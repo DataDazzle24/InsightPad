@@ -1,0 +1,758 @@
+<script>
+(function() {
+  const CHAVE_TOKEN_AUTH = 'insightpad_auth_token';
+  const CHAVE_USUARIO_AUTH = 'insightpad_auth_usuario';
+  const CHAVE_EXPIRA_AUTH = 'insightpad_auth_expira';
+  const CHAVE_PERMISSOES_AUTH = 'insightpad_auth_permissoes';
+  const CHAVE_DISPOSITIVO_AUTH = 'insightpad_auth_dispositivo';
+  const CHAVE_PRE_RENDER_PAGE = 'insightpad_pre_render_page';
+  const CHAVE_PRE_RENDER_ATE = 'insightpad_pre_render_ate';
+  const INTERVALO_MONITOR_SESSAO_MS = 30 * 1000;
+  let urlWebAppCache = '';
+  let ultimaValidacaoSessaoMs = 0;
+
+  function obterBaseUrl() {
+    return String(window.location.href || '').split('?')[0];
+  }
+
+  function obterUrlWebApp(callback) {
+    if (urlWebAppCache) {
+      callback(urlWebAppCache);
+      return;
+    }
+
+    google.script.run
+      .withSuccessHandler(function(url) {
+        urlWebAppCache = String(url || obterBaseUrl()).split('?')[0];
+        callback(urlWebAppCache);
+      })
+      .withFailureHandler(function(erro) {
+        console.error('Erro ao obter URL do Web App:', erro);
+        callback(obterBaseUrl());
+      })
+      .obterUrlWebApp();
+  }
+
+  function navegarPara(destino) {
+    window.location.assign(destino);
+  }
+
+  function navegarParaPagina(pageKey) {
+    const pagina = String(pageKey || '').trim();
+    if (!pagina) return;
+
+    const link = document.createElement('a');
+    link.href = obterBaseNavegacaoImediata() + '?page=' + encodeURIComponent(pagina);
+    link.target = '_top';
+    link.rel = 'noopener';
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+
+    setTimeout(function() {
+      link.remove();
+    }, 1000);
+  }
+
+  function obterBaseNavegacaoImediata() {
+    const linkWebApp = document.querySelector('a[href*="script.google.com/macros/s/"][href*="/exec"]');
+
+    if (linkWebApp) {
+      return String(linkWebApp.href || '').split('?')[0];
+    }
+
+    const urlAtual = String(window.location.href || '');
+    if (urlAtual.indexOf('script.google.com/macros/s/') >= 0 && urlAtual.indexOf('/exec') >= 0) {
+      return urlAtual.split('?')[0];
+    }
+
+    if (urlWebAppCache) {
+      return String(urlWebAppCache || '').split('?')[0];
+    }
+
+    return 'https://script.google.com/macros/s/AKfycbxGdd8eTLu7BLmwpVXqajZcMH7tAkInFuxWCf5WZIO8F07YAek7LcerT0ifihoXyZdd/exec';
+  }
+
+  function estaOffline() {
+    return navigator.onLine === false;
+  }
+
+  function paginaPermiteOperacaoOffline(pageAtual) {
+    return String(pageAtual || obterPageAtual()) === 'Caixa';
+  }
+
+  function obterPageAtual() {
+    const params = new URLSearchParams(window.location.search || '');
+    return params.get('page') || 'Menu';
+  }
+
+  function obterCodigoLogin() {
+    const params = new URLSearchParams(window.location.search || '');
+    return params.get('authCode') || '';
+  }
+
+  function obterTokenSessao() {
+    return localStorage.getItem(CHAVE_TOKEN_AUTH) || '';
+  }
+
+  function obterIdDispositivo() {
+    let idDispositivo = localStorage.getItem(CHAVE_DISPOSITIVO_AUTH) || '';
+
+    if (!idDispositivo) {
+      idDispositivo = window.crypto && typeof window.crypto.randomUUID === 'function'
+        ? window.crypto.randomUUID()
+        : String(Date.now()) + '-' + Math.random().toString(36).slice(2);
+
+      localStorage.setItem(CHAVE_DISPOSITIVO_AUTH, idDispositivo);
+    }
+
+    return idDispositivo;
+  }
+
+  function instalarTokenAutomaticoGoogleRun() {
+    if (!window.google || !google.script || !google.script.run || google.script.run.__insightTokenProxy) {
+      return;
+    }
+
+    const metodosInternos = new Set([
+      'withSuccessHandler',
+      'withFailureHandler',
+      'withUserObject'
+    ]);
+
+    const funcoesSemToken = new Set([
+      'obterUrlWebApp',
+      'loginUsuario',
+      'validarSessao',
+      'prepararRenderizacaoPagina',
+      'carregarPaginaProtegida',
+      'consumirCodigoLogin',
+      'logoutUsuario'
+    ]);
+
+    const funcoesSemLog = new Set([
+      'obterUrlWebApp',
+      'loginUsuario',
+      'validarSessao',
+      'prepararRenderizacaoPagina',
+      'carregarPaginaProtegida',
+      'consumirCodigoLogin',
+      'logoutUsuario',
+      'registrarLogChamadaFrontend'
+    ]);
+
+    function moduloPorPagina(pageKey) {
+      if (!pageKey) return 'SISTEMA';
+      if (pageKey.indexOf('Cadastro_') === 0 || pageKey === 'MenuCadastro') return 'CADASTROS';
+      if (pageKey === 'Estoque') return 'ESTOQUE';
+      if (pageKey === 'Caixa' || pageKey === 'Gestao_Vendas' || pageKey === 'MenuVendas') return 'VENDAS';
+      if (pageKey === 'MenuDashboard' || pageKey.indexOf('Dashboard_') === 0) return 'DASHBOARD';
+      if (pageKey === 'Gestao_Acessos' || pageKey === 'Controle_Usuarios' || pageKey === 'Login') return 'ACESSOS';
+      if (pageKey === 'Menu') return 'MENU';
+      return 'SISTEMA';
+    }
+
+    function resumoResultadoChamada(resultado) {
+      if (!resultado || typeof resultado !== 'object') return 'Chamada concluida.';
+      if (resultado.mensagem) return String(resultado.mensagem).slice(0, 500);
+      if (resultado.sucesso === false) return 'Chamada retornou falha.';
+      if (resultado.sucesso === true) return 'Chamada retornou sucesso.';
+      return 'Chamada concluida.';
+    }
+
+    function registrarLogChamada(funcao, inicio, sucesso, resultadoOuErro) {
+      if (funcoesSemLog.has(String(funcao))) return;
+
+      try {
+        const erro = sucesso ? '' : String(
+          resultadoOuErro && (resultadoOuErro.message || resultadoOuErro.toString && resultadoOuErro.toString()) || 'Erro na chamada.'
+        ).slice(0, 800);
+
+        const payloadLog = {
+          pagina: obterPageAtual(),
+          modulo: moduloPorPagina(obterPageAtual()),
+          funcao: String(funcao || ''),
+          sucesso: sucesso ? 'S' : 'N',
+          erro: erro,
+          resumo: sucesso ? resumoResultadoChamada(resultadoOuErro) : 'Erro ao executar funcao pelo front.',
+          tempoExecucaoMs: Date.now() - inicio
+        };
+
+        google.script.run.registrarLogChamadaFrontend(payloadLog);
+      } catch (erroLog) {
+        console.warn('Nao foi possivel registrar log da chamada:', erroLog);
+      }
+    }
+
+    function protegerRunner(runner, contexto) {
+      contexto = contexto || {};
+
+      return new Proxy(runner, {
+        get(target, prop, receiver) {
+          const valor = Reflect.get(target, prop, receiver);
+
+          if (typeof valor !== 'function') {
+            return valor;
+          }
+
+          if (metodosInternos.has(String(prop))) {
+            if (String(prop) === 'withSuccessHandler') {
+              return function(handler) {
+                const ctx = contexto;
+                const wrapped = function(resultado) {
+                  if (ctx && ctx.chamadaAtual) {
+                    if (ctx.chamadaAtual.semLog !== true) {
+                      registrarLogChamada(ctx.chamadaAtual.funcao, ctx.chamadaAtual.inicio, true, resultado);
+                    }
+                    ctx.chamadaAtual = null;
+                  }
+
+                  if (typeof handler === 'function') {
+                    return handler.apply(this, arguments);
+                  }
+                };
+
+                return protegerRunner(valor.call(target, wrapped), ctx);
+              };
+            }
+
+            if (String(prop) === 'withFailureHandler') {
+              return function(handler) {
+                const ctx = contexto;
+                const wrapped = function(erro) {
+                  if (ctx && ctx.chamadaAtual) {
+                    if (ctx.chamadaAtual.semLog !== true) {
+                      registrarLogChamada(ctx.chamadaAtual.funcao, ctx.chamadaAtual.inicio, false, erro);
+                    }
+                    ctx.chamadaAtual = null;
+                  }
+
+                  if (typeof handler === 'function') {
+                    return handler.apply(this, arguments);
+                  }
+                };
+
+                return protegerRunner(valor.call(target, wrapped), ctx);
+              };
+            }
+
+            return function(...args) {
+              return protegerRunner(valor.apply(target, args), contexto);
+            };
+          }
+
+          return function(...args) {
+            contexto.chamadaAtual = {
+              funcao: String(prop),
+              inicio: Date.now(),
+              semLog: window.__INSIGHT_SUPRIMIR_LOG_CHAMADA === true
+            };
+
+            if (!funcoesSemToken.has(String(prop))) {
+              args.push(obterTokenSessao());
+            }
+
+            return valor.apply(target, args);
+          };
+        }
+      });
+    }
+
+    google.script.run = protegerRunner(google.script.run);
+    google.script.run.__insightTokenProxy = true;
+  }
+
+  function limparSessaoLocal() {
+    localStorage.removeItem(CHAVE_TOKEN_AUTH);
+    localStorage.removeItem(CHAVE_USUARIO_AUTH);
+    localStorage.removeItem(CHAVE_EXPIRA_AUTH);
+    localStorage.removeItem(CHAVE_PERMISSOES_AUTH);
+    localStorage.removeItem(CHAVE_PRE_RENDER_PAGE);
+    localStorage.removeItem(CHAVE_PRE_RENDER_ATE);
+  }
+
+  function salvarSessaoValidada(resultado) {
+    if (resultado && resultado.usuario) {
+      localStorage.setItem(CHAVE_USUARIO_AUTH, JSON.stringify(resultado.usuario));
+    }
+
+    if (resultado && resultado.permissoes) {
+      localStorage.setItem(CHAVE_PERMISSOES_AUTH, JSON.stringify(resultado.permissoes));
+    }
+  }
+
+  function salvarSessaoCompleta(resultado) {
+    localStorage.setItem(CHAVE_TOKEN_AUTH, resultado.token || '');
+    localStorage.setItem(CHAVE_EXPIRA_AUTH, resultado.expiraEm || '');
+
+    if (resultado.usuario) {
+      localStorage.setItem(CHAVE_USUARIO_AUTH, JSON.stringify(resultado.usuario));
+    }
+
+    localStorage.setItem(CHAVE_PERMISSOES_AUTH, JSON.stringify(resultado.permissoes || {}));
+  }
+
+  function carregarSessaoCache() {
+    try {
+      const token = obterTokenSessao();
+      const expiraEm = localStorage.getItem(CHAVE_EXPIRA_AUTH) || '';
+      const usuario = JSON.parse(localStorage.getItem(CHAVE_USUARIO_AUTH) || 'null');
+      const permissoes = JSON.parse(localStorage.getItem(CHAVE_PERMISSOES_AUTH) || '{}');
+
+      if (!token || !usuario || !permissoes || typeof permissoes !== 'object') return null;
+
+      return {
+        token: token,
+        expiraEm: expiraEm,
+        usuario: usuario,
+        permissoes: permissoes
+      };
+    } catch (erro) {
+      console.warn('Nao foi possivel carregar cache de sessao:', erro);
+      return null;
+    }
+  }
+
+  function removerCodigoLoginDaUrl() {
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('authCode');
+      window.history.replaceState({}, document.title, url.toString());
+    } catch (erro) {
+      console.warn('Nao foi possivel limpar o codigo de acesso da URL:', erro);
+    }
+  }
+
+  function redirecionarLogin() {
+    if (estaOffline() && manterSessaoOfflineSePossivel()) return;
+
+    const pageAtual = obterPageAtual();
+    obterUrlWebApp(function(urlWebApp) {
+      navegarPara(urlWebApp + '?page=Login&next=' + encodeURIComponent(pageAtual));
+    });
+  }
+
+  function redirecionarMenu() {
+    obterUrlWebApp(function(urlWebApp) {
+      navegarPara(urlWebApp + '?page=Menu');
+    });
+  }
+
+  function mostrarAviso(mensagem) {
+    if (window.toastr) {
+      toastr.warning(mensagem);
+      return;
+    }
+
+    console.warn(mensagem);
+  }
+
+  function revelarInterfaceValidada() {
+    document.body.classList.add('sessao-validada');
+  }
+
+  function ocultarInterfaceValidada() {
+    document.body.classList.remove('sessao-validada');
+  }
+
+  function publicarSessao(sessao) {
+    window.InsightSessao = {
+      token: sessao.token || obterTokenSessao(),
+      usuario: sessao.usuario || null,
+      permissoes: sessao.permissoes || {}
+    };
+
+    aplicarPermissoesVisuais(window.InsightSessao);
+
+    document.dispatchEvent(new CustomEvent('insight:sessao-validada', {
+      detail: window.InsightSessao
+    }));
+  }
+
+  function aplicarSessaoCacheSePossivel(pageAtual) {
+    const sessaoCache = carregarSessaoCache();
+    if (!sessaoCache) return false;
+
+    const agora = new Date();
+    const expira = converterDataLocal(sessaoCache.expiraEm);
+
+    if (expira && expira.getTime() <= agora.getTime()) {
+      limparSessaoLocal();
+      return false;
+    }
+
+    publicarSessao(sessaoCache);
+
+    return true;
+  }
+
+  function consumirPreRenderizacaoValidada(pageAtual) {
+    const paginaValidada = localStorage.getItem(CHAVE_PRE_RENDER_PAGE) || '';
+    const validaAte = Number(localStorage.getItem(CHAVE_PRE_RENDER_ATE) || 0);
+
+    localStorage.removeItem(CHAVE_PRE_RENDER_PAGE);
+    localStorage.removeItem(CHAVE_PRE_RENDER_ATE);
+
+    return paginaValidada === String(pageAtual || '') && validaAte > Date.now();
+  }
+
+  function manterSessaoOfflineSePossivel() {
+    const pageAtual = obterPageAtual();
+    if (!paginaPermiteOperacaoOffline(pageAtual)) return false;
+
+    const cacheOk = aplicarSessaoCacheSePossivel(pageAtual);
+    if (!cacheOk) return false;
+
+    revelarInterfaceValidada();
+    mostrarAviso('Conexão indisponível. O Caixa continuará em modo offline.');
+    return true;
+  }
+
+  function converterDataLocal(valor) {
+    if (!valor) return null;
+
+    const texto = String(valor || '').trim();
+    const br = texto.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2})(?::(\d{2}))?)?/);
+
+    if (br) {
+      const data = new Date(
+        Number(br[3]),
+        Number(br[2]) - 1,
+        Number(br[1]),
+        Number(br[4] || 0),
+        Number(br[5] || 0),
+        Number(br[6] || 0)
+      );
+      return Number.isNaN(data.getTime()) ? null : data;
+    }
+
+    const data = new Date(texto);
+    return Number.isNaN(data.getTime()) ? null : data;
+  }
+
+  function garantirCssPermissoes() {
+    if (document.getElementById('cssPermissoesSessao')) return;
+
+    const style = document.createElement('style');
+    style.id = 'cssPermissoesSessao';
+    style.textContent = `
+      a.acesso-negado {
+        filter: grayscale(100%);
+        opacity: 0.58;
+        cursor: not-allowed !important;
+      }
+
+      a.acesso-negado::before {
+        background-color: #9e9e9e !important;
+        width: 100% !important;
+        opacity: 0.25;
+      }
+
+      a.acesso-negado:hover::before {
+        width: 100% !important;
+      }
+
+      a.acesso-negado i,
+      a.acesso-negado #icone,
+      a.acesso-negado #icone-material,
+      a.acesso-negado #icone_cad,
+      a.acesso-negado #texto_btn,
+      a.acesso-negado #texto_btn_cad {
+        color: #d0d0d0 !important;
+      }
+    `;
+
+    document.head.appendChild(style);
+  }
+
+  function extrairPageLink(link) {
+    try {
+      const href = link.getAttribute('href') || '';
+      if (!href) return '';
+
+      const url = new URL(href, window.location.href);
+      return url.searchParams.get('page') || '';
+    } catch (erro) {
+      return '';
+    }
+  }
+
+  function usuarioPodeAcessarPagina(permissoes, pageKey) {
+    const pagina = String(pageKey || '').toUpperCase();
+    if (!pageKey || pagina === 'LOGIN' || pagina === 'MENU') return true;
+
+    const permissao = permissoes && permissoes[pageKey];
+    return !!permissao && permissao.podeAcessar === 'S';
+  }
+
+  function animarBloqueio(link) {
+    link.classList.remove('clicked');
+    void link.offsetWidth;
+    link.classList.add('clicked');
+  }
+
+  function configurarBloqueioLink(link) {
+    if (link.dataset.permissaoConfigurada === 'S') return;
+
+    link.dataset.permissaoConfigurada = 'S';
+    link.dataset.bloqueioOriginal = link.classList.contains('btn-bloqueado') ? 'S' : 'N';
+
+    link.addEventListener('click', function(evento) {
+      const pageKey = extrairPageLink(link);
+      if (!pageKey || String(pageKey).toUpperCase() === 'LOGIN') return;
+
+      if (link.dataset.acessoNegado === 'S') {
+        evento.preventDefault();
+        evento.stopPropagation();
+        mostrarAviso('Voce nao possui acesso a essa pagina');
+        animarBloqueio(link);
+        return;
+      }
+
+    }, true);
+  }
+
+  function prepararLinksProtegidos() {
+    garantirCssPermissoes();
+
+    document.querySelectorAll('a[href]').forEach(function(link) {
+      const pageKey = extrairPageLink(link);
+      if (!pageKey) return;
+      configurarBloqueioLink(link);
+    });
+  }
+
+  function aplicarPermissoesVisuais(sessao) {
+    const permissoes = sessao && sessao.permissoes ? sessao.permissoes : {};
+    garantirCssPermissoes();
+
+    document.querySelectorAll('a[href]').forEach(function(link) {
+      const pageKey = extrairPageLink(link);
+      if (!pageKey) return;
+
+      configurarBloqueioLink(link);
+
+      if (usuarioPodeAcessarPagina(permissoes, pageKey)) {
+        link.dataset.acessoNegado = 'N';
+        link.classList.remove('acesso-negado');
+
+        if (link.dataset.bloqueioOriginal !== 'S') {
+          link.classList.remove('btn-bloqueado');
+        }
+
+        link.removeAttribute('aria-disabled');
+        return;
+      }
+
+      link.dataset.acessoNegado = 'S';
+      link.classList.add('acesso-negado', 'btn-bloqueado');
+      link.setAttribute('aria-disabled', 'true');
+    });
+  }
+
+  function consumirCodigoLoginAoAbrir(codigo) {
+    google.script.run
+      .withSuccessHandler(function(resultado) {
+        if (!resultado || !resultado.sucesso || !resultado.token) {
+          limparSessaoLocal();
+          mostrarAviso(resultado?.mensagem || 'Sessao de login nao encontrada. Faça login novamente.');
+          redirecionarLogin();
+          return;
+        }
+
+        salvarSessaoCompleta(resultado);
+        removerCodigoLoginDaUrl();
+
+        publicarSessao({
+          token: resultado.token,
+          usuario: resultado.usuario || null,
+          permissoes: resultado.permissoes || {}
+        });
+
+        const pageAtual = obterPageAtual();
+        const permissaoPagina = pageAtual === 'Menu' ? { podeAcessar: 'S' } : (resultado.permissoes || {})[pageAtual];
+
+        if (pageAtual === 'Menu' || (permissaoPagina && permissaoPagina.podeAcessar === 'S')) {
+          revelarInterfaceValidada();
+        }
+
+        validarSessaoAoAbrirPagina();
+      })
+      .withFailureHandler(function(erro) {
+        console.error('Erro ao consumir codigo de login:', erro);
+        limparSessaoLocal();
+        redirecionarLogin();
+      })
+      .consumirCodigoLogin(codigo);
+  }
+
+  function validarSessaoAoAbrirPagina(opcoes) {
+    opcoes = opcoes || {};
+    const pageAtual = obterPageAtual();
+
+    if (String(pageAtual).toUpperCase() === 'LOGIN') return;
+
+    const codigoLogin = obterCodigoLogin();
+
+    if (codigoLogin) {
+      consumirCodigoLoginAoAbrir(codigoLogin);
+      return;
+    }
+
+    const token = obterTokenSessao();
+
+    if (!token) {
+      limparSessaoLocal();
+      redirecionarLogin();
+      return;
+    }
+
+    if (consumirPreRenderizacaoValidada(pageAtual) && aplicarSessaoCacheSePossivel(pageAtual)) {
+      revelarInterfaceValidada();
+      return;
+    }
+
+    const cacheAplicado = aplicarSessaoCacheSePossivel(pageAtual);
+
+    if (String(pageAtual).toUpperCase() === 'MENU' && cacheAplicado) {
+      revelarInterfaceValidada();
+    }
+
+    if (estaOffline()) {
+      if (manterSessaoOfflineSePossivel()) return;
+      mostrarAviso('Sem conexão para validar sua sessão.');
+      return;
+    }
+
+    const suprimirLogAnterior = window.__INSIGHT_SUPRIMIR_LOG_CHAMADA;
+    if (opcoes.semLog === true) {
+      window.__INSIGHT_SUPRIMIR_LOG_CHAMADA = true;
+    }
+
+    ultimaValidacaoSessaoMs = Date.now();
+
+    google.script.run
+      .withSuccessHandler(function(resultado) {
+        window.__INSIGHT_SUPRIMIR_LOG_CHAMADA = suprimirLogAnterior;
+
+        if (!resultado || !resultado.autenticado) {
+          console.warn('Sessao local removida apos validacao:', resultado);
+          limparSessaoLocal();
+          redirecionarLogin();
+          return;
+        }
+
+        salvarSessaoValidada(resultado);
+
+        const sessaoValidada = {
+          token: token,
+          usuario: resultado.usuario || null,
+          permissoes: resultado.permissoes || {}
+        };
+
+        publicarSessao(sessaoValidada);
+
+        if (!resultado.autorizado) {
+          ocultarInterfaceValidada();
+          localStorage.removeItem(CHAVE_PERMISSOES_AUTH);
+          mostrarAviso(resultado.mensagem || 'Você não possui acesso a essa página.');
+
+          if (pageAtual !== 'Menu') {
+            setTimeout(redirecionarMenu, 350);
+            return;
+          }
+        }
+
+        revelarInterfaceValidada();
+      })
+      .withFailureHandler(function(erro) {
+        window.__INSIGHT_SUPRIMIR_LOG_CHAMADA = suprimirLogAnterior;
+        console.error('Erro ao validar sessão:', erro);
+
+        if (estaOffline() && manterSessaoOfflineSePossivel()) return;
+
+        limparSessaoLocal();
+        redirecionarLogin();
+      })
+      .validarSessao(token, pageAtual, obterIdDispositivo());
+  }
+
+  function logoutInsightPad() {
+    const token = obterTokenSessao();
+
+    limparSessaoLocal();
+
+    if (!token) {
+      redirecionarLogin();
+      return;
+    }
+
+    google.script.run
+      .withSuccessHandler(function() {
+        redirecionarLogin();
+      })
+      .withFailureHandler(function(erro) {
+        console.error('Erro ao realizar logout:', erro);
+        if (estaOffline() && manterSessaoOfflineSePossivel()) return;
+        redirecionarLogin();
+      })
+      .logoutUsuario(token);
+  }
+
+  function iniciarMonitorSessao() {
+    if (String(obterPageAtual()).toUpperCase() === 'LOGIN') return;
+
+    setInterval(function() {
+      if (!obterTokenSessao()) return;
+      if (estaOffline()) return;
+      if (document.visibilityState && document.visibilityState !== 'visible') return;
+      if (Date.now() - ultimaValidacaoSessaoMs < INTERVALO_MONITOR_SESSAO_MS) return;
+      validarSessaoAoAbrirPagina({ semLog: true });
+    }, INTERVALO_MONITOR_SESSAO_MS);
+
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState !== 'visible') return;
+      if (!obterTokenSessao()) return;
+      if (estaOffline()) return;
+      if (Date.now() - ultimaValidacaoSessaoMs < INTERVALO_MONITOR_SESSAO_MS) return;
+      validarSessaoAoAbrirPagina({ semLog: true });
+    });
+  }
+
+  function configurarNavegacaoInterna() {
+    document.addEventListener('click', function(evento) {
+      const alvo = evento.target && evento.target.closest
+        ? evento.target.closest('[data-insight-page]')
+        : null;
+
+      if (!alvo) return;
+
+      const pageKey = alvo.getAttribute('data-insight-page') || '';
+      if (!pageKey) return;
+
+      evento.preventDefault();
+      evento.stopPropagation();
+
+      alvo.classList.remove('clicked');
+      void alvo.offsetWidth;
+      alvo.classList.add('clicked');
+
+      navegarParaPagina(pageKey);
+    }, true);
+  }
+
+  window.InsightAuth = {
+    obterTokenSessao: obterTokenSessao,
+    limparSessaoLocal: limparSessaoLocal,
+    validarSessaoAoAbrirPagina: validarSessaoAoAbrirPagina,
+    navegarParaPagina: navegarParaPagina,
+    logout: logoutInsightPad
+  };
+
+  instalarTokenAutomaticoGoogleRun();
+  document.addEventListener('DOMContentLoaded', validarSessaoAoAbrirPagina);
+  document.addEventListener('DOMContentLoaded', prepararLinksProtegidos);
+  document.addEventListener('DOMContentLoaded', iniciarMonitorSessao);
+  document.addEventListener('DOMContentLoaded', configurarNavegacaoInterna);
+})();
+</script>

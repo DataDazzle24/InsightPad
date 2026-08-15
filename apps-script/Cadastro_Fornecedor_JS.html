@@ -1,0 +1,1991 @@
+﻿<script>
+  // ==========================================================================================================================================
+// VARIÃVEIS GLOBAIS
+// ==========================================================================================================================================
+
+
+// Timeout para controlar o debounce da pesquisa
+let timeoutId = null;
+
+// Armazena a referÃªncia da linha selecionada na tabela
+let linhaSelecionada = null;
+let linhasSelecionadas = [];
+
+
+
+
+
+// ===========================================================================================================================================
+// ELEMENTOS DO DOM
+// ===========================================================================================================================================
+
+// Input de pesquisa
+const inputPesquisarRazao = document.getElementById('inputPesquisarRazao');
+const inputPesquisarFantasia = document.getElementById('inputPesquisarFantasia');
+const inputPesquisarCNPJ = document.getElementById('inputPesquisarCNPJ');
+const inputPesquisarRepresentante = document.getElementById('inputPesquisarRepresentante');
+const inputPesquisarSegmento = document.getElementById('inputPesquisarSegmento');
+
+// Lista de sugestÃµes do dropdown
+const listaUlPesquisarRazao = document.getElementById('listaPesquisarRazao');
+const listaUlPesquisarFantasia = document.getElementById('listaPesquisarFantasia');
+const listaUlPesquisarCNPJ = document.getElementById('listaPesquisarCNPJ');
+const listaUlPesquisarRepresentante = document.getElementById('listaPesquisarRepresentante');
+const listaUlPesquisarSegmento = document.getElementById('listaPesquisarSegmento');
+
+
+
+
+
+// ===========================================================================================================================================
+// INICIALIZAÃ‡ÃƒO DA PÃGINA
+// ===========================================================================================================================================
+
+// Executa quando o DOM estiver completamente carregado
+document.addEventListener('DOMContentLoaded', function() {
+
+    // CONFIGURAÃ‡ÃƒO DO TOASTR (NOTIFICAÃ‡Ã•ES) ===================================================
+    toastr.options = {
+        "closeButton": true,              // Mostra botÃ£o de fechar
+        "debug": false,                   // Modo debug desativado
+        "newestOnTop": true,              // NotificaÃ§Ãµes mais recentes no topo
+        "progressBar": true,              // Mostra barra de progresso
+        "preventDuplicates": true,        // Evita notificaÃ§Ãµes duplicadas
+        "onclick": null,                  // Sem aÃ§Ã£o ao clicar
+        "showDuration": "300",            // DuraÃ§Ã£o da animaÃ§Ã£o de entrada
+        "hideDuration": "1000",           // DuraÃ§Ã£o da animaÃ§Ã£o de saÃ­da
+        "timeOut": "3000",                // Tempo de exibiÃ§Ã£o (3 segundos)
+        "extendedTimeOut": "0",           // Tempo extra ao passar mouse
+        "showEasing": "swing",            // Efeito de entrada
+        "hideEasing": "linear",           // Efeito de saÃ­da
+        "showMethod": "fadeIn",           // MÃ©todo de entrada
+        "hideMethod": "fadeOut"           // MÃ©todo de saÃ­da
+    };
+
+
+
+    // CONFIGURAÃ‡ÃƒO DOS EVENT LISTENERS ===========================================================
+
+    // BotÃ£o Extrair - extrai os dados da tabela
+    const botaoExtrair = document.getElementById("btnExtrair");
+    if (botaoExtrair) {
+        botaoExtrair.addEventListener("click", function() {
+            exportarTabelaParaCSV("Fornecedores.csv");
+      });
+    }
+
+    // BotÃ£o Limpar - remove filtros e restaura tabela
+    const botaoLimpar = document.getElementById("btnLimpar");
+    if (botaoLimpar) {
+        botaoLimpar.addEventListener("click", Limpar);
+    }
+
+
+
+    // PESQUISA ---------------------------------------------------------------------------
+
+    // BotÃ£o Pesquisar - abre modal de pesquisa
+    const btnPesquisar = document.getElementById("btnPesquisar");
+    if (btnPesquisar) {
+        btnPesquisar.addEventListener("click", abrirModalPesquisa);
+    }
+
+    // BotÃ£o Confirmar Pesquisa - executa a pesquisa
+    const btnConfirmarPesquisa = document.getElementById("btnConfirmarPesquisa");
+    if (btnConfirmarPesquisa) {
+      btnConfirmarPesquisa.addEventListener("click", aplicarPesquisaNaTabela);
+    }
+
+    // BotÃ£o Cancelar Pesquisa - fecha modal de pesquisa
+    const btnCancelarPesquisa = document.getElementById("btnCancelarPesquisa");
+    if (btnCancelarPesquisa) {
+        btnCancelarPesquisa.addEventListener("click", fecharModalPesquisa);
+    }
+
+    // BotÃ£o Cadastrar - abre modal de cadastro
+    const btnCadastrar = document.getElementById("btnCadastrar");
+    if (btnCadastrar) {
+        btnCadastrar.addEventListener("click", abrirModalCadastro);
+    }
+
+    // BotÃ£o Cancelar Cadastro - fecha modal de cadastro
+    const btnCancelarCadastro = document.getElementById("btnCancelarCadastro");
+    if (btnCancelarCadastro) {
+        btnCancelarCadastro.addEventListener("click", fecharModalCadastro);
+    }
+
+    // BotÃ£o Confirmar Cadastro - executa cadastro
+    const btnConfirmarCadastro = document.getElementById("btnConfirmarCadastro");
+    if (btnConfirmarCadastro) {
+        btnConfirmarCadastro.addEventListener("click", cadastrarFornecedor);
+    }
+
+    // Fechar modal de cadastro ao clicar fora
+    const modalCadastro = document.getElementById("modalCadastro");
+    if (modalCadastro) {
+        modalCadastro.addEventListener("click", function(e) {
+            if (e.target === modalCadastro) {
+                fecharModalCadastro();
+            }
+        });
+    }
+
+    // BotÃ£o Excluir - abre modal de confirmaÃ§Ã£o
+    const btnExcluir = document.getElementById("btnExcluir");
+    if (btnExcluir) {
+        btnExcluir.addEventListener("click", abrirModalExclusao);
+    }
+
+    // BotÃ£o NÃ£o Excluir - fecha modal de exclusÃ£o
+    const btnNaoExcluir = document.getElementById("btnNaoExcluir");
+    if (btnNaoExcluir) {
+        btnNaoExcluir.addEventListener("click", fecharModalExclusao);
+    }
+
+    // BotÃ£o Sim Excluir - confirma exclusÃ£o
+    const btnSimExcluir = document.getElementById("btnSimExcluir");
+    if (btnSimExcluir) {
+        btnSimExcluir.addEventListener("click", confirmarExclusaoForn);
+    }
+
+    // BotÃ£o Editar - abre modal de ediÃ§Ã£o
+    const btnEditar = document.getElementById("btnEditar");
+    if (btnEditar) {
+        btnEditar.addEventListener("click", abrirModalEdicao);
+    }
+
+    // BotÃ£o Cancelar EdiÃ§Ã£o - fecha modal de ediÃ§Ã£o
+    const btnCancelarEdicao = document.getElementById("btnCancelarEdicao");
+    if (btnCancelarEdicao) {
+        btnCancelarEdicao.addEventListener("click", fecharModalEdicao);
+    }
+
+    // BotÃ£o Confirmar EdiÃ§Ã£o - executa ediÃ§Ã£o
+    const btnConfirmarEdicao = document.getElementById("btnConfirmarEdicao");
+    if (btnConfirmarEdicao) {
+        btnConfirmarEdicao.addEventListener("click", confirmarEdicaoForn);
+    }
+
+    // Fechar modal de ediÃ§Ã£o ao clicar fora
+    const modalEdicao = document.getElementById("modalEdicao");
+    if (modalEdicao) {
+        modalEdicao.addEventListener("click", function(e) {
+            if (e.target === modalEdicao) {
+                fecharModalEdicao();
+            }
+        });
+    }
+    
+
+
+
+
+    // CONFIGURAÃ‡ÃƒO DO CALENDÃRIO -----------------------------------------------------------
+
+    const inputsData = document.querySelectorAll('.datepicker');
+    if (!inputsData.length || !window.M || !M.Datepicker) return;
+
+    const isRangeId = (id) =>
+      id === "inputPesquisarDataCadastro";
+
+    // i18n (mesmo que vocÃª jÃ¡ usa)
+    const i18nBR = {
+      cancel: 'Cancelar',
+      clear: 'Limpar',
+      done: 'OK',
+      months: ['Janeiro','Fevereiro','MarÃ§o','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'],
+      monthsShort: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],
+      weekdays: ['Domingo','Segunda','TerÃ§a','Quarta','Quinta','Sexta','SÃ¡bado'],
+      weekdaysShort: ['Dom','Seg','Ter','Qua','Qui','Sex','SÃ¡b'],
+      weekdaysAbbrev: ['D','S','T','Q','Q','S','S']
+    };
+
+    // Init geral
+    inputsData.forEach((input) => {
+      if (isRangeId(input.id)) {
+       initDatepickerRange(input, i18nBR);
+      } else {
+        M.Datepicker.init(input, {
+          format: 'dd/mm/yyyy',
+          maxDate: new Date(),
+          autoClose: true,
+          showClearBtn: true,
+          yearRange: 100,
+          i18n: i18nBR
+        });
+      }
+    });
+
+
+
+
+    // APLICA MÃSCARAS ======================================================
+    
+    aplicarMascaraTelefone('inputTelefone1');
+    aplicarMascaraTelefone('inputTelefone2');
+    aplicarMascaraTelefone('inputEditarTelefone1');
+    aplicarMascaraTelefone('inputEditarTelefone2');
+
+    aplicarMascaraCNPJ('inputCNPJ');
+    aplicarMascaraCNPJ('inputEditarCNPJ');
+    aplicarMascaraCNPJ('inputPesquisarCNPJ');
+
+    aplicarMascaraCPF('inputCPF');
+    aplicarMascaraCPF('inputEditarCPF');
+
+    aplicarMascaraCEP('inputCEP');
+    aplicarMascaraCEP('inputEditarCEP');
+
+    inicializarBuscaCEP("inputCEP", {
+        uf: "inputUF",
+        cidade: "inputCidade",
+        bairro: "inputBairro",
+        endereco: "inputEndereco"
+    });
+
+    inicializarBuscaCEP("inputEditarCEP", {
+        uf: "inputEditarUF",
+        cidade: "inputEditarCidade",
+        bairro: "inputEditarBairro",
+        endereco: "inputEditarEndereco"
+    });
+
+
+
+    // CARREGA DADOS INICIAIS NA TABELA =============================================================
+
+    carregarDadosIniciais();
+
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =======================================================================================================================================
+// FUNÃ‡ÃƒO: BUSCAR ENDEREÃ‡O PELO CEP
+// =======================================================================================================================================
+
+function buscarEnderecoPorCEP(cep, idsCampos) {
+    var cepLimpo = String(cep || "").replace(/\D/g, "");
+
+    if (cepLimpo.length !== 8) {
+        return Promise.resolve({
+            sucesso: false,
+            mensagem: "CEP invÃ¡lido. Digite os 8 nÃºmeros do CEP."
+        });
+    }
+
+    return fetch("https://viacep.com.br/ws/" + cepLimpo + "/json/")
+        .then(function(resposta) {
+            if (!resposta.ok) {
+                throw new Error("Falha na consulta do CEP");
+            }
+            return resposta.json();
+        })
+        .then(function(dados) {
+            if (dados.erro) {
+                return {
+                    sucesso: false,
+                    mensagem: "CEP nÃ£o encontrado."
+                };
+            }
+
+            var campoUF = document.getElementById(idsCampos.uf);
+            var campoCidade = document.getElementById(idsCampos.cidade);
+            var campoBairro = document.getElementById(idsCampos.bairro);
+            var campoEndereco = document.getElementById(idsCampos.endereco);
+
+            if (campoUF) campoUF.value = (dados.uf || "").toUpperCase();
+            if (campoCidade) campoCidade.value = (dados.localidade || "").toUpperCase();
+            if (campoBairro) campoBairro.value = (dados.bairro || "").toUpperCase();
+            if (campoEndereco) campoEndereco.value = (dados.logradouro || "").toUpperCase();
+
+            return {
+                sucesso: true,
+                dados: dados
+            };
+        })
+        .catch(function(erro) {
+            console.error("Erro ao buscar CEP:", erro);
+            return {
+                sucesso: false,
+                mensagem: "Erro ao consultar o CEP."
+            };
+        });
+}
+
+
+// =======================================================================================================================================
+// FUNÃ‡ÃƒO: INICIALIZAR AUTOPREENCHIMENTO POR CEP
+// =======================================================================================================================================
+
+function inicializarBuscaCEP(idCampoCEP, idsCamposRelacionados) {
+    var campoCEP = document.getElementById(idCampoCEP);
+
+    if (!campoCEP) return;
+
+    var ultimoCepConsultado = "";
+
+    function resetarControleCEP() {
+        ultimoCepConsultado = "";
+    }
+
+    function executarBuscaCEP() {
+        var cepLimpo = campoCEP.value.replace(/\D/g, "");
+
+        if (cepLimpo.length !== 8) return;
+        if (cepLimpo === ultimoCepConsultado) return;
+
+        ultimoCepConsultado = cepLimpo;
+
+        buscarEnderecoPorCEP(cepLimpo, idsCamposRelacionados)
+            .then(function(resultado) {
+                if (!resultado.sucesso) {
+                    toastr.warning(resultado.mensagem || "NÃ£o foi possÃ­vel buscar o CEP.");
+                    resetarControleCEP();
+                }
+            });
+    }
+
+    campoCEP.addEventListener("blur", executarBuscaCEP);
+
+    campoCEP.addEventListener("input", function() {
+        var cepLimpo = this.value.replace(/\D/g, "");
+
+        // Se o campo foi apagado ou ficou incompleto, libera nova busca futura
+        if (cepLimpo.length < 8) {
+            resetarControleCEP();
+            return;
+        }
+
+        if (cepLimpo.length === 8) {
+            executarBuscaCEP();
+        }
+    });
+
+    // expÃµe funÃ§Ã£o para reset externo
+    campoCEP._resetarControleCEP = resetarControleCEP;
+}
+
+
+// =======================================================================================================================================
+// FUNÃ‡ÃƒO: APLICAR MÃSCARA DE CEP
+// =======================================================================================================================================
+
+function aplicarMascaraCEP(idCampo) {
+    const campo = document.getElementById(idCampo);
+
+    if (campo) {
+        campo.addEventListener('input', function(e) {
+            let valor = e.target.value.replace(/\D/g, '');
+            valor = valor.substring(0, 8);
+
+            if (valor.length > 5) {
+                valor = valor.slice(0, 5) + '-' + valor.slice(5);
+            }
+
+            e.target.value = valor;
+        });
+
+        campo.setAttribute('maxlength', '9');
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =======================================================================================================================================
+// FUNÃ‡ÃƒO: APLICAR MÃSCARA DE CPF
+// =======================================================================================================================================
+
+function aplicarMascaraCPF(idCampo) {
+    const campo = document.getElementById(idCampo);
+
+    if (campo) {
+        campo.addEventListener('input', function(e) {
+            let valor = e.target.value.replace(/\D/g, '');
+            valor = valor.substring(0, 11);
+
+            if (valor.length > 3) valor = valor.slice(0, 3) + '.' + valor.slice(3);
+            if (valor.length > 7) valor = valor.slice(0, 7) + '.' + valor.slice(7);
+            if (valor.length > 11) valor = valor.slice(0, 11) + '-' + valor.slice(11);
+            if (valor.length > 14) valor = valor.substring(0, 14);
+
+            e.target.value = valor;
+        });
+
+        campo.setAttribute('maxlength', '14');
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =======================================================================================================================================
+// FUNÃ‡ÃƒO: APLICAR MÃSCARA DE CEP
+// =======================================================================================================================================
+
+function aplicarMascaraCEP(idCampo) {
+    const campo = document.getElementById(idCampo);
+
+    if (campo) {
+        campo.addEventListener('input', function(e) {
+            let valor = e.target.value.replace(/\D/g, '');
+            valor = valor.substring(0, 8);
+
+            if (valor.length > 5) {
+                valor = valor.slice(0, 5) + '-' + valor.slice(5);
+            }
+
+            e.target.value = valor;
+        });
+
+        campo.setAttribute('maxlength', '9');
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+// =======================================================================================================================================
+// FUNÃ‡ÃƒO: APLICAR MÃSCARA DE CNPJ
+// =======================================================================================================================================
+
+function aplicarMascaraCNPJ(idCampo) {
+    const campo = document.getElementById(idCampo);
+    
+    if (campo) {
+        campo.addEventListener('input', function(e) {
+            
+            // 1. Remove tudo que nÃ£o Ã© nÃºmero (variÃ¡vel de trabalho)
+            let apenasNumeros = e.target.value.replace(/\D/g, '');
+            
+            // 2. Limita o valor puro a 14 dÃ­gitos (tamanho do CNPJ sem pontos)
+            apenasNumeros = apenasNumeros.substring(0, 14);
+            
+            let cnpjFormatado = '';
+
+            // 3. ReconstrÃ³i o CNPJ formatado do zero
+            if (apenasNumeros.length > 0) {
+                // XX
+                cnpjFormatado += apenasNumeros.substring(0, 2);
+            }
+            if (apenasNumeros.length >= 3) {
+                // XX.XXX
+                cnpjFormatado += '.' + apenasNumeros.substring(2, 5);
+            }
+            if (apenasNumeros.length >= 6) {
+                // XX.XXX.XXX
+                cnpjFormatado += '.' + apenasNumeros.substring(5, 8);
+            }
+            if (apenasNumeros.length >= 9) {
+                // XX.XXX.XXX/XXXX
+                cnpjFormatado += '/' + apenasNumeros.substring(8, 12);
+            }
+            if (apenasNumeros.length >= 13) {
+                // XX.XXX.XXX/XXXX-XX
+                cnpjFormatado += '-' + apenasNumeros.substring(12, 14);
+            }
+
+            // 4. Atribui o novo valor formatado ao campo
+            e.target.value = cnpjFormatado;
+        });
+        
+        // Garante que o input nÃ£o insira mais que 18 caracteres (CNPJ completo)
+        campo.setAttribute('maxlength', '18');
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =======================================================================================================================================
+// FUNÃ‡ÃƒO: APLICAR MÃSCARA DE TELEFONE
+// =======================================================================================================================================
+
+// Aplica mÃ¡scara (XX) XXXXX-XXXX em campo de telefone
+function aplicarMascaraTelefone(idCampo) {
+
+    const campo = document.getElementById(idCampo);
+    
+    if (campo) {
+        // Evento disparado a cada tecla digitada
+        campo.addEventListener('input', function(e) {
+            // Remove tudo que nÃ£o Ã© nÃºmero
+            let valor = e.target.value.replace(/\D/g, '');
+            
+            // Limita a 11 dÃ­gitos (DDD + 9 dÃ­gitos)
+            valor = valor.substring(0, 11);
+            
+            // Aplica a mÃ¡scara progressivamente
+            if (valor.length > 0) {
+                // Adiciona parÃªnteses no DDD
+                valor = '(' + valor;
+            }
+            if (valor.length > 3) {
+                // Fecha parÃªnteses apÃ³s DDD
+                valor = valor.slice(0, 3) + ') ' + valor.slice(3);
+            }
+            if (valor.length > 10) {
+                // Adiciona hÃ­fen antes dos Ãºltimos 4 dÃ­gitos
+                valor = valor.slice(0, 10) + '-' + valor.slice(10);
+            }
+            
+            // Atualiza o valor do campo com a mÃ¡scara
+            e.target.value = valor;
+        });
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// =======================================================================================================================================
+// FUNÃ‡ÃƒO: CARREGAR DADOS INICIAIS
+// =======================================================================================================================================
+
+// Preenche a tabela com todos os dados ao abrir a pÃ¡gina
+function carregarDadosIniciais() {
+    
+    // Verifica se hÃ¡ dados disponÃ­veis
+    if (typeof dadosTabela === 'undefined' || !dadosTabela || !Array.isArray(dadosTabela) || dadosTabela.length === 0) {
+        return; // Sai da funÃ§Ã£o se nÃ£o houver dados
+    }
+
+    // Referencia o corpo da tabela
+    var CorpoTabela = document.getElementById("tb_corpo");
+    
+    // Remove todas as linhas existentes (limpa a tabela)
+    while(CorpoTabela.hasChildNodes()){
+        CorpoTabela.removeChild(CorpoTabela.lastChild);
+    }
+
+    // Percorre cada linha de dados
+    dadosTabela.forEach(function(r){
+
+        // Cria uma nova linha <tr>
+        var Linha = document.createElement("tr");
+
+        // Preenche as 12 colunas da fornecedor (
+        for (var i = 0; i < r.length && i < 24; i++) {
+            var Coluna = document.createElement("td");
+            Coluna.textContent = r[i]; 
+            Linha.appendChild(Coluna);
+        }
+
+        // Adiciona evento de clique para selecionar a linha
+        Linha.addEventListener("click", function(evento) {
+            selecionarLinha(this, evento);
+        });
+
+        // Adiciona a linha ao corpo da tabela
+        CorpoTabela.appendChild(Linha);
+    });
+}
+
+
+
+
+
+
+
+
+
+
+
+// ===============================================================================================================================================
+// FUNÇÃO: SELECIONAR/DESSELECIONAR LINHA
+// ===============================================================================================================================================
+
+function obterLinhasSelecionadasValidas() {
+    linhasSelecionadas = linhasSelecionadas.filter(function(linha) {
+        return linha && linha.isConnected;
+    });
+    linhaSelecionada = linhasSelecionadas.length ? linhasSelecionadas[linhasSelecionadas.length - 1] : null;
+    return linhasSelecionadas;
+}
+
+function limparSelecaoLinhas() {
+    linhasSelecionadas.forEach(function(linha) {
+        if (linha && linha.classList) linha.classList.remove("selecionada");
+    });
+    linhasSelecionadas = [];
+    linhaSelecionada = null;
+}
+
+// Marca linha selecionada (verde) ou desmarca se clicar novamente
+function selecionarLinha(linha, evento) {
+    const selecaoMultipla = !!(evento && (evento.ctrlKey || evento.metaKey));
+    obterLinhasSelecionadasValidas();
+
+    if (selecaoMultipla) {
+        const indiceLinha = linhasSelecionadas.indexOf(linha);
+        if (indiceLinha >= 0) {
+            linha.classList.remove("selecionada");
+            linhasSelecionadas.splice(indiceLinha, 1);
+        } else {
+            linha.classList.add("selecionada");
+            linhasSelecionadas.push(linha);
+        }
+    } else {
+        const jaSelecionadaUnica = linhasSelecionadas.length === 1 && linhasSelecionadas[0] === linha;
+        limparSelecaoLinhas();
+        if (!jaSelecionadaUnica) {
+            linha.classList.add("selecionada");
+            linhasSelecionadas = [linha];
+        }
+    }
+
+    linhaSelecionada = linhasSelecionadas.length ? linhasSelecionadas[linhasSelecionadas.length - 1] : null;
+}
+
+
+
+
+
+
+
+
+
+
+// ==================================================================================================================================================
+// FUNÃ‡Ã•ES: CONTROLE DO MODAL DE CARREGAMENTO
+// ==================================================================================================================================================
+
+// Exibe o modal de carregamento (tela preta com logo girando)
+function mostrarCarregamentoModal() {
+    document.getElementById('modalCarregamento').classList.add('ativo');
+}
+
+// Esconde o modal de carregamento
+function esconderCarregamentoModal() {
+    document.getElementById('modalCarregamento').classList.remove('ativo');
+}
+
+
+
+
+
+
+
+
+
+
+// ==============================================================================================================================================
+// FUNÃ‡ÃƒO: ATUALIZAR DADOS
+// ==============================================================================================================================================
+
+// Busca dados atualizados do GS sem recarregar a pÃ¡gina
+function atualizarDadosForn() {
+    
+    // Chama funÃ§Ã£o do Google Apps Script
+    google.script.run
+        .withSuccessHandler(function(resultado) {
+            if (resultado.sucesso) {
+
+                dadosTabela = resultado.dadosCompletos;
+                
+                // Recarrega a tabela com os novos dados
+                carregarDadosIniciais();
+            } else {
+                toastr.error(resultado.mensagem || "Erro ao atualizar dados!");
+            }
+        })
+        .withFailureHandler(function(erro) {
+            console.error("Erro ao atualizar dados:", erro);
+            toastr.error("Erro ao atualizar dados. Verifique o console.");
+        })
+        .buscarDadosAtualizadosForn();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ============================================================================================================================
+// CONFIGURAÃ‡ÃƒO DO CALENDÃRIO DE PESQUISA
+// ============================================================================================================================
+
+// ====== Range Datepicker (2 cliques) ======
+function initDatepickerRange(input, i18nBR) {
+  const fmt = (d) => {
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yy = d.getFullYear();
+    return `${dd}/${mm}/${yy}`;
+  };
+
+  // Estado por input
+  let start = null;
+  let end = null;
+
+  const instance = M.Datepicker.init(input, {
+    format: 'dd/mm/yyyy',         // nÃ£o usamos direto no input, mas ok manter
+    maxDate: new Date(),
+    autoClose: false,             // IMPORTANTÃSSIMO: nÃ£o fecha no 1Âº clique
+    showClearBtn: true,
+    yearRange: 100,
+    i18n: i18nBR,
+
+    onOpen() {
+      // Quando abrir, redesenha highlight (se jÃ¡ tiver start/end)
+      setTimeout(() => highlightRange(instance, start, end), 0);
+    },
+
+    onSelect(date) {
+      // date vem como Date
+      if (!start || (start && end)) {
+        // 1Âº clique (ou reinÃ­cio)
+        start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        end = null;
+
+        // opcional: limpa o input atÃ© fechar, ou mostra o comeÃ§o
+        input.value = `${fmt(start)} - `;
+        setTimeout(() => highlightRange(instance, start, end), 0);
+        return;
+      }
+
+      // 2Âº clique
+      const picked = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+      // se clicou antes do start, inverte
+      if (picked.getTime() < start.getTime()) {
+        end = start;
+        start = picked;
+      } else {
+        end = picked;
+      }
+
+      input.value = `${fmt(start)} - ${fmt(end)}`;
+
+      setTimeout(() => highlightRange(instance, start, end), 0);
+
+      // agora pode fechar
+      instance.close();
+    }
+  });
+
+  // Clique no "Limpar" (Materialize nÃ£o expÃµe callback direto, entÃ£o limpamos ao apagar)
+  input.addEventListener("input", () => {
+    if (!input.value.trim()) {
+      start = null;
+      end = null;
+      const inst = M.Datepicker.getInstance(input);
+      if (inst) setTimeout(() => highlightRange(inst, start, end), 0);
+    }
+  });
+}
+
+
+// ====== Pinta o intervalo no calendÃ¡rio ======
+function highlightRange(instance, start, end) {
+  if (!instance || !instance.datepickerEl) return;
+
+  const root = instance.datepickerEl;
+  const tds = root.querySelectorAll(".datepicker-table td");
+
+  // limpa classes antigas
+  tds.forEach(td => {
+    td.classList.remove("range-start", "range-end", "range-between");
+  });
+
+  if (!start) return;
+
+  const startT = start.getTime();
+  const endT = end ? end.getTime() : null;
+
+  tds.forEach(td => {
+    const btn = td.querySelector(".datepicker-day-button");
+    if (!btn) return;
+
+    // tenta ler data do DOM do Materialize
+    const day = parseInt(btn.getAttribute("data-day"), 10);
+    const month = parseInt(btn.getAttribute("data-month"), 10);
+    const year = parseInt(btn.getAttribute("data-year"), 10);
+
+    if (Number.isNaN(day) || Number.isNaN(month) || Number.isNaN(year)) return;
+
+    const cellDate = new Date(year, month, day);
+    const cellT = cellDate.getTime();
+
+    // 1 clique: marca sÃ³ o inÃ­cio
+    if (!endT) {
+      if (cellT === startT) td.classList.add("range-start");
+      return;
+    }
+
+    // 2 cliques: marca intervalo
+    if (cellT === startT) td.classList.add("range-start");
+    else if (cellT === endT) td.classList.add("range-end");
+    else if (cellT > startT && cellT < endT) td.classList.add("range-between");
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =================================================================================================================================================
+// CONFIGURAÃ‡ÃƒO GERAL DOS DROPDOWNS MULTISELEÃ‡ÃƒO - USADOS NA PARTE DE PESQUISA
+// =================================================================================================================================================
+// Essa funÃ§Ã£o serÃ¡ chamada dentro da funÃ§Ã£o de abrir modal de pesquisa, onde passaremos os elementos que farÃ£o parte dessa configuraÃ§Ã£o
+
+function configurarDropdownMulti(inputCampo, listaUl, dados, separador = "; ") {
+  if (!inputCampo || !listaUl) return;
+
+  // Guarda os selecionados (mantÃ©m mesmo com filtro)
+  const selecionados = new Set();
+
+  const normalizar = (v) => String(v ?? "").trim();
+  const lower = (v) => normalizar(v).toLowerCase();
+
+  function obterOpcoesValidas() {
+    return Array.from(new Set((dados || []).map(normalizar).filter(Boolean)));
+  }
+
+  String(inputCampo.value || "")
+    .split(";")
+    .map(normalizar)
+    .filter(Boolean)
+    .forEach(valor => selecionados.add(valor));
+
+  function atualizarInput() {
+    inputCampo.value = Array.from(selecionados).join(separador);
+  }
+
+  function render(lista) {
+    listaUl.innerHTML = "";
+
+    const opcoesTodas = obterOpcoesValidas();
+
+    if (opcoesTodas.length) {
+      const todosSelecionados = opcoesTodas.every(valor => selecionados.has(valor));
+      const algunsSelecionados = opcoesTodas.some(valor => selecionados.has(valor));
+      const liTodos = document.createElement("li");
+      liTodos.style.cssText = "padding: 10px; border-bottom: 1px solid #ddd; display:flex; align-items:center; gap:10px; font-weight:700;";
+
+      const chkTodos = document.createElement("input");
+      chkTodos.type = "checkbox";
+      chkTodos.checked = todosSelecionados;
+      chkTodos.indeterminate = !todosSelecionados && algunsSelecionados;
+      chkTodos.style.cursor = "pointer";
+
+      const labelTodos = document.createElement("span");
+      labelTodos.textContent = "Selecionar todos";
+      labelTodos.style.cssText = "cursor: pointer; user-select: none;";
+
+      liTodos.addEventListener("click", () => {
+        const marcarTodos = !opcoesTodas.every(valor => selecionados.has(valor));
+        opcoesTodas.forEach(valor => {
+          if (marcarTodos) selecionados.add(valor);
+          else selecionados.delete(valor);
+        });
+        atualizarInput();
+        render(lista);
+      });
+
+      liTodos.appendChild(chkTodos);
+      liTodos.appendChild(labelTodos);
+      listaUl.appendChild(liTodos);
+    }
+
+    if (!lista || lista.length === 0) {
+      const li = document.createElement("li");
+      li.textContent = "Nenhum resultado encontrado";
+      li.style.cssText = "padding: 10px; color: #666; font-style: italic;";
+      listaUl.appendChild(li);
+      listaUl.style.display = "block";
+      return;
+    }
+
+    lista.forEach(item => {
+      const valor = normalizar(item);
+      if (!valor) return;
+
+      const li = document.createElement("li");
+      li.style.cssText = "padding: 10px; border-bottom: 1px solid #eee; display:flex; align-items:center; gap:10px;";
+
+      const chk = document.createElement("input");
+      chk.type = "checkbox";
+      chk.checked = selecionados.has(valor);
+      chk.style.cursor = "pointer";
+
+      const label = document.createElement("span");
+      label.textContent = valor;
+      label.style.cssText = "cursor: pointer; user-select: none;";
+
+      function alternar() {
+        if (chk.checked) selecionados.add(valor);
+        else selecionados.delete(valor);
+        atualizarInput();
+      }
+
+      // clique no checkbox
+      chk.addEventListener("change", alternar);
+
+      // clique no texto tambÃ©m alterna
+      label.addEventListener("click", () => {
+        chk.checked = !chk.checked;
+        alternar();
+      });
+
+      li.appendChild(chk);
+      li.appendChild(label);
+      listaUl.appendChild(li);
+    });
+
+    listaUl.style.display = "block";
+  }
+
+  function mostrarTudo() {
+    render(dados);
+  }
+
+  function filtrar() {
+    const texto = lower(inputCampo.value);
+    // Filtra digitando: aqui vamos considerar o "Ãºltimo termo" apÃ³s ';'
+    // para permitir que o usuÃ¡rio continue digitando mesmo com itens jÃ¡ selecionados.
+    const ultimoTermo = texto.split(";").pop().trim();
+
+    if (!ultimoTermo) {
+      mostrarTudo();
+      return;
+    }
+
+    const filtrados = dados.filter(item => lower(item).includes(ultimoTermo));
+    render(filtrados);
+  }
+
+  // Abre no clique/focus
+  inputCampo.addEventListener("focus", mostrarTudo);
+  inputCampo.addEventListener("click", mostrarTudo);
+
+  // Filtra ao digitar
+  inputCampo.addEventListener("input", () => {
+    // debounce simples (opcional)
+    clearTimeout(inputCampo._ddTimeout);
+    inputCampo._ddTimeout = setTimeout(filtrar, 150);
+  });
+
+  // Fechar ao clicar fora
+  document.addEventListener("click", (e) => {
+    if (e.target === inputCampo) return;
+    if (listaUl.contains(e.target)) return;
+    if (e.target.closest(".dropdown-container")) return;
+    listaUl.style.display = "none";
+  });
+
+  // (Opcional) ESC fecha
+  inputCampo.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") listaUl.style.display = "none";
+  });
+
+  // Exponho um helper se vocÃª quiser limpar depois
+  inputCampo._clearMulti = () => {
+    selecionados.clear();
+    atualizarInput();
+    listaUl.style.display = "none";
+  };
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ==============================================================================================================================================
+// FUNÃ‡ÃƒO: EXTRAIR DADOS
+// ==============================================================================================================================================
+
+function exportarTabelaParaCSV(nomeArquivo) {
+  const thead = document.querySelector("#tb_cabecalho");
+  const tbody = document.querySelector("#tb_corpo");
+
+  if (!thead || !tbody) {
+    console.warn("CabeÃ§alho ou corpo da tabela nÃ£o encontrado.");
+    return;
+  }
+
+  // ===== helpers =====
+  const limparTexto = (t) => String(t ?? "").replace(/\s+/g, " ").trim();
+
+  // Escapa CSV: aspas duplas e vÃ­rgulas/quebras de linha
+  const csvEscape = (valor) => {
+    const v = limparTexto(valor);
+    const precisaAspas = /[",\n\r]/.test(v);
+    const vEsc = v.replace(/"/g, '""');
+    return precisaAspas ? `"${vEsc}"` : vEsc;
+  };
+
+  const linhasCSV = [];
+
+  // ===== cabeÃ§alho =====
+  const ths = Array.from(thead.querySelectorAll("th"));
+  const cabecalho = ths.map(th => csvEscape(th.textContent));
+  linhasCSV.push(cabecalho.join(",")); // separado por vÃ­rgula
+
+  // ===== corpo =====
+  const trs = Array.from(tbody.querySelectorAll("tr"));
+  trs.forEach(tr => {
+    const tds = Array.from(tr.querySelectorAll("td"));
+    const linha = tds.map(td => csvEscape(td.textContent));
+    linhasCSV.push(linha.join(","));
+  });
+
+  // Monta arquivo (UTF-8 com BOM pra abrir bem no Excel PT-BR)
+  const csvFinal = "\uFEFF" + linhasCSV.join("\r\n");
+  const blob = new Blob([csvFinal], { type: "text/csv;charset=utf-8;" });
+
+  // Download
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = nomeArquivo || "export.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ========================================
+// FUNÃ‡ÃƒO: LIMPAR FILTROS
+// ========================================
+// Remove filtros e restaura tabela completa
+function Limpar() {
+    
+    // Recarrega todos os dados
+    carregarDadosIniciais();
+    document.getElementById("inputPesquisarRazao").value = "";
+    document.getElementById("inputPesquisarFantasia").value = "";
+    document.getElementById("inputPesquisarCNPJ").value = "";
+    document.getElementById("inputPesquisarRepresentante").value = "";
+    document.getElementById("inputPesquisarSegmento").value = "";
+    document.getElementById("inputPesquisarDataCadastro").value = "";
+    
+    toastr.info('Filtros removidos com sucesso!');
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ==================================================================================================================================================
+// MODAL DE PESQUISA
+// ==================================================================================================================================================
+
+// Abre o modal de pesquisa --------------------------------------------------------------------------------------
+
+function abrirModalPesquisa() {
+    // 1) Abre o modal
+    const modal = document.getElementById("modalPesquisa");
+    if (!modal) return;
+    modal.classList.add("ativo");
+
+    // 2) Pega as linhas atualmente exibidas na tabela (interface)
+    const tbody = document.getElementById("tb_corpo");
+    if (!tbody) return;
+
+    const linhas = Array.from(tbody.querySelectorAll("tr"));
+
+    // 3) Coleta valores distintos (coluna 3 = index 2 / coluna 5 = index 4)
+    const setRazao = new Set();
+    const setFantasia = new Set();
+    const setCNPJ = new Set();
+    const setRepresentante = new Set();
+    const setSegmento = new Set();
+
+    linhas.forEach(tr => {
+
+      const tds = tr.querySelectorAll("td");
+      if (!tds || tds.length < 24) return;
+
+      const razao = (tds[1].textContent || "").trim();
+      const fantasia = (tds[3].textContent || "").trim();
+      const cnpj = (tds[4].textContent || "").trim();
+      const representante = (tds[13].textContent || "").trim();
+      const segmento = (tds[17].textContent || "").trim();
+
+      if (razao) setRazao.add(razao);
+      if (fantasia) setFantasia.add(fantasia);
+      if (cnpj) setCNPJ.add(cnpj);
+      if (representante) setRepresentante.add(representante);
+      if (segmento) setSegmento.add(segmento);
+      
+    });
+
+    // 4) Ordena (opcional, fica melhor)
+    const razoes = Array.from(setRazao).sort((a, b) => a.localeCompare(b));
+    const fantasias = Array.from(setFantasia).sort((a, b) => a.localeCompare(b));
+    const cnpjs = Array.from(setCNPJ).sort((a, b) => a.localeCompare(b));
+    const representantes = Array.from(setRepresentante).sort((a, b) => a.localeCompare(b));
+    const segmentos = Array.from(setSegmento).sort((a, b) => a.localeCompare(b));
+
+    configurarDropdownMulti(inputPesquisarRazao, listaUlPesquisarRazao, razoes);
+    configurarDropdownMulti(inputPesquisarFantasia, listaUlPesquisarFantasia, fantasias);
+    configurarDropdownMulti(inputPesquisarCNPJ, listaUlPesquisarCNPJ, cnpjs);
+    configurarDropdownMulti(inputPesquisarRepresentante, listaUlPesquisarRepresentante, representantes);
+    configurarDropdownMulti(inputPesquisarSegmento, listaUlPesquisarSegmento, segmentos);
+
+}
+
+
+
+
+
+
+// Fecha o modal e limpa os campos ------------------------------------------------------------------------------------
+
+function fecharModalPesquisa() {
+    document.getElementById("modalPesquisa").classList.remove("ativo");
+    document.querySelectorAll("#modalPesquisa .sugestoes").forEach(lista => lista.style.display = "none");
+}
+
+
+
+
+
+// Pega os dados dos inputs e aplica a pesquisa na tabela --------------------------------------------------------------
+
+function aplicarPesquisaNaTabela() {
+
+  const inputRaz = document.getElementById("inputPesquisarRazao");
+  const inputFan = document.getElementById("inputPesquisarFantasia");
+  const inputCNPJ = document.getElementById("inputPesquisarCNPJ");
+  const inputRep = document.getElementById("inputPesquisarRepresentante");
+  const inputSeg = document.getElementById("inputPesquisarSegmento");
+  const inputCad = document.getElementById("inputPesquisarDataCadastro");
+
+  const razRaw = (inputRaz?.value || "").trim();
+  const fanRaw = (inputFan?.value || "").trim();
+  const cnpjRaw = (inputCNPJ?.value || "").trim();
+  const repRaw = (inputRep?.value || "").trim();
+  const segRaw = (inputSeg?.value || "").trim();
+  const cadRaw = (inputCad?.value || "").trim();
+
+  // 2) Se nenhum campo preenchido
+  if (!razRaw && !fanRaw && !cnpjRaw && !repRaw && !segRaw && !cadRaw) {
+    // Use sua lib de toast se existir, senÃ£o alert
+    if (window.toastr) toastr.warning("Preencha ao menos um campo!");
+    else alert("Preencha ao menos um campo!");
+    return;
+  }
+
+  // Pega linhas atuais exibidas
+  const tbody = document.getElementById("tb_corpo");
+  if (!tbody) return;
+
+  const linhasDOM = Array.from(tbody.querySelectorAll("tr"));
+
+  // Transforma as linhas DOM em array de textos [col1..col8]
+  const linhas = linhasDOM.map(tr => Array.from(tr.querySelectorAll("td")).map(td => (td.textContent || "").trim()));
+
+  // ====== Monta critÃ©rios ======
+  const normalizar = (v) => String(v ?? "").trim();
+  const normLower = (v) => normalizar(v).toLowerCase();
+
+  // Atividade / Filial: split por ";" e OR dentro do campo
+  const listaRaz = parseListaMulti(razRaw); // array de strings
+  const listaFan = parseListaMulti(fanRaw);
+  const listaCNPJ = parseListaMulti(cnpjRaw);
+  const listaRep = parseListaMulti(repRaw);
+  const listaSeg = parseListaMulti(segRaw);
+
+  // Datas: "dd/MM/yyyy - dd/MM/yyyy"
+  const rangeCad = parseRangeBR(cadRaw);
+
+  // ====== Filtra (AND entre campos) ======
+  const filtradas = linhas.filter(r => {
+
+    if (listaRaz.length > 0) {
+      const valor = normLower(r[1]);
+      const ok = listaRaz.some(x => normLower(x) === valor);
+      if (!ok) return false;
+    }
+
+    if (listaFan.length > 0) {
+      const valor = normLower(r[3]);
+      const ok = listaFan.some(x => normLower(x) === valor);
+      if (!ok) return false;
+    }
+
+    if (listaCNPJ.length > 0) {
+      const valor = normLower(r[4]);
+      const ok = listaCNPJ.some(x => normLower(x) === valor);
+      if (!ok) return false;
+    }
+
+    if (listaRep.length > 0) {
+      const valor = normLower(r[13]);
+      const ok = listaRep.some(x => normLower(x) === valor);
+      if (!ok) return false;
+    }
+
+    if (listaSeg.length > 0) {
+      const valor = normLower(r[17]);
+      const ok = listaSeg.some(x => normLower(x) === valor);
+      if (!ok) return false;
+    }
+
+    if (rangeCad) {
+      const ts = parseDataHoraBRToTS(r[22]);
+      if (!ts) return false;
+      if (ts < rangeCad.iniTS || ts > rangeCad.fimTS) return false;
+    }
+
+    return true;
+  });
+
+  // ====== Renderiza a tabela com o resultado filtrado ======
+  renderTabelaAPartirDeArray(filtradas);
+  fecharModalPesquisa();
+
+  // (Opcional) fechar modal de pesquisa se quiser
+  // document.getElementById("modalPesquisa")?.classList.remove("ativo");
+}
+
+
+// ===== Helpers =====
+
+// "nome1; nome2; nome3" -> ["nome1","nome2","nome3"]
+function parseListaMulti(str) {
+  const s = String(str || "").trim();
+  if (!s) return [];
+  return s
+    .split(";")
+    .map(x => x.trim())
+    .filter(Boolean);
+}
+
+// "dd/MM/yyyy - dd/MM/yyyy" -> {iniTS, fimTS} (fim no final do dia)
+function parseRangeBR(str) {
+  const s = String(str || "").trim();
+  if (!s) return null;
+
+  const parts = s.split("-").map(p => p.trim());
+  if (parts.length < 2) return null;
+
+  const ini = parseDataBRToTS(parts[0], false);
+  const fim = parseDataBRToTS(parts[1], true);
+
+  if (!ini || !fim) return null;
+
+  return { iniTS: ini, fimTS: fim };
+}
+
+// "dd/MM/yyyy" -> timestamp (00:00:00) ou (23:59:59)
+function parseDataBRToTS(str, fimDoDia) {
+  const s = String(str || "").trim();
+  const [dd, MM, yyyy] = s.split("/").map(n => parseInt(n, 10));
+  if (!yyyy || !MM || !dd) return 0;
+
+  const h = fimDoDia ? 23 : 0;
+  const m = fimDoDia ? 59 : 0;
+  const sec = fimDoDia ? 59 : 0;
+
+  return new Date(yyyy, MM - 1, dd, h, m, sec).getTime();
+}
+
+// "dd/MM/yyyy HH:mm:ss" OU "dd/MM/yyyy" -> timestamp
+function parseDataHoraBRToTS(str) {
+  const s = String(str || "").trim();
+  if (!s) return 0;
+
+  const [dataParte, horaParte] = s.split(" ");
+  if (!dataParte) return 0;
+
+  const [dd, MM, yyyy] = dataParte.split("/").map(n => parseInt(n, 10));
+  if (!yyyy || !MM || !dd) return 0;
+
+  let hh = 0, mm = 0, ss = 0;
+  if (horaParte) {
+    const hparts = horaParte.split(":").map(n => parseInt(n, 10));
+    hh = isNaN(hparts[0]) ? 0 : hparts[0];
+    mm = isNaN(hparts[1]) ? 0 : hparts[1];
+    ss = isNaN(hparts[2]) ? 0 : hparts[2];
+  }
+
+  return new Date(yyyy, MM - 1, dd, hh, mm, ss).getTime();
+}
+
+// Renderiza a tabela (sÃ³ reescreve o tbody com as linhas filtradas)
+function renderTabelaAPartirDeArray(linhas) {
+  const tbody = document.getElementById("tb_corpo");
+  if (!tbody) return;
+
+  // limpa
+  while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+
+  // popula
+  linhas.forEach(r => {
+    const tr = document.createElement("tr");
+
+    for (let i = 0; i < r.length && i < 24; i++) {
+      const td = document.createElement("td");
+      td.textContent = r[i];
+      tr.appendChild(td);
+    }
+
+    tr.addEventListener("click", function (evento) {
+      selecionarLinha(this, evento);
+    });
+
+    tbody.appendChild(tr);
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =====================================================================================================================================================
+// MODAL DE CADASTRO - FUNÃ‡Ã•ES
+// =====================================================================================================================================================
+
+// Abre o modal de cadastro
+function abrirModalCadastro() {
+    document.getElementById("modalCadastro").classList.add("ativo");
+    document.getElementById("inputRazaoSocial").focus();
+}
+
+
+
+// Fecha o modal e limpa os campos
+function fecharModalCadastro() {
+    document.getElementById("modalCadastro").classList.remove("ativo");
+
+    document.getElementById("inputRazaoSocial").value = "";
+    document.getElementById("inputCodInterno").value = "";
+    document.getElementById("inputNomeFantasia").value = "";
+    document.getElementById("inputCNPJ").value = "";
+    document.getElementById("inputCPF").value = "";
+    document.getElementById("inputCEP").value = "";
+    document.getElementById("inputUF").value = "";
+    document.getElementById("inputCidade").value = "";
+    document.getElementById("inputBairro").value = "";
+    document.getElementById("inputEndereco").value = "";
+    document.getElementById("inputNumero").value = "";
+    document.getElementById("inputComplemento").value = "";
+    document.getElementById("inputRepresentante").value = "";
+    document.getElementById("inputTelefone1").value = "";
+    document.getElementById("inputTelefone2").value = "";
+    document.getElementById("inputEmail").value = "";
+    document.getElementById("inputSegmento").value = "";
+    document.getElementById("inputTipoPagamento").value = "";
+    document.getElementById("inputPrazoPagamento").value = "";
+    document.getElementById("inputTempoEntrega").value = "";
+    document.getElementById("inputObservacao").value = "";
+
+    var campoCEP = document.getElementById("inputCEP");
+    if (campoCEP && typeof campoCEP._resetarControleCEP === "function") {
+        campoCEP._resetarControleCEP();
+    }
+}
+
+
+
+// Executa o cadastro da fornecedor
+function cadastrarFornecedor() {
+
+    // Mostra tela de carregamento
+    mostrarCarregamentoModal();
+
+    // Coleta dados dos campos (convertidos para maiÃºsculas)
+    const razaosocial = document.getElementById("inputRazaoSocial").value.trim().toUpperCase();
+    const codinterno = document.getElementById("inputCodInterno").value.trim().toUpperCase();
+    const nomefantasia = document.getElementById("inputNomeFantasia").value.trim().toUpperCase();
+    const cnpj = document.getElementById("inputCNPJ").value.trim();
+    const cpf = document.getElementById("inputCPF").value.trim();
+    const cep = document.getElementById("inputCEP").value.trim().toUpperCase();
+    const uf = document.getElementById("inputUF").value.trim().toUpperCase();
+    const cidade = document.getElementById("inputCidade").value.trim().toUpperCase();
+    const bairro = document.getElementById("inputBairro").value.trim().toUpperCase();
+    const endereco = document.getElementById("inputEndereco").value.trim().toUpperCase();
+    const numero = document.getElementById("inputNumero").value.trim().toUpperCase();
+    const complemento = document.getElementById("inputComplemento").value.trim().toUpperCase();
+    const representante = document.getElementById("inputRepresentante").value.trim().toUpperCase();
+    const telefone1 = document.getElementById("inputTelefone1").value.trim();
+    const telefone2 = document.getElementById("inputTelefone2").value.trim();
+    const email = document.getElementById("inputEmail").value.trim();
+    const segmento = document.getElementById("inputSegmento").value.trim().toUpperCase();
+    const tipoPagamento = document.getElementById("inputTipoPagamento").value.trim().toUpperCase();
+    const prazoPagamento = document.getElementById("inputPrazoPagamento").value.trim();
+    const tempoentrega = document.getElementById("inputTempoEntrega").value.trim();
+    const observacao = document.getElementById("inputObservacao").value.trim().toUpperCase();
+    
+
+    // Valida RazÃ£o Social
+    if (razaosocial === "") {
+        toastr.warning("Por favor, informe a razÃ£o social do fornecedor!");
+        document.getElementById("inputRazaoSocial").focus();
+        esconderCarregamentoModal();
+        return;
+    }
+
+    // Valida Nome Fantasia
+    if (nomefantasia === "") {
+        toastr.warning("Por favor, informe o nome fantasia do fornecedor!");
+        document.getElementById("inputNomeFantasia").focus();
+        esconderCarregamentoModal();
+        return;
+    }
+
+    // Valida Segmento
+    if (segmento === "") {
+        toastr.warning("Por favor, informe o segmento do fornecedor!");
+        document.getElementById("inputSegmento").focus();
+        esconderCarregamentoModal();
+        return;
+    }
+
+
+    // CHAMA FUNÃ‡ÃƒO DO GOOGLE APPS SCRIPT ========================================================================================
+    google.script.run
+    .withSuccessHandler(Retorno)
+    .withFailureHandler(Erro)
+    .cadastrarNovoFornecedor(
+        razaosocial,
+        codinterno,
+        nomefantasia,
+        cnpj,
+        cpf,
+        cep,
+        uf,
+        cidade,
+        bairro,
+        endereco,
+        numero,
+        complemento,
+        representante,
+        telefone1,
+        telefone2,
+        email,
+        segmento,
+        tipoPagamento,
+        prazoPagamento,
+        tempoentrega,
+        observacao
+    );
+
+    // Callback de sucesso
+    function Retorno(resultado) {
+        if (resultado.sucesso) {
+            // Atualiza dados e fecha modal
+            atualizarDadosForn();
+            fecharModalCadastro();
+            esconderCarregamentoModal();
+            toastr.success("Fornecedor cadastrada com sucesso!");
+        } else {
+            esconderCarregamentoModal();
+            toastr.error(resultado.mensagem || "Erro ao cadastrar fornecedor!");
+        }
+    }
+
+    // Callback de erro
+    function Erro(erro) {
+        console.error("Erro ao cadastrar:", erro);
+        esconderCarregamentoModal();
+        toastr.error("Erro ao cadastrar fornecedor. Verifique o console.");
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// ==================================================================================================================================================
+// MODAL DE EXCLUSÃƒO - FUNÃ‡Ã•ES
+// ==================================================================================================================================================
+
+// Abre modal de confirmaÃ§Ã£o de exclusÃ£o ============================================================================
+function abrirModalExclusao() {
+    const linhas = obterLinhasSelecionadasValidas();
+    if (!linhas.length) {
+        toastr.warning("Selecione um fornecedor na tabela antes de excluir!");
+        return;
+    }
+
+    const nomesFornecedores = linhas.map(function(linha) {
+        return String(linha.cells[1]?.textContent || "").trim();
+    }).filter(Boolean);
+
+    const textoSelecionados = nomesFornecedores.length === 1
+        ? nomesFornecedores[0]
+        : nomesFornecedores.length + " fornecedores selecionados: " + nomesFornecedores.join("; ");
+
+    document.getElementById("fornecedorSelecionado").textContent = textoSelecionados;
+    document.getElementById("modalExclusao").classList.add("ativo");
+}
+
+// Fecha modal de exclusão ==========================================================================================
+function fecharModalExclusao() {
+    document.getElementById("modalExclusao").classList.remove("ativo");
+}
+
+// Confirma e executa a exclusão
+function confirmarExclusaoForn() {
+    const linhas = obterLinhasSelecionadasValidas();
+    if (!linhas.length) {
+        toastr.error("Nenhuma linha selecionada!");
+        return;
+    }
+
+    const idsFornecedores = linhas.map(function(linha) {
+        return String(linha.cells[0]?.textContent || "").trim();
+    }).filter(Boolean);
+
+    fecharModalExclusao();
+    mostrarCarregamentoModal();
+
+    google.script.run
+        .withSuccessHandler(function(resultado) {
+            if (resultado.sucesso) {
+                google.script.run
+                    .withSuccessHandler(function(resultadoAtualizacao) {
+                        if (resultadoAtualizacao.sucesso) {
+                            todosFornecedores = resultadoAtualizacao.fornecedores;
+                            dadosTabela = resultadoAtualizacao.dadosCompletos;
+                            carregarDadosIniciais();
+                            atualizarDadosForn();
+                            limparSelecaoLinhas();
+
+                            esconderCarregamentoModal();
+                            toastr.success(idsFornecedores.length === 1 ? "Fornecedor inativado com sucesso!" : "Fornecedores inativados com sucesso!");
+                        } else {
+                            esconderCarregamentoModal();
+                            toastr.error("Erro ao atualizar dados!");
+                        }
+                    })
+                    .withFailureHandler(function(erro) {
+                        esconderCarregamentoModal();
+                        console.error("Erro ao atualizar:", erro);
+                        toastr.error("Erro ao atualizar dados.");
+                    })
+                    .buscarDadosAtualizadosForn();
+            } else {
+                esconderCarregamentoModal();
+                toastr.error(resultado.mensagem || "Erro ao excluir fornecedor!");
+            }
+        })
+        .withFailureHandler(function(erro) {
+            esconderCarregamentoModal();
+            console.error("Erro ao excluir:", erro);
+            toastr.error("Erro ao excluir fornecedor. Verifique o console.");
+        })
+        .excluirFornecedoresEmLote(idsFornecedores);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ===================================================================================================================================================
+// MODAL DE EDIÃ‡ÃƒO - FUNÃ‡Ã•ES
+// ===================================================================================================================================================
+
+// Abre modal de ediÃ§Ã£o com dados preenchidos
+function abrirModalEdicao() {
+    if (!linhaSelecionada) {
+        toastr.warning("Selecione um fornecedor na tabela antes de editar!");
+        return;
+    }
+
+    // Pega dados da linha selecionada
+    var razaosocial = linhaSelecionada.cells[1].textContent;
+    var codinterno = linhaSelecionada.cells[2].textContent;
+    var nomefantasia = linhaSelecionada.cells[3].textContent;
+    var cnpj = linhaSelecionada.cells[4].textContent;
+    var cpf = linhaSelecionada.cells[5].textContent;
+    var cep = linhaSelecionada.cells[6].textContent;
+    var uf = linhaSelecionada.cells[7].textContent;
+    var cidade = linhaSelecionada.cells[8].textContent;
+    var bairro = linhaSelecionada.cells[9].textContent;
+    var endereco = linhaSelecionada.cells[10].textContent;
+    var numero = linhaSelecionada.cells[11].textContent;
+    var complemento = linhaSelecionada.cells[12].textContent;
+    var representante = linhaSelecionada.cells[13].textContent;
+    var telefone1 = linhaSelecionada.cells[14].textContent;
+    var telefone2 = linhaSelecionada.cells[15].textContent;
+    var email = linhaSelecionada.cells[16].textContent;
+    var segmento = linhaSelecionada.cells[17].textContent;
+    var tipoPagamento = linhaSelecionada.cells[18].textContent;
+    var prazoPagamento = linhaSelecionada.cells[19].textContent;
+    var tempoentrega = linhaSelecionada.cells[20].textContent;
+    var observacao = linhaSelecionada.cells[21].textContent;
+    
+    // Preenche campos do modal
+    document.getElementById("inputEditarRazaoSocial").value = razaosocial;
+    document.getElementById("inputEditarCodInterno").value = codinterno;
+    document.getElementById("inputEditarNomeFantasia").value = nomefantasia;
+    document.getElementById("inputEditarCNPJ").value = cnpj;
+    document.getElementById("inputEditarCPF").value = cpf;
+    document.getElementById("inputEditarCEP").value = cep;
+    document.getElementById("inputEditarUF").value = uf;
+    document.getElementById("inputEditarCidade").value = cidade;
+    document.getElementById("inputEditarBairro").value = bairro;
+    document.getElementById("inputEditarEndereco").value = endereco;
+    document.getElementById("inputEditarNumero").value = numero;
+    document.getElementById("inputEditarComplemento").value = complemento;
+    document.getElementById("inputEditarRepresentante").value = representante;
+    document.getElementById("inputEditarTelefone1").value = telefone1;
+    document.getElementById("inputEditarTelefone2").value = telefone2;
+    document.getElementById("inputEditarEmail").value = email;
+    document.getElementById("inputEditarSegmento").value = segmento;
+    document.getElementById("inputEditarTipoPagamento").value = tipoPagamento;
+    document.getElementById("inputEditarPrazoPagamento").value = prazoPagamento;
+    document.getElementById("inputEditarTempoEntrega").value = tempoentrega;
+    document.getElementById("inputEditarObservacao").value = observacao;
+    
+    // Mostra modal e foca no primeiro campo
+    document.getElementById("modalEdicao").classList.add("ativo");
+    document.getElementById("inputEditarRazaoSocial").focus();
+}
+
+// Fecha modal de ediÃ§Ã£o
+function fecharModalEdicao() {
+    document.getElementById("modalEdicao").classList.remove("ativo");
+    
+    // Limpa campos
+    document.getElementById("inputEditarRazaoSocial").value = "";
+    document.getElementById("inputEditarCodInterno").value = "";
+    document.getElementById("inputEditarNomeFantasia").value = "";
+    document.getElementById("inputEditarCNPJ").value = "";
+    document.getElementById("inputEditarCPF").value = "";
+    document.getElementById("inputEditarCEP").value = "";
+    document.getElementById("inputEditarUF").value = "";
+    document.getElementById("inputEditarCidade").value = "";
+    document.getElementById("inputEditarBairro").value = "";
+    document.getElementById("inputEditarEndereco").value = "";
+    document.getElementById("inputEditarNumero").value = "";
+    document.getElementById("inputEditarComplemento").value = "";
+    document.getElementById("inputEditarRepresentante").value = "";
+    document.getElementById("inputEditarTelefone1").value = "";
+    document.getElementById("inputEditarTelefone2").value = "";
+    document.getElementById("inputEditarEmail").value = "";
+    document.getElementById("inputEditarSegmento").value = "";
+    document.getElementById("inputEditarTipoPagamento").value = "";
+    document.getElementById("inputEditarPrazoPagamento").value = "";
+    document.getElementById("inputEditarTempoEntrega").value = "";
+    document.getElementById("inputEditarObservacao").value = "";
+
+    var campoEditarCEP = document.getElementById("inputEditarCEP");
+    if (campoEditarCEP && typeof campoEditarCEP._resetarControleCEP === "function") {
+        campoEditarCEP._resetarControleCEP();
+    }
+}
+
+// Confirma e executa a ediÃ§Ã£o
+function confirmarEdicaoForn() {
+    if (!linhaSelecionada) {
+        toastr.error("Nenhuma linha selecionada!");
+        return;
+    }
+
+    // Coleta novos dados (convertidos para maiÃºsculas)
+    const novorazaosocial = document.getElementById("inputEditarRazaoSocial").value.trim().toUpperCase();
+    const novocodinterno = document.getElementById("inputEditarCodInterno").value.trim().toUpperCase();
+    const novonomefantasia = document.getElementById("inputEditarNomeFantasia").value.trim().toUpperCase();
+    const novocnpj = document.getElementById("inputEditarCNPJ").value.trim();
+    const novocpf = document.getElementById("inputEditarCPF").value.trim();
+    const novocep = document.getElementById("inputEditarCEP").value.trim().toUpperCase();
+    const novauf = document.getElementById("inputEditarUF").value.trim().toUpperCase();
+    const novacidade = document.getElementById("inputEditarCidade").value.trim().toUpperCase();
+    const novobairro = document.getElementById("inputEditarBairro").value.trim().toUpperCase();
+    const novoendereco = document.getElementById("inputEditarEndereco").value.trim().toUpperCase();
+    const novonumero = document.getElementById("inputEditarNumero").value.trim().toUpperCase();
+    const novocomplemento = document.getElementById("inputEditarComplemento").value.trim().toUpperCase();
+    const novorepresentante = document.getElementById("inputEditarRepresentante").value.trim().toUpperCase();
+    const novotelefone1 = document.getElementById("inputEditarTelefone1").value.trim();
+    const novotelefone2 = document.getElementById("inputEditarTelefone2").value.trim();
+    const novoemail = document.getElementById("inputEditarEmail").value.trim();
+    const novosegmento = document.getElementById("inputEditarSegmento").value.trim().toUpperCase();
+    const novotipoPagamento = document.getElementById("inputEditarTipoPagamento").value.trim().toUpperCase();
+    const novoprazoPagamento = document.getElementById("inputEditarPrazoPagamento").value.trim();
+    const novotempoentrega = document.getElementById("inputEditarTempoEntrega").value.trim();
+    const novoobservacao = document.getElementById("inputEditarObservacao").value.trim().toUpperCase();
+
+    
+    // Valida RazÃ£o Social
+    if (novorazaosocial === "") {
+        toastr.warning("Por favor, informe a razÃ£o social do fornecedor!");
+        document.getElementById("inputEditarRazaoSocial").focus();
+        esconderCarregamentoModal();
+        return;
+    }
+
+    // Valida Nome Fantasia
+    if (novonomefantasia === "") {
+        toastr.warning("Por favor, informe o nome fantasia do fornecedor!");
+        document.getElementById("inputEditarNomeFantasia").focus();
+        esconderCarregamentoModal();
+        return;
+    }
+
+    // Valida Segmento
+    if (novosegmento === "") {
+        toastr.warning("Por favor, informe o segmento do fornecedor!");
+        document.getElementById("inputEditarSegmento").focus();
+        esconderCarregamentoModal();
+        return;
+    }
+
+    // Pega o ID da filial
+    var idFornecedor = linhaSelecionada.cells[0].textContent;
+
+    // Fecha modal e mostra carregamento
+    fecharModalEdicao();
+    mostrarCarregamentoModal();
+
+    // Chama funÃ§Ã£o GS para editar
+    google.script.run
+        .withSuccessHandler(function(resultado) {
+            if (resultado.sucesso) {
+                // Atualiza dados
+                google.script.run
+                    .withSuccessHandler(function(resultadoAtualizacao) {
+                        if (resultadoAtualizacao.sucesso) {
+                            todosFornecedores = resultadoAtualizacao.fornecedores;
+                            dadosTabela = resultadoAtualizacao.dadosCompletos;
+                            carregarDadosIniciais();
+                            
+                            // Limpa seleÃ§Ã£o
+                            linhaSelecionada = null;
+                            
+                            esconderCarregamentoModal();
+                            toastr.success("Fornecedor editado com sucesso!");
+                        } else {
+                            esconderCarregamentoModal();
+                            toastr.error("Erro ao atualizar dados!");
+                        }
+                    })
+                    .withFailureHandler(function(erro) {
+                        esconderCarregamentoModal();
+                        console.error("Erro ao atualizar:", erro);
+                        toastr.error("Erro ao atualizar dados.");
+                    })
+                    .buscarDadosAtualizadosForn();
+            } else {
+                esconderCarregamentoModal();
+                toastr.error(resultado.mensagem || "Erro ao editar filial!");
+            }
+        })
+        .withFailureHandler(function(erro) {
+            esconderCarregamentoModal();
+            console.error("Erro ao editar:", erro);
+            toastr.error("Erro ao editar filial. Verifique o console.");
+        })
+        .editarFornecedor(
+          idFornecedor,
+          novorazaosocial,
+          novocodinterno,
+          novonomefantasia,
+          novocnpj,
+          novocpf,
+          novocep,
+          novauf,
+          novacidade,
+          novobairro,
+          novoendereco,
+          novonumero,
+          novocomplemento,
+          novorepresentante,
+          novotelefone1,
+          novotelefone2,
+          novoemail,
+          novosegmento,
+          novotipoPagamento,
+          novoprazoPagamento,
+          novotempoentrega,
+          novoobservacao
+      );
+}
+
+</script>

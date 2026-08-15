@@ -1,0 +1,1062 @@
+<style>
+
+/* ========================================
+   CONTAINER GERAL
+   ======================================== */
+
+/* Container principal que ocupa toda a área abaixo do cabeçalho */
+#geral {
+  position: absolute;
+  top: 8vh;                    /* Começa após o cabeçalho (8% da altura) */
+  left: 0;
+  width: 100%;
+  height: 92vh;                /* Ocupa os 92% restantes da tela */
+  display: flex;
+  flex-direction: column;      /* Organiza elementos em coluna */
+  align-items: stretch;
+  font-family: "DejaVu Sans Mono", monospace;
+}
+
+
+/* ========================================
+   SEÇÃO SUPERIOR - BOTÕES DE AÇÃO
+   ======================================== */
+
+/* Container da barra superior com botões */
+#cad_superior{
+  display: flex;
+  width: 100%;
+  height: 10%;                 /* 10% da altura do container geral */
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 1%;
+  padding-right: 1%;
+}
+
+/* Lado esquerdo: botões de ação (Voltar, Cadastrar, Editar, Excluir) */
+#cad_esquerda{
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  height: 100%;
+  width: 40%;
+  gap: 2%;                     /* Espaçamento entre botões */
+}
+
+/* Estilo dos ícones dos botões */
+#cad_icone{
+  color: black;
+  max-height: 100%;
+  font-size: 2rem;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+/* Hover dos ícones - muda para azul */
+#cad_icone:hover{
+  color: #42DCFA;
+}
+
+/* Ícone especial do botão limpar (maior) */
+#cad_limpar{
+  color: black;
+  max-height: 100%;
+  font-size: 2.3rem;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+#cad_limpar:hover{
+  color: #42DCFA;
+}
+
+/* Remove estilo padrão dos botões */
+#btnExcluir, #btnEditar, #btnCadastrar, #btnPesquisar, #btnLimpar, #btnVoltar, #btnExtrair{
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* Lado direito: campo de pesquisa e botões */
+#cad_direita{
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  height: 100%;
+  width: 40%;
+  gap: 1%;
+}
+
+
+
+
+
+/* ========================================
+   SEÇÃO INFERIOR - TABELA
+   ======================================== */
+
+/* Container da seção com tabela */
+#cad_inferior{
+  padding: 1%;
+  height: 90%;               /* 90% da altura do container geral */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Container wrapper da tabela */
+#container_tabela{
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e0e0e0;
+  background: white;
+}
+
+/* Reset da tabela */
+
+
+/* Células do cabeçalho */
+#tb_cabecalho{
+  background-color: black;
+  color: white;
+}
+
+#tb_cabecalho th{
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: black;
+
+  text-align: center;
+  vertical-align: middle;
+  padding: 12px 8px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+#tb_cabecalho th:first-child{
+  border-top-left-radius: 12px;
+}
+
+#tb_cabecalho th:last-child{
+  border-top-right-radius: 12px;
+}
+
+#tabela_scroll{
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: auto;
+  background-color: white;
+}
+
+#tabela_scroll::-webkit-scrollbar{
+  height: 12px;
+  width: 12px;
+}
+
+#tabela_scroll::-webkit-scrollbar-track{
+  background: #f0f0f0;
+}
+
+#tabela_scroll::-webkit-scrollbar-thumb{
+  background-color: #000000;
+  border-radius: 6px;
+  border: 2px solid #f0f0f0;
+}
+
+#tabela_scroll::-webkit-scrollbar-thumb:hover{
+  background-color: #333333;
+}
+
+#tb_filial{
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 12px;
+  width: max-content;
+  min-width: 100%;
+  table-layout: fixed;
+}
+/* Tabela do corpo */
+
+/* Células do corpo da tabela */
+#tb_corpo td{
+  text-align: center;
+  vertical-align: middle;
+  padding: 10px 8px;
+  color: black;
+  border-bottom: 1px solid #f0f0f0;
+  white-space: nowrap;
+}
+
+/* Linhas alternadas: ímpares cinza claro */
+#tb_corpo tr:nth-child(odd) {
+  background-color: #f5f5f5;
+}
+
+/* Linhas pares: brancas */
+#tb_corpo tr:nth-child(even) {
+  background-color: white;
+}
+
+/* Hover azul nas linhas */
+#tb_corpo tr:hover {
+  background-color: #42DCFA !important;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+/* Linha selecionada (verde) */
+#tb_corpo tr.selecionada {
+  background-color: #36DB2E !important;
+  color: white;
+}
+
+#tb_corpo tr.selecionada:hover {
+  background-color: #36DB2E !important;
+}
+
+/* Remove borda da última linha */
+#tb_corpo tr:last-child td {
+  border-bottom: none;
+}
+
+/* Larguras das colunas (8 colunas) */
+#tb_col_id,
+#tb_corpo td:nth-child(1){
+  width: 70px;
+  min-width: 70px;
+}
+
+#tb_col_nome,
+#tb_corpo td:nth-child(2){
+  width: 260px;
+  min-width: 260px;
+}
+
+#tb_col_codint,
+#tb_corpo td:nth-child(3){
+  width: 140px;
+  min-width: 140px;
+}
+
+#tb_col_cep,
+#tb_corpo td:nth-child(4){
+  width: 120px;
+  min-width: 120px;
+}
+
+#tb_col_uf,
+#tb_corpo td:nth-child(5){
+  width: 80px;
+  min-width: 80px;
+}
+
+#tb_col_cidade,
+#tb_corpo td:nth-child(6){
+  width: 180px;
+  min-width: 180px;
+}
+
+#tb_col_bairro,
+#tb_corpo td:nth-child(7){
+  width: 180px;
+  min-width: 180px;
+}
+
+#tb_col_endereco,
+#tb_corpo td:nth-child(8){
+  width: 260px;
+  min-width: 260px;
+}
+
+#tb_col_numero,
+#tb_corpo td:nth-child(9){
+  width: 100px;
+  min-width: 100px;
+}
+
+#tb_col_complemento,
+#tb_corpo td:nth-child(10){
+  width: 180px;
+  min-width: 180px;
+}
+
+#tb_col_telefone,
+#tb_corpo td:nth-child(11){
+  width: 150px;
+  min-width: 150px;
+}
+
+#tb_col_dtcriacao,
+#tb_corpo td:nth-child(12){
+  width: 190px;
+  min-width: 190px;
+}
+
+#tb_col_alteracao,
+#tb_corpo td:nth-child(13){
+  width: 190px;
+  min-width: 190px;
+}
+
+
+/* ========================================
+   NOTIFICAÇÕES TOASTR
+   ======================================== */
+
+/* Container dos toasts (centralizado no topo) */
+#toast-container {
+  position: fixed !important;
+  top: 2vh !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: auto !important;
+  max-width: 500px !important;
+  z-index: 9999 !important;
+}
+
+/* Estilo individual de cada toast */
+#toast-container > div {
+  width: 100% !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+  padding: 15px 20px 15px 55px !important;
+  margin-bottom: 10px !important;
+}
+
+/* Mensagem do toast */
+#toast-container > div .toast-message {
+  padding-left: 0 !important;
+  line-height: 1.4 !important;
+}
+
+/* Ícones dos toasts */
+#toast-container .toast-success::before,
+#toast-container .toast-info::before,
+#toast-container .toast-warning::before,
+#toast-container .toast-error::before {
+  position: absolute !important;
+  left: 15px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  font-size: 24px !important;
+}
+
+/* Cores dos diferentes tipos de toast */
+#toast-container > .toast-success {
+  background-color: #28a745 !important;
+}
+
+#toast-container > .toast-info {
+  background-color: #17a2b8 !important;
+}
+
+#toast-container > .toast-warning {
+  background-color: #ffc107 !important;
+  color: #333 !important;
+}
+
+#toast-container > .toast-error {
+  background-color: #dc3545 !important;
+}
+
+
+/* ========================================
+   MODAIS - ESTRUTURA BASE
+   ======================================== */
+
+/* Overlay do modal (fundo desfocado) */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(8px);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  animation: fadeIn 0.3s ease;
+}
+
+/* Modal ativo (visível) */
+.modal-overlay.ativo {
+  display: flex;
+}
+
+/* Caixa do modal padrão (exclusão e confirmações) */
+.modal-box {
+  width: 50%;
+  height: 50%;
+  max-width: 800px;
+  min-width: 400px;
+  max-height: 600px;
+  min-height: 400px;
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  animation: slideIn 0.4s ease;
+}
+
+/* Caixa grande do modal (cadastro e edição com múltiplos campos) */
+.modal-box-large {
+  width: 95%;
+  height: 90%;
+  max-width: 1650px;
+  min-width: 950px;
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.4s ease;
+}
+
+/* Título dos modais */
+.modal-titulo {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 30px 0;
+  text-align: left;
+  letter-spacing: 1px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ========================================
+    ESTILIZAÇÃO DAS LISTAS DE SUGESTÃO (.sugestoes)
+    ======================================== */
+
+.sugestoes {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    position: absolute; /* Permite sobreposição */
+    z-index: 1000; /* Garante que fique acima de outros elementos */
+    width: 100%;
+    max-height: 150px;
+    overflow-y: auto;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    top: 100%; /* Posiciona logo abaixo do input pai */
+    left: 0;
+    box-sizing: border-box;
+}
+
+.sugestoes li {
+    padding: 8px 15px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #333;
+    transition: background-color 0.2s;
+}
+
+.sugestoes li:hover {
+    background-color: #f0f0f0;
+}
+
+/* Opcional: Adicionar position: relative ao .form-field onde a sugestão está para o posicionamento funcionar */
+div.form-column div.form-field {
+    /* ... outras propriedades ... */
+    position: relative; /* CRUCIAL para o posicionamento do .sugestoes */
+    /* ... outras propriedades ... */
+}
+
+
+
+
+
+
+
+
+
+
+
+/* ================================================================================================================
+   LAYOUT DO CALENDÁRIO
+   ============================================================================================================== */
+
+/* Painel da esquerda */
+.datepicker-date-display{
+  background-color: black !important;
+}
+.datepicker-date-display .date-text,
+.datepicker-date-display .year-text{
+  color: #fff !important;
+}
+
+/* ===== DIAS (NÚMEROS) PRETOS ===== */
+.datepicker-table td .datepicker-day-button{
+  color: #000 !important;
+}
+
+/* Dia de hoje (mantém preto) */
+.datepicker-table td.is-today .datepicker-day-button{
+  color: #000 !important;
+}
+
+/* Dias de outros meses (opcional mais claro) */
+.datepicker-table td.is-outside-current-month .datepicker-day-button{
+  color: rgba(0,0,0,.35) !important;
+}
+
+/* ===== DIA SELECIONADO: bolinha azul + número branco ===== */
+.datepicker-table td.is-selected{
+  background-color: black !important;
+}
+.datepicker-table td.is-selected .datepicker-day-button{
+  color: #fff !important;
+}
+
+/* Hover */
+.datepicker-table td .datepicker-day-button:hover{
+  background-color: rgba(6, 6, 61, 0.12) !important;
+}
+
+/* Arredonda o “quadro” inteiro do datepicker */
+.datepicker-modal,
+.datepicker-container{
+  border-radius: 14px !important;
+  overflow: hidden !important; /* garante que o painel azul também respeite o raio */
+}
+
+/* (Opcional) arredonda o painel da esquerda também */
+.datepicker-date-display{
+  border-top-left-radius: 14px !important;
+  border-bottom-left-radius: 14px !important;
+}
+
+/* Dias bloqueados (futuros): deixa bem cinza e sem interação visual */
+.datepicker-table td.is-disabled .datepicker-day-button{
+  color: rgba(0,0,0,.28) !important;   /* número cinza */
+  cursor: not-allowed !important;
+}
+
+/* Remove hover nos dias desabilitados */
+.datepicker-table td.is-disabled .datepicker-day-button:hover{
+  background: transparent !important;
+}
+
+/* Aumenta a largura do calendário para caber nomes de meses longos */
+.datepicker-container{
+  min-width: 380px !important;  /* ajuste: 360~420 */
+}
+
+/* Garante que o texto do mês não quebre e tenha espaço */
+.datepicker-controls{
+  width: 100% !important;
+}
+
+.datepicker-controls .month-text,
+.datepicker-controls .year-text{
+  white-space: nowrap !important;
+}
+
+/* Entre início e fim */
+.datepicker-table td.range-between{
+  background-color: rgba(6, 6, 61, 0.18) !important;
+}
+
+/* Início e fim (bolinha azul) */
+.datepicker-table td.range-start,
+.datepicker-table td.range-end{
+  background-color: black !important;
+}
+
+
+
+
+
+
+
+
+
+
+/* ========================================
+   MODAL DE CADASTRO/EDIÇÃO - LAYOUT 2 COLUNAS
+   ======================================== */
+
+/* Container dos campos em 2 colunas */
+.form-container {
+  display: flex;
+  gap: 20px;                    /* Reduzido de 30px para 20px */
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 20px;
+  padding: 0 10px;              /* Adiciona padding lateral */
+}
+
+/* Cada coluna de campos */
+div.form-container div.form-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.titulo-secao-modal {
+  width: 100%;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #222;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #42DCFA;
+  margin-bottom: 4px;
+}
+
+/* Cada campo individual */
+div.form-column div.form-field {
+  display: flex;
+  flex-direction: column;
+  min-height: 78px;
+}
+
+/* Label dos campos */
+.input-label {
+  font-size: 0.85rem;           /* Tamanho fixo ao invés de clamp */
+  color: #555;
+  margin-bottom: 6px;           /* Reduzido de 8px */
+  font-weight: 500;
+  text-align: left;
+}
+
+/* Inputs padrão (nome, uf, cidade, bairro) */
+div.form-field input.input-moderno {
+  width: 100%;
+  height: 40px;                 /* Altura fixa */
+  padding: 8px 15px;            /* Padding fixo */
+  font-size: 0.9rem;            /* Tamanho fixo */
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  outline: none;
+  transition: all 0.3s ease;
+  background-color: #f9f9f9;
+  //text-transform: uppercase;
+  box-sizing: border-box;       /* Garante que padding não aumente tamanho */
+}
+
+/* Input de telefone (mantém máscara visível) */
+div.form-field input.input-moderno-telefone {
+  width: 100%;
+  height: 40px;                 /* Mesma altura */
+  padding: 8px 15px;
+  font-size: 0.9rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  outline: none;
+  transition: all 0.3s ease;
+  background-color: #f9f9f9;
+  font-family: "DejaVu Sans Mono", monospace;
+  box-sizing: border-box;
+}
+
+
+/* Placeholder dos inputs */
+div.form-field input.input-moderno::placeholder,
+div.form-field input.input-moderno-telefone::placeholder{
+  color: #999;
+  opacity: 0.7;
+  text-transform: none;
+  font-size: 0.85rem;           /* Placeholder um pouco menor */
+}
+
+/* Input focado (borda azul) */
+div.form-field input.input-moderno:focus, 
+div.form-field input.input-moderno-telefone:focus{
+  border-color: #42DCFA;
+  background-color: white;
+  box-shadow: 0 0 0 3px rgba(66, 220, 250, 0.1);
+}
+
+/* Group para modal simples (exclusão) */
+.form-group {
+  margin-bottom: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Texto de confirmação de exclusão */
+.texto-confirmacao {
+  font-size: 1.1rem;
+  color: #333;
+  text-align: center;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Nome destacado em verde */
+.texto-confirmacao strong {
+  color: #36DB2E;
+  font-weight: 700;
+}
+
+
+
+/* ========================================
+   BOTÕES DOS MODAIS
+   ======================================== */
+
+/* Container dos botões */
+.modal-botoes {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: auto;
+  padding-top: 20px;
+  flex-wrap: wrap;
+}
+
+/* Estilo base dos botões */
+.btn-cadastrar,
+.btn-cancelar,
+.btn-sim,
+.btn-nao {
+  padding: clamp(10px, 2vh, 14px) clamp(25px, 4vw, 35px);
+  font-size: clamp(0.85rem, 1.5vw, 1rem);
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+/* Botão Cadastrar/Editar/Sim (verde) */
+.btn-cadastrar,
+.btn-sim {
+  background-color: #36DB2E;
+  color: white;
+  box-shadow: 0 4px 15px rgba(54, 219, 46, 0.3);
+}
+
+.btn-cadastrar:hover,
+.btn-sim:hover {
+  background-color: #2ec926;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(54, 219, 46, 0.4);
+}
+
+/* Botão Cancelar (azul) */
+.btn-cancelar {
+  background-color: #42DCFA;
+  color: white;
+  box-shadow: 0 4px 15px rgba(66, 220, 250, 0.3);
+}
+
+.btn-cancelar:hover {
+  background-color: #30c9e8;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(66, 220, 250, 0.4);
+}
+
+/* Botão Não (vermelho) */
+.btn-nao {
+  background-color: #dc3545;
+  color: white;
+  box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+}
+
+.btn-nao:hover {
+  background-color: #c82333;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
+}
+
+
+/* ========================================
+   MODAL DE CARREGAMENTO
+   ======================================== */
+
+/* Overlay do loading */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 10001;          /* Acima de todos os outros modais */
+  animation: fadeIn 0.3s ease;
+}
+
+.loading-overlay.ativo {
+  display: flex;
+}
+
+/* Caixa preta do loading */
+.loading-box {
+  width: 25%;
+  height: 50%;
+  min-width: 200px;
+  min-height: 300px;
+  background-color: #000000;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: slideIn 0.4s ease;
+}
+
+/* Container da logo e spinner */
+.loading-container {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Logo da empresa */
+.loading-logo {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  z-index: 2;
+}
+
+/* Spinner azul girando */
+.loading-spinner {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  border: 4px solid transparent;
+  border-top: 4px solid #42DCFA;
+  border-radius: 50%;
+  animation: girarSpinner 1s linear infinite;
+}
+
+
+/* ========================================
+   ANIMAÇÕES
+   ======================================== */
+
+/* Fade in dos modais */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Slide in das caixas */
+@keyframes slideIn {
+  from { 
+    transform: scale(0.8); 
+    opacity: 0; 
+  }
+  to { 
+    transform: scale(1); 
+    opacity: 1; 
+  }
+}
+
+/* Rotação do spinner */
+@keyframes girarSpinner {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+
+/* ========================================
+   MEDIA QUERIES - RESPONSIVIDADE
+   ======================================== */
+
+/* Tablets (768px - 1024px) */
+@media (max-width: 1024px) {
+  /* Ajusta tabela para tablets */
+  #tb_cabecalho th,
+  #tb_corpo td {
+    padding: 8px 4px;
+  }
+  
+  /* Modal grande em tablets */
+  .modal-box-large {
+    width: 90%;
+    height: 75%;
+    min-width: 500px;
+    padding: 30px;
+  }
+  
+  /* Reduz gap entre colunas */
+  .form-container {
+    gap: 20px;
+  }
+}
+
+/* Tablets pequenos e celulares landscape (481px - 768px) */
+@media (max-width: 768px) {
+  /* Cabeçalho superior */
+  #cad_superior {
+    height: 15%;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  #cad_esquerda,
+  #cad_direita {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  /* Tabela */
+  #cad_inferior {
+    height: 85%;
+  }
+  
+  
+  /* Modal padrão */
+  .modal-box {
+    width: 90%;
+    height: 60%;
+    min-width: 300px;
+    padding: 30px 20px;
+  }
+  
+  /* Modal grande vira 1 coluna */
+  .modal-box-large {
+    width: 95%;
+    height: 80%;
+    min-width: 300px;
+    padding: 25px 15px;
+  }
+  
+  .form-container {
+    flex-direction: column;   /* Empilha colunas */
+    gap: 15px;
+  }
+  
+  /* Botões em coluna */
+  .modal-botoes {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .btn-cadastrar,
+  .btn-cancelar,
+  .btn-sim,
+  .btn-nao {
+    width: 100%;
+  }
+  
+  /* Loading box */
+  .loading-box {
+    width: 40%;
+    height: 40%;
+  }
+}
+
+/* Celulares portrait (até 480px) */
+@media (max-width: 480px) {
+  /* Ícones menores */
+  #cad_icone {
+    font-size: 1.5rem;
+  }
+  
+  #cad_limpar {
+    font-size: 1.8rem;
+  }
+  
+  
+  #tb_cabecalho th,
+  #tb_corpo td {
+    padding: 6px 2px;
+  }
+  
+  /* Modal ocupa quase toda tela */
+  .modal-box-large {
+    width: 98%;
+    height: 90%;
+    padding: 20px 10px;
+  }
+  
+  .modal-titulo {
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+  }
+  
+  .input-label {
+    font-size: 0.75rem;
+  }
+  
+  .input-moderno,
+  .input-moderno-telefone {
+    padding: 8px 10px;
+    font-size: 0.85rem;
+  }
+  
+  /* Loading box */
+  .loading-box {
+    width: 60%;
+    height: 35%;
+  }
+  
+  .loading-container {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .loading-logo {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .loading-spinner {
+    width: 80px;
+    height: 80px;
+  }
+}
+
+/* Telas grandes (acima de 1920px) */
+@media (min-width: 1920px) {
+  .modal-box {
+    max-width: 1000px;
+    max-height: 700px;
+  }
+  
+  .modal-box-large {
+    max-width: 1400px;
+  }
+}
+</style>

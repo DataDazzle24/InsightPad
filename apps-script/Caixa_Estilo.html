@@ -1,0 +1,1656 @@
+<style>
+
+/* =================================================================================================
+   FRENTE DE CAIXA (PDV) - CSS
+   - Página começa após cabeçalho (8vh)
+   - Layout 2 colunas (campos / carrinho)
+   - Scroll interno nas caixas
+   - Tabela: cabeçalho e totais fixos, só o corpo rola
+   - Modais no padrão do sistema
+   ================================================================================================= */
+
+/* =========================================
+   BASE
+   ========================================= */
+html, body{
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body{
+  overflow: hidden; /* a página não estoura; scroll fica nos containers */
+  font-family: "DejaVu Sans Mono", monospace;
+  background: #f2f2f2;
+}
+
+/* =========================================
+   CONTAINER PRINCIPAL (abaixo do cabeçalho)
+   ========================================= */
+#pdv_main{
+  position: fixed;
+  top: 8vh;     /* altura do seu cabeçalho */
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  margin-top: 0;   /* importante */
+  height: auto;    /* importante */
+
+  box-sizing: border-box;
+  padding: 1.5%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+}
+
+/* =========================================
+   BLOQUEIO PARA INCLUSÃO DE FILIAL
+   ========================================= */
+
+#pdv_content{
+  position: relative;
+}
+
+/* Overlay que trava a tela até selecionar a filial */
+#pdv_lock_overlay{
+  position: absolute;
+  inset: 0;
+  display: none;                /* JS liga/desliga */
+  align-items: center;
+  justify-content: center;
+  background: rgba(242,242,242,0.60);
+  backdrop-filter: blur(2px);
+  z-index: 9000;
+  border-radius: 14px;
+}
+
+#pdv_lock_overlay .pdv-lock-box{
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 14px;
+  padding: 16px 18px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  font-weight: 900;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: #111;
+}
+
+#pdv_lock_overlay .pdv-lock-box i{
+  font-size: 1.4rem;
+}
+
+/* =========================
+   LOCK BOX central na tela e maior
+   ========================= */
+
+#pdv_lock_overlay .pdv-lock-box{
+  position: fixed;                 /* <- agora é centrado na tela toda */
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+
+  min-width: 520px;                /* maior */
+  min-height: 150px;               /* maior */
+  padding: 26px 30px;              /* mais “respiro” */
+  justify-content: center;         /* centraliza conteúdo interno */
+}
+
+/* opcional: texto um pouco maior */
+#pdv_lock_overlay .pdv-lock-box span{
+  font-size: 1.05rem;
+}
+
+/* opcional: ícone maior */
+#pdv_lock_overlay .pdv-lock-box i{
+  font-size: 1.8rem;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =========================================
+   TOPBAR (Filial - canto superior direito)
+   ========================================= */
+#pdv_topbar{
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) auto minmax(230px, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+
+#pdv_topbar_left{
+  display: inline-flex;
+  align-items: center;
+  gap: 25px;
+  justify-self: start;
+}
+
+/* Relógio */
+#pdv_relogio{
+  margin-bottom: 5px;
+  font-weight: 900;
+  font-size: 0.95rem;
+  color: #111;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 8px 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+  white-space: nowrap;
+}
+
+#btnResincronizarPDV{
+  width: 42px;
+  height: 42px;
+  margin-bottom: 5px;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  background: #fff;
+  color: #111;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#btnResincronizarPDV i{
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+#btnResincronizarPDV:hover:not(:disabled){
+  color: #42DCFA;
+  border-color: #42DCFA;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(66,220,250,0.25);
+}
+
+#btnResincronizarPDV:disabled{
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+#btnResincronizarPDV.sincronizando i{
+  animation: girarSpinner 1s linear infinite;
+}
+
+.pdv-offline-box{
+  min-width: 235px;
+  min-height: 42px;
+  margin-bottom: 5px;
+  padding: 6px 14px;
+  border-radius: 10px;
+  border: 1px solid #f0c36d;
+  background: #fff3cd;
+  color: #5f4300;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  justify-self: center;
+  font-size: 0.74rem;
+  font-weight: 900;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.pdv-offline-box span + span{
+  border-left: 1px solid rgba(95,67,0,0.25);
+  padding-left: 10px;
+}
+
+.pdv-offline-box.online{
+  border-color: #b8e7b4;
+  background: #efffee;
+  color: #146b10;
+}
+
+.pdv-offline-box.offline{
+  border-color: #f0c36d;
+  background: #fff3cd;
+  color: #5f4300;
+}
+
+.pdv-offline-box.sincronizando{
+  border-color: #42DCFA;
+  background: #e9fbff;
+  color: #06606d;
+}
+
+body.pdv-offline #btnVoltar,
+body.pdv-offline #cabecalho a,
+body.pdv-offline #btnGerenciarAcessosCabecalho,
+body.pdv-offline #btnLogoutCabecalho{
+  cursor: not-allowed;
+}
+
+#lblFilial{
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #333;
+}
+
+#wrapFilial{
+  width: 299px;
+  max-width: 60vw;
+  justify-self: end;
+}
+
+#btnVoltar{
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Ícone padrão */
+#cad_icone{
+  color: black;
+  max-height: 100%;
+  font-size: 2rem;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+#cad_icone:hover{
+  color: #42DCFA;
+}
+
+/* =========================================
+   CONTEÚDO (2 colunas)
+   ========================================= */
+#pdv_content{
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 1.5%;
+}
+
+#pdv_left,
+#pdv_right{
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* colunas */
+#pdv_left{
+  width: 38%;
+  min-width: 340px;
+}
+
+#pdv_right{
+  flex: 1;
+}
+
+/* headers internos */
+#pdv_left_header,
+#pdv_right_header{
+  padding: 14px 16px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+#pdv_left_title,
+#pdv_right_title{
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 900;
+  color: #111;
+  letter-spacing: 0.5px;
+}
+
+/* =========================================
+   ESQUERDA (Campos)
+   ========================================= */
+#pdv_left_body{
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* Container dos botões (lado esquerdo) */
+#pdv_left_actions{
+  width: 100%;
+  margin-top: 1.2%;
+  display: flex;
+  gap: 1%;
+}
+
+/* Botão base (tamanho ideal p/ PDV) */
+#btnCancelarItem,
+#btnIncluirItem{
+  height: 52px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+/* CANCELAR menor */
+#btnCancelarItem{
+  flex: 0.60;
+  background-color: #42DCFA;
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(66, 220, 250, 0.30);
+}
+
+#btnCancelarItem:hover{
+  background-color: #30c9e8;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(66, 220, 250, 0.40);
+}
+
+/* INCLUIR maior */
+#btnIncluirItem{
+  flex: 1.40;
+  background-color: #36DB2E;
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(54, 219, 46, 0.30);
+}
+
+#btnIncluirItem:hover{
+  background-color: #2ec926;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(54, 219, 46, 0.40);
+}
+
+/* Ícone dentro do botão */
+#btnCancelarItem i,
+#btnIncluirItem i{
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+/* Opcional: estado desabilitado */
+#btnCancelarItem:disabled,
+#btnIncluirItem:disabled{
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+
+
+
+#linhaCodigo{
+  display: flex;
+  gap: 1%;
+  width: 100%;
+  align-items: flex-start;
+}
+
+/* Cada coluna da linha */
+#groupEAN{
+  flex: 0 0 49.5%;
+}
+#groupCodigo{
+  flex: 0 0 49.5%; /* 40 + 59 + 1% gap = 100% */
+}
+
+/* >>> IMPORTANTE: dentro dessa linha, o input precisa preencher 100% do grupo <<< */
+#linhaCodigo .form-group input.input-moderno{
+  width: 100% !important;
+}
+
+/* opcional: garante que nada “vaze” por padding/borda */
+#groupEAN,
+#groupCodigo{
+  box-sizing: border-box;
+}
+
+
+#linhaQtd{
+  display: flex;
+  gap: 1%;
+  width: 100%;
+  align-items: flex-start;
+}
+
+/* Cada coluna da linha */
+#groupQtdEstoque{
+  flex: 0 0 49.5%;
+}
+#groupQtd{
+  flex: 0 0 49.5%; /* 40 + 59 + 1% gap = 100% */
+}
+
+/* >>> IMPORTANTE: dentro dessa linha, o input precisa preencher 100% do grupo <<< */
+#linhaQtd .form-group input.input-moderno{
+  width: 100% !important;
+}
+
+/* opcional: garante que nada “vaze” por padding/borda */
+#groupQtdEstoque,
+#groupQtd{
+  box-sizing: border-box;
+}
+
+#linhaValores{
+  display: flex;
+  gap: 1%;
+  width: 100%;
+  align-items: flex-start;
+}
+
+/* 50% cada (ajustando pelo gap) */
+#groupVlrUnit{
+  flex: 0 0 49.5%;
+  box-sizing: border-box;
+}
+
+#groupVlrTotal{
+  flex: 0 0 49.5%;
+  box-sizing: border-box;
+}
+
+/* Alinha os inputs com os demais (mesma lógica da linhaQtd) */
+#linhaValores .form-group input.input-moderno{
+  width: 100% !important;
+}
+
+/* =========================================
+   TABELA / CARRINHO (Direita)
+   ========================================= */
+#carrinho_wrapper{
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+
+  /* NOVO: borda + sombra + cantos arredondados */
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: #fff;
+
+  /* NOVO: garante que tudo respeite o arredondado */
+  overflow: hidden;
+}
+
+/* Cabeçalho fixo */
+#carrinho_head{
+  background: #000;
+}
+
+#tb_carrinho_head{
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+}
+
+#tb_carrinho_head th{
+  padding: 12px 8px;
+  color: #fff;
+  text-align: center;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+/* Cantos superiores arredondados */
+#tb_carrinho_head th:first-child{
+  border-top-left-radius: 12px;
+}
+#tb_carrinho_head th:last-child{
+  border-top-right-radius: 12px;
+}
+
+/* Corpo com scroll (somente o corpo rola) */
+#carrinho_body_scroll{
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: #fff;
+}
+
+/* Estilização da scrollbar (Webkit) */
+#carrinho_body_scroll::-webkit-scrollbar{
+  width: 12px;
+}
+#carrinho_body_scroll::-webkit-scrollbar-track{
+  background: #f0f0f0;
+}
+#carrinho_body_scroll::-webkit-scrollbar-thumb{
+  background-color: #000;
+  border-radius: 6px;
+  border: 2px solid #f0f0f0;
+}
+#carrinho_body_scroll::-webkit-scrollbar-thumb:hover{
+  background-color: #333;
+}
+
+#tb_carrinho_body{
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+}
+
+#tb_carrinho_body td{
+  padding: 10px 8px;
+  text-align: center;
+  vertical-align: middle;
+  color: #000;
+  border-bottom: 1px solid #f0f0f0;
+  white-space: nowrap;
+}
+
+#tb_carrinho_corpo td:first-child{
+  text-align: center !important;
+}
+
+#tb_carrinho_corpo td:nth-child(5){
+  text-align: left !important;
+}
+
+#tb_carrinho_corpo tr:nth-child(odd){ background: #f5f5f5; }
+#tb_carrinho_corpo tr:nth-child(even){ background: #fff; }
+
+#tb_carrinho_corpo tr:hover{
+  background: #42DCFA !important;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+/* Rodapé fixo (Totais) */
+#carrinho_footer{
+  background: #000;
+}
+
+#tb_carrinho_footer{
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+}
+
+#tb_carrinho_footer td{
+  padding: 12px 16px;   /* um pouco mais de respiro */
+  color: #fff;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+/* 1ª célula (label) na esquerda */
+#tb_carrinho_footer td:first-child{
+  text-align: left;
+  border-bottom-left-radius: 12px;
+}
+
+/* 2ª célula (valor) na direita */
+#tb_carrinho_footer td:last-child{
+  text-align: right;
+  border-bottom-right-radius: 12px;
+}
+
+/* Ajuste de alinhamento "Produto" (fica melhor à esquerda) */
+#tb_carrinho_body td:nth-child(1){
+  text-align: left;
+}
+
+/* Garantir larguras iguais entre head/body/footer */
+#thProd, #tb_carrinho_body td:nth-child(1), #tb_carrinho_footer td:nth-child(1){ width: 35%; }
+#thQtd,  #tb_carrinho_body td:nth-child(2), #tb_carrinho_footer td:nth-child(2){ width: 16%; }
+#thVlrUnit,#tb_carrinho_body td:nth-child(3), #tb_carrinho_footer td:nth-child(3){ width: 16%; }
+#thVlrTotal,#tb_carrinho_body td:nth-child(4), #tb_carrinho_footer td:nth-child(4){ width: 25%; }
+#thAcoes,#tb_carrinho_body td:nth-child(5), #tb_carrinho_footer td:nth-child(5){ width: 8%; }
+
+/* Ícones */
+.iconDelete{
+  color: #ff2b2b;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 6px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.iconDelete:hover{ background: rgba(0,0,0,0.08); }
+
+.iconEdit{
+  color: #f5c400;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 6px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.iconEdit:hover{ background: rgba(0,0,0,0.08); }
+
+/* Rodapé do lado direito (botões) */
+#pdv_right_actions{
+  padding-top: 0.8%;
+  border-top: 1px solid #eee;
+  display: flex;
+  gap: 1%;
+  width: 100%
+}
+
+/* Botão base */
+#btnLimparCarrinho,
+#btnIrPagamento{
+  height: 52px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+/* Ícone */
+#btnLimparCarrinho i,
+#btnIrPagamento i{
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+/* LIMPAR menor e vermelho */
+#btnLimparCarrinho{
+  flex: 0.60;
+  background-color: #ff2b2b;
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(255, 43, 43, 0.25);
+}
+
+#btnLimparCarrinho:hover{
+  background-color: #e62222;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 43, 43, 0.35);
+}
+
+/* IR PARA PAGAMENTO maior (CTA) */
+#btnIrPagamento{
+  flex: 1.40;
+  background-color: #36DB2E;
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(54, 219, 46, 0.30);
+}
+
+#btnIrPagamento:hover{
+  background-color: #2ec926;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(54, 219, 46, 0.40);
+}
+
+/* Opcional: estado desabilitado */
+#btnLimparCarrinho:disabled,
+#btnIrPagamento:disabled{
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* =========================================
+   COMPONENTES PADRÃO (mesmo padrão do sistema)
+   ========================================= */
+.form-group{
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.input-label{
+  width: 100%;
+  font-size: clamp(0.8rem, 1.5vw, 0.9rem);
+  color: #555;
+  font-weight: 600;
+  text-align: left;
+}
+
+div.form-group input.input-moderno{
+  width: 100%;
+  min-height: 30px;
+  padding: 12px 14px;
+  font-size: clamp(0.9rem, 1.5vw, 1rem);
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  outline: none;
+  transition: all 0.25s ease;
+  background-color: #f9f9f9;
+  text-transform: uppercase;
+  box-sizing: border-box;
+}
+
+div.form-group input.input-moderno::placeholder{
+  color: #999;
+  opacity: 0.75;
+  text-transform: none;
+}
+
+div.form-group input.input-moderno:focus{
+  border-color: #42DCFA;
+  background-color: #fff;
+  box-shadow: 0 0 0 3px rgba(66,220,250,0.12);
+}
+
+div.form-group input.input-moderno:disabled{
+  background: #e0e0e0;
+  cursor: not-allowed;
+}
+
+/* =========================================
+   TOASTR - PADRAO DO SISTEMA
+   ========================================= */
+#toast-container {
+  position: fixed !important;
+  top: 2vh !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: auto !important;
+  max-width: 500px !important;
+  z-index: 99999 !important;
+  font-family: "DejaVu Sans Mono", monospace !important;
+}
+
+#toast-container > div {
+  width: 100% !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+  padding: 15px 20px 15px 55px !important;
+  margin-bottom: 10px !important;
+  position: relative !important;
+  z-index: 99999 !important;
+}
+
+#toast-container > div .toast-message {
+  padding-left: 0 !important;
+  line-height: 1.4 !important;
+}
+
+#toast-container .toast-success::before,
+#toast-container .toast-info::before,
+#toast-container .toast-warning::before,
+#toast-container .toast-error::before {
+  position: absolute !important;
+  left: 15px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  font-size: 24px !important;
+}
+
+#toast-container > .toast-success {
+  background-color: #28a745 !important;
+}
+
+#toast-container > .toast-info {
+  background-color: #17a2b8 !important;
+}
+
+#toast-container > .toast-warning {
+  background-color: #ffc107 !important;
+  color: #333 !important;
+}
+
+#toast-container > .toast-error {
+  background-color: #dc3545 !important;
+}
+
+/* Dropdown */
+.dropdown-container{
+  position: relative;
+}
+
+.sugestoes{
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 100%;
+  max-height: 190px;
+  overflow: auto;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: none; /* JS mostra/oculta */
+  z-index: 9999;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+}
+
+.sugestoes li{
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  font-size: 0.9rem;
+}
+.sugestoes li:last-child{ border-bottom: none; }
+.sugestoes li:hover{ background: #f5f5f5; }
+
+/* Botões (padrão) */
+.modal-botoes{
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: auto;
+  flex-wrap: wrap;
+}
+
+.btn-cadastrar,
+.btn-cancelar,
+.btn-sim,
+.btn-nao{
+  flex: 1;
+  padding: 12px 14px;
+  font-size: clamp(0.85rem, 1.5vw, 1rem);
+  font-weight: 800;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.btn-cadastrar{
+  background-color: #36DB2E;
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(54,219,46,0.30);
+}
+.btn-cadastrar:hover{
+  background-color: #2ec926;
+  transform: translateY(-2px);
+}
+
+.btn-cancelar{
+  background-color: #42DCFA;
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(66,220,250,0.30);
+}
+.btn-cancelar:hover{
+  background-color: #30c9e8;
+  transform: translateY(-2px);
+}
+
+/* Para os botões da direita (LIMPAR / IR PARA PAGAMENTO) */
+.btn-nao{
+  background: #000;
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.20);
+}
+.btn-nao:hover{ transform: translateY(-2px); }
+
+.btn-sim{
+  background-color: #36DB2E;
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(54,219,46,0.30);
+}
+.btn-sim:hover{ transform: translateY(-2px); }
+
+/* Texto de confirmação */
+.texto-confirmacao{
+  font-size: 0.95rem;
+  color: #333;
+  margin: 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =========================================
+   MODAIS (padrão)
+   ========================================= */
+
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(8px);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  animation: fadeIn 0.3s ease;
+}
+
+/* Modal ativo (visível) */
+.modal-overlay.ativo {
+  display: flex;
+}
+
+/* Caixa grande do modal (cadastro e edição com múltiplos campos) */
+.modal-box-large {
+  width: 80%;                /* Maior para acomodar 2 colunas */
+  height: 92%;
+  max-width: 1200px;
+  min-width: 600px;
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.4s ease;
+  font-family: "DejaVu Sans Mono", monospace;
+}
+
+/* Título dos modais */
+.modal-titulo {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 30px 0;
+  text-align: left;
+  letter-spacing: 1px;
+}
+
+.modal-header-inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 30px;
+}
+
+.modal-header-inline .modal-titulo {
+  margin: 0;
+}
+
+#pagamentoClienteArea {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.btn-mini-cliente {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  border: none;
+  border-radius: 8px;
+  background: #36DB2E;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  box-shadow: 0 4px 12px rgba(54, 219, 46, 0.28);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-mini-cliente:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(54, 219, 46, 0.34);
+}
+
+.btn-mini-cliente.editar {
+  background: #ffc107;
+  color: #333;
+  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.32);
+}
+
+.btn-mini-cliente.editar:hover {
+  box-shadow: 0 6px 16px rgba(255, 193, 7, 0.38);
+}
+
+.cliente-pagamento-nome {
+  max-width: 360px;
+  color: #333;
+  font-size: 0.95rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mini-modal-overlay {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.58);
+  backdrop-filter: blur(6px);
+  z-index: 10020;
+}
+
+.mini-modal-overlay.ativo {
+  display: flex;
+}
+
+.mini-modal-cliente {
+  width: 82%;
+  max-width: 980px;
+  min-width: 620px;
+  max-height: 86vh;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 20px 56px rgba(0, 0, 0, 0.26);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  font-family: "DejaVu Sans Mono", monospace;
+}
+
+.mini-modal-titulo {
+  margin: 0;
+  color: #333;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.mini-cliente-conteudo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 24px;
+  min-height: 0;
+}
+
+.mini-cliente-campos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  min-width: 0;
+}
+
+.mini-cliente-cards {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: 14px;
+}
+
+.cliente-big-number {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 20px;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  min-height: 120px;
+}
+
+.cliente-big-label {
+  color: #6b7280;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.cliente-big-number strong {
+  color: #111827;
+  font-size: 1.55rem;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.mini-cliente-botoes {
+  margin-top: 4px;
+}
+
+.input-email {
+  text-transform: none !important;
+}
+
+/* Caixa do modal padrão (exclusão e confirmações) */
+.modal-box {
+  width: 50%;
+  height: 50%;
+  max-width: 800px;
+  min-width: 400px;
+  max-height: 600px;
+  min-height: 400px;
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  animation: slideIn 0.4s ease;
+  font-family: "DejaVu Sans Mono", monospace;
+}
+
+.form-container{
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin-box: 2%;
+}
+
+/* Grid do pagamento e edição */
+#pag_grid,
+#edit_grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+#linha_1{
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1%;
+}
+
+#excluir_texto_group {
+  margin-bottom: 20px;
+  flex: 1;
+  display: flex;
+  padding: 10%;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Texto de confirmação de exclusão */
+.texto-confirmacao {
+  font-size: 1.1rem;
+  color: #333;
+  text-align: center;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Nome destacado em verde */
+.texto-confirmacao strong {
+  color: #36DB2E;
+  font-weight: 700;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ========================================
+    ESTILIZAÇÃO DAS LISTAS DE SUGESTÃO (.sugestoes)
+    ======================================== */
+
+.sugestoes {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    position: absolute; /* Permite sobreposição */
+    z-index: 1000; /* Garante que fique acima de outros elementos */
+    width: 100%;
+    max-height: 150px;
+    overflow-y: auto;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    top: 100%; /* Posiciona logo abaixo do input pai */
+    left: 0;
+    box-sizing: border-box;
+}
+
+.sugestoes li {
+    padding: 8px 15px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #333;
+    transition: background-color 0.2s;
+}
+
+.sugestoes li:hover {
+    background-color: #f0f0f0;
+}
+
+/* Opcional: Adicionar position: relative ao .form-field onde a sugestão está para o posicionamento funcionar */
+div.form-column div.form-field {
+    /* ... outras propriedades ... */
+    position: relative; /* CRUCIAL para o posicionamento do .sugestoes */
+    /* ... outras propriedades ... */
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =========================================
+   LUPA - estoque por filial
+   ========================================= */
+#lblQtdEstoque{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ícone (bootstrap-icons) */
+#btnAbrirModalEstoqueFilial{
+  font-size: 1.15rem;
+  color: #111;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 10px;
+  transition: transform 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+  line-height: 1;
+}
+
+/* hover */
+#btnAbrirModalEstoqueFilial:hover{
+  background: rgba(66,220,250,0.22);
+  color: #000;
+  transform: translateY(-1px);
+}
+
+/* "apertado" */
+#btnAbrirModalEstoqueFilial:active{
+  transform: translateY(0px) scale(0.98);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =========================================
+   MODAL - ESTOQUE POR FILIAL
+   ========================================= */
+
+/* Wrapper da tabela (faz a tabela rolar se tiver muitas filiais) */
+#estoque_table_wrapper{
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  background: #fff;
+}
+
+/* Tabela */
+#tb_estoque_filial{
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+}
+
+/* Cabeçalho (preto igual carrinho) */
+#tb_estoque_filial thead th{
+  background: #000;
+  color: #fff;
+  font-weight: 900;
+  padding: 12px 10px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Cantos arredondados no topo */
+#tb_estoque_filial thead th:first-child{
+  border-top-left-radius: 12px;
+}
+#tb_estoque_filial thead th:last-child{
+  border-top-right-radius: 12px;
+}
+
+/* Linhas */
+#tb_estoque_filial tbody td{
+  padding: 12px 10px;
+  text-align: center;
+  color: #111;
+  border-bottom: 1px solid #f0f0f0;
+  white-space: nowrap;
+}
+
+/* Zebra */
+#tb_estoque_filial tbody tr:nth-child(odd){ background: #f5f5f5; }
+#tb_estoque_filial tbody tr:nth-child(even){ background: #fff; }
+
+/* Hover igual carrinho */
+#tb_estoque_filial tbody tr:hover{
+  background: #42DCFA !important;
+  cursor: default;
+  transition: background-color 0.2s ease;
+}
+
+/* Larguras (Filial maior, Quantidade menor) */
+#tb_estoque_filial thead th:nth-child(1),
+#tb_estoque_filial tbody td:nth-child(1){ width: 70%; }
+
+#tb_estoque_filial thead th:nth-child(2),
+#tb_estoque_filial tbody td:nth-child(2){ width: 30%; }
+
+/* Botão FECHAR ocupando toda a base */
+#modalEstoqueFilial .modal-botoes{
+  margin-top: 18px;
+}
+
+#btnFecharModalEstoqueFilial{
+  width: 100%;
+  flex: 1;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =========================
+   FIX: dropdown FILIAL acima do blur
+   ========================= */
+
+/* cria stacking context no topo */
+#pdv_topbar{
+  position: relative;
+  z-index: 9500;
+}
+
+/* garante que o container da filial e sua lista ficam acima do overlay */
+#wrapFilial{
+  position: relative;
+  z-index: 9501;
+}
+
+/* só a lista da filial acima do overlay */
+#listaFilial{
+  z-index: 9502 !important;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ========================================
+   MODAL DE CARREGAMENTO
+   ======================================== */
+
+/* Overlay do loading */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 10001;          /* Acima de todos os outros modais */
+  animation: fadeIn 0.3s ease;
+}
+
+.loading-overlay.ativo {
+  display: flex;
+}
+
+/* Caixa preta do loading */
+.loading-box {
+  width: 25%;
+  height: 50%;
+  min-width: 200px;
+  min-height: 300px;
+  background-color: #000000;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: slideIn 0.4s ease;
+}
+
+/* Container da logo e spinner */
+.loading-container {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Logo da empresa */
+.loading-logo {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  z-index: 2;
+}
+
+/* Spinner azul girando */
+.loading-spinner {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  border: 4px solid transparent;
+  border-top: 4px solid #42DCFA;
+  border-radius: 50%;
+  animation: girarSpinner 1s linear infinite;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =========================================
+   ANIMAÇÕES
+   ========================================= */
+@keyframes fadeIn{
+  from{ opacity: 0; }
+  to{ opacity: 1; }
+}
+@keyframes slideIn{
+  from{ transform: scale(0.92); opacity: 0; }
+  to{ transform: scale(1); opacity: 1; }
+}
+
+@keyframes girarSpinner {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* =========================================
+   RESPONSIVO
+   ========================================= */
+@media (max-width: 980px){
+  #pdv_topbar{
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  #pdv_topbar_left,
+  #pdv_offline_box,
+  #wrapFilial{
+    justify-self: stretch;
+  }
+
+  #pdv_topbar_left{
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  #pdv_relogio{
+    flex: 1;
+    text-align: center;
+  }
+
+  #pdv_content{
+    flex-direction: column;
+  }
+  #pdv_left{
+    width: 100%;
+    min-width: 0;
+  }
+  #pdv_right{
+    width: 100%;
+  }
+
+  #wrapFilial{
+    width: 100%;
+    max-width: none;
+  }
+
+  .modal-box{
+    width: 92%;
+    min-width: 0;
+  }
+
+  #pag_grid,
+  #edit_grid{
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+</style>

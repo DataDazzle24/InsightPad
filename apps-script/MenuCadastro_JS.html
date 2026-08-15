@@ -1,0 +1,14 @@
+<script>
+
+document.querySelectorAll('#Btn_cad').forEach(btn => {
+  btn.addEventListener('click', e => {
+    // remove se já tiver para permitir clicar várias vezes
+    btn.classList.remove('clicked');
+    // força reflow para reiniciar a animação
+    void btn.offsetWidth;
+    // adiciona classe que dispara a animação
+    btn.classList.add('clicked');
+  });
+});
+
+</script>

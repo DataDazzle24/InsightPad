@@ -1,0 +1,4398 @@
+<script>
+
+// ==========================================================================================================================================
+// VARIÁVEIS GLOBAIS
+// ==========================================================================================================================================
+
+let todostipos= ["SAÍDA PERDA", "ENTRADA"]
+let todosprodutos = [];
+let todasfilais = [];
+
+// Timeout para controlar o debounce da pesquisa
+let timeoutId = null;
+
+// Armazena a referência da linha selecionada na tabela
+let linhaSelecionada = null;
+
+let dadosSaldoEstoque = [];
+let dadosSaldoFiltrados = [];
+let ordemSaldo = null;
+let idTransferenciaEmEdicao = null;
+let contextoExclusaoEstoque = null;
+let mapaProdutoPorCodigoEstoque = new Map();
+let mapaProdutoPorNomeEstoque = new Map();
+let mapaFilialPorCodigoEstoque = new Map();
+let mapaFilialPorNomeEstoque = new Map();
+let mapaNfPorIdEstoque = new Map();
+
+// Paginacao da tabela principal.
+// A pagina abre com 100 movimentacoes e carrega mais 100 ao rolar ate o fim.
+const LIMITE_PAGINA_ESTOQUE = 100;
+let filtrosAtuaisEstoque = {};
+let carregandoPaginaEstoque = false;
+let erroScrollEstoque = false;
+let temMaisEstoque = !!(typeof paginacaoEstoque !== "undefined" && paginacaoEstoque && paginacaoEstoque.temMais);
+let proximoOffsetEstoque = (typeof dadosTabela !== "undefined" && Array.isArray(dadosTabela)) ? dadosTabela.length : 0;
+
+// Saldo e carregado depois da renderizacao inicial para nao travar a abertura da pagina.
+let saldoEstoqueCarregado = false;
+let saldoEstoqueCarregando = false;
+
+function dispararAtualizacaoDashboardAnaliticoEstoque(idOrigem) {
+  if (typeof google === "undefined" || !google.script || !google.script.run || !idOrigem) return;
+
+  google.script.run
+    .withFailureHandler(function(erro) {
+      console.warn("Atualizacao analitica de estoque nao concluida em segundo plano.", erro);
+    })
+    .atualizarDashboardAnaliticoSegundoPlano("ESTOQUE", idOrigem, "REPROCESSAR");
+}
+
+
+
+
+// ===========================================================================================================================================
+// ELEMENTOS DO DOM
+// ===========================================================================================================================================
+
+// Input de pesquisa
+const inputTipo = document.getElementById('inputTipo');
+const inputProduto = document.getElementById('inputProduto');
+const inputFilial = document.getElementById('inputFilial');
+
+const inputEditarTipo = document.getElementById('inputEditarTipo');
+const inputEditarProduto = document.getElementById('inputEditarProduto');
+const inputEditarFilial = document.getElementById('inputEditarFilial');
+
+const inputTransferenciaFilialOrigem = document.getElementById('inputTransferenciaFilialOrigem');
+const inputTransferenciaFilialDestino = document.getElementById('inputTransferenciaFilialDestino');
+
+const inputPesquisarTipo = document.getElementById('inputPesquisarTipo');
+const inputPesquisarProduto = document.getElementById('inputPesquisarProduto');
+const inputPesquisarFilial = document.getElementById('inputPesquisarFilial');
+
+const inputPesquisarSaldoProduto = document.getElementById('inputPesquisarSaldoProduto');
+const inputPesquisarSaldoFilial = document.getElementById('inputPesquisarSaldoFilial');
+
+
+// Lista de sugestões do dropdown
+const listaUlTipo = document.getElementById('listaTipo');
+const listaUlProduto = document.getElementById('listaProduto');
+const listaUlFilial = document.getElementById('listaFilial');
+
+const listaUlEditarTipo = document.getElementById('listaEditarTipo');
+const listaUlEditarProduto = document.getElementById('listaEditarProduto');
+const listaUlEditarFilial = document.getElementById('listaEditarFilial');
+
+const listaUlTransferenciaFilialOrigem = document.getElementById('listaTransferenciaFilialOrigem');
+const listaUlTransferenciaFilialDestino = document.getElementById('listaTransferenciaFilialDestino');
+
+const listaUlPesquisarTipo = document.getElementById('listaPesquisarTipo');
+const listaUlPesquisarProduto = document.getElementById('listaPesquisarProduto');
+const listaUlPesquisarFilial = document.getElementById('listaPesquisarFilial');
+
+const listaUlPesquisarSaldoProduto = document.getElementById('listaPesquisarSaldoProduto');
+const listaUlPesquisarSaldoFilial = document.getElementById('listaPesquisarSaldoFilial');
+
+
+
+
+
+
+// ===========================================================================================================================================
+// INICIALIZAÇÃO DA PÁGINA
+// ===========================================================================================================================================
+
+// Executa quando o DOM estiver completamente carregado
+document.addEventListener('DOMContentLoaded', function() {
+
+    // CONFIGURAÇÃO DO TOASTR (NOTIFICAÇÕES) ===================================================
+    toastr.options = {
+        "closeButton": true,              // Mostra botão de fechar
+        "debug": false,                   // Modo debug desativado
+        "newestOnTop": true,              // Notificações mais recentes no topo
+        "progressBar": true,              // Mostra barra de progresso
+        "preventDuplicates": true,        // Evita notificações duplicadas
+        "onclick": null,                  // Sem ação ao clicar
+        "showDuration": "300",            // Duração da animação de entrada
+        "hideDuration": "1000",           // Duração da animação de saída
+        "timeOut": "3000",                // Tempo de exibição (3 segundos)
+        "extendedTimeOut": "0",           // Tempo extra ao passar mouse
+        "showEasing": "swing",            // Efeito de entrada
+        "hideEasing": "linear",           // Efeito de saída
+        "showMethod": "fadeIn",           // Método de entrada
+        "hideMethod": "fadeOut"           // Método de saída
+    };
+
+
+    // ====== CARREGANDO OS DADOS CAPTURADOS DAS LISTAS SUSPENSAS DENTRO DAS LISTAS EM BRANCO CRIADAS NO INÍCIO DO CÓDIGO======
+
+    // Pega os nomes das filiais passadas pelo template GS
+    if (typeof itensFil !== 'undefined' && itensFil && itensFil.length > 0) {
+        // Filtra itens vazios ou com espaços em branco
+        todasfilais = itensFil
+            .filter(item => item && item.nome && item.nome.trim() !== '')
+            .map(item => item.nome);
+    } else {
+        todasfilais = [];
+    }
+
+
+    carregarTodosProdutosDeItens(itensProd);
+    reconstruirMapasConsultaEstoque();
+
+
+
+
+    // CONFIGURAÇÃO DOS EVENT LISTENERS ===========================================================
+
+    // Botão Extrair - extrai os dados da tabela
+    const botaoExtrair = document.getElementById("btnExtrair");
+    if (botaoExtrair) {
+        botaoExtrair.addEventListener("click", function() {
+            exportarTabelaParaCSV("Clientes.csv");
+      });
+    }
+
+    // Botão Limpar - remove filtros e restaura tabela
+    const botaoLimpar = document.getElementById("btnLimpar");
+    if (botaoLimpar) {
+        botaoLimpar.addEventListener("click", Limpar);
+    }
+
+
+
+    // PESQUISA ---------------------------------------------------------------------------
+
+    // Botão Pesquisar - abre modal de pesquisa
+    const btnPesquisar = document.getElementById("btnPesquisar");
+    if (btnPesquisar) {
+        btnPesquisar.addEventListener("click", abrirModalPesquisa);
+    }
+
+    // Botão Confirmar Pesquisa - executa a pesquisa
+    const btnConfirmarPesquisa = document.getElementById("btnConfirmarPesquisa");
+    if (btnConfirmarPesquisa) {
+      btnConfirmarPesquisa.addEventListener("click", aplicarPesquisaNaTabela);
+    }
+
+    // Botão Cancelar Pesquisa - fecha modal de pesquisa
+    const btnCancelarPesquisa = document.getElementById("btnCancelarPesquisa");
+    if (btnCancelarPesquisa) {
+        btnCancelarPesquisa.addEventListener("click", fecharModalPesquisa);
+    }
+
+    const btnToggleSaldoPrincipal = document.getElementById("btnToggleSaldoPrincipal");
+    if (btnToggleSaldoPrincipal) {
+        btnToggleSaldoPrincipal.addEventListener("click", abrirModalSaldoEstoque);
+    }
+
+    const btnToggleMovimentacoesSaldo = document.getElementById("btnToggleMovimentacoesSaldo");
+    if (btnToggleMovimentacoesSaldo) {
+        btnToggleMovimentacoesSaldo.addEventListener("click", fecharModalSaldoEstoque);
+    }
+
+    const btnVoltarSaldo = document.getElementById("btnVoltarSaldo");
+    if (btnVoltarSaldo) {
+        btnVoltarSaldo.addEventListener("click", fecharModalSaldoEstoque);
+    }
+
+    const btnFiltroSaldo = document.getElementById("btnFiltroSaldo");
+    if (btnFiltroSaldo) {
+        btnFiltroSaldo.addEventListener("click", abrirModalPesquisaSaldo);
+    }
+
+    const btnLimparFiltroSaldo = document.getElementById("btnLimparFiltroSaldo");
+    if (btnLimparFiltroSaldo) {
+        btnLimparFiltroSaldo.addEventListener("click", limparFiltrosSaldo);
+    }
+
+    const btnCancelarPesquisaSaldo = document.getElementById("btnCancelarPesquisaSaldo");
+    if (btnCancelarPesquisaSaldo) {
+        btnCancelarPesquisaSaldo.addEventListener("click", fecharModalPesquisaSaldo);
+    }
+
+    const btnConfirmarPesquisaSaldo = document.getElementById("btnConfirmarPesquisaSaldo");
+    if (btnConfirmarPesquisaSaldo) {
+        btnConfirmarPesquisaSaldo.addEventListener("click", aplicarPesquisaSaldo);
+    }
+
+    const thSaldo = document.getElementById("saldo_col_saldo");
+    if (thSaldo) {
+        thSaldo.addEventListener("click", alternarOrdenacaoSaldo);
+    }
+
+    // Botão Cadastrar - abre modal de cadastro
+    const btnCadastrar = document.getElementById("btnCadastrar");
+    if (btnCadastrar) {
+        btnCadastrar.addEventListener("click", abrirModalCadastro);
+    }
+
+    // Botão Cancelar Cadastro - fecha modal de cadastro
+    const btnCancelarCadastro = document.getElementById("btnCancelarCadastro");
+    if (btnCancelarCadastro) {
+        btnCancelarCadastro.addEventListener("click", fecharModalCadastro);
+    }
+
+    // Botão Confirmar Cadastro - executa cadastro
+    const btnConfirmarCadastro = document.getElementById("btnConfirmarCadastro");
+    if (btnConfirmarCadastro) {
+        btnConfirmarCadastro.addEventListener("click", cadastrar);
+    }
+
+    // Fechar modal de cadastro ao clicar fora
+    const modalCadastro = document.getElementById("modalCadastro");
+    if (modalCadastro) {
+        modalCadastro.addEventListener("click", function(e) {
+            if (e.target === modalCadastro) {
+                fecharModalCadastro();
+            }
+        });
+    }
+
+    // Botão Excluir - abre modal de confirmação
+    const btnExcluir = document.getElementById("btnExcluir");
+    if (btnExcluir) {
+        btnExcluir.addEventListener("click", abrirModalExclusao);
+    }
+
+    // Botão Não Excluir - fecha modal de exclusão
+    const btnNaoExcluir = document.getElementById("btnNaoExcluir");
+    if (btnNaoExcluir) {
+        btnNaoExcluir.addEventListener("click", fecharModalExclusao);
+    }
+
+    // Botão Sim Excluir - confirma exclusão
+    const btnSimExcluir = document.getElementById("btnSimExcluir");
+    if (btnSimExcluir) {
+        btnSimExcluir.addEventListener("click", confirmarExclusao);
+    }
+
+    const btnExcluirNf = document.getElementById("btnExcluirNf");
+    if (btnExcluirNf) {
+        btnExcluirNf.addEventListener("click", confirmarExclusaoNf);
+    }
+
+    const btnExcluirProdutoNf = document.getElementById("btnExcluirProdutoNf");
+    if (btnExcluirProdutoNf) {
+        btnExcluirProdutoNf.addEventListener("click", confirmarExclusaoProdutoNf);
+    }
+
+    // Botão Editar - abre modal de edição
+    const btnEditar = document.getElementById("btnEditar");
+    if (btnEditar) {
+        btnEditar.addEventListener("click", abrirModalEdicao);
+    }
+
+    const btnTransferirEstoque = document.getElementById("btnTransferirEstoque");
+    if (btnTransferirEstoque) {
+        btnTransferirEstoque.addEventListener("click", abrirModalTransferencia);
+    }
+
+    const btnAdicionarItemTransferencia = document.getElementById("btnAdicionarItemTransferencia");
+    if (btnAdicionarItemTransferencia) {
+        btnAdicionarItemTransferencia.addEventListener("click", adicionarNovoBlocoTransferencia);
+    }
+
+    const btnCancelarTransferencia = document.getElementById("btnCancelarTransferencia");
+    if (btnCancelarTransferencia) {
+        btnCancelarTransferencia.addEventListener("click", fecharModalTransferencia);
+    }
+
+    const btnConfirmarTransferencia = document.getElementById("btnConfirmarTransferencia");
+    if (btnConfirmarTransferencia) {
+        btnConfirmarTransferencia.addEventListener("click", confirmarTransferencia);
+    }
+
+    const btnEditarTransferencia = document.getElementById("btnEditarTransferencia");
+    if (btnEditarTransferencia) {
+        btnEditarTransferencia.addEventListener("click", confirmarEdicaoTransferencia);
+    }
+
+    // Botão Cancelar Edição - fecha modal de edição
+    const btnCancelarEdicao = document.getElementById("btnCancelarEdicao");
+    if (btnCancelarEdicao) {
+        btnCancelarEdicao.addEventListener("click", fecharModalEdicao);
+    }
+
+    // Botão Confirmar Edição - executa edição
+    const btnConfirmarEdicao = document.getElementById("btnConfirmarEdicao");
+    if (btnConfirmarEdicao) {
+        btnConfirmarEdicao.addEventListener("click", confirmarEdicao);
+    }
+
+    // Fechar modal de edição ao clicar fora
+    const modalEdicao = document.getElementById("modalEdicao");
+    if (modalEdicao) {
+        modalEdicao.addEventListener("click", function(e) {
+            if (e.target === modalEdicao) {
+                fecharModalEdicao();
+            }
+        });
+    }
+
+
+
+
+
+    // CONFIGURAÇÃO DO CALENDÁRIO -----------------------------------------------------------
+
+    const inputsData = document.querySelectorAll('.datepicker');
+    if (!inputsData.length || !window.M || !M.Datepicker) return;
+
+    // IDs que devem usar RANGE (2 cliques)
+    const RANGE_IDS = new Set([
+      "inputPesquisarDataCadastro",
+      "inputPesquisarDataMovimentacao"
+    ]);
+
+    // IDs que devem usar DATA SIMPLES (1 clique) - você pediu esses dois
+    const SINGLE_CLICK_IDS = new Set([
+      "inputEditarDataMovimentacao",
+      "inputDataMovimentacao"
+    ]);
+
+    // i18n (igual ao seu)
+    const i18nBR = {
+      cancel: 'Cancelar',
+      clear: 'Limpar',
+      done: 'OK',
+      months: ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'],
+      monthsShort: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],
+      weekdays: ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'],
+      weekdaysShort: ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'],
+      weekdaysAbbrev: ['D','S','T','Q','Q','S','S']
+    };
+
+    // Init geral
+    inputsData.forEach((input) => {
+      const id = input.id || '';
+
+      // 1) RANGE: só para os dois inputs de pesquisa
+      if (RANGE_IDS.has(id)) {
+        initDatepickerRange(input, i18nBR);
+        return;
+      }
+
+      // 2) DATA SIMPLES (1 clique): para os dois inputs que você citou
+      //    (e também serve para qualquer outro datepicker que você tiver)
+      initDatepickerSingleClick(input, i18nBR);
+    });
+
+
+
+
+    // APLICA MÁSCARAS ======================================================
+
+    aplicarMascaraValor("inputValor");
+    aplicarMascaraValor("inputEditarValor");
+    aplicarMascaraApenasNumeros3("inputQtd");
+    aplicarMascaraApenasNumeros3("inputEditarQtd");
+    configurarCalculoValorMovimentacao("inputQtd", "inputValor", "inputValorMovimentacao");
+    configurarCalculoValorMovimentacao("inputEditarQtd", "inputEditarValor", "inputEditarValorMovimentacao");
+    configurarValorAutomaticoSaidaPerda("inputTipo", "inputProduto", "inputValor", "inputValorMovimentacao");
+    configurarValorAutomaticoSaidaPerda("inputEditarTipo", "inputEditarProduto", "inputEditarValor", "inputEditarValorMovimentacao");
+
+
+
+
+    // CONFIGURAR OS DROPDOWNS SIMPLES =============================================================
+
+    configurarTodosDropdowns()
+
+    // CARREGA DADOS INICIAIS NA TABELA =============================================================
+
+    carregarDadosIniciais();
+    iniciarScrollIncrementalEstoque();
+    carregarSaldoEstoqueAssincrono();
+
+});
+
+
+
+
+
+
+
+
+// =======================================================================================================================================
+// FUNÇÃO: PEGAR PRODUTOS QUE NÃO SÃO COMBO E ARMAZENAR NA LISTA
+// =======================================================================================================================================
+
+function carregarTodosProdutosDeItens(itensProd) {
+  // garante que a variável global exista
+  if (!Array.isArray(itensProd) || itensProd.length === 0) {
+    todosprodutos = [];
+    return;
+  }
+
+  const set = new Set();
+
+  for (const item of itensProd) {
+    if (!item) continue;
+
+    const nome = (item.nome ?? '').toString().trim();
+    const comboRaw = (item.combo ?? '').toString().trim();
+
+    // normaliza "Não" (aceita "Nao", "não", "NAO", etc.)
+    const comboNorm = comboRaw
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, ''); // remove acentos
+
+    // só entra se não for combo e tiver nome
+    if ((comboNorm === 'nao' || comboNorm === 'n' || comboNorm === 'false' || comboNorm === '') && nome) {
+      set.add(nome);
+    }
+  }
+
+  // distintos + ordenado
+  todosprodutos = Array.from(set).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// =======================================================================================================================================
+// FUNÇÃO: MASCARA PARA INSERIR APENAS NUMEROS
+// =======================================================================================================================================
+
+function aplicarMascaraApenasNumeros3(idCampo) {
+  const campo = document.getElementById(idCampo);
+  if (!campo) return;
+
+  // (opcional) ajuda no mobile
+  campo.setAttribute('inputmode', 'numeric');
+  campo.setAttribute('maxlength', '3');
+
+  // Bloqueia teclas não numéricas (mas permite navegação/atalhos)
+  campo.addEventListener('keydown', (e) => {
+    const permitidas = [
+      'Backspace', 'Delete', 'Tab', 'Enter', 'Escape',
+      'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
+      'Home', 'End'
+    ];
+
+    if (permitidas.includes(e.key)) return;
+
+    // Ctrl/Cmd + A/C/V/X
+    if ((e.ctrlKey || e.metaKey) && ['a', 'c', 'v', 'x'].includes(e.key.toLowerCase())) return;
+
+    // Só aceita dígitos 0-9
+    if (!/^\d$/.test(e.key)) e.preventDefault();
+
+    // Limite de 3 dígitos (respeita seleção: se tiver texto selecionado, permite substituir)
+    const selLen = (campo.selectionEnd ?? 0) - (campo.selectionStart ?? 0);
+    const futuroLen = campo.value.length - selLen + 1;
+    if (futuroLen > 3) e.preventDefault();
+  });
+
+  // Sanitiza qualquer colagem/arrasto (remove não-dígitos e corta em 3)
+  campo.addEventListener('input', (e) => {
+    let v = e.target.value.replace(/\D/g, '').slice(0, 3);
+    if (e.target.value !== v) e.target.value = v;
+  });
+
+  // Sanitiza também no paste (para evitar piscadas)
+  campo.addEventListener('paste', (e) => {
+    e.preventDefault();
+    const texto = (e.clipboardData || window.clipboardData).getData('text') || '';
+    const v = texto.replace(/\D/g, '').slice(0, 3);
+
+    const start = campo.selectionStart ?? campo.value.length;
+    const end = campo.selectionEnd ?? campo.value.length;
+
+    const novo = (campo.value.slice(0, start) + v + campo.value.slice(end)).replace(/\D/g, '').slice(0, 3);
+    campo.value = novo;
+
+    const pos = Math.min((campo.value.length), start + v.length);
+    campo.setSelectionRange(pos, pos);
+
+    campo.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =======================================================================================================================================
+// FUNÇÃO: APLICAR MÁSCARA DE VALOR
+// =======================================================================================================================================
+
+// Aplica máscara R$ 0,00 com entrada da direita para esquerda
+// Agora: não preenche o campo no início (placeholder aparece). Só mostra "R$ 0,00" quando o usuário começar a digitar.
+function aplicarMascaraValor(idCampo) {
+  const campo = document.getElementById(idCampo);
+  if (!campo) return;
+
+  // NÃO define valor inicial -> permite placeholder
+  // campo.value = 'R$ 0,00';
+
+  // Flag para evitar loops quando setamos value via código
+  let atualizando = false;
+
+  campo.addEventListener('focus', e => {
+    setTimeout(() => {
+      const len = e.target.value.length;
+      e.target.setSelectionRange(len, len);
+    });
+  });
+
+  campo.addEventListener('keydown', e => {
+    const permitidas = [8, 9, 13, 27, 46]; // backspace, tab, enter, esc, del
+    const ctrl = e.ctrlKey && [65, 67, 86, 88].includes(e.keyCode); // A,C,V,X
+    const nav = e.keyCode >= 35 && e.keyCode <= 39; // setas, home, end
+    const num = (!e.shiftKey && ((e.keyCode >= 48 && e.keyCode <= 57) || (e.keyCode >= 96 && e.keyCode <= 105)));
+
+    if (!(permitidas.includes(e.keyCode) || ctrl || nav || num)) e.preventDefault();
+  });
+
+  campo.addEventListener('input', e => {
+    if (atualizando) return;
+
+    // Se o usuário apagou tudo, mantém vazio para aparecer o placeholder
+    const soNumeros = e.target.value.replace(/\D/g, '');
+    if (soNumeros.length === 0) {
+      atualizando = true;
+      e.target.value = '';
+      atualizando = false;
+      return;
+    }
+
+    // Mantém sua lógica original, só que só roda quando houver dígitos
+    let v = soNumeros.slice(0, 9) || '0';
+    v = v.padStart(3, '0');
+    const reais = v.slice(0, -2).replace(/^0+/, '') || '0';
+    const centavos = v.slice(-2);
+
+    atualizando = true;
+    e.target.value = `R$ ${reais.replace(/\B(?=(\d{3})+(?!\d))/g, '.')},${centavos}`;
+    atualizando = false;
+  });
+
+  campo.obterValor = () => parseInt((campo.value || '').replace(/\D/g, '')) / 100 || 0;
+
+  campo.definirValor = valor => {
+    // Se quiser "definir vazio", passe null/undefined/NaN
+    if (valor === null || valor === undefined || Number.isNaN(valor)) {
+      campo.value = '';
+      return;
+    }
+
+    let v = Math.round(valor * 100).toString().padStart(3, '0').slice(0, 9);
+    const reais = v.slice(0, -2).replace(/^0+/, '') || '0';
+    const centavos = v.slice(-2);
+
+    campo.value = `R$ ${reais.replace(/\B(?=(\d{3})+(?!\d))/g, '.')},${centavos}`;
+  };
+}
+
+
+function formatarMoedaBR(valor) {
+  const numero = Number(valor) || 0;
+  return numero.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  });
+}
+
+
+function obterValorMonetarioNumero(valor) {
+  if (typeof valor === 'number') return Number.isFinite(valor) ? valor : 0;
+
+  const texto = String(valor ?? '').trim();
+  if (!texto) return 0;
+
+  if (texto.includes(',')) {
+    const numeroBR = texto
+      .replace(/[^\d,.-]/g, '')
+      .replace(/\./g, '')
+      .replace(',', '.');
+
+    return parseFloat(numeroBR) || 0;
+  }
+
+  return parseFloat(texto.replace(/[^\d.-]/g, '')) || 0;
+}
+
+
+function tipoEhSaidaPerda(valor) {
+  return normalizarTextoBase(valor) === 'SAIDA PERDA';
+}
+
+
+function obterProdutoPorNome(nomeProduto) {
+  const nomeNormalizado = normalizarTextoBase(nomeProduto);
+  if (!nomeNormalizado) return null;
+
+  return mapaProdutoPorNomeEstoque.get(nomeNormalizado) || null;
+}
+
+
+function definirValorMonetarioCampo(campo, valor) {
+  if (!campo) return;
+
+  if (typeof campo.definirValor === 'function') {
+    campo.definirValor(valor);
+    return;
+  }
+
+  campo.value = formatarMoedaBR(valor);
+}
+
+
+function atualizarValorAutomaticoSaidaPerda(tipoId, produtoId, valorId, totalId) {
+  const inputTipoMov = document.getElementById(tipoId);
+  const inputProdutoMov = document.getElementById(produtoId);
+  const inputValorUnitario = document.getElementById(valorId);
+
+  if (!inputTipoMov || !inputProdutoMov || !inputValorUnitario) return;
+
+  if (!tipoEhSaidaPerda(inputTipoMov.value)) {
+    inputValorUnitario.disabled = false;
+    inputValorUnitario.classList.remove('input-readonly');
+
+    if (inputValorUnitario.dataset.valorAutomaticoPerda === 'S') {
+      inputValorUnitario.value = '';
+      inputValorUnitario.dataset.valorAutomaticoPerda = 'N';
+      calcularValorMovimentacao(produtoId === 'inputProduto' ? 'inputQtd' : 'inputEditarQtd', valorId, totalId);
+    }
+
+    return;
+  }
+
+  inputValorUnitario.disabled = true;
+  inputValorUnitario.classList.add('input-readonly');
+  inputValorUnitario.dataset.valorAutomaticoPerda = 'S';
+
+  const produto = obterProdutoPorNome(inputProdutoMov.value);
+  if (!produto) {
+    inputValorUnitario.value = '';
+    calcularValorMovimentacao(produtoId === 'inputProduto' ? 'inputQtd' : 'inputEditarQtd', valorId, totalId);
+    return;
+  }
+
+  const precoCusto = obterValorMonetarioNumero(produto.precoCusto);
+  definirValorMonetarioCampo(inputValorUnitario, precoCusto);
+  calcularValorMovimentacao(produtoId === 'inputProduto' ? 'inputQtd' : 'inputEditarQtd', valorId, totalId);
+}
+
+
+function configurarValorAutomaticoSaidaPerda(tipoId, produtoId, valorId, totalId) {
+  const inputTipoMov = document.getElementById(tipoId);
+  const inputProdutoMov = document.getElementById(produtoId);
+
+  if (!inputTipoMov || !inputProdutoMov) return;
+
+  const atualizar = () => atualizarValorAutomaticoSaidaPerda(tipoId, produtoId, valorId, totalId);
+
+  inputTipoMov.addEventListener('input', atualizar);
+  inputTipoMov.addEventListener('change', atualizar);
+  inputProdutoMov.addEventListener('input', atualizar);
+  inputProdutoMov.addEventListener('change', atualizar);
+}
+
+
+function calcularValorMovimentacao(qtdId, valorUnitarioId, totalId) {
+  const inputQtd = document.getElementById(qtdId);
+  const inputValorUnitario = document.getElementById(valorUnitarioId);
+  const inputTotal = document.getElementById(totalId);
+
+  if (!inputQtd || !inputValorUnitario || !inputTotal) return;
+
+  const qtd = parseInt(String(inputQtd.value || '').replace(/\D/g, ''), 10) || 0;
+  const valorUnitario = typeof inputValorUnitario.obterValor === 'function'
+    ? inputValorUnitario.obterValor()
+    : (parseInt(String(inputValorUnitario.value || '').replace(/\D/g, ''), 10) || 0) / 100;
+
+  inputTotal.value = qtd && valorUnitario ? formatarMoedaBR(qtd * valorUnitario) : '';
+}
+
+
+function configurarCalculoValorMovimentacao(qtdId, valorUnitarioId, totalId) {
+  const inputQtd = document.getElementById(qtdId);
+  const inputValorUnitario = document.getElementById(valorUnitarioId);
+
+  if (!inputQtd || !inputValorUnitario) return;
+
+  const recalcular = () => calcularValorMovimentacao(qtdId, valorUnitarioId, totalId);
+
+  inputQtd.addEventListener('input', recalcular);
+  inputValorUnitario.addEventListener('input', recalcular);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =======================================================================================================================================
+// FUNÇÃO: CARREGAR DADOS INICIAIS
+// =======================================================================================================================================
+
+// Preenche a tabela com todos os dados ao abrir a página
+function carregarDadosIniciais() {
+
+  // Verifica se há dados disponíveis
+  if (typeof dadosTabela === 'undefined' || !dadosTabela || !Array.isArray(dadosTabela) || dadosTabela.length === 0) {
+    return;
+  }
+
+  const CorpoTabela = document.getElementById("tb_corpo");
+  if (!CorpoTabela) return;
+
+  linhaSelecionada = null;
+
+  // Limpa a tabela
+  while (CorpoTabela.firstChild) {
+    CorpoTabela.removeChild(CorpoTabela.firstChild);
+  }
+
+  // =========================
+  // 1) Cria mapas para JOIN rápido (O(1))
+  // =========================
+  const mapaProdutos = new Map(); // codigoProduto -> nomeProduto
+  if (Array.isArray(itensProd)) {
+    itensProd.forEach(p => {
+      if (p && p.codigo != null) mapaProdutos.set(String(p.codigo), p.nome);
+    });
+  }
+
+  const mapaFiliais = new Map(); // codigoFilial -> nomeFilial
+  if (Array.isArray(itensFil)) {
+    itensFil.forEach(f => {
+      if (f && f.codigo != null) mapaFiliais.set(String(f.codigo), f.nome);
+    });
+  }
+
+  // =========================
+  // 2) Renderiza (com fragment para performance)
+  // =========================
+  const frag = document.createDocumentFragment();
+
+  dadosTabela.forEach(function (r) {
+    // Clona linha para não alterar dadosTabela original
+    const linha = r.slice();
+
+    // JOIN 1: 5ª coluna (índice 4) -> código do produto => nome do produto
+    if (linha[4] != null && String(linha[4]).trim() !== '') {
+      const nomeProd = mapaProdutos.get(String(linha[4]));
+      if (nomeProd) linha[4] = nomeProd;
+    }
+
+    // JOIN 2: 9ª coluna (índice 8) -> código da filial => nome da filial
+    if (linha[8] != null && String(linha[8]).trim() !== '') {
+      const nomeFil = mapaFiliais.get(String(linha[8]));
+      if (nomeFil) linha[8] = nomeFil;
+    }
+
+    // Cria a linha <tr>
+    const Linha = document.createElement("tr");
+
+    // Preenche as colunas exibidas
+    for (let i = 0; i < linha.length && i < 12; i++) {
+      const Coluna = document.createElement("td");
+      Coluna.textContent = linha[i];
+      Linha.appendChild(Coluna);
+    }
+
+    // Clique para selecionar
+    Linha.addEventListener("click", function () {
+      selecionarLinha(this);
+    });
+
+    frag.appendChild(Linha);
+  });
+
+  CorpoTabela.appendChild(frag);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ===============================================================================================================================================
+// FUNÇÃO: SELECIONAR/DESSELECIONAR LINHA
+// ===============================================================================================================================================
+
+// Marca linha selecionada (verde) ou desmarca se clicar novamente
+function selecionarLinha(linha) {
+
+    // Verifica se a linha clicada já está selecionada
+    if (linhaSelecionada === linha) {
+        // Se sim, desseleciona (remove classe verde)
+        linha.classList.remove("selecionada");
+        linhaSelecionada = null;
+    } else {
+        // Remove seleção anterior se existir
+        if (linhaSelecionada) {
+            linhaSelecionada.classList.remove("selecionada");
+        }
+        
+        // Adiciona seleção na nova linha (classe verde)
+        linha.classList.add("selecionada");
+        linhaSelecionada = linha;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+// ==================================================================================================================================================
+// FUNÇÕES: CONTROLE DO MODAL DE CARREGAMENTO
+// ==================================================================================================================================================
+
+// Exibe o modal de carregamento (tela preta com logo girando)
+function mostrarCarregamentoModal() {
+    document.getElementById('modalCarregamento').classList.add('ativo');
+}
+
+// Esconde o modal de carregamento
+function esconderCarregamentoModal() {
+    document.getElementById('modalCarregamento').classList.remove('ativo');
+}
+
+
+
+
+
+
+
+
+
+
+// ==============================================================================================================================================
+// FUNÇÃO: ATUALIZAR DADOS
+// ==============================================================================================================================================
+
+// Busca dados atualizados do GS sem recarregar a página
+function atualizarDados() {
+
+    // Chama função do Google Apps Script
+    google.script.run
+        .withSuccessHandler(function(resultado) {
+            if (resultado.sucesso) {
+
+                dadosTabela = resultado.dadosCompletos;
+                
+                // Recarrega a tabela com os novos dados
+                carregarDadosIniciais();
+
+                if (document.getElementById("modalSaldoEstoque")?.classList.contains("ativo")) {
+                    dadosSaldoEstoque = montarDadosSaldoEstoque();
+                    dadosSaldoFiltrados = dadosSaldoEstoque.slice();
+                    renderizarTabelaSaldo(dadosSaldoFiltrados);
+                }
+            } else {
+                toastr.error(resultado.mensagem || "Erro ao atualizar dados!");
+            }
+        })
+        .withFailureHandler(function(erro) {
+            console.error("Erro ao atualizar dados:", erro);
+            toastr.error("Erro ao atualizar dados. Verifique o console.");
+        })
+        .buscarDadosAtualizadosEstoque();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ============================================================================================================================
+// CONFIGURAÇÃO DO CALENDÁRIO DE PESQUISA
+// ============================================================================================================================
+
+// Função para apenas um clique ----------------------------------
+function initDatepickerSingleClick(input, i18nBR) {
+  const instance = M.Datepicker.init(input, {
+    format: 'dd/mm/yyyy',
+    maxDate: new Date(),
+    autoClose: true,      // fecha ao selecionar (1 clique)
+    showClearBtn: true,
+    yearRange: 100,
+    i18n: i18nBR
+  });
+
+  return instance;
+}
+
+
+
+
+// ====== Range Datepicker (2 cliques) ======
+function initDatepickerRange(input, i18nBR) {
+  const fmt = (d) => {
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yy = d.getFullYear();
+    return `${dd}/${mm}/${yy}`;
+  };
+
+  let start = null;
+  let end = null;
+
+  const instance = M.Datepicker.init(input, {
+    format: 'dd/mm/yyyy',
+    maxDate: new Date(),
+    autoClose: false,     // NÃO fecha no 1º clique (range)
+    showClearBtn: true,
+    yearRange: 100,
+    i18n: i18nBR,
+
+    onOpen() {
+      const inst = M.Datepicker.getInstance(input);
+      setTimeout(() => highlightRange(inst, start, end), 0);
+    },
+
+    onSelect(date) {
+      if (!start || (start && end)) {
+        start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        end = null;
+
+        input.value = `${fmt(start)} - `;
+        const inst = M.Datepicker.getInstance(input);
+        setTimeout(() => highlightRange(inst, start, end), 0);
+        return;
+      }
+
+      const picked = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+      if (picked.getTime() < start.getTime()) {
+        end = start;
+        start = picked;
+      } else {
+        end = picked;
+      }
+
+      input.value = `${fmt(start)} - ${fmt(end)}`;
+
+      const inst = M.Datepicker.getInstance(input);
+      setTimeout(() => highlightRange(inst, start, end), 0);
+
+      inst.close();
+    }
+  });
+
+  input.addEventListener("input", () => {
+    if (!input.value.trim()) {
+      start = null;
+      end = null;
+      const inst = M.Datepicker.getInstance(input);
+      if (inst) setTimeout(() => highlightRange(inst, start, end), 0);
+    }
+  });
+
+  return instance;
+}
+
+
+// ====== Pinta o intervalo no calendário ======
+function highlightRange(instance, start, end) {
+  if (!instance || !instance.datepickerEl) return;
+
+  const root = instance.datepickerEl;
+  const tds = root.querySelectorAll(".datepicker-table td");
+
+  // limpa classes antigas
+  tds.forEach(td => {
+    td.classList.remove("range-start", "range-end", "range-between");
+  });
+
+  if (!start) return;
+
+  const startT = start.getTime();
+  const endT = end ? end.getTime() : null;
+
+  tds.forEach(td => {
+    const btn = td.querySelector(".datepicker-day-button");
+    if (!btn) return;
+
+    // tenta ler data do DOM do Materialize
+    const day = parseInt(btn.getAttribute("data-day"), 10);
+    const month = parseInt(btn.getAttribute("data-month"), 10);
+    const year = parseInt(btn.getAttribute("data-year"), 10);
+
+    if (Number.isNaN(day) || Number.isNaN(month) || Number.isNaN(year)) return;
+
+    const cellDate = new Date(year, month, day);
+    const cellT = cellDate.getTime();
+
+    // 1 clique: marca só o início
+    if (!endT) {
+      if (cellT === startT) td.classList.add("range-start");
+      return;
+    }
+
+    // 2 cliques: marca intervalo
+    if (cellT === startT) td.classList.add("range-start");
+    else if (cellT === endT) td.classList.add("range-end");
+    else if (cellT > startT && cellT < endT) td.classList.add("range-between");
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =================================================================================================================================================
+// CONFIGURAÇÃO GERAL DOS DROPDOWNS SIMPLES
+// =================================================================================================================================================
+// Ao final desse bloco de código devemos informar quais elementos farão parte dessa configuração
+
+function configurarDropdown(inputCampo, listaUl, dados) {
+  if (!inputCampo || !listaUl) return;
+  let timeoutId = null;
+
+  // EVENTO: DIGITAÇÃO NO CAMPO DE PESQUISA =======================================================
+  inputCampo.addEventListener('input', function (e) {
+    if (inputCampo.dataset.selecaoDropdown === 'S') {
+      inputCampo.dataset.selecaoDropdown = 'N';
+      esconderSugestoes(listaUl);
+      return;
+    }
+
+    const texto = e.target.value;
+
+    // Cancela timeout anterior (debounce)
+    if (timeoutId) clearTimeout(timeoutId);
+
+    // Aguarda 300ms após parar de digitar para filtrar
+    timeoutId = setTimeout(function () {
+      filtrarEMostrarSugestoes(texto, dados, listaUl, inputCampo);
+    }, 300);
+  });
+
+  document.addEventListener('click', function (e) {
+  // NÃO fecha se clicou dentro do próprio input ou dentro da lista
+  if (e.target === inputCampo || listaUl.contains(e.target)) return;
+
+  // NÃO fecha se clicou dentro do container do dropdown
+  if (e.target.closest('.dropdown-container')) return;
+
+  esconderSugestoes(listaUl);
+  });
+
+  // EVENTO: FOCO NO CAMPO - MOSTRA TODAS AS OPÇÕES ================================================
+  inputCampo.addEventListener('focus', function () {
+      mostrarSugestoes(dados, listaUl, inputCampo);
+  });
+
+  // EVENTO: CLICAR FORA - FECHA DROPDOWN ==========================================================
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('.dropdown-container')) {
+      esconderSugestoes(listaUl);
+    }
+  });
+
+  // EVENTO: NAVEGAÇÃO POR TECLADO =================================================================
+  inputCampo.addEventListener('keydown', function (e) {
+    const items = listaUl.querySelectorAll('li');
+    const selected = listaUl.querySelector('li.selected');
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        navegarSugestoes(items, selected, 'down');
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        navegarSugestoes(items, selected, 'up');
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selected) {
+          selecionarOpcao(selected.textContent, inputCampo, listaUl);
+        }
+        break;
+      case 'Escape':
+        esconderSugestoes(listaUl);
+        break;
+    }
+  });
+}
+
+
+// FUNÇÕES AUXILIARES==================================================================================================
+
+
+// Filtra dados e exibe sugestões ===================================================================================
+function filtrarEMostrarSugestoes(texto, dados, listaUl, inputCampo) {
+ const textoFiltro = (texto || '').trim().toLowerCase();
+  if (textoFiltro === '') {
+    mostrarSugestoes(dados, listaUl, inputCampo);
+    return;
+  }
+  const filtrados = dados.filter(item => item.toLowerCase().includes(textoFiltro));
+  mostrarSugestoes(filtrados, listaUl, inputCampo);
+}
+
+// Exibe a lista de sugestões =======================================================================================
+function mostrarSugestoes(lista, listaUl, inputCampo) {
+  listaUl.innerHTML = '';
+
+  if (lista.length === 0) {
+    const noResults = document.createElement('li');
+    noResults.textContent = 'Nenhum resultado encontrado';
+    noResults.style.cssText = 'padding: 10px; color: #666; font-style: italic;';
+    listaUl.appendChild(noResults);
+  } else {
+    lista.forEach(item => {
+      const li = document.createElement('li');
+      li.textContent = item;
+      li.style.cssText = 'padding: 10px; cursor: pointer; border-bottom: 1px solid #eee;';
+
+      // Evento de clique no item
+      li.addEventListener('click', function () {
+        selecionarOpcao(item, inputCampo, listaUl);
+      });
+
+      // Evento de hover
+      li.addEventListener('mouseenter', function () {
+        const selected = listaUl.querySelector('li.selected');
+        if (selected) {
+          selected.classList.remove('selected');
+          selected.style.backgroundColor = '';
+        }
+        li.classList.add('selected');
+        li.style.backgroundColor = '#f5f5f5';
+      });
+
+      listaUl.appendChild(li);
+    });
+  }
+
+  listaUl.style.display = 'block';
+}
+
+// Esconde o dropdown ===============================================================================================
+function esconderSugestoes(listaUl) {
+  listaUl.style.display = 'none';
+}
+
+// Seleciona uma opção ==============================================================================================
+function selecionarOpcao(valor, inputCampo, listaUl) {
+  inputCampo.dataset.selecaoDropdown = 'S';
+  inputCampo.value = valor;
+  inputCampo.dispatchEvent(new Event('input', { bubbles: true }));
+  inputCampo.dispatchEvent(new Event('change', { bubbles: true }));
+  esconderSugestoes(listaUl);
+}
+
+// Navega pelas sugestões com setas =================================================================================
+function navegarSugestoes(items, selected, direction) {
+  if (items.length === 0) return;
+
+  let index = -1;
+  if (selected) {
+    index = Array.from(items).indexOf(selected);
+    selected.classList.remove('selected');
+    selected.style.backgroundColor = '';
+  }
+
+  if (direction === 'down') {
+    index = index < items.length - 1 ? index + 1 : 0;
+  } else {
+    index = index > 0 ? index - 1 : items.length - 1;
+  }
+
+  items[index].classList.add('selected');
+  items[index].style.backgroundColor = '#f5f5f5';
+  items[index].scrollIntoView({ block: 'nearest' });
+}
+
+
+// CONFIGURAÇÃO DE TODOS OS DROPDOWNS DA PÁGINA ======================================================================
+
+function configurarTodosDropdowns() {
+
+  configurarDropdown(inputTipo, listaUlTipo, todostipos);
+  configurarDropdown(inputProduto, listaUlProduto, todosprodutos);
+  configurarDropdown(inputFilial, listaUlFilial, todasfilais);
+
+  configurarDropdown(inputEditarTipo, listaUlEditarTipo, todostipos);
+  configurarDropdown(inputEditarProduto, listaUlEditarProduto, todosprodutos);
+  configurarDropdown(inputEditarFilial, listaUlEditarFilial, todasfilais);
+
+  configurarDropdown(inputTransferenciaFilialOrigem, listaUlTransferenciaFilialOrigem, todasfilais);
+  configurarDropdown(inputTransferenciaFilialDestino, listaUlTransferenciaFilialDestino, todasfilais);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =================================================================================================================================================
+// CONFIGURAÇÃO GERAL DOS DROPDOWNS MULTISELEÇÃO - USADOS NA PARTE DE PESQUISA
+// =================================================================================================================================================
+// Essa função será chamada dentro da função de abrir modal de pesquisa, onde passaremos os elementos que farão parte dessa configuração
+
+function configurarDropdownMulti(inputCampo, listaUl, dados, separador = "; ") {
+  if (!inputCampo || !listaUl) return;
+
+  // Guarda os selecionados (mantém mesmo com filtro)
+  const selecionados = new Set();
+
+  const normalizar = (v) => String(v ?? "").trim();
+  const lower = (v) => normalizar(v).toLowerCase();
+
+  function obterOpcoesValidas() {
+    return Array.from(new Set((dados || []).map(normalizar).filter(Boolean)));
+  }
+
+  String(inputCampo.value || "")
+    .split(";")
+    .map(normalizar)
+    .filter(Boolean)
+    .forEach(valor => selecionados.add(valor));
+
+  function atualizarInput() {
+    inputCampo.value = Array.from(selecionados).join(separador);
+  }
+
+  function render(lista) {
+    listaUl.innerHTML = "";
+
+    const opcoesTodas = obterOpcoesValidas();
+
+    if (opcoesTodas.length) {
+      const todosSelecionados = opcoesTodas.every(valor => selecionados.has(valor));
+      const algunsSelecionados = opcoesTodas.some(valor => selecionados.has(valor));
+      const liTodos = document.createElement("li");
+      liTodos.style.cssText = "padding: 10px; border-bottom: 1px solid #ddd; display:flex; align-items:center; gap:10px; font-weight:700;";
+
+      const chkTodos = document.createElement("input");
+      chkTodos.type = "checkbox";
+      chkTodos.checked = todosSelecionados;
+      chkTodos.indeterminate = !todosSelecionados && algunsSelecionados;
+      chkTodos.style.cursor = "pointer";
+
+      const labelTodos = document.createElement("span");
+      labelTodos.textContent = "Selecionar todos";
+      labelTodos.style.cssText = "cursor: pointer; user-select: none;";
+
+      liTodos.addEventListener("click", () => {
+        const marcarTodos = !opcoesTodas.every(valor => selecionados.has(valor));
+        opcoesTodas.forEach(valor => {
+          if (marcarTodos) selecionados.add(valor);
+          else selecionados.delete(valor);
+        });
+        atualizarInput();
+        render(lista);
+      });
+
+      liTodos.appendChild(chkTodos);
+      liTodos.appendChild(labelTodos);
+      listaUl.appendChild(liTodos);
+    }
+
+    if (!lista || lista.length === 0) {
+      const li = document.createElement("li");
+      li.textContent = "Nenhum resultado encontrado";
+      li.style.cssText = "padding: 10px; color: #666; font-style: italic;";
+      listaUl.appendChild(li);
+      listaUl.style.display = "block";
+      return;
+    }
+
+    lista.forEach(item => {
+      const valor = normalizar(item);
+      if (!valor) return;
+
+      const li = document.createElement("li");
+      li.style.cssText = "padding: 10px; border-bottom: 1px solid #eee; display:flex; align-items:center; gap:10px;";
+
+      const chk = document.createElement("input");
+      chk.type = "checkbox";
+      chk.checked = selecionados.has(valor);
+      chk.style.cursor = "pointer";
+
+      const label = document.createElement("span");
+      label.textContent = valor;
+      label.style.cssText = "cursor: pointer; user-select: none;";
+
+      function alternar() {
+        if (chk.checked) selecionados.add(valor);
+        else selecionados.delete(valor);
+        atualizarInput();
+      }
+
+      // clique no checkbox
+      chk.addEventListener("change", alternar);
+
+      // clique no texto também alterna
+      label.addEventListener("click", () => {
+        chk.checked = !chk.checked;
+        alternar();
+      });
+
+      li.appendChild(chk);
+      li.appendChild(label);
+      listaUl.appendChild(li);
+    });
+
+    listaUl.style.display = "block";
+  }
+
+  function mostrarTudo() {
+    render(dados);
+  }
+
+  function filtrar() {
+    const texto = lower(inputCampo.value);
+    // Filtra digitando: aqui vamos considerar o "último termo" após ';'
+    // para permitir que o usuário continue digitando mesmo com itens já selecionados.
+    const ultimoTermo = texto.split(";").pop().trim();
+
+    if (!ultimoTermo) {
+      mostrarTudo();
+      return;
+    }
+
+    const filtrados = dados.filter(item => lower(item).includes(ultimoTermo));
+    render(filtrados);
+  }
+
+  // Abre no clique/focus
+  inputCampo.addEventListener("focus", mostrarTudo);
+  inputCampo.addEventListener("click", mostrarTudo);
+
+  // Filtra ao digitar
+  inputCampo.addEventListener("input", () => {
+    // debounce simples (opcional)
+    clearTimeout(inputCampo._ddTimeout);
+    inputCampo._ddTimeout = setTimeout(filtrar, 150);
+  });
+
+  // Fechar ao clicar fora
+  document.addEventListener("click", (e) => {
+    if (e.target === inputCampo) return;
+    if (listaUl.contains(e.target)) return;
+    if (e.target.closest(".dropdown-container")) return;
+    listaUl.style.display = "none";
+  });
+
+  // (Opcional) ESC fecha
+  inputCampo.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") listaUl.style.display = "none";
+  });
+
+  // Exponho um helper se você quiser limpar depois
+  inputCampo._clearMulti = () => {
+    selecionados.clear();
+    atualizarInput();
+    listaUl.style.display = "none";
+  };
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ==============================================================================================================================================
+// FUNÇÃO: EXTRAIR DADOS
+// ==============================================================================================================================================
+
+function exportarTabelaParaCSV(nomeArquivo) {
+  const thead = document.querySelector("#tb_cabecalho");
+  const tbody = document.querySelector("#tb_corpo");
+
+  if (!thead || !tbody) {
+    console.warn("Cabeçalho ou corpo da tabela não encontrado.");
+    return;
+  }
+
+  // ===== helpers =====
+  const limparTexto = (t) => String(t ?? "").replace(/\s+/g, " ").trim();
+
+  // Escapa CSV: aspas duplas e vírgulas/quebras de linha
+  const csvEscape = (valor) => {
+    const v = limparTexto(valor);
+    const precisaAspas = /[",\n\r]/.test(v);
+    const vEsc = v.replace(/"/g, '""');
+    return precisaAspas ? `"${vEsc}"` : vEsc;
+  };
+
+  const linhasCSV = [];
+
+  // ===== cabeçalho =====
+  const ths = Array.from(thead.querySelectorAll("th"));
+  const cabecalho = ths.map(th => csvEscape(th.textContent));
+  linhasCSV.push(cabecalho.join(",")); // separado por vírgula
+
+  // ===== corpo =====
+  const trs = Array.from(tbody.querySelectorAll("tr"));
+  trs.forEach(tr => {
+    const tds = Array.from(tr.querySelectorAll("td"));
+    const linha = tds.map(td => csvEscape(td.textContent));
+    linhasCSV.push(linha.join(","));
+  });
+
+  // Monta arquivo (UTF-8 com BOM pra abrir bem no Excel PT-BR)
+  const csvFinal = "\uFEFF" + linhasCSV.join("\r\n");
+  const blob = new Blob([csvFinal], { type: "text/csv;charset=utf-8;" });
+
+  // Download
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = nomeArquivo || "export.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ========================================
+// FUNÇÃO: LIMPAR FILTROS
+// ========================================
+// Remove filtros e restaura tabela completa
+function Limpar() {
+    
+    // Recarrega todos os dados
+    carregarDadosIniciais();
+    
+    toastr.info('Filtros removidos com sucesso!');
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ==================================================================================================================================================
+// MODAL DE PESQUISA
+// ==================================================================================================================================================
+
+// Abre o modal de pesquisa --------------------------------------------------------------------------------------
+
+function abrirModalPesquisa() {
+    // 1) Abre o modal
+    const modal = document.getElementById("modalPesquisa");
+    if (!modal) return;
+    modal.classList.add("ativo");
+
+    // 2) Pega as linhas atualmente exibidas na tabela (interface)
+    const tbody = document.getElementById("tb_corpo");
+    if (!tbody) return;
+
+    const linhas = Array.from(tbody.querySelectorAll("tr"));
+
+    // 3) Coleta valores distintos (coluna 3 = index 2 / coluna 5 = index 4)
+    const setTipo = new Set();
+    const setProduto = new Set();
+    const setFilial = new Set();
+
+
+    linhas.forEach(tr => {
+
+      const tds = tr.querySelectorAll("td");
+      if (!tds || tds.length < 11) return;
+
+      const tipo = (tds[1].textContent || "").trim(); // 2ª coluna
+      const produto = (tds[4].textContent || "").trim(); // 5ª coluna
+      const filial = (tds[7].textContent || "").trim(); // 8ª coluna
+
+      if (tipo) setTipo.add(tipo);
+      if (produto) setProduto.add(produto);
+      if (filial) setFilial.add(filial);
+      
+    });
+
+    // 4) Ordena (opcional, fica melhor)
+    const tipos = Array.from(setTipo).sort((a, b) => a.localeCompare(b));
+    const produtos = Array.from(setProduto).sort((a, b) => a.localeCompare(b));
+    const filiais = Array.from(setFilial).sort((a, b) => a.localeCompare(b));
+
+    configurarDropdownMulti(inputPesquisarTipo, listaUlPesquisarTipo, tipos);
+    configurarDropdownMulti(inputPesquisarProduto, listaUlPesquisarProduto, produtos);
+    configurarDropdownMulti(inputPesquisarFilial, listaUlPesquisarFilial, filiais);
+
+}
+
+
+
+
+
+
+// Fecha o modal e limpa os campos ------------------------------------------------------------------------------------
+
+function fecharModalPesquisa() {
+    document.getElementById("modalPesquisa").classList.remove("ativo");
+    document.querySelectorAll("#modalPesquisa .sugestoes").forEach(lista => lista.style.display = "none");
+}
+
+
+
+
+
+// Pega os dados dos inputs e aplica a pesquisa na tabela --------------------------------------------------------------
+
+function aplicarPesquisaNaTabela() {
+
+  const inputTip = document.getElementById("inputPesquisarTipo");
+  const inputPro = document.getElementById("inputPesquisarProduto");
+  const inputFil = document.getElementById("inputPesquisarFilial");
+  const inputMov = document.getElementById("inputPesquisarDataMovimentacao");
+  const inputCad = document.getElementById("inputPesquisarDataCadastro");
+
+  const tipRaw = (inputTip?.value || "").trim();
+  const proRaw = (inputPro?.value || "").trim();
+  const filRaw = (inputFil?.value || "").trim();
+  const movRaw = (inputMov?.value || "").trim();
+  const cadRaw = (inputCad?.value || "").trim();
+
+  // 2) Se nenhum campo preenchido
+  if (!tipRaw && !proRaw && !filRaw && !movRaw && !cadRaw) {
+    // Use sua lib de toast se existir, senão alert
+    if (window.toastr) toastr.warning("Preencha ao menos um campo!");
+    else alert("Preencha ao menos um campo!");
+    return;
+  }
+
+  // Pega linhas atuais exibidas
+  const tbody = document.getElementById("tb_corpo");
+  if (!tbody) return;
+
+  const linhasDOM = Array.from(tbody.querySelectorAll("tr"));
+
+  // Transforma as linhas DOM em array de textos [col1..col8]
+  const linhas = linhasDOM.map(tr => Array.from(tr.querySelectorAll("td")).map(td => (td.textContent || "").trim()));
+
+  // ====== Monta critérios ======
+  const normalizar = (v) => String(v ?? "").trim();
+  const normLower = (v) => normalizar(v).toLowerCase();
+
+  // Atividade / Filial: split por ";" e OR dentro do campo
+  const listaTip = parseListaMulti(tipRaw); // array de strings
+  const listaPro = parseListaMulti(proRaw);
+  const listaFil = parseListaMulti(filRaw);
+
+  // Datas: "dd/MM/yyyy - dd/MM/yyyy"
+  const rangeMov = parseRangeBR(movRaw);
+  const rangeCad = parseRangeBR(cadRaw);
+
+  // ====== Filtra (AND entre campos) ======
+  const filtradas = linhas.filter(r => {
+
+    if (listaTip.length > 0) {
+      const valor = normLower(r[1]);
+      const ok = listaTip.some(x => normLower(x) === valor);
+      if (!ok) return false;
+    }
+
+    // AND 2: Subcategoria
+    if (listaPro.length > 0) {
+      const valor = normLower(r[4]);
+      const ok = listaPro.some(x => normLower(x) === valor);
+      if (!ok) return false;
+    }
+
+    // AND 2: Subcategoria
+    if (listaFil.length > 0) {
+      const valor = normLower(r[7]);
+      const ok = listaFil.some(x => normLower(x) === valor);
+      if (!ok) return false;
+    }
+
+    if (rangeMov) {
+      const ts = parseDataHoraBRToTS(r[8]);
+      if (!ts) return false;
+      if (ts < rangeMov.iniTS || ts > rangeMov.fimTS) return false;
+    }
+
+    // AND 4: Período de cadastro 
+    if (rangeCad) {
+      const ts = parseDataHoraBRToTS(r[9]);
+      if (!ts) return false;
+      if (ts < rangeCad.iniTS || ts > rangeCad.fimTS) return false;
+    }
+
+    return true;
+  });
+
+  // ====== Renderiza a tabela com o resultado filtrado ======
+  renderTabelaAPartirDeArray(filtradas);
+  fecharModalPesquisa();
+
+  // (Opcional) fechar modal de pesquisa se quiser
+  // document.getElementById("modalPesquisa")?.classList.remove("ativo");
+}
+
+
+// ===== Helpers =====
+
+// "nome1; nome2; nome3" -> ["nome1","nome2","nome3"]
+function parseListaMulti(str) {
+  const s = String(str || "").trim();
+  if (!s) return [];
+  return s
+    .split(";")
+    .map(x => x.trim())
+    .filter(Boolean);
+}
+
+// "dd/MM/yyyy - dd/MM/yyyy" -> {iniTS, fimTS} (fim no final do dia)
+function parseRangeBR(str) {
+  const s = String(str || "").trim();
+  if (!s) return null;
+
+  const parts = s.split("-").map(p => p.trim());
+  if (parts.length < 2) return null;
+
+  const ini = parseDataBRToTS(parts[0], false);
+  const fim = parseDataBRToTS(parts[1], true);
+
+  if (!ini || !fim) return null;
+
+  return { iniTS: ini, fimTS: fim };
+}
+
+// "dd/MM/yyyy" -> timestamp (00:00:00) ou (23:59:59)
+function parseDataBRToTS(str, fimDoDia) {
+  const s = String(str || "").trim();
+  const [dd, MM, yyyy] = s.split("/").map(n => parseInt(n, 10));
+  if (!yyyy || !MM || !dd) return 0;
+
+  const h = fimDoDia ? 23 : 0;
+  const m = fimDoDia ? 59 : 0;
+  const sec = fimDoDia ? 59 : 0;
+
+  return new Date(yyyy, MM - 1, dd, h, m, sec).getTime();
+}
+
+// "dd/MM/yyyy HH:mm:ss" OU "dd/MM/yyyy" -> timestamp
+function parseDataHoraBRToTS(str) {
+  const s = String(str || "").trim();
+  if (!s) return 0;
+
+  const [dataParte, horaParte] = s.split(" ");
+  if (!dataParte) return 0;
+
+  const [dd, MM, yyyy] = dataParte.split("/").map(n => parseInt(n, 10));
+  if (!yyyy || !MM || !dd) return 0;
+
+  let hh = 0, mm = 0, ss = 0;
+  if (horaParte) {
+    const hparts = horaParte.split(":").map(n => parseInt(n, 10));
+    hh = isNaN(hparts[0]) ? 0 : hparts[0];
+    mm = isNaN(hparts[1]) ? 0 : hparts[1];
+    ss = isNaN(hparts[2]) ? 0 : hparts[2];
+  }
+
+  return new Date(yyyy, MM - 1, dd, hh, mm, ss).getTime();
+}
+
+// Renderiza a tabela (só reescreve o tbody com as linhas filtradas)
+function renderTabelaAPartirDeArray(linhas) {
+  const tbody = document.getElementById("tb_corpo");
+  if (!tbody) return;
+
+  linhaSelecionada = null;
+
+  // limpa
+  while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+
+  // popula
+  linhas.forEach(r => {
+    const tr = document.createElement("tr");
+
+    for (let i = 0; i < r.length && i < 12; i++) {
+      const td = document.createElement("td");
+      td.textContent = r[i];
+      tr.appendChild(td);
+    }
+
+    tr.addEventListener("click", function () {
+      selecionarLinha(this);
+    });
+
+    tbody.appendChild(tr);
+  });
+}
+
+
+function obterNomeProdutoPorCodigo(codigo) {
+  const chave = String(codigo ?? '').trim();
+  if (!chave) return chave;
+
+  const produto = mapaProdutoPorCodigoEstoque.get(chave);
+  return produto && produto.nome ? produto.nome : chave;
+}
+
+
+function obterNomeFilialPorCodigo(codigo) {
+  const chave = String(codigo ?? '').trim();
+  if (!chave) return chave;
+
+  const filial = mapaFilialPorCodigoEstoque.get(chave);
+  return filial && filial.nome ? filial.nome : chave;
+}
+
+
+function normalizarTextoBase(valor) {
+  return String(valor ?? '')
+    .trim()
+    .toUpperCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+
+function obterQuantidadeMovimentacao(valor) {
+  const numero = parseFloat(String(valor ?? '').replace(',', '.').replace(/[^\d.-]/g, ''));
+  return Number.isFinite(numero) ? numero : 0;
+}
+
+
+function montarDadosSaldoEstoque() {
+  const mapaSaldo = new Map();
+
+  if (!Array.isArray(dadosTabela)) return [];
+
+  dadosTabela.forEach(linha => {
+    if (!Array.isArray(linha) || linha.length <= COL_EST.EDITADO) return;
+
+    const tipo = normalizarTextoBase(linha[COL_EST.TIPO]);
+    const codigoProduto = String(linha[COL_EST.PRODUTO] ?? '').trim();
+    const codigoFilial = String(linha[COL_EST.FILIAL] ?? '').trim();
+    const qtd = obterQuantidadeMovimentacao(linha[COL_EST.QTD]);
+
+    if (!codigoProduto || !codigoFilial || !qtd) return;
+
+    let fator = 0;
+    if (tipo.includes('ENTRADA')) fator = 1;
+    if (tipo.includes('SAIDA')) fator = -1;
+    if (!fator) return;
+
+    const chave = `${codigoFilial}||${codigoProduto}`;
+    const atual = mapaSaldo.get(chave) || {
+      filial: obterNomeFilialPorCodigo(codigoFilial),
+      produto: obterNomeProdutoPorCodigo(codigoProduto),
+      saldo: 0
+    };
+
+    atual.saldo += qtd * fator;
+    mapaSaldo.set(chave, atual);
+  });
+
+  return Array.from(mapaSaldo.values()).sort((a, b) => {
+    const filial = a.filial.localeCompare(b.filial, 'pt-BR');
+    if (filial !== 0) return filial;
+    return a.produto.localeCompare(b.produto, 'pt-BR');
+  });
+}
+
+
+function renderizarTabelaSaldo(linhas) {
+  const tbody = document.getElementById("tb_saldo_corpo");
+  if (!tbody) return;
+
+  while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+
+  const frag = document.createDocumentFragment();
+
+  linhas.forEach(item => {
+    const tr = document.createElement("tr");
+
+    [item.filial, item.produto, item.saldo].forEach((valor, idx) => {
+      const td = document.createElement("td");
+      td.textContent = idx === 2 ? String(valor) : valor;
+      tr.appendChild(td);
+    });
+
+    frag.appendChild(tr);
+  });
+
+  tbody.appendChild(frag);
+}
+
+function renderizarLoadingSaldoEstoque() {
+  const tbody = document.getElementById("tb_saldo_corpo");
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:28px;"><div class="preloader-wrapper small active"><div class="spinner-layer spinner-green-only"><div class="circle-clipper left"><div class="circle"></div></div><div class="gap-patch"><div class="circle"></div></div><div class="circle-clipper right"><div class="circle"></div></div></div></div></td></tr>';
+}
+
+function carregarSaldoEstoqueAssincrono(forcarRecalculo) {
+  // O saldo depende do historico completo, por isso fica no backend e roda em paralelo
+  // depois que a tabela principal ja foi renderizada.
+  if (saldoEstoqueCarregando) return;
+  if (saldoEstoqueCarregado && !forcarRecalculo) return;
+
+  saldoEstoqueCarregando = true;
+  if (forcarRecalculo) saldoEstoqueCarregado = false;
+
+  if (document.getElementById("modalSaldoEstoque")?.classList.contains("ativo")) {
+    renderizarLoadingSaldoEstoque();
+  }
+
+  google.script.run
+    .withSuccessHandler(function(resultado) {
+      saldoEstoqueCarregando = false;
+      if (!resultado || !resultado.sucesso) {
+        toastr.error(resultado?.mensagem || "Erro ao carregar saldo de estoque.");
+        return;
+      }
+
+      dadosSaldoEstoque = Array.isArray(resultado.dadosSaldo) ? resultado.dadosSaldo : [];
+      dadosSaldoFiltrados = dadosSaldoEstoque.slice();
+      saldoEstoqueCarregado = true;
+
+      if (document.getElementById("modalSaldoEstoque")?.classList.contains("ativo")) {
+        renderizarTabelaSaldo(dadosSaldoFiltrados);
+      }
+    })
+    .withFailureHandler(function(erro) {
+      saldoEstoqueCarregando = false;
+      console.error("Erro ao carregar saldo:", erro);
+      toastr.error("Erro ao carregar saldo de estoque. Verifique o console.");
+    })
+    .buscarDadosAtualizadosEstoque("SALDO");
+}
+
+
+function atualizarIconeOrdenacaoSaldo() {
+  const icone = document.getElementById("iconeOrdenacaoSaldo");
+  if (!icone) return;
+
+  if (ordemSaldo === 'desc') {
+    icone.textContent = '▼';
+    return;
+  }
+
+  if (ordemSaldo === 'asc') {
+    icone.textContent = '▲';
+    return;
+  }
+
+  icone.textContent = '';
+}
+
+
+function abrirModalSaldoEstoque() {
+  ordemSaldo = null;
+
+  if (saldoEstoqueCarregado) renderizarTabelaSaldo(dadosSaldoFiltrados);
+  else renderizarLoadingSaldoEstoque();
+  atualizarIconeOrdenacaoSaldo();
+
+  const modal = document.getElementById("modalSaldoEstoque");
+  if (modal) modal.classList.add("ativo");
+
+  if (!saldoEstoqueCarregado && !saldoEstoqueCarregando) carregarSaldoEstoqueAssincrono();
+}
+
+
+function fecharModalSaldoEstoque() {
+  const modal = document.getElementById("modalSaldoEstoque");
+  if (modal) modal.classList.remove("ativo");
+
+  fecharModalPesquisaSaldo();
+}
+
+
+function abrirModalPesquisaSaldo() {
+  const produtos = Array.from(new Set(dadosSaldoEstoque.map(item => item.produto).filter(Boolean)))
+    .sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  const filiais = Array.from(new Set(dadosSaldoEstoque.map(item => item.filial).filter(Boolean)))
+    .sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+  configurarDropdownMulti(inputPesquisarSaldoProduto, listaUlPesquisarSaldoProduto, produtos);
+  configurarDropdownMulti(inputPesquisarSaldoFilial, listaUlPesquisarSaldoFilial, filiais);
+
+  const modal = document.getElementById("modalPesquisaSaldo");
+  if (modal) modal.classList.add("ativo");
+}
+
+
+function fecharModalPesquisaSaldo() {
+  const modal = document.getElementById("modalPesquisaSaldo");
+  if (modal) modal.classList.remove("ativo");
+
+  const inputProduto = document.getElementById("inputPesquisarSaldoProduto");
+  const inputFilial = document.getElementById("inputPesquisarSaldoFilial");
+
+  if (inputProduto) inputProduto.value = "";
+  if (inputFilial) inputFilial.value = "";
+}
+
+
+function aplicarPesquisaSaldo() {
+  const produtoRaw = (document.getElementById("inputPesquisarSaldoProduto")?.value || "").trim();
+  const filialRaw = (document.getElementById("inputPesquisarSaldoFilial")?.value || "").trim();
+
+  const produtos = parseListaMulti(produtoRaw).map(normalizarTextoBase);
+  const filiais = parseListaMulti(filialRaw).map(normalizarTextoBase);
+
+  dadosSaldoFiltrados = dadosSaldoEstoque.filter(item => {
+    if (produtos.length && !produtos.includes(normalizarTextoBase(item.produto))) return false;
+    if (filiais.length && !filiais.includes(normalizarTextoBase(item.filial))) return false;
+    return true;
+  });
+
+  if (ordemSaldo) {
+    dadosSaldoFiltrados.sort((a, b) => ordemSaldo === 'desc' ? b.saldo - a.saldo : a.saldo - b.saldo);
+  }
+
+  renderizarTabelaSaldo(dadosSaldoFiltrados);
+  fecharModalPesquisaSaldo();
+}
+
+
+function limparFiltrosSaldo() {
+  dadosSaldoFiltrados = dadosSaldoEstoque.slice();
+
+  if (ordemSaldo) {
+    dadosSaldoFiltrados.sort((a, b) => ordemSaldo === 'desc' ? b.saldo - a.saldo : a.saldo - b.saldo);
+  }
+
+  renderizarTabelaSaldo(dadosSaldoFiltrados);
+  fecharModalPesquisaSaldo();
+
+  if (window.toastr) toastr.info('Filtros removidos com sucesso!');
+}
+
+
+function alternarOrdenacaoSaldo() {
+  ordemSaldo = ordemSaldo === 'desc' ? 'asc' : 'desc';
+
+  dadosSaldoFiltrados.sort((a, b) => ordemSaldo === 'desc' ? b.saldo - a.saldo : a.saldo - b.saldo);
+  renderizarTabelaSaldo(dadosSaldoFiltrados);
+  atualizarIconeOrdenacaoSaldo();
+}
+
+
+// =====================================================================================================================================================
+// MODAL DE TRANSFERENCIA - FUNCOES
+// =====================================================================================================================================================
+
+const LIMITE_MAXIMO_ITENS_TRANSFERENCIA = 20;
+
+function obterBlocosTransferencia() {
+  return Array.from(document.querySelectorAll(".bloco-transferencia-item"));
+}
+
+function atualizarBotoesRemoverTransferencia() {
+  const blocos = obterBlocosTransferencia();
+
+  blocos.forEach((bloco, index) => {
+    const btnRemover = bloco.querySelector(".btn-remover-transferencia");
+    if (!btnRemover) return;
+
+    btnRemover.classList.toggle("oculto", index === 0);
+  });
+}
+
+function atualizarEstadoBotaoAdicionarTransferencia() {
+  const btnAdicionar = document.getElementById("btnAdicionarItemTransferencia");
+  if (!btnAdicionar) return;
+
+  const blocos = obterBlocosTransferencia();
+  const existeIncompleto = blocos.some(bloco => {
+    const produto = bloco.querySelector(".input-produto-transferencia");
+    const qtd = bloco.querySelector(".input-qtd-transferencia");
+    return !produto || !qtd || produto.value.trim() === "" || qtd.value.trim() === "";
+  });
+
+  btnAdicionar.disabled = blocos.length >= LIMITE_MAXIMO_ITENS_TRANSFERENCIA || existeIncompleto;
+  atualizarBotoesRemoverTransferencia();
+}
+
+function criarBlocoTransferencia(produto = "", qtd = "") {
+  const bloco = document.createElement("div");
+  bloco.className = "bloco-transferencia-item";
+
+  bloco.innerHTML = `
+    <div class="form-field dropdown-container">
+      <label class="input-label campo-obrigatorio">Produto</label>
+      <input type="text" class="input-moderno input-produto-transferencia" placeholder="Selecione o produto ...">
+      <ul class="sugestoes lista-produto-transferencia"></ul>
+    </div>
+
+    <div class="form-field">
+      <label class="input-label campo-obrigatorio">Quantidade</label>
+      <input type="text" class="input-moderno input-qtd-transferencia" placeholder="Quantidade ..." maxlength="3">
+    </div>
+
+    <button type="button" class="btn-remover-transferencia" title="Remover item">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  `;
+
+  bloco.querySelector(".input-produto-transferencia").value = produto;
+  bloco.querySelector(".input-qtd-transferencia").value = qtd;
+
+  return bloco;
+}
+
+function adicionarEventosBlocoTransferencia(bloco) {
+  if (!bloco) return;
+
+  const inputProduto = bloco.querySelector(".input-produto-transferencia");
+  const listaProduto = bloco.querySelector(".lista-produto-transferencia");
+  const inputQtd = bloco.querySelector(".input-qtd-transferencia");
+  const btnRemover = bloco.querySelector(".btn-remover-transferencia");
+
+  if (inputProduto && listaProduto) {
+    configurarDropdown(inputProduto, listaProduto, todosprodutos);
+    inputProduto.addEventListener("input", atualizarEstadoBotaoAdicionarTransferencia);
+  }
+
+  if (inputQtd) {
+    inputQtd.setAttribute("inputmode", "numeric");
+    inputQtd.addEventListener("input", function() {
+      this.value = this.value.replace(/\D/g, "").slice(0, 3);
+      atualizarEstadoBotaoAdicionarTransferencia();
+    });
+  }
+
+  if (btnRemover) {
+    btnRemover.addEventListener("click", function() {
+      removerBlocoTransferencia(bloco);
+    });
+  }
+}
+
+function removerBlocoTransferencia(bloco) {
+  const blocos = obterBlocosTransferencia();
+
+  if (blocos.length <= 1) {
+    toastr.warning("A transferência precisa ter ao menos um produto.");
+    return;
+  }
+
+  bloco.remove();
+  atualizarEstadoBotaoAdicionarTransferencia();
+}
+
+function configurarModoTransferencia(modo) {
+  const btnTransferir = document.getElementById("btnConfirmarTransferencia");
+  const btnEditar = document.getElementById("btnEditarTransferencia");
+
+  if (!btnTransferir || !btnEditar) return;
+
+  if (modo === "edicao") {
+    btnTransferir.disabled = true;
+    btnEditar.style.display = "inline-block";
+    return;
+  }
+
+  btnTransferir.disabled = false;
+  btnEditar.style.display = "none";
+}
+
+function adicionarNovoBlocoTransferencia() {
+  const container = document.getElementById("containerItensTransferencia");
+  if (!container) return;
+
+  const blocos = obterBlocosTransferencia();
+
+  if (blocos.length >= LIMITE_MAXIMO_ITENS_TRANSFERENCIA) {
+    toastr.warning("Limite maximo de 20 itens por transferencia.");
+    atualizarEstadoBotaoAdicionarTransferencia();
+    return;
+  }
+
+  const ultimoBloco = blocos[blocos.length - 1];
+  if (ultimoBloco) {
+    const produto = ultimoBloco.querySelector(".input-produto-transferencia");
+    const qtd = ultimoBloco.querySelector(".input-qtd-transferencia");
+
+    if (!produto || !qtd || produto.value.trim() === "" || qtd.value.trim() === "") {
+      toastr.warning("Preencha o produto e a quantidade atuais antes de adicionar outro item.");
+      if (produto && produto.value.trim() === "") produto.focus();
+      else if (qtd) qtd.focus();
+      atualizarEstadoBotaoAdicionarTransferencia();
+      return;
+    }
+  }
+
+  const novoBloco = criarBlocoTransferencia();
+  container.appendChild(novoBloco);
+  adicionarEventosBlocoTransferencia(novoBloco);
+  atualizarEstadoBotaoAdicionarTransferencia();
+}
+
+function resetarTransferencia() {
+  const container = document.getElementById("containerItensTransferencia");
+  if (!container) return;
+
+  idTransferenciaEmEdicao = null;
+  document.getElementById("inputTransferenciaFilialOrigem").value = "";
+  document.getElementById("inputTransferenciaFilialDestino").value = "";
+
+  container.innerHTML = "";
+  const primeiroBloco = criarBlocoTransferencia();
+  container.appendChild(primeiroBloco);
+  adicionarEventosBlocoTransferencia(primeiroBloco);
+  configurarModoTransferencia("cadastro");
+  atualizarEstadoBotaoAdicionarTransferencia();
+}
+
+function abrirModalTransferencia() {
+  const idTransferenciaSelecionada = linhaSelecionada?.cells?.[2]?.textContent.trim() || "";
+
+  if (linhaSelecionada && !idTransferenciaSelecionada) {
+    toastr.warning("A linha selecionada não é uma transferência.");
+    return;
+  }
+
+  if (idTransferenciaSelecionada) {
+    abrirModalEdicaoTransferencia(idTransferenciaSelecionada);
+  } else {
+    resetarTransferencia();
+  }
+
+  document.getElementById("modalTransferencia").classList.add("ativo");
+}
+
+function fecharModalTransferencia() {
+  document.getElementById("modalTransferencia").classList.remove("ativo");
+  resetarTransferencia();
+}
+
+function obterLinhasTransferenciaAtiva(idTransferencia) {
+  return (Array.isArray(dadosTabela) ? dadosTabela : [])
+    .filter(linha => String(linha[2] || "").trim() === String(idTransferencia).trim());
+}
+
+function abrirModalEdicaoTransferencia(idTransferencia, linhasCarregadas) {
+  if (!Array.isArray(linhasCarregadas)) {
+    mostrarCarregamentoModal();
+    google.script.run
+      .withSuccessHandler(function(resultado) {
+        esconderCarregamentoModal();
+        if (!resultado || !resultado.sucesso) {
+          toastr.error(resultado?.mensagem || "Erro ao carregar transferencia.");
+          resetarTransferencia();
+          return;
+        }
+
+        mesclarMovimentacoesEstoque(resultado.movimentacoes || []);
+        abrirModalEdicaoTransferencia(idTransferencia, resultado.movimentacoes || []);
+      })
+      .withFailureHandler(function(erro) {
+        esconderCarregamentoModal();
+        console.error("Erro ao carregar transferencia:", erro);
+        toastr.error("Erro ao carregar transferencia. Verifique o console.");
+        resetarTransferencia();
+      })
+      .buscarMovimentacoesTransferenciaEstoque(idTransferencia);
+    return;
+  }
+
+  const linhas = linhasCarregadas;
+
+  if (linhas.length === 0) {
+    toastr.warning("Transferência não encontrada nos dados atuais.");
+    resetarTransferencia();
+    return;
+  }
+
+  const saidas = linhas.filter(linha => normalizarTextoBase(linha[1]).includes("SAIDA"));
+  const entradas = linhas.filter(linha => normalizarTextoBase(linha[1]).includes("ENTRADA"));
+
+  if (saidas.length === 0 || entradas.length === 0) {
+    toastr.warning("Transferência incompleta. Não foi possível abrir para edição.");
+    resetarTransferencia();
+    return;
+  }
+
+  idTransferenciaEmEdicao = idTransferencia;
+  document.getElementById("inputTransferenciaFilialOrigem").value = obterNomeFilialPorCodigo(saidas[0][7]);
+  document.getElementById("inputTransferenciaFilialDestino").value = obterNomeFilialPorCodigo(entradas[0][7]);
+
+  const container = document.getElementById("containerItensTransferencia");
+  container.innerHTML = "";
+
+  saidas.forEach(linha => {
+    const bloco = criarBlocoTransferencia(obterNomeProdutoPorCodigo(linha[4]), String(linha[5] || "").trim());
+    container.appendChild(bloco);
+    adicionarEventosBlocoTransferencia(bloco);
+  });
+
+  configurarModoTransferencia("edicao");
+  atualizarEstadoBotaoAdicionarTransferencia();
+}
+
+function obterDadosTransferencia() {
+  return obterBlocosTransferencia().map(bloco => {
+    const produto = (bloco.querySelector(".input-produto-transferencia")?.value || "").trim().toUpperCase();
+    const qtd = (bloco.querySelector(".input-qtd-transferencia")?.value || "").trim();
+    const produtoObj = mapaProdutoPorNomeEstoque.get(normalizarTextoBase(produto));
+
+    return {
+      produto: produto,
+      codigoProduto: produtoObj ? produtoObj.codigo : "",
+      qtd: qtd
+    };
+  }).filter(item => item.produto !== "" || item.qtd !== "");
+}
+
+function confirmarTransferencia() {
+  executarSalvarTransferencia("cadastro");
+}
+
+function confirmarEdicaoTransferencia() {
+  executarSalvarTransferencia("edicao");
+}
+
+function executarSalvarTransferencia(modo) {
+  const origem = document.getElementById("inputTransferenciaFilialOrigem").value.trim().toUpperCase();
+  const destino = document.getElementById("inputTransferenciaFilialDestino").value.trim().toUpperCase();
+
+  if (modo === "edicao" && !idTransferenciaEmEdicao) {
+    toastr.warning("Nenhuma transferência carregada para edição.");
+    return;
+  }
+
+  if (!origem || !destino) {
+    toastr.warning("Informe filial de origem e filial de destino.");
+    return;
+  }
+
+  if (origem === destino) {
+    toastr.warning("Filial de origem e filial de destino devem ser diferentes.");
+    return;
+  }
+
+  const filialOrigemObj = mapaFilialPorNomeEstoque.get(normalizarTextoBase(origem));
+  const filialDestinoObj = mapaFilialPorNomeEstoque.get(normalizarTextoBase(destino));
+
+  if (!filialOrigemObj || !filialDestinoObj) {
+    toastr.warning("Selecione filiais validas nas listas.");
+    return;
+  }
+
+  const itens = obterDadosTransferencia();
+
+  if (itens.length === 0) {
+    toastr.warning("Informe ao menos um produto para transferencia.");
+    return;
+  }
+
+  const produtosVistos = new Set();
+
+  for (const item of itens) {
+    if (!item.codigoProduto || !item.qtd) {
+      toastr.warning("Preencha produtos validos e quantidades em todos os itens.");
+      return;
+    }
+
+    if (produtosVistos.has(item.codigoProduto)) {
+      toastr.warning("O mesmo produto nao pode aparecer mais de uma vez na transferencia.");
+      return;
+    }
+
+    produtosVistos.add(item.codigoProduto);
+  }
+
+  mostrarCarregamentoModal();
+
+  const runner = google.script.run
+    .withSuccessHandler(function(resultado) {
+      esconderCarregamentoModal();
+
+      if (resultado.sucesso) {
+        atualizarDados();
+        fecharModalTransferencia();
+        toastr.success(resultado.mensagem || "Transferencia salva com sucesso!");
+      } else {
+        toastr.error(resultado.mensagem || "Erro ao salvar transferencia.");
+      }
+    })
+    .withFailureHandler(function(erro) {
+      esconderCarregamentoModal();
+      console.error("Erro ao salvar transferencia:", erro);
+      toastr.error("Erro ao salvar transferencia. Verifique o console.");
+    });
+
+  if (modo === "edicao") {
+    runner.editarTransferenciaEstoque(idTransferenciaEmEdicao, filialOrigemObj.codigo, filialDestinoObj.codigo, itens);
+  } else {
+    runner.cadastrarTransferenciaEstoque(filialOrigemObj.codigo, filialDestinoObj.codigo, itens);
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =====================================================================================================================================================
+// MODAL DE CADASTRO - FUNÇÕES
+// =====================================================================================================================================================
+
+// Abre o modal de cadastro
+function abrirModalCadastro() {
+    document.getElementById("modalCadastro").classList.add("ativo");
+}
+
+
+
+// Fecha o modal e limpa os campos
+function fecharModalCadastro() {
+    document.getElementById("modalCadastro").classList.remove("ativo");
+
+    // Limpa todos os campos
+    document.getElementById("inputTipo").value = "";
+    document.getElementById("inputProduto").value = "";
+    document.getElementById("inputQtd").value = "";
+    document.getElementById("inputValor").value = "";
+    document.getElementById("inputValorMovimentacao").value = "";
+    document.getElementById("inputFilial").value = "";
+    document.getElementById("inputDataMovimentacao").value = "";
+
+    const inputValorCadastro = document.getElementById("inputValor");
+    if (inputValorCadastro) {
+      inputValorCadastro.disabled = false;
+      inputValorCadastro.classList.remove("input-readonly");
+      inputValorCadastro.dataset.valorAutomaticoPerda = "N";
+    }
+}
+
+
+
+// Executa o cadastro da fornecedor
+function cadastrar() {
+
+    // Mostra tela de carregamento
+    mostrarCarregamentoModal();
+
+    // Coleta dados dos campos (convertidos para maiúsculas)
+    const tipo = document.getElementById("inputTipo").value.trim().toUpperCase();
+    const produto = document.getElementById("inputProduto").value.trim().toUpperCase();
+    const qtd = document.getElementById("inputQtd").value.trim();
+    const valor = document.getElementById("inputValor").value.trim().toUpperCase();
+    const filial = document.getElementById("inputFilial").value.trim().toUpperCase();
+    const movimentacao = document.getElementById("inputDataMovimentacao").value.trim();
+
+
+    // Valida Razão Social
+    if (tipo === "" || produto === "" || qtd === "" || filial === "" || movimentacao === "") {
+        toastr.warning("Somente o campo de valor não é obrigatório, preencha os demais campos!");
+        esconderCarregamentoModal();
+        return;
+    }
+
+    // Busca o código correspondente nas listas passadas pelo template
+    const produtoObj = mapaProdutoPorNomeEstoque.get(normalizarTextoBase(produto));
+    const filialObj = mapaFilialPorNomeEstoque.get(normalizarTextoBase(filial));
+
+    // Se encontrar, pega o código; caso contrário, define como vazio
+    const codigoProduto = produtoObj ? produtoObj.codigo : "";
+    const codigoFilial = filialObj ? filialObj.codigo : "";
+
+    if (tipoEhSaidaPerda(tipo) && (!produtoObj || valor === "")) {
+        toastr.warning("Produto sem preço de custo válido para calcular a saída por perda.");
+        esconderCarregamentoModal();
+        return;
+    }
+
+
+    // CHAMA FUNÇÃO DO GOOGLE APPS SCRIPT ========================================================================================
+    google.script.run
+        .withSuccessHandler(Retorno)
+        .withFailureHandler(Erro)
+        .cadastrarEstoque(tipo, codigoProduto, qtd, valor, codigoFilial, movimentacao);
+
+    // Callback de sucesso
+    function Retorno(resultado) {
+        if (resultado.sucesso) {
+            // Atualiza dados e fecha modal
+            atualizarDados();
+            fecharModalCadastro();
+            esconderCarregamentoModal();
+            toastr.success("Movimentação cadastrada com sucesso!");
+        } else {
+            esconderCarregamentoModal();
+            toastr.error(resultado.mensagem || "Erro ao cadastrar movimentação!");
+        }
+    }
+
+    // Callback de erro
+    function Erro(erro) {
+        console.error("Erro ao cadastrar:", erro);
+        esconderCarregamentoModal();
+        toastr.error("Erro ao cadastrar movimentação. Verifique o console.");
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// ==================================================================================================================================================
+// MODAL DE EXCLUSÃO - FUNÇÕES
+// ==================================================================================================================================================
+
+// Abre modal de confirmação de exclusão ============================================================================
+function abrirModalExclusao() {
+
+    if (!linhaSelecionada) {
+        toastr.warning("Selecione uma movimentação na tabela antes de excluir!");
+        return;
+    }
+
+
+    // (coluna 2, índice 1)
+    var idMov = linhaSelecionada.cells[0].textContent;
+    var prodSelec = linhaSelecionada.cells[4].textContent;
+    var tipoSelec = linhaSelecionada.cells[1].textContent;
+    var filSelec = linhaSelecionada.cells[7].textContent;
+    var dataSelec = linhaSelecionada.cells[8].textContent;
+
+    if (idMov === "") {
+        toastr.warning("Selecione uma movimentação na tabela antes de excluir!");
+        return;
+    }
+
+    // Atualiza texto do modal
+    document.getElementById("movimentacaoSelecionada").textContent = idMov;
+    document.getElementById("produtoSelecionado").textContent = prodSelec;
+    document.getElementById("tipoSelecionado").textContent = tipoSelec;
+    document.getElementById("filialSelecionada").textContent = filSelec;
+    document.getElementById("dataSelecionada").textContent = dataSelec;
+
+    // Mostra modal
+    document.getElementById("modalExclusao").classList.add("ativo");
+}
+
+
+
+// Fecha modal de exclusão ==========================================================================================
+function fecharModalExclusao() {
+    document.getElementById("modalExclusao").classList.remove("ativo");
+    document.getElementById("boxModalExclusao")?.classList.remove("com-nf");
+    contextoExclusaoEstoque = null;
+}
+
+// Confirma e executa a exclusão
+function confirmarExclusao() {
+
+    if (!linhaSelecionada) {
+        toastr.error("Nenhuma linha selecionada!");
+        return;
+    }
+
+    // Pega o ID do fornecedor (colunas id na tabela da interface)(coluna 1, índice 0)
+    var idMov = linhaSelecionada.cells[0].textContent;
+
+    // Fecha modal e mostra carregamento
+    fecharModalExclusao();
+    mostrarCarregamentoModal();
+
+    // Chama função GS para excluir
+    google.script.run
+        .withSuccessHandler(function(resultado) {
+            if (resultado.sucesso) {
+                // Atualiza dados
+                google.script.run
+                    .withSuccessHandler(function(resultadoAtualizacao) {
+                        if (resultadoAtualizacao.sucesso) {
+
+                            atualizarDados();
+                            // Limpa seleção
+                            linhaSelecionada = null;
+
+                            esconderCarregamentoModal();
+                            toastr.success("Movimentação excluída com sucesso!");
+                        } else {
+                            esconderCarregamentoModal();
+                            toastr.error("Erro ao atualizar dados!");
+                        }
+                    })
+                    .withFailureHandler(function(erro) {
+                        esconderCarregamentoModal();
+                        console.error("Erro ao atualizar:", erro);
+                        toastr.error("Erro ao atualizar dados.");
+                    })
+                    .buscarDadosAtualizadosEstoque();
+            } else {
+                esconderCarregamentoModal();
+                toastr.error(resultado.mensagem || "Erro ao excluir movimentação!");
+            }
+        })
+        .withFailureHandler(function(erro) {
+            esconderCarregamentoModal();
+            console.error("Erro ao excluir:", erro);
+            toastr.error("Erro ao excluir cliente. Verifique o console.");
+        })
+        .excluirEstoque(idMov);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ===================================================================================================================================================
+// MODAL DE EDIÇÃO - FUNÇÕES
+// ===================================================================================================================================================
+
+// Abre modal de edição com dados preenchidos
+function abrirModalEdicao() {
+
+    if (!linhaSelecionada) {
+        toastr.warning("Selecione uma movimentação na tabela antes de editar!");
+        return;
+    }
+
+    // Pega dados da linha selecionada
+    var tipo = linhaSelecionada.cells[1].textContent;
+    var idTransferencia = linhaSelecionada.cells[2].textContent;
+    var produto = linhaSelecionada.cells[4].textContent;
+    var qtd = linhaSelecionada.cells[5].textContent;
+    var valor = linhaSelecionada.cells[6].textContent;
+    var filial = linhaSelecionada.cells[7].textContent;
+    var data = linhaSelecionada.cells[8].textContent;
+
+    if( tipo === "SAÍDA VENDA"){
+        toastr.error("Movimentações de saídas por venda devem ser editadas no módulo de vendas!");
+        return;
+    }
+
+    if (idTransferencia) {
+        toastr.error("Movimentações de transferência não devem ser editadas diretamente.");
+        return;
+    }
+
+    // Preenche campos do modal
+    document.getElementById("inputEditarTipo").value = tipo;
+    document.getElementById("inputEditarProduto").value = produto;
+    document.getElementById("inputEditarQtd").value = qtd;
+    document.getElementById("inputEditarValor").value = valor;
+    document.getElementById("inputEditarFilial").value = filial;
+    document.getElementById("inputEditarDataMovimentacao").value = data;
+    atualizarValorAutomaticoSaidaPerda("inputEditarTipo", "inputEditarProduto", "inputEditarValor", "inputEditarValorMovimentacao");
+    calcularValorMovimentacao("inputEditarQtd", "inputEditarValor", "inputEditarValorMovimentacao");
+
+
+    // Mostra modal e foca no primeiro campo
+    document.getElementById("modalEdicao").classList.add("ativo");
+
+}
+
+// Fecha modal de edição
+function fecharModalEdicao() {
+    document.getElementById("modalEdicao").classList.remove("ativo");
+
+    // Limpa campos
+    document.getElementById("inputEditarTipo").value = "";
+    document.getElementById("inputEditarProduto").value = "";
+    document.getElementById("inputEditarQtd").value = "";
+    document.getElementById("inputEditarValor").value = "";
+    document.getElementById("inputEditarValorMovimentacao").value = "";
+    document.getElementById("inputEditarFilial").value = "";
+    document.getElementById("inputEditarDataMovimentacao").value = "";
+
+    const inputValorEdicao = document.getElementById("inputEditarValor");
+    if (inputValorEdicao) {
+      inputValorEdicao.disabled = false;
+      inputValorEdicao.classList.remove("input-readonly");
+      inputValorEdicao.dataset.valorAutomaticoPerda = "N";
+    }
+}
+
+// Confirma e executa a edição
+function confirmarEdicao() {
+
+    if (!linhaSelecionada) {
+        toastr.error("Nenhuma linha selecionada!");
+        return;
+    }
+
+    // Coleta novos dados (convertidos para maiúsculas)
+    const novotipo = document.getElementById("inputEditarTipo").value.trim().toUpperCase();
+    const novoproduto = document.getElementById("inputEditarProduto").value.trim().toUpperCase();
+    const novaqtd = document.getElementById("inputEditarQtd").value.trim();
+    const novovalor = document.getElementById("inputEditarValor").value.trim();
+    const novafilial = document.getElementById("inputEditarFilial").value.trim().toUpperCase();
+    const novadata = document.getElementById("inputEditarDataMovimentacao").value.trim();
+
+
+    if (novotipo === "" || novoproduto === "" || novaqtd === "" || novafilial === "" || novadata === "") {
+        toastr.warning("Somente o campo de valor não é obrigatório, preencha os demais campos!");
+        esconderCarregamentoModal();
+        return;
+    }
+
+    // Busca o código correspondente nas listas passadas pelo template
+    const novoprodutoObj = mapaProdutoPorNomeEstoque.get(normalizarTextoBase(novoproduto));
+    const novafilialObj = mapaFilialPorNomeEstoque.get(normalizarTextoBase(novafilial));
+
+    // Se encontrar, pega o código; caso contrário, define como vazio
+    const novocodigoProduto = novoprodutoObj ? novoprodutoObj.codigo : "";
+    const novocodigoFilial = novafilialObj ? novafilialObj.codigo : "";
+
+    if (tipoEhSaidaPerda(novotipo) && (!novoprodutoObj || novovalor === "")) {
+        toastr.warning("Produto sem preço de custo válido para calcular a saída por perda.");
+        esconderCarregamentoModal();
+        return;
+    }
+
+
+    // Pega o ID da filial
+    var idMov = linhaSelecionada.cells[0].textContent;
+
+    // Fecha modal e mostra carregamento
+    fecharModalEdicao();
+    mostrarCarregamentoModal();
+
+    // Chama função GS para editar
+    google.script.run
+        .withSuccessHandler(function(resultado) {
+            if (resultado.sucesso) {
+                // Atualiza dados
+                google.script.run
+                    .withSuccessHandler(function(resultadoAtualizacao) {
+                        if (resultadoAtualizacao.sucesso) {
+
+                            atualizarDados();
+
+                            // Limpa seleção
+                            linhaSelecionada = null;
+
+                            esconderCarregamentoModal();
+                            toastr.success("Movimentação editada com sucesso!");
+                        } else {
+                            esconderCarregamentoModal();
+                            toastr.error("Erro ao atualizar dados!");
+                        }
+                    })
+                    .withFailureHandler(function(erro) {
+                        esconderCarregamentoModal();
+                        console.error("Erro ao atualizar:", erro);
+                        toastr.error("Erro ao atualizar dados.");
+                    })
+                    .buscarDadosAtualizadosEstoque();
+            } else {
+                esconderCarregamentoModal();
+                toastr.error(resultado.mensagem || "Erro ao editar movimentação!");
+            }
+        })
+        .withFailureHandler(function(erro) {
+            esconderCarregamentoModal();
+            console.error("Erro ao editar:", erro);
+            toastr.error("Erro ao editar movimentação. Verifique o console.");
+        })
+        .editarEstoque(idMov, novotipo, novocodigoProduto, novaqtd, novovalor, novocodigoFilial, novadata);
+}
+
+
+
+
+// ===================================================================================================================================================
+// NOVO FLUXO: MOVIMENTACAO POR NF E PRODUTOS EM LOTE
+// ===================================================================================================================================================
+
+const COL_EST = {
+  ID: 0,
+  NF: 1,
+  TIPO: 2,
+  TRANSFERENCIA: 3,
+  VENDA: 4,
+  PRODUTO: 5,
+  QTD: 6,
+  VALOR: 7,
+  VALOR_CALC: 8,
+  FILIAL: 9,
+  DT_MOV: 10,
+  CRIADO: 11,
+  EDITADO: 12
+};
+
+const COL_TB = {
+  ID: 0,
+  TIPO: 1,
+  TRANSFERENCIA: 2,
+  VENDA: 3,
+  PRODUTO: 4,
+  QTD: 5,
+  VALOR: 6,
+  VALOR_CALC: 7,
+  FILIAL: 8,
+  DT_MOV: 9,
+  NF: 10,
+  NUMERO_NF: 11,
+  EMISSAO_NF: 12,
+  VALOR_NF: 13,
+  FRETE_NF: 14,
+  SEGURO_NF: 15,
+  ICMS_NF: 16,
+  ICMS_ST_NF: 17,
+  IPI_NF: 18,
+  CPF_NF: 19,
+  CNPJ_NF: 20,
+  ESTADO_NF: 21,
+  CRIADO: 22,
+  EDITADO: 23
+};
+
+const COLUNAS_NF_TABELA = 11;
+
+const ESTADOS_BR = [
+  "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS",
+  "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC",
+  "SP", "SE", "TO"
+];
+
+let idMovimentacaoEmEdicao = null;
+let idNfEmEdicao = null;
+
+document.addEventListener("DOMContentLoaded", function() {
+  todostipos = ["ENTRADA", "SAÍDA PERDA"];
+
+  configurarFluxoNfMovimentacao("cadastro");
+  configurarFluxoNfMovimentacao("edicao");
+
+  const btnCancelarCadastroRodape = document.getElementById("btnCancelarCadastroRodape");
+  if (btnCancelarCadastroRodape) btnCancelarCadastroRodape.addEventListener("click", fecharModalCadastro);
+
+  const btnCancelarEdicaoRodape = document.getElementById("btnCancelarEdicaoRodape");
+  if (btnCancelarEdicaoRodape) btnCancelarEdicaoRodape.addEventListener("click", fecharModalEdicao);
+
+  const btnAddCadastro = document.getElementById("btnAdicionarItemMovimentacao");
+  if (btnAddCadastro) btnAddCadastro.addEventListener("click", function() {
+    adicionarLinhaProdutoMovimentacao("cadastro");
+  });
+
+  const btnAddEdicao = document.getElementById("btnAdicionarItemMovimentacaoEdicao");
+  if (btnAddEdicao) btnAddEdicao.addEventListener("click", function() {
+    adicionarLinhaProdutoMovimentacao("edicao");
+  });
+
+  ["inputNumeroNF", "inputEditarNumeroNF"].forEach(aplicarMascaraSomenteNumeros);
+  ["inputCpfNF", "inputEditarCpfNF"].forEach(aplicarMascaraCpf);
+  ["inputCnpjNF", "inputEditarCnpjNF"].forEach(aplicarMascaraCnpj);
+
+  [
+    "inputValorNF", "inputFreteNF", "inputSeguroNF", "inputIcmsNF", "inputIcmsStNF", "inputIpiNF",
+    "inputEditarValorNF", "inputEditarFreteNF", "inputEditarSeguroNF", "inputEditarIcmsNF", "inputEditarIcmsStNF", "inputEditarIpiNF"
+  ].forEach(id => {
+    aplicarMascaraValor(id);
+    const campo = document.getElementById(id);
+    if (campo) campo.addEventListener("input", function() {
+      recalcularCustosAtuais(id.includes("Editar") ? "edicao" : "cadastro");
+    });
+  });
+
+  configurarDropdown(document.getElementById("inputEstadoNF"), document.getElementById("listaEstadoNF"), ESTADOS_BR);
+  configurarDropdown(document.getElementById("inputEditarEstadoNF"), document.getElementById("listaEditarEstadoNF"), ESTADOS_BR);
+
+  resetarMovimentacaoNf("cadastro");
+  resetarMovimentacaoNf("edicao");
+});
+
+function configurarTodosDropdowns() {
+  configurarDropdown(document.getElementById("inputTipo"), document.getElementById("listaTipo"), todostipos);
+  configurarDropdown(document.getElementById("inputFilial"), document.getElementById("listaFilial"), todasfilais);
+  configurarDropdown(document.getElementById("inputEditarTipo"), document.getElementById("listaEditarTipo"), todostipos);
+  configurarDropdown(document.getElementById("inputEditarFilial"), document.getElementById("listaEditarFilial"), todasfilais);
+  configurarDropdown(inputTransferenciaFilialOrigem, listaUlTransferenciaFilialOrigem, todasfilais);
+  configurarDropdown(inputTransferenciaFilialDestino, listaUlTransferenciaFilialDestino, todasfilais);
+}
+
+function configurarFluxoNfMovimentacao(modo) {
+  const cfg = obterConfigMovimentacao(modo);
+  const inputTipoMov = document.getElementById(cfg.tipoId);
+  const checkNf = document.getElementById(cfg.checkNfId);
+
+  if (inputTipoMov) {
+    inputTipoMov.addEventListener("input", function() {
+      atualizarLayoutTipoMovimentacao(modo);
+    });
+    inputTipoMov.addEventListener("change", function() {
+      atualizarLayoutTipoMovimentacao(modo);
+    });
+  }
+
+  if (checkNf) {
+    checkNf.addEventListener("change", function() {
+      atualizarEstadoCamposNf(modo);
+      recalcularCustosAtuais(modo);
+    });
+  }
+}
+
+function obterConfigMovimentacao(modo) {
+  const edicao = modo === "edicao";
+  return {
+    modo: modo,
+    prefixo: edicao ? "Editar" : "",
+    modalId: edicao ? "modalEdicao" : "modalCadastro",
+    tipoId: edicao ? "inputEditarTipo" : "inputTipo",
+    filialId: edicao ? "inputEditarFilial" : "inputFilial",
+    dataId: edicao ? "inputEditarDataMovimentacao" : "inputDataMovimentacao",
+    quadroNfId: edicao ? "quadroNfEdicao" : "quadroNfCadastro",
+    checkNfId: edicao ? "checkEditarHabilitarNf" : "checkHabilitarNf",
+    containerId: edicao ? "containerItensMovimentacaoEdicao" : "containerItensMovimentacao",
+    numeroNfId: edicao ? "inputEditarNumeroNF" : "inputNumeroNF",
+    emissaoNfId: edicao ? "inputEditarEmissaoNF" : "inputEmissaoNF",
+    valorNfId: edicao ? "inputEditarValorNF" : "inputValorNF",
+    freteNfId: edicao ? "inputEditarFreteNF" : "inputFreteNF",
+    seguroNfId: edicao ? "inputEditarSeguroNF" : "inputSeguroNF",
+    icmsNfId: edicao ? "inputEditarIcmsNF" : "inputIcmsNF",
+    icmsStNfId: edicao ? "inputEditarIcmsStNF" : "inputIcmsStNF",
+    ipiNfId: edicao ? "inputEditarIpiNF" : "inputIpiNF",
+    cpfNfId: edicao ? "inputEditarCpfNF" : "inputCpfNF",
+    cnpjNfId: edicao ? "inputEditarCnpjNF" : "inputCnpjNF",
+    estadoNfId: edicao ? "inputEditarEstadoNF" : "inputEstadoNF"
+  };
+}
+
+function normalizarTextoMov(valor) {
+  return String(valor || "")
+    .trim()
+    .toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function movimentoEhEntrada(valor) {
+  return normalizarTextoMov(valor) === "ENTRADA";
+}
+
+function movimentoEhSaidaPerda(valor) {
+  return normalizarTextoMov(valor) === "SAIDA PERDA";
+}
+
+function obterProdutoPorCodigo(codigoProduto) {
+  const codigo = String(codigoProduto || "").trim();
+  return (Array.isArray(itensProd) ? itensProd : []).find(item => String(item.codigo || "").trim() === codigo) || null;
+}
+
+function obterPrecoCustoProduto(produto) {
+  return obterValorMonetarioNumero(produto?.precoCusto || 0);
+}
+
+function obterLinhasProdutoMovimentacao(modo) {
+  const cfg = obterConfigMovimentacao(modo);
+  return Array.from(document.querySelectorAll(`#${cfg.containerId} .linha-produto-nf`));
+}
+
+function criarLinhaProdutoMovimentacao(modo, dados) {
+  const linha = document.createElement("div");
+  linha.className = "linha-produto-nf";
+
+  linha.innerHTML = `
+    <div class="form-field dropdown-container campo-produto-nf">
+      <label class="input-label campo-obrigatorio">Produto</label>
+      <input type="text" class="input-moderno input-produto-nf" placeholder="Selecione o produto ...">
+      <ul class="sugestoes lista-produto-nf"></ul>
+    </div>
+
+    <div class="form-field campo-qtd-nf">
+      <label class="input-label campo-obrigatorio">Qtd</label>
+      <input type="text" class="input-moderno input-qtd-nf" placeholder="Qtd">
+    </div>
+
+    <div class="form-field campo-valor-unitario">
+      <label class="input-label campo-obrigatorio">Valor unitário</label>
+      <input type="text" class="input-moderno input-valor-unitario-nf" placeholder="R$ 0,00">
+    </div>
+
+    <div class="form-field campo-custo-cadastro">
+      <label class="input-label">Custo cadastro</label>
+      <input type="text" class="input-moderno input-readonly input-custo-cadastro-nf" disabled>
+    </div>
+
+    <div class="form-field campo-custo-atual">
+      <label class="input-label">Custo atual NF</label>
+      <input type="text" class="input-moderno input-readonly input-custo-atual-nf" disabled>
+    </div>
+
+    <div class="form-field campo-substituir-custo">
+      <label class="input-label">Atualizar custo</label>
+      <label class="check-substituir-custo">
+        <input type="checkbox" class="input-substituir-custo-nf">
+      </label>
+    </div>
+
+    <button type="button" class="btn-remover-movimentacao" title="Remover produto">
+      <i class="bi bi-trash3"></i>
+    </button>
+  `;
+
+  const inputProduto = linha.querySelector(".input-produto-nf");
+  const listaProduto = linha.querySelector(".lista-produto-nf");
+  const inputQtd = linha.querySelector(".input-qtd-nf");
+  const inputValor = linha.querySelector(".input-valor-unitario-nf");
+  const btnRemover = linha.querySelector(".btn-remover-movimentacao");
+
+  configurarDropdown(inputProduto, listaProduto, todosprodutos);
+  aplicarMascaraApenasNumerosFlex(inputQtd);
+  aplicarMascaraValorEmElemento(inputValor);
+
+  inputProduto.addEventListener("input", function() {
+    preencherCustoCadastroLinha(linha);
+    recalcularCustosAtuais(modo);
+  });
+  inputProduto.addEventListener("change", function() {
+    preencherCustoCadastroLinha(linha);
+    recalcularCustosAtuais(modo);
+  });
+  inputQtd.addEventListener("input", function() {
+    recalcularCustosAtuais(modo);
+  });
+  inputValor.addEventListener("input", function() {
+    recalcularCustosAtuais(modo);
+  });
+
+  btnRemover.addEventListener("click", function() {
+    linha.remove();
+    atualizarBotoesRemoverMovimentacao(modo);
+    recalcularCustosAtuais(modo);
+  });
+
+  if (dados) {
+    inputProduto.value = dados.produto || "";
+    inputQtd.value = dados.qtd || "";
+    if (dados.valorUnitario) inputValor.definirValor ? inputValor.definirValor(obterValorMonetarioNumero(dados.valorUnitario)) : inputValor.value = dados.valorUnitario;
+    linha.querySelector(".input-substituir-custo-nf").checked = !!dados.substituirCusto;
+    preencherCustoCadastroLinha(linha);
+  }
+
+  return linha;
+}
+
+function adicionarLinhaProdutoMovimentacao(modo, dados) {
+  const cfg = obterConfigMovimentacao(modo);
+  const container = document.getElementById(cfg.containerId);
+  if (!container) return;
+
+  const linhas = obterLinhasProdutoMovimentacao(modo);
+  const ultima = linhas[linhas.length - 1];
+  if (!dados && ultima) {
+    const produto = ultima.querySelector(".input-produto-nf")?.value.trim();
+    const qtd = ultima.querySelector(".input-qtd-nf")?.value.trim();
+    if (!produto || !qtd) {
+      toastr.warning("Preencha o produto e a quantidade antes de adicionar outra linha.");
+      return;
+    }
+  }
+
+  const linha = criarLinhaProdutoMovimentacao(modo, dados);
+  container.appendChild(linha);
+  atualizarLayoutTipoMovimentacao(modo);
+  atualizarBotoesRemoverMovimentacao(modo);
+  recalcularCustosAtuais(modo);
+}
+
+function atualizarBotoesRemoverMovimentacao(modo) {
+  obterLinhasProdutoMovimentacao(modo).forEach((linha, index) => {
+    const btn = linha.querySelector(".btn-remover-movimentacao");
+    if (!btn) return;
+    btn.classList.toggle("oculto", index === 0);
+  });
+}
+
+function preencherCustoCadastroLinha(linha) {
+  const produtoNome = linha.querySelector(".input-produto-nf")?.value.trim().toUpperCase();
+  const produtoObj = (Array.isArray(itensProd) ? itensProd : []).find(item => String(item.nome || "").trim().toUpperCase() === produtoNome);
+  const custo = obterPrecoCustoProduto(produtoObj);
+  const campoCusto = linha.querySelector(".input-custo-cadastro-nf");
+
+  linha.dataset.codigoProduto = produtoObj ? produtoObj.codigo : "";
+  linha.dataset.precoCusto = String(custo || 0);
+
+  if (campoCusto) campoCusto.value = produtoObj ? formatarMoedaBR(custo) : "";
+
+  const cfg = obterConfigMovimentacao(linha.closest("#containerItensMovimentacaoEdicao") ? "edicao" : "cadastro");
+  const tipo = document.getElementById(cfg.tipoId)?.value || "";
+
+  if (movimentoEhSaidaPerda(tipo)) {
+    const campoValor = linha.querySelector(".input-valor-unitario-nf");
+    if (campoValor) {
+      if (campoValor.definirValor) campoValor.definirValor(custo);
+      else campoValor.value = formatarMoedaBR(custo);
+    }
+  }
+}
+
+function obterExtrasNf(modo) {
+  const cfg = obterConfigMovimentacao(modo);
+  return [
+    cfg.icmsNfId,
+    cfg.icmsStNfId,
+    cfg.ipiNfId,
+    cfg.freteNfId,
+    cfg.seguroNfId
+  ].reduce((total, id) => total + obterValorCampoMonetario(id), 0);
+}
+
+function definirValorTotalNfAutomatico(modo, totalProdutos) {
+  const cfg = obterConfigMovimentacao(modo);
+  const campoValorNf = document.getElementById(cfg.valorNfId);
+  if (!campoValorNf) return;
+
+  if (campoValorNf.definirValor) campoValorNf.definirValor(totalProdutos || 0);
+  else campoValorNf.value = totalProdutos ? formatarMoedaBR(totalProdutos) : "";
+}
+
+function obterSubtotalLinhaMovimentacao(linha) {
+  const qtd = parseInt((linha.querySelector(".input-qtd-nf")?.value || "").replace(/\D/g, ""), 10) || 0;
+  const campoValor = linha.querySelector(".input-valor-unitario-nf");
+  const unitario = campoValor?.obterValor ? campoValor.obterValor() : obterValorMonetarioNumero(campoValor?.value);
+
+  return {
+    qtd: qtd,
+    unitario: unitario,
+    subtotal: qtd * unitario
+  };
+}
+
+function obterTotalProdutosMovimentacao(linhas) {
+  return linhas.reduce((total, linha) => {
+    const dadosLinha = obterSubtotalLinhaMovimentacao(linha);
+    return total + dadosLinha.subtotal;
+  }, 0);
+}
+
+function obterRateioFinanceiroLinha(subtotalLinha, totalProdutos, extras) {
+  if (!totalProdutos || !subtotalLinha || !extras) return 0;
+  return extras * (subtotalLinha / totalProdutos);
+}
+
+function obterExtrasNfPorGrupo(modo) {
+  const cfg = obterConfigMovimentacao(modo);
+  return {
+    impostos: [
+      cfg.icmsNfId,
+      cfg.icmsStNfId,
+      cfg.ipiNfId
+    ].reduce((total, id) => total + obterValorCampoMonetario(id), 0),
+    transporteSeguro: [
+      cfg.freteNfId,
+      cfg.seguroNfId
+    ].reduce((total, id) => total + obterValorCampoMonetario(id), 0)
+  };
+}
+
+function recalcularCustosAtuais(modo) {
+  const cfg = obterConfigMovimentacao(modo);
+  const tipo = document.getElementById(cfg.tipoId)?.value || "";
+  const linhas = obterLinhasProdutoMovimentacao(modo);
+  const entrada = movimentoEhEntrada(tipo);
+  const totalProdutos = entrada ? obterTotalProdutosMovimentacao(linhas) : 0;
+  const extrasPorGrupo = entrada ? obterExtrasNfPorGrupo(modo) : { impostos: 0, transporteSeguro: 0 };
+  const extras = extrasPorGrupo.impostos + extrasPorGrupo.transporteSeguro;
+
+  if (entrada) definirValorTotalNfAutomatico(modo, totalProdutos);
+
+  linhas.forEach(linha => {
+    preencherCustoCadastroLinha(linha);
+
+    const dadosLinha = obterSubtotalLinhaMovimentacao(linha);
+    const qtd = dadosLinha.qtd;
+    const unitario = dadosLinha.unitario;
+    const custoCadastro = Number(linha.dataset.precoCusto || 0);
+    const extrasRateadosLinha = obterRateioFinanceiroLinha(dadosLinha.subtotal, totalProdutos, extras);
+    const custoAtual = movimentoEhSaidaPerda(tipo)
+      ? custoCadastro
+      : unitario + (qtd > 0 ? extrasRateadosLinha / qtd : 0);
+    const campoCustoAtual = linha.querySelector(".input-custo-atual-nf");
+
+    if (campoCustoAtual) campoCustoAtual.value = (entrada || movimentoEhSaidaPerda(tipo)) ? formatarMoedaBR(custoAtual) : "";
+    linha.dataset.custoAtual = String(custoAtual || 0);
+  });
+}
+
+function atualizarLayoutTipoMovimentacao(modo) {
+  const cfg = obterConfigMovimentacao(modo);
+  const tipo = document.getElementById(cfg.tipoId)?.value || "";
+  const entrada = movimentoEhEntrada(tipo);
+  const saidaPerda = movimentoEhSaidaPerda(tipo);
+  const quadroNf = document.getElementById(cfg.quadroNfId);
+  const btnAdd = document.getElementById(modo === "edicao" ? "btnAdicionarItemMovimentacaoEdicao" : "btnAdicionarItemMovimentacao");
+
+  if (quadroNf) quadroNf.classList.toggle("oculto", !entrada);
+  if (btnAdd) btnAdd.disabled = !entrada && obterLinhasProdutoMovimentacao(modo).length >= 1;
+
+  obterLinhasProdutoMovimentacao(modo).forEach(linha => {
+    linha.classList.toggle("saida-perda", saidaPerda);
+    const valor = linha.querySelector(".input-valor-unitario-nf");
+    if (valor) {
+      valor.disabled = saidaPerda;
+      valor.classList.toggle("input-readonly", saidaPerda);
+    }
+  });
+
+  atualizarEstadoCamposNf(modo);
+  recalcularCustosAtuais(modo);
+}
+
+function atualizarEstadoCamposNf(modo) {
+  const cfg = obterConfigMovimentacao(modo);
+  const tipo = document.getElementById(cfg.tipoId)?.value || "";
+  const check = document.getElementById(cfg.checkNfId);
+  const quadroNf = document.getElementById(cfg.quadroNfId);
+  const habilitado = movimentoEhEntrada(tipo) && (!check || check.checked);
+
+  [
+    cfg.numeroNfId, cfg.emissaoNfId, cfg.valorNfId, cfg.freteNfId, cfg.seguroNfId,
+    cfg.icmsNfId, cfg.icmsStNfId, cfg.ipiNfId, cfg.cpfNfId, cfg.cnpjNfId, cfg.estadoNfId
+  ].forEach(id => {
+    const campo = document.getElementById(id);
+    if (!campo) return;
+    const valorNfAutomatico = id === cfg.valorNfId;
+    campo.disabled = valorNfAutomatico || !habilitado;
+    campo.classList.toggle("input-readonly", valorNfAutomatico || !habilitado);
+  });
+
+  if (quadroNf) quadroNf.classList.toggle("desabilitado", movimentoEhEntrada(tipo) && !habilitado);
+}
+
+function resetarMovimentacaoNf(modo) {
+  const cfg = obterConfigMovimentacao(modo);
+  [
+    cfg.tipoId, cfg.filialId, cfg.dataId, cfg.numeroNfId, cfg.emissaoNfId, cfg.valorNfId,
+    cfg.freteNfId, cfg.seguroNfId, cfg.icmsNfId, cfg.icmsStNfId, cfg.ipiNfId,
+    cfg.cpfNfId, cfg.cnpjNfId, cfg.estadoNfId
+  ].forEach(id => {
+    const campo = document.getElementById(id);
+    if (campo) campo.value = "";
+  });
+
+  const check = document.getElementById(cfg.checkNfId);
+  if (check) check.checked = true;
+
+  const container = document.getElementById(cfg.containerId);
+  if (container) {
+    container.innerHTML = "";
+    adicionarLinhaProdutoMovimentacao(modo);
+  }
+
+  if (modo === "edicao") {
+    idMovimentacaoEmEdicao = null;
+    idNfEmEdicao = null;
+  }
+
+  atualizarLayoutTipoMovimentacao(modo);
+}
+
+function abrirModalCadastro() {
+  resetarMovimentacaoNf("cadastro");
+  document.getElementById("modalCadastro")?.classList.add("ativo");
+}
+
+function fecharModalCadastro() {
+  document.getElementById("modalCadastro")?.classList.remove("ativo");
+  resetarMovimentacaoNf("cadastro");
+}
+
+function abrirModalEdicao() {
+  if (!linhaSelecionada) {
+    toastr.warning("Selecione uma movimentação na tabela antes de editar!");
+    return;
+  }
+
+  const idMovSelecionado = linhaSelecionada.dataset.idMov || linhaSelecionada.cells[COL_TB.ID]?.textContent || "";
+  const movimentacaoSelecionada = obterMovimentacaoEstoquePorId(idMovSelecionado);
+
+  if (!movimentacaoSelecionada) {
+    toastr.error("Movimentação não encontrada nos dados atuais.");
+    return;
+  }
+
+  const tipo = movimentacaoSelecionada[COL_EST.TIPO] || "";
+  const idTransferencia = movimentacaoSelecionada[COL_EST.TRANSFERENCIA] || "";
+
+  if (normalizarTextoMov(tipo) === "SAIDA VENDA") {
+    toastr.error("Movimentações de saídas por venda devem ser editadas no módulo de vendas!");
+    return;
+  }
+
+  if (idTransferencia) {
+    toastr.error("Movimentações de transferência não devem ser editadas diretamente.");
+    return;
+  }
+
+  resetarMovimentacaoNf("edicao");
+
+  idMovimentacaoEmEdicao = movimentacaoSelecionada[COL_EST.ID] || "";
+  idNfEmEdicao = movimentacaoSelecionada[COL_EST.NF] || "";
+
+  const cfg = obterConfigMovimentacao("edicao");
+  document.getElementById(cfg.tipoId).value = tipo;
+  document.getElementById(cfg.filialId).value = obterNomeFilialPorCodigo(movimentacaoSelecionada[COL_EST.FILIAL]);
+  document.getElementById(cfg.dataId).value = movimentacaoSelecionada[COL_EST.DT_MOV] || "";
+
+  if (idNfEmEdicao) {
+    carregarNfParaEdicaoEstoque(idNfEmEdicao, movimentacaoSelecionada);
+    return;
+  }
+
+  const linhasOrigem = idNfEmEdicao
+    ? (Array.isArray(dadosTabela) ? dadosTabela : []).filter(linha => String(linha[COL_EST.NF] || "").trim() === String(idNfEmEdicao).trim())
+    : [[
+      movimentacaoSelecionada[COL_EST.ID] || "",
+      "",
+      tipo,
+      "",
+      "",
+      movimentacaoSelecionada[COL_EST.PRODUTO] || "",
+      movimentacaoSelecionada[COL_EST.QTD] || "",
+      movimentacaoSelecionada[COL_EST.VALOR] || "",
+      movimentacaoSelecionada[COL_EST.FILIAL] || "",
+      movimentacaoSelecionada[COL_EST.DT_MOV] || ""
+    ]];
+
+  const container = document.getElementById(cfg.containerId);
+  container.innerHTML = "";
+  linhasOrigem.forEach(linha => {
+    adicionarLinhaProdutoMovimentacao("edicao", {
+      produto: obterNomeProdutoPorCodigo(linha[COL_EST.PRODUTO]),
+      qtd: linha[COL_EST.QTD],
+      valorUnitario: linha[COL_EST.VALOR]
+    });
+  });
+
+  preencherNfEdicao(idNfEmEdicao);
+  atualizarLayoutTipoMovimentacao("edicao");
+  document.getElementById("modalEdicao")?.classList.add("ativo");
+}
+
+function carregarNfParaEdicaoEstoque(idNf, movimentacaoSelecionada) {
+  mostrarCarregamentoModal();
+  google.script.run
+    .withSuccessHandler(function(resultado) {
+      esconderCarregamentoModal();
+      if (!resultado || !resultado.sucesso) {
+        toastr.error(resultado?.mensagem || "Erro ao carregar dados da NF.");
+        return;
+      }
+
+      mesclarNfsEstoque(resultado.nf ? [resultado.nf] : []);
+      preencherEdicaoMovimentacaoEstoque(movimentacaoSelecionada, resultado.movimentacoes || [], resultado.nf || []);
+    })
+    .withFailureHandler(function(erro) {
+      esconderCarregamentoModal();
+      console.error("Erro ao carregar NF:", erro);
+      toastr.error("Erro ao carregar dados da NF. Verifique o console.");
+    })
+    .buscarNfComMovimentacoesEstoque(idNf);
+}
+
+function preencherEdicaoMovimentacaoEstoque(movimentacaoSelecionada, linhasOrigem, nf) {
+  if (nf && nf.length) mesclarNfsEstoque([nf]);
+
+  const cfg = obterConfigMovimentacao("edicao");
+  const container = document.getElementById(cfg.containerId);
+  container.innerHTML = "";
+
+  const linhas = Array.isArray(linhasOrigem) && linhasOrigem.length ? linhasOrigem : [movimentacaoSelecionada];
+  linhas.forEach(linha => {
+    adicionarLinhaProdutoMovimentacao("edicao", {
+      produto: obterNomeProdutoPorCodigo(linha[COL_EST.PRODUTO]),
+      qtd: linha[COL_EST.QTD],
+      valorUnitario: linha[COL_EST.VALOR]
+    });
+  });
+
+  preencherNfEdicao(idNfEmEdicao);
+  atualizarLayoutTipoMovimentacao("edicao");
+  document.getElementById("modalEdicao")?.classList.add("ativo");
+}
+
+function fecharModalEdicao() {
+  document.getElementById("modalEdicao")?.classList.remove("ativo");
+  resetarMovimentacaoNf("edicao");
+}
+
+function preencherNfEdicao(idNf) {
+  const cfg = obterConfigMovimentacao("edicao");
+  const nf = (Array.isArray(dadosNfs) ? dadosNfs : []).find(linha => String(linha[0] || "").trim() === String(idNf || "").trim());
+  const check = document.getElementById(cfg.checkNfId);
+
+  if (!nf) {
+    if (check) check.checked = false;
+    atualizarEstadoCamposNf("edicao");
+    return;
+  }
+
+  if (check) check.checked = true;
+  document.getElementById(cfg.numeroNfId).value = nf[1] || "";
+  document.getElementById(cfg.emissaoNfId).value = nf[2] || "";
+  document.getElementById(cfg.valorNfId).value = nf[3] || "";
+  document.getElementById(cfg.freteNfId).value = nf[4] || "";
+  document.getElementById(cfg.seguroNfId).value = nf[5] || "";
+  document.getElementById(cfg.icmsNfId).value = nf[6] || "";
+  document.getElementById(cfg.icmsStNfId).value = nf[7] || "";
+  document.getElementById(cfg.ipiNfId).value = nf[8] || "";
+  document.getElementById(cfg.cpfNfId).value = nf[9] || "";
+  document.getElementById(cfg.cnpjNfId).value = nf[10] || "";
+  document.getElementById(cfg.estadoNfId).value = nf[11] || "";
+}
+
+function montarPayloadMovimentacao(modo) {
+  const cfg = obterConfigMovimentacao(modo);
+  const tipo = document.getElementById(cfg.tipoId)?.value.trim().toUpperCase() || "";
+  const filialNome = document.getElementById(cfg.filialId)?.value.trim().toUpperCase() || "";
+  const dataMovimentacao = document.getElementById(cfg.dataId)?.value.trim() || "";
+  const filial = (Array.isArray(itensFil) ? itensFil : []).find(item => String(item.nome || "").trim().toUpperCase() === filialNome);
+
+  if (!tipo || !filialNome || !dataMovimentacao) {
+    toastr.warning("Informe tipo, filial e data da movimentação.");
+    return null;
+  }
+
+  if (!filial) {
+    toastr.warning("Selecione uma filial válida na lista.");
+    return null;
+  }
+
+  if (!movimentoEhEntrada(tipo) && !movimentoEhSaidaPerda(tipo)) {
+    toastr.warning("Selecione um tipo de movimentação válido.");
+    return null;
+  }
+
+  const itens = obterLinhasProdutoMovimentacao(modo).map(linha => {
+    preencherCustoCadastroLinha(linha);
+    const produtoNome = linha.querySelector(".input-produto-nf")?.value.trim().toUpperCase();
+    const produtoObj = (Array.isArray(itensProd) ? itensProd : []).find(item => String(item.nome || "").trim().toUpperCase() === produtoNome);
+    const qtd = linha.querySelector(".input-qtd-nf")?.value.trim() || "";
+    const campoValor = linha.querySelector(".input-valor-unitario-nf");
+    const valorUnitarioNumero = movimentoEhSaidaPerda(tipo)
+      ? Number(linha.dataset.precoCusto || 0)
+      : (campoValor?.obterValor ? campoValor.obterValor() : obterValorMonetarioNumero(campoValor?.value));
+    const custoAtualNumero = Number(linha.dataset.custoAtual || valorUnitarioNumero || 0);
+
+    return {
+      codigoProduto: produtoObj ? produtoObj.codigo : "",
+      produto: produtoNome,
+      qtd: qtd,
+      valorUnitario: formatarMoedaBR(valorUnitarioNumero),
+      custoAtual: formatarMoedaBR(custoAtualNumero),
+      substituirCusto: linha.querySelector(".input-substituir-custo-nf")?.checked || false
+    };
+  }).filter(item => item.produto || item.qtd);
+
+  if (itens.length === 0) {
+    toastr.warning("Informe ao menos um produto.");
+    return null;
+  }
+
+  for (const item of itens) {
+    if (!item.codigoProduto || !item.qtd) {
+      toastr.warning("Preencha produtos válidos e quantidades em todas as linhas.");
+      return null;
+    }
+
+    if (movimentoEhEntrada(tipo) && obterValorMonetarioNumero(item.valorUnitario) <= 0) {
+      toastr.warning("Informe o valor unitário dos produtos da entrada.");
+      return null;
+    }
+  }
+
+  const checkNf = document.getElementById(cfg.checkNfId);
+  return {
+    tipo: tipo,
+    filial: filial.codigo,
+    dataMovimentacao: dataMovimentacao,
+    nfHabilitada: movimentoEhEntrada(tipo) && (!checkNf || checkNf.checked),
+    nf: {
+      numero: document.getElementById(cfg.numeroNfId)?.value || "",
+      emissao: document.getElementById(cfg.emissaoNfId)?.value || "",
+      valor: document.getElementById(cfg.valorNfId)?.value || "",
+      frete: document.getElementById(cfg.freteNfId)?.value || "",
+      seguro: document.getElementById(cfg.seguroNfId)?.value || "",
+      icms: document.getElementById(cfg.icmsNfId)?.value || "",
+      icmsSt: document.getElementById(cfg.icmsStNfId)?.value || "",
+      ipi: document.getElementById(cfg.ipiNfId)?.value || "",
+      cpf: document.getElementById(cfg.cpfNfId)?.value || "",
+      cnpj: document.getElementById(cfg.cnpjNfId)?.value || "",
+      estado: document.getElementById(cfg.estadoNfId)?.value || ""
+    },
+    itens: itens
+  };
+}
+
+function cadastrar() {
+  const payload = montarPayloadMovimentacao("cadastro");
+  if (!payload) return;
+
+  mostrarCarregamentoModal();
+  google.script.run
+    .withSuccessHandler(function(resultado) {
+      esconderCarregamentoModal();
+      if (resultado.sucesso) {
+        dispararAtualizacaoDashboardAnaliticoEstoque(resultado.idNf || resultado.idMov || resultado.idMovimentacao || "");
+        atualizarDados();
+        fecharModalCadastro();
+        toastr.success(resultado.mensagem || "Movimentação cadastrada com sucesso!");
+      } else {
+        toastr.error(resultado.mensagem || "Erro ao cadastrar movimentação.");
+      }
+    })
+    .withFailureHandler(function(erro) {
+      esconderCarregamentoModal();
+      console.error("Erro ao cadastrar:", erro);
+      toastr.error("Erro ao cadastrar movimentação. Verifique o console.");
+    })
+    .cadastrarEstoque(payload);
+}
+
+function confirmarEdicao() {
+  if (!idMovimentacaoEmEdicao) {
+    toastr.error("Nenhuma movimentação carregada para edição.");
+    return;
+  }
+
+  const payload = montarPayloadMovimentacao("edicao");
+  if (!payload) return;
+
+  mostrarCarregamentoModal();
+  google.script.run
+    .withSuccessHandler(function(resultado) {
+      esconderCarregamentoModal();
+      if (resultado.sucesso) {
+        dispararAtualizacaoDashboardAnaliticoEstoque(idMovimentacaoEmEdicao);
+        atualizarDados();
+        fecharModalEdicao();
+        linhaSelecionada = null;
+        toastr.success(resultado.mensagem || "Movimentação editada com sucesso!");
+      } else {
+        toastr.error(resultado.mensagem || "Erro ao editar movimentação.");
+      }
+    })
+    .withFailureHandler(function(erro) {
+      esconderCarregamentoModal();
+      console.error("Erro ao editar:", erro);
+      toastr.error("Erro ao editar movimentação. Verifique o console.");
+    })
+    .editarEstoque(idMovimentacaoEmEdicao, payload);
+}
+
+function carregarDadosIniciais() {
+  const corpoTabela = document.getElementById("tb_corpo");
+  if (!corpoTabela) return;
+
+  linhaSelecionada = null;
+  while (corpoTabela.firstChild) corpoTabela.removeChild(corpoTabela.firstChild);
+  if (!Array.isArray(dadosTabela) || dadosTabela.length === 0) return;
+
+  const frag = document.createDocumentFragment();
+
+  dadosTabela.forEach(function(r) {
+    frag.appendChild(criarLinhaTabelaEstoque(r));
+  });
+
+  corpoTabela.appendChild(frag);
+}
+
+function atualizarDados() {
+  // Depois de cadastrar/editar/excluir, recarrega somente a primeira pagina vigente.
+  // Isso evita puxar todo o historico novamente.
+  carregarPrimeiraPaginaEstoque(filtrosAtuaisEstoque);
+  carregarSaldoEstoqueAssincrono(true);
+}
+
+function iniciarScrollIncrementalEstoque() {
+  // Scroll incremental da tabela principal: cada chamada busca mais 100 linhas no backend.
+  const scroll = document.getElementById("tabela_scroll");
+  if (!scroll || scroll.dataset.scrollIncrementalAtivo === "S") return;
+
+  scroll.dataset.scrollIncrementalAtivo = "S";
+  scroll.addEventListener("scroll", function() {
+    const distanciaFim = scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight;
+    if (distanciaFim <= 120) carregarMaisEstoque();
+  });
+}
+
+function carregarMaisEstoque() {
+  // Mantem filtros atuais no scroll, assim o usuario continua navegando dentro do resultado filtrado.
+  if (carregandoPaginaEstoque || erroScrollEstoque || !temMaisEstoque) return;
+
+  carregandoPaginaEstoque = true;
+  google.script.run
+    .withSuccessHandler(function(resultado) {
+      carregandoPaginaEstoque = false;
+      if (!resultado || !resultado.sucesso) {
+        erroScrollEstoque = true;
+        toastr.error(resultado?.mensagem || "Erro ao carregar mais movimentacoes.");
+        return;
+      }
+
+      const novas = Array.isArray(resultado.dadosCompletos) ? resultado.dadosCompletos : [];
+      const novasNfs = Array.isArray(resultado.dadosNfs) ? resultado.dadosNfs : [];
+      dadosTabela = (Array.isArray(dadosTabela) ? dadosTabela : []).concat(novas);
+      mesclarNfsEstoque(novasNfs);
+      renderTabelaAPartirDeArray(novas, true);
+
+      const pag = resultado.paginacao || {};
+      proximoOffsetEstoque += novas.length;
+      temMaisEstoque = !!pag.temMais;
+    })
+    .withFailureHandler(function(erro) {
+      carregandoPaginaEstoque = false;
+      erroScrollEstoque = true;
+      console.error("Erro ao carregar mais estoque:", erro);
+      toastr.error("Erro ao carregar mais movimentacoes. Verifique o console.");
+    })
+    .buscarPaginaEstoque(
+      proximoOffsetEstoque,
+      LIMITE_PAGINA_ESTOQUE,
+      filtrosAtuaisEstoque.tipo || "",
+      filtrosAtuaisEstoque.produto || "",
+      filtrosAtuaisEstoque.filial || "",
+      filtrosAtuaisEstoque.dataMovInicial || "",
+      filtrosAtuaisEstoque.dataMovFinal || "",
+      filtrosAtuaisEstoque.dataCadInicial || "",
+      filtrosAtuaisEstoque.dataCadFinal || ""
+    );
+}
+
+function carregarPrimeiraPaginaEstoque(filtros) {
+  // Usado pela abertura sem filtros, pelo modal de pesquisa e pela limpeza de filtros.
+  filtrosAtuaisEstoque = filtros || {};
+  carregandoPaginaEstoque = true;
+  erroScrollEstoque = false;
+  mostrarCarregamentoModal();
+
+  google.script.run
+    .withSuccessHandler(function(resultado) {
+      carregandoPaginaEstoque = false;
+      esconderCarregamentoModal();
+      if (!resultado || !resultado.sucesso) {
+        toastr.error(resultado?.mensagem || "Erro ao buscar movimentacoes.");
+        return;
+      }
+
+      dadosTabela = Array.isArray(resultado.dadosCompletos) ? resultado.dadosCompletos : [];
+      dadosNfs = Array.isArray(resultado.dadosNfs) ? resultado.dadosNfs : [];
+      reconstruirMapasConsultaEstoque();
+      carregarDadosIniciais();
+
+      const pag = resultado.paginacao || {};
+      proximoOffsetEstoque = dadosTabela.length;
+      temMaisEstoque = !!pag.temMais;
+    })
+    .withFailureHandler(function(erro) {
+      carregandoPaginaEstoque = false;
+      esconderCarregamentoModal();
+      console.error("Erro ao buscar estoque:", erro);
+      toastr.error("Erro ao buscar movimentacoes. Verifique o console.");
+    })
+    .buscarPaginaEstoque(
+      0,
+      LIMITE_PAGINA_ESTOQUE,
+      filtrosAtuaisEstoque.tipo || "",
+      filtrosAtuaisEstoque.produto || "",
+      filtrosAtuaisEstoque.filial || "",
+      filtrosAtuaisEstoque.dataMovInicial || "",
+      filtrosAtuaisEstoque.dataMovFinal || "",
+      filtrosAtuaisEstoque.dataCadInicial || "",
+      filtrosAtuaisEstoque.dataCadFinal || ""
+    );
+}
+
+function mesclarNfsEstoque(novasNfs) {
+  // NFs chegam em partes: somente das linhas renderizadas ou sob demanda ao abrir modais.
+  if (!Array.isArray(novasNfs) || !novasNfs.length) return;
+  const mapa = new Map((Array.isArray(dadosNfs) ? dadosNfs : []).map(nf => [String(nf?.[0] || "").trim(), nf]));
+  novasNfs.forEach(nf => {
+    const id = String(nf?.[0] || "").trim();
+    if (id) mapa.set(id, nf);
+  });
+  dadosNfs = Array.from(mapa.values());
+  reconstruirMapasConsultaEstoque();
+}
+
+function mesclarMovimentacoesEstoque(novasMovimentacoes) {
+  // Evita duplicar movimentacoes carregadas sob demanda por NF/transferencia.
+  if (!Array.isArray(novasMovimentacoes) || !novasMovimentacoes.length) return;
+  const mapa = new Map((Array.isArray(dadosTabela) ? dadosTabela : []).map(linha => [String(linha?.[COL_EST.ID] || "").trim(), linha]));
+  novasMovimentacoes.forEach(linha => {
+    const id = String(linha?.[COL_EST.ID] || "").trim();
+    if (id) mapa.set(id, linha);
+  });
+  dadosTabela = Array.from(mapa.values());
+}
+
+function obterMovimentacaoEstoquePorId(idMov) {
+  const id = String(idMov || "").trim();
+  if (!id) return null;
+
+  return (Array.isArray(dadosTabela) ? dadosTabela : [])
+    .find(linha => String(linha?.[COL_EST.ID] || "").trim() === id) || null;
+}
+
+function obterNfEstoquePorId(idNf) {
+  const id = String(idNf || "").trim();
+  if (!id) return null;
+
+  return mapaNfPorIdEstoque.get(id) || null;
+}
+
+function criarLinhaVisualEstoque(linha) {
+  const idNf = String(linha?.[COL_EST.NF] ?? "").trim();
+  const nf = obterNfEstoquePorId(idNf) || [];
+
+  return [
+    linha?.[COL_EST.ID] || "",
+    linha?.[COL_EST.TIPO] || "",
+    linha?.[COL_EST.TRANSFERENCIA] || "",
+    linha?.[COL_EST.VENDA] || "",
+    obterNomeProdutoPorCodigo(linha?.[COL_EST.PRODUTO]),
+    linha?.[COL_EST.QTD] || "",
+    linha?.[COL_EST.VALOR] || "",
+    linha?.[COL_EST.VALOR_CALC] || "",
+    obterNomeFilialPorCodigo(linha?.[COL_EST.FILIAL]),
+    linha?.[COL_EST.DT_MOV] || "",
+    idNf || "SEM NF",
+    nf[1] || "",
+    nf[2] || "",
+    nf[3] || "",
+    nf[4] || "",
+    nf[5] || "",
+    nf[6] || "",
+    nf[7] || "",
+    nf[8] || "",
+    nf[9] || "",
+    nf[10] || "",
+    nf[11] || "",
+    linha?.[COL_EST.CRIADO] || "",
+    linha?.[COL_EST.EDITADO] || ""
+  ];
+}
+
+function criarLinhaTabelaEstoque(linha) {
+  const linhaVisual = Array.isArray(linha) && linha.length > COL_EST.EDITADO + 1
+    ? linha
+    : criarLinhaVisualEstoque(linha);
+  const tr = document.createElement("tr");
+
+  tr.dataset.idMov = String(linhaVisual[COL_TB.ID] || "").trim();
+
+  for (let i = 0; i <= COL_TB.EDITADO; i++) {
+    const td = document.createElement("td");
+    td.textContent = linhaVisual[i] || "";
+    tr.appendChild(td);
+  }
+
+  tr.addEventListener("click", function() {
+    selecionarLinha(this);
+  });
+
+  return tr;
+}
+
+function textoExclusao(valor) {
+  const texto = String(valor ?? "").trim();
+  return texto || "-";
+}
+
+function preencherInfoExclusao(containerId, itens) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  container.innerHTML = "";
+  itens.forEach(item => {
+    const bloco = document.createElement("div");
+    bloco.className = "exclusao-info-item";
+
+    const label = document.createElement("span");
+    label.className = "exclusao-info-label";
+    label.textContent = item.label;
+
+    const valor = document.createElement("span");
+    valor.className = "exclusao-info-valor";
+    valor.textContent = textoExclusao(item.valor);
+
+    bloco.appendChild(label);
+    bloco.appendChild(valor);
+    container.appendChild(bloco);
+  });
+}
+
+function preencherProdutosNfExclusao(idNf, idMovSelecionado) {
+  const tbody = document.getElementById("corpoProdutosNfExclusao");
+  if (!tbody) return;
+
+  tbody.innerHTML = "";
+
+  const linhas = (Array.isArray(dadosTabela) ? dadosTabela : [])
+    .filter(linha => String(linha?.[COL_EST.NF] || "").trim() === String(idNf || "").trim());
+
+  if (linhas.length === 0) {
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 3;
+    td.textContent = "Nenhum produto ativo encontrado para esta NF.";
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+    return;
+  }
+
+  linhas.forEach(linha => {
+    const tr = document.createElement("tr");
+    if (String(linha[COL_EST.ID] || "").trim() === String(idMovSelecionado || "").trim()) {
+      tr.classList.add("produto-selecionado");
+    }
+
+    [
+      obterNomeProdutoPorCodigo(linha[COL_EST.PRODUTO]),
+      linha[COL_EST.QTD],
+      linha[COL_EST.VALOR],
+      linha[COL_EST.VALOR_CALC]
+    ].forEach(valor => {
+      const td = document.createElement("td");
+      td.textContent = textoExclusao(valor);
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  });
+}
+
+function preencherModalExclusaoComNf(movimentacao, idMov, idNf) {
+  const nf = obterNfEstoquePorId(idNf) || [];
+
+  preencherInfoExclusao("infoMovimentacaoExclusao", [
+    { label: "ID Mov.", valor: idMov },
+    { label: "ID NF", valor: idNf },
+    { label: "Tipo", valor: movimentacao[COL_EST.TIPO] },
+    { label: "ID Transferencia", valor: movimentacao[COL_EST.TRANSFERENCIA] },
+    { label: "ID Venda", valor: movimentacao[COL_EST.VENDA] },
+    { label: "Produto", valor: obterNomeProdutoPorCodigo(movimentacao[COL_EST.PRODUTO]) },
+    { label: "Quantidade", valor: movimentacao[COL_EST.QTD] },
+    { label: "Valor unit. bruto", valor: movimentacao[COL_EST.VALOR] },
+    { label: "Valor unit. com custos", valor: movimentacao[COL_EST.VALOR_CALC] },
+    { label: "Filial", valor: obterNomeFilialPorCodigo(movimentacao[COL_EST.FILIAL]) },
+    { label: "Data mov.", valor: movimentacao[COL_EST.DT_MOV] },
+    { label: "Criado em", valor: movimentacao[COL_EST.CRIADO] },
+    { label: "Editado em", valor: movimentacao[COL_EST.EDITADO] }
+  ]);
+
+  preencherInfoExclusao("infoNfExclusao", [
+    { label: "ID NF", valor: idNf },
+    { label: "Numero NF", valor: nf[1] },
+    { label: "Emissao", valor: nf[2] },
+    { label: "Valor NF", valor: nf[3] },
+    { label: "Frete", valor: nf[4] },
+    { label: "Seguro", valor: nf[5] },
+    { label: "ICMS", valor: nf[6] },
+    { label: "ICMS ST", valor: nf[7] },
+    { label: "IPI", valor: nf[8] },
+    { label: "CPF", valor: nf[9] },
+    { label: "CNPJ", valor: nf[10] },
+    { label: "Estado", valor: nf[11] }
+  ]);
+
+  preencherProdutosNfExclusao(idNf, idMov);
+}
+
+function abrirModalExclusao() {
+  if (!linhaSelecionada) {
+    toastr.warning("Selecione uma movimentação na tabela antes de excluir!");
+    return;
+  }
+
+  const idMov = linhaSelecionada.dataset.idMov || linhaSelecionada.cells[COL_TB.ID]?.textContent || "";
+  const movimentacao = obterMovimentacaoEstoquePorId(idMov);
+  const idNf = String(movimentacao?.[COL_EST.NF] || "").trim();
+  const temNf = !!idNf;
+  const boxModal = document.getElementById("boxModalExclusao");
+
+  contextoExclusaoEstoque = {
+    idMov: idMov,
+    idNf: idNf,
+    temNf: temNf
+  };
+
+  boxModal?.classList.toggle("com-nf", temNf);
+
+  document.getElementById("movimentacaoSelecionada").textContent = idMov;
+  document.getElementById("produtoSelecionado").textContent = movimentacao ? obterNomeProdutoPorCodigo(movimentacao[COL_EST.PRODUTO]) : "";
+  document.getElementById("tipoSelecionado").textContent = movimentacao?.[COL_EST.TIPO] || "";
+  document.getElementById("filialSelecionada").textContent = movimentacao ? obterNomeFilialPorCodigo(movimentacao[COL_EST.FILIAL]) : "";
+  document.getElementById("dataSelecionada").textContent = movimentacao?.[COL_EST.DT_MOV] || "";
+
+  if (temNf && movimentacao) {
+    preencherModalExclusaoComNf(movimentacao, idMov, idNf);
+    carregarNfParaExclusaoEstoque(idNf, movimentacao, idMov);
+  }
+
+  document.getElementById("modalExclusao").classList.add("ativo");
+}
+
+function carregarNfParaExclusaoEstoque(idNf, movimentacao, idMov) {
+  google.script.run
+    .withSuccessHandler(function(resultado) {
+      if (!resultado || !resultado.sucesso) return;
+      mesclarNfsEstoque(resultado.nf ? [resultado.nf] : []);
+      mesclarMovimentacoesEstoque(resultado.movimentacoes || []);
+      preencherModalExclusaoComNf(movimentacao, idMov, idNf);
+    })
+    .withFailureHandler(function(erro) {
+      console.error("Erro ao carregar NF para exclusao:", erro);
+    })
+    .buscarNfComMovimentacoesEstoque(idNf);
+}
+
+function confirmarExclusao() {
+  if (!linhaSelecionada) {
+    toastr.error("Nenhuma linha selecionada!");
+    return;
+  }
+
+  const idMov = linhaSelecionada.dataset.idMov || linhaSelecionada.cells[COL_TB.ID]?.textContent || "";
+  fecharModalExclusao();
+  mostrarCarregamentoModal();
+
+  google.script.run
+    .withSuccessHandler(function(resultado) {
+      esconderCarregamentoModal();
+      if (resultado.sucesso) {
+        dispararAtualizacaoDashboardAnaliticoEstoque(idMov);
+        atualizarDados();
+        linhaSelecionada = null;
+        toastr.success("Movimentação excluída com sucesso!");
+      } else {
+        toastr.error(resultado.mensagem || "Erro ao excluir movimentação!");
+      }
+    })
+    .withFailureHandler(function(erro) {
+      esconderCarregamentoModal();
+      console.error("Erro ao excluir:", erro);
+      toastr.error("Erro ao excluir movimentação. Verifique o console.");
+    })
+    .excluirEstoque(idMov);
+}
+
+function confirmarExclusaoNf() {
+  const idMov = contextoExclusaoEstoque?.idMov || linhaSelecionada?.dataset?.idMov || linhaSelecionada?.cells?.[COL_TB.ID]?.textContent || "";
+  if (!idMov) {
+    toastr.error("Nenhuma movimentação carregada para exclusão.");
+    return;
+  }
+
+  fecharModalExclusao();
+  mostrarCarregamentoModal();
+
+  google.script.run
+    .withSuccessHandler(function(resultado) {
+      esconderCarregamentoModal();
+      if (resultado.sucesso) {
+        dispararAtualizacaoDashboardAnaliticoEstoque(idMov);
+        atualizarDados();
+        linhaSelecionada = null;
+        toastr.success(resultado.mensagem || "NF excluída com sucesso!");
+      } else {
+        toastr.error(resultado.mensagem || "Erro ao excluir NF!");
+      }
+    })
+    .withFailureHandler(function(erro) {
+      esconderCarregamentoModal();
+      console.error("Erro ao excluir NF:", erro);
+      toastr.error("Erro ao excluir NF. Verifique o console.");
+    })
+    .excluirEstoque(idMov);
+}
+
+function confirmarExclusaoProdutoNf() {
+  const idMov = contextoExclusaoEstoque?.idMov || linhaSelecionada?.dataset?.idMov || linhaSelecionada?.cells?.[COL_TB.ID]?.textContent || "";
+  if (!idMov) {
+    toastr.error("Nenhum produto carregado para exclusão.");
+    return;
+  }
+
+  fecharModalExclusao();
+  mostrarCarregamentoModal();
+
+  google.script.run
+    .withSuccessHandler(function(resultado) {
+      esconderCarregamentoModal();
+      if (resultado.sucesso) {
+        dispararAtualizacaoDashboardAnaliticoEstoque(idMov);
+        atualizarDados();
+        linhaSelecionada = null;
+        toastr.success(resultado.mensagem || "Produto excluído da NF com sucesso!");
+      } else {
+        toastr.error(resultado.mensagem || "Erro ao excluir produto da NF!");
+      }
+    })
+    .withFailureHandler(function(erro) {
+      esconderCarregamentoModal();
+      console.error("Erro ao excluir produto da NF:", erro);
+      toastr.error("Erro ao excluir produto da NF. Verifique o console.");
+    })
+    .excluirProdutoNfEstoque(idMov);
+}
+
+function montarDadosSaldoEstoque() {
+  const mapaSaldo = new Map();
+  if (!Array.isArray(dadosTabela)) return [];
+
+  dadosTabela.forEach(linha => {
+    if (!Array.isArray(linha) || linha.length < 10) return;
+    const tipo = normalizarTextoBase(linha[COL_EST.TIPO]);
+    const codigoProduto = String(linha[COL_EST.PRODUTO] ?? "").trim();
+    const codigoFilial = String(linha[COL_EST.FILIAL] ?? "").trim();
+    const qtd = obterQuantidadeMovimentacao(linha[COL_EST.QTD]);
+
+    if (!codigoProduto || !codigoFilial || !qtd) return;
+
+    let fator = 0;
+    if (tipo.includes("ENTRADA")) fator = 1;
+    if (tipo.includes("SAIDA")) fator = -1;
+    if (!fator) return;
+
+    const chave = `${codigoFilial}||${codigoProduto}`;
+    const atual = mapaSaldo.get(chave) || {
+      filial: obterNomeFilialPorCodigo(codigoFilial),
+      produto: obterNomeProdutoPorCodigo(codigoProduto),
+      saldo: 0
+    };
+
+    atual.saldo += qtd * fator;
+    mapaSaldo.set(chave, atual);
+  });
+
+  return Array.from(mapaSaldo.values()).sort((a, b) => {
+    const filial = a.filial.localeCompare(b.filial, "pt-BR");
+    if (filial !== 0) return filial;
+    return a.produto.localeCompare(b.produto, "pt-BR");
+  });
+}
+
+function obterLinhasTransferenciaAtiva(idTransferencia) {
+  return (Array.isArray(dadosTabela) ? dadosTabela : [])
+    .filter(linha => String(linha[COL_EST.TRANSFERENCIA] || "").trim() === String(idTransferencia).trim());
+}
+
+function abrirModalTransferencia() {
+  const idMovSelecionado = linhaSelecionada?.dataset?.idMov || linhaSelecionada?.cells?.[COL_TB.ID]?.textContent || "";
+  const movimentacaoSelecionada = obterMovimentacaoEstoquePorId(idMovSelecionado);
+  const idTransferenciaSelecionada = String(movimentacaoSelecionada?.[COL_EST.TRANSFERENCIA] || "").trim();
+
+  if (linhaSelecionada && !idTransferenciaSelecionada) {
+    toastr.warning("A linha selecionada não é uma transferência.");
+    return;
+  }
+
+  if (idTransferenciaSelecionada) abrirModalEdicaoTransferencia(idTransferenciaSelecionada);
+  else resetarTransferencia();
+
+  document.getElementById("modalTransferencia").classList.add("ativo");
+}
+
+function abrirModalEdicaoTransferencia(idTransferencia) {
+  const linhas = obterLinhasTransferenciaAtiva(idTransferencia);
+
+  if (linhas.length === 0) {
+    toastr.warning("Transferência não encontrada nos dados atuais.");
+    resetarTransferencia();
+    return;
+  }
+
+  const saidas = linhas.filter(linha => normalizarTextoBase(linha[COL_EST.TIPO]).includes("SAIDA"));
+  const entradas = linhas.filter(linha => normalizarTextoBase(linha[COL_EST.TIPO]).includes("ENTRADA"));
+
+  if (saidas.length === 0 || entradas.length === 0) {
+    toastr.warning("Transferência incompleta. Não foi possível abrir para edição.");
+    resetarTransferencia();
+    return;
+  }
+
+  idTransferenciaEmEdicao = idTransferencia;
+  document.getElementById("inputTransferenciaFilialOrigem").value = obterNomeFilialPorCodigo(saidas[0][COL_EST.FILIAL]);
+  document.getElementById("inputTransferenciaFilialDestino").value = obterNomeFilialPorCodigo(entradas[0][COL_EST.FILIAL]);
+
+  const container = document.getElementById("containerItensTransferencia");
+  container.innerHTML = "";
+
+  saidas.forEach(linha => {
+    const bloco = criarBlocoTransferencia(obterNomeProdutoPorCodigo(linha[COL_EST.PRODUTO]), String(linha[COL_EST.QTD] || "").trim());
+    container.appendChild(bloco);
+    adicionarEventosBlocoTransferencia(bloco);
+  });
+
+  configurarModoTransferencia("edicao");
+  atualizarEstadoBotaoAdicionarTransferencia();
+}
+
+function abrirModalPesquisa() {
+  const modal = document.getElementById("modalPesquisa");
+  if (!modal) return;
+  modal.classList.add("ativo");
+
+  // As opcoes vêm do backend e representam toda a base, nao apenas as 100 linhas visiveis.
+  const listas = typeof listasFiltrosEstoque !== "undefined" && listasFiltrosEstoque ? listasFiltrosEstoque : {};
+  configurarDropdownMulti(inputPesquisarTipo, listaUlPesquisarTipo, Array.isArray(listas.tipos) ? listas.tipos : todostipos);
+  configurarDropdownMulti(inputPesquisarProduto, listaUlPesquisarProduto, Array.isArray(listas.produtos) ? listas.produtos : todosprodutos);
+  configurarDropdownMulti(inputPesquisarFilial, listaUlPesquisarFilial, Array.isArray(listas.filiais) ? listas.filiais : todasfilais);
+}
+
+function aplicarPesquisaNaTabela() {
+  // Converte nomes escolhidos no modal para codigos antes de consultar o backend.
+  const tipRaw = (document.getElementById("inputPesquisarTipo")?.value || "").trim();
+  const proRaw = (document.getElementById("inputPesquisarProduto")?.value || "").trim();
+  const filRaw = (document.getElementById("inputPesquisarFilial")?.value || "").trim();
+  const movRaw = (document.getElementById("inputPesquisarDataMovimentacao")?.value || "").trim();
+  const cadRaw = (document.getElementById("inputPesquisarDataCadastro")?.value || "").trim();
+
+  const periodoMov = obterPeriodoTextoEstoque(movRaw);
+  const periodoCad = obterPeriodoTextoEstoque(cadRaw);
+
+  carregarPrimeiraPaginaEstoque({
+    tipo: parseListaMulti(tipRaw).join(";"),
+    produto: parseListaMulti(proRaw).map(obterCodigoProdutoPorNome).filter(Boolean).join(";"),
+    filial: parseListaMulti(filRaw).map(obterCodigoFilialPorNome).filter(Boolean).join(";"),
+    dataMovInicial: periodoMov.inicial,
+    dataMovFinal: periodoMov.final,
+    dataCadInicial: periodoCad.inicial,
+    dataCadFinal: periodoCad.final
+  });
+  fecharModalPesquisa();
+}
+
+function renderTabelaAPartirDeArray(dados, anexar) {
+  const tbody = document.getElementById("tb_corpo");
+  if (!tbody) return;
+  if (!anexar) {
+    tbody.innerHTML = "";
+    linhaSelecionada = null;
+  }
+
+  const frag = document.createDocumentFragment();
+  dados.forEach(linha => {
+    frag.appendChild(criarLinhaTabelaEstoque(linha));
+  });
+  tbody.appendChild(frag);
+}
+
+function Limpar() {
+  document.getElementById("inputPesquisarTipo").value = "";
+  document.getElementById("inputPesquisarProduto").value = "";
+  document.getElementById("inputPesquisarFilial").value = "";
+  document.getElementById("inputPesquisarDataMovimentacao").value = "";
+  document.getElementById("inputPesquisarDataCadastro").value = "";
+  carregarPrimeiraPaginaEstoque({});
+  toastr.info("Filtros removidos com sucesso!");
+}
+
+function obterCodigoProdutoPorNome(nomeProduto) {
+  const nome = normalizarTextoBase(nomeProduto);
+  const produto = mapaProdutoPorNomeEstoque.get(nome);
+  return produto ? produto.codigo : "";
+}
+
+function obterCodigoFilialPorNome(nomeFilial) {
+  const nome = normalizarTextoBase(nomeFilial);
+  const filial = mapaFilialPorNomeEstoque.get(nome);
+  return filial ? filial.codigo : "";
+}
+
+function reconstruirMapasConsultaEstoque() {
+  mapaProdutoPorCodigoEstoque = new Map();
+  mapaProdutoPorNomeEstoque = new Map();
+  mapaFilialPorCodigoEstoque = new Map();
+  mapaFilialPorNomeEstoque = new Map();
+  mapaNfPorIdEstoque = new Map();
+
+  (Array.isArray(itensProd) ? itensProd : []).forEach(item => {
+    const codigo = String(item?.codigo || "").trim();
+    const nome = normalizarTextoBase(item?.nome);
+    if (codigo) mapaProdutoPorCodigoEstoque.set(codigo, item);
+    if (nome) mapaProdutoPorNomeEstoque.set(nome, item);
+  });
+
+  (Array.isArray(itensFil) ? itensFil : []).forEach(item => {
+    const codigo = String(item?.codigo || "").trim();
+    const nome = normalizarTextoBase(item?.nome);
+    if (codigo) mapaFilialPorCodigoEstoque.set(codigo, item);
+    if (nome) mapaFilialPorNomeEstoque.set(nome, item);
+  });
+
+  (Array.isArray(dadosNfs) ? dadosNfs : []).forEach(nf => {
+    const id = String(nf?.[0] || "").trim();
+    if (id) mapaNfPorIdEstoque.set(id, nf);
+  });
+}
+
+function obterPeriodoTextoEstoque(valor) {
+  const partes = String(valor || "").split("-").map(p => p.trim()).filter(Boolean);
+  return {
+    inicial: partes[0] || "",
+    final: partes[1] || ""
+  };
+}
+
+function obterTextoCelulaEstoque(linha, indice) {
+  const valor = linha[indice];
+
+  if (indice === COL_EST.NF) {
+    return String(valor ?? "").trim() || "SEM NF";
+  }
+
+  return valor || "";
+}
+
+function obterValorCampoMonetario(idCampo) {
+  const campo = document.getElementById(idCampo);
+  if (!campo) return 0;
+  return campo.obterValor ? campo.obterValor() : obterValorMonetarioNumero(campo.value);
+}
+
+function aplicarMascaraValorEmElemento(campo) {
+  if (!campo) return;
+  let atualizando = false;
+  campo.setAttribute("inputmode", "numeric");
+
+  campo.addEventListener("keydown", e => {
+    const permitidas = [8, 9, 13, 27, 46];
+    const ctrl = e.ctrlKey && [65, 67, 86, 88].includes(e.keyCode);
+    const nav = e.keyCode >= 35 && e.keyCode <= 39;
+    const num = (!e.shiftKey && ((e.keyCode >= 48 && e.keyCode <= 57) || (e.keyCode >= 96 && e.keyCode <= 105)));
+    if (!(permitidas.includes(e.keyCode) || ctrl || nav || num)) e.preventDefault();
+  });
+
+  campo.addEventListener("input", e => {
+    if (atualizando) return;
+    const soNumeros = e.target.value.replace(/\D/g, "");
+    if (!soNumeros) {
+      atualizando = true;
+      e.target.value = "";
+      atualizando = false;
+      return;
+    }
+
+    let v = soNumeros.slice(0, 9).padStart(3, "0");
+    const reais = v.slice(0, -2).replace(/^0+/, "") || "0";
+    const centavos = v.slice(-2);
+    atualizando = true;
+    e.target.value = `R$ ${reais.replace(/\B(?=(\d{3})+(?!\d))/g, ".")},${centavos}`;
+    atualizando = false;
+  });
+
+  campo.obterValor = () => parseInt((campo.value || "").replace(/\D/g, ""), 10) / 100 || 0;
+  campo.definirValor = valor => {
+    if (valor === null || valor === undefined || Number.isNaN(Number(valor))) {
+      campo.value = "";
+      return;
+    }
+    campo.value = formatarMoedaBR(Number(valor));
+  };
+}
+
+function aplicarMascaraApenasNumerosFlex(campo) {
+  if (!campo) return;
+  campo.setAttribute("inputmode", "numeric");
+  campo.addEventListener("input", function() {
+    this.value = this.value.replace(/\D/g, "").slice(0, 6);
+  });
+}
+
+function aplicarMascaraSomenteNumeros(idCampo) {
+  const campo = document.getElementById(idCampo);
+  if (!campo) return;
+  campo.setAttribute("inputmode", "numeric");
+  campo.addEventListener("input", function() {
+    this.value = this.value.replace(/\D/g, "");
+  });
+}
+
+function aplicarMascaraCpf(idCampo) {
+  const campo = document.getElementById(idCampo);
+  if (!campo) return;
+  campo.setAttribute("inputmode", "numeric");
+  campo.addEventListener("input", function() {
+    let v = this.value.replace(/\D/g, "").slice(0, 11);
+    v = v.replace(/(\d{3})(\d)/, "$1.$2");
+    v = v.replace(/(\d{3})(\d)/, "$1.$2");
+    v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+    this.value = v;
+  });
+}
+
+function aplicarMascaraCnpj(idCampo) {
+  const campo = document.getElementById(idCampo);
+  if (!campo) return;
+  campo.setAttribute("inputmode", "numeric");
+  campo.addEventListener("input", function() {
+    let v = this.value.replace(/\D/g, "").slice(0, 14);
+    v = v.replace(/^(\d{2})(\d)/, "$1.$2");
+    v = v.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3");
+    v = v.replace(/\.(\d{3})(\d)/, ".$1/$2");
+    v = v.replace(/(\d{4})(\d)/, "$1-$2");
+    this.value = v;
+  });
+}
+
+</script>

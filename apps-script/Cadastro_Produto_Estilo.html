@@ -1,0 +1,1782 @@
+<style>
+
+
+/* ================================================================================================================================================
+   CONTAINER GERAL
+   ======================================== =======================================================================================================*/
+
+/* Container principal que ocupa toda a área abaixo do cabeçalho */
+#geral {
+  position: absolute;
+  top: 8vh;                    /* Começa após o cabeçalho (8% da altura) */
+  left: 0;
+  width: 100%;
+  height: 92vh;                /* Ocupa os 92% restantes da tela */
+  display: flex;
+  flex-direction: column;      /* Organiza elementos em coluna */
+  align-items: stretch;
+  font-family: "DejaVu Sans Mono", monospace;
+
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+
+
+
+
+
+
+/* =============================================================================================================================================
+   SEÇÃO SUPERIOR - BOTÕES DE AÇÃO
+   =============================================================================================================================================*/
+
+/* Container da barra superior com botões */
+#cad_superior{
+  display: flex;
+  width: 100%;
+  height: 10%;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 1%;
+  padding-right: 1%;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+/* Lado esquerdo: botões de ação (Voltar, Cadastrar, Editar, Excluir) */
+#cad_esquerda{
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  height: 100%;
+  width: 40%;
+  gap: 2%;                     /* Espaçamento entre botões */
+}
+
+/* Estilo dos ícones dos botões */
+#cad_icone{
+  color: black;
+  max-height: 100%;
+  font-size: 2rem;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+/* Hover dos ícones - muda para azul */
+#cad_icone:hover{
+  color: #42DCFA;
+}
+
+/* Ícone especial do botão limpar (maior) */
+#cad_limpar{
+  color: black;
+  max-height: 100%;
+  font-size: 2.3rem;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+#cad_limpar:hover{
+  color: #42DCFA;
+}
+
+/* Remove estilo padrão dos botões */
+#btnExcluir, #btnEditar, #btnCadastrar, #btnPromocao, #btnPesquisar, #btnLimpar, #btnVoltar, #btnExtrair{
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* Lado direito: campo de pesquisa e botões */
+#cad_direita{
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  height: 100%;
+  width: 40%;
+  gap: 1%;
+}
+
+#legenda_promocao {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: row;
+  gap: 24px;
+  width: auto;
+  color: #333;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.legenda-promocao-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legenda-promocao-item .status-promocao-dot {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ========================================
+    ESTILIZAÇÃO DAS LISTAS DE SUGESTÃO (.sugestoes)
+    ======================================== */
+
+.sugestoes {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    position: absolute; /* Permite sobreposição */
+    z-index: 1000; /* Garante que fique acima de outros elementos */
+    width: 100%;
+    max-height: 150px;
+    overflow-y: auto;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    top: 100%; /* Posiciona logo abaixo do input pai */
+    left: 0;
+    box-sizing: border-box;
+}
+
+.sugestoes li {
+    padding: 8px 15px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #333;
+    transition: background-color 0.2s;
+}
+
+.sugestoes li:hover {
+    background-color: #f0f0f0;
+}
+
+/* Opcional: Adicionar position: relative ao .form-field onde a sugestão está para o posicionamento funcionar */
+div.form-column div.form-field {
+    /* ... outras propriedades ... */
+    position: relative; /* CRUCIAL para o posicionamento do .sugestoes */
+    /* ... outras propriedades ... */
+}
+
+
+
+
+
+
+
+
+
+
+
+/* ================================================================================================================
+   LAYOUT DO CALENDÁRIO
+   ============================================================================================================== */
+
+/* Painel da esquerda */
+.datepicker-date-display{
+  background-color: black !important;
+}
+.datepicker-date-display .date-text,
+.datepicker-date-display .year-text{
+  color: #fff !important;
+}
+
+/* ===== DIAS (NÚMEROS) PRETOS ===== */
+.datepicker-table td .datepicker-day-button{
+  color: #000 !important;
+}
+
+/* Dia de hoje (mantém preto) */
+.datepicker-table td.is-today .datepicker-day-button{
+  color: #000 !important;
+}
+
+/* Dias de outros meses (opcional mais claro) */
+.datepicker-table td.is-outside-current-month .datepicker-day-button{
+  color: rgba(0,0,0,.35) !important;
+}
+
+/* ===== DIA SELECIONADO: bolinha azul + número branco ===== */
+.datepicker-table td.is-selected{
+  background-color: black !important;
+}
+.datepicker-table td.is-selected .datepicker-day-button{
+  color: #fff !important;
+}
+
+/* Hover */
+.datepicker-table td .datepicker-day-button:hover{
+  background-color: rgba(6, 6, 61, 0.12) !important;
+}
+
+/* Arredonda o “quadro” inteiro do datepicker */
+.datepicker-modal,
+.datepicker-container{
+  border-radius: 14px !important;
+  overflow: hidden !important; /* garante que o painel azul também respeite o raio */
+}
+
+/* (Opcional) arredonda o painel da esquerda também */
+.datepicker-date-display{
+  border-top-left-radius: 14px !important;
+  border-bottom-left-radius: 14px !important;
+}
+
+/* Dias bloqueados (futuros): deixa bem cinza e sem interação visual */
+.datepicker-table td.is-disabled .datepicker-day-button{
+  color: rgba(0,0,0,.28) !important;   /* número cinza */
+  cursor: not-allowed !important;
+}
+
+/* Remove hover nos dias desabilitados */
+.datepicker-table td.is-disabled .datepicker-day-button:hover{
+  background: transparent !important;
+}
+
+/* Aumenta a largura do calendário para caber nomes de meses longos */
+.datepicker-container{
+  min-width: 380px !important;  /* ajuste: 360~420 */
+}
+
+/* Garante que o texto do mês não quebre e tenha espaço */
+.datepicker-controls{
+  width: 100% !important;
+}
+
+.datepicker-controls .month-text,
+.datepicker-controls .year-text{
+  white-space: nowrap !important;
+}
+
+/* Entre início e fim */
+.datepicker-table td.range-between{
+  background-color: rgba(6, 6, 61, 0.18) !important;
+}
+
+/* Início e fim (bolinha azul) */
+.datepicker-table td.range-start,
+.datepicker-table td.range-end{
+  background-color: black !important;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =======================================================================================================================================================
+    SEÇÃO INFERIOR - TABELA
+    ======================================================================================================================================================= */
+
+/* Container da seção com tabela */
+#cad_inferior{
+  padding: 1%;
+  height: 90%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  min-height: 0;
+}
+
+/* Container wrapper da tabela (não deixa a página expandir) */
+#container_tabela{
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e0e0e0;
+  background: white;
+  box-sizing: border-box;
+  min-height: 0;
+}
+
+/* Wrapper com scroll vertical e horizontal
+   - Horizontal: aparece embaixo (final do container)
+   - Não expande a página (fica limitado ao container) */
+#tabela_scroll{
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: auto;
+  background-color: white;
+  box-sizing: border-box;
+  min-height: 0;
+}
+
+/* Scrollbars (Webkit) */
+#tabela_scroll::-webkit-scrollbar{
+  height: 12px; /* horizontal */
+  width: 12px;  /* vertical */
+}
+
+#tabela_scroll::-webkit-scrollbar-track{
+  background: #f0f0f0;
+}
+
+#tabela_scroll::-webkit-scrollbar-thumb{
+  background-color: #000000;
+  border-radius: 6px;
+  border: 2px solid #f0f0f0;
+}
+
+#tabela_scroll::-webkit-scrollbar-thumb:hover{
+  background-color: #333333;
+}
+
+/* Tabela única (thead + tbody juntos) */
+#tb_fornecedor{
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 12px;
+  width: max-content;     /* permite a tabela ser maior que o container */
+  min-width: 100%;        /* mas nunca menor que o container */
+  table-layout: fixed;    /* respeita as larguras */
+}
+
+/* Cabeçalho */
+#tb_cabecalho{
+  background-color: black;
+  color: white;
+}
+
+/* Th sticky (fixo no topo durante scroll vertical) */
+#tb_cabecalho th{
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: black;
+
+  text-align: center;
+  vertical-align: middle;
+  padding: 12px 8px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+/* Arredondamento do cabeçalho */
+#tb_cabecalho th:first-child{
+  border-top-left-radius: 12px;
+}
+#tb_cabecalho th:last-child{
+  border-top-right-radius: 12px;
+}
+
+/* Corpo */
+#tb_corpo td{
+  text-align: center;
+  vertical-align: middle;
+  padding: 10px 8px;
+  color: black;
+  border-bottom: 1px solid #f0f0f0;
+  white-space: nowrap; /* evita quebrar e bagunçar widths */
+}
+
+/* Linhas alternadas */
+#tb_corpo tr:nth-child(odd){
+  background-color: #f5f5f5;
+}
+#tb_corpo tr:nth-child(even){
+  background-color: white;
+}
+
+/* Hover */
+#tb_corpo tr:hover{
+  background-color: #42DCFA !important;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+/* Selecionada */
+#tb_corpo tr.selecionada{
+  background-color: #36DB2E !important;
+  color: white;
+}
+#tb_corpo tr.selecionada:hover{
+  background-color: #36DB2E !important;
+}
+
+/* Remove borda da última linha */
+#tb_corpo tr:last-child td{
+  border-bottom: none;
+}
+
+.status-promocao-wrapper{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.status-promocao-dot{
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-promocao-dot--sim{
+  background-color: #36DB2E;
+  box-shadow: 0 0 8px rgba(54, 219, 46, 0.45);
+}
+
+.status-promocao-dot--nao{
+  background-color: #42DCFA;
+  box-shadow: 0 0 8px rgba(66, 220, 250, 0.45);
+}
+
+.status-promocao-texto{
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* =========================
+   LARGURAS DAS COLUNAS
+   Use px (recomendado) para tabela com scroll horizontal.
+   Assim ela não "espalha" nem fica comprimida.
+   ========================= */
+
+/* Cabeçalho (th) e corpo (td:nth-child) juntos */
+#tb_col_id,
+#tb_corpo td:nth-child(1){
+  width: 70px;
+  min-width: 70px;
+}
+
+#tb_col_promocao,
+#tb_corpo td:nth-child(2){
+  width: 130px;
+  min-width: 130px;
+}
+
+#tb_col_nome,
+#tb_corpo td:nth-child(4){
+  width: 260px;
+  min-width: 260px;
+}
+
+#tb_col_codinterno,
+#tb_corpo td:nth-child(5){
+  width: 170px;
+  min-width: 170px;
+}
+
+#tb_col_categoria,
+#tb_corpo td:nth-child(6){
+  width: 220px;
+  min-width: 220px;
+}
+
+#tb_col_subcategoria,
+#tb_corpo td:nth-child(7){
+  width: 220px;
+  min-width: 220px;
+}
+
+#tb_col_ean,
+#tb_corpo td:nth-child(8){
+  width: 180px;
+  min-width: 180px;
+}
+
+#tb_col_marca,
+#tb_corpo td:nth-child(9){
+  width: 180px;
+  min-width: 180px;
+}
+
+#tb_col_tipotamanho,
+#tb_corpo td:nth-child(10){
+  width: 150px;
+  min-width: 150px;
+}
+
+#tb_col_tamanho,
+#tb_corpo td:nth-child(11){
+  width: 140px;
+  min-width: 140px;
+}
+
+#tb_col_cor,
+#tb_corpo td:nth-child(12){
+  width: 160px;
+  min-width: 160px;
+}
+
+#tb_col_fornecedor,
+#tb_corpo td:nth-child(13){
+  width: 220px;
+  min-width: 220px;
+}
+
+#tb_col_estmaximo,
+#tb_corpo td:nth-child(14){
+  width: 150px;
+  min-width: 150px;
+}
+
+#tb_col_estminimo,
+#tb_corpo td:nth-child(15){
+  width: 150px;
+  min-width: 150px;
+}
+
+#tb_col_precovenda,
+#tb_corpo td:nth-child(16){
+  width: 160px;
+  min-width: 160px;
+}
+
+#tb_col_precocusto,
+#tb_corpo td:nth-child(17){
+  width: 160px;
+  min-width: 160px;
+}
+
+#tb_col_observacao,
+#tb_corpo td:nth-child(18){
+  width: 260px;
+  min-width: 260px;
+}
+
+#tb_col_combo,
+#tb_corpo td:nth-child(19){
+  width: 110px;
+  min-width: 110px;
+}
+
+#tb_col_saidaest,
+#tb_corpo td:nth-child(20){
+  width: 260px;
+  min-width: 260px;
+}
+
+#tb_col_qtdsaidaest,
+#tb_corpo td:nth-child(21){
+  width: 130px;
+  min-width: 130px;
+}
+
+#tb_col_valorunitario,
+#tb_corpo td:nth-child(22){
+  width: 160px;
+  min-width: 160px;
+}
+
+#tb_col_dtcriacao,
+#tb_corpo td:nth-child(23){
+  width: 190px;
+  min-width: 190px;
+}
+
+#tb_col_alteracao,
+#tb_corpo td:nth-child(24){
+  width: 190px;
+  min-width: 190px;
+}
+
+/* A interface não exibe o ID técnico da promoção vigente. */
+#tb_corpo td:nth-child(3){ width: 260px; min-width: 260px; }
+#tb_corpo td:nth-child(4){ width: 170px; min-width: 170px; }
+#tb_corpo td:nth-child(5){ width: 220px; min-width: 220px; }
+#tb_corpo td:nth-child(6){ width: 220px; min-width: 220px; }
+#tb_corpo td:nth-child(7){ width: 180px; min-width: 180px; }
+#tb_corpo td:nth-child(8){ width: 180px; min-width: 180px; }
+#tb_corpo td:nth-child(9){ width: 150px; min-width: 150px; }
+#tb_corpo td:nth-child(10){ width: 140px; min-width: 140px; }
+#tb_corpo td:nth-child(11){ width: 160px; min-width: 160px; }
+#tb_corpo td:nth-child(12){ width: 220px; min-width: 220px; }
+#tb_corpo td:nth-child(13){ width: 150px; min-width: 150px; }
+#tb_corpo td:nth-child(14){ width: 150px; min-width: 150px; }
+#tb_corpo td:nth-child(15){ width: 160px; min-width: 160px; }
+#tb_corpo td:nth-child(16){ width: 160px; min-width: 160px; }
+#tb_corpo td:nth-child(17){ width: 260px; min-width: 260px; }
+#tb_corpo td:nth-child(18){ width: 110px; min-width: 110px; }
+#tb_corpo td:nth-child(19){ width: 260px; min-width: 260px; }
+#tb_corpo td:nth-child(20){ width: 130px; min-width: 130px; }
+#tb_corpo td:nth-child(21){ width: 160px; min-width: 160px; }
+#tb_corpo td:nth-child(22){ width: 190px; min-width: 190px; }
+#tb_corpo td:nth-child(23){ width: 190px; min-width: 190px; }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =================================================================================================================================================
+   NOTIFICAÇÕES TOASTR
+   ================================================================================================================================================= */
+
+/* Container dos toasts (centralizado no topo) */
+#toast-container {
+  position: fixed !important;
+  top: 2vh !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: auto !important;
+  max-width: 500px !important;
+  z-index: 10050 !important;
+  pointer-events: none !important;
+}
+
+/* Estilo individual de cada toast */
+#toast-container > div {
+  width: 100% !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+  padding: 15px 20px 15px 55px !important;
+  margin-bottom: 10px !important;
+  position: relative !important;
+  z-index: 10051 !important;
+  pointer-events: auto !important;
+}
+
+/* Mensagem do toast */
+#toast-container > div .toast-message {
+  padding-left: 0 !important;
+  line-height: 1.4 !important;
+}
+
+/* Ícones dos toasts */
+#toast-container .toast-success::before,
+#toast-container .toast-info::before,
+#toast-container .toast-warning::before,
+#toast-container .toast-error::before {
+  position: absolute !important;
+  left: 15px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  font-size: 24px !important;
+}
+
+/* Cores dos diferentes tipos de toast */
+#toast-container > .toast-success {
+  background-color: #28a745 !important;
+}
+
+#toast-container > .toast-info {
+  background-color: #17a2b8 !important;
+}
+
+#toast-container > .toast-warning {
+  background-color: #ffc107 !important;
+  color: #333 !important;
+}
+
+#toast-container > .toast-error {
+  background-color: #dc3545 !important;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ====================================================================================================================================================
+   MODAIS - ESTRUTURA BASE
+   ==================================================================================================================================================== */
+
+/* Overlay do modal (fundo desfocado) */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(8px);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  animation: fadeIn 0.3s ease;
+}
+
+/* Modal ativo (visível) */
+.modal-overlay.ativo {
+  display: flex;
+}
+
+/* Caixa do modal padrão (exclusão e confirmações) */
+.modal-box {
+  width: 50%;
+  height: 50%;
+  max-width: 800px;
+  min-width: 400px;
+  max-height: 600px;
+  min-height: 400px;
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  animation: slideIn 0.4s ease;
+  font-family: "DejaVu Sans Mono", monospace;
+}
+
+/* Caixa grande do modal (cadastro e edição com múltiplos campos) */
+.modal-box-large {
+  width: 95%;
+  height: 90%;
+  max-width: 1650px;
+  min-width: 950px;
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.4s ease;
+  font-family: "DejaVu Sans Mono", monospace;
+}
+
+/* Título dos modais */
+.modal-titulo {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 30px 0;
+  text-align: left;
+  letter-spacing: 1px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ====================================================================================================================================================
+   MODAL DE PROMOÇÃO
+   ==================================================================================================================================================== */
+
+.modal-box-promocao{
+  width: 80%;
+  max-width: 1100px;
+  min-width: 700px;
+  height: auto;
+  max-height: 85vh;
+}
+
+.modal-header-promocao{
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  position: relative;
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.modal-header-promocao .modal-titulo{
+  margin: 0;
+}
+
+.btn-promocao-csv{
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+
+.btn-promocao-csv i{
+  color: black;
+  font-size: 2rem;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.btn-promocao-csv:hover i,
+.btn-promocao-csv:focus i{
+  color: #42DCFA;
+}
+
+.btn-promocao-csv:active i{
+  transform: scale(0.92);
+}
+
+.form-container-promocao{
+  display: flex;
+  gap: 1%;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin-bottom: 20px;
+  padding: 0 10px;
+}
+
+.form-column-promocao{
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-column-promocao:nth-child(1){
+  flex: 0 0 55%;
+  max-width: 55%;
+}
+
+.form-column-promocao:nth-child(2){
+  flex: 0 0 44%;
+  max-width: 44%;
+}
+
+.form-column-promocao .form-field{
+  display: flex;
+  flex-direction: column;
+  min-height: 78px;
+  position: relative;
+}
+
+.modal-botoes-promocao{
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: auto;
+  padding-top: 20px;
+  flex-wrap: wrap;
+}
+
+.input-datetime-promocao{
+  text-transform: none !important;
+  color: #333;
+}
+
+.input-datetime-promocao::-webkit-datetime-edit,
+.input-datetime-promocao::-webkit-datetime-edit-text,
+.input-datetime-promocao::-webkit-datetime-edit-month-field,
+.input-datetime-promocao::-webkit-datetime-edit-day-field,
+.input-datetime-promocao::-webkit-datetime-edit-year-field,
+.input-datetime-promocao::-webkit-datetime-edit-hour-field,
+.input-datetime-promocao::-webkit-datetime-edit-minute-field{
+  text-transform: none !important;
+}
+
+.input-datetime-promocao::-webkit-calendar-picker-indicator{
+  cursor: pointer;
+  opacity: 0.85;
+  filter: contrast(1.1);
+}
+
+#inputPromocaoPrecoCusto,
+#inputPromocaoLucro{
+  background-color: #efefef;
+  color: #555;
+  cursor: not-allowed;
+}
+
+.modal-botoes-promocao button:disabled{
+  background-color: #cfcfcf !important;
+  color: #777 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.modal-overlay-secundario{
+  z-index: 10000;
+}
+
+.modal-box-extracao-promocao{
+  width: 42vw;
+  max-width: 620px;
+  min-width: 430px;
+  min-height: 420px;
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  animation: slideIn 0.4s ease;
+  font-family: "DejaVu Sans Mono", monospace;
+}
+
+.modal-extracao-topo{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 38px;
+  margin-bottom: 24px;
+}
+
+.modal-titulo-extracao-promocao{
+  margin: 0;
+  font-size: clamp(1.25rem, 2.4vw, 1.7rem);
+  text-align: left;
+}
+
+.checkbox-extrair-tudo-promocao{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #333;
+  font-size: 0.86rem;
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+  margin-left: auto;
+}
+
+.checkbox-extrair-tudo-promocao span{
+  color: #333;
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.modal-box-extracao-promocao .form-field{
+  display: flex;
+  flex-direction: column;
+  min-height: 86px;
+  position: relative;
+}
+
+.modal-box-extracao-promocao .input-moderno:disabled{
+  background-color: #efefef;
+  color: #777;
+  cursor: not-allowed;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ========================================
+    MODAL GERAL E LAYOUT
+    ======================================== */
+
+/* Container do modal overlay (garante 95% de largura) */
+.modal-box-large {
+    /* ... outras propriedades mantidas ... */
+    width: 98vw;
+    max-width: 1730px;
+    /* ... outras propriedades mantidas ... */
+}
+
+/* Container dos campos */
+.form-container {
+  display: flex;
+  gap: 20px;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin-bottom: 20px;
+  padding: 0 10px;
+}
+
+/* Base das colunas (aplica o gap interno) */
+div.form-container div.form-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+div.form-container div.form-column:nth-child(1),
+div.form-container div.form-column:nth-child(2) {
+  flex: 0 0 27%;
+  max-width: 27%;
+}
+
+div.form-container div.form-column:nth-child(3) {
+  flex: 0 0 42%;
+  max-width: 42%;
+}
+
+/* Cada campo individual */
+div.form-column div.form-field {
+  display: flex;
+  flex-direction: column;
+  min-height: 78px;
+  position: relative;
+}
+
+.titulo-secao-modal {
+  width: 100%;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #222;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #42DCFA;
+  margin-bottom: 4px;
+}
+
+/* ========================================
+    INPUTS E LABELS (Mantido o seu estilo base)
+    ======================================== */
+
+/* Label dos campos */
+.input-label {
+    font-size: 0.85rem;
+    color: #555;
+    margin-bottom: 6px;
+    font-weight: 500;
+    text-align: left;
+}
+
+/* Inputs padrão */
+div.form-field input.input-moderno,
+div.form-field input.input-moderno-telefone,
+div.form-field input.input-moderno-cnpj {
+    width: 100%;
+    height: 40px;
+    padding: 8px 15px;
+    font-size: 0.9rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    outline: none;
+    transition: all 0.3s ease;
+    background-color: #f9f9f9;
+    text-transform: uppercase;
+    font-family: "DejaVu Sans Mono", monospace;
+    box-sizing: border-box;
+}
+
+/* Placeholder dos inputs */
+div.form-field input.input-moderno::placeholder,
+div.form-field input.input-moderno-telefone::placeholder,
+div.form-field input.input-moderno-cnpj::placeholder {
+  color: #999;
+  opacity: 0.7;
+  text-transform: none;
+  font-size: 0.85rem;
+}
+
+/* Input focado (borda azul) */
+div.form-field input.input-moderno:focus,
+div.form-field input.input-moderno-telefone:focus,
+div.form-field input.input-moderno-cnpj:focus {
+  border-color: #42DCFA;
+  background-color: white;
+  box-shadow: 0 0 0 3px rgba(66, 220, 250, 0.1);
+}
+
+.campo-duplo {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.campo-duplo-item {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+div.form-field input.input-bloqueado {
+  background-color: #efefef;
+  color: #555;
+  cursor: not-allowed;
+}
+
+
+/* ========================================
+    2. ESTILIZAÇÃO DO CHECKBOX MODERNO
+    ======================================== */
+
+/* Oculta o checkbox nativo */
+.input-checkbox {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Estilo do label (o novo checkbox visual) */
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 1rem;
+    color: #333;
+}
+
+/* O quadrado/círculo do checkbox */
+.checkbox-label::before {
+    content: '';
+    width: 20px;
+    height: 20px;
+    border: 2px solid #999;
+    border-radius: 4px;
+    margin-right: 10px;
+    display: inline-block;
+    transition: all 0.3s ease;
+    background-color: #f0f0f0;
+}
+
+/* Estado de 'CHECKED' (Verde Fluorescente) */
+.input-checkbox:checked + .checkbox-label::before {
+    border-color: #36DB2E; /* Cor verde forte */
+    background-color: #36DB2E; /* Cor verde forte */
+    box-shadow: 0 0 8px rgba(54, 219, 46, 0.8); /* Efeito neon/florescente */
+}
+
+/* O 'tick' (check mark) */
+.input-checkbox:checked + .checkbox-label::after {
+    content: '✓';
+    position: absolute;
+    color: white;
+    font-size: 14px;
+    font-weight: 900;
+    line-height: 1;
+    left: 5px; /* Ajuste para o alinhamento central */
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* Ajuste do campo que contém o checkbox para o alinhamento */
+div.form-column:nth-child(3) > div.form-field:first-child {
+    align-items: flex-start;
+    justify-content: center;
+    min-height: 60px;
+    padding-top: 6px;
+}
+
+
+/* ========================================
+    3. ESTRUTURA DA 3ª COLUNA (Sub-colunas)
+    ======================================== */
+
+/* Alinha os campos de saída (prod, qtd, valor) horizontalmente */
+div.form-column:nth-child(3) div.form-field {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  min-height: auto;
+}
+
+#modalPesquisa div.form-column:nth-child(3) div.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-height: 78px;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+div.form-column:nth-child(3) .prod-saida {
+  flex: 0 0 34%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+div.form-column:nth-child(3) .qtd-prod-saida {
+  flex: 0 0 17%;
+  display: flex;
+  flex-direction: column;
+}
+
+div.form-column:nth-child(3) .valor-atual-prod-saida {
+  flex: 0 0 20%;
+  display: flex;
+  flex-direction: column;
+}
+
+div.form-column:nth-child(3) .valor-prod-saida {
+  flex: 0 0 23%;
+  display: flex;
+  flex-direction: column;
+}
+
+div.form-column:nth-child(3) .prod-saida input,
+div.form-column:nth-child(3) .qtd-prod-saida input,
+div.form-column:nth-child(3) .valor-atual-prod-saida input,
+div.form-column:nth-child(3) .valor-prod-saida input {
+  width: 100%;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ========================================
+   BOTÕES DOS MODAIS
+   ======================================== */
+
+/* Container dos botões */
+.modal-botoes {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: auto;
+  padding-top: 20px;
+  flex-wrap: wrap;
+}
+
+/* Estilo base dos botões */
+.btn-cadastrar,
+.btn-cancelar,
+.btn-sim,
+.btn-nao {
+  padding: clamp(10px, 2vh, 14px) clamp(25px, 4vw, 35px);
+  font-size: clamp(0.85rem, 1.5vw, 1rem);
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+/* Botão Cadastrar/Editar/Sim (verde) */
+.btn-cadastrar,
+.btn-sim {
+  background-color: #36DB2E;
+  color: white;
+  box-shadow: 0 4px 15px rgba(54, 219, 46, 0.3);
+}
+
+.btn-cadastrar:hover,
+.btn-sim:hover {
+  background-color: #2ec926;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(54, 219, 46, 0.4);
+}
+
+/* Botão Cancelar (azul) */
+.btn-cancelar {
+  background-color: #42DCFA;
+  color: white;
+  box-shadow: 0 4px 15px rgba(66, 220, 250, 0.3);
+}
+
+.btn-cancelar:hover {
+  background-color: #30c9e8;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(66, 220, 250, 0.4);
+}
+
+/* Botão Não (vermelho) */
+.btn-nao {
+  background-color: #dc3545;
+  color: white;
+  box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+}
+
+.btn-nao:hover {
+  background-color: #c82333;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
+}
+
+/* Group para modal simples (exclusão) */
+.form-group {
+  margin-bottom: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Texto de confirmação de exclusão */
+.texto-confirmacao {
+  font-size: 1.1rem;
+  color: #333;
+  text-align: center;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Nome destacado em verde */
+.texto-confirmacao strong {
+  color: #36DB2E;
+  font-weight: 700;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ========================================
+   MODAL DE CARREGAMENTO
+   ======================================== */
+
+/* Overlay do loading */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 10001;          /* Acima de todos os outros modais */
+  animation: fadeIn 0.3s ease;
+}
+
+.loading-overlay.ativo {
+  display: flex;
+}
+
+/* Caixa preta do loading */
+.loading-box {
+  width: 25%;
+  height: 50%;
+  min-width: 200px;
+  min-height: 300px;
+  background-color: #000000;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: slideIn 0.4s ease;
+}
+
+/* Container da logo e spinner */
+.loading-container {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Logo da empresa */
+.loading-logo {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  z-index: 2;
+}
+
+/* Spinner azul girando */
+.loading-spinner {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  border: 4px solid transparent;
+  border-top: 4px solid #42DCFA;
+  border-radius: 50%;
+  animation: girarSpinner 1s linear infinite;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ========================================
+   ANIMAÇÕES
+   ======================================== */
+
+/* Fade in dos modais */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Slide in das caixas */
+@keyframes slideIn {
+  from { 
+    transform: scale(0.8); 
+    opacity: 0; 
+  }
+  to { 
+    transform: scale(1); 
+    opacity: 1; 
+  }
+}
+
+/* Rotação do spinner */
+@keyframes girarSpinner {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ========================================
+   MEDIA QUERIES - RESPONSIVIDADE
+   ======================================== */
+
+/* Tablets (768px - 1024px) */
+@media (max-width: 1024px) {
+
+  #legenda_promocao {
+    font-size: 0.68rem;
+    gap: 12px;
+  }
+
+  .modal-box-promocao{
+  width: 92%;
+  min-width: 520px;
+}
+
+  /* Ajusta tabela para tablets */
+  #tb_fornecedor {
+    font-size: 11px;
+  }
+  
+  #tb_cabecalho th,
+  #tb_corpo td {
+    padding: 8px 4px;
+  }
+  
+  /* Modal grande em tablets */
+  .modal-box-large {
+    width: 90%;
+    height: 75%;
+    min-width: 500px;
+    padding: 30px;
+  }
+  
+  /* Reduz gap entre colunas */
+  .form-container {
+    gap: 20px;
+  }
+}
+
+/* Tablets pequenos e celulares landscape (481px - 768px) */
+@media (max-width: 768px) {
+
+  #legenda_promocao {
+    position: static;
+    transform: none;
+    width: auto;
+    order: 2;
+  }
+  /* Cabeçalho superior */
+  #cad_superior {
+    height: 15%;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  #cad_esquerda,
+  #cad_direita {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  /* Tabela */
+  #cad_inferior {
+    height: 85%;
+  }
+  
+  #tb_fornecedor {
+    font-size: 10px;
+  }
+  
+  /* Modal padrão */
+  .modal-box {
+    width: 90%;
+    height: 60%;
+    min-width: 300px;
+    padding: 30px 20px;
+  }
+  
+  /* Modal grande vira 1 coluna */
+  .modal-box-large {
+    width: 95%;
+    height: 80%;
+    min-width: 300px;
+    padding: 25px 15px;
+  }
+  
+  .form-container {
+    flex-direction: column;   /* Empilha colunas */
+    gap: 15px;
+  }
+  
+  /* Botões em coluna */
+  .modal-botoes {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .btn-cadastrar,
+  .btn-cancelar,
+  .btn-sim,
+  .btn-nao {
+    width: 100%;
+  }
+  
+  /* Loading box */
+  .loading-box {
+    width: 40%;
+    height: 40%;
+  }
+
+  div.form-container div.form-column:nth-child(1),
+  div.form-container div.form-column:nth-child(2),
+  div.form-container div.form-column:nth-child(3) {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+
+  .campo-duplo {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .modal-box-promocao{
+  width: 95%;
+  min-width: 300px;
+  max-height: 88vh;
+  padding: 25px 15px;
+}
+
+.form-container-promocao{
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-column-promocao:nth-child(1),
+.form-column-promocao:nth-child(2){
+  flex: 1 1 100%;
+  max-width: 100%;
+}
+
+.modal-botoes-promocao{
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal-botoes-promocao button{
+  width: 100%;
+}
+}
+
+
+
+/* Celulares portrait (até 480px) */
+@media (max-width: 480px) {
+  /* Ícones menores */
+  #cad_icone {
+    font-size: 1.5rem;
+  }
+  
+  #cad_limpar {
+    font-size: 1.8rem;
+  }
+  
+  /* Tabela ainda menor */
+  #tb_fornecedor {
+    font-size: 9px;
+  }
+  
+  #tb_cabecalho th,
+  #tb_corpo td {
+    padding: 6px 2px;
+  }
+  
+  /* Modal ocupa quase toda tela */
+  .modal-box-large {
+    width: 98%;
+    height: 90%;
+    padding: 20px 10px;
+  }
+  
+  .modal-titulo {
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+  }
+  
+  .input-label {
+    font-size: 0.75rem;
+  }
+  
+  .input-moderno,
+  .input-moderno-telefone,
+  .input-moderno-cnpj {
+    padding: 8px 10px;
+    font-size: 0.85rem;
+  }
+  
+  /* Loading box */
+  .loading-box {
+    width: 60%;
+    height: 35%;
+  }
+  
+  .loading-container {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .loading-logo {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .loading-spinner {
+    width: 80px;
+    height: 80px;
+  }
+
+  .modal-box-promocao{
+  width: 98%;
+  min-width: unset;
+  height: auto;
+  max-height: 90vh;
+  padding: 20px 10px;
+}
+}
+
+/* Telas grandes (acima de 1920px) */
+@media (min-width: 1920px) {
+  .modal-box {
+    max-width: 1000px;
+    max-height: 700px;
+  }
+  
+  .modal-box-large {
+    max-width: 1730px;
+  }
+  
+  #tb_fornecedor {
+    font-size: 14px;
+  }
+}
+</style>

@@ -1,0 +1,125 @@
+<style>
+
+#geral {
+  position: absolute;
+  top: 8vh;      /* começa logo abaixo do cabeçalho */
+  left: 0;
+  width: 100%;
+  height: 92vh;   /* ocupa o restante da tela */ 
+
+  display: flex;           /* <<< TORNA FLEX */
+  flex-direction: row;     /* lado a lado */
+  align-items: stretch;    /* garante mesma altura */
+}
+
+
+#Esquerda_cad {
+    display: flex;
+    left: 0;
+    width: 50%;
+    height: 100%; 
+    flex-direction: column; /* Alinha os botões em uma coluna (verticalmente) */
+    justify-content: center; /* Centraliza os botões verticalmente */
+    align-items: center; /* Centraliza os botões horizontalmente */
+    gap: 1%; /* Adiciona um espaço entre os botões */
+    padding: 1% 0.2% 1% 1%;
+}
+
+#Direita_cad {
+    display: flex;
+    width: 50%;
+    height: 100%; 
+    flex-direction: column; /* Alinha os botões em uma coluna (verticalmente) */
+    justify-content: center; /* Centraliza os botões verticalmente */
+    align-items: center; /* Centraliza os botões horizontalmente */
+    gap: 1%; /* Adiciona um espaço entre os botões */
+    padding: 1% 1% 1% 0.2%;
+}
+
+
+#Btn_cad{
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column; /* Alinha os botões em uma coluna (verticalmente) */
+  justify-content: center; /* Centraliza os botões verticalmente */
+  align-items: center; /* Centraliza os botões horizontalmente */
+  text-align: center;
+}
+
+
+/* a barra azul inicial */
+#Btn_cad::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1%;                        /* começa com 0 de largura */
+  height: 100%;
+  background-color: #42DCFA;       /* azul Materialize */
+  transition: width 0.4s ease;     /* animação suave */
+  z-index: 0;                      /* fica atrás do conteúdo */
+}
+
+/* quando o mouse passar */
+#Btn_cad:hover::before {
+  width: 10%;                      /* cresce até 10% da largura do botão */
+}
+
+#Btn_cad:hover #icone_cad {
+  color: #42DCFA;
+}
+
+#Btn_cad.clicked #icone_cad {
+  color: white;
+}
+
+#Btn_cad:hover #texto_btn_cad {
+  color: #42DCFA;
+}
+
+#Btn_cad.clicked #texto_btn_cad {
+  color: white;
+}
+
+#Btn_cad.clicked::before {
+  width: 100%;
+  background-color: #36DB2E; /* verde */
+  transition: width 0.5s ease, background-color 0.5s ease;
+}
+
+#Btn_cad > * {
+  position: relative;
+  z-index: 1;
+}
+
+#icone_cad{
+  max-height: 30%;
+  font-size: 3rem;
+
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+#texto_btn_cad{
+    color: white;
+    font-size: 1vw; 
+    font-family: "DejaVu Sans Mono", monospace;
+    margin-top: 0.5em; /* espaço entre ícone e texto */
+    text-align: center;
+
+    transition: transform 0.3s ease
+}
+html body #toast-container,
+html body .toast-top-right,
+html body .toast-top-center,
+html body .toast-top-left,
+html body .toast-bottom-right,
+html body .toast-bottom-center,
+html body .toast-bottom-left {
+  z-index: 2147483647 !important;
+}
+
+html body #toast-container > div {
+  z-index: 2147483647 !important;
+}
+</style>

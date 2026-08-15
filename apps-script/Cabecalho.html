@@ -1,0 +1,541 @@
+<div id = "Fundo">
+
+  <div id="cabecalho">
+
+    <div id = "Esquerda">
+
+      <img src="https://drive.google.com/thumbnail?id=1T6pWIpQeH-jPowvh63mPQDJVIjA3VJBJ&sz=w2000" >
+
+      <h1 id="titulo"><?= tituloPagina ?></h1>
+
+    </div>
+
+    <div id = "links">
+
+      <a href="https://script.google.com/macros/s/AKfycbxGdd8eTLu7BLmwpVXqajZcMH7tAkInFuxWCf5WZIO8F07YAek7LcerT0ifihoXyZdd/exec?page=MenuVendas" data-tooltip="VENDAS">
+      <i id = "icone" class="bi bi-cart-check"></i>
+      </a> 
+
+      <a href="https://script.google.com/macros/s/AKfycbxGdd8eTLu7BLmwpVXqajZcMH7tAkInFuxWCf5WZIO8F07YAek7LcerT0ifihoXyZdd/exec?page=Estoque" data-tooltip="ESTOQUE">
+      <i id = "icone" class="bi bi-box-seam"></i>
+      </a> 
+
+      <a href="https://script.google.com/macros/s/AKfycbxGdd8eTLu7BLmwpVXqajZcMH7tAkInFuxWCf5WZIO8F07YAek7LcerT0ifihoXyZdd/exec?" data-tooltip="CONTAS A PAGAR">
+            <i id = "icone-material" class="material-symbols-outlined">payments</i>
+      </a>
+
+      <a href="https://script.google.com/macros/s/AKfycbxGdd8eTLu7BLmwpVXqajZcMH7tAkInFuxWCf5WZIO8F07YAek7LcerT0ifihoXyZdd/exec?" data-tooltip="CONTAS A RECEBER">
+            <i id = "icone-material" class="material-symbols-outlined">request_quote</i>
+      </a>
+
+      <a href="https://script.google.com/macros/s/AKfycbxGdd8eTLu7BLmwpVXqajZcMH7tAkInFuxWCf5WZIO8F07YAek7LcerT0ifihoXyZdd/exec?page=MenuCadastro" data-tooltip="CADASTROS">
+      <i id = "icone-material" class="bi bi-list-check"></i>
+      </a> 
+
+      <a href="https://script.google.com/macros/s/AKfycbxGdd8eTLu7BLmwpVXqajZcMH7tAkInFuxWCf5WZIO8F07YAek7LcerT0ifihoXyZdd/exec?page=MenuDashboard" data-tooltip="DASHBOARD">
+            <i id = "icone-material" class="material-symbols-outlined">finance</i>
+      </a>
+
+      <a href="https://script.google.com/macros/s/AKfycbxGdd8eTLu7BLmwpVXqajZcMH7tAkInFuxWCf5WZIO8F07YAek7LcerT0ifihoXyZdd/exec?" data-tooltip="HOME">
+      <i id = "icone" class="bi bi-house"></i>
+      </a> 
+
+    </div>
+
+    <div id="usuarioCabecalho" class="usuario-cabecalho">
+      <button type="button" id="btnUsuarioCabecalho" class="usuario-cabecalho-botao" title="Minha conta">
+        <i class="bi bi-person-circle"></i>
+        <span class="usuario-cabecalho-textos">
+          <span id="usuarioCabecalhoNome">USUARIO</span>
+        </span>
+      </button>
+
+      <div id="menuUsuarioCabecalho" class="usuario-cabecalho-menu">
+        <div class="usuario-cabecalho-topo">
+          <img src="https://drive.google.com/thumbnail?id=1T6pWIpQeH-jPowvh63mPQDJVIjA3VJBJ&sz=w2000" alt="Insight Pad">
+          <button type="button" id="btnFecharUsuarioCabecalho" class="usuario-cabecalho-fechar" title="Fechar painel">
+            <i class="bi bi-arrow-right-circle"></i>
+          </button>
+        </div>
+
+        <div class="usuario-cabecalho-perfil">
+          <i class="bi bi-person-circle"></i>
+          <div>
+            <strong id="usuarioCabecalhoNomeMenu">USUARIO</strong>
+            <span id="usuarioCabecalhoNivelMenu">-</span>
+          </div>
+        </div>
+
+        <div class="usuario-cabecalho-conteudo">
+          <div class="usuario-cabecalho-info">
+            <span>CLIENTE</span>
+            <strong id="usuarioCabecalhoCliente">-</strong>
+          </div>
+
+          <div class="usuario-cabecalho-info">
+            <span>PAGINAS LIBERADAS</span>
+            <strong id="usuarioCabecalhoPermissoes">-</strong>
+          </div>
+        </div>
+
+        <div class="usuario-cabecalho-rodape">
+          <button type="button" id="btnGerenciarAcessosCabecalho" class="usuario-cabecalho-acessos">
+            <i class="bi bi-shield-lock"></i>
+            <span>GERENCIAR ACESSOS</span>
+          </button>
+
+          <a id="btnSuporteCabecalho" class="usuario-cabecalho-suporte" href="https://wa.me/5521985795316" target="_blank" rel="noopener noreferrer">
+            <i class="bi bi-whatsapp"></i>
+            <span>ACIONAR SUPORTE</span>
+          </a>
+
+          <button type="button" id="btnLogoutCabecalho" class="usuario-cabecalho-sair">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>SAIR</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+
+</div>
+
+<style>
+  #tb_cabecalho th[data-ordenacao-indice] {
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .ordenacao-titulo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .ordenacao-icone {
+    color: #42DCFA;
+    font-size: 0.9rem;
+    line-height: 1;
+    display: none;
+  }
+
+  .ordenacao-icone:not(:empty) {
+    display: inline-block;
+    min-width: 10px;
+  }
+</style>
+
+<script>
+(function() {
+  function fecharListasSuspensasForaDoElemento(elemento) {
+    const containerAtual = elemento?.closest?.(".dropdown-container") || null;
+
+    document.querySelectorAll(".sugestoes").forEach(function(lista) {
+      if (lista.contains(elemento)) return;
+      if (containerAtual && containerAtual.contains(lista)) return;
+      lista.style.display = "none";
+    });
+  }
+
+  document.addEventListener("focusin", function(evento) {
+    const alvo = evento.target;
+    if (!alvo || !alvo.matches?.("input, textarea, select, button, [tabindex]")) return;
+    fecharListasSuspensasForaDoElemento(alvo);
+  }, true);
+
+  document.addEventListener("click", function(evento) {
+    const alvo = evento.target;
+    if (!alvo || alvo.closest?.(".sugestoes")) return;
+    fecharListasSuspensasForaDoElemento(alvo);
+  }, true);
+
+  const CONFIGS = [
+    { thead: "tb_cabecalho", tbody: "tb_corpo" }
+  ];
+
+  const tabelasOrdenadas = new WeakMap();
+
+  function normalizar(valor) {
+    return String(valor || "")
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+  }
+
+  function parseNumero(valor) {
+    let texto = String(valor || "")
+      .replace(/\u00A0/g, " ")
+      .replace(/[Rr]\$\s*/g, "")
+      .replace(/\s/g, "")
+      .replace(/[^\d,.-]/g, "");
+
+    if (!texto || !/[0-9]/.test(texto)) return null;
+
+    const lastComma = texto.lastIndexOf(",");
+    const lastDot = texto.lastIndexOf(".");
+
+    if (lastComma > -1 && lastDot > -1) {
+      texto = lastComma > lastDot
+        ? texto.replace(/\./g, "").replace(",", ".")
+        : texto.replace(/,/g, "");
+    } else if (lastComma > -1) {
+      texto = texto.replace(/\./g, "").replace(",", ".");
+    }
+
+    const numero = Number(texto);
+    return Number.isFinite(numero) ? numero : null;
+  }
+
+  function parseData(valor) {
+    const texto = String(valor || "").trim();
+    if (!texto) return null;
+
+    const br = texto.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2})(?::(\d{2}))?)?/);
+    if (br) {
+      const data = new Date(
+        Number(br[3]),
+        Number(br[2]) - 1,
+        Number(br[1]),
+        Number(br[4] || 0),
+        Number(br[5] || 0),
+        Number(br[6] || 0)
+      );
+      return Number.isNaN(data.getTime()) ? null : data.getTime();
+    }
+
+    if (!/[\/-]|gmt|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/i.test(texto)) {
+      return null;
+    }
+
+    const data = new Date(texto);
+    return Number.isNaN(data.getTime()) ? null : data.getTime();
+  }
+
+  function valorCelula(row, indice) {
+    return row.children[indice] ? row.children[indice].textContent.trim() : "";
+  }
+
+  function comparar(a, b, indice, direcao) {
+    const va = valorCelula(a, indice);
+    const vb = valorCelula(b, indice);
+    const da = parseData(va);
+    const db = parseData(vb);
+
+    if (da !== null || db !== null) {
+      const resultadoData = (da ?? -Infinity) - (db ?? -Infinity);
+      return direcao === "asc" ? resultadoData : -resultadoData;
+    }
+
+    const na = parseNumero(va);
+    const nb = parseNumero(vb);
+
+    if (na !== null || nb !== null) {
+      const resultadoNumero = (na ?? -Infinity) - (nb ?? -Infinity);
+      return direcao === "asc" ? resultadoNumero : -resultadoNumero;
+    }
+
+    const resultadoTexto = normalizar(va).localeCompare(normalizar(vb), "pt-BR", { numeric: true });
+    return direcao === "asc" ? resultadoTexto : -resultadoTexto;
+  }
+
+  function obterIndicePadrao(ths) {
+    const textos = ths.map(th => normalizar(th.textContent));
+    const prioridades = [
+      "ultima alteracao",
+      "data da venda",
+      "data de criacao",
+      "data da movimentacao"
+    ];
+
+    for (const alvo of prioridades) {
+      const indice = textos.findIndex(texto => texto.includes(alvo));
+      if (indice >= 0) return indice;
+    }
+
+    return -1;
+  }
+
+  function prepararCabecalho(th) {
+    if (th.dataset.ordenacaoPreparada === "S") return;
+
+    const texto = th.textContent.trim();
+    th.textContent = "";
+
+    const wrapper = document.createElement("span");
+    wrapper.className = "ordenacao-titulo";
+
+    const label = document.createElement("span");
+    label.className = "ordenacao-label";
+    label.textContent = texto;
+
+    const icone = document.createElement("span");
+    icone.className = "ordenacao-icone";
+    icone.setAttribute("aria-hidden", "true");
+
+    wrapper.appendChild(label);
+    wrapper.appendChild(icone);
+    th.appendChild(wrapper);
+    th.dataset.ordenacaoPreparada = "S";
+  }
+
+  function atualizarIcones(ths, indiceAtivo, direcao) {
+    ths.forEach((th, indice) => {
+      const icone = th.querySelector(".ordenacao-icone");
+      if (!icone) return;
+      icone.textContent = indice === indiceAtivo
+        ? (direcao === "asc" ? "\u25B2" : direcao === "desc" ? "\u25BC" : "")
+        : "";
+    });
+  }
+
+  function ordenarTabela(estado, indice, direcao, mostrarIcone) {
+    const linhas = Array.from(estado.tbody.querySelectorAll("tr"));
+    if (linhas.length <= 1) {
+      atualizarIcones(estado.ths, mostrarIcone ? indice : -1, direcao);
+      return;
+    }
+
+    estado.aplicando = true;
+
+    linhas.sort((a, b) => {
+      const resultado = comparar(a, b, indice, direcao);
+      if (resultado !== 0) return resultado;
+      return Number(a.dataset.ordemOriginal || 0) - Number(b.dataset.ordemOriginal || 0);
+    });
+
+    const frag = document.createDocumentFragment();
+    linhas.forEach(row => frag.appendChild(row));
+    estado.tbody.appendChild(frag);
+
+    atualizarIcones(estado.ths, mostrarIcone ? indice : -1, direcao);
+
+    setTimeout(() => {
+      estado.aplicando = false;
+    }, 0);
+  }
+
+  function ordenarPadrao(estado) {
+    const linhas = Array.from(estado.tbody.querySelectorAll("tr"));
+    linhas.forEach((row, index) => {
+      if (!row.dataset.ordemOriginal) row.dataset.ordemOriginal = String(index);
+    });
+
+    estado.indiceAtivo = -1;
+    estado.direcao = "";
+
+    if (estado.indicePadrao >= 0) {
+      ordenarTabela(estado, estado.indicePadrao, "desc", false);
+      return;
+    }
+
+    atualizarIcones(estado.ths, -1, "");
+  }
+
+  function configurarTabela(thead, tbody) {
+    if (!thead || !tbody || tabelasOrdenadas.has(tbody)) return;
+
+    const ths = Array.from(thead.querySelectorAll("th"));
+    if (!ths.length) return;
+
+    const estado = {
+      thead,
+      tbody,
+      ths,
+      indiceAtivo: -1,
+      direcao: "",
+      indicePadrao: obterIndicePadrao(ths),
+      aplicando: false
+    };
+
+    tabelasOrdenadas.set(tbody, estado);
+
+    ths.forEach((th, indice) => {
+      prepararCabecalho(th);
+      th.dataset.ordenacaoIndice = String(indice);
+      th.addEventListener("click", () => {
+        if (estado.indiceAtivo !== indice) {
+          estado.indiceAtivo = indice;
+          estado.direcao = "asc";
+          ordenarTabela(estado, indice, "asc", true);
+          return;
+        }
+
+        if (estado.direcao === "asc") {
+          estado.direcao = "desc";
+          ordenarTabela(estado, indice, "desc", true);
+          return;
+        }
+
+        ordenarPadrao(estado);
+      });
+    });
+
+    const observer = new MutationObserver(() => {
+      if (estado.aplicando) return;
+      clearTimeout(estado.timer);
+      estado.timer = setTimeout(() => ordenarPadrao(estado), 0);
+    });
+
+    observer.observe(tbody, { childList: true });
+    setTimeout(() => ordenarPadrao(estado), 0);
+  }
+
+  function inicializarOrdenacaoTabelas() {
+    CONFIGS.forEach(config => {
+      configurarTabela(
+        document.getElementById(config.thead),
+        document.getElementById(config.tbody)
+      );
+    });
+  }
+
+document.addEventListener("DOMContentLoaded", inicializarOrdenacaoTabelas);
+  setTimeout(inicializarOrdenacaoTabelas, 500);
+})();
+</script>
+
+<script>
+(function() {
+  const CHAVE_USUARIO_AUTH = "insightpad_auth_usuario";
+
+  function obterBaseWebAppCabecalho() {
+    const linkWebApp = document.querySelector('#links a[href*="script.google.com/macros/s/"][href*="/exec"]');
+    if (linkWebApp) {
+      return String(linkWebApp.href || "").split("?")[0];
+    }
+
+    return String(window.location.href || "").split("?")[0];
+  }
+
+  function abreviarNome(nome) {
+    const partes = String(nome || "USUARIO").trim().split(/\s+/).filter(Boolean);
+    if (!partes.length) return "USUARIO";
+    if (partes.length === 1) return partes[0];
+    return partes[0] + " " + partes[partes.length - 1];
+  }
+
+  function obterSessaoLocal() {
+    if (window.InsightSessao) return window.InsightSessao;
+
+    try {
+      const usuario = JSON.parse(localStorage.getItem(CHAVE_USUARIO_AUTH) || "null");
+      return usuario ? { usuario: usuario, permissoes: {} } : null;
+    } catch (erro) {
+      return null;
+    }
+  }
+
+  function resumirPermissoes(permissoes) {
+    const nomes = Object.values(permissoes || {})
+      .filter(permissao => permissao && permissao.podeAcessar === "S")
+      .map(permissao => permissao.nomeExibicao || permissao.pageKey)
+      .filter(Boolean)
+      .sort((a, b) => String(a).localeCompare(String(b), "pt-BR"));
+
+    if (!nomes.length) return "-";
+    return nomes.join(", ");
+  }
+
+  function obterClienteUsuario(usuario) {
+    return String(
+      usuario.nomeCliente ||
+      usuario.clienteSistema ||
+      usuario.nomeClienteSistema ||
+      usuario.idClienteSistema ||
+      "-"
+    ).trim() || "-";
+  }
+
+  function atualizarUsuarioCabecalho(sessao) {
+    const box = document.getElementById("usuarioCabecalho");
+    if (!box || !sessao || !sessao.usuario) return;
+
+    const usuario = sessao.usuario;
+    const nome = abreviarNome(usuario.nome || usuario.login || "USUARIO");
+    const nivel = String(usuario.nivelUsuario || "USUARIO").toUpperCase();
+    const cliente = obterClienteUsuario(usuario);
+    const permissoes = resumirPermissoes(sessao.permissoes || {});
+
+    document.getElementById("usuarioCabecalhoNome").textContent = nome.toUpperCase();
+    document.getElementById("usuarioCabecalhoNomeMenu").textContent = String(usuario.nome || nome).toUpperCase();
+    document.getElementById("usuarioCabecalhoNivelMenu").textContent = nivel;
+    document.getElementById("usuarioCabecalhoCliente").textContent = cliente.toUpperCase();
+    document.getElementById("usuarioCabecalhoPermissoes").textContent = permissoes.toUpperCase();
+
+    const btnAcessos = document.getElementById("btnGerenciarAcessosCabecalho");
+    if (btnAcessos) {
+      btnAcessos.classList.toggle("ativo", nivel === "MASTER" || nivel === "ADMIN");
+    }
+
+    box.classList.add("ativo");
+  }
+
+  function alternarMenuUsuario(evento) {
+    evento.stopPropagation();
+    document.getElementById("usuarioCabecalho")?.classList.toggle("aberto");
+  }
+
+  function fecharMenuUsuario() {
+    document.getElementById("usuarioCabecalho")?.classList.remove("aberto");
+  }
+
+  function manterMenuUsuarioAberto(evento) {
+    evento.stopPropagation();
+  }
+
+  function sairSistema(evento) {
+    evento.stopPropagation();
+
+    if (window.InsightAuth && typeof window.InsightAuth.logout === "function") {
+      window.InsightAuth.logout();
+      return;
+    }
+
+    localStorage.removeItem("insightpad_auth_token");
+    localStorage.removeItem("insightpad_auth_usuario");
+    localStorage.removeItem("insightpad_auth_expira");
+    localStorage.removeItem("insightpad_auth_permissoes");
+    window.location.assign(String(window.location.href || "").split("?")[0] + "?page=Login");
+  }
+
+  function navegarCabecalho(destino) {
+    const link = document.createElement("a");
+    link.href = destino;
+    link.target = "_top";
+    link.rel = "noopener";
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+
+    setTimeout(function() {
+      link.remove();
+    }, 1000);
+  }
+
+  function abrirGestaoAcessos(evento) {
+    evento.preventDefault();
+    evento.stopPropagation();
+    navegarCabecalho(obterBaseWebAppCabecalho() + "?page=Gestao_Acessos");
+  }
+
+  document.addEventListener("DOMContentLoaded", function() {
+    document.getElementById("btnUsuarioCabecalho")?.addEventListener("click", alternarMenuUsuario);
+    document.getElementById("menuUsuarioCabecalho")?.addEventListener("click", manterMenuUsuarioAberto);
+    document.getElementById("btnFecharUsuarioCabecalho")?.addEventListener("click", fecharMenuUsuario);
+    document.getElementById("btnGerenciarAcessosCabecalho")?.addEventListener("click", abrirGestaoAcessos);
+    document.getElementById("btnLogoutCabecalho")?.addEventListener("click", sairSistema);
+    document.addEventListener("click", fecharMenuUsuario);
+    atualizarUsuarioCabecalho(obterSessaoLocal());
+  });
+
+  document.addEventListener("insight:sessao-validada", function(evento) {
+    atualizarUsuarioCabecalho(evento.detail);
+  });
+})();
+</script>
+
+<?!= Chamar("Sessao_JS") ?>

@@ -1,0 +1,209 @@
+<script>
+
+const CHAVE_TOKEN_AUTH = 'insightpad_auth_token';
+const CHAVE_USUARIO_AUTH = 'insightpad_auth_usuario';
+const CHAVE_EXPIRA_AUTH = 'insightpad_auth_expira';
+const CHAVE_PERMISSOES_AUTH = 'insightpad_auth_permissoes';
+const CHAVE_DISPOSITIVO_AUTH = 'insightpad_auth_dispositivo';
+let urlWebAppCache = '';
+let loginEmProcessamento = false;
+
+document.addEventListener('DOMContentLoaded', function() {
+  toastr.options = {
+    closeButton: true,
+    debug: false,
+    newestOnTop: true,
+    progressBar: true,
+    preventDuplicates: true,
+    positionClass: 'toast-top-center',
+    showDuration: '300',
+    hideDuration: '1000',
+    timeOut: '3000',
+    extendedTimeOut: '0',
+    showEasing: 'swing',
+    hideEasing: 'linear',
+    showMethod: 'fadeIn',
+    hideMethod: 'fadeOut'
+  };
+
+  const form = document.getElementById('formLogin');
+  const btnSenha = document.getElementById('btnAlternarSenha');
+  const inputLogin = document.getElementById('inputLogin');
+
+  exibirErroLoginSeExistir();
+
+  if (inputLogin) {
+    inputLogin.focus();
+  }
+
+  if (form) {
+    form.addEventListener('submit', enviarLogin);
+  }
+
+  if (btnSenha) {
+    btnSenha.addEventListener('click', alternarSenha);
+  }
+});
+
+function obterBaseUrl() {
+  return String(window.location.href || '').split('?')[0];
+}
+
+function obterUrlWebApp(callback) {
+  if (urlWebAppCache) {
+    callback(urlWebAppCache);
+    return;
+  }
+
+  google.script.run
+    .withSuccessHandler(function(url) {
+      urlWebAppCache = String(url || obterBaseUrl()).split('?')[0];
+      callback(urlWebAppCache);
+    })
+    .withFailureHandler(function(erro) {
+      console.error('Erro ao obter URL do Web App:', erro);
+      callback(obterBaseUrl());
+    })
+    .obterUrlWebApp();
+}
+
+function navegarPara(destino) {
+  window.location.assign(destino);
+}
+
+function internetDisponivelLogin() {
+  return navigator.onLine !== false;
+}
+
+function obterGoogleRunLogin() {
+  return (typeof google !== 'undefined' && google.script && google.script.run) ? google.script.run : null;
+}
+
+function definirEstadoBotaoEntrar(processando, texto) {
+  const btnEntrar = document.getElementById('btnEntrar');
+  if (!btnEntrar) return;
+
+  loginEmProcessamento = !!processando;
+  btnEntrar.disabled = !!processando;
+  btnEntrar.textContent = texto || (processando ? 'VALIDANDO...' : 'ENTRAR');
+}
+
+function obterProximaPagina() {
+  const params = new URLSearchParams(window.location.search || '');
+  const next = params.get('next') || 'Menu';
+  return next === 'Login' ? 'Menu' : next;
+}
+
+function exibirErroLoginSeExistir() {
+  const params = new URLSearchParams(window.location.search || '');
+  const erroLogin = params.get('erroLogin') || '';
+  if (!erroLogin) return;
+
+  toastr.error(erroLogin);
+
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('erroLogin');
+    window.history.replaceState({}, document.title, url.toString());
+  } catch (erro) {
+    console.warn('Não foi possível limpar erroLogin da URL:', erro);
+  }
+}
+
+function mostrarCarregamentoLogin() {
+  document.getElementById('modalCarregamento')?.classList.add('ativo');
+}
+
+function esconderCarregamentoLogin() {
+  document.getElementById('modalCarregamento')?.classList.remove('ativo');
+}
+
+function salvarSessaoLocal(resultado) {
+  localStorage.setItem(CHAVE_TOKEN_AUTH, resultado.token || '');
+  localStorage.setItem(CHAVE_EXPIRA_AUTH, resultado.expiraEm || '');
+  localStorage.setItem(CHAVE_USUARIO_AUTH, JSON.stringify(resultado.usuario || {}));
+  localStorage.setItem(CHAVE_PERMISSOES_AUTH, JSON.stringify(resultado.permissoes || {}));
+}
+
+function limparSessaoLocal() {
+  localStorage.removeItem(CHAVE_TOKEN_AUTH);
+  localStorage.removeItem(CHAVE_EXPIRA_AUTH);
+  localStorage.removeItem(CHAVE_USUARIO_AUTH);
+  localStorage.removeItem(CHAVE_PERMISSOES_AUTH);
+}
+
+function obterIdDispositivo() {
+  let idDispositivo = localStorage.getItem(CHAVE_DISPOSITIVO_AUTH) || '';
+
+  if (!idDispositivo) {
+    idDispositivo = window.crypto && typeof window.crypto.randomUUID === 'function'
+      ? window.crypto.randomUUID()
+      : String(Date.now()) + '-' + Math.random().toString(36).slice(2);
+
+    localStorage.setItem(CHAVE_DISPOSITIVO_AUTH, idDispositivo);
+  }
+
+  return idDispositivo;
+}
+
+function alternarSenha() {
+  const inputSenha = document.getElementById('inputSenha');
+  const icone = document.querySelector('#btnAlternarSenha i');
+  if (!inputSenha) return;
+
+  const visivel = inputSenha.type === 'text';
+  inputSenha.type = visivel ? 'password' : 'text';
+
+  if (icone) {
+    icone.className = visivel ? 'bi bi-eye' : 'bi bi-eye-slash';
+  }
+}
+
+function enviarLogin(e) {
+  e.preventDefault();
+
+  if (loginEmProcessamento) return;
+
+  if (!internetDisponivelLogin()) {
+    toastr.warning('Sem internet. O login precisa de conexão para validar seu usuário.');
+    return;
+  }
+
+  const form = document.getElementById('formLogin');
+  const inputLogin = document.getElementById('inputLogin');
+  const inputSenha = document.getElementById('inputSenha');
+  const inputNext = document.getElementById('inputNextLogin');
+  const inputUserAgent = document.getElementById('inputUserAgentLogin');
+  const inputDispositivo = document.getElementById('inputDispositivoLogin');
+
+  if (!form) {
+    toastr.error('Formulário de login não encontrado.');
+    return;
+  }
+
+  const login = String(inputLogin?.value || '').trim();
+  const senha = String(inputSenha?.value || '');
+
+  if (!login) {
+    toastr.warning('Informe seu login ou e-mail.');
+    inputLogin?.focus();
+    return;
+  }
+
+  if (!senha) {
+    toastr.warning('Informe sua senha.');
+    inputSenha?.focus();
+    return;
+  }
+
+  mostrarCarregamentoLogin();
+  definirEstadoBotaoEntrar(true, 'ENTRANDO...');
+
+  if (inputNext) inputNext.value = obterProximaPagina();
+  if (inputUserAgent) inputUserAgent.value = navigator.userAgent || '';
+  if (inputDispositivo) inputDispositivo.value = obterIdDispositivo();
+
+  form.submit();
+}
+
+</script>

@@ -1,0 +1,606 @@
+﻿<script>
+let dadosUsuarios = Array.isArray(dadosTabelaUsuarios) ? dadosTabelaUsuarios.slice() : [];
+let dadosUsuariosFiltrados = dadosUsuarios.slice();
+let linhaSelecionada = null;
+let linhasSelecionadas = [];
+let usuarioSelecionado = null;
+let usuariosSelecionados = [];
+let cadastroClienteSelecionado = null;
+let cadastroPerfilSelecionado = null;
+let edicaoClienteSelecionado = null;
+let edicaoPerfilSelecionado = null;
+
+document.addEventListener("DOMContentLoaded", function() {
+  configurarToastr();
+  vincularEventos();
+  configurarDropdownsBase();
+  carregarTabelaUsuarios(dadosUsuarios);
+  atualizarDadosUsuarios();
+});
+
+function configurarToastr() {
+  if (!window.toastr) return;
+  toastr.options = {
+    closeButton: true,
+    newestOnTop: true,
+    progressBar: true,
+    preventDuplicates: true,
+    timeOut: "3000",
+    extendedTimeOut: "0",
+    showMethod: "fadeIn",
+    hideMethod: "fadeOut"
+  };
+}
+
+function vincularEventos() {
+  document.getElementById("btnVoltar")?.addEventListener("click", voltarGestaoAcessos);
+  document.getElementById("btnCadastrar")?.addEventListener("click", abrirModalCadastro);
+  document.getElementById("btnEditar")?.addEventListener("click", abrirModalEdicao);
+  document.getElementById("btnExcluir")?.addEventListener("click", abrirModalExclusao);
+  document.getElementById("btnPesquisar")?.addEventListener("click", abrirModalPesquisa);
+  document.getElementById("btnLimpar")?.addEventListener("click", limparPesquisa);
+  document.getElementById("btnExtrair")?.addEventListener("click", () => exportarTabelaParaCSV("Controle_Usuarios.csv"));
+
+  document.getElementById("btnCancelarCadastro")?.addEventListener("click", fecharModalCadastro);
+  document.getElementById("btnConfirmarCadastro")?.addEventListener("click", cadastrarUsuario);
+  document.getElementById("btnCancelarEdicao")?.addEventListener("click", fecharModalEdicao);
+  document.getElementById("btnConfirmarEdicao")?.addEventListener("click", editarUsuario);
+  document.getElementById("btnNaoExcluir")?.addEventListener("click", fecharModalExclusao);
+  document.getElementById("btnSimExcluir")?.addEventListener("click", inativarUsuario);
+  document.getElementById("btnCancelarPesquisa")?.addEventListener("click", fecharModalPesquisa);
+  document.getElementById("btnConfirmarPesquisa")?.addEventListener("click", aplicarPesquisa);
+
+  ["modalCadastro", "modalEdicao", "modalExclusao", "modalPesquisa"].forEach(id => {
+    const modal = document.getElementById(id);
+    modal?.addEventListener("click", function(evento) {
+      if (evento.target === modal) modal.classList.remove("ativo");
+    });
+  });
+
+  document.getElementById("inputEmailUsuario")?.addEventListener("input", sugerirLoginCadastro);
+  configurarAlternanciaSenha();
+}
+
+function configurarAlternanciaSenha() {
+  document.querySelectorAll(".btn-toggle-senha").forEach(function(botao) {
+    if (botao.dataset.toggleConfigurado === "S") return;
+    botao.dataset.toggleConfigurado = "S";
+
+    botao.addEventListener("click", function() {
+      const input = document.getElementById(botao.dataset.target || "");
+      const icone = botao.querySelector("i");
+      if (!input || !icone) return;
+
+      const mostrando = input.type === "text";
+      input.type = mostrando ? "password" : "text";
+      icone.classList.toggle("bi-eye", mostrando);
+      icone.classList.toggle("bi-eye-slash", !mostrando);
+      botao.title = mostrando ? "Mostrar senha" : "Ocultar senha";
+    });
+  });
+}
+
+function voltarGestaoAcessos() {
+  navegarControleUsuarios("Gestao_Acessos");
+}
+
+function obterBaseWebAppControleUsuarios() {
+  const linkWebApp = document.querySelector('#links a[href*="script.google.com/macros/s/"][href*="/exec"]');
+  if (linkWebApp) {
+    return String(linkWebApp.href || "").split("?")[0];
+  }
+
+  return String(window.location.href || "").split("?")[0];
+}
+
+function navegarControleUsuarios(pageKey) {
+  const link = document.createElement("a");
+  link.href = obterBaseWebAppControleUsuarios() + "?page=" + encodeURIComponent(pageKey);
+  link.target = "_top";
+  link.rel = "noopener";
+  link.style.display = "none";
+  document.body.appendChild(link);
+  link.click();
+
+  setTimeout(function() {
+    link.remove();
+  }, 1000);
+}
+
+function mostrarCarregamento() {
+  document.getElementById("modalCarregamento")?.classList.add("ativo");
+}
+
+function esconderCarregamento() {
+  document.getElementById("modalCarregamento")?.classList.remove("ativo");
+}
+
+function norm(valor) {
+  return String(valor || "")
+    .trim()
+    .toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function configurarDropdown(inputId, listaId, dados, aoSelecionar) {
+  const input = document.getElementById(inputId);
+  const lista = document.getElementById(listaId);
+  if (!input || !lista) return;
+
+  input._dadosDropdownControleUsuarios = dados || [];
+  input._aoSelecionarControleUsuarios = aoSelecionar;
+
+  if (input.dataset.dropdownControleConfigurado === "S") return;
+  input.dataset.dropdownControleConfigurado = "S";
+
+  function renderizar(mostrarTudo) {
+    const termo = mostrarTudo ? "" : norm(input.value);
+    const itens = (input._dadosDropdownControleUsuarios || []).filter(item => !termo || norm(item.nome).includes(termo));
+    lista.innerHTML = "";
+
+    if (!itens.length) {
+      const li = document.createElement("li");
+      li.textContent = "Nenhum resultado encontrado";
+      li.style.color = "#666";
+      li.style.fontStyle = "italic";
+      lista.appendChild(li);
+      lista.style.display = "block";
+      return;
+    }
+
+    itens.forEach(item => {
+      const li = document.createElement("li");
+      li.textContent = item.nome;
+      li.addEventListener("click", function(evento) {
+        evento.stopPropagation();
+        input.value = item.nome;
+        lista.style.display = "none";
+        if (typeof input._aoSelecionarControleUsuarios === "function") {
+          input._aoSelecionarControleUsuarios(item);
+        }
+      });
+      lista.appendChild(li);
+    });
+
+    lista.style.display = "block";
+  }
+
+  input.addEventListener("focus", () => renderizar(true));
+  input.addEventListener("click", evento => {
+    evento.stopPropagation();
+    renderizar(true);
+  });
+  input.addEventListener("input", () => {
+    if (typeof input._aoSelecionarControleUsuarios === "function") {
+      input._aoSelecionarControleUsuarios(null);
+    }
+    renderizar(false);
+  });
+  input.addEventListener("keydown", evento => {
+    if (evento.key === "Escape") lista.style.display = "none";
+  });
+}
+
+function configurarDropdownsBase() {
+  configurarDropdown("inputClienteUsuario", "listaClienteUsuario", listasControleUsuarios.clientes || [], item => cadastroClienteSelecionado = item);
+  configurarDropdown("inputPerfilUsuario", "listaPerfilUsuario", listasControleUsuarios.perfis || [], item => cadastroPerfilSelecionado = item);
+  configurarDropdown("inputEditarClienteUsuario", "listaEditarClienteUsuario", listasControleUsuarios.clientes || [], item => edicaoClienteSelecionado = item);
+  configurarDropdown("inputEditarPerfilUsuario", "listaEditarPerfilUsuario", listasControleUsuarios.perfis || [], item => edicaoPerfilSelecionado = item);
+
+  if (document.body.dataset.dropdownControleClickConfigurado !== "S") {
+    document.body.dataset.dropdownControleClickConfigurado = "S";
+    document.addEventListener("click", function(evento) {
+      if (evento.target.closest(".dropdown-container")) return;
+      document.querySelectorAll(".sugestoes").forEach(lista => lista.style.display = "none");
+    });
+  }
+}
+
+function carregarTabelaUsuarios(dados) {
+  const tbody = document.getElementById("tb_corpo");
+  if (!tbody) return;
+
+  tbody.innerHTML = "";
+  linhaSelecionada = null;
+  linhasSelecionadas = [];
+  usuarioSelecionado = null;
+  usuariosSelecionados = [];
+
+  if (!dados.length) {
+    tbody.innerHTML = '<tr><td colspan="9">Nenhum usuÃ¡rio encontrado.</td></tr>';
+    return;
+  }
+
+  dados.forEach(usuario => {
+    const tr = document.createElement("tr");
+    tr.dataset.idUsuario = usuario.idUsuario;
+    tr.innerHTML = `
+      <td>${usuario.idUsuario || ""}</td>
+      <td>${usuario.nomeCliente || ""}</td>
+      <td>${usuario.nome || ""}</td>
+      <td>${usuario.email || ""}</td>
+      <td>${usuario.login || ""}</td>
+      <td>${usuario.nomePerfil || ""}</td>
+      <td>${usuario.criadoEm || ""}</td>
+      <td>${usuario.editadoEm || ""}</td>
+      <td><span class="${usuario.statusAtivacao === "S" ? "status-ativo" : "status-inativo"}">${usuario.statusAtivacao === "S" ? "ATIVO" : "INATIVO"}</span></td>
+    `;
+    tr.addEventListener("click", evento => selecionarLinha(tr, usuario, evento));
+    tbody.appendChild(tr);
+  });
+}
+
+function obterLinhasSelecionadasValidas() {
+  linhasSelecionadas = linhasSelecionadas.filter(linha => linha && linha.isConnected);
+  usuariosSelecionados = usuariosSelecionados.filter(usuario => {
+    return linhasSelecionadas.some(linha => String(linha.dataset.idUsuario || "") === String(usuario.idUsuario || ""));
+  });
+  linhaSelecionada = linhasSelecionadas.length ? linhasSelecionadas[linhasSelecionadas.length - 1] : null;
+  usuarioSelecionado = usuariosSelecionados.length ? usuariosSelecionados[usuariosSelecionados.length - 1] : null;
+  return linhasSelecionadas;
+}
+
+function limparSelecaoLinhas() {
+  linhasSelecionadas.forEach(linha => linha?.classList?.remove("selecionada"));
+  linhasSelecionadas = [];
+  usuariosSelecionados = [];
+  linhaSelecionada = null;
+  usuarioSelecionado = null;
+}
+
+function selecionarLinha(tr, usuario, evento) {
+  const selecaoMultipla = !!(evento && (evento.ctrlKey || evento.metaKey));
+  obterLinhasSelecionadasValidas();
+
+  if (selecaoMultipla) {
+    const indiceLinha = linhasSelecionadas.indexOf(tr);
+    if (indiceLinha >= 0) {
+      tr.classList.remove("selecionada");
+      linhasSelecionadas.splice(indiceLinha, 1);
+      usuariosSelecionados = usuariosSelecionados.filter(item => String(item.idUsuario) !== String(usuario.idUsuario));
+    } else {
+      tr.classList.add("selecionada");
+      linhasSelecionadas.push(tr);
+      usuariosSelecionados.push(usuario);
+    }
+  } else {
+    const jaSelecionadaUnica = linhasSelecionadas.length === 1 && linhasSelecionadas[0] === tr;
+    limparSelecaoLinhas();
+    if (!jaSelecionadaUnica) {
+      tr.classList.add("selecionada");
+      linhasSelecionadas = [tr];
+      usuariosSelecionados = [usuario];
+    }
+  }
+
+  linhaSelecionada = linhasSelecionadas.length ? linhasSelecionadas[linhasSelecionadas.length - 1] : null;
+  usuarioSelecionado = usuariosSelecionados.length ? usuariosSelecionados[usuariosSelecionados.length - 1] : null;
+}
+
+function abrirModalCadastro() {
+  limparCadastro();
+  document.getElementById("modalCadastro")?.classList.add("ativo");
+}
+
+function fecharModalCadastro() {
+  document.getElementById("modalCadastro")?.classList.remove("ativo");
+  limparCadastro();
+}
+
+function limparCadastro() {
+  ["inputNomeUsuario", "inputEmailUsuario", "inputLoginUsuario", "inputClienteUsuario", "inputPerfilUsuario", "inputSenhaUsuario", "inputConfirmarSenhaUsuario"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+  cadastroClienteSelecionado = null;
+  cadastroPerfilSelecionado = null;
+}
+
+function sugerirLoginCadastro() {
+  const email = document.getElementById("inputEmailUsuario")?.value || "";
+  const login = document.getElementById("inputLoginUsuario");
+  if (login && !login.value.trim()) login.value = email.trim().toLowerCase();
+}
+
+function validarEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || "").trim());
+}
+
+function validarSenha(senha) {
+  return String(senha || "").length >= 8;
+}
+
+function cadastrarUsuario() {
+  const senha = document.getElementById("inputSenhaUsuario")?.value || "";
+  const confirmar = document.getElementById("inputConfirmarSenhaUsuario")?.value || "";
+  const payload = {
+    nome: document.getElementById("inputNomeUsuario")?.value || "",
+    email: document.getElementById("inputEmailUsuario")?.value || "",
+    login: document.getElementById("inputLoginUsuario")?.value || "",
+    idClienteSistema: cadastroClienteSelecionado?.id || "",
+    idPerfil: cadastroPerfilSelecionado?.id || "",
+    senha
+  };
+
+  if (!payload.nome.trim() || !payload.email.trim() || !payload.login.trim() || !payload.idClienteSistema || !payload.idPerfil) {
+    toastr.warning("Preencha todos os campos obrigatÃ³rios.");
+    return;
+  }
+
+  if (!validarEmail(payload.email)) {
+    toastr.warning("Informe um e-mail vÃ¡lido.");
+    return;
+  }
+
+  if (!validarSenha(senha)) {
+    toastr.warning("A senha deve ter pelo menos 8 caracteres.");
+    return;
+  }
+
+  if (senha !== confirmar) {
+    toastr.warning("As senhas informadas nÃ£o conferem.");
+    return;
+  }
+
+  mostrarCarregamento();
+  google.script.run
+    .withSuccessHandler(tratarRetornoOperacao)
+    .withFailureHandler(tratarErroOperacao)
+    .cadastrarUsuarioControle(payload);
+}
+
+function abrirModalEdicao() {
+  if (!usuarioSelecionado) {
+    toastr.warning("Selecione um usuÃ¡rio na tabela antes de editar.");
+    return;
+  }
+
+  document.getElementById("inputEditarNomeUsuario").value = usuarioSelecionado.nome || "";
+  document.getElementById("inputEditarEmailUsuario").value = usuarioSelecionado.email || "";
+  document.getElementById("inputEditarLoginUsuario").value = usuarioSelecionado.login || "";
+  document.getElementById("inputEditarClienteUsuario").value = usuarioSelecionado.nomeCliente || "";
+  document.getElementById("inputEditarPerfilUsuario").value = usuarioSelecionado.nomePerfil || "";
+  document.getElementById("inputEditarSenhaUsuario").value = "";
+  document.getElementById("inputEditarConfirmarSenhaUsuario").value = "";
+  edicaoClienteSelecionado = { id: usuarioSelecionado.idClienteSistema, nome: usuarioSelecionado.nomeCliente };
+  edicaoPerfilSelecionado = { id: usuarioSelecionado.idPerfil, nome: usuarioSelecionado.nomePerfil };
+  document.getElementById("modalEdicao")?.classList.add("ativo");
+}
+
+function fecharModalEdicao() {
+  document.getElementById("modalEdicao")?.classList.remove("ativo");
+}
+
+function editarUsuario() {
+  if (!usuarioSelecionado) return;
+
+  const senha = document.getElementById("inputEditarSenhaUsuario")?.value || "";
+  const confirmar = document.getElementById("inputEditarConfirmarSenhaUsuario")?.value || "";
+  const payload = {
+    idUsuario: usuarioSelecionado.idUsuario,
+    nome: document.getElementById("inputEditarNomeUsuario")?.value || "",
+    email: document.getElementById("inputEditarEmailUsuario")?.value || "",
+    login: document.getElementById("inputEditarLoginUsuario")?.value || "",
+    idClienteSistema: edicaoClienteSelecionado?.id || "",
+    idPerfil: edicaoPerfilSelecionado?.id || "",
+    senha
+  };
+
+  if (!payload.nome.trim() || !payload.email.trim() || !payload.login.trim() || !payload.idClienteSistema || !payload.idPerfil) {
+    toastr.warning("Preencha todos os campos obrigatÃ³rios.");
+    return;
+  }
+
+  if (!validarEmail(payload.email)) {
+    toastr.warning("Informe um e-mail vÃ¡lido.");
+    return;
+  }
+
+  if (senha && !validarSenha(senha)) {
+    toastr.warning("A nova senha deve ter pelo menos 8 caracteres.");
+    return;
+  }
+
+  if (senha !== confirmar) {
+    toastr.warning("As senhas informadas nÃ£o conferem.");
+    return;
+  }
+
+  mostrarCarregamento();
+  google.script.run
+    .withSuccessHandler(tratarRetornoOperacao)
+    .withFailureHandler(tratarErroOperacao)
+    .editarUsuarioControle(payload);
+}
+
+function abrirModalExclusao() {
+  obterLinhasSelecionadasValidas();
+  if (!usuariosSelecionados.length) {
+    toastr.warning("Selecione um usuário na tabela antes de inativar.");
+    return;
+  }
+
+  const nomesUsuarios = usuariosSelecionados.map(usuario => usuario.nome || "").filter(Boolean);
+  const textoSelecionados = nomesUsuarios.length === 1
+    ? nomesUsuarios[0]
+    : nomesUsuarios.length + " usuários selecionados: " + nomesUsuarios.join("; ");
+
+  document.getElementById("usuarioSelecionadoExclusao").textContent = textoSelecionados;
+  document.getElementById("modalExclusao")?.classList.add("ativo");
+}
+
+function fecharModalExclusao() {
+  document.getElementById("modalExclusao")?.classList.remove("ativo");
+}
+
+function inativarUsuario() {
+  obterLinhasSelecionadasValidas();
+  if (!usuariosSelecionados.length) return;
+
+  const idsUsuarios = usuariosSelecionados
+    .map(usuario => String(usuario.idUsuario || "").trim())
+    .filter(Boolean);
+
+  mostrarCarregamento();
+  google.script.run
+    .withSuccessHandler(tratarRetornoOperacao)
+    .withFailureHandler(tratarErroOperacao)
+    .inativarUsuariosControleEmLote(idsUsuarios);
+}
+
+function tratarRetornoOperacao(resposta) {
+  esconderCarregamento();
+
+  if (!resposta || !resposta.sucesso) {
+    toastr.error(resposta?.mensagem || "NÃ£o foi possÃ­vel concluir a operaÃ§Ã£o.");
+    return;
+  }
+
+  toastr.success(resposta.mensagem || "OperaÃ§Ã£o concluÃ­da com sucesso.");
+  fecharModalCadastro();
+  fecharModalEdicao();
+  fecharModalExclusao();
+  atualizarDadosUsuarios();
+}
+
+function tratarErroOperacao(erro) {
+  esconderCarregamento();
+  console.error("Erro na operaÃ§Ã£o de usuÃ¡rio:", erro);
+  toastr.error("Erro ao processar a operaÃ§Ã£o.");
+}
+
+function atualizarDadosUsuarios() {
+  mostrarCarregamento();
+  google.script.run
+    .withSuccessHandler(function(resposta) {
+      esconderCarregamento();
+      if (!resposta || !resposta.sucesso) {
+        toastr.error(resposta?.mensagem || "NÃ£o foi possÃ­vel atualizar os usuÃ¡rios.");
+        if (resposta && resposta.autorizado === false) {
+          setTimeout(voltarGestaoAcessos, 1200);
+        }
+        return;
+      }
+      dadosUsuarios = resposta.usuarios || [];
+      listasControleUsuarios = resposta.listas || listasControleUsuarios;
+      configurarDropdownsBase();
+      limparPesquisa();
+    })
+    .withFailureHandler(tratarErroOperacao)
+    .buscarDadosAtualizadosControleUsuarios();
+}
+
+function abrirModalPesquisa() {
+  montarDropdownsPesquisa();
+  document.getElementById("modalPesquisa")?.classList.add("ativo");
+}
+
+function fecharModalPesquisa() {
+  document.getElementById("modalPesquisa")?.classList.remove("ativo");
+}
+
+function montarDropdownsPesquisa() {
+  const campos = [
+    ["inputPesquisarId", "listaPesquisarId", 0],
+    ["inputPesquisarCliente", "listaPesquisarCliente", 1],
+    ["inputPesquisarNome", "listaPesquisarNome", 2],
+    ["inputPesquisarEmail", "listaPesquisarEmail", 3],
+    ["inputPesquisarLogin", "listaPesquisarLogin", 4],
+    ["inputPesquisarPerfil", "listaPesquisarPerfil", 5],
+    ["inputPesquisarCriado", "listaPesquisarCriado", 6],
+    ["inputPesquisarEditado", "listaPesquisarEditado", 7],
+    ["inputPesquisarStatus", "listaPesquisarStatus", 8]
+  ];
+
+  campos.forEach(([inputId, listaId, indice]) => {
+    const dados = valoresDistintosTabela(indice).map(valor => ({ id: valor, nome: valor }));
+    configurarDropdown(inputId, listaId, dados, item => {
+      const input = document.getElementById(inputId);
+      if (input && item) input.value = item.nome;
+    });
+  });
+}
+
+function valoresDistintosTabela(indice) {
+  const set = new Set();
+  dadosUsuarios.forEach(usuario => {
+    const linha = [
+      usuario.idUsuario,
+      usuario.nomeCliente,
+      usuario.nome,
+      usuario.email,
+      usuario.login,
+      usuario.nomePerfil,
+      usuario.criadoEm,
+      usuario.editadoEm,
+      usuario.statusAtivacao === "S" ? "ATIVO" : "INATIVO"
+    ];
+    const valor = String(linha[indice] || "").trim();
+    if (valor) set.add(valor);
+  });
+  return Array.from(set).sort((a, b) => a.localeCompare(b, "pt-BR", { numeric: true }));
+}
+
+function aplicarPesquisa() {
+  const filtros = [
+    ["inputPesquisarId", "idUsuario"],
+    ["inputPesquisarCliente", "nomeCliente"],
+    ["inputPesquisarNome", "nome"],
+    ["inputPesquisarEmail", "email"],
+    ["inputPesquisarLogin", "login"],
+    ["inputPesquisarPerfil", "nomePerfil"],
+    ["inputPesquisarCriado", "criadoEm"],
+    ["inputPesquisarEditado", "editadoEm"]
+  ];
+  const status = document.getElementById("inputPesquisarStatus")?.value || "";
+  const possuiFiltro = filtros.some(([id]) => document.getElementById(id)?.value.trim()) || status.trim();
+
+  if (!possuiFiltro) {
+    toastr.warning("Informe pelo menos um campo para pesquisar.");
+    return;
+  }
+
+  dadosUsuariosFiltrados = dadosUsuarios.filter(usuario => {
+    const okCampos = filtros.every(([id, chave]) => {
+      const filtro = document.getElementById(id)?.value || "";
+      return !filtro.trim() || norm(usuario[chave]).includes(norm(filtro));
+    });
+    const statusTexto = usuario.statusAtivacao === "S" ? "ATIVO" : "INATIVO";
+    const okStatus = !status.trim() || norm(statusTexto).includes(norm(status));
+    return okCampos && okStatus;
+  });
+
+  carregarTabelaUsuarios(dadosUsuariosFiltrados);
+  fecharModalPesquisa();
+}
+
+function limparPesquisa() {
+  ["inputPesquisarId", "inputPesquisarCliente", "inputPesquisarNome", "inputPesquisarEmail", "inputPesquisarLogin", "inputPesquisarPerfil", "inputPesquisarStatus", "inputPesquisarCriado", "inputPesquisarEditado"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+  dadosUsuariosFiltrados = dadosUsuarios.slice();
+  carregarTabelaUsuarios(dadosUsuariosFiltrados);
+}
+
+function exportarTabelaParaCSV(nomeArquivo) {
+  const linhas = [];
+  const rows = document.querySelectorAll("#tb_usuarios tr");
+  rows.forEach(row => {
+    const cols = Array.from(row.querySelectorAll("th, td")).map(col => {
+      const texto = String(col.textContent || "").replace(/\s+/g, " ").trim().replace(/"/g, '""');
+      return `"${texto}"`;
+    });
+    linhas.push(cols.join(";"));
+  });
+  const csvFinal = "\uFEFF" + linhas.join("\r\n");
+  const blob = new Blob([csvFinal], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = nomeArquivo;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+</script>

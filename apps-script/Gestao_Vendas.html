@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <?!=Chamar("EstiloCabecalho") ?>
+    <?!=Chamar("Gestao_Vendas_Estilo") ?>
+  </head>
+
+  <body>
+    <?!= Chamar("Cabecalho", { tituloPagina: tituloPagina }) ?>
+
+    <div id="geral">
+      <div id="cad_superior">
+        <div id="cad_esquerda">
+          <button id="btnVoltar" type="button" data-insight-page="MenuVendas">
+            <i id="cad_icone" class="bi bi-arrow-left-circle"></i>
+          </button>
+
+          <button id="btnEditar">
+            <i id="cad_icone" class="bi bi-pencil-square"></i>
+          </button>
+
+          <button id="btnExcluir">
+            <i id="cad_icone" class="bi bi-trash3"></i>
+          </button>
+        </div>
+
+        <div id="cad_direita">
+          <button id="btnExtrair">
+            <i id="cad_icone" class="bi bi-filetype-csv"></i>
+          </button>
+
+          <button id="btnPesquisar">
+            <i id="cad_icone" class="bi bi-funnel"></i>
+          </button>
+
+          <button id="btnLimpar">
+            <i id="cad_limpar" class="bi bi-eraser"></i>
+          </button>
+        </div>
+      </div>
+
+      <div id="cad_inferior">
+        <div id="container_tabela">
+          <div id="tabela_scroll">
+            <table id="tb">
+              <thead id="tb_cabecalho">
+                <tr>
+                  <th>ID VENDA</th>
+                  <th>CLIENTE</th>
+                  <th>FILIAL</th>
+                  <th>TOTAL VENDA</th>
+                  <th>DESCONTO</th>
+                  <th>TOTAL COM DESCONTO</th>
+                  <th>FORMA 1</th>
+                  <th>VALOR 1</th>
+                  <th>FORMA 2</th>
+                  <th>VALOR 2</th>
+                  <th>TROCO</th>
+                  <th>DATA DA VENDA</th>
+                </tr>
+              </thead>
+              <tbody id="tb_corpo"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="modalCarregamento" class="loading-overlay">
+      <div class="loading-box">
+        <div class="loading-container">
+          <img src="https://drive.google.com/thumbnail?id=1T6pWIpQeH-jPowvh63mPQDJVIjA3VJBJ" alt="Logo" class="loading-logo">
+          <div class="loading-spinner"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="modalPesquisa" class="modal-overlay">
+      <div class="modal-box-large modal-box-pesquisa">
+        <h2 class="modal-titulo">PESQUISA</h2>
+
+        <div class="form-container">
+          <div class="form-column">
+            <div class="form-field dropdown-container">
+              <label class="input-label">Cliente</label>
+              <input id="filtroCliente" class="input-moderno" type="text" placeholder="Digite e selecione o cliente desejado" autocomplete="off">
+              <ul id="listaFiltroCliente" class="sugestoes"></ul>
+            </div>
+
+            <div class="form-field dropdown-container">
+              <label class="input-label">Filial</label>
+              <input id="filtroFilial" class="input-moderno" type="text" placeholder="Digite e selecione a filial desejada" autocomplete="off">
+              <ul id="listaFiltroFilial" class="sugestoes"></ul>
+            </div>
+
+            <div class="form-field">
+              <label class="input-label">Período da venda</label>
+              <input id="filtroPeriodoVenda" class="input-moderno datepicker" type="text" placeholder="Selecione o período da venda">
+            </div>
+          </div>
+
+          <div class="form-column">
+            <div class="form-field">
+              <label class="input-label">Valor mínimo</label>
+              <input id="filtroValorMin" class="input-moderno" type="text" placeholder="R$ 0,00">
+            </div>
+
+            <div class="form-field">
+              <label class="input-label">Valor máximo</label>
+              <input id="filtroValorMax" class="input-moderno" type="text" placeholder="R$ 0,00">
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-botoes">
+          <button id="btnCancelarPesquisa" class="btn-cancelar">CANCELAR</button>
+          <button id="btnConfirmarPesquisa" class="btn-cadastrar">PESQUISAR</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="modalExclusao" class="modal-overlay">
+      <div class="modal-box modal-box-exclusao">
+        <h2 class="modal-titulo">EXCLUIR VENDA</h2>
+
+        <p class="pergunta-exclusao">Deseja, realmente, excluir essa venda?</p>
+
+        <div class="conteudo-exclusao-venda">
+          <div id="resumoExclusaoVenda" class="resumo-exclusao"></div>
+
+          <div class="itens-exclusao">
+            <h3 class="titulo-quadro-exclusao">ITENS DA VENDA</h3>
+            <div class="itens-exclusao-scroll">
+              <table class="tabela-itens-exclusao">
+                <thead>
+                  <tr>
+                    <th>ITEM</th>
+                    <th>QTD</th>
+                    <th>VALOR UNIT.</th>
+                  </tr>
+                </thead>
+                <tbody id="itensExclusaoVenda"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-botoes">
+          <button id="btnNaoExcluir" class="btn-cancelar">CANCELAR</button>
+          <button id="btnSimExcluir" class="btn-sim">SIM</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="modalEdicaoVenda" class="modal-overlay">
+      <div class="modal-box-full">
+        <div class="modal-edicao-header">
+          <h2 class="modal-titulo">EDITAR VENDA</h2>
+        </div>
+
+        <div class="edicao-venda-grid">
+          <div class="edicao-painel">
+            <div class="edicao-painel-header">
+              <h3 class="subtitulo-modal">ITENS DA VENDA</h3>
+              <button id="btnAdicionarItemEdicao" class="btn-adicionar-item-edicao" type="button">
+                <i class="bi bi-plus-lg"></i>
+              </button>
+            </div>
+
+            <div class="lista-itens-edicao">
+              <table class="tabela-itens-edicao">
+                <thead>
+                  <tr>
+                    <th>PRODUTO</th>
+                    <th>QTD</th>
+                    <th>VALOR UNIT.</th>
+                    <th>VALOR TOTAL</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="listaItensVendaEdicao"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="edicao-painel pagamento-edicao">
+            <h3 class="subtitulo-modal">PAGAMENTO</h3>
+
+            <div class="form-group dropdown-container">
+              <label class="input-label">CLIENTE</label>
+              <input id="editarClienteVenda" class="input-moderno" type="text" placeholder="Cliente da venda..." autocomplete="off">
+              <ul id="listaEditarClienteVenda" class="sugestoes"></ul>
+            </div>
+
+            <div class="form-group dropdown-container">
+              <label class="input-label">FILIAL</label>
+              <input id="editarFilialVenda" class="input-moderno" type="text" placeholder="Filial da venda..." autocomplete="off">
+              <ul id="listaEditarFilialVenda" class="sugestoes"></ul>
+            </div>
+
+            <div class="pagamento-grid">
+              <div class="form-group">
+                <label class="input-label">TOTAL VENDA</label>
+                <input id="editarTotalVenda" class="input-moderno" type="text" disabled>
+              </div>
+
+              <div class="form-group">
+                <label class="input-label">DESCONTO</label>
+                <input id="editarDescontoVenda" class="input-moderno" type="text" placeholder="R$ 0,00">
+              </div>
+
+              <div class="form-group">
+                <label class="input-label">TOTAL COM DESCONTO</label>
+                <input id="editarTotalDescontoVenda" class="input-moderno" type="text" disabled>
+              </div>
+
+              <div class="form-group dropdown-container">
+                <label class="input-label">FORMA 1</label>
+                <input id="editarForma1Venda" class="input-moderno" type="text" autocomplete="off">
+                <ul id="listaEditarForma1Venda" class="sugestoes"></ul>
+              </div>
+
+              <div class="form-group">
+                <label class="input-label">VALOR 1</label>
+                <input id="editarValor1Venda" class="input-moderno" type="text">
+              </div>
+
+              <div class="form-group dropdown-container">
+                <label class="input-label">FORMA 2</label>
+                <input id="editarForma2Venda" class="input-moderno" type="text" autocomplete="off">
+                <ul id="listaEditarForma2Venda" class="sugestoes"></ul>
+              </div>
+
+              <div class="form-group">
+                <label class="input-label">VALOR 2</label>
+                <input id="editarValor2Venda" class="input-moderno" type="text">
+              </div>
+
+              <div class="form-group">
+                <label class="input-label">TROCO</label>
+                <input id="editarTrocoVenda" class="input-moderno" type="text" disabled>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="modal-botoes modal-botoes-edicao">
+          <button id="btnCancelarEdicaoVenda" class="btn-cancelar">CANCELAR</button>
+          <button id="btnConfirmarEdicaoVenda" class="btn-editar-amarelo">EDITAR</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      var dadosVendas = <?!= JSON.stringify(dadosVendas) ?>;
+      var dadosProdutosVenda = <?!= JSON.stringify(dadosProdutosVenda) ?>;
+      var itensProd = <?!= JSON.stringify(itensProd) ?>;
+      var itensSaida = <?!= JSON.stringify(itensSaida) ?>;
+      var itensFil = <?!= JSON.stringify(itensFil) ?>;
+      var itensCli = <?!= JSON.stringify(itensCli) ?>;
+      var listasFiltrosGestao = <?!= JSON.stringify(listasFiltros || {}) ?>;
+      var paginacaoGestao = <?!= JSON.stringify(paginacao || {}) ?>;
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <?!=Chamar("Gestao_Vendas_JS")?>
+  </body>
+</html>

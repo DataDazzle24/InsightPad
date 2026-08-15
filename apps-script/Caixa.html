@@ -1,0 +1,607 @@
+<!-- Esse Será o HTML principal da nossa página, que irá suportar todos os elementos -->
+<!-- Vamos utilizar o seguinte site para icones: materializecss.com -->
+<!DOCTYPE html>
+<html>
+
+  <head>
+
+    <base target="_top">
+
+    <!-- Esses dois links são referentes a importação das bibliotecas que iremos usar (Icones e layout) -->
+    <!-- São links prontos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+
+    <!-- Incluímos essa função para chamar o CSS que irá estilizar nossa página -->
+    <!-- "EstiloFormVendedor" - é o nome da aba dentro do nosso Apps Script -->
+    <?!=Chamar("Caixa_Estilo") ?>
+
+
+    <?!=Chamar("EstiloCabecalho") ?>
+
+  </head>
+
+  <body>
+
+    <?!= Chamar("Cabecalho", { tituloPagina: tituloPagina }) ?>
+
+    <!-- Bloco geral da página, incluindo a tabela, os campos, e os botões -->
+    <div id="pdv_main">
+
+
+      <!-- Campo de Filial (canto superior direito) -->
+      <div id="pdv_topbar">
+
+        <div id="pdv_topbar_left">
+
+            <a id="btnVoltar" href="https://script.google.com/macros/s/AKfycbxGdd8eTLu7BLmwpVXqajZcMH7tAkInFuxWCf5WZIO8F07YAek7LcerT0ifihoXyZdd/exec?page=MenuVendas" data-insight-page="MenuVendas">
+              <i id="cad_icone" class="bi bi-arrow-left-circle"></i>
+            </a>
+
+            <div id="pdv_relogio" aria-label="Relógio"></div>
+
+            <button id="btnResincronizarPDV" type="button" title="Resincronizar vendas pendentes">
+              <i class="bi bi-arrow-clockwise"></i>
+            </button>
+
+        </div>
+
+        <div id="pdv_offline_box" class="pdv-offline-box" aria-live="polite">
+          <span id="pdv_status_conexao">ONLINE</span>
+          <span id="pdv_status_pendencias">0 PENDÊNCIAS</span>
+        </div>
+
+        <div id="wrapFilial" class="form-group dropdown-container">
+            <input type="text" id="inputFilial" class="input-moderno" placeholder="Selecione a filial ...">
+            <ul id="listaFilial" class="sugestoes"></ul>
+        </div>
+
+      </div>
+
+      <!-- CONTEÚDO PRINCIPAL (2 colunas) -->
+      <div id="pdv_content">
+
+
+
+
+        <!-- ============================================================================================
+            LADO ESQUERDO - CAMPOS
+            ============================================================================================ -->
+        <section id="pdv_left">
+
+          <div id="pdv_left_body">
+
+
+            <div id="linhaCodigo" class="form-row">
+              
+                <!-- 1) EAN (Leitor) -->
+                <div id="groupEAN" class="form-group">
+                  <label id="lblEAN" class="input-label" for="inputEAN">Código de barras (EAN)</label>
+                  <input id="inputEAN" class="input-moderno" type="text" placeholder="Leia o código de barras..." autocomplete="off">
+                </div>
+
+                <div id="groupCodigo" class="form-group">
+                  <label id="lblCodigo" class="input-label" for="inputCodigo">Código do produto</label>
+                  <input id="inputCodigo" class="input-moderno" type="text" placeholder="Insira o código do produto..." autocomplete="off">
+                </div>
+
+            </div>
+
+            <!-- 2) Nome do produto (Dropdown) -->
+            <div id="groupProduto" class="form-group dropdown-container">
+              <label id="lblProduto" class="input-label" for="inputProduto">Nome do produto</label>
+              <input id="inputProduto" class="input-moderno" type="text" placeholder="Digite e selecione o produto..." autocomplete="off">
+              <ul id="listaProduto" class="sugestoes"></ul>
+            </div>
+
+            <div id="linhaQtd" class="form-row">
+
+                  <!-- 3A) Quantidade em estoque (auto + desabilitado) -->
+                  <div id="groupQtdEstoque" class="form-group">
+                      <label id="lblQtdEstoque" class="input-label" for="inputQtdEstoque">
+                        Quantidade em estoque
+                        <!-- Ícone de lupa -->
+                        <i id="btnAbrirModalEstoqueFilial" class="bi bi-search" title="Ver estoque por filial"></i>
+                      </label>
+
+                      <input id="inputQtdEstoque" class="input-moderno" type="text" placeholder="Automático..." disabled>
+                  </div>
+
+                  <!-- 3B) Quantidade (venda) -->
+                  <div id="groupQtd" class="form-group">
+                      <label id="lblQtd" class="input-label" for="inputQuantidade">Quantidade na venda</label>
+                      <input id="inputQuantidade" class="input-moderno" type="number" min="1" step="1" placeholder="Informe a quantidade...">
+                  </div>
+
+            </div>
+
+            <div id="linhaValores">
+
+                  <!-- 4) Valor unitário -->
+                  <div id="groupVlrUnit" class="form-group">
+                      <label id="lblVlrUnit" class="input-label" for="inputValorUnitario">Valor Unitário</label>
+                      <input id="inputValorUnitario" class="input-moderno" type="text" placeholder="Valor unitário..." disabled>
+                  </div>
+
+                  <!-- 5) Valor total -->
+                  <div id="groupVlrTotal" class="form-group">
+                      <label id="lblVlrTotal" class="input-label" for="inputValorTotal">Valor total</label>
+                      <input id="inputValorTotal" class="input-moderno" type="text" placeholder="Calculado automaticamente..." disabled>
+                  </div>
+
+            </div>
+
+            <div id="pdv_left_actions">
+
+                  <button id="btnCancelarItem" type="button">
+                      <i class="bi bi-x-circle"></i>
+                      <span>CANCELAR</span>
+                  </button>
+
+                  <button id="btnIncluirItem" type="button">
+                      <i class="bi bi-plus-circle"></i>
+                      <span>INCLUIR</span>
+                  </button>
+
+            </div>
+
+          </div>
+
+          
+
+        </section>
+
+
+
+
+        <!-- ============================================================================================
+            LADO DIREITO - TABELA (CARRINHO)
+            ============================================================================================ -->
+
+        <section id="pdv_right">
+
+          <!-- Wrapper do carrinho: cabeçalho fixo, corpo com scroll, rodapé fixo -->
+          <div id="carrinho_wrapper">
+
+            <!-- Cabeçalho fixo -->
+            <div id="carrinho_head">
+              <table id="tb_carrinho_head">
+                <thead>
+                  <tr>
+                    <th id="thProd">PRODUTO</th>
+                    <th id="thQtd">QUANTIDADE</th>
+                    <th id="thVlrUnit">VALOR UNITÁRIO</th>
+                    <th id="thVlrTotal">VALOR TOTAL</th>
+                    <th id="thAcoes"></th>
+                  </tr>
+                </thead>
+              </table>
+            </div>
+
+            <!-- Corpo com scroll -->
+            <div id="carrinho_body_scroll">
+              <table id="tb_carrinho_body">
+                <tbody id="tb_carrinho_corpo">
+                  <!-- Linhas inseridas via JS -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Rodapé fixo (linha preta com totais) -->
+            <div id="carrinho_footer">
+              <table id="tb_carrinho_footer">
+                <tfoot>
+                  <tr>
+                    <td id="ftLabel">VALOR TOTAL:</td>
+                    <td id="ftVlrTotal">R$ 0,00</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+          </div>
+
+
+          <div id="pdv_right_actions">
+
+              <button id="btnLimparCarrinho" type="button">
+                  <i class="bi bi-trash3"></i>
+                  <span>LIMPAR CARRINHO</span>
+              </button>
+
+              <button id="btnIrPagamento" type="button">
+                  <i class="bi bi-credit-card-2-front"></i>
+                  <span>IR PARA PAGAMENTO</span>
+              </button>
+
+          </div>
+
+    </section>
+
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- =================================================================================================
+     MODAL: PAGAMENTO (Fechamento)
+     ================================================================================================= -->
+<div id="modalPagamento" class="modal-overlay">
+
+  <div id="modalPagamentoBox" class="modal-box-large">
+
+    <div id="pagamentoHeader" class="modal-header-inline">
+      <h2 id="tituloPagamento" class="modal-titulo">PAGAMENTO</h2>
+      <div id="pagamentoClienteArea">
+        <button id="btnClientePagamento" class="btn-mini-cliente" type="button" title="Adicionar cliente">
+          <i class="bi bi-person-plus-fill"></i>
+        </button>
+        <span id="nomeClientePagamento" class="cliente-pagamento-nome"></span>
+      </div>
+    </div>
+
+    <div class="form-container">
+
+    <div id="linha_1">
+      
+      <!-- Total da compra (label / campo não editável) -->
+      <div id="pag_total_group" class="form-group">
+        <label id="pag_total_label" class="input-label">VALOR TOTAL DA COMPRA</label>
+        <input id="pag_total_compra" class="input-moderno" type="text" disabled>
+      </div>
+
+      <div id="desconto" class="form-group">
+        <label id="desconto_label" class="input-label">DESCONTO</label>
+        <input id="desconto_compra" class="input-moderno" placeholder="R$ 0,00" type="text">
+      </div>
+
+      <div id="pag_desconto_group" class="form-group">
+        <label id="pag_desconto_label" class="input-label">VALOR TOTAL COM DESCONTO</label>
+        <input id="pag_desconto_compra" class="input-moderno" placeholder="R$ 0,00" type="text" disabled>
+      </div>        
+
+    </div>
+
+    <!-- Campos em 2 colunas -->
+    <div id="pag_grid">
+
+      <!-- ESQUERDA: formas de pagamento -->
+      <div id="pag_col_esq">
+
+        <div id="pag_forma1_group" class="form-group dropdown-container">
+          <label id="pag_forma1_label" class="input-label" for="pag_forma1">FORMA DE PAGAMENTO 1</label>
+          <input id="pag_forma1" class="input-moderno" type="text" placeholder="Selecione..." autocomplete="off">
+          <ul id="pag_lista_forma1" class="sugestoes"></ul>
+        </div>
+
+        <div id="pag_forma2_group" class="form-group dropdown-container">
+          <label id="pag_forma2_label" class="input-label" for="pag_forma2">FORMA DE PAGAMENTO 2</label>
+          <input id="pag_forma2" class="input-moderno" type="text" placeholder="Selecione..." autocomplete="off" disabled>
+          <ul id="pag_lista_forma2" class="sugestoes"></ul>
+        </div>
+
+      </div>
+
+      <!-- DIREITA: valores por forma -->
+      <div id="pag_col_dir">
+
+        <div id="pag_valor1_group" class="form-group">
+          <label id="pag_valor1_label" class="input-label" for="pag_valor1">VALOR DE PAGAMENTO 1</label>
+          <input id="pag_valor1" class="input-moderno" type="text" placeholder="R$ 0,00" disabled>
+        </div>
+
+        <div id="pag_valor2_group" class="form-group">
+          <label id="pag_valor2_label" class="input-label" for="pag_valor2">VALOR DE PAGAMENTO 2</label>
+          <input id="pag_valor2" class="input-moderno" type="text" placeholder="R$ 0,00" disabled>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Troco -->
+    <div id="pag_troco_group" class="form-group">
+      <label id="pag_troco_label" class="input-label">TROCO</label>
+      <input id="pag_troco" class="input-moderno" type="text" disabled>
+    </div>
+
+    </div>
+
+    <!-- Botões -->
+    <div id="pag_botoes" class="modal-botoes">
+      <button id="btnCancelarPagamento" class="btn-cancelar">CANCELAR</button>
+      <button id="btnFinalizarCompra" class="btn-cadastrar">FINALIZAR COMPRA</button>
+    </div>
+
+  </div>
+
+  <div id="modalClientePagamento" class="mini-modal-overlay">
+    <div id="boxClientePagamento" class="mini-modal-cliente">
+      <h3 id="tituloClientePagamento" class="mini-modal-titulo">Cliente da Venda</h3>
+
+      <div class="mini-cliente-conteudo">
+        <div class="mini-cliente-campos">
+          <div class="form-group dropdown-container">
+            <label class="input-label" for="inputClientePagamentoNome">NOME</label>
+            <input id="inputClientePagamentoNome" class="input-moderno" type="text" placeholder="Pesquise pelo nome..." autocomplete="off">
+            <ul id="listaClientePagamentoNome" class="sugestoes"></ul>
+          </div>
+
+          <div class="form-group">
+            <label class="input-label" for="inputClientePagamentoCPF">CPF</label>
+            <input id="inputClientePagamentoCPF" class="input-moderno" type="text" placeholder="XXX.XXX.XXX-XX" maxlength="14" autocomplete="off">
+          </div>
+
+          <div class="form-group">
+            <label class="input-label" for="inputClientePagamentoSexo">SEXO</label>
+            <input id="inputClientePagamentoSexo" class="input-moderno" type="text" disabled>
+          </div>
+
+          <div class="form-group">
+            <label class="input-label" for="inputClientePagamentoNascimento">DATA DE NASCIMENTO</label>
+            <input id="inputClientePagamentoNascimento" class="input-moderno" type="text" disabled>
+          </div>
+
+          <div class="form-group">
+            <label class="input-label" for="inputClientePagamentoIdade">IDADE</label>
+            <input id="inputClientePagamentoIdade" class="input-moderno" type="text" disabled>
+          </div>
+
+          <div class="form-group">
+            <label class="input-label" for="inputClientePagamentoEmail">EMAIL</label>
+            <input id="inputClientePagamentoEmail" class="input-moderno input-email" type="text" disabled>
+          </div>
+        </div>
+
+        <div class="mini-cliente-cards">
+          <div class="cliente-big-number">
+            <span class="cliente-big-label">COMPRAS</span>
+            <strong id="clienteQtdCompras">0</strong>
+          </div>
+          <div class="cliente-big-number">
+            <span class="cliente-big-label">TOTAL EM COMPRAS</span>
+            <strong id="clienteTotalCompras">R$ 0,00</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-botoes mini-cliente-botoes">
+        <button id="btnCancelarClientePagamento" class="btn-cancelar" type="button">CANCELAR</button>
+        <button id="btnConfirmarClientePagamento" class="btn-cadastrar" type="button">CONFIRMAR</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- =================================================================================================
+     MODAL: EDIÇÃO DE ITEM DO CARRINHO
+     ================================================================================================= -->
+
+<div id="modalEdicaoItem" class="modal-overlay">
+
+  <div id="modalEdicaoItemBox" class="modal-box">
+
+    <h2 id="tituloEdicaoItem" class="modal-titulo">EDITAR ITEM</h2>
+
+    <div id="edit_grid">
+
+      <!-- Coluna esquerda -->
+      <div id="edit_col_esq">
+        <div id="edit_prod_group" class="form-group">
+          <label id="edit_prod_label" class="input-label">PRODUTO</label>
+          <input id="edit_produto" class="input-moderno" type="text" disabled>
+        </div>
+
+        <div id="edit_vlrunit_group" class="form-group">
+          <label id="edit_vlrunit_label" class="input-label">VALOR UNITÁRIO</label>
+          <input id="edit_valor_unit" class="input-moderno" type="text" disabled>
+        </div>
+      </div>
+
+      <!-- Coluna direita -->
+      <div id="edit_col_dir">
+        <div id="edit_qtd_group" class="form-group">
+          <label id="edit_qtd_label" class="input-label">QUANTIDADE</label>
+          <input id="edit_quantidade" class="input-moderno" type="number" min="1" step="1">
+        </div>
+
+        <div id="edit_vlrtotal_group" class="form-group">
+          <label id="edit_vlrtotal_label" class="input-label">VALOR TOTAL</label>
+          <input id="edit_valor_total" class="input-moderno" type="text" disabled>
+        </div>
+      </div>
+
+    </div>
+
+    <div id="edit_botoes" class="modal-botoes">
+      <button id="btnCancelarEdicaoItem" class="btn-cancelar">CANCELAR</button>
+      <button id="btnConfirmarEdicaoItem" class="btn-cadastrar">EDITAR</button>
+    </div>
+
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+<!-- =================================================================================================
+     MODAL: EXCLUSÃO DE ITEM DO CARRINHO
+     ================================================================================================= -->
+<div id="modalExclusaoItem" class="modal-overlay">
+  <div id="modalExclusaoItemBox" class="modal-box">
+
+    <h2 id="tituloExclusaoItem" class="modal-titulo">EXCLUIR ITEM</h2>
+
+    <div id="excluir_texto_group" class="form-group">
+      <p id="textoConfirmacaoExclusao" class="texto-confirmacao" style="text-align:center;">
+        Deseja, realmente, excluir o produto <strong id="excluir_nome_prod"></strong>
+        com quantidade <strong id="excluir_qtd_prod"></strong> do carrinho?
+      </p>
+    </div>
+
+    <div id="excluir_botoes" class="modal-botoes">
+      <button id="btnCancelarExclusaoItem" class="btn-cancelar">CANCELAR</button>
+      <button id="btnConfirmarExclusaoItem" class="btn-sim">EXCLUIR</button>
+    </div>
+
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- =================================================================================================
+     MODAL: DISPONIBILIDADE EM ESTOQUE (POR FILIAL)
+     ================================================================================================= -->
+<div id="modalEstoqueFilial" class="modal-overlay">
+
+  <div class="modal-box-large">
+
+    <h2 class="modal-titulo">DISPONIBILIDADE EM ESTOQUE</h2>
+
+    <!-- Conteúdo: TABELA -->
+    <div id="estoque_table_wrapper">
+      <table id="tb_estoque_filial">
+        <thead>
+          <tr>
+            <th>FILIAL</th>
+            <th>QUANTIDADE</th>
+          </tr>
+        </thead>
+        <tbody id="tb_estoque_filial_corpo">
+          <!-- Linhas serão inseridas via JS -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Botões: apenas FECHAR ocupando toda a base -->
+    <div class="modal-botoes">
+      <button id="btnFecharModalEstoqueFilial" class="btn-cancelar">FECHAR</button>
+    </div>
+
+  </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- =================================================================================================
+     MODAL: MODAL DE CARREGAMENTO
+     ================================================================================================= -->
+
+    <div id="modalCarregamento" class="loading-overlay">
+      <div class="loading-box">
+        <div class="loading-container">
+          <!-- Logo da empresa com animação de spinner -->
+          <img src="https://drive.google.com/thumbnail?id=1T6pWIpQeH-jPowvh63mPQDJVIjA3VJBJ" alt="Logo" class="loading-logo">
+          <div class="loading-spinner"></div>
+        </div>
+      </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Scripts necessários -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+    <script>
+      var itensProd = <?!= JSON.stringify(itensProd) ?>;
+      var itensSaida = <?!= JSON.stringify(itensSaida) ?>;
+      var itensFil = <?!= JSON.stringify(itensFil) ?>;
+      var itensEst = <?!= JSON.stringify(itensEst) ?>;
+      var itensPromo = <?!= JSON.stringify(itensPromo) ?>;
+      var itensCli = <?!= JSON.stringify(itensCli) ?>;
+      var resumoClientesVenda = <?!= JSON.stringify(resumoClientesVenda) ?>;
+    </script>
+
+    <!-- ✅ jQuery (obrigatório para Toastr clássico) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+    <!-- ✅ Toastr JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+    <!-- Seu JS -->
+    <?!=Chamar("Caixa_JS")?>
+
+  </body>
+</html>

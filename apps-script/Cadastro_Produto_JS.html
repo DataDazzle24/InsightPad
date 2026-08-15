@@ -1,0 +1,4243 @@
+﻿<script>
+
+// ==========================================================================================================================================
+// VARIÃVEIS GLOBAIS
+// ==========================================================================================================================================
+
+// Array para armazenar todos os nomes de fornecedores (usado no dropdown de inputs)
+let todosfornecedores = [];
+// Array para armazenar todos os nomes de categorias (usado no dropdown de inputs)
+let todascategorias = [];
+// Array para armazenar todos os nomes de categorias (usado no dropdown de inputs)
+let todosprodutos = [];
+
+let todassubcategorias = [];
+let todascores = [];
+
+const listaTipoTamanho = ['LETRA', 'NUMERICO', 'KILO', 'LITRO', 'OUTRO'];
+
+const listaTamanhoLetra = [
+  'PP', 'P', 'M', 'G', 'GG', 'XG', 'XXG', 'XXXG',
+  'XS', 'S', 'L', 'XL', 'XXL', 'XXXL'
+];
+
+const listaTamanhoNumerico = [
+  '34', '36', '38', '40', '42', '44', '46', '48', '50', '52', '54', '56'
+];
+
+const listaTamanhoOutro = ['ÃšNICO', 'SOB MEDIDA'];
+
+const listaTamanhoKilo = [
+  '1 G', '2 G', '5 G', '10 G', '15 G', '20 G', '25 G', '30 G', '40 G', '50 G',
+  '75 G', '80 G', '100 G', '120 G', '125 G', '150 G', '180 G', '200 G', '250 G', '300 G',
+  '350 G', '400 G', '450 G', '500 G', '600 G', '700 G', '750 G', '800 G', '900 G', '1 KG',
+  '1,2 KG', '1,5 KG', '2 KG', '2,5 KG', '3 KG', '4 KG', '5 KG', '10 KG', '15 KG', '20 KG'
+];
+
+const listaTamanhoLitro = [
+  '10 ML', '20 ML', '30 ML', '50 ML', '60 ML', '75 ML', '80 ML', '100 ML', '120 ML', '125 ML',
+  '150 ML', '180 ML', '200 ML', '250 ML', '300 ML', '330 ML', '350 ML', '400 ML', '473 ML', '500 ML',
+  '550 ML', '600 ML', '700 ML', '750 ML', '800 ML', '900 ML', '1 L', '1,2 L', '1,5 L', '1,75 L',
+  '2 L', '2,5 L', '3 L', '4 L', '5 L', '6 L', '10 L', '15 L', '20 L', '25 L'
+];
+
+todascores = [
+  'AMARELO','AMARELO BEBÃŠ','AMARELO CANÃRIO','AMARELO MOSTARDA','AMARELO OURO',
+  'AZUL','AZUL BEBÃŠ','AZUL CLARO','AZUL ESCURO','AZUL MARINHO','AZUL ROYAL','AZUL TURQUESA',
+  'BEGE','BORDÃ”','BRANCO','BRANCO GELO','BRONZE',
+  'CAFÃ‰','CAQUI','CARAMELO','CEREJA','CHUMBO','COBRE','CORAL','CREME',
+  'DOURADO',
+  'FÃšCSIA',
+  'GELO','GOIABA','GRAFITE',
+  'LARANJA','LARANJA QUEIMADO','LILÃS','LIMA','LIMÃƒO',
+  'MARFIM','MARROM','MARROM CAFÃ‰','MARROM CHOCOLATE',
+  'NUDE',
+  'OFF WHITE','OLIVA','OURO',
+  'PÃŠSSEGO','PINK','PRATA','PRETO',
+  'ROSA','ROSA BEBÃŠ','ROSA CHICLETE','ROSA CLARO','ROSA PINK','ROSE','ROXO',
+  'SALMÃƒO','TERRACOTA',
+  'VERDE','VERDE ÃGUA','VERDE BANDEIRA','VERDE ESMERALDA','VERDE LIMÃƒO','VERDE MILITAR','VERDE MUSGO',
+  'VERMELHO','VERMELHO ESCURO','VINHO',
+  'TRANSPARENTE','MULTICOLORIDO','ESTAMPADO'
+];
+
+const mapaProdutoPorId = new Map();
+const mapaProdutoPorNome = new Map();
+
+let todosprodutosPromocao = [];
+let todosprodutosHistoricoPromocao = [];
+let contextoPromocao = {
+  idProduto: '',
+  idPromocao: '',
+  origemLinha: null
+};
+
+const controleToastLucroPromocao = {
+  modal: 0
+};
+
+// Timeout para controlar o debounce da pesquisa
+let timeoutId = null;
+
+// Armazena a referÃªncia da linha selecionada na tabela
+let linhaSelecionada = null;
+let linhasSelecionadas = [];
+
+
+
+
+
+// ===========================================================================================================================================
+// ELEMENTOS DO DOM
+// ===========================================================================================================================================
+
+// Input de pesquisa
+const inputCadCategoria = document.getElementById('inputCategoria');
+const inputCadFornecedor = document.getElementById('inputFornecedor');
+const inputCadProdsaida1 = document.getElementById('inputProdsaida1');
+const inputCadProdsaida2 = document.getElementById('inputProdsaida2');
+const inputCadProdsaida3 = document.getElementById('inputProdsaida3');
+
+const inputEditCategoria = document.getElementById('inputEditarCategoria');
+const inputEditFornecedor = document.getElementById('inputEditarFornecedor');
+const inputEditProdsaida1 = document.getElementById('inputEditarProdsaida1');
+const inputEditProdsaida2 = document.getElementById('inputEditarProdsaida2');
+const inputEditProdsaida3 = document.getElementById('inputEditarProdsaida3');
+
+const inputPesquisarNome = document.getElementById('inputPesquisarNome');
+const inputPesquisarCategoria = document.getElementById('inputPesquisarCategoria');
+const inputPesquisarEAN = document.getElementById('inputPesquisarEAN');
+const inputPesquisarMarca = document.getElementById('inputPesquisarMarca');
+const inputPesquisarFornecedor = document.getElementById('inputPesquisarFornecedor');
+const inputPesquisarProdsaida = document.getElementById('inputPesquisarProdSaida');
+const inputPesquisarCombo = document.getElementById('inputPesquisarCombo');
+
+const inputCadCodigoInterno = document.getElementById('inputCodigoInterno');
+const inputCadSubcategoria = document.getElementById('inputSubcategoria');
+const inputCadCor = document.getElementById('inputCor');
+const inputCadTipoTamanho = document.getElementById('inputTipoTamanho');
+const inputCadTamanho = document.getElementById('inputTamanho');
+const inputCadPrecoVenda = document.getElementById('inputPrecoVenda');
+const inputCadPrecoCusto = document.getElementById('inputPrecoCusto');
+const inputCadLucro = document.getElementById('inputLucro');
+const inputCadObservacao = document.getElementById('inputObservacao');
+
+const inputEditCodigoInterno = document.getElementById('inputEditarCodigoInterno');
+const inputEditSubcategoria = document.getElementById('inputEditarSubcategoria');
+const inputEditCor = document.getElementById('inputEditarCor');
+const inputEditTipoTamanho = document.getElementById('inputEditarTipoTamanho');
+const inputEditTamanho = document.getElementById('inputEditarTamanho');
+const inputEditPrecoVenda = document.getElementById('inputEditarPrecoVenda');
+const inputEditPrecoCusto = document.getElementById('inputEditarPrecoCusto');
+const inputEditLucro = document.getElementById('inputEditarLucro');
+const inputEditObservacao = document.getElementById('inputEditarObservacao');
+
+
+
+
+
+// Lista de sugestÃµes do dropdown
+const listaUlCadCategoria = document.getElementById('listaCadCategoria');
+const listaUlCadFornecedor = document.getElementById('listaCadFornecedor');
+const listaUlCadProdsaida1 = document.getElementById('listaCadProdsaida1');
+const listaUlCadProdsaida2 = document.getElementById('listaCadProdsaida2');
+const listaUlCadProdsaida3 = document.getElementById('listaCadProdsaida3');
+
+const listaUlEditCategoria = document.getElementById('listaEditarCategoria');
+const listaUlEditFornecedor = document.getElementById('listaEditarFornecedor');
+const listaUlEditProdsaida1 = document.getElementById('listaEditarProdsaida1');
+const listaUlEditProdsaida2 = document.getElementById('listaEditarProdsaida2');
+const listaUlEditProdsaida3 = document.getElementById('listaEditarProdsaida3');
+
+const listaUlPesquisarNome = document.getElementById('listaPesquisarNome');
+const listaUlPesquisarCategoria = document.getElementById('listaPesquisarCategoria');
+const listaUlPesquisarEAN = document.getElementById('listaPesquisarEAN');
+const listaUlPesquisarMarca = document.getElementById('listaPesquisarMarca');
+const listaUlPesquisarFornecedor = document.getElementById('listaPesquisarFornecedor');
+const listaUlPesquisarProdsaida = document.getElementById('listaPesquisarProdSaida');
+const listaUlPesquisarCombo = document.getElementById('listaPesquisarCombo');
+
+const listaUlCadSubcategoria = document.getElementById('listaCadSubcategoria');
+const listaUlCadCor = document.getElementById('listaCadCor');
+const listaUlCadTipoTamanho = document.getElementById('listaCadTipoTamanho');
+const listaUlCadTamanho = document.getElementById('listaCadTamanho');
+
+const listaUlEditSubcategoria = document.getElementById('listaEditarSubcategoria');
+const listaUlEditCor = document.getElementById('listaEditCor');
+const listaUlEditTipoTamanho = document.getElementById('listaEditTipoTamanho');
+const listaUlEditTamanho = document.getElementById('listaEditTamanho');
+
+
+
+
+const btnPromocao = document.getElementById('btnPromocao');
+
+const modalPromocao = document.getElementById('modalPromocao');
+
+const inputPromoIdPromocao = document.getElementById('inputPromoIdPromocao');
+const inputPromoIdProduto = document.getElementById('inputPromoIdProduto');
+const inputPromocaoProduto = document.getElementById('inputPromocaoProduto');
+const inputPromocaoPrecoAtual = document.getElementById('inputPromocaoPrecoAtual');
+const inputPromocaoPrecoVenda = document.getElementById('inputPromocaoPrecoVenda');
+const inputPromocaoPrecoCusto = document.getElementById('inputPromocaoPrecoCusto');
+const inputPromocaoLucro = document.getElementById('inputPromocaoLucro');
+const inputPromocaoInicio = document.getElementById('inputPromocaoInicio');
+const inputPromocaoFim = document.getElementById('inputPromocaoFim');
+
+const btnCancelarPromocao = document.getElementById('btnCancelarPromocao');
+const btnExcluirPromocao = document.getElementById('btnExcluirPromocao');
+const btnEditarPromocao = document.getElementById('btnEditarPromocao');
+const btnCadastrarPromocao = document.getElementById('btnCadastrarPromocao');
+
+const listaUlPromocaoProduto = document.getElementById('listaPromocaoProduto');
+
+const btnExportarHistoricoPromocao = document.getElementById('btnExportarHistoricoPromocao');
+const modalExtracaoPromocao = document.getElementById('modalExtracaoPromocao');
+const checkExtrairTudoPromocao = document.getElementById('checkExtrairTudoPromocao');
+const inputExtracaoPromocaoProduto = document.getElementById('inputExtracaoPromocaoProduto');
+const listaUlExtracaoPromocaoProduto = document.getElementById('listaExtracaoPromocaoProduto');
+const inputExtracaoPromocaoPeriodo = document.getElementById('inputExtracaoPromocaoPeriodo');
+const btnCancelarExtracaoPromocao = document.getElementById('btnCancelarExtracaoPromocao');
+const btnConfirmarExtracaoPromocao = document.getElementById('btnConfirmarExtracaoPromocao');
+
+
+
+
+
+
+// ===========================================================================================================================================
+// INICIALIZAÃ‡ÃƒO DA PÃGINA
+// ===========================================================================================================================================
+
+// Executa quando o DOM estiver completamente carregado
+document.addEventListener('DOMContentLoaded', function() {
+
+    // CONFIGURAÃ‡ÃƒO DO TOASTR (NOTIFICAÃ‡Ã•ES) ===================================================
+    toastr.options = {
+        "closeButton": true,              // Mostra botÃ£o de fechar
+        "debug": false,                   // Modo debug desativado
+        "newestOnTop": true,              // NotificaÃ§Ãµes mais recentes no topo
+        "progressBar": true,              // Mostra barra de progresso
+        "preventDuplicates": true,        // Evita notificaÃ§Ãµes duplicadas
+        "onclick": null,                  // Sem aÃ§Ã£o ao clicar
+        "showDuration": "300",            // DuraÃ§Ã£o da animaÃ§Ã£o de entrada
+        "hideDuration": "1000",           // DuraÃ§Ã£o da animaÃ§Ã£o de saÃ­da
+        "timeOut": "3000",                // Tempo de exibiÃ§Ã£o (3 segundos)
+        "extendedTimeOut": "0",           // Tempo extra ao passar mouse
+        "showEasing": "swing",            // Efeito de entrada
+        "hideEasing": "linear",           // Efeito de saÃ­da
+        "showMethod": "fadeIn",           // MÃ©todo de entrada
+        "hideMethod": "fadeOut"           // MÃ©todo de saÃ­da
+    };
+  
+
+
+    // CARREGA DADOS DO DROPDOWN =================================================================
+
+    // Pega os nomes dos fornecedores passados pelo template GS
+    if (typeof itensForn !== 'undefined' && itensForn && itensForn.length > 0) {
+        // Aqui cada item Ã© um objeto {codigo, nome}, entÃ£o acessamos o nome
+        todosfornecedores = itensForn
+            .filter(item => item && item.nome && item.nome.trim() !== '')
+            .map(item => item.nome);
+    } else {
+        todosfornecedores = [];
+    }
+
+    // Pega os nomes das categorias passadas pelo template GS
+    if (typeof itensCat !== 'undefined' && itensCat && itensCat.length > 0) {
+        // Aqui cada item Ã© um objeto {codigo, nome}, entÃ£o acessamos o nome
+        todascategorias = itensCat
+            .filter(item => item && item.nome && item.nome.trim() !== '')
+            .map(item => item.nome);
+    } else {
+        todascategorias = [];
+    }
+
+    if (typeof itensSubcat !== 'undefined' && itensSubcat && itensSubcat.length > 0) {
+      todassubcategorias = itensSubcat.filter(item =>
+        item && item.nome && item.categoriaMae
+      );
+    } else {
+      todassubcategorias = [];
+    }
+
+    carregarListaTodosProdutos();
+
+
+
+
+    // CONFIGURAÃ‡ÃƒO DOS EVENT LISTENERS ===========================================================
+
+    // BotÃ£o Extrair - extrai os dados da tabela
+    const botaoExtrair = document.getElementById("btnExtrair");
+    if (botaoExtrair) {
+        botaoExtrair.addEventListener("click", function() {
+            exportarTabelaParaCSV("Produtos.csv");
+      });
+    }
+
+    // BotÃ£o Limpar - remove filtros e restaura tabela
+    const botaoLimpar = document.getElementById("btnLimpar");
+    if (botaoLimpar) {
+        botaoLimpar.addEventListener("click", Limpar);
+    }
+
+
+
+    // PESQUISA ---------------------------------------------------------------------------
+
+    // BotÃ£o Pesquisar - abre modal de pesquisa
+    const btnPesquisar = document.getElementById("btnPesquisar");
+    if (btnPesquisar) {
+        btnPesquisar.addEventListener("click", abrirModalPesquisa);
+    }
+
+    // BotÃ£o Confirmar Pesquisa - executa a pesquisa
+    const btnConfirmarPesquisa = document.getElementById("btnConfirmarPesquisa");
+    if (btnConfirmarPesquisa) {
+      btnConfirmarPesquisa.addEventListener("click", aplicarPesquisaNaTabela);
+    }
+
+    // BotÃ£o Cancelar Pesquisa - fecha modal de pesquisa
+    const btnCancelarPesquisa = document.getElementById("btnCancelarPesquisa");
+    if (btnCancelarPesquisa) {
+        btnCancelarPesquisa.addEventListener("click", fecharModalPesquisa);
+    }
+
+
+
+
+    // BotÃ£o Cadastrar - abre modal de cadastro
+    const btnCadastrar = document.getElementById("btnCadastrar");
+    if (btnCadastrar) {
+        btnCadastrar.addEventListener("click", abrirModalCadastro);
+    }
+
+    // BotÃ£o Cancelar Cadastro - fecha modal de cadastro
+    const btnCancelarCadastro = document.getElementById("btnCancelarCadastro");
+    if (btnCancelarCadastro) {
+        btnCancelarCadastro.addEventListener("click", fecharModalCadastro);
+    }
+
+    // BotÃ£o Confirmar Cadastro - executa cadastro
+    const btnConfirmarCadastro = document.getElementById("btnConfirmarCadastro");
+    if (btnConfirmarCadastro) {
+        btnConfirmarCadastro.addEventListener("click", cadastrar);
+    }
+
+    // Fechar modal de cadastro ao clicar fora
+    const modalCadastro = document.getElementById("modalCadastro");
+    if (modalCadastro) {
+        modalCadastro.addEventListener("click", function(e) {
+            if (e.target === modalCadastro) {
+                fecharModalCadastro();
+            }
+        });
+    }
+
+    // BotÃ£o Excluir - abre modal de confirmaÃ§Ã£o
+    const btnExcluir = document.getElementById("btnExcluir");
+    if (btnExcluir) {
+        btnExcluir.addEventListener("click", abrirModalExclusao);
+    }
+
+    // BotÃ£o NÃ£o Excluir - fecha modal de exclusÃ£o
+    const btnNaoExcluir = document.getElementById("btnNaoExcluir");
+    if (btnNaoExcluir) {
+        btnNaoExcluir.addEventListener("click", fecharModalExclusao);
+    }
+
+    // BotÃ£o Sim Excluir - confirma exclusÃ£o
+    const btnSimExcluir = document.getElementById("btnSimExcluir");
+    if (btnSimExcluir) {
+        btnSimExcluir.addEventListener("click", confirmarExclusao);
+    }
+
+    // BotÃ£o Editar - abre modal de ediÃ§Ã£o
+    const btnEditar = document.getElementById("btnEditar");
+    if (btnEditar) {
+        btnEditar.addEventListener("click", abrirModalEdicao);
+    }
+
+    // BotÃ£o Cancelar EdiÃ§Ã£o - fecha modal de ediÃ§Ã£o
+    const btnCancelarEdicao = document.getElementById("btnCancelarEdicao");
+    if (btnCancelarEdicao) {
+        btnCancelarEdicao.addEventListener("click", fecharModalEdicao);
+    }
+
+    // BotÃ£o Confirmar EdiÃ§Ã£o - executa ediÃ§Ã£o
+    const btnConfirmarEdicao = document.getElementById("btnConfirmarEdicao");
+    if (btnConfirmarEdicao) {
+        btnConfirmarEdicao.addEventListener("click", confirmarEdicao);
+    }
+
+    // Fechar modal de ediÃ§Ã£o ao clicar fora
+    const modalEdicao = document.getElementById("modalEdicao");
+    if (modalEdicao) {
+        modalEdicao.addEventListener("click", function(e) {
+            if (e.target === modalEdicao) {
+                fecharModalEdicao();
+            }
+        });
+    }
+
+
+
+
+
+
+    if (btnPromocao) {
+      btnPromocao.addEventListener('click', abrirModalPromocao);
+    }
+
+    if (btnCancelarPromocao) {
+      btnCancelarPromocao.addEventListener('click', fecharModalPromocao);
+    }
+
+    if (btnCadastrarPromocao) {
+      btnCadastrarPromocao.addEventListener('click', cadastrarPromocao);
+    }
+
+    if (btnEditarPromocao) {
+      btnEditarPromocao.addEventListener('click', editarPromocao);
+    }
+
+    if (btnExcluirPromocao) {
+      btnExcluirPromocao.addEventListener('click', excluirPromocao);
+    }
+
+    if (modalPromocao) {
+      modalPromocao.addEventListener('click', function(e) {
+        if (e.target === modalPromocao) {
+          fecharModalPromocao();
+        }
+      });
+    }
+
+    if (btnExportarHistoricoPromocao) {
+      btnExportarHistoricoPromocao.addEventListener('click', abrirModalExtracaoPromocao);
+    }
+
+    if (btnCancelarExtracaoPromocao) {
+      btnCancelarExtracaoPromocao.addEventListener('click', fecharModalExtracaoPromocao);
+    }
+
+    if (btnConfirmarExtracaoPromocao) {
+      btnConfirmarExtracaoPromocao.addEventListener('click', extrairHistoricoPromocoes);
+    }
+
+    if (checkExtrairTudoPromocao) {
+      checkExtrairTudoPromocao.addEventListener('change', atualizarEstadoCamposExtracaoPromocao);
+    }
+
+    if (modalExtracaoPromocao) {
+      modalExtracaoPromocao.addEventListener('click', function(e) {
+        if (e.target === modalExtracaoPromocao) {
+          fecharModalExtracaoPromocao();
+        }
+      });
+    }
+    
+
+
+    // APLICA MÃSCARAS ======================================================
+    
+    aplicarMascaraValor('inputPrecoVenda');
+    aplicarMascaraValor('inputValorsaida1');
+    aplicarMascaraValor('inputValorsaida2');
+    aplicarMascaraValor('inputValorsaida3');
+    aplicarMascaraValor('inputEditarPrecoVenda');
+    aplicarMascaraValor('inputEditarValorsaida1');
+    aplicarMascaraValor('inputEditarValorsaida2');
+    aplicarMascaraValor('inputEditarValorsaida3');
+    aplicarMascaraValor('inputValorAtualSaida1');
+    aplicarMascaraValor('inputValorAtualSaida2');
+    aplicarMascaraValor('inputValorAtualSaida3');
+    aplicarMascaraValor('inputEditarValorAtualSaida1');
+    aplicarMascaraValor('inputEditarValorAtualSaida2');
+    aplicarMascaraValor('inputEditarValorAtualSaida3');
+    aplicarMascaraValor('inputPromocaoPrecoAtual');
+    aplicarMascaraValor('inputPromocaoPrecoVenda');
+    aplicarMascaraValor('inputPromocaoPrecoCusto');
+    aplicarMascaraValor('inputPromocaoLucro');
+
+    permitirApenasNumeros('inputEstmaximo');
+    permitirApenasNumeros('inputEstminimo');
+    permitirApenasNumeros('inputQtdsaida1');
+    permitirApenasNumeros('inputQtdsaida2');
+    permitirApenasNumeros('inputQtdsaida3');
+    permitirApenasNumeros('inputEditarEstmaximo');
+    permitirApenasNumeros('inputEditarEstminimo');
+    permitirApenasNumeros('inputEditarQtdsaida1');
+    permitirApenasNumeros('inputEditarQtdsaida2');
+    permitirApenasNumeros('inputEditarQtdsaida3');
+
+
+    
+
+
+    // CONFIGURA EVENTOS DO DROPDOWN ================================================================
+
+    configurarTodosDropdowns();
+    configurarValidacaoTamanhosPermitidos();
+    inicializarCalendarioPesquisaProduto();
+
+    carregarListaProdutosPromocao();
+    configurarDropdownPromocao();
+
+    habilitarLeitorSomenteEAN();
+    configurarCamposSaidaCombo();
+    carregarDadosIniciais();
+
+    aplicarMascaraValor('inputPrecoCusto');
+    aplicarMascaraValor('inputEditarPrecoCusto');
+    aplicarMascaraValor('inputLucro');
+    aplicarMascaraValor('inputEditarLucro');
+
+    reconstruirMapasProdutos();
+    configurarValoresAtuaisProdutosSaida();
+    configurarCalculosAutomaticos();
+    configurarValidacaoEstoqueTempoReal();
+    configurarPromocaoProdutoAutoFill();
+    configurarCalculoLucroPromocao();
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function validarEstoqueMaximoMinimo(valorMax, valorMin) {
+  const max = parseInt(valorMax, 10) || 0;
+  const min = parseInt(valorMin, 10) || 0;
+
+  if (max <= 0) {
+    return { valido: false, mensagem: 'O estoque mÃ¡ximo deve ser maior que zero.' };
+  }
+
+  if (max <= min) {
+    return { valido: false, mensagem: 'O estoque mÃ¡ximo deve ser maior que o estoque mÃ­nimo.' };
+  }
+
+  return { valido: true };
+}
+
+const controleToastEstoque = {
+  cadastro: 0,
+  edicao: 0
+};
+
+function mostrarToastEstoqueComThrottle(chave, mensagem) {
+  const agora = Date.now();
+  const ultimo = controleToastEstoque[chave] || 0;
+
+  if (agora - ultimo > 1200) {
+    toastr.warning(mensagem);
+    controleToastEstoque[chave] = agora;
+  }
+}
+
+function validarEstoqueEmTempoReal(prefixo = '') {
+  const inputMax = document.getElementById(`input${prefixo}Estmaximo`);
+  const inputMin = document.getElementById(`input${prefixo}Estminimo`);
+
+  if (!inputMax || !inputMin) return;
+
+  const valorMaxBruto = String(inputMax.value || '').trim();
+  const valorMinBruto = String(inputMin.value || '').trim();
+
+  // sem nada preenchido, nÃ£o faz nada
+  if (!valorMaxBruto && !valorMinBruto) return;
+
+  const max = parseInt(valorMaxBruto, 10) || 0;
+  const min = parseInt(valorMinBruto, 10) || 0;
+
+  const chave = prefixo === 'Editar' ? 'edicao' : 'cadastro';
+
+  if (valorMaxBruto && max <= 0) {
+    mostrarToastEstoqueComThrottle(chave, 'O estoque mÃ¡ximo deve ser maior que zero.');
+    return;
+  }
+
+  // sÃ³ compara se ambos estiverem preenchidos
+  if (valorMaxBruto && valorMinBruto && max <= min) {
+    mostrarToastEstoqueComThrottle(chave, 'O estoque mÃ¡ximo deve ser sempre maior que o estoque mÃ­nimo.');
+  }
+}
+
+function configurarValidacaoEstoqueTempoReal() {
+  [
+    'inputEstmaximo',
+    'inputEstminimo',
+    'inputEditarEstmaximo',
+    'inputEditarEstminimo'
+  ].forEach(function(id) {
+    const campo = document.getElementById(id);
+    if (!campo) return;
+
+    campo.addEventListener('input', function() {
+      const prefixo = id.includes('Editar') ? 'Editar' : '';
+      validarEstoqueEmTempoReal(prefixo);
+    });
+
+    campo.addEventListener('change', function() {
+      const prefixo = id.includes('Editar') ? 'Editar' : '';
+      validarEstoqueEmTempoReal(prefixo);
+    });
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ===============================================================================================================================
+// FUNÃ‡ÃƒO PARA CARREGAR A LISTA DE PRODUTOS A PARTIR DA TABELA INTEIRA
+// ===============================================================================================================================
+
+function carregarListaTodosProdutos() {
+
+  if (!Array.isArray(dadosTabelaProd) || dadosTabelaProd.length === 0) {
+    todosprodutos = [];
+    window.itensProd = []; // << NOVO
+    return;
+  }
+
+  const set = new Set();
+  const mapItens = new Map(); // << NOVO (para deduplicar por nome)
+
+  dadosTabelaProd.forEach(linha => {
+    if (!Array.isArray(linha)) return;
+
+    const nomeProduto = (linha[3] ?? '').toString().trim(); // Coluna B
+    const flagCombo = (linha[18] ?? '').toString().trim().toUpperCase();
+
+    // SÃ³ entra se coluna J for "NÃ£o"
+    if (flagCombo !== 'SIM' && nomeProduto) {
+      set.add(nomeProduto);
+
+      // =========================
+      // NOVO: itensProd (A e B)
+      // =========================
+      const codigo = (linha[0] ?? '').toString().trim();   // Coluna A
+      if (!mapItens.has(nomeProduto)) {
+        mapItens.set(nomeProduto, { codigo: codigo, nome: nomeProduto });
+      }
+    }
+  });
+
+  // Distintos + ordenado
+  todosprodutos = Array.from(set).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+  // NOVO: lista de objetos ordenada por nome
+  const itensProd = Array.from(mapItens.values())
+    .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+
+  // Expondo para uso global (se preferir const local apenas, posso ajustar)
+  window.itensProd = itensProd;
+}
+
+
+function carregarListaProdutosPromocao() {
+  if (!Array.isArray(dadosTabelaProd) || dadosTabelaProd.length === 0) {
+    todosprodutosPromocao = [];
+    return;
+  }
+
+  const nomes = new Set();
+
+  dadosTabelaProd.forEach(function(linha) {
+    if (!Array.isArray(linha)) return;
+
+    const nome = String(linha[3] || '').trim();
+    if (nome) nomes.add(nome);
+  });
+
+  todosprodutosPromocao = Array.from(nomes).sort(function(a, b) {
+    return a.localeCompare(b, 'pt-BR');
+  });
+}
+
+function parseMoedaBR(valor) {
+  return parseFloat(
+    String(valor || '')
+      .replace(/[^\d,.-]/g, '')
+      .replace(/\./g, '')
+      .replace(',', '.')
+  ) || 0;
+}
+
+function brDateTimeToInputDateTimeLocal(valor) {
+  const texto = String(valor || '').trim();
+  if (!texto) return '';
+
+  const partes = texto.split(' ');
+  const data = partes[0] || '';
+  const hora = partes[1] || '00:00';
+
+  const [dd, mm, yyyy] = data.split('/');
+  if (!dd || !mm || !yyyy) return '';
+
+  const horaSemSegundos = hora.slice(0, 5);
+
+  return `${yyyy}-${mm}-${dd}T${horaSemSegundos}`;
+}
+
+function inputDateTimeLocalToTimestamp(valor) {
+  if (!valor) return 0;
+  const dt = new Date(valor);
+  return isNaN(dt.getTime()) ? 0 : dt.getTime();
+}
+
+function mostrarToastLucroPromocaoComThrottle(mensagem) {
+  const agora = Date.now();
+  const ultimo = controleToastLucroPromocao.modal || 0;
+
+  if (agora - ultimo > 1200) {
+    toastr.warning(mensagem);
+    controleToastLucroPromocao.modal = agora;
+  }
+}
+
+function configurarDropdownPromocao() {
+  if (!inputPromocaoProduto || !listaUlPromocaoProduto) return;
+
+  let timeoutId = null;
+
+  inputPromocaoProduto.addEventListener('input', function (e) {
+    const texto = e.target.value;
+
+    if (timeoutId) clearTimeout(timeoutId);
+
+    timeoutId = setTimeout(function () {
+      filtrarEMostrarSugestoes(
+        texto,
+        todosprodutosPromocao || [],
+        listaUlPromocaoProduto,
+        inputPromocaoProduto
+      );
+    }, 300);
+  });
+
+  inputPromocaoProduto.addEventListener('focus', function () {
+    mostrarSugestoes(
+      todosprodutosPromocao || [],
+      listaUlPromocaoProduto,
+      inputPromocaoProduto
+    );
+  });
+
+  inputPromocaoProduto.addEventListener('click', function () {
+    mostrarSugestoes(
+      todosprodutosPromocao || [],
+      listaUlPromocaoProduto,
+      inputPromocaoProduto
+    );
+  });
+
+  document.addEventListener('click', function (e) {
+    if (e.target === inputPromocaoProduto || listaUlPromocaoProduto.contains(e.target)) return;
+    if (e.target.closest('.dropdown-container')) return;
+    esconderSugestoes(listaUlPromocaoProduto);
+  });
+
+  inputPromocaoProduto.addEventListener('keydown', function (e) {
+    const items = listaUlPromocaoProduto.querySelectorAll('li');
+    const selected = listaUlPromocaoProduto.querySelector('li.selected');
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        navegarSugestoes(items, selected, 'down');
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        navegarSugestoes(items, selected, 'up');
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selected) {
+          selecionarOpcao(selected.textContent, inputPromocaoProduto, listaUlPromocaoProduto);
+        }
+        break;
+      case 'Escape':
+        esconderSugestoes(listaUlPromocaoProduto);
+        break;
+    }
+  });
+}
+
+function preencherDadosProdutoPromocaoPorNome(nomeProduto) {
+  const nomeNormalizado = String(nomeProduto || '').trim().toUpperCase();
+
+  if (!nomeNormalizado) {
+    inputPromoIdProduto.value = '';
+    if (inputPromocaoPrecoAtual?.definirValor) inputPromocaoPrecoAtual.definirValor(null);
+    if (inputPromocaoPrecoCusto?.definirValor) inputPromocaoPrecoCusto.definirValor(null);
+    if (inputPromocaoLucro?.definirValor) inputPromocaoLucro.definirValor(null);
+    return;
+  }
+
+  const linhaProduto = mapaProdutoPorNome.get(nomeNormalizado);
+
+  if (!linhaProduto) {
+    inputPromoIdProduto.value = '';
+    if (inputPromocaoPrecoAtual?.definirValor) inputPromocaoPrecoAtual.definirValor(null);
+    if (inputPromocaoPrecoCusto?.definirValor) inputPromocaoPrecoCusto.definirValor(null);
+    if (inputPromocaoLucro?.definirValor) inputPromocaoLucro.definirValor(null);
+    return;
+  }
+
+  inputPromoIdProduto.value = String(linhaProduto[0] || '').trim();
+
+  const precoAtual = parseMoedaBR(linhaProduto[15] || 0);
+  const precoCusto = parseMoedaBR(linhaProduto[16] || 0);
+  if (inputPromocaoPrecoAtual?.definirValor) {
+    inputPromocaoPrecoAtual.definirValor(precoAtual);
+  }
+  if (inputPromocaoPrecoCusto?.definirValor) {
+    inputPromocaoPrecoCusto.definirValor(precoCusto);
+  }
+
+  recalcularLucroPromocao();
+}
+
+function configurarPromocaoProdutoAutoFill() {
+  if (!inputPromocaoProduto) return;
+
+  inputPromocaoProduto.addEventListener('change', function() {
+    preencherDadosProdutoPromocaoPorNome(inputPromocaoProduto.value);
+  });
+
+  inputPromocaoProduto.addEventListener('blur', function() {
+    preencherDadosProdutoPromocaoPorNome(inputPromocaoProduto.value);
+  });
+}
+
+function recalcularLucroPromocao() {
+  if (!inputPromocaoPrecoVenda || !inputPromocaoPrecoCusto || !inputPromocaoLucro) return;
+
+  const venda = typeof inputPromocaoPrecoVenda.obterValor === 'function'
+    ? inputPromocaoPrecoVenda.obterValor()
+    : 0;
+
+  const custo = typeof inputPromocaoPrecoCusto.obterValor === 'function'
+    ? inputPromocaoPrecoCusto.obterValor()
+    : 0;
+
+  const valorVendaBruto = String(inputPromocaoPrecoVenda.value || '').trim();
+  const valorCustoBruto = String(inputPromocaoPrecoCusto.value || '').trim();
+
+  if (!valorVendaBruto && !valorCustoBruto) {
+    if (typeof inputPromocaoLucro.definirValor === 'function') {
+      inputPromocaoLucro.definirValor(null);
+    }
+    return;
+  }
+
+  const lucro = venda - custo;
+
+  if (typeof inputPromocaoLucro.definirValor === 'function') {
+    inputPromocaoLucro.definirValor(lucro);
+  }
+
+  if (valorVendaBruto && valorCustoBruto && custo > venda) {
+    mostrarToastLucroPromocaoComThrottle(
+      'AtenÃ§Ã£o: esta promoÃ§Ã£o estÃ¡ com prejuÃ­zo. O preÃ§o promocional estÃ¡ menor que o custo.'
+    );
+  }
+}
+
+function configurarCalculoLucroPromocao() {
+  if (inputPromocaoPrecoVenda) {
+    inputPromocaoPrecoVenda.addEventListener('input', recalcularLucroPromocao);
+    inputPromocaoPrecoVenda.addEventListener('change', recalcularLucroPromocao);
+  }
+}
+
+function limparModalPromocao() {
+  if (inputPromoIdPromocao) inputPromoIdPromocao.value = '';
+  if (inputPromoIdProduto) inputPromoIdProduto.value = '';
+
+  if (inputPromocaoProduto) inputPromocaoProduto.value = '';
+  if (inputPromocaoPrecoAtual) inputPromocaoPrecoAtual.value = '';
+  if (inputPromocaoPrecoVenda) inputPromocaoPrecoVenda.value = '';
+  if (inputPromocaoPrecoCusto) inputPromocaoPrecoCusto.value = '';
+  if (inputPromocaoLucro) inputPromocaoLucro.value = '';
+  if (inputPromocaoInicio) inputPromocaoInicio.value = '';
+  if (inputPromocaoFim) inputPromocaoFim.value = '';
+
+  contextoPromocao = {
+    idProduto: '',
+    idPromocao: '',
+    origemLinha: null
+  };
+}
+
+function aplicarModoCadastroPromocao() {
+  if (btnCadastrarPromocao) btnCadastrarPromocao.disabled = false;
+  if (btnEditarPromocao) btnEditarPromocao.disabled = true;
+  if (btnExcluirPromocao) btnExcluirPromocao.disabled = true;
+}
+
+function aplicarModoEdicaoPromocao() {
+  if (btnCadastrarPromocao) btnCadastrarPromocao.disabled = true;
+  if (btnEditarPromocao) btnEditarPromocao.disabled = false;
+  if (btnExcluirPromocao) btnExcluirPromocao.disabled = false;
+}
+
+function linhaSelecionadaEhValida() {
+  return !!(linhaSelecionada && linhaSelecionada.isConnected && document.body.contains(linhaSelecionada));
+}
+
+function abrirModalPromocao() {
+  const idSelecionado = linhaSelecionadaEhValida()
+    ? String(linhaSelecionada.cells[0]?.textContent || '').trim()
+    : '';
+
+  mostrarCarregamentoModal();
+
+  google.script.run
+    .withSuccessHandler(function(resultado) {
+      esconderCarregamentoModal();
+
+      if (resultado && resultado.sucesso) {
+        dadosTabelaProd = resultado.dadosCompletosProd || [];
+        dadosTabelaSaida = resultado.dadosCompletosSaida || [];
+
+        linhaSelecionada = null;
+        carregarDadosIniciais();
+        carregarListaTodosProdutos();
+        carregarListaProdutosPromocao();
+        reconstruirMapasProdutos();
+
+        if (idSelecionado) {
+          const linhas = Array.from(document.querySelectorAll('#tb_corpo tr'));
+          const linhaAtualizada = linhas.find(function(tr) {
+            return String(tr.cells[0]?.textContent || '').trim() === idSelecionado;
+          });
+
+          if (linhaAtualizada) {
+            selecionarLinha(linhaAtualizada);
+          }
+        }
+
+        abrirModalPromocaoSincronizado();
+        return;
+      }
+
+      toastr.error(resultado?.mensagem || 'NÃ£o foi possÃ­vel sincronizar as promoÃ§Ãµes.');
+    })
+    .withFailureHandler(function(erro) {
+      esconderCarregamentoModal();
+      console.error('Erro ao sincronizar promoÃ§Ãµes:', erro);
+      toastr.error('Erro ao sincronizar promoÃ§Ãµes antes de abrir o modal.');
+    })
+    .buscarDadosAtualizadosProd();
+}
+
+function abrirModalPromocaoSincronizado() {
+  limparModalPromocao();
+  aplicarModoCadastroPromocao();
+
+  // se a linha antiga nÃ£o existe mais no DOM, descarta
+  if (!linhaSelecionadaEhValida()) {
+    linhaSelecionada = null;
+  }
+
+  // SEM linha selecionada = modo cadastro limpo
+  if (!linhaSelecionada) {
+    if (modalPromocao) {
+      modalPromocao.classList.add('ativo');
+    }
+
+    if (inputPromocaoProduto) {
+      inputPromocaoProduto.focus();
+    }
+    return;
+  }
+
+  const idProduto = String(linhaSelecionada.cells[0]?.textContent || '').trim();
+  const produtoSelecionado = Array.isArray(dadosTabelaProd)
+    ? dadosTabelaProd.find(linha => String(linha[0] || '').trim() === idProduto)
+    : null;
+  const idPromocao = String(produtoSelecionado?.[2] || '').trim();
+  const nomeProduto = String(linhaSelecionada.cells[2]?.textContent || '').trim();
+
+  // COM linha selecionada, mas sem promoÃ§Ã£o vigente = nÃ£o abre modal
+  if (!idPromocao) {
+    toastr.warning(`O produto "${nomeProduto}" nÃ£o possui promoÃ§Ã£o vigente.`);
+    return;
+  }
+
+  contextoPromocao.idProduto = idProduto;
+  contextoPromocao.idPromocao = idPromocao;
+  contextoPromocao.origemLinha = linhaSelecionada;
+
+  if (modalPromocao) {
+    modalPromocao.classList.add('ativo');
+  }
+
+  mostrarCarregamentoModal();
+
+  google.script.run
+    .withSuccessHandler(function(resultado) {
+      esconderCarregamentoModal();
+
+      if (!resultado || !resultado.sucesso || !resultado.promocao) {
+        toastr.warning('NÃ£o foi possÃ­vel carregar os dados da promoÃ§Ã£o atual.');
+        fecharModalPromocao();
+        return;
+      }
+
+      const promo = resultado.promocao;
+
+      inputPromoIdPromocao.value = promo.idPromocao || '';
+      inputPromoIdProduto.value = promo.idProduto || idProduto;
+      inputPromocaoProduto.value = promo.nomeProduto || nomeProduto;
+
+      preencherDadosProdutoPromocaoPorNome(inputPromocaoProduto.value);
+
+      if (inputPromocaoPrecoVenda?.definirValor) {
+        inputPromocaoPrecoVenda.definirValor(parseMoedaBR(promo.precoPromocao));
+      }
+
+      inputPromocaoInicio.value = brDateTimeToInputDateTimeLocal(promo.inicioPromocao);
+      inputPromocaoFim.value = brDateTimeToInputDateTimeLocal(promo.fimPromocao);
+
+      recalcularLucroPromocao();
+      aplicarModoEdicaoPromocao();
+    })
+    .withFailureHandler(function(erro) {
+      esconderCarregamentoModal();
+      console.error('Erro ao carregar promoÃ§Ã£o:', erro);
+      toastr.error('Erro ao carregar os dados da promoÃ§Ã£o.');
+      fecharModalPromocao();
+    })
+    .buscarPromocaoPorId({
+      idPromocao: idPromocao,
+      idProduto: idProduto
+    });
+}
+
+function fecharModalPromocao() {
+  if (modalPromocao) {
+    modalPromocao.classList.remove('ativo');
+  }
+
+  limparModalPromocao();
+  aplicarModoCadastroPromocao();
+}
+
+function obterI18nDatepickerBRPromocao() {
+  return {
+    cancel: 'Cancelar',
+    clear: 'Limpar',
+    done: 'OK',
+    months: ['Janeiro','Fevereiro','MarÃ§o','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'],
+    monthsShort: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],
+    weekdays: ['Domingo','Segunda','TerÃ§a','Quarta','Quinta','Sexta','SÃ¡bado'],
+    weekdaysShort: ['Dom','Seg','Ter','Qua','Qui','Sex','SÃ¡b'],
+    weekdaysAbbrev: ['D','S','T','Q','Q','S','S']
+  };
+}
+
+function inicializarCalendarioExtracaoPromocao() {
+  if (!inputExtracaoPromocaoPeriodo || inputExtracaoPromocaoPeriodo.dataset.rangePromocaoInit === 'S') return;
+
+  initDatepickerRange(inputExtracaoPromocaoPeriodo, obterI18nDatepickerBRPromocao());
+  inputExtracaoPromocaoPeriodo.dataset.rangePromocaoInit = 'S';
+}
+
+function inicializarCalendarioPesquisaProduto() {
+  const inputPeriodoPesquisa = document.getElementById("inputPesquisarDataCadastro");
+  if (
+    !inputPeriodoPesquisa ||
+    inputPeriodoPesquisa.dataset.rangePesquisaProdutoInit === "S" ||
+    !window.M ||
+    !M.Datepicker
+  ) return;
+
+  initDatepickerRange(inputPeriodoPesquisa, obterI18nDatepickerBRPromocao());
+  inputPeriodoPesquisa.dataset.rangePesquisaProdutoInit = "S";
+}
+
+function configurarDropdownHistoricoPromocao() {
+  if (!inputExtracaoPromocaoProduto || !listaUlExtracaoPromocaoProduto) return;
+  if (inputExtracaoPromocaoProduto.dataset.dropdownHistoricoPromocao === 'S') return;
+
+  inputExtracaoPromocaoProduto.addEventListener('focus', function() {
+    mostrarSugestoes(todosprodutosHistoricoPromocao || [], listaUlExtracaoPromocaoProduto, inputExtracaoPromocaoProduto);
+  });
+
+  inputExtracaoPromocaoProduto.addEventListener('click', function() {
+    mostrarSugestoes(todosprodutosHistoricoPromocao || [], listaUlExtracaoPromocaoProduto, inputExtracaoPromocaoProduto);
+  });
+
+  inputExtracaoPromocaoProduto.addEventListener('input', function(e) {
+    filtrarEMostrarSugestoes(
+      e.target.value,
+      todosprodutosHistoricoPromocao || [],
+      listaUlExtracaoPromocaoProduto,
+      inputExtracaoPromocaoProduto
+    );
+  });
+
+  inputExtracaoPromocaoProduto.addEventListener('keydown', function(e) {
+    const items = listaUlExtracaoPromocaoProduto.querySelectorAll('li');
+    const selected = listaUlExtracaoPromocaoProduto.querySelector('li.selected');
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        navegarSugestoes(items, selected, 'down');
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        navegarSugestoes(items, selected, 'up');
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selected) {
+          selecionarOpcao(selected.textContent, inputExtracaoPromocaoProduto, listaUlExtracaoPromocaoProduto);
+        }
+        break;
+      case 'Escape':
+        esconderSugestoes(listaUlExtracaoPromocaoProduto);
+        break;
+    }
+  });
+
+  document.addEventListener('click', function(e) {
+    if (e.target === inputExtracaoPromocaoProduto || listaUlExtracaoPromocaoProduto.contains(e.target)) return;
+    if (e.target.closest('#modalExtracaoPromocao .dropdown-container')) return;
+    esconderSugestoes(listaUlExtracaoPromocaoProduto);
+  });
+
+  inputExtracaoPromocaoProduto.dataset.dropdownHistoricoPromocao = 'S';
+}
+
+function atualizarEstadoCamposExtracaoPromocao() {
+  const extrairTudo = !!checkExtrairTudoPromocao?.checked;
+
+  [inputExtracaoPromocaoProduto, inputExtracaoPromocaoPeriodo].forEach(function(input) {
+    if (!input) return;
+    input.disabled = extrairTudo;
+    input.classList.toggle('input-bloqueado', extrairTudo);
+    if (extrairTudo) input.value = '';
+  });
+
+  if (extrairTudo && listaUlExtracaoPromocaoProduto) {
+    esconderSugestoes(listaUlExtracaoPromocaoProduto);
+  }
+}
+
+function limparModalExtracaoPromocao() {
+  if (checkExtrairTudoPromocao) checkExtrairTudoPromocao.checked = false;
+  if (inputExtracaoPromocaoProduto) inputExtracaoPromocaoProduto.value = '';
+  if (inputExtracaoPromocaoPeriodo) inputExtracaoPromocaoPeriodo.value = '';
+  atualizarEstadoCamposExtracaoPromocao();
+}
+
+function abrirModalExtracaoPromocao(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  limparModalExtracaoPromocao();
+
+  if (modalExtracaoPromocao) {
+    modalExtracaoPromocao.classList.add('ativo');
+  }
+
+  inicializarCalendarioExtracaoPromocao();
+  configurarDropdownHistoricoPromocao();
+
+  mostrarCarregamentoModal();
+
+  google.script.run
+    .withSuccessHandler(function(resultado) {
+      esconderCarregamentoModal();
+
+      if (resultado && resultado.sucesso) {
+        todosprodutosHistoricoPromocao = resultado.produtos || [];
+        return;
+      }
+
+      toastr.error(resultado?.mensagem || 'Erro ao carregar produtos com histÃ³rico de promoÃ§Ã£o.');
+    })
+    .withFailureHandler(function(erro) {
+      esconderCarregamentoModal();
+      console.error('Erro ao buscar produtos do histÃ³rico:', erro);
+      toastr.error('Erro ao carregar produtos do histÃ³rico de promoÃ§Ãµes.');
+    })
+    .buscarProdutosHistoricoPromocoes();
+}
+
+function fecharModalExtracaoPromocao() {
+  if (modalExtracaoPromocao) {
+    modalExtracaoPromocao.classList.remove('ativo');
+  }
+
+  limparModalExtracaoPromocao();
+}
+
+function exportarLinhasParaCSV(cabecalho, linhas, nomeArquivo) {
+  const limparTexto = (t) => String(t ?? '').replace(/\s+/g, ' ').trim();
+  const csvEscape = (valor) => {
+    const v = limparTexto(valor);
+    const precisaAspas = /[",\n\r]/.test(v);
+    const vEsc = v.replace(/"/g, '""');
+    return precisaAspas ? `"${vEsc}"` : vEsc;
+  };
+
+  const linhasCSV = [];
+  linhasCSV.push((cabecalho || []).map(csvEscape).join(','));
+
+  (linhas || []).forEach(function(linha) {
+    linhasCSV.push((linha || []).map(csvEscape).join(','));
+  });
+
+  const csvFinal = '\uFEFF' + linhasCSV.join('\r\n');
+  const blob = new Blob([csvFinal], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = nomeArquivo || 'Historico_Promocoes.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function extrairHistoricoPromocoes() {
+  const extrairTudo = !!checkExtrairTudoPromocao?.checked;
+  const produto = String(inputExtracaoPromocaoProduto?.value || '').trim();
+  const periodo = String(inputExtracaoPromocaoPeriodo?.value || '').trim();
+
+  if (!extrairTudo && !produto && !periodo) {
+    toastr.warning('Informe um produto, um perÃ­odo ou marque EXTRAIR TUDO.');
+    return;
+  }
+
+  if (!extrairTudo && periodo && !periodo.includes(' - ')) {
+    toastr.warning('Selecione a data inicial e a data final do perÃ­odo.');
+    return;
+  }
+
+  mostrarCarregamentoModal();
+
+  google.script.run
+    .withSuccessHandler(function(resultado) {
+      esconderCarregamentoModal();
+
+      if (!resultado || !resultado.sucesso) {
+        toastr.error(resultado?.mensagem || 'Erro ao extrair histÃ³rico de promoÃ§Ãµes.');
+        return;
+      }
+
+      if (!resultado.linhas || resultado.linhas.length === 0) {
+        toastr.warning('Nenhuma promoÃ§Ã£o encontrada para os parÃ¢metros informados.');
+        return;
+      }
+
+      exportarLinhasParaCSV(
+        resultado.cabecalho || [],
+        resultado.linhas || [],
+        'Historico_Promocoes.csv'
+      );
+
+      fecharModalExtracaoPromocao();
+      toastr.success('HistÃ³rico de promoÃ§Ãµes extraÃ­do com sucesso!');
+    })
+    .withFailureHandler(function(erro) {
+      esconderCarregamentoModal();
+      console.error('Erro ao extrair histÃ³rico de promoÃ§Ãµes:', erro);
+      toastr.error('Erro ao extrair histÃ³rico de promoÃ§Ãµes.');
+    })
+    .extrairHistoricoPromocoesCSV({
+      extrairTudo: extrairTudo,
+      produto: produto,
+      periodo: periodo
+    });
+}
+
+function validarCamposPromocao() {
+  const produto = String(inputPromocaoProduto?.value || '').trim();
+  const idProduto = String(inputPromoIdProduto?.value || '').trim();
+  const precoPromocao = inputPromocaoPrecoVenda?.obterValor ? inputPromocaoPrecoVenda.obterValor() : 0;
+  const inicio = String(inputPromocaoInicio?.value || '').trim();
+  const fim = String(inputPromocaoFim?.value || '').trim();
+
+  if (!produto || !idProduto) {
+    return { valido: false, mensagem: 'Selecione um produto vÃ¡lido para a promoÃ§Ã£o.' };
+  }
+
+  if (!precoPromocao || precoPromocao <= 0) {
+    return { valido: false, mensagem: 'Informe um preÃ§o promocional vÃ¡lido.' };
+  }
+
+  if (!inicio) {
+    return { valido: false, mensagem: 'Informe a data e hora de inÃ­cio da promoÃ§Ã£o.' };
+  }
+
+  if (!fim) {
+    return { valido: false, mensagem: 'Informe a data e hora de fim da promoÃ§Ã£o.' };
+  }
+
+  const tsInicio = inputDateTimeLocalToTimestamp(inicio);
+  const tsFim = inputDateTimeLocalToTimestamp(fim);
+
+  if (!tsInicio || !tsFim) {
+    return { valido: false, mensagem: 'PerÃ­odo da promoÃ§Ã£o invÃ¡lido.' };
+  }
+
+  if (tsFim <= tsInicio) {
+    return { valido: false, mensagem: 'A data/hora de fim deve ser maior que a data/hora de inÃ­cio.' };
+  }
+
+  return { valido: true };
+}
+
+function cadastrarPromocao() {
+  const validacao = validarCamposPromocao();
+  if (!validacao.valido) {
+    toastr.warning(validacao.mensagem);
+    return;
+  }
+
+  mostrarCarregamentoModal();
+
+  const payload = {
+    idProduto: String(inputPromoIdProduto.value || '').trim(),
+    nomeProduto: String(inputPromocaoProduto.value || '').trim(),
+    precoPromocao: String(inputPromocaoPrecoVenda.value || '').trim(),
+    precoCusto: String(inputPromocaoPrecoCusto.value || '').trim(),
+    lucro: String(inputPromocaoLucro.value || '').trim(),
+    inicioPromocao: String(inputPromocaoInicio.value || '').trim(),
+    fimPromocao: String(inputPromocaoFim.value || '').trim()
+  };
+
+  google.script.run
+    .withSuccessHandler(function(resultado) {
+      esconderCarregamentoModal();
+
+      if (resultado && resultado.sucesso) {
+        fecharModalPromocao();
+        atualizarDados();
+        toastr.success('PromoÃ§Ã£o cadastrada com sucesso!');
+      } else {
+        toastr.error(resultado?.mensagem || 'Erro ao cadastrar promoÃ§Ã£o.');
+      }
+    })
+    .withFailureHandler(function(erro) {
+      esconderCarregamentoModal();
+      console.error('Erro ao cadastrar promoÃ§Ã£o:', erro);
+      toastr.error('Erro ao cadastrar promoÃ§Ã£o.');
+    })
+    .cadastrarPromocao(payload);
+}
+
+function editarPromocao() {
+  const idPromocao = String(inputPromoIdPromocao?.value || '').trim();
+  const idProduto = String(inputPromoIdProduto?.value || '').trim();
+
+  if (!idPromocao || !idProduto) {
+    toastr.warning('Selecione uma linha com promoÃ§Ã£o vigente antes de editar.');
+    return;
+  }
+
+  const validacao = validarCamposPromocao();
+  if (!validacao.valido) {
+    toastr.warning(validacao.mensagem);
+    return;
+  }
+
+  mostrarCarregamentoModal();
+
+  const payload = {
+    idPromocao: idPromocao,
+    idProduto: idProduto,
+    nomeProduto: String(inputPromocaoProduto.value || '').trim(),
+    precoPromocao: String(inputPromocaoPrecoVenda.value || '').trim(),
+    precoCusto: String(inputPromocaoPrecoCusto.value || '').trim(),
+    lucro: String(inputPromocaoLucro.value || '').trim(),
+    inicioPromocao: String(inputPromocaoInicio.value || '').trim(),
+    fimPromocao: String(inputPromocaoFim.value || '').trim()
+  };
+
+  google.script.run
+    .withSuccessHandler(function(resultado) {
+      esconderCarregamentoModal();
+
+      if (resultado && resultado.sucesso) {
+        fecharModalPromocao();
+        atualizarDados();
+        toastr.success('PromoÃ§Ã£o editada com sucesso!');
+      } else {
+        toastr.error(resultado?.mensagem || 'Erro ao editar promoÃ§Ã£o.');
+      }
+    })
+    .withFailureHandler(function(erro) {
+      esconderCarregamentoModal();
+      console.error('Erro ao editar promoÃ§Ã£o:', erro);
+      toastr.error('Erro ao editar promoÃ§Ã£o.');
+    })
+    .editarPromocao(payload);
+}
+
+function excluirPromocao() {
+  const idPromocao = String(inputPromoIdPromocao?.value || '').trim();
+  const idProduto = String(inputPromoIdProduto?.value || '').trim();
+
+  if (!idPromocao || !idProduto) {
+    toastr.warning('Selecione uma linha com promoÃ§Ã£o vigente antes de excluir.');
+    return;
+  }
+
+  mostrarCarregamentoModal();
+
+  google.script.run
+    .withSuccessHandler(function(resultado) {
+      esconderCarregamentoModal();
+
+      if (resultado && resultado.sucesso) {
+        fecharModalPromocao();
+        atualizarDados();
+        toastr.success('PromoÃ§Ã£o excluÃ­da com sucesso!');
+      } else {
+        toastr.error(resultado?.mensagem || 'Erro ao excluir promoÃ§Ã£o.');
+      }
+    })
+    .withFailureHandler(function(erro) {
+      esconderCarregamentoModal();
+      console.error('Erro ao excluir promoÃ§Ã£o:', erro);
+      toastr.error('Erro ao excluir promoÃ§Ã£o.');
+    })
+    .excluirPromocao({
+      idPromocao: idPromocao,
+      idProduto: idProduto
+    });
+}
+
+
+
+
+
+
+
+
+
+
+// =======================================================================================================================================
+// FUNÃ‡ÃƒO: APLICAR MÃSCARA DE VALOR
+// =======================================================================================================================================
+
+// Aplica mÃ¡scara R$ 0,00 com entrada da direita para esquerda
+// Agora: nÃ£o preenche o campo no inÃ­cio (placeholder aparece). SÃ³ mostra "R$ 0,00" quando o usuÃ¡rio comeÃ§ar a digitar.
+function aplicarMascaraValor(idCampo) {
+  const campo = document.getElementById(idCampo);
+  if (!campo) return console.error('Campo nÃ£o encontrado:', idCampo);
+
+  // NÃƒO define valor inicial -> permite placeholder
+  // campo.value = 'R$ 0,00';
+
+  // Flag para evitar loops quando setamos value via cÃ³digo
+  let atualizando = false;
+
+  campo.addEventListener('focus', e => {
+    setTimeout(() => {
+      const len = e.target.value.length;
+      e.target.setSelectionRange(len, len);
+    });
+  });
+
+  campo.addEventListener('keydown', e => {
+    const permitidas = [8, 9, 13, 27, 46]; // backspace, tab, enter, esc, del
+    const ctrl = e.ctrlKey && [65, 67, 86, 88].includes(e.keyCode); // A,C,V,X
+    const nav = e.keyCode >= 35 && e.keyCode <= 39; // setas, home, end
+    const num = (!e.shiftKey && ((e.keyCode >= 48 && e.keyCode <= 57) || (e.keyCode >= 96 && e.keyCode <= 105)));
+
+    if (!(permitidas.includes(e.keyCode) || ctrl || nav || num)) e.preventDefault();
+  });
+
+  campo.addEventListener('input', e => {
+    if (atualizando) return;
+
+    // Se o usuÃ¡rio apagou tudo, mantÃ©m vazio para aparecer o placeholder
+    const soNumeros = e.target.value.replace(/\D/g, '');
+    if (soNumeros.length === 0) {
+      atualizando = true;
+      e.target.value = '';
+      atualizando = false;
+      return;
+    }
+
+    // MantÃ©m sua lÃ³gica original, sÃ³ que sÃ³ roda quando houver dÃ­gitos
+    let v = soNumeros.slice(0, 9) || '0';
+    v = v.padStart(3, '0');
+    const reais = v.slice(0, -2).replace(/^0+/, '') || '0';
+    const centavos = v.slice(-2);
+
+    atualizando = true;
+    e.target.value = `R$ ${reais.replace(/\B(?=(\d{3})+(?!\d))/g, '.')},${centavos}`;
+    atualizando = false;
+  });
+
+  campo.obterValor = () => parseInt((campo.value || '').replace(/\D/g, '')) / 100 || 0;
+
+  campo.definirValor = valor => {
+    // Se quiser "definir vazio", passe null/undefined/NaN
+    if (valor === null || valor === undefined || Number.isNaN(valor)) {
+      campo.value = '';
+      return;
+    }
+
+    let v = Math.round(valor * 100).toString().padStart(3, '0').slice(0, 9);
+    const reais = v.slice(0, -2).replace(/^0+/, '') || '0';
+    const centavos = v.slice(-2);
+
+    campo.value = `R$ ${reais.replace(/\B(?=(\d{3})+(?!\d))/g, '.')},${centavos}`;
+  };
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =======================================================================================================================================
+// FUNÃ‡ÃƒO: APLICAR MÃSCARA PARA PERMITIR APENAS NÃšMEROS
+// =======================================================================================================================================
+
+function permitirApenasNumeros(idCampo) {
+  const campo = document.getElementById(idCampo);
+  if (!campo) return;
+
+  campo.addEventListener('input', function () {
+    this.value = this.value.replace(/\D/g, ''); // remove tudo que nÃ£o for dÃ­gito
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =======================================================================================================================================
+// FUNÃ‡ÃƒO: CARREGAR DADOS INICIAIS
+// =======================================================================================================================================
+
+function construirLinhasTabelaComJoin() {
+  const linhasFinais = [];
+
+  if (!Array.isArray(dadosTabelaProd) || dadosTabelaProd.length === 0) {
+    return linhasFinais;
+  }
+
+  const mapaCategoria = new Map(
+    (Array.isArray(itensCat) ? itensCat : []).map(item => [
+      String(item.codigo || '').trim(),
+      String(item.nome || '').trim()
+    ])
+  );
+
+  const mapaSubcategoria = new Map(
+    (Array.isArray(todassubcategorias) ? todassubcategorias : []).map(item => [
+      String(item.codigo || '').trim(),
+      String(item.nome || '').trim()
+    ])
+  );
+
+  const mapaFornecedor = new Map(
+    (Array.isArray(itensForn) ? itensForn : []).map(item => [
+      String(item.codigo || '').trim(),
+      String(item.nome || '').trim()
+    ])
+  );
+
+  const mapaNomeProdutoPorId = new Map(
+    dadosTabelaProd.map(prod => [
+      String(prod[0] || '').trim(),
+      String(prod[3] || '').trim()
+    ])
+  );
+
+  const mapaSaidasPorProduto = new Map();
+
+  if (Array.isArray(dadosTabelaSaida)) {
+    dadosTabelaSaida.forEach(saida => {
+      if (!Array.isArray(saida)) return;
+
+      const idProduto = String(saida[0] || '').trim();
+      if (!idProduto) return;
+
+      if (!mapaSaidasPorProduto.has(idProduto)) {
+        mapaSaidasPorProduto.set(idProduto, []);
+      }
+
+      mapaSaidasPorProduto.get(idProduto).push(saida);
+    });
+  }
+
+  dadosTabelaProd.forEach(produto => {
+    if (!Array.isArray(produto)) return;
+
+    const idProduto = String(produto[0] || '').trim();
+
+    const linhaBase = [
+      produto[0] || "",                                                       // 0 ID
+      produto[1] || "",                                                       // 1 EM_PROMOCAO
+      produto[3] || "",                                                       // 2 NOME_PRODUTO
+      produto[4] || "",                                                       // 3 COD_INTERNO_PROD
+      mapaCategoria.get(String(produto[5] || '').trim()) || produto[5] || "", // 4 CATEGORIA
+      mapaSubcategoria.get(String(produto[6] || '').trim()) || produto[6] || "", // 5 SUBCATEGORIA
+      produto[7] || "",                                                       // 6 EAN
+      produto[8] || "",                                                       // 7 MARCA
+      produto[9] || "",                                                       // 8 TIPO_TAMANHO
+      produto[10] || "",                                                      // 9 TAMANHO
+      produto[11] || "",                                                      // 10 COR
+      mapaFornecedor.get(String(produto[12] || '').trim()) || produto[12] || "", // 11 FORNECEDOR
+      produto[13] || "",                                                      // 12 EST_MAXIMO
+      produto[14] || "",                                                      // 13 EST_MINIMO
+      produto[15] || "",                                                      // 14 PRECO_VENDA
+      produto[16] || "",                                                      // 15 PRECO_CUSTO
+      produto[17] || "",                                                      // 16 OBSERVACAO
+      produto[18] || "",                                                      // 17 COMBO
+      "",                                                                     // 18 PRODUTO DE SAÃDA
+      "",                                                                     // 19 QTD. SAÃDA
+      "",                                                                     // 20 VALOR UNITÃRIO
+      produto[19] || "",                                                      // 21 CRIADO_EM
+      produto[20] || ""                                                       // 22 EDITADO_EM
+    ];
+
+    const saidasDoProduto = mapaSaidasPorProduto.get(idProduto) || [];
+
+    if (saidasDoProduto.length === 0) {
+      linhasFinais.push(linhaBase);
+      return;
+    }
+
+    saidasDoProduto.forEach(saida => {
+      const idProdutoSaida = String(saida[1] || '').trim();
+      const nomeProdutoSaida = mapaNomeProdutoPorId.get(idProdutoSaida) || `ID ${idProdutoSaida}`;
+
+      const linhaJoin = linhaBase.slice();
+      linhaJoin[18] = nomeProdutoSaida; // PRODUTO DE SAÃDA
+      linhaJoin[19] = saida[2] || "";   // QTD
+      linhaJoin[20] = saida[3] || "";   // VALOR UNITÃRIO
+
+      linhasFinais.push(linhaJoin);
+    });
+  });
+
+  return linhasFinais;
+}
+
+function preencherCelulaTabela(td, valor, indiceColuna) {
+  const texto = String(valor ?? '').trim();
+
+  // coluna 1 = "EM PROMOÃ‡ÃƒO"
+  if (indiceColuna === 1) {
+    td.innerHTML = '';
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'status-promocao-wrapper';
+
+    const dot = document.createElement('span');
+    const valorNormalizado = texto.toUpperCase() === 'SIM' ? 'SIM' : 'NÃƒO';
+
+    dot.className =
+      valorNormalizado === 'SIM'
+        ? 'status-promocao-dot status-promocao-dot--sim'
+        : 'status-promocao-dot status-promocao-dot--nao';
+
+    const textoOculto = document.createElement('span');
+    textoOculto.className = 'status-promocao-texto';
+    textoOculto.textContent = valorNormalizado;
+
+    wrapper.appendChild(dot);
+    wrapper.appendChild(textoOculto);
+    td.appendChild(wrapper);
+    return;
+  }
+
+  td.textContent = valor ?? '';
+}
+
+// Preenche a tabela com todos os dados ao abrir a pÃ¡gina
+function carregarDadosIniciais() {
+  const corpoTabela = document.getElementById("tb_corpo");
+  if (!corpoTabela) return;
+
+  // sempre que a tabela Ã© reconstruÃ­da, a seleÃ§Ã£o antiga deixa de valer
+  linhaSelecionada = null;
+  linhasSelecionadas = [];
+
+  corpoTabela.innerHTML = "";
+
+  const linhasExibicao = construirLinhasTabelaComJoin();
+  if (!linhasExibicao.length) return;
+
+  const frag = document.createDocumentFragment();
+
+  linhasExibicao.forEach(function(r) {
+    const linha = document.createElement("tr");
+
+    for (let i = 0; i < r.length && i < 23; i++) {
+      const coluna = document.createElement("td");
+      preencherCelulaTabela(coluna, r[i], i);
+      linha.appendChild(coluna);
+    }
+
+    linha.addEventListener("click", function(evento) {
+      selecionarLinha(this, evento);
+    });
+
+    frag.appendChild(linha);
+  });
+
+  corpoTabela.appendChild(frag);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ===============================================================================================================================================
+// FUNÇÃO: SELECIONAR/DESSELECIONAR LINHA
+// ===============================================================================================================================================
+
+function obterLinhasSelecionadasValidas() {
+    linhasSelecionadas = linhasSelecionadas.filter(function(linha) {
+        return linha && linha.isConnected;
+    });
+    linhaSelecionada = linhasSelecionadas.length ? linhasSelecionadas[linhasSelecionadas.length - 1] : null;
+    return linhasSelecionadas;
+}
+
+function limparSelecaoLinhas() {
+    linhasSelecionadas.forEach(function(linha) {
+        if (linha && linha.classList) linha.classList.remove("selecionada");
+    });
+    linhasSelecionadas = [];
+    linhaSelecionada = null;
+}
+
+// Marca linha selecionada (verde) ou desmarca se clicar novamente
+function selecionarLinha(linha, evento) {
+    const selecaoMultipla = !!(evento && (evento.ctrlKey || evento.metaKey));
+    obterLinhasSelecionadasValidas();
+
+    if (selecaoMultipla) {
+        const indiceLinha = linhasSelecionadas.indexOf(linha);
+        if (indiceLinha >= 0) {
+            linha.classList.remove("selecionada");
+            linhasSelecionadas.splice(indiceLinha, 1);
+        } else {
+            linha.classList.add("selecionada");
+            linhasSelecionadas.push(linha);
+        }
+    } else {
+        const jaSelecionadaUnica = linhasSelecionadas.length === 1 && linhasSelecionadas[0] === linha;
+        limparSelecaoLinhas();
+        if (!jaSelecionadaUnica) {
+            linha.classList.add("selecionada");
+            linhasSelecionadas = [linha];
+        }
+    }
+
+    linhaSelecionada = linhasSelecionadas.length ? linhasSelecionadas[linhasSelecionadas.length - 1] : null;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ==================================================================================================================================================
+// FUNÃ‡Ã•ES: CONTROLE DO MODAL DE CARREGAMENTO
+// ==================================================================================================================================================
+
+// Exibe o modal de carregamento (tela preta com logo girando)
+function mostrarCarregamentoModal() {
+    document.getElementById('modalCarregamento').classList.add('ativo');
+}
+
+// Esconde o modal de carregamento
+function esconderCarregamentoModal() {
+    document.getElementById('modalCarregamento').classList.remove('ativo');
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ==============================================================================================================================================
+// FUNÃ‡ÃƒO: ATUALIZAR DADOS
+// ==============================================================================================================================================
+
+// Busca dados atualizados do Google Sheets sem recarregar a pÃ¡gina
+function atualizarDados() {
+  google.script.run
+    .withSuccessHandler(function(resultado) {
+      if (resultado && resultado.sucesso) {
+        dadosTabelaProd = resultado.dadosCompletosProd || [];
+        dadosTabelaSaida = resultado.dadosCompletosSaida || [];
+
+        // limpa seleÃ§Ã£o e contexto antes de remontar a interface
+        linhaSelecionada = null;
+        contextoPromocao = {
+          idProduto: '',
+          idPromocao: '',
+          origemLinha: null
+        };
+
+        carregarDadosIniciais();
+        carregarListaTodosProdutos();
+        carregarListaProdutosPromocao();
+        reconstruirMapasProdutos();
+
+        toastr.success("Dados atualizados com sucesso!");
+      } else {
+        toastr.error(resultado?.mensagem || "Erro ao atualizar os dados!");
+      }
+    })
+    .withFailureHandler(function(erro) {
+      console.error("Erro ao atualizar dados:", erro);
+      toastr.error("Erro ao atualizar dados. Verifique o console para mais detalhes.");
+    })
+    .buscarDadosAtualizadosProd();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ==============================================================================================================================================
+// FUNÃ‡ÃƒO: ATIVAR O LEITOR DE CÃ“DIGO DE BARRAS PARA OS CAMPOS DE EAN
+// ==============================================================================================================================================
+
+function habilitarLeitorSomenteEAN() {
+  const allowedIds = new Set(['inputEAN', 'inputEditarEAN']);
+
+  // Buffer para capturar o "digitar rÃ¡pido" do leitor
+  let buffer = '';
+  let lastTime = 0;
+  let scannerMode = false;
+
+  // Ajustes finos
+  const MAX_INTERVAL_MS = 35;   // intervalo tÃ­pico entre teclas do leitor (muito rÃ¡pido)
+  const MIN_LEN_TO_TREAT_AS_SCAN = 6; // mÃ­nimo de chars p/ considerar leitura (EAN geralmente > 8)
+
+  function isAllowedTarget(target) {
+    return target && target.id && allowedIds.has(target.id);
+  }
+
+  function isPrintableKey(e) {
+    // teclas que "produzem caractere"
+    return e.key && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey;
+  }
+
+  // Captura em fase "capture" para conseguir bloquear antes de preencher outros inputs
+  document.addEventListener('keydown', function (e) {
+    const target = e.target;
+
+    // Se estÃ¡ usando ctrl/cmd/alt, ignore (atalhos)
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+    const now = Date.now();
+    const dt = now - lastTime;
+    lastTime = now;
+
+    // Se veio muito rÃ¡pido, Ã© forte candidato a leitor
+    // (scannerMode liga apÃ³s alguns caracteres rÃ¡pidos em sequÃªncia)
+    if (dt > 0 && dt <= MAX_INTERVAL_MS) {
+      // sÃ³ acumula caracteres imprimÃ­veis e Enter
+      if (isPrintableKey(e)) {
+        buffer += e.key;
+      } else if (e.key === 'Enter') {
+        // final da leitura
+      }
+      if (buffer.length >= MIN_LEN_TO_TREAT_AS_SCAN) scannerMode = true;
+    } else {
+      // lento demais: provavelmente digitaÃ§Ã£o humana -> reseta
+      buffer = '';
+      scannerMode = false;
+      return;
+    }
+
+    // Se detectou padrÃ£o de leitor e o foco NÃƒO Ã© permitido, bloqueia a digitaÃ§Ã£o
+    if (scannerMode && !isAllowedTarget(target)) {
+      // bloqueia caracteres e Enter para nÃ£o "escrever" no campo errado
+      if (isPrintableKey(e) || e.key === 'Enter') {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    }
+  }, true);
+
+  // Quando Enter vem (final da leitura), decide se aplica ou descarta
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter') return;
+
+    const target = e.target;
+
+    // Se nÃ£o estamos em modo scanner, nÃ£o mexe
+    if (!scannerMode) {
+      buffer = '';
+      return;
+    }
+
+    // Se o foco Ã© permitido, preenche o input com o buffer (EAN)
+    if (isAllowedTarget(target)) {
+      e.preventDefault(); // evita submit acidental
+      target.value = buffer;
+
+      // Dispara evento input para seus listeners reagirem (filtro, validaÃ§Ã£o, etc.)
+      target.dispatchEvent(new Event('input', { bubbles: true }));
+    } else {
+      // foco nÃ£o permitido: apenas descarta (e jÃ¡ estamos bloqueando a digitaÃ§Ã£o)
+      e.preventDefault();
+    }
+
+    // reseta
+    buffer = '';
+    scannerMode = false;
+
+  }, true);
+
+  // Se o usuÃ¡rio clicar fora/blur, nÃ£o mantÃ©m buffer pendurado
+  document.addEventListener('click', function () {
+    buffer = '';
+    scannerMode = false;
+  }, true);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ==============================================================================================================================================
+// FUNÃ‡ÃƒO: HABILITAR E DESABILITAR CAMPOS DE SAÃDA
+// ==============================================================================================================================================
+// =================================================================================================
+// ATUALIZAÃ‡ÃƒO AVANÃ‡ADA DOS CAMPOS DE SAÃDA (CADASTRO + EDIÃ‡ÃƒO)
+// Regras:
+// A) CADASTRO (sem "Editar"):
+//  - Checkbox #inputProdutoCombo desmarcada: esconder todos os campos de saÃ­da
+//  - Checkbox marcada: mostrar todos, mas liberar em cascata:
+//      prod1 -> (preencheu) libera qtd1 -> (preencheu) libera val1 -> (preencheu) libera prod2 ... atÃ© linha 3
+//
+// B) EDIÃ‡ÃƒO (com "Editar"):
+//  - Checkbox #inputEditarProdutoCombo desmarcada: mostrar todos, porÃ©m bloqueados (disabled)
+//  - Checkbox marcada: liberar em cascata igual ao cadastro,
+//    MAS considerando campos jÃ¡ preenchidos ao abrir o modal:
+//      - todos os campos que jÃ¡ tiverem valor ficam habilitados
+//      - o "prÃ³ximo" campo na ordem tambÃ©m fica habilitado
+// =================================================================================================
+
+function atualizarCamposSaida() {
+  const get = (id) => document.getElementById(id);
+
+  function wrapperOf(el) {
+    return el?.closest?.('.form-group') ||
+           el?.closest?.('.dropdown-container') ||
+           el?.parentElement ||
+           el;
+  }
+
+  function setVisible(el, visible) {
+    if (!el) return;
+    const w = wrapperOf(el);
+    if (w) w.style.display = visible ? '' : 'none';
+  }
+
+  function setEnabled(el, enabled) {
+    if (!el) return;
+    el.disabled = !enabled;
+    el.style.backgroundColor = enabled ? '' : '#e0e0e0';
+  }
+
+  function hasValue(el) {
+    return !!(el && String(el.value || '').trim() !== '');
+  }
+
+  function clearValue(el) {
+    if (!el) return;
+    el.value = '';
+  }
+
+  function getOrder(prefix) {
+    return [
+      `input${prefix}Prodsaida1`, `input${prefix}Qtdsaida1`, `input${prefix}Valorsaida1`,
+      `input${prefix}Prodsaida2`, `input${prefix}Qtdsaida2`, `input${prefix}Valorsaida2`,
+      `input${prefix}Prodsaida3`, `input${prefix}Qtdsaida3`, `input${prefix}Valorsaida3`,
+    ];
+  }
+
+  // =========================
+  // CADASTRO (mantido igual)
+  // =========================
+  function applyCadastro() {
+    const chk = get('inputProdutoCombo') || get('inputCheckbox');
+    const checked = !!chk?.checked;
+
+    const els = getOrder('').map(get);
+
+    // Checkbox desmarcada -> ESCONDE, BLOQUEIA e LIMPA
+    if (!checked) {
+      els.forEach(el => {
+        setVisible(el, false);
+        setEnabled(el, false);
+        clearValue(el);
+      });
+      return;
+    }
+
+    // Checkbox marcada -> mostra tudo
+    els.forEach(el => setVisible(el, true));
+
+    // Cascata baseada em "tem valor" no anterior
+    for (let i = 0; i < els.length; i++) {
+      const el = els[i];
+      if (!el) continue;
+
+      if (i === 0) {
+        setEnabled(el, true);
+        continue;
+      }
+
+      const prev = els[i - 1];
+      const prevFilled = hasValue(prev);
+
+      if (prevFilled) {
+        setEnabled(el, true);
+      } else {
+        for (let j = i; j < els.length; j++) {
+          if (!els[j]) continue;
+          setEnabled(els[j], false);
+          clearValue(els[j]);
+        }
+        break;
+      }
+    }
+  }
+
+  // =========================
+  // EDIÃ‡ÃƒO (AJUSTADO)
+  // =========================
+  function applyEdicao() {
+    const chk = get('inputEditarProdutoCombo') || get('inputEditarCheckbox');
+    const checked = !!chk?.checked;
+
+    const els = getOrder('Editar').map(get);
+
+    // 1) Checkbox DESMARCADA: NÃƒO MOSTRA campos de saÃ­da (produto simples)
+    if (!checked) {
+      els.forEach(el => {
+        setVisible(el, false);
+        setEnabled(el, false);
+        // NÃƒO limpamos aqui para nÃ£o apagar dados se usuÃ¡rio sÃ³ desmarcar/remarcar
+      });
+      return;
+    }
+
+    // 2) Checkbox MARCADA: mostra tudo
+    els.forEach(el => setVisible(el, true));
+
+    // Se for "virar combo" (produto simples -> marcou checkbox), normalmente estarÃ¡ tudo vazio.
+    // Nesse caso, aplica cascata igual cadastro (e limpa/trava a partir do primeiro vazio).
+    const anyFilled = els.some(hasValue);
+
+    if (!anyFilled) {
+      // Cascata igual ao cadastro, porÃ©m SEM precisar digitar (baseado em valor)
+      for (let i = 0; i < els.length; i++) {
+        const el = els[i];
+        if (!el) continue;
+
+        if (i === 0) {
+          setEnabled(el, true); // prod1 habilitado
+          continue;
+        }
+
+        const prev = els[i - 1];
+        const prevFilled = hasValue(prev);
+
+        if (prevFilled) {
+          setEnabled(el, true);
+        } else {
+          // trava + limpa daqui pra frente (pra aparecerem em branco e na ordem)
+          for (let j = i; j < els.length; j++) {
+            if (!els[j]) continue;
+            setEnabled(els[j], false);
+            clearValue(els[j]);
+          }
+          break;
+        }
+      }
+      return;
+    }
+
+    // Caso "combo": jÃ¡ existem valores preenchidos ao abrir o modal.
+    // Queremos: campos preenchidos habilitados + o prÃ³ximo campo da sequÃªncia habilitado.
+    // ImplementaÃ§Ã£o: cascata baseada no valor do campo anterior, SEM limpar.
+    for (let i = 0; i < els.length; i++) {
+      const el = els[i];
+      if (!el) continue;
+
+      if (i === 0) {
+        setEnabled(el, true);
+        continue;
+      }
+
+      const prev = els[i - 1];
+      const prevFilled = hasValue(prev);
+
+      if (prevFilled) {
+        // se o anterior tem valor, o atual fica habilitado (mesmo que vazio: ele Ã© o "prÃ³ximo")
+        setEnabled(el, true);
+      } else {
+        // a partir do momento que o anterior estÃ¡ vazio, bloqueia os prÃ³ximos (sem limpar)
+        for (let j = i; j < els.length; j++) {
+          if (!els[j]) continue;
+          setEnabled(els[j], false);
+        }
+        break;
+      }
+    }
+  }
+
+  applyCadastro();
+  applyEdicao();
+
+  ['', 'Editar'].forEach(function(prefixo) {
+    for (let i = 1; i <= 3; i++) {
+      atualizarValorAtualProdutoSaida(prefixo, i);
+    }
+  });
+}
+
+
+// =================================================================================================
+// CONFIGURAÃ‡ÃƒO (chame 1 vez)
+// - Amarra eventos dos inputs e checkboxes
+// - Garante que seleÃ§Ã£o via UL (LI) tambÃ©m atualize a cascata, mesmo sem digitar
+// =================================================================================================
+function configurarCamposSaidaCombo() {
+  const idsParaOuvir = [
+    // Cadastro
+    'inputProdutoCombo', 'inputCheckbox',
+    'inputProdsaida1','inputQtdsaida1','inputValorsaida1',
+    'inputProdsaida2','inputQtdsaida2','inputValorsaida2',
+    'inputProdsaida3','inputQtdsaida3','inputValorsaida3',
+
+    // EdiÃ§Ã£o
+    'inputEditarProdutoCombo', 'inputEditarCheckbox',
+    'inputEditarProdsaida1','inputEditarQtdsaida1','inputEditarValorsaida1',
+    'inputEditarProdsaida2','inputEditarQtdsaida2','inputEditarValorsaida2',
+    'inputEditarProdsaida3','inputEditarQtdsaida3','inputEditarValorsaida3',
+  ];
+
+  // Set global (pra funcionar mesmo se vocÃª chamar configurarCamposSaidaCombo() mais de uma vez)
+  if (!document.__ulsSugestoesProd) document.__ulsSugestoesProd = new Set();
+  const ulsSugestoesProd = document.__ulsSugestoesProd;
+
+  idsParaOuvir.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    const isCheckbox = id.includes('Combo') || id.includes('Checkbox');
+    const isProdDrop  = id.includes('Prodsaida');
+
+    if (isCheckbox) {
+      el.addEventListener('change', atualizarCamposSaida);
+      el.addEventListener('click', atualizarCamposSaida);
+      return;
+    }
+
+    el.addEventListener('input', atualizarCamposSaida);
+    el.addEventListener('change', atualizarCamposSaida);
+    el.addEventListener('blur', atualizarCamposSaida);
+
+    if (isProdDrop) {
+      const container = el.closest('.dropdown-container') || el.parentElement;
+      const ul = container?.querySelector('ul.sugestoes') || container?.querySelector('ul');
+      if (ul) ulsSugestoesProd.add(ul);
+
+      el.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') setTimeout(atualizarCamposSaida, 0);
+      });
+    }
+  });
+
+  // Listener global CAPTURE: clique em LI dentro das ULs -> atualiza cascata depois de preencher o input
+  if (!document.__listenerDropdownSaidaCapture) {
+    document.addEventListener('click', function (e) {
+      const li = e.target.closest('li');
+      if (!li) return;
+
+      const ul = li.closest('ul');
+      if (!ul) return;
+
+      if (!document.__ulsSugestoesProd || !document.__ulsSugestoesProd.has(ul)) return;
+
+      setTimeout(atualizarCamposSaida, 0);
+    }, true);
+
+    document.__listenerDropdownSaidaCapture = true;
+  }
+
+  // Ajusta estado inicial
+  atualizarCamposSaida();
+}
+
+const controleToastLucro = {
+  cadastro: 0,
+  edicao: 0
+};
+
+function mostrarToastLucroComThrottle(chave, mensagem) {
+  const agora = Date.now();
+  const ultimo = controleToastLucro[chave] || 0;
+
+  if (agora - ultimo > 1200) {
+    toastr.warning(mensagem);
+    controleToastLucro[chave] = agora;
+  }
+}
+
+function recalcularLucroSimples() {
+  if (!inputCadPrecoVenda || !inputCadPrecoCusto || !inputCadLucro) return;
+
+  const venda = typeof inputCadPrecoVenda.obterValor === 'function'
+    ? inputCadPrecoVenda.obterValor()
+    : 0;
+
+  const custo = typeof inputCadPrecoCusto.obterValor === 'function'
+    ? inputCadPrecoCusto.obterValor()
+    : 0;
+
+  const lucro = venda - custo;
+
+  if (typeof inputCadLucro.definirValor === 'function') {
+    inputCadLucro.definirValor(lucro);
+  } else {
+    inputCadLucro.value = lucro.toFixed(2).replace('.', ',');
+  }
+}
+
+function recalcularLucroSimplesEdicao() {
+  if (!inputEditPrecoVenda || !inputEditPrecoCusto || !inputEditLucro) return;
+
+  const venda = typeof inputEditPrecoVenda.obterValor === 'function'
+    ? inputEditPrecoVenda.obterValor()
+    : 0;
+
+  const custo = typeof inputEditPrecoCusto.obterValor === 'function'
+    ? inputEditPrecoCusto.obterValor()
+    : 0;
+
+  const lucro = venda - custo;
+
+  if (typeof inputEditLucro.definirValor === 'function') {
+    inputEditLucro.definirValor(lucro);
+  } else {
+    inputEditLucro.value = lucro.toFixed(2).replace('.', ',');
+  }
+}
+
+function reconstruirMapasProdutos() {
+  mapaProdutoPorId.clear();
+  mapaProdutoPorNome.clear();
+
+  if (!Array.isArray(dadosTabelaProd)) return;
+
+  dadosTabelaProd.forEach(linha => {
+    if (!Array.isArray(linha)) return;
+
+    const id = String(linha[0] || '').trim();
+    const nome = String(linha[3] || '').trim();
+    const precoCusto = String(linha[16] || '').trim();
+
+    if (id) mapaProdutoPorId.set(id, linha);
+    if (nome) mapaProdutoPorNome.set(nome.toUpperCase(), linha);
+  });
+}
+
+function atualizarValorAtualProdutoSaida(prefixo, indice) {
+  const inputProduto = document.getElementById(`input${prefixo}Prodsaida${indice}`);
+  const inputValorAtual = document.getElementById(`input${prefixo}ValorAtualSaida${indice}`);
+  if (!inputProduto || !inputValorAtual) return;
+
+  const nomeProduto = String(inputProduto.value || '').trim().toUpperCase();
+  const linhaProduto = mapaProdutoPorNome.get(nomeProduto);
+  const precoAtual = linhaProduto ? parseMoedaBR(linhaProduto[15] || 0) : null;
+
+  if (typeof inputValorAtual.definirValor === 'function') {
+    inputValorAtual.definirValor(precoAtual);
+  } else {
+    inputValorAtual.value = precoAtual === null ? '' : String(precoAtual);
+  }
+}
+
+function configurarValoresAtuaisProdutosSaida() {
+  ['', 'Editar'].forEach(function(prefixo) {
+    for (let i = 1; i <= 3; i++) {
+      const inputProduto = document.getElementById(`input${prefixo}Prodsaida${i}`);
+      if (!inputProduto) continue;
+
+      inputProduto.addEventListener('input', function() {
+        atualizarValorAtualProdutoSaida(prefixo, i);
+      });
+      inputProduto.addEventListener('change', function() {
+        atualizarValorAtualProdutoSaida(prefixo, i);
+      });
+      inputProduto.addEventListener('blur', function() {
+        atualizarValorAtualProdutoSaida(prefixo, i);
+      });
+    }
+  });
+}
+
+function calcularTotaisCombo(prefixo = '') {
+  const isEdit = prefixo === 'Editar';
+
+  const inputCombo = document.getElementById(`input${prefixo}ProdutoCombo`);
+  const inputPrecoVenda = document.getElementById(`input${prefixo}PrecoVenda`);
+  const inputPrecoCusto = document.getElementById(`input${prefixo}PrecoCusto`);
+  const inputLucro = document.getElementById(`input${prefixo}Lucro`);
+
+  if (!inputCombo || !inputPrecoVenda || !inputPrecoCusto || !inputLucro) return;
+
+  if (!inputCombo.checked) {
+    inputPrecoVenda.readOnly = false;
+    inputPrecoCusto.readOnly = false;
+
+    inputPrecoVenda.classList.remove('input-bloqueado');
+    inputPrecoCusto.classList.remove('input-bloqueado');
+
+    if (isEdit) recalcularLucroSimplesEdicao();
+    else recalcularLucroSimples();
+
+    return;
+  }
+
+  let totalVenda = 0;
+  let totalCusto = 0;
+
+  for (let i = 1; i <= 3; i++) {
+    const inputProd = document.getElementById(`input${prefixo}Prodsaida${i}`);
+    const inputQtd = document.getElementById(`input${prefixo}Qtdsaida${i}`);
+    const inputValor = document.getElementById(`input${prefixo}Valorsaida${i}`);
+
+    const nomeProduto = String(inputProd?.value || '').trim().toUpperCase();
+    const qtd = parseFloat(String(inputQtd?.value || '0').replace(',', '.')) || 0;
+    const valorVenda = inputValor?.obterValor ? inputValor.obterValor() : 0;
+
+    if (nomeProduto && qtd > 0) {
+      totalVenda += qtd * valorVenda;
+
+      const linhaProduto = mapaProdutoPorNome.get(nomeProduto);
+      if (linhaProduto) {
+        const precoCustoItem = parseFloat(
+          String(linhaProduto[16] || '').replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.')
+        ) || 0;
+
+        totalCusto += qtd * precoCustoItem;
+      }
+    }
+  }
+
+  inputPrecoVenda.readOnly = true;
+  inputPrecoCusto.readOnly = true;
+
+  inputPrecoVenda.classList.add('input-bloqueado');
+  inputPrecoCusto.classList.add('input-bloqueado');
+
+  if (inputPrecoVenda.definirValor) inputPrecoVenda.definirValor(totalVenda);
+  if (inputPrecoCusto.definirValor) inputPrecoCusto.definirValor(totalCusto);
+
+  const lucro = totalVenda - totalCusto;
+  if (inputLucro.definirValor) inputLucro.definirValor(lucro);
+}
+
+function configurarCalculosAutomaticos() {
+  const idsCadastro = ['inputPrecoVenda', 'inputPrecoCusto'];
+  const idsEdicao = ['inputEditarPrecoVenda', 'inputEditarPrecoCusto'];
+
+  idsCadastro.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', recalcularLucroSimples);
+      el.addEventListener('change', recalcularLucroSimples);
+    }
+  });
+
+  idsEdicao.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', recalcularLucroSimplesEdicao);
+      el.addEventListener('change', recalcularLucroSimplesEdicao);
+    }
+  });
+
+  ['','Editar'].forEach(prefixo => {
+    const chk = document.getElementById(`input${prefixo}ProdutoCombo`);
+    if (chk) {
+      chk.addEventListener('change', function() {
+        calcularTotaisCombo(prefixo);
+      });
+    }
+
+    for (let i = 1; i <= 3; i++) {
+      ['Prodsaida', 'Qtdsaida', 'Valorsaida'].forEach(base => {
+        const el = document.getElementById(`input${prefixo}${base}${i}`);
+        if (el) {
+          el.addEventListener('input', function() {
+            calcularTotaisCombo(prefixo);
+          });
+          el.addEventListener('change', function() {
+            calcularTotaisCombo(prefixo);
+          });
+        }
+      });
+    }
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ============================================================================================================================
+// CONFIGURAÃ‡ÃƒO DO CALENDÃRIO DE PESQUISA
+// ============================================================================================================================
+
+// ====== Range Datepicker (2 cliques) ======
+function initDatepickerRange(input, i18nBR) {
+  const fmt = (d) => {
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yy = d.getFullYear();
+    return `${dd}/${mm}/${yy}`;
+  };
+
+  // Estado por input
+  let start = null;
+  let end = null;
+
+  const instance = M.Datepicker.init(input, {
+    format: 'dd/mm/yyyy',         // nÃ£o usamos direto no input, mas ok manter
+    maxDate: new Date(),
+    autoClose: false,             // IMPORTANTÃSSIMO: nÃ£o fecha no 1Âº clique
+    showClearBtn: true,
+    yearRange: 100,
+    i18n: i18nBR,
+
+    onOpen() {
+      // Quando abrir, redesenha highlight (se jÃ¡ tiver start/end)
+      setTimeout(() => highlightRange(instance, start, end), 0);
+    },
+
+    onSelect(date) {
+      // date vem como Date
+      if (!start || (start && end)) {
+        // 1Âº clique (ou reinÃ­cio)
+        start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        end = null;
+
+        // opcional: limpa o input atÃ© fechar, ou mostra o comeÃ§o
+        input.value = `${fmt(start)} - `;
+        setTimeout(() => highlightRange(instance, start, end), 0);
+        return;
+      }
+
+      // 2Âº clique
+      const picked = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+      // se clicou antes do start, inverte
+      if (picked.getTime() < start.getTime()) {
+        end = start;
+        start = picked;
+      } else {
+        end = picked;
+      }
+
+      input.value = `${fmt(start)} - ${fmt(end)}`;
+
+      setTimeout(() => highlightRange(instance, start, end), 0);
+
+      // agora pode fechar
+      instance.close();
+    }
+  });
+
+  // Clique no "Limpar" (Materialize nÃ£o expÃµe callback direto, entÃ£o limpamos ao apagar)
+  input.addEventListener("input", () => {
+    if (!input.value.trim()) {
+      start = null;
+      end = null;
+      const inst = M.Datepicker.getInstance(input);
+      if (inst) setTimeout(() => highlightRange(inst, start, end), 0);
+    }
+  });
+}
+
+
+// ====== Pinta o intervalo no calendÃ¡rio ======
+function highlightRange(instance, start, end) {
+  if (!instance || !instance.datepickerEl) return;
+
+  const root = instance.datepickerEl;
+  const tds = root.querySelectorAll(".datepicker-table td");
+
+  // limpa classes antigas
+  tds.forEach(td => {
+    td.classList.remove("range-start", "range-end", "range-between");
+  });
+
+  if (!start) return;
+
+  const startT = start.getTime();
+  const endT = end ? end.getTime() : null;
+
+  tds.forEach(td => {
+    const btn = td.querySelector(".datepicker-day-button");
+    if (!btn) return;
+
+    // tenta ler data do DOM do Materialize
+    const day = parseInt(btn.getAttribute("data-day"), 10);
+    const month = parseInt(btn.getAttribute("data-month"), 10);
+    const year = parseInt(btn.getAttribute("data-year"), 10);
+
+    if (Number.isNaN(day) || Number.isNaN(month) || Number.isNaN(year)) return;
+
+    const cellDate = new Date(year, month, day);
+    const cellT = cellDate.getTime();
+
+    // 1 clique: marca sÃ³ o inÃ­cio
+    if (!endT) {
+      if (cellT === startT) td.classList.add("range-start");
+      return;
+    }
+
+    // 2 cliques: marca intervalo
+    if (cellT === startT) td.classList.add("range-start");
+    else if (cellT === endT) td.classList.add("range-end");
+    else if (cellT > startT && cellT < endT) td.classList.add("range-between");
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =================================================================================================================================================
+// CONFIGURAÃ‡ÃƒO GERAL DOS DROPDOWNS SIMPLES
+// =================================================================================================================================================
+// Ao final desse bloco de cÃ³digo devemos informar quais elementos farÃ£o parte dessa configuraÃ§Ã£o
+
+function configurarDropdown(inputCampo, listaUl, dados) {
+  if (!inputCampo || !listaUl) return;
+  let timeoutId = null;
+
+  // EVENTO: DIGITAÃ‡ÃƒO NO CAMPO DE PESQUISA =======================================================
+  inputCampo.addEventListener('input', function (e) {
+    const texto = e.target.value;
+
+    // Cancela timeout anterior (debounce)
+    if (timeoutId) clearTimeout(timeoutId);
+
+    // Aguarda 300ms apÃ³s parar de digitar para filtrar
+    timeoutId = setTimeout(function () {
+      filtrarEMostrarSugestoes(texto, dados, listaUl, inputCampo);
+    }, 300);
+  });
+
+  document.addEventListener('click', function (e) {
+  // NÃƒO fecha se clicou dentro do prÃ³prio input ou dentro da lista
+  if (e.target === inputCampo || listaUl.contains(e.target)) return;
+
+  // NÃƒO fecha se clicou dentro do container do dropdown
+  if (e.target.closest('.dropdown-container')) return;
+
+  esconderSugestoes(listaUl);
+  });
+
+  // EVENTO: FOCO NO CAMPO - MOSTRA TODAS AS OPÃ‡Ã•ES ================================================
+  inputCampo.addEventListener('focus', function () {
+      mostrarSugestoes(dados, listaUl, inputCampo);
+  });
+
+  // EVENTO: CLICAR FORA - FECHA DROPDOWN ==========================================================
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('.dropdown-container')) {
+      esconderSugestoes(listaUl);
+    }
+  });
+
+  // EVENTO: NAVEGAÃ‡ÃƒO POR TECLADO =================================================================
+  inputCampo.addEventListener('keydown', function (e) {
+    const items = listaUl.querySelectorAll('li');
+    const selected = listaUl.querySelector('li.selected');
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        navegarSugestoes(items, selected, 'down');
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        navegarSugestoes(items, selected, 'up');
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selected) {
+          selecionarOpcao(selected.textContent, inputCampo, listaUl);
+        }
+        break;
+      case 'Escape':
+        esconderSugestoes(listaUl);
+        break;
+    }
+  });
+}
+
+
+// FUNÃ‡Ã•ES AUXILIARES==================================================================================================
+
+function obterListaTamanhosPorTipo(tipo) {
+  const valor = String(tipo || '').trim().toUpperCase();
+
+  if (valor === 'LETRA') return listaTamanhoLetra;
+  if (valor === 'NUMERICO') return listaTamanhoNumerico;
+  if (valor === 'KILO') return listaTamanhoKilo;
+  if (valor === 'LITRO') return listaTamanhoLitro;
+  if (valor === 'OUTRO') return listaTamanhoOutro;
+
+  return [];
+}
+
+function validarTipoETamanhoPermitidos(tipo, tamanho) {
+  const tipoNormalizado = String(tipo || '').trim().toUpperCase();
+  const tamanhoNormalizado = String(tamanho || '').trim().toUpperCase();
+
+  if (!tipoNormalizado && !tamanhoNormalizado) return { valido: true };
+  if (!listaTipoTamanho.includes(tipoNormalizado)) {
+    return { valido: false, mensagem: 'Selecione um tipo de tamanho disponÃ­vel na lista.' };
+  }
+
+  const tamanhosPermitidos = obterListaTamanhosPorTipo(tipoNormalizado);
+  if (!tamanhoNormalizado || !tamanhosPermitidos.includes(tamanhoNormalizado)) {
+    return { valido: false, mensagem: 'Selecione um tamanho disponÃ­vel na lista do tipo escolhido.' };
+  }
+
+  return { valido: true };
+}
+
+function configurarValidacaoTamanhosPermitidos() {
+  [
+    [inputCadTipoTamanho, inputCadTamanho],
+    [inputEditTipoTamanho, inputEditTamanho]
+  ].forEach(function(campos) {
+    const inputTipo = campos[0];
+    const inputTamanho = campos[1];
+    if (!inputTipo || !inputTamanho) return;
+
+    inputTipo.addEventListener('blur', function() {
+      setTimeout(function() {
+        const valor = String(inputTipo.value || '').trim().toUpperCase();
+        if (valor && !listaTipoTamanho.includes(valor)) {
+          inputTipo.value = '';
+          inputTamanho.value = '';
+          toastr.warning('Selecione um tipo de tamanho disponÃ­vel na lista.');
+        }
+      }, 120);
+    });
+
+    inputTamanho.addEventListener('blur', function() {
+      setTimeout(function() {
+        const tipo = String(inputTipo.value || '').trim().toUpperCase();
+        const tamanho = String(inputTamanho.value || '').trim().toUpperCase();
+        if (tamanho && !obterListaTamanhosPorTipo(tipo).includes(tamanho)) {
+          inputTamanho.value = '';
+          toastr.warning('Selecione um tamanho disponÃ­vel na lista do tipo escolhido.');
+        }
+      }, 120);
+    });
+  });
+}
+
+function obterListaSubcategoriasPorCategoria(nomeCategoria) {
+  const categoria = String(nomeCategoria || '').trim().toUpperCase();
+
+  return todassubcategorias
+    .filter(item => String(item.categoriaMae || '').trim().toUpperCase() === categoria)
+    .map(item => item.nome)
+    .sort((a, b) => a.localeCompare(b, 'pt-BR'));
+}
+
+// Filtra dados e exibe sugestÃµes ===================================================================================
+function filtrarEMostrarSugestoes(texto, dados, listaUl, inputCampo) {
+ const textoFiltro = (texto || '').trim().toLowerCase();
+  if (textoFiltro === '') {
+    mostrarSugestoes(dados, listaUl, inputCampo);
+    return;
+  }
+  const filtrados = dados.filter(item => item.toLowerCase().includes(textoFiltro));
+  mostrarSugestoes(filtrados, listaUl, inputCampo);
+}
+
+// Exibe a lista de sugestÃµes =======================================================================================
+function mostrarSugestoes(lista, listaUl, inputCampo) {
+  listaUl.innerHTML = '';
+
+  if (lista.length === 0) {
+    const noResults = document.createElement('li');
+    noResults.textContent = 'Nenhum resultado encontrado';
+    noResults.style.cssText = 'padding: 10px; color: #666; font-style: italic;';
+    listaUl.appendChild(noResults);
+  } else {
+    lista.forEach(item => {
+      const li = document.createElement('li');
+      li.textContent = item;
+      li.style.cssText = 'padding: 10px; cursor: pointer; border-bottom: 1px solid #eee;';
+
+      // Evento de clique no item
+      li.addEventListener('click', function () {
+        selecionarOpcao(item, inputCampo, listaUl);
+      });
+
+      // Evento de hover
+      li.addEventListener('mouseenter', function () {
+        const selected = listaUl.querySelector('li.selected');
+        if (selected) {
+          selected.classList.remove('selected');
+          selected.style.backgroundColor = '';
+        }
+        li.classList.add('selected');
+        li.style.backgroundColor = '#f5f5f5';
+      });
+
+      listaUl.appendChild(li);
+    });
+  }
+
+  listaUl.style.display = 'block';
+}
+
+// Esconde o dropdown ===============================================================================================
+function esconderSugestoes(listaUl) {
+  listaUl.style.display = 'none';
+}
+
+// Seleciona uma opÃ§Ã£o ==============================================================================================
+function selecionarOpcao(valor, inputCampo, listaUl) {
+  inputCampo.value = valor;
+  esconderSugestoes(listaUl);
+  inputCampo.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+// Navega pelas sugestÃµes com setas =================================================================================
+function navegarSugestoes(items, selected, direction) {
+  if (items.length === 0) return;
+
+  let index = -1;
+  if (selected) {
+    index = Array.from(items).indexOf(selected);
+    selected.classList.remove('selected');
+    selected.style.backgroundColor = '';
+  }
+
+  if (direction === 'down') {
+    index = index < items.length - 1 ? index + 1 : 0;
+  } else {
+    index = index > 0 ? index - 1 : items.length - 1;
+  }
+
+  items[index].classList.add('selected');
+  items[index].style.backgroundColor = '#f5f5f5';
+  items[index].scrollIntoView({ block: 'nearest' });
+}
+
+function configurarDropdownDependente(inputPai, listaUlPai, inputFilho, listaUlFilho, obterListaFilha) {
+  if (!inputPai || !listaUlPai || !inputFilho || !listaUlFilho) return;
+
+  inputFilho._dadosDropdown = [];
+
+  function atualizarFilho() {
+    const opcoes = obterListaFilha(inputPai.value);
+    inputFilho._dadosDropdown = opcoes;
+    inputFilho.value = '';
+    listaUlFilho.innerHTML = '';
+    esconderSugestoes(listaUlFilho);
+  }
+
+  inputFilho.addEventListener('focus', function () {
+    mostrarSugestoes(inputFilho._dadosDropdown || [], listaUlFilho, inputFilho);
+  });
+
+  inputFilho.addEventListener('click', function () {
+    mostrarSugestoes(inputFilho._dadosDropdown || [], listaUlFilho, inputFilho);
+  });
+
+  inputFilho.addEventListener('input', function (e) {
+    filtrarEMostrarSugestoes(
+      e.target.value,
+      inputFilho._dadosDropdown || [],
+      listaUlFilho,
+      inputFilho
+    );
+  });
+
+  document.addEventListener('click', function (e) {
+    if (e.target === inputFilho || listaUlFilho.contains(e.target)) return;
+    if (e.target.closest('.dropdown-container')) return;
+    esconderSugestoes(listaUlFilho);
+  });
+
+  inputPai.addEventListener('input', atualizarFilho);
+  inputPai.addEventListener('change', atualizarFilho);
+  inputPai.addEventListener('blur', atualizarFilho);
+
+  atualizarFilho();
+}
+
+
+// CONFIGURAÃ‡ÃƒO DE TODOS OS DROPDOWNS DA PÃGINA ======================================================================
+
+function configurarTodosDropdowns() {
+  // Produtos de saÃ­da
+  configurarDropdown(inputCadProdsaida1, listaUlCadProdsaida1, todosprodutos);
+  configurarDropdown(inputCadProdsaida2, listaUlCadProdsaida2, todosprodutos);
+  configurarDropdown(inputCadProdsaida3, listaUlCadProdsaida3, todosprodutos);
+  configurarDropdown(inputEditProdsaida1, listaUlEditProdsaida1, todosprodutos);
+  configurarDropdown(inputEditProdsaida2, listaUlEditProdsaida2, todosprodutos);
+  configurarDropdown(inputEditProdsaida3, listaUlEditProdsaida3, todosprodutos);
+
+  // Fornecedores
+  configurarDropdown(inputCadFornecedor, listaUlCadFornecedor, todosfornecedores);
+  configurarDropdown(inputEditFornecedor, listaUlEditFornecedor, todosfornecedores);
+
+  // Categorias
+  configurarDropdown(inputCadCategoria, listaUlCadCategoria, todascategorias);
+  configurarDropdown(inputEditCategoria, listaUlEditCategoria, todascategorias);
+
+  // Cores
+  configurarDropdown(inputCadCor, listaUlCadCor, todascores);
+  configurarDropdown(inputEditCor, listaUlEditCor, todascores);
+
+  // Tipo tamanho
+  configurarDropdown(inputCadTipoTamanho, listaUlCadTipoTamanho, listaTipoTamanho);
+  configurarDropdown(inputEditTipoTamanho, listaUlEditTipoTamanho, listaTipoTamanho);
+
+  // DependÃªncias
+  configurarDropdownDependente(
+    inputCadCategoria,
+    listaUlCadCategoria,
+    inputCadSubcategoria,
+    listaUlCadSubcategoria,
+    obterListaSubcategoriasPorCategoria
+  );
+
+  configurarDropdownDependente(
+    inputEditCategoria,
+    listaUlEditCategoria,
+    inputEditSubcategoria,
+    listaUlEditSubcategoria,
+    obterListaSubcategoriasPorCategoria
+  );
+
+  configurarDropdownDependente(
+    inputCadTipoTamanho,
+    listaUlCadTipoTamanho,
+    inputCadTamanho,
+    listaUlCadTamanho,
+    obterListaTamanhosPorTipo
+  );
+
+  configurarDropdownDependente(
+    inputEditTipoTamanho,
+    listaUlEditTipoTamanho,
+    inputEditTamanho,
+    listaUlEditTamanho,
+    obterListaTamanhosPorTipo
+  );
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =================================================================================================================================================
+// CONFIGURAÃ‡ÃƒO GERAL DOS DROPDOWNS MULTISELEÃ‡ÃƒO - USADOS NA PARTE DE PESQUISA
+// =================================================================================================================================================
+// Essa funÃ§Ã£o serÃ¡ chamada dentro da funÃ§Ã£o de abrir modal de pesquisa, onde passaremos os elementos que farÃ£o parte dessa configuraÃ§Ã£o
+
+function configurarDropdownMulti(inputCampo, listaUl, dados, separador = "; ") {
+  if (!inputCampo || !listaUl) return;
+
+  // Guarda os selecionados (mantÃ©m mesmo com filtro)
+  const selecionados = new Set();
+
+  const normalizar = (v) => String(v ?? "").trim();
+  const lower = (v) => normalizar(v).toLowerCase();
+
+  function obterOpcoesValidas() {
+    return Array.from(new Set((dados || []).map(normalizar).filter(Boolean)));
+  }
+
+  String(inputCampo.value || "")
+    .split(";")
+    .map(normalizar)
+    .filter(Boolean)
+    .forEach(valor => selecionados.add(valor));
+
+  function atualizarInput() {
+    inputCampo.value = Array.from(selecionados).join(separador);
+  }
+
+  function render(lista) {
+    listaUl.innerHTML = "";
+
+    const opcoesTodas = obterOpcoesValidas();
+
+    if (opcoesTodas.length) {
+      const todosSelecionados = opcoesTodas.every(valor => selecionados.has(valor));
+      const algunsSelecionados = opcoesTodas.some(valor => selecionados.has(valor));
+      const liTodos = document.createElement("li");
+      liTodos.style.cssText = "padding: 10px; border-bottom: 1px solid #ddd; display:flex; align-items:center; gap:10px; font-weight:700;";
+
+      const chkTodos = document.createElement("input");
+      chkTodos.type = "checkbox";
+      chkTodos.checked = todosSelecionados;
+      chkTodos.indeterminate = !todosSelecionados && algunsSelecionados;
+      chkTodos.style.cursor = "pointer";
+
+      const labelTodos = document.createElement("span");
+      labelTodos.textContent = "Selecionar todos";
+      labelTodos.style.cssText = "cursor: pointer; user-select: none;";
+
+      liTodos.addEventListener("click", () => {
+        const marcarTodos = !opcoesTodas.every(valor => selecionados.has(valor));
+        opcoesTodas.forEach(valor => {
+          if (marcarTodos) selecionados.add(valor);
+          else selecionados.delete(valor);
+        });
+        atualizarInput();
+        render(lista);
+      });
+
+      liTodos.appendChild(chkTodos);
+      liTodos.appendChild(labelTodos);
+      listaUl.appendChild(liTodos);
+    }
+
+    if (!lista || lista.length === 0) {
+      const li = document.createElement("li");
+      li.textContent = "Nenhum resultado encontrado";
+      li.style.cssText = "padding: 10px; color: #666; font-style: italic;";
+      listaUl.appendChild(li);
+      listaUl.style.display = "block";
+      return;
+    }
+
+    lista.forEach(item => {
+      const valor = normalizar(item);
+      if (!valor) return;
+
+      const li = document.createElement("li");
+      li.style.cssText = "padding: 10px; border-bottom: 1px solid #eee; display:flex; align-items:center; gap:10px;";
+
+      const chk = document.createElement("input");
+      chk.type = "checkbox";
+      chk.checked = selecionados.has(valor);
+      chk.style.cursor = "pointer";
+
+      const label = document.createElement("span");
+      label.textContent = valor;
+      label.style.cssText = "cursor: pointer; user-select: none;";
+
+      function alternar() {
+        if (chk.checked) selecionados.add(valor);
+        else selecionados.delete(valor);
+        atualizarInput();
+      }
+
+      // clique no checkbox
+      chk.addEventListener("change", alternar);
+
+      // clique no texto tambÃ©m alterna
+      label.addEventListener("click", () => {
+        chk.checked = !chk.checked;
+        alternar();
+      });
+
+      li.appendChild(chk);
+      li.appendChild(label);
+      listaUl.appendChild(li);
+    });
+
+    listaUl.style.display = "block";
+  }
+
+  function mostrarTudo() {
+    render(dados);
+  }
+
+  function filtrar() {
+    const texto = lower(inputCampo.value);
+    // Filtra digitando: aqui vamos considerar o "Ãºltimo termo" apÃ³s ';'
+    // para permitir que o usuÃ¡rio continue digitando mesmo com itens jÃ¡ selecionados.
+    const ultimoTermo = texto.split(";").pop().trim();
+
+    if (!ultimoTermo) {
+      mostrarTudo();
+      return;
+    }
+
+    const filtrados = dados.filter(item => lower(item).includes(ultimoTermo));
+    render(filtrados);
+  }
+
+  // Abre no clique/focus
+  inputCampo.addEventListener("focus", mostrarTudo);
+  inputCampo.addEventListener("click", mostrarTudo);
+
+  // Filtra ao digitar
+  inputCampo.addEventListener("input", () => {
+    // debounce simples (opcional)
+    clearTimeout(inputCampo._ddTimeout);
+    inputCampo._ddTimeout = setTimeout(filtrar, 150);
+  });
+
+  // Fechar ao clicar fora
+  document.addEventListener("click", (e) => {
+    if (e.target === inputCampo) return;
+    if (listaUl.contains(e.target)) return;
+    if (e.target.closest(".dropdown-container")) return;
+    listaUl.style.display = "none";
+  });
+
+  // (Opcional) ESC fecha
+  inputCampo.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") listaUl.style.display = "none";
+  });
+
+  // Exponho um helper se vocÃª quiser limpar depois
+  inputCampo._clearMulti = () => {
+    selecionados.clear();
+    atualizarInput();
+    listaUl.style.display = "none";
+  };
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ====================================================================================================================================================
+// FUNÃ‡ÃƒO: FILTRAR TABELA
+// ====================================================================================================================================================
+
+// Filtra dados da tabela baseado na pesquisa
+function FiltroProd(){
+
+    var CampoProduto = document.getElementById("pesquisa");
+    var CorpoTabela = document.getElementById("tb_corpo");
+    var produto = CampoProduto.value.trim();
+
+    // Valida se o campo estÃ¡ preenchido
+    if(produto === ""){
+        toastr.warning('Antes de pesquisar selecione um produto!');
+        return false;
+    }
+
+    // Limpa a tabela
+    while(CorpoTabela.hasChildNodes()){
+        CorpoTabela.removeChild(CorpoTabela.lastChild);
+    }
+
+    // Verifica se hÃ¡ dados disponÃ­veis
+    if (typeof dadosTabela === 'undefined' || !dadosTabela || !Array.isArray(dadosTabela)) {
+        toastr.error('Dados nÃ£o disponÃ­veis. Recarregue a pÃ¡gina.');
+        return false;
+    }
+
+    var criterio = produto.toLowerCase();
+    
+    // Filtra dados pela coluna de nome (Ã­ndice 1)
+    var dadosFiltrados = dadosTabela.filter(function(linha){
+        var nomeProduto = linha[1] ? linha[1].toString().toLowerCase() : "";
+        return nomeProduto === criterio;
+    });
+
+    // Verifica se encontrou resultados
+    if(dadosFiltrados.length === 0){
+        toastr.warning('NÃ£o foram encontrados produtos para essa pesquisa!');
+        return false;
+    }
+
+    // Preenche tabela com dados filtrados
+    dadosFiltrados.forEach(function(r){
+        var Linha = document.createElement("tr");
+        
+        // Preenche as 12 colunas
+        for (var i = 0; i < r.length && i < 12; i++) {
+            var Coluna = document.createElement("td");
+            Coluna.textContent = r[i]; 
+            Linha.appendChild(Coluna);
+        }
+
+        // Adiciona evento de clique
+        Linha.addEventListener("click", function(evento) {
+            selecionarLinha(this, evento);
+        });
+
+        CorpoTabela.appendChild(Linha);
+    });
+
+    toastr.success('Encontrado(s) ' + dadosFiltrados.length + ' registro(s)!');
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ==============================================================================================================================================
+// FUNÃ‡ÃƒO: EXTRAIR DADOS
+// ==============================================================================================================================================
+
+function exportarTabelaParaCSV(nomeArquivo) {
+  const thead = document.querySelector("#tb_cabecalho");
+  const tbody = document.querySelector("#tb_corpo");
+
+  if (!thead || !tbody) {
+    console.warn("CabeÃ§alho ou corpo da tabela nÃ£o encontrado.");
+    return;
+  }
+
+  // ===== helpers =====
+  const limparTexto = (t) => String(t ?? "").replace(/\s+/g, " ").trim();
+
+  // Escapa CSV: aspas duplas e vÃ­rgulas/quebras de linha
+  const csvEscape = (valor) => {
+    const v = limparTexto(valor);
+    const precisaAspas = /[",\n\r]/.test(v);
+    const vEsc = v.replace(/"/g, '""');
+    return precisaAspas ? `"${vEsc}"` : vEsc;
+  };
+
+  const linhasCSV = [];
+
+  // ===== cabeÃ§alho =====
+  const ths = Array.from(thead.querySelectorAll("th"));
+  const cabecalho = ths.map(th => csvEscape(th.textContent));
+  linhasCSV.push(cabecalho.join(",")); // separado por vÃ­rgula
+
+  // ===== corpo =====
+  const trs = Array.from(tbody.querySelectorAll("tr"));
+  trs.forEach(tr => {
+    const tds = Array.from(tr.querySelectorAll("td"));
+    const linha = tds.map(td => csvEscape(td.textContent));
+    linhasCSV.push(linha.join(","));
+  });
+
+  // Monta arquivo (UTF-8 com BOM pra abrir bem no Excel PT-BR)
+  const csvFinal = "\uFEFF" + linhasCSV.join("\r\n");
+  const blob = new Blob([csvFinal], { type: "text/csv;charset=utf-8;" });
+
+  // Download
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = nomeArquivo || "export.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ================================================================================================================================================
+// FUNÃ‡ÃƒO: LIMPAR FILTROS
+// ================================================================================================================================================
+// Remove filtros e restaura tabela completa
+function Limpar() {
+    
+    // Recarrega todos os dados
+    carregarDadosIniciais();
+    document.getElementById("inputPesquisarNome").value = "";
+    document.getElementById("inputPesquisarCategoria").value = "";
+    document.getElementById("inputPesquisarEAN").value = "";
+    document.getElementById("inputPesquisarMarca").value = "";
+    document.getElementById("inputPesquisarFornecedor").value = "";
+    document.getElementById("inputPesquisarProdSaida").value = "";
+    document.getElementById("inputPesquisarCombo").value = "";
+    document.getElementById("inputPesquisarDataCadastro").value = "";
+    
+    toastr.info('Filtros removidos com sucesso!');
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ==================================================================================================================================================
+// MODAL DE PESQUISA
+// ==================================================================================================================================================
+
+// Abre o modal de pesquisa --------------------------------------------------------------------------------------
+
+function abrirModalPesquisa() {
+    // 1) Abre o modal
+    const modal = document.getElementById("modalPesquisa");
+    if (!modal) return;
+    modal.classList.add("ativo");
+
+    // 2) Pega as linhas atualmente exibidas na tabela (interface)
+    const tbody = document.getElementById("tb_corpo");
+    if (!tbody) return;
+
+    const linhas = Array.from(tbody.querySelectorAll("tr"));
+
+    // 3) Coleta valores distintos (coluna 3 = index 2 / coluna 5 = index 4)
+    const setNome = new Set();
+    const setCategoria = new Set();
+    const setEAN = new Set();
+    const setMarca = new Set();
+    const setFornecedor = new Set();
+    const setCombo = new Set();
+    const setProdsaida = new Set();
+
+    linhas.forEach(tr => {
+
+      const tds = tr.querySelectorAll("td");
+      if (!tds || tds.length < 23) return;
+
+      const nome = (tds[2].textContent || "").trim();
+      const categoria = (tds[4].textContent || "").trim();
+      const ean = (tds[6].textContent || "").trim();
+      const marca = (tds[7].textContent || "").trim();
+      const fornecedor = (tds[11].textContent || "").trim();
+      const combo = (tds[17].textContent || "").trim();
+      const prodsaida = (tds[18].textContent || "").trim();
+
+      if (nome) setNome.add(nome);
+      if (categoria) setCategoria.add(categoria);
+      if (ean) setEAN.add(ean);
+      if (marca) setMarca.add(marca);
+      if (fornecedor) setFornecedor.add(fornecedor);
+      if (combo) setCombo.add(combo);
+      if (prodsaida) setProdsaida.add(prodsaida);
+      
+    });
+
+    // 4) Ordena (opcional, fica melhor)
+    const nomes = Array.from(setNome).sort((a, b) => a.localeCompare(b));
+    const categorias = Array.from(setCategoria).sort((a, b) => a.localeCompare(b));
+    const eans = Array.from(setEAN).sort((a, b) => a.localeCompare(b));
+    const marcas = Array.from(setMarca).sort((a, b) => a.localeCompare(b));
+    const fornecedores = Array.from(setFornecedor).sort((a, b) => a.localeCompare(b));
+    const combos = Array.from(setCombo).sort((a, b) => a.localeCompare(b));
+    const prodsaidas = Array.from(setProdsaida).sort((a, b) => a.localeCompare(b));
+
+    configurarDropdownMulti(inputPesquisarNome, listaUlPesquisarNome, nomes);
+    configurarDropdownMulti(inputPesquisarCategoria, listaUlPesquisarCategoria, categorias);
+    configurarDropdownMulti(inputPesquisarEAN, listaUlPesquisarEAN, eans);
+    configurarDropdownMulti(inputPesquisarMarca, listaUlPesquisarMarca, marcas);
+    configurarDropdownMulti(inputPesquisarFornecedor, listaUlPesquisarFornecedor, fornecedores);
+    configurarDropdownMulti(inputPesquisarCombo, listaUlPesquisarCombo, combos);
+    configurarDropdownMulti(inputPesquisarProdsaida, listaUlPesquisarProdsaida, prodsaidas);
+
+}
+
+
+
+
+
+
+// Fecha o modal e limpa os campos ------------------------------------------------------------------------------------
+
+function fecharModalPesquisa() {
+    document.getElementById("modalPesquisa").classList.remove("ativo");
+    document.querySelectorAll("#modalPesquisa .sugestoes").forEach(lista => lista.style.display = "none");
+}
+
+
+
+
+
+// Pega os dados dos inputs e aplica a pesquisa na tabela --------------------------------------------------------------
+
+function aplicarPesquisaNaTabela() {
+
+  const inputNom = document.getElementById("inputPesquisarNome");
+  const inputCat = document.getElementById("inputPesquisarCategoria");
+  const inputEan = document.getElementById("inputPesquisarEAN");
+  const inputMar = document.getElementById("inputPesquisarMarca");
+  const inputFor = document.getElementById("inputPesquisarFornecedor");
+  const inputPro = document.getElementById("inputPesquisarProdSaida");
+  const inputCom = document.getElementById("inputPesquisarCombo");
+  const inputCad = document.getElementById("inputPesquisarDataCadastro");
+
+  const nomRaw = (inputNom?.value || "").trim();
+  const catRaw = (inputCat?.value || "").trim();
+  const eanRaw = (inputEan?.value || "").trim();
+  const marRaw = (inputMar?.value || "").trim();
+  const forRaw = (inputFor?.value || "").trim();
+  const proRaw = (inputPro?.value || "").trim();
+  const comRaw = (inputCom?.value || "").trim();
+  const cadRaw = (inputCad?.value || "").trim();
+
+  // 2) Se nenhum campo preenchido
+  if (!nomRaw && !catRaw && !eanRaw && !marRaw && !forRaw && !proRaw && !comRaw && !cadRaw) {
+    // Use sua lib de toast se existir, senÃ£o alert
+    if (window.toastr) toastr.warning("Preencha ao menos um campo!");
+    else alert("Preencha ao menos um campo!");
+    return;
+  }
+
+  // Pega linhas atuais exibidas
+  const tbody = document.getElementById("tb_corpo");
+  if (!tbody) return;
+
+  const linhasDOM = Array.from(tbody.querySelectorAll("tr"));
+
+  // Transforma as linhas DOM em array de textos [col1..col8]
+  const linhas = linhasDOM.map(tr => Array.from(tr.querySelectorAll("td")).map(td => (td.textContent || "").trim()));
+
+  // ====== Monta critÃ©rios ======
+  const normalizar = (v) => String(v ?? "").trim();
+  const normLower = (v) => normalizar(v).toLowerCase();
+
+  // Atividade / Filial: split por ";" e OR dentro do campo
+  const listaNom = parseListaMulti(nomRaw); // array de strings
+  const listaCat = parseListaMulti(catRaw);
+  const listaEan = parseListaMulti(eanRaw);
+  const listaMar = parseListaMulti(marRaw);
+  const listaFor = parseListaMulti(forRaw);
+  const listaPro = parseListaMulti(proRaw);
+  const listaCom = parseListaMulti(comRaw);
+
+  // Datas: "dd/MM/yyyy - dd/MM/yyyy"
+  const rangeCad = parseRangeBR(cadRaw);
+
+  // ====== Filtra (AND entre campos) ======
+  const filtradas = linhas.filter(r => {
+
+    if (listaNom.length > 0) {
+      const valor = normLower(r[2]);
+      const ok = listaNom.some(x => normLower(x) === valor);
+      if (!ok) return false;
+    }
+
+    // AND 2: Subcategoria
+    if (listaCat.length > 0) {
+      const valor = normLower(r[4]);
+      const ok = listaCat.some(x => normLower(x) === valor);
+      if (!ok) return false;
+    }
+
+    // AND 2: Subcategoria
+    if (listaEan.length > 0) {
+      const valor = normLower(r[6]);
+      const ok = listaEan.some(x => normLower(x) === valor);
+      if (!ok) return false;
+    }
+
+    // AND 2: Subcategoria
+    if (listaMar.length > 0) {
+      const valor = normLower(r[7]);
+      const ok = listaMar.some(x => normLower(x) === valor);
+      if (!ok) return false;
+    }
+
+    // AND 2: Subcategoria
+    if (listaFor.length > 0) {
+      const valor = normLower(r[11]);
+      const ok = listaFor.some(x => normLower(x) === valor);
+      if (!ok) return false;
+    }
+
+    if (listaPro.length > 0) {
+      const valor = normLower(r[17]);
+      const ok = listaPro.some(x => normLower(x) === valor);
+      if (!ok) return false;
+    }
+
+    if (listaCom.length > 0) {
+      const valor = normLower(r[18]);
+      const ok = listaCom.some(x => normLower(x) === valor);
+      if (!ok) return false;
+    }
+
+    // AND 4: PerÃ­odo de cadastro
+    if (rangeCad) {
+      const ts = parseDataHoraBRToTS(r[21]);
+      if (!ts) return false;
+      if (ts < rangeCad.iniTS || ts > rangeCad.fimTS) return false;
+    }
+
+    return true;
+  });
+
+  // ====== Renderiza a tabela com o resultado filtrado ======
+  renderTabelaAPartirDeArray(filtradas);
+  fecharModalPesquisa();
+
+  // (Opcional) fechar modal de pesquisa se quiser
+  // document.getElementById("modalPesquisa")?.classList.remove("ativo");
+}
+
+
+// ===== Helpers =====
+
+// "nome1; nome2; nome3" -> ["nome1","nome2","nome3"]
+function parseListaMulti(str) {
+  const s = String(str || "").trim();
+  if (!s) return [];
+  return s
+    .split(";")
+    .map(x => x.trim())
+    .filter(Boolean);
+}
+
+// "dd/MM/yyyy - dd/MM/yyyy" -> {iniTS, fimTS} (fim no final do dia)
+function parseRangeBR(str) {
+  const s = String(str || "").trim();
+  if (!s) return null;
+
+  const parts = s.split("-").map(p => p.trim());
+  if (parts.length < 2) return null;
+
+  const ini = parseDataBRToTS(parts[0], false);
+  const fim = parseDataBRToTS(parts[1], true);
+
+  if (!ini || !fim) return null;
+
+  return { iniTS: ini, fimTS: fim };
+}
+
+// "dd/MM/yyyy" -> timestamp (00:00:00) ou (23:59:59)
+function parseDataBRToTS(str, fimDoDia) {
+  const s = String(str || "").trim();
+  const [dd, MM, yyyy] = s.split("/").map(n => parseInt(n, 10));
+  if (!yyyy || !MM || !dd) return 0;
+
+  const h = fimDoDia ? 23 : 0;
+  const m = fimDoDia ? 59 : 0;
+  const sec = fimDoDia ? 59 : 0;
+
+  return new Date(yyyy, MM - 1, dd, h, m, sec).getTime();
+}
+
+// "dd/MM/yyyy HH:mm:ss" OU "dd/MM/yyyy" -> timestamp
+function parseDataHoraBRToTS(str) {
+  const s = String(str || "").trim();
+  if (!s) return 0;
+
+  const [dataParte, horaParte] = s.split(" ");
+  if (!dataParte) return 0;
+
+  const [dd, MM, yyyy] = dataParte.split("/").map(n => parseInt(n, 10));
+  if (!yyyy || !MM || !dd) return 0;
+
+  let hh = 0, mm = 0, ss = 0;
+  if (horaParte) {
+    const hparts = horaParte.split(":").map(n => parseInt(n, 10));
+    hh = isNaN(hparts[0]) ? 0 : hparts[0];
+    mm = isNaN(hparts[1]) ? 0 : hparts[1];
+    ss = isNaN(hparts[2]) ? 0 : hparts[2];
+  }
+
+  return new Date(yyyy, MM - 1, dd, hh, mm, ss).getTime();
+}
+
+// Renderiza a tabela (sÃ³ reescreve o tbody com as linhas filtradas)
+function renderTabelaAPartirDeArray(linhas) {
+  const tbody = document.getElementById("tb_corpo");
+  if (!tbody) return;
+
+  tbody.innerHTML = "";
+
+  linhas.forEach(function(r) {
+    const tr = document.createElement("tr");
+
+    for (let i = 0; i < r.length && i < 23; i++) {
+      const td = document.createElement("td");
+      preencherCelulaTabela(td, r[i], i);
+      tr.appendChild(td);
+    }
+
+    tr.addEventListener("click", function (evento) {
+      selecionarLinha(this, evento);
+    });
+
+    tbody.appendChild(tr);
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =====================================================================================================================================================
+// MODAL DE CADASTRO - FUNÃ‡Ã•ES
+// =====================================================================================================================================================
+
+// Abre o modal de cadastro
+function abrirModalCadastro() {
+    document.getElementById("modalCadastro").classList.add("ativo");
+    document.getElementById("inputNome").focus();
+}
+
+
+
+// Fecha o modal e limpa os campos
+function fecharModalCadastro() {
+  document.getElementById("modalCadastro").classList.remove("ativo");
+
+  document.getElementById("inputNome").value = "";
+  document.getElementById("inputCodigoInterno").value = "";
+  document.getElementById("inputCategoria").value = "";
+  document.getElementById("inputSubcategoria").value = "";
+  document.getElementById("inputEAN").value = "";
+  document.getElementById("inputMarca").value = "";
+  document.getElementById("inputCor").value = "";
+  document.getElementById("inputFornecedor").value = "";
+  document.getElementById("inputEstmaximo").value = "";
+  document.getElementById("inputEstminimo").value = "";
+  document.getElementById("inputTipoTamanho").value = "";
+  document.getElementById("inputTamanho").value = "";
+  document.getElementById("inputPrecoVenda").value = "";
+  document.getElementById("inputPrecoCusto").value = "";
+  document.getElementById("inputLucro").value = "";
+  document.getElementById("inputObservacao").value = "";
+
+  for (let i = 1; i <= 3; i++) {
+    document.getElementById(`inputProdsaida${i}`).value = "";
+    document.getElementById(`inputQtdsaida${i}`).value = "";
+    document.getElementById(`inputValorAtualSaida${i}`).value = "";
+    document.getElementById(`inputValorsaida${i}`).value = "";
+  }
+
+  const chk = document.getElementById("inputProdutoCombo");
+  chk.checked = false;
+  chk.disabled = false;
+
+  const inputPrecoVenda = document.getElementById("inputPrecoVenda");
+  const inputPrecoCusto = document.getElementById("inputPrecoCusto");
+
+  inputPrecoVenda.readOnly = false;
+  inputPrecoCusto.readOnly = false;
+  inputPrecoVenda.classList.remove("input-bloqueado");
+  inputPrecoCusto.classList.remove("input-bloqueado");
+
+  if (typeof atualizarCamposSaida === "function") {
+    atualizarCamposSaida();
+  }
+}
+
+
+
+// Executa o cadastro da fornecedor
+function cadastrar() {
+  mostrarCarregamentoModal();
+
+  const nomeproduto = document.getElementById("inputNome").value.trim().toUpperCase();
+  const codigoInterno = document.getElementById("inputCodigoInterno").value.trim().toUpperCase();
+  const categoria = document.getElementById("inputCategoria").value.trim().toUpperCase();
+  const subcategoria = document.getElementById("inputSubcategoria").value.trim().toUpperCase();
+  const ean = document.getElementById("inputEAN").value.trim();
+  const marca = document.getElementById("inputMarca").value.trim().toUpperCase();
+  const tipoTamanho = document.getElementById("inputTipoTamanho").value.trim().toUpperCase();
+  const tamanho = document.getElementById("inputTamanho").value.trim().toUpperCase();
+  const cor = document.getElementById("inputCor").value.trim().toUpperCase();
+  const fornecedor = document.getElementById("inputFornecedor").value.trim().toUpperCase();
+  const estmaximo = document.getElementById("inputEstmaximo").value.trim();
+  const estminimo = document.getElementById("inputEstminimo").value.trim();
+  const precovenda = document.getElementById("inputPrecoVenda").value.trim();
+  const precocusto = document.getElementById("inputPrecoCusto").value.trim();
+  const observacao = document.getElementById("inputObservacao").value.trim().toUpperCase();
+  const produtocombo = document.getElementById("inputProdutoCombo").checked ? "SIM" : "NÃƒO";
+
+  const prodsaida1 = document.getElementById("inputProdsaida1").value.trim().toUpperCase();
+  const qtdsaida1 = document.getElementById("inputQtdsaida1").value.trim();
+  const valorsaida1 = document.getElementById("inputValorsaida1").value.trim();
+
+  const prodsaida2 = document.getElementById("inputProdsaida2").value.trim().toUpperCase();
+  const qtdsaida2 = document.getElementById("inputQtdsaida2").value.trim();
+  const valorsaida2 = document.getElementById("inputValorsaida2").value.trim();
+
+  const prodsaida3 = document.getElementById("inputProdsaida3").value.trim().toUpperCase();
+  const qtdsaida3 = document.getElementById("inputQtdsaida3").value.trim();
+  const valorsaida3 = document.getElementById("inputValorsaida3").value.trim();
+
+  if (nomeproduto === "") {
+    toastr.warning("Por favor, informe o nome do produto!");
+    document.getElementById("inputNome").focus();
+    esconderCarregamentoModal();
+    return;
+  }
+
+  const validacaoTamanho = validarTipoETamanhoPermitidos(tipoTamanho, tamanho);
+  if (!validacaoTamanho.valido) {
+    toastr.warning(validacaoTamanho.mensagem);
+    esconderCarregamentoModal();
+    return;
+  }
+
+  const validacaoEstoque = validarEstoqueMaximoMinimo(estmaximo, estminimo);
+  if (!validacaoEstoque.valido) {
+    toastr.warning(validacaoEstoque.mensagem);
+    esconderCarregamentoModal();
+    return;
+  }
+
+  if (!document.getElementById("inputProdutoCombo").checked && precovenda === "") {
+    toastr.warning("Por favor, informe o preÃ§o de venda do produto!");
+    document.getElementById("inputPrecoVenda").focus();
+    esconderCarregamentoModal();
+    return;
+  }
+
+  const categoriaObj = itensCat.find(item => String(item.nome || '').trim().toUpperCase() === categoria);
+  const subcategoriaObj = (Array.isArray(todassubcategorias) ? todassubcategorias : [])
+  .find(item => String(item.nome || '').trim().toUpperCase() === subcategoria);
+  const fornecedorObj = itensForn.find(item => String(item.nome || '').trim().toUpperCase() === fornecedor);
+
+  const codigoCategoria = categoriaObj ? categoriaObj.codigo : "";
+  const codigoSubcategoria = subcategoriaObj ? subcategoriaObj.codigo : "";
+  const codigoFornecedor = fornecedorObj ? fornecedorObj.codigo : "";
+
+  google.script.run
+    .withSuccessHandler(function(resultado) {
+      if (resultado.sucesso) {
+        atualizarDados();
+        fecharModalCadastro();
+        esconderCarregamentoModal();
+        toastr.success("Produto cadastrado com sucesso!");
+      } else {
+        esconderCarregamentoModal();
+        toastr.error(resultado.mensagem || "Erro ao cadastrar produto!");
+      }
+    })
+    .withFailureHandler(function(erro) {
+      console.error("Erro ao cadastrar:", erro);
+      esconderCarregamentoModal();
+      toastr.error("Erro ao cadastrar produto. Verifique o console.");
+    })
+    .cadastrarNovoProduto(
+      nomeproduto,
+      codigoInterno,
+      codigoCategoria,
+      codigoSubcategoria,
+      ean,
+      marca,
+      tipoTamanho,
+      tamanho,
+      cor,
+      codigoFornecedor,
+      estmaximo,
+      estminimo,
+      precovenda,
+      precocusto,
+      produtocombo,
+      observacao,
+      prodsaida1, qtdsaida1, valorsaida1,
+      prodsaida2, qtdsaida2, valorsaida2,
+      prodsaida3, qtdsaida3, valorsaida3
+    );
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// ==================================================================================================================================================
+// MODAL DE EXCLUSÃƒO - FUNÃ‡Ã•ES
+// ==================================================================================================================================================
+
+// Abre modal de confirmaÃ§Ã£o de exclusÃ£o ============================================================================
+function abrirModalExclusao() {
+    const linhas = obterLinhasSelecionadasValidas();
+    if (!linhas.length) {
+        toastr.warning("Selecione um produto na tabela antes de excluir!");
+        return;
+    }
+
+    const nomesProdutos = linhas.map(function(linha) {
+        return String(linha.cells[2]?.textContent || "").trim();
+    }).filter(Boolean);
+
+    const textoSelecionados = nomesProdutos.length === 1
+        ? nomesProdutos[0]
+        : nomesProdutos.length + " produtos selecionados: " + nomesProdutos.join("; ");
+
+    document.getElementById("produtoSelecionado").textContent = textoSelecionados;
+    document.getElementById("modalExclusao").classList.add("ativo");
+}
+
+// Fecha modal de exclusão ==========================================================================================
+function fecharModalExclusao() {
+    document.getElementById("modalExclusao").classList.remove("ativo");
+}
+
+// Confirma e executa a exclusão
+function confirmarExclusao() {
+  const linhas = obterLinhasSelecionadasValidas();
+  if (!linhas.length) {
+    toastr.error("Nenhuma linha selecionada!");
+    return;
+  }
+
+  const idsProdutos = linhas.map(function(linha) {
+    return String(linha.cells[0]?.textContent || "").trim();
+  }).filter(Boolean);
+
+  fecharModalExclusao();
+  mostrarCarregamentoModal();
+
+  google.script.run
+    .withSuccessHandler(function(resultado) {
+      if (resultado && resultado.sucesso) {
+        limparSelecaoLinhas();
+        atualizarDados();
+        esconderCarregamentoModal();
+        toastr.success(idsProdutos.length === 1 ? "Produto inativado com sucesso!" : "Produtos inativados com sucesso!");
+      } else {
+        esconderCarregamentoModal();
+        toastr.error(resultado?.mensagem || "Erro ao excluir produto!");
+      }
+    })
+    .withFailureHandler(function(erro) {
+      esconderCarregamentoModal();
+      console.error("Erro ao excluir:", erro);
+      toastr.error("Erro ao excluir produto. Verifique o console.");
+    })
+    .excluirProdutosEmLote(idsProdutos);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ===================================================================================================================================================
+// MODAL DE EDIÃ‡ÃƒO - FUNÃ‡Ã•ES
+// ===================================================================================================================================================
+
+// Abre modal de ediÃ§Ã£o com dados preenchidos
+function abrirModalEdicao() {
+  if (!linhaSelecionada) {
+    toastr.warning("Selecione um produto na tabela antes de editar!");
+    return;
+  }
+
+  const idProduto = String(linhaSelecionada.cells[0].textContent || '').trim();
+
+  const linhaProduto = Array.isArray(dadosTabelaProd)
+    ? dadosTabelaProd.find(linha => String(linha[0] || '').trim() === idProduto)
+    : null;
+
+  if (!linhaProduto) {
+    toastr.error("Produto nÃ£o encontrado nos dados carregados.");
+    return;
+  }
+
+  const idCategoria = String(linhaProduto[5] || '').trim();
+  const idSubcategoria = String(linhaProduto[6] || '').trim();
+  const idFornecedor = String(linhaProduto[12] || '').trim();
+
+  const categoriaObj = Array.isArray(itensCat)
+    ? itensCat.find(item => String(item.codigo) === idCategoria)
+    : null;
+
+  const subcategoriaObj = Array.isArray(todassubcategorias)
+    ? todassubcategorias.find(item => String(item.codigo) === idSubcategoria)
+    : null;
+
+  const fornecedorObj = Array.isArray(itensForn)
+    ? itensForn.find(item => String(item.codigo) === idFornecedor)
+    : null;
+
+  document.getElementById("inputEditarNome").value = linhaProduto[3] || "";
+  document.getElementById("inputEditarCodigoInterno").value = linhaProduto[4] || "";
+  document.getElementById("inputEditarCategoria").value = categoriaObj ? categoriaObj.nome : "";
+  document.getElementById("inputEditarSubcategoria").value = subcategoriaObj ? subcategoriaObj.nome : "";
+  document.getElementById("inputEditarEAN").value = linhaProduto[7] || "";
+  document.getElementById("inputEditarMarca").value = linhaProduto[8] || "";
+  document.getElementById("inputEditarTipoTamanho").value = linhaProduto[9] || "";
+  document.getElementById("inputEditarTamanho").value = linhaProduto[10] || "";
+  document.getElementById("inputEditarCor").value = linhaProduto[11] || "";
+  document.getElementById("inputEditarFornecedor").value = fornecedorObj ? fornecedorObj.nome : "";
+  document.getElementById("inputEditarEstmaximo").value = linhaProduto[13] || "";
+  document.getElementById("inputEditarEstminimo").value = linhaProduto[14] || "";
+  document.getElementById("inputEditarPrecoVenda").value = linhaProduto[15] || "";
+  document.getElementById("inputEditarPrecoCusto").value = linhaProduto[16] || "";
+  document.getElementById("inputEditarObservacao").value = linhaProduto[17] || "";
+
+  const checkboxCombo = document.getElementById("inputEditarProdutoCombo");
+  const ehCombo = String(linhaProduto[18] || '').trim().toUpperCase() === "SIM";
+
+  checkboxCombo.checked = ehCombo;
+
+  // regra: se jÃ¡ Ã© combo, nÃ£o pode desmarcar
+  checkboxCombo.disabled = ehCombo;
+
+  // limpa saÃ­das antes de preencher
+  for (let i = 1; i <= 3; i++) {
+    document.getElementById(`inputEditarProdsaida${i}`).value = "";
+    document.getElementById(`inputEditarQtdsaida${i}`).value = "";
+    document.getElementById(`inputEditarValorAtualSaida${i}`).value = "";
+    document.getElementById(`inputEditarValorsaida${i}`).value = "";
+  }
+
+  const saidasRelacionadas = Array.isArray(dadosTabelaSaida)
+    ? dadosTabelaSaida.filter(linha => String(linha[0] || '').trim() === idProduto)
+    : [];
+
+  saidasRelacionadas.slice(0, 3).forEach(function(saida, index) {
+    const pos = index + 1;
+    const idProdutoSaida = String(saida[1] || '').trim();
+    const linhaProdSaida = mapaProdutoPorId.get(idProdutoSaida);
+
+    document.getElementById(`inputEditarProdsaida${pos}`).value = linhaProdSaida ? (linhaProdSaida[3] || "") : "";
+    document.getElementById(`inputEditarQtdsaida${pos}`).value = saida[2] || "";
+    document.getElementById(`inputEditarValorsaida${pos}`).value = saida[3] || "";
+    atualizarValorAtualProdutoSaida('Editar', pos);
+  });
+
+  document.getElementById("modalEdicao").classList.add("ativo");
+
+  if (typeof atualizarCamposSaida === "function") {
+    atualizarCamposSaida();
+  }
+
+  calcularTotaisCombo('Editar');
+  recalcularLucroSimplesEdicao();
+
+  document.getElementById("inputEditarNome").focus();
+}
+
+// Fecha modal de ediÃ§Ã£o
+function fecharModalEdicao() {
+  document.getElementById("modalEdicao").classList.remove("ativo");
+
+  document.getElementById("inputEditarNome").value = "";
+  document.getElementById("inputEditarCodigoInterno").value = "";
+  document.getElementById("inputEditarCategoria").value = "";
+  document.getElementById("inputEditarSubcategoria").value = "";
+  document.getElementById("inputEditarEAN").value = "";
+  document.getElementById("inputEditarMarca").value = "";
+  document.getElementById("inputEditarCor").value = "";
+  document.getElementById("inputEditarFornecedor").value = "";
+  document.getElementById("inputEditarEstmaximo").value = "";
+  document.getElementById("inputEditarEstminimo").value = "";
+  document.getElementById("inputEditarTipoTamanho").value = "";
+  document.getElementById("inputEditarTamanho").value = "";
+  document.getElementById("inputEditarPrecoVenda").value = "";
+  document.getElementById("inputEditarPrecoCusto").value = "";
+  document.getElementById("inputEditarLucro").value = "";
+  document.getElementById("inputEditarObservacao").value = "";
+
+  for (let i = 1; i <= 3; i++) {
+    document.getElementById(`inputEditarProdsaida${i}`).value = "";
+    document.getElementById(`inputEditarQtdsaida${i}`).value = "";
+    document.getElementById(`inputEditarValorAtualSaida${i}`).value = "";
+    document.getElementById(`inputEditarValorsaida${i}`).value = "";
+  }
+
+  const chk = document.getElementById("inputEditarProdutoCombo");
+  chk.checked = false;
+  chk.disabled = false;
+
+  const inputPrecoVenda = document.getElementById("inputEditarPrecoVenda");
+  const inputPrecoCusto = document.getElementById("inputEditarPrecoCusto");
+
+  inputPrecoVenda.readOnly = false;
+  inputPrecoCusto.readOnly = false;
+  inputPrecoVenda.classList.remove("input-bloqueado");
+  inputPrecoCusto.classList.remove("input-bloqueado");
+
+  if (typeof atualizarCamposSaida === "function") {
+    atualizarCamposSaida();
+  }
+}
+
+// Confirma e executa a ediÃ§Ã£o
+function confirmarEdicao() {
+  if (!linhaSelecionada) {
+    toastr.error("Nenhuma linha selecionada!");
+    return;
+  }
+
+  const idProduto = String(linhaSelecionada.cells[0].textContent || '').trim();
+
+  const novonomeproduto = document.getElementById("inputEditarNome").value.trim().toUpperCase();
+  const novocodigoInterno = document.getElementById("inputEditarCodigoInterno").value.trim().toUpperCase();
+  const novocategoria = document.getElementById("inputEditarCategoria").value.trim().toUpperCase();
+  const novosubcategoria = document.getElementById("inputEditarSubcategoria").value.trim().toUpperCase();
+  const novoean = document.getElementById("inputEditarEAN").value.trim();
+  const novomarca = document.getElementById("inputEditarMarca").value.trim().toUpperCase();
+  const novotipoTamanho = document.getElementById("inputEditarTipoTamanho").value.trim().toUpperCase();
+  const novotamanho = document.getElementById("inputEditarTamanho").value.trim().toUpperCase();
+  const novacor = document.getElementById("inputEditarCor").value.trim().toUpperCase();
+  const novofornecedor = document.getElementById("inputEditarFornecedor").value.trim().toUpperCase();
+  const novoestmaximo = document.getElementById("inputEditarEstmaximo").value.trim();
+  const novoestminimo = document.getElementById("inputEditarEstminimo").value.trim();
+  const novoprecovenda = document.getElementById("inputEditarPrecoVenda").value.trim();
+  const novoprecocusto = document.getElementById("inputEditarPrecoCusto").value.trim();
+  const novoobservacao = document.getElementById("inputEditarObservacao").value.trim().toUpperCase();
+  const novoprodutocombo = document.getElementById("inputEditarProdutoCombo").checked ? "SIM" : "NÃƒO";
+
+  const novoprodsaida1 = document.getElementById("inputEditarProdsaida1").value.trim().toUpperCase();
+  const novoqtdsaida1 = document.getElementById("inputEditarQtdsaida1").value.trim();
+  const novovalorsaida1 = document.getElementById("inputEditarValorsaida1").value.trim();
+
+  const novoprodsaida2 = document.getElementById("inputEditarProdsaida2").value.trim().toUpperCase();
+  const novoqtdsaida2 = document.getElementById("inputEditarQtdsaida2").value.trim();
+  const novovalorsaida2 = document.getElementById("inputEditarValorsaida2").value.trim();
+
+  const novoprodsaida3 = document.getElementById("inputEditarProdsaida3").value.trim().toUpperCase();
+  const novoqtdsaida3 = document.getElementById("inputEditarQtdsaida3").value.trim();
+  const novovalorsaida3 = document.getElementById("inputEditarValorsaida3").value.trim();
+
+  if (novonomeproduto === "") {
+    toastr.warning("Por favor, informe o nome do produto!");
+    return;
+  }
+
+  const validacaoTamanho = validarTipoETamanhoPermitidos(novotipoTamanho, novotamanho);
+  if (!validacaoTamanho.valido) {
+    toastr.warning(validacaoTamanho.mensagem);
+    return;
+  }
+
+  const validacaoEstoque = validarEstoqueMaximoMinimo(novoestmaximo, novoestminimo);
+  if (!validacaoEstoque.valido) {
+    toastr.warning(validacaoEstoque.mensagem);
+    return;
+  }
+
+  const categoriaObj = itensCat.find(item => String(item.nome || '').trim().toUpperCase() === novocategoria);
+  const subcategoriaObj = (Array.isArray(todassubcategorias) ? todassubcategorias : [])
+  .find(item => String(item.nome || '').trim().toUpperCase() === novosubcategoria);
+  const fornecedorObj = itensForn.find(item => String(item.nome || '').trim().toUpperCase() === novofornecedor);
+
+  const novocodigoCategoria = categoriaObj ? categoriaObj.codigo : "";
+  const novocodigoSubcategoria = subcategoriaObj ? subcategoriaObj.codigo : "";
+  const novocodigoFornecedor = fornecedorObj ? fornecedorObj.codigo : "";
+
+  mostrarCarregamentoModal();
+
+  google.script.run
+    .withSuccessHandler(function(resultado) {
+      if (resultado.sucesso) {
+        atualizarDados();
+        fecharModalEdicao();
+        esconderCarregamentoModal();
+        toastr.success("Produto editado com sucesso!");
+      } else {
+        esconderCarregamentoModal();
+        toastr.error(resultado.mensagem || "Erro ao editar produto!");
+      }
+    })
+    .withFailureHandler(function(erro) {
+      console.error("Erro ao editar:", erro);
+      esconderCarregamentoModal();
+      toastr.error("Erro ao editar produto. Verifique o console.");
+    })
+    .editarProduto(
+      idProduto,
+      novonomeproduto,
+      novocodigoInterno,
+      novocodigoCategoria,
+      novocodigoSubcategoria,
+      novoean,
+      novomarca,
+      novotipoTamanho,
+      novotamanho,
+      novacor,
+      novocodigoFornecedor,
+      novoestmaximo,
+      novoestminimo,
+      novoprecovenda,
+      novoprecocusto,
+      novoprodutocombo,
+      novoobservacao,
+      novoprodsaida1, novoqtdsaida1, novovalorsaida1,
+      novoprodsaida2, novoqtdsaida2, novovalorsaida2,
+      novoprodsaida3, novoqtdsaida3, novovalorsaida3
+    );
+}
+
+</script>

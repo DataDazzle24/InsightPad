@@ -1,0 +1,620 @@
+<!-- Esse Será o HTML principal da página de Cadastro de Fornecedores -->
+<!DOCTYPE html>
+<html>
+
+<head>
+  <base target="_top">
+
+  <!-- Importação das bibliotecas de ícones e estilos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,250,0,200" />
+
+  <!-- jQuery -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+  <!-- Toastr para notificações -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+
+  <!-- Chamada dos estilos customizados -->
+  <?!=Chamar("EstiloCabecalho") ?>
+  <?!=Chamar("Cadastro_Fornecedor_Estilo") ?>
+
+</head>
+
+
+<body>
+
+  <!-- Cabeçalho da página -->
+  <?!= Chamar("Cabecalho", { tituloPagina: tituloPagina }) ?>
+
+  <!-- Container geral da página -->
+  <div id="geral">
+
+    <!-- Seção superior com botões de ação -->
+    <div id="cad_superior">
+
+      <!-- Botões da esquerda: Voltar, Cadastrar, Editar, Excluir -->
+      <div id="cad_esquerda">
+
+        <!-- Botão Voltar - retorna ao menu de cadastros -->
+        <button id="btnVoltar" type="button" data-insight-page="MenuCadastro">
+            <i id="cad_icone" class="bi bi-arrow-left-circle"></i>
+          </button>
+
+        <!-- Botão Cadastrar - abre modal de cadastro -->
+        <button id="btnCadastrar">
+            <i id="cad_icone" class="bi bi-plus-circle"></i>
+          </button>
+
+        <!-- Botão Editar - abre modal de edição da filial selecionada -->
+        <button id="btnEditar">
+            <i id="cad_icone" class="bi bi-pencil-square"></i>
+          </button>
+
+        <!-- Botão Excluir - abre modal de confirmação de exclusão -->
+        <button id="btnExcluir">
+            <i id="cad_icone" class="bi bi-trash3"></i> 
+          </button>
+
+      </div>
+
+
+      <!-- Botões da direita: Campo de pesquisa e ações -->
+      <div id="cad_direita">
+
+        <!-- Botão Pesquisar - filtra dados na tabela -->
+        <button id="btnExtrair">
+            <i id="cad_icone" class="bi bi-filetype-csv"></i> 
+          </button>
+
+        <!-- Botão Pesquisar - filtra dados na tabela -->
+        <button id="btnPesquisar">
+            <i id="cad_icone" class="bi bi-funnel"></i> 
+          </button>
+
+        <!-- Botão Limpar - remove filtros e restaura tabela completa -->
+        <button id="btnLimpar">
+            <i id="cad_limpar" class="bi bi-eraser"></i> 
+          </button>
+
+      </div>
+
+    </div>
+
+
+
+    <!-- Seção inferior com a tabela de dados -->
+    <div id="cad_inferior">
+
+      <div id="container_tabela">
+
+        <div id="tabela_scroll">
+
+          <!-- Cabeçalho da tabela (fixo) -->
+          <table id="tb_fornecedor">
+
+            <thead id="tb_cabecalho">
+              <tr>
+                <th id="tb_col_id">ID</th>
+                <th id="tb_col_razao_social">RAZÃO SOCIAL</th>
+                <th id="tb_col_cod_interno">CÓD. INTERNO</th>
+                <th id="tb_col_nome_fantasia">NOME FANTASIA</th>
+                <th id="tb_col_cnpj">CNPJ</th>
+                <th id="tb_col_cpf">CPF</th>
+                <th id="tb_col_cep">CEP</th>
+                <th id="tb_col_uf">UF</th>
+                <th id="tb_col_cidade">CIDADE</th>
+                <th id="tb_col_bairro">BAIRRO</th>
+                <th id="tb_col_endereco">ENDEREÇO</th>
+                <th id="tb_col_numero">NÚMERO</th>
+                <th id="tb_col_complemento">COMPLEMENTO</th>
+                <th id="tb_col_representante">REPRESENTANTE</th>
+                <th id="tb_col_tel_1">TELEFONE 1</th>
+                <th id="tb_col_tel_2">TELEFONE 2</th>
+                <th id="tb_col_email">EMAIL</th>
+                <th id="tb_col_segmento">SEGMENTO</th>
+                <th id="tb_col_tipo_pagamento">TIPO PAGAMENTO</th>
+                <th id="tb_col_prazo_pagamento">PRAZO PAGAMENTO</th>
+                <th id="tb_col_tempo_entrega">TEMPO MÉDIO ENTREGA</th>
+                <th id="tb_col_observacao">OBSERVAÇÃO</th>
+                <th id="tb_col_dtcriacao">DATA DE CRIAÇÃO</th>
+                <th id="tb_col_alteracao">ÚLTIMA ALTERAÇÃO</th>
+              </tr>
+            </thead>
+
+            <tbody id="tb_corpo">
+              <!-- Corpo será preenchido dinamicamente via JavaScript -->
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <!-- MODAIS -------------------------------------------------------------------------------------------------->
+
+
+    <!-- Modal de Cadastro de Novo Fornecedor ------------------------------------------->
+
+    <div id="modalCadastro" class="modal-overlay">
+      <div class="modal-box-large">
+
+        <!-- Título do modal -->
+        <h2 class="modal-titulo">CADASTRAR FORNECEDOR</h2>
+
+        <!-- Container dos campos em 3 colunas -->
+        <div class="form-container">
+
+          <div class="form-column">
+            <div class="titulo-secao-modal">IDENTIFICAÇÃO</div>
+
+            <div class="form-field">
+              <label class="input-label campo-obrigatorio">Razão Social</label>
+              <input type="text" id="inputRazaoSocial" class="input-moderno" placeholder="Digite a razão social..." maxlength="100">
+            </div>
+
+            <div class="form-field">
+              <label class="input-label">Código Interno</label>
+              <input type="text" id="inputCodInterno" class="input-moderno" placeholder="Digite o código interno..." maxlength="30">
+            </div>
+
+            <div class="form-field">
+              <label class="input-label campo-obrigatorio">Nome Fantasia</label>
+              <input type="text" id="inputNomeFantasia" class="input-moderno" placeholder="Digite o nome fantasia..." maxlength="100">
+            </div>
+
+            <div class="form-field">
+              <label class="input-label">CNPJ</label>
+              <input type="text" id="inputCNPJ" class="input-moderno-cnpj" placeholder="Digite o CNPJ..." maxlength="18">
+            </div>
+
+            <div class="form-field">
+              <label class="input-label">CPF</label>
+              <input type="text" id="inputCPF" class="input-moderno" placeholder="Digite o CPF..." maxlength="14">
+            </div>
+          </div>
+
+          <div class="form-column">
+            <div class="titulo-secao-modal">ENDEREÇO</div>
+
+            <div class="form-field">
+              <label class="input-label">CEP</label>
+              <input type="text" id="inputCEP" class="input-moderno" placeholder="Digite o CEP..." maxlength="9">
+            </div>
+
+            <div class="form-field">
+              <label class="input-label">UF</label>
+              <input type="text" id="inputUF" class="input-moderno" placeholder="EX: RJ" maxlength="2">
+            </div>
+
+            <div class="form-field">
+              <label class="input-label">Cidade</label>
+              <input type="text" id="inputCidade" class="input-moderno" placeholder="Digite a cidade..." maxlength="100">
+            </div>
+
+            <div class="form-field">
+              <label class="input-label">Bairro</label>
+              <input type="text" id="inputBairro" class="input-moderno" placeholder="Digite o bairro..." maxlength="100">
+            </div>
+
+            <div class="form-field">
+              <label class="input-label">Endereço</label>
+              <input type="text" id="inputEndereco" class="input-moderno" placeholder="Digite o endereço..." maxlength="150">
+            </div>
+
+            <div class="form-field">
+              <label class="input-label">Número</label>
+              <input type="text" id="inputNumero" class="input-moderno" placeholder="Digite o número..." maxlength="20">
+            </div>
+
+            <div class="form-field">
+              <label class="input-label">Complemento</label>
+              <input type="text" id="inputComplemento" class="input-moderno" placeholder="Digite o complemento..." maxlength="100">
+            </div>
+          </div>
+
+          <div class="form-column">
+            <div class="titulo-secao-modal">CONTATO E CONDIÇÕES</div>
+
+            <div class="form-field">
+              <label class="input-label">Representante</label>
+              <input type="text" id="inputRepresentante" class="input-moderno" placeholder="Digite o representante..." maxlength="100">
+            </div>
+
+            <div class="form-field">
+              <label class="input-label">Telefone 1</label>
+              <input type="text" id="inputTelefone1" class="input-moderno-telefone" placeholder="(00) 00000-0000" maxlength="15">
+            </div>
+
+            <div class="form-field">
+              <label class="input-label">Telefone 2</label>
+              <input type="text" id="inputTelefone2" class="input-moderno-telefone" placeholder="(00) 00000-0000" maxlength="15">
+            </div>
+
+            <div class="form-field">
+              <label class="input-label">Email</label>
+              <input type="text" id="inputEmail" class="input-moderno" placeholder="Digite o email..." maxlength="100">
+            </div>
+
+            <div class="form-field">
+              <label class="input-label campo-obrigatorio">Segmento</label>
+              <input type="text" id="inputSegmento" class="input-moderno" placeholder="Digite o segmento..." maxlength="100">
+            </div>
+
+            <div class="form-field">
+              <label class="input-label">Tipo de Pagamento</label>
+              <input type="text" id="inputTipoPagamento" class="input-moderno" placeholder="Digite o tipo de pagamento..." maxlength="50">
+            </div>
+
+            <div class="form-field">
+              <label class="input-label">Prazo de Pagamento (dias)</label>
+              <input type="text" id="inputPrazoPagamento" class="input-moderno" placeholder="Digite o prazo de pagamento..." maxlength="3">
+            </div>
+
+            <div class="form-field">
+              <label class="input-label">Tempo Médio de Entrega (dias)</label>
+              <input type="text" id="inputTempoEntrega" class="input-moderno" placeholder="Digite o tempo médio de entrega..." maxlength="3">
+            </div>
+
+            <div class="form-field">
+              <label class="input-label">Observação</label>
+              <input type="text" id="inputObservacao" class="input-moderno" placeholder="Digite uma observação..." maxlength="300">
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Botões de ação do modal -->
+        <div class="modal-botoes">
+          <button id="btnCancelarCadastro" class="btn-cancelar">CANCELAR</button>
+          <button id="btnConfirmarCadastro" class="btn-cadastrar">CADASTRAR</button>
+        </div>
+
+      </div>
+    </div>
+
+
+
+
+
+
+
+
+
+    <!-- Modal de Carregamento ------------------------------------------------------------------------------->
+
+    <div id="modalCarregamento" class="loading-overlay">
+      <div class="loading-box">
+        <div class="loading-container">
+          <!-- Logo da empresa com animação de spinner -->
+          <img src="https://drive.google.com/thumbnail?id=1T6pWIpQeH-jPowvh63mPQDJVIjA3VJBJ" alt="Logo" class="loading-logo">
+          <div class="loading-spinner"></div>
+        </div>
+      </div>
+    </div>
+
+
+
+
+
+
+
+
+
+    <!-- Modal de Confirmação de Exclusão ----------------------------------------------------------------------->
+
+    <div id="modalExclusao" class="modal-overlay">
+      <div class="modal-box">
+        <h2 class="modal-titulo">EXCLUIR FORNECEDOR</h2>
+
+        <div class="form-group">
+          <!-- Texto dinâmico com o nome do fornecedor a ser excluída -->
+          <p class="texto-confirmacao">Deseja, realmente, excluir o fornecedor
+            <strong id="fornecedorSelecionado"></strong>?
+          </p>
+        </div>
+
+        <div class="modal-botoes">
+          <button id="btnNaoExcluir" class="btn-nao">NÃO</button>
+          <button id="btnSimExcluir" class="btn-sim">SIM</button>
+        </div>
+      </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+<!-- Modal de Edição de Fornecedor ---------------------------------------------------------------------------->
+
+<div id="modalEdicao" class="modal-overlay">
+
+  <div class="modal-box-large">
+
+    <h2 class="modal-titulo">EDITAR FORNECEDOR</h2>
+
+    <!-- Container dos campos em 3 colunas (igual ao cadastro) -->
+    <div class="form-container">
+
+      <div class="form-column">
+        <div class="titulo-secao-modal">IDENTIFICAÇÃO</div>
+
+        <div class="form-field">
+              <label class="input-label campo-obrigatorio">Razão Social</label>
+          <input type="text" id="inputEditarRazaoSocial" class="input-moderno" placeholder="Digite a razão social..." maxlength="100">
+        </div>
+
+        <div class="form-field">
+          <label class="input-label">Código Interno</label>
+          <input type="text" id="inputEditarCodInterno" class="input-moderno" placeholder="Digite o código interno..." maxlength="30">
+        </div>
+
+        <div class="form-field">
+              <label class="input-label campo-obrigatorio">Nome Fantasia</label>
+          <input type="text" id="inputEditarNomeFantasia" class="input-moderno" placeholder="Digite o nome fantasia..." maxlength="100">
+        </div>
+
+        <div class="form-field">
+          <label class="input-label">CNPJ</label>
+          <input type="text" id="inputEditarCNPJ" class="input-moderno-cnpj" placeholder="Digite o CNPJ..." maxlength="18">
+        </div>
+
+        <div class="form-field">
+          <label class="input-label">CPF</label>
+          <input type="text" id="inputEditarCPF" class="input-moderno" placeholder="Digite o CPF..." maxlength="14">
+        </div>
+      </div>
+
+      <div class="form-column">
+        <div class="titulo-secao-modal">ENDEREÇO</div>
+
+        <div class="form-field">
+          <label class="input-label">CEP</label>
+          <input type="text" id="inputEditarCEP" class="input-moderno" placeholder="Digite o CEP..." maxlength="9">
+        </div>
+
+        <div class="form-field">
+          <label class="input-label">UF</label>
+          <input type="text" id="inputEditarUF" class="input-moderno" placeholder="EX: RJ" maxlength="2">
+        </div>
+
+        <div class="form-field">
+          <label class="input-label">Cidade</label>
+          <input type="text" id="inputEditarCidade" class="input-moderno" placeholder="Digite a cidade..." maxlength="100">
+        </div>
+
+        <div class="form-field">
+          <label class="input-label">Bairro</label>
+          <input type="text" id="inputEditarBairro" class="input-moderno" placeholder="Digite o bairro..." maxlength="100">
+        </div>
+
+        <div class="form-field">
+          <label class="input-label">Endereço</label>
+          <input type="text" id="inputEditarEndereco" class="input-moderno" placeholder="Digite o endereço..." maxlength="150">
+        </div>
+
+        <div class="form-field">
+          <label class="input-label">Número</label>
+          <input type="text" id="inputEditarNumero" class="input-moderno" placeholder="Digite o número..." maxlength="20">
+        </div>
+
+        <div class="form-field">
+          <label class="input-label">Complemento</label>
+          <input type="text" id="inputEditarComplemento" class="input-moderno" placeholder="Digite o complemento..." maxlength="100">
+        </div>
+      </div>
+
+      <div class="form-column">
+        <div class="titulo-secao-modal">CONTATO E CONDIÇÕES</div>
+
+        <div class="form-field">
+          <label class="input-label">Representante</label>
+          <input type="text" id="inputEditarRepresentante" class="input-moderno" placeholder="Digite o representante..." maxlength="100">
+        </div>
+
+        <div class="form-field">
+          <label class="input-label">Telefone 1</label>
+          <input type="text" id="inputEditarTelefone1" class="input-moderno-telefone" placeholder="(00) 00000-0000" maxlength="15">
+        </div>
+
+        <div class="form-field">
+          <label class="input-label">Telefone 2</label>
+          <input type="text" id="inputEditarTelefone2" class="input-moderno-telefone" placeholder="(00) 00000-0000" maxlength="15">
+        </div>
+
+        <div class="form-field">
+          <label class="input-label">Email</label>
+          <input type="text" id="inputEditarEmail" class="input-moderno" placeholder="Digite o email..." maxlength="100">
+        </div>
+
+        <div class="form-field">
+              <label class="input-label campo-obrigatorio">Segmento</label>
+          <input type="text" id="inputEditarSegmento" class="input-moderno" placeholder="Digite o segmento..." maxlength="100">
+        </div>
+
+        <div class="form-field">
+          <label class="input-label">Tipo de Pagamento</label>
+          <input type="text" id="inputEditarTipoPagamento" class="input-moderno" placeholder="Digite o tipo de pagamento..." maxlength="50">
+        </div>
+
+        <div class="form-field">
+          <label class="input-label">Prazo de Pagamento (dias)</label>
+          <input type="text" id="inputEditarPrazoPagamento" class="input-moderno" placeholder="Digite o prazo de pagamento..." maxlength="3">
+        </div>
+
+        <div class="form-field">
+          <label class="input-label">Tempo Médio de Entrega (dias)</label>
+          <input type="text" id="inputEditarTempoEntrega" class="input-moderno" placeholder="Digite o tempo médio de entrega..." maxlength="3">
+        </div>
+
+        <div class="form-field">
+          <label class="input-label">Observação</label>
+          <input type="text" id="inputEditarObservacao" class="input-moderno" placeholder="Digite uma observação..." maxlength="300">
+        </div>
+      </div>
+
+    </div>
+
+    <div class="modal-botoes">
+      <button id="btnCancelarEdicao" class="btn-cancelar">CANCELAR</button>
+      <button id="btnConfirmarEdicao" class="btn-cadastrar">EDITAR</button>
+    </div>
+
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+<!-- MODAL DE PESQUISA ---------------------------------------------------------------------------------->
+
+<div id="modalPesquisa" class="modal-overlay">
+
+<div class="modal-box-large">
+
+  <h2 class="modal-titulo">PESQUISA</h2>
+
+  <!-- Container dos campos -->
+  <div class="form-container">
+
+    <div class="form-column">
+
+      <!-- Campo de categoria, acoplado a uma lista suspensa-->
+      <div class="form-field dropdown-container">
+        <label class="input-label">Razão Social</label>
+        <input type="text" id="inputPesquisarRazao" class="input-moderno" placeholder="Digite e selecione a razão social desejada">
+        <ul id="listaPesquisarRazao" class="sugestoes"></ul>
+      </div>
+
+      <div class="form-field dropdown-container">
+        <label class="input-label">Nome Fantasia</label>
+        <input type="text" id="inputPesquisarFantasia" class="input-moderno" placeholder="Digite e selecione o Nome Fantasia desejado">
+        <ul id="listaPesquisarFantasia" class="sugestoes"></ul>
+      </div>
+
+
+    </div>
+
+    <div class="form-column">
+
+      <div class="form-field dropdown-container">
+        <label class="input-label">CNPJ</label>
+        <input type="text" id="inputPesquisarCNPJ" class="input-moderno" placeholder="Digite e selecione o CNPJ desejado">
+        <ul id="listaPesquisarCNPJ" class="sugestoes"></ul>
+      </div>
+
+      <div class="form-field dropdown-container">
+        <label class="input-label">Representante</label>
+        <input type="text" id="inputPesquisarRepresentante" class="input-moderno" placeholder="Digite e selecione o representante desejado">
+        <ul id="listaPesquisarRepresentante" class="sugestoes"></ul>
+      </div>
+
+    </div>
+
+    <div class="form-column">
+
+      <div class="form-field dropdown-container">
+        <label class="input-label">Segmento</label>
+        <input type="text" id="inputPesquisarSegmento" class="input-moderno" placeholder="Digite e selecione o segmento desejado">
+        <ul id="listaPesquisarSegmento" class="sugestoes"></ul>
+      </div>
+
+      <!-- Campo de data, acoplada a um calendário -->
+      <div class="form-field">
+        <label for="inputData" class="input-label">Período de cadastro</label>
+        <input type="text" id="inputPesquisarDataCadastro" class="input-moderno datepicker" placeholder="Selecione a data de cadastro da subcategoria">
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- Botões de ação do modal -->
+  <div class="modal-botoes">
+    <button id="btnCancelarPesquisa" class="btn-cancelar">CANCELAR</button>
+    <button id="btnConfirmarPesquisa" class="btn-cadastrar">PESQUISAR</button>
+  </div>
+
+
+
+</div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- Scripts necessários -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+
+
+
+<script>
+  // dadosTabela: array completo com todos os dados das filiais
+  var dadosTabela = <?!= JSON.stringify(dadosTabela) ?>;
+
+</script>
+
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+
+
+
+<!-- Importa o JavaScript customizado -->
+<?!=Chamar("Cadastro_Fornecedor_JS") ?>
+
+</body>
+
+</html>

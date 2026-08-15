@@ -1,0 +1,566 @@
+<style>
+
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+#divObjetos {
+    display: flex;
+    flex-direction: row; /* Alinha os itens em uma linha (horizontalmente) */
+    width: 100%;
+    height: 100vh; /* Ocupa a altura total da tela */
+}
+
+body:not(.sessao-validada) #divObjetos {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+body.sessao-validada #divObjetos {
+    opacity: 1;
+    visibility: visible;
+}
+
+.usuario-menu-principal {
+  position: absolute;
+  top: 22px;
+  left: 22px;
+  z-index: 50;
+  display: none;
+  font-family: "DejaVu Sans Mono", monospace;
+}
+
+.usuario-menu-principal.ativo {
+  display: block;
+}
+
+.usuario-menu-botao {
+  height: 40px;
+  min-width: 142px;
+  max-width: 178px;
+  border: 1px solid rgba(66, 220, 250, 0.45);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 9px;
+  padding: 0 10px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+}
+
+.usuario-menu-botao:hover,
+.usuario-menu-principal.aberto .usuario-menu-botao {
+  border-color: #42DCFA;
+  background: rgba(66, 220, 250, 0.13);
+  transform: translateY(-1px);
+}
+
+.usuario-menu-botao i {
+  color: #42DCFA;
+  font-size: 1.08rem;
+}
+
+#usuarioMenuNome {
+  min-width: 0;
+  color: white;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.usuario-menu-painel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 25vw;
+  min-width: 320px;
+  max-width: 430px;
+  height: 100vh;
+  padding: 18px;
+  background: #000;
+  color: white;
+  box-shadow: 18px 0 42px rgba(0, 0, 0, 0.36);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  z-index: 9001;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateX(-105%);
+  transition: transform 0.28s ease, opacity 0.22s ease, visibility 0.22s ease;
+}
+
+.usuario-menu-principal.aberto .usuario-menu-painel {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+.usuario-menu-topo {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.usuario-menu-topo img {
+  max-height: 44px;
+  width: auto;
+  filter: drop-shadow(0 0 10px rgba(66, 220, 250, 0.28));
+}
+
+.usuario-menu-fechar {
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.usuario-menu-fechar i {
+  font-size: 1.45rem;
+}
+
+.usuario-menu-fechar:hover {
+  background: rgba(255, 255, 255, 0.09);
+  transform: translateX(-2px);
+}
+
+.usuario-menu-perfil {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 14px 0 18px;
+  border-bottom: 1px solid rgba(66, 220, 250, 0.24);
+}
+
+.usuario-menu-perfil > i {
+  color: #42DCFA;
+  font-size: 2.6rem;
+}
+
+.usuario-menu-perfil div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.usuario-menu-perfil strong {
+  color: white;
+  font-size: 0.98rem;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.usuario-menu-perfil span {
+  color: #42DCFA;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.usuario-menu-conteudo {
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.usuario-menu-info {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 13px;
+  border: 1px solid rgba(66, 220, 250, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.usuario-menu-info span {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.64rem;
+  font-weight: 900;
+}
+
+.usuario-menu-info strong {
+  color: white;
+  font-size: 0.76rem;
+  font-weight: 900;
+  line-height: 1.45;
+  max-height: 150px;
+  overflow: auto;
+}
+
+.usuario-menu-rodape {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(66, 220, 250, 0.22);
+}
+
+.usuario-menu-acessos,
+.usuario-menu-suporte,
+.usuario-menu-sair {
+  height: 38px;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.76rem;
+  font-weight: 900;
+  cursor: pointer;
+  text-decoration: none;
+  transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+.usuario-menu-acessos {
+  display: none;
+  background: #1677ff;
+  box-shadow: 0 8px 18px rgba(22, 119, 255, 0.24);
+}
+
+.usuario-menu-acessos.ativo {
+  display: flex;
+}
+
+.usuario-menu-sair {
+  background: #e53935;
+  box-shadow: 0 8px 18px rgba(229, 57, 53, 0.26);
+}
+
+.usuario-menu-suporte {
+  background: #36DB2E;
+  box-shadow: 0 8px 18px rgba(54, 219, 46, 0.26);
+}
+
+.usuario-menu-acessos:hover,
+.usuario-menu-suporte:hover,
+.usuario-menu-sair:hover {
+  filter: brightness(0.96);
+  transform: translateY(-1px);
+}
+
+/*
+ * O bloco da esquerda, com o fundo preto.
+ * flex: 1; faz com que ele ocupe uma porção igual de espaço.
+ * display: flex; e os alinhamentos centram o conteúdo interno (a imagem).
+ */
+#Esquerda {
+    position: relative;
+    flex: 1; /* Ocupa metade do espaço disponível */
+    background-color: black;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Centraliza a imagem verticalmente */
+    align-items: center; /* Centraliza a imagem horizontalmente */
+}
+
+/*
+ * A imagem da logo.
+ * max-width: 90%; garante que a imagem não ultrapasse 90% da largura do seu container.
+ */
+#imagem {
+    flex-grow: 1;        /* faz a imagem crescer para ocupar o container */
+    width: auto;
+    height: auto;
+    max-height: 70%;     /* limite máximo da altura */
+    max-width: 90%;      /* limite máximo da largura */
+}
+
+#Rodape{
+  position: absolute;
+  bottom: 3%;
+  padding-left: 0.8%;
+  height: 10%;
+  width: 50%;
+  display: flex;
+  flex-direction: row; /* Alinha os botões em uma coluna (verticalmente) */
+  justify-content: flex-start; 
+  align-items: center; /* Centraliza os botões horizontalmente */
+  bottom: 0px;
+  left: 0px
+}
+
+#logo_dd{
+  max-height: 45%;
+  height: auto;
+  width: auto;
+}
+
+#texto_logo{
+  color: white;
+  font-size: 1.2vw; 
+  font-family: "DejaVu Sans Mono", monospace;
+  margin-top: 0.5em; /* espaço entre ícone e texto */
+  text-align: center;
+}
+
+/*
+ * O bloco da direita, com o fundo branco.
+ * flex: 1; faz com que ele ocupe a outra metade do espaço.
+ * display: flex; e os alinhamentos centram os botões.
+ */
+#divBtn {
+    flex: 1; /* Ocupa a outra metade do espaço disponível */
+    display: flex;
+    flex-direction: column; /* Alinha os botões em uma coluna (verticalmente) */
+    justify-content: center; /* Centraliza os botões verticalmente */
+    align-items: center; /* Centraliza os botões horizontalmente */
+    gap: 1.5%; /* Adiciona um espaço entre os botões */
+}
+
+#Bloco{
+  width: 100%;
+  height: 33.3%;
+  display: flex;
+  flex-direction: row; /* Alinha os botões em uma coluna (verticalmente) */
+  justify-content: center; /* Centraliza os botões verticalmente */
+  gap: 1%
+}
+
+#Btn{
+  width: 100%;
+  height: 33.3%;
+  display: flex;
+  flex-direction: column; /* Alinha os botões em uma coluna (verticalmente) */
+  justify-content: center; /* Centraliza os botões verticalmente */
+  align-items: center; /* Centraliza os botões horizontalmente */
+  text-align: center;
+}
+
+#BtnB{
+  width: 99.5%;
+  height: 100%;
+  display: flex;
+  flex-direction: column; /* Alinha os botões em uma coluna (verticalmente) */
+  justify-content: center; /* Centraliza os botões verticalmente */
+  align-items: center; /* Centraliza os botões horizontalmente */
+  text-align: center;
+}
+
+/* a barra azul inicial */
+#Btn::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1%;                        /* começa com 0 de largura */
+  height: 100%;
+  background-color: #42DCFA;       /* azul Materialize */
+  transition: width 0.4s ease;     /* animação suave */
+  z-index: 0;                      /* fica atrás do conteúdo */
+}
+
+/* quando o mouse passar */
+#Btn:hover::before {
+  width: 10%;                      /* cresce até 10% da largura do botão */
+}
+
+#Btn:hover #icone {
+  color: #42DCFA;
+}
+
+#Btn.clicked #icone {
+  color: white;
+}
+
+#Btn:hover #texto_btn {
+  color: #42DCFA;
+}
+
+#Btn.clicked #texto_btn {
+  color: white;
+}
+
+#Btn.clicked::before {
+  width: 100%;
+  background-color: #36DB2E; /* verde */
+  transition: width 0.5s ease, background-color 0.5s ease;
+}
+
+#Btn > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* a barra azul inicial */
+#BtnB::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2%;                        /* começa com 0 de largura */
+  height: 100%;
+  background-color: #42DCFA;       /* azul Materialize */
+  transition: width 0.4s ease;     /* animação suave */
+  z-index: 0;                      /* fica atrás do conteúdo */
+
+}
+
+/* quando o mouse passar */
+#BtnB:hover::before {
+  width: 10%;                      /* cresce até 10% da largura do botão */
+}
+
+#BtnB:hover #icone {
+  color: #42DCFA;
+}
+
+#BtnB.clicked #icone {
+  color: white;
+}
+
+#BtnB:hover #texto_btn {
+  color: #42DCFA;
+}
+
+#BtnB.clicked #texto_btn {
+  color: white;
+}
+
+#BtnB.clicked::before {
+  width: 100%;
+  background-color: #36DB2E; /* verde */
+  transition: width 0.5s ease, background-color 0.5s ease;
+}
+
+#BtnB > * {
+  position: relative;
+  z-index: 1;
+}
+
+body:not(.sessao-validada) #divObjetos {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+body.sessao-validada #divObjetos {
+  opacity: 1;
+  visibility: visible;
+}
+
+#icone{
+  max-height: 25%;
+  font-size: 2.2rem;
+
+  transition: color 0.3s ease;
+}
+
+#texto_btn{
+    color: white;
+    font-size: 1vw; 
+    font-family: "DejaVu Sans Mono", monospace;
+    margin-top: 0.5em; /* espaço entre ícone e texto */
+    text-align: center;
+
+    transition: transform 0.3s ease
+}
+
+btn-bloqueado {
+    filter: grayscale(100%);
+    opacity: 0.65;
+    cursor: not-allowed !important;
+  }
+
+  .btn-bloqueado::before {
+    background-color: #9e9e9e !important;
+    width: 100% !important;
+    opacity: 0.25;
+  }
+
+  .btn-bloqueado:hover::before {
+    width: 100% !important;
+  }
+
+  .btn-bloqueado:hover #icone,
+  .btn-bloqueado:hover #texto_btn {
+    color: #d0d0d0 !important;
+  }
+
+  .btn-bloqueado #icone,
+  .btn-bloqueado #texto_btn {
+    color: #d0d0d0 !important;
+  }
+
+  .btn-bloqueado.clicked::before {
+    background-color: #9e9e9e !important;
+    width: 100% !important;
+  }
+
+  .btn-bloqueado.clicked #icone,
+  .btn-bloqueado.clicked #texto_btn {
+    color: #d0d0d0 !important;
+  }
+
+  #toast-container {
+    position: fixed !important;
+    top: 2vh !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: auto !important;
+    max-width: 500px !important;
+    z-index: 9999 !important;
+  }
+
+  #toast-container > div {
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+  }
+
+  @media (max-width: 980px) {
+    .usuario-menu-botao {
+      min-width: 44px;
+      width: 44px;
+      padding: 0;
+      justify-content: center;
+    }
+
+    #usuarioMenuNome {
+      display: none;
+    }
+
+    .usuario-menu-painel {
+      width: min(86vw, 380px);
+      min-width: 0;
+    }
+  }
+  html body #toast-container,
+  html body .toast-top-right,
+  html body .toast-top-center,
+  html body .toast-top-left,
+  html body .toast-bottom-right,
+  html body .toast-bottom-center,
+  html body .toast-bottom-left {
+    z-index: 2147483647 !important;
+  }
+
+  html body #toast-container > div {
+    z-index: 2147483647 !important;
+  }
+
+</style>

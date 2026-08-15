@@ -1,0 +1,170 @@
+<script>
+  toastr.options = {
+    closeButton: false,
+    progressBar: true,
+    newestOnTop: true,
+    positionClass: "toast-top-center",
+    preventDuplicates: true,
+    timeOut: "2500",
+    extendedTimeOut: "800",
+    showDuration: "300",
+    hideDuration: "200"
+  };
+
+  document.querySelectorAll('#Btn, #BtnB').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const bloqueado = btn.classList.contains('btn-bloqueado');
+
+      if (bloqueado) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        toastr.warning('Você não possui acesso a essa página');
+
+        btn.classList.remove('clicked');
+        void btn.offsetWidth;
+        btn.classList.add('clicked');
+
+        return;
+      }
+
+      btn.classList.remove('clicked');
+      void btn.offsetWidth;
+      btn.classList.add('clicked');
+    });
+  });
+
+  (function() {
+    const CHAVE_USUARIO_AUTH = 'insightpad_auth_usuario';
+    const CHAVE_PERMISSOES_AUTH = 'insightpad_auth_permissoes';
+
+    function obterBaseWebAppMenu() {
+      const linkWebApp = document.querySelector('a[href*="script.google.com/macros/s/"][href*="/exec"]');
+      if (linkWebApp) return String(linkWebApp.href || '').split('?')[0];
+      return String(window.location.href || '').split('?')[0];
+    }
+
+    function abreviarNome(nome) {
+      const partes = String(nome || 'USUARIO').trim().split(/\s+/).filter(Boolean);
+      if (!partes.length) return 'USUARIO';
+      if (partes.length === 1) return partes[0];
+      return partes[0] + ' ' + partes[partes.length - 1];
+    }
+
+    function obterSessaoMenu() {
+      if (window.InsightSessao) return window.InsightSessao;
+
+      try {
+        const usuario = JSON.parse(localStorage.getItem(CHAVE_USUARIO_AUTH) || 'null');
+        const permissoes = JSON.parse(localStorage.getItem(CHAVE_PERMISSOES_AUTH) || '{}');
+        return usuario ? { usuario: usuario, permissoes: permissoes || {} } : null;
+      } catch (erro) {
+        return null;
+      }
+    }
+
+    function listarPermissoes(permissoes) {
+      const nomes = Object.values(permissoes || {})
+        .filter(permissao => permissao && permissao.podeAcessar === 'S')
+        .map(permissao => permissao.nomeExibicao || permissao.pageKey)
+        .filter(Boolean)
+        .sort((a, b) => String(a).localeCompare(String(b), 'pt-BR'));
+
+      return nomes.length ? nomes.join(', ') : '-';
+    }
+
+    function obterClienteUsuario(usuario) {
+      return String(
+        usuario.nomeCliente ||
+        usuario.clienteSistema ||
+        usuario.nomeClienteSistema ||
+        usuario.idClienteSistema ||
+        '-'
+      ).trim() || '-';
+    }
+
+    function atualizarUsuarioMenu(sessao) {
+      const box = document.getElementById('usuarioMenuPrincipal');
+      if (!box || !sessao || !sessao.usuario) return;
+
+      const usuario = sessao.usuario;
+      const nomeCurto = abreviarNome(usuario.nome || usuario.login || 'USUARIO');
+      const nivel = String(usuario.nivelUsuario || 'USUARIO').toUpperCase();
+
+      document.getElementById('usuarioMenuNome').textContent = nomeCurto.toUpperCase();
+      document.getElementById('usuarioMenuNomePainel').textContent = String(usuario.nome || nomeCurto).toUpperCase();
+      document.getElementById('usuarioMenuNivelPainel').textContent = nivel;
+      document.getElementById('usuarioMenuCliente').textContent = obterClienteUsuario(usuario).toUpperCase();
+      document.getElementById('usuarioMenuPermissoes').textContent = listarPermissoes(sessao.permissoes || {}).toUpperCase();
+
+      const btnAcessos = document.getElementById('btnGerenciarAcessosMenu');
+      if (btnAcessos) {
+        btnAcessos.classList.toggle('ativo', nivel === 'MASTER' || nivel === 'ADMIN');
+      }
+
+      box.classList.add('ativo');
+    }
+
+    function alternarPainelUsuario(evento) {
+      evento.stopPropagation();
+      document.getElementById('usuarioMenuPrincipal')?.classList.toggle('aberto');
+    }
+
+    function fecharPainelUsuario(evento) {
+      if (evento) evento.stopPropagation();
+      document.getElementById('usuarioMenuPrincipal')?.classList.remove('aberto');
+    }
+
+    function manterPainelAberto(evento) {
+      evento.stopPropagation();
+    }
+
+    function navegarMenu(destino) {
+      const link = document.createElement('a');
+      link.href = destino;
+      link.target = '_top';
+      link.rel = 'noopener';
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+
+      setTimeout(function() {
+        link.remove();
+      }, 1000);
+    }
+
+    function abrirGestaoAcessos(evento) {
+      evento.preventDefault();
+      evento.stopPropagation();
+      navegarMenu(obterBaseWebAppMenu() + '?page=Gestao_Acessos');
+    }
+
+    function sairSistema(evento) {
+      evento.preventDefault();
+      evento.stopPropagation();
+
+      if (window.InsightAuth && typeof window.InsightAuth.logout === 'function') {
+        window.InsightAuth.logout();
+        return;
+      }
+
+      localStorage.removeItem('insightpad_auth_token');
+      localStorage.removeItem(CHAVE_USUARIO_AUTH);
+      localStorage.removeItem('insightpad_auth_expira');
+      localStorage.removeItem(CHAVE_PERMISSOES_AUTH);
+      navegarMenu(obterBaseWebAppMenu() + '?page=Login');
+    }
+
+    document.getElementById('btnUsuarioMenuPrincipal')?.addEventListener('click', alternarPainelUsuario);
+    document.getElementById('painelUsuarioMenuPrincipal')?.addEventListener('click', manterPainelAberto);
+    document.getElementById('btnFecharUsuarioMenu')?.addEventListener('click', fecharPainelUsuario);
+    document.getElementById('btnGerenciarAcessosMenu')?.addEventListener('click', abrirGestaoAcessos);
+    document.getElementById('btnLogoutMenu')?.addEventListener('click', sairSistema);
+    document.addEventListener('click', fecharPainelUsuario);
+    document.addEventListener('insight:sessao-validada', function(evento) {
+      atualizarUsuarioMenu(evento.detail);
+    });
+
+    atualizarUsuarioMenu(obterSessaoMenu());
+  })();
+</script>

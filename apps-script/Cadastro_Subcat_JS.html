@@ -1,0 +1,2003 @@
+﻿<script>
+
+
+
+// ========================================
+// VARIÃVEIS GLOBAIS
+// ========================================
+
+// Array para armazenar todos os nomes das categorias (usado no dropdown de inputs)
+let todascategorias = [];
+
+// Timeout para controlar o debounce da pesquisa
+let timeoutId = null;
+
+// Armazena a referÃªncia da linha selecionada na tabela
+let linhaSelecionada = null;
+let linhasSelecionadas = [];
+
+const LIMITE_MAXIMO_SUBCATEGORIAS_LOTE = 20;
+
+
+
+
+
+// ========================================
+// ELEMENTOS DO DOM
+// ========================================
+
+// Inputs para acionar os menus suspensos
+const inputEditarCategoria = document.getElementById('inputEditarCategoria');
+const inputPesquisarCategoria = document.getElementById('inputPesquisarCategoria');
+const inputPesquisarSubcategoria = document.getElementById('inputPesquisarSubcategoria');
+
+// Listas de sugestÃµes dos menus suspensos
+const listaUlEditarCategoria = document.getElementById('listaEditarCategoria');
+const listaUlPesquisarCategoria = document.getElementById('listaPesquisarCategoria');
+const listaUlPesquisarSubcategoria = document.getElementById('listaPesquisarSubcategoria');
+
+
+
+
+
+// ========================================
+// INICIALIZAÃ‡ÃƒO DA PÃGINA
+// ========================================
+
+// Executa quando o DOM estiver completamente carregado
+document.addEventListener('DOMContentLoaded', function() {
+
+    // ====== CONFIGURAÃ‡ÃƒO DO TOASTR (NOTIFICAÃ‡Ã•ES) ======
+    toastr.options = {
+        "closeButton": true,              // Mostra botÃ£o de fechar
+        "debug": false,                   // Modo debug desativado
+        "newestOnTop": true,              // NotificaÃ§Ãµes mais recentes no topo
+        "progressBar": true,              // Mostra barra de progresso
+        "preventDuplicates": true,        // Evita notificaÃ§Ãµes duplicadas
+        "onclick": null,                  // Sem aÃ§Ã£o ao clicar
+        "showDuration": "300",            // DuraÃ§Ã£o da animaÃ§Ã£o de entrada
+        "hideDuration": "1000",           // DuraÃ§Ã£o da animaÃ§Ã£o de saÃ­da
+        "timeOut": "3000",                // Tempo de exibiÃ§Ã£o (3 segundos)
+        "extendedTimeOut": "0",           // Tempo extra ao passar mouse
+        "showEasing": "swing",            // Efeito de entrada
+        "hideEasing": "linear",           // Efeito de saÃ­da
+        "showMethod": "fadeIn",           // MÃ©todo de entrada
+        "hideMethod": "fadeOut"           // MÃ©todo de saÃ­da
+    };
+
+
+    // ====== CARREGANDO OS DADOS CAPTURADOS DAS LISTAS SUSPENSAS DENTRO DAS LISTAS EM BRANCO CRIADAS NO INÃCIO DO CÃ“DIGO======
+
+    // Pega os nomes das categorias passadas pelo template GS
+    if (typeof categoriasCadastradas !== 'undefined' && categoriasCadastradas && categoriasCadastradas.length > 0) {
+        // Filtra itens vazios ou com espaÃ§os em branco
+        todascategorias = categoriasCadastradas
+            .filter(item => item && item.nome && item.nome.trim() !== '')
+            .map(item => item.nome);
+    } else {
+        todascategorias = [];
+    }
+
+
+
+
+
+
+  
+
+    // ====== CONFIGURAÃ‡ÃƒO DOS EVENT LISTENERS ====================================================================
+
+    // BotÃ£o Extrair - extrai os dados da tabela
+    const botaoExtrair = document.getElementById("btnExtrair");
+    if (botaoExtrair) {
+        botaoExtrair.addEventListener("click", function() {
+            exportarTabelaParaCSV("Atividades.csv");
+      });
+    }
+
+    // BotÃ£o Limpar - remove filtros e restaura tabela
+    const botaoLimpar = document.getElementById("btnLimpar");
+    if (botaoLimpar) {
+        botaoLimpar.addEventListener("click", Limpar);
+    }
+
+    const btnAdicionarSubcategoriaLote = document.getElementById("btnAdicionarSubcategoriaLote");
+    if (btnAdicionarSubcategoriaLote) {
+        btnAdicionarSubcategoriaLote.addEventListener("click", adicionarNovoBlocoSubcategoriaLote);
+    }
+
+
+
+    // PESQUISA ---------------------------------------------------------------------------
+
+    // BotÃ£o Pesquisar - abre modal de pesquisa
+    const btnPesquisar = document.getElementById("btnPesquisar");
+    if (btnPesquisar) {
+        btnPesquisar.addEventListener("click", abrirModalPesquisa);
+    }
+
+    // BotÃ£o Confirmar Pesquisa - executa a pesquisa
+    const btnConfirmarPesquisa = document.getElementById("btnConfirmarPesquisa");
+    if (btnConfirmarPesquisa) {
+      btnConfirmarPesquisa.addEventListener("click", aplicarPesquisaNaTabela);
+    }
+
+    // BotÃ£o Cancelar Pesquisa - fecha modal de pesquisa
+    const btnCancelarPesquisa = document.getElementById("btnCancelarPesquisa");
+    if (btnCancelarPesquisa) {
+        btnCancelarPesquisa.addEventListener("click", fecharModalPesquisa);
+    }
+
+
+
+    // CADASTRO ----------------------------------------------------------------------------
+
+    // BotÃ£o Cadastrar - abre modal de cadastro
+    const btnCadastrar = document.getElementById("btnCadastrar");
+    if (btnCadastrar) {
+        btnCadastrar.addEventListener("click", abrirModalCadastro);
+    }
+
+    // BotÃ£o Cancelar Cadastro - fecha modal de cadastro
+    const btnCancelarCadastro = document.getElementById("btnCancelarCadastro");
+    if (btnCancelarCadastro) {
+        btnCancelarCadastro.addEventListener("click", fecharModalCadastro);
+    }
+
+    // BotÃ£o Confirmar Cadastro - executa cadastro
+    const btnConfirmarCadastro = document.getElementById("btnConfirmarCadastro");
+    if (btnConfirmarCadastro) {
+        btnConfirmarCadastro.addEventListener("click", cadastrar);
+    }
+
+    // Fechar modal de cadastro ao clicar fora
+    const modalCadastro = document.getElementById("modalCadastro");
+    if (modalCadastro) {
+        modalCadastro.addEventListener("click", function(e) {
+            if (e.target === modalCadastro) {
+                fecharModalCadastro();
+            }
+        });
+    }
+
+
+
+    // EXCLUSÃƒO ----------------------------------------------------------------------------
+
+    // BotÃ£o Excluir - abre modal de confirmaÃ§Ã£o
+    const btnExcluir = document.getElementById("btnExcluir");
+    if (btnExcluir) {
+        btnExcluir.addEventListener("click", abrirModalExclusao);
+    }
+
+    // BotÃ£o NÃ£o Excluir - fecha modal de exclusÃ£o
+    const btnNaoExcluir = document.getElementById("btnNaoExcluir");
+    if (btnNaoExcluir) {
+        btnNaoExcluir.addEventListener("click", fecharModalExclusao);
+    }
+
+    // BotÃ£o Sim Excluir - confirma exclusÃ£o
+    const btnSimExcluir = document.getElementById("btnSimExcluir");
+    if (btnSimExcluir) {
+        btnSimExcluir.addEventListener("click", confirmarExclusao);
+    }
+
+
+
+    // EDIÃ‡ÃƒO -------------------------------------------------------------------------------
+
+    // BotÃ£o Editar - abre modal de ediÃ§Ã£o
+    const btnEditar = document.getElementById("btnEditar");
+    if (btnEditar) {
+        btnEditar.addEventListener("click", abrirModalEdicao);
+    }
+
+    // BotÃ£o Cancelar EdiÃ§Ã£o - fecha modal de ediÃ§Ã£o
+    const btnCancelarEdicao = document.getElementById("btnCancelarEdicao");
+    if (btnCancelarEdicao) {
+        btnCancelarEdicao.addEventListener("click", fecharModalEdicao);
+    }
+
+    // BotÃ£o Confirmar EdiÃ§Ã£o - executa ediÃ§Ã£o
+    const btnConfirmarEdicao = document.getElementById("btnConfirmarEdicao");
+    if (btnConfirmarEdicao) {
+        btnConfirmarEdicao.addEventListener("click", confirmarEdicao);
+    }
+
+    // Fechar modal de ediÃ§Ã£o ao clicar fora
+    const modalEdicao = document.getElementById("modalEdicao");
+    if (modalEdicao) {
+        modalEdicao.addEventListener("click", function(e) {
+            if (e.target === modalEdicao) {
+                fecharModalEdicao();
+            }
+        });
+    }
+
+
+
+
+    // CONFIGURAÃ‡ÃƒO DO CALENDÃRIO -----------------------------------------------------------
+
+    const inputsData = document.querySelectorAll('.datepicker');
+    if (!inputsData.length || !window.M || !M.Datepicker) return;
+
+    const isRangeId = (id) =>
+      id === "inputPesquisarDataCadastro";
+
+    // i18n (mesmo que vocÃª jÃ¡ usa)
+    const i18nBR = {
+      cancel: 'Cancelar',
+      clear: 'Limpar',
+      done: 'OK',
+      months: ['Janeiro','Fevereiro','MarÃ§o','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'],
+      monthsShort: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],
+      weekdays: ['Domingo','Segunda','TerÃ§a','Quarta','Quinta','Sexta','SÃ¡bado'],
+      weekdaysShort: ['Dom','Seg','Ter','Qua','Qui','Sex','SÃ¡b'],
+      weekdaysAbbrev: ['D','S','T','Q','Q','S','S']
+    };
+
+    // Init geral
+    inputsData.forEach((input) => {
+      if (isRangeId(input.id)) {
+       initDatepickerRange(input, i18nBR);
+      } else {
+        M.Datepicker.init(input, {
+          format: 'dd/mm/yyyy',
+          maxDate: new Date(),
+          autoClose: true,
+          showClearBtn: true,
+          yearRange: 100,
+          i18n: i18nBR
+        });
+      }
+    });
+
+
+    resetarCadastroLoteSubcategoria();
+
+
+    // CONFIGURA EVENTOS DO DROPDOWN ================================================================
+    configurarTodosDropdowns();
+
+
+    // CARREGA DADOS INICIAIS NA TABELA =============================================================
+    carregarDadosIniciais();
+
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ======================================================================================
+// FUNÃ‡ÃƒO: ATUALIZAR DADOS
+// ======================================================================================
+// Busca dados atualizados do GS sem recarregar a pÃ¡gina
+function atualizarDados() {
+    
+    // Chama funÃ§Ã£o do Google Apps Script
+    google.script.run
+        .withSuccessHandler(function(resultado) {
+            if (resultado.sucesso) {
+                dadosTabela = resultado.dadosCompletos;
+                
+                // Recarrega a tabela com os novos dados
+                carregarDadosIniciais();
+            } else {
+                toastr.error(resultado.mensagem || "Erro ao atualizar dados!");
+            }
+        })
+        .withFailureHandler(function(erro) {
+            console.error("Erro ao atualizar dados:", erro);
+            toastr.error("Erro ao atualizar dados. Verifique o console.");
+        })
+        .buscarDadosAtualizadosSubcategoria();
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ============================================================================================================================================
+// FUNÃ‡ÃƒO: CARREGAR DADOS INICIAIS
+// ============================================================================================================================================
+// Preenche a tabela com todos os dados ao abrir a pÃ¡gina
+// Devemos alterar apenas o trecho "var i = 0; i < r.length && i < 5; i++", onde trocamos o numero de colunas da tabela "i < 5"
+
+function carregarDadosIniciais() {
+    
+  if (typeof dadosTabela === 'undefined' || !dadosTabela || !Array.isArray(dadosTabela) || dadosTabela.length === 0) {
+        return;
+    }
+
+    var CorpoTabela = document.getElementById("tb_corpo");
+    
+    while(CorpoTabela.hasChildNodes()){
+        CorpoTabela.removeChild(CorpoTabela.lastChild);
+    }
+
+    dadosTabela.forEach(function(r){
+
+        var Linha = document.createElement("tr");
+
+        for (var i = 0; i < r.length && i < 5; i++) {
+            var Coluna = document.createElement("td");
+            Coluna.textContent = r[i]; 
+            Linha.appendChild(Coluna);
+        }
+
+        // Adicionar evento de clique na linha
+        Linha.addEventListener("click", function(evento) {
+            selecionarLinha(this, evento);
+        });
+
+        CorpoTabela.appendChild(Linha);
+
+    });
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =======================================================================================
+// FUNÇÃO: SELECIONAR/DESSELECIONAR LINHA
+// =======================================================================================
+function obterLinhasSelecionadasValidas() {
+    linhasSelecionadas = linhasSelecionadas.filter(function(linha) {
+        return linha && linha.isConnected;
+    });
+    linhaSelecionada = linhasSelecionadas.length ? linhasSelecionadas[linhasSelecionadas.length - 1] : null;
+    return linhasSelecionadas;
+}
+
+function limparSelecaoLinhas() {
+    linhasSelecionadas.forEach(function(linha) {
+        if (linha && linha.classList) linha.classList.remove("selecionada");
+    });
+    linhasSelecionadas = [];
+    linhaSelecionada = null;
+}
+
+// Marca linha selecionada (verde) ou desmarca se clicar novamente
+function selecionarLinha(linha, evento) {
+    const selecaoMultipla = !!(evento && (evento.ctrlKey || evento.metaKey));
+    obterLinhasSelecionadasValidas();
+
+    if (selecaoMultipla) {
+        const indiceLinha = linhasSelecionadas.indexOf(linha);
+        if (indiceLinha >= 0) {
+            linha.classList.remove("selecionada");
+            linhasSelecionadas.splice(indiceLinha, 1);
+        } else {
+            linha.classList.add("selecionada");
+            linhasSelecionadas.push(linha);
+        }
+    } else {
+        const jaSelecionadaUnica = linhasSelecionadas.length === 1 && linhasSelecionadas[0] === linha;
+        limparSelecaoLinhas();
+        if (!jaSelecionadaUnica) {
+            linha.classList.add("selecionada");
+            linhasSelecionadas = [linha];
+        }
+    }
+
+    linhaSelecionada = linhasSelecionadas.length ? linhasSelecionadas[linhasSelecionadas.length - 1] : null;
+}
+
+
+// ======================================================================================
+// FUNÃ‡Ã•ES: CONTROLE DO MODAL DE CARREGAMENTO
+// ======================================================================================
+
+// Exibe o modal de carregamento (tela preta com logo girando)
+function mostrarCarregamentoModal() {
+    document.getElementById('modalCarregamento').classList.add('ativo');
+}
+
+// Esconde o modal de carregamento
+function esconderCarregamentoModal() {
+    document.getElementById('modalCarregamento').classList.remove('ativo');
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ============================================================================================================================
+// CONFIGURAÃ‡ÃƒO DO CALENDÃRIO DE PESQUISA
+// ============================================================================================================================
+
+// ====== Range Datepicker (2 cliques) ======
+function initDatepickerRange(input, i18nBR) {
+  const fmt = (d) => {
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yy = d.getFullYear();
+    return `${dd}/${mm}/${yy}`;
+  };
+
+  // Estado por input
+  let start = null;
+  let end = null;
+
+  const instance = M.Datepicker.init(input, {
+    format: 'dd/mm/yyyy',         // nÃ£o usamos direto no input, mas ok manter
+    maxDate: new Date(),
+    autoClose: false,             // IMPORTANTÃSSIMO: nÃ£o fecha no 1Âº clique
+    showClearBtn: true,
+    yearRange: 100,
+    i18n: i18nBR,
+
+    onOpen() {
+      // Quando abrir, redesenha highlight (se jÃ¡ tiver start/end)
+      setTimeout(() => highlightRange(instance, start, end), 0);
+    },
+
+    onSelect(date) {
+      // date vem como Date
+      if (!start || (start && end)) {
+        // 1Âº clique (ou reinÃ­cio)
+        start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        end = null;
+
+        // opcional: limpa o input atÃ© fechar, ou mostra o comeÃ§o
+        input.value = `${fmt(start)} - `;
+        setTimeout(() => highlightRange(instance, start, end), 0);
+        return;
+      }
+
+      // 2Âº clique
+      const picked = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+      // se clicou antes do start, inverte
+      if (picked.getTime() < start.getTime()) {
+        end = start;
+        start = picked;
+      } else {
+        end = picked;
+      }
+
+      input.value = `${fmt(start)} - ${fmt(end)}`;
+
+      setTimeout(() => highlightRange(instance, start, end), 0);
+
+      // agora pode fechar
+      instance.close();
+    }
+  });
+
+  // Clique no "Limpar" (Materialize nÃ£o expÃµe callback direto, entÃ£o limpamos ao apagar)
+  input.addEventListener("input", () => {
+    if (!input.value.trim()) {
+      start = null;
+      end = null;
+      const inst = M.Datepicker.getInstance(input);
+      if (inst) setTimeout(() => highlightRange(inst, start, end), 0);
+    }
+  });
+}
+
+
+// ====== Pinta o intervalo no calendÃ¡rio ======
+function highlightRange(instance, start, end) {
+  if (!instance || !instance.datepickerEl) return;
+
+  const root = instance.datepickerEl;
+  const tds = root.querySelectorAll(".datepicker-table td");
+
+  // limpa classes antigas
+  tds.forEach(td => {
+    td.classList.remove("range-start", "range-end", "range-between");
+  });
+
+  if (!start) return;
+
+  const startT = start.getTime();
+  const endT = end ? end.getTime() : null;
+
+  tds.forEach(td => {
+    const btn = td.querySelector(".datepicker-day-button");
+    if (!btn) return;
+
+    // tenta ler data do DOM do Materialize
+    const day = parseInt(btn.getAttribute("data-day"), 10);
+    const month = parseInt(btn.getAttribute("data-month"), 10);
+    const year = parseInt(btn.getAttribute("data-year"), 10);
+
+    if (Number.isNaN(day) || Number.isNaN(month) || Number.isNaN(year)) return;
+
+    const cellDate = new Date(year, month, day);
+    const cellT = cellDate.getTime();
+
+    // 1 clique: marca sÃ³ o inÃ­cio
+    if (!endT) {
+      if (cellT === startT) td.classList.add("range-start");
+      return;
+    }
+
+    // 2 cliques: marca intervalo
+    if (cellT === startT) td.classList.add("range-start");
+    else if (cellT === endT) td.classList.add("range-end");
+    else if (cellT > startT && cellT < endT) td.classList.add("range-between");
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =================================================================================================================================================
+// CONFIGURAÃ‡ÃƒO GERAL DOS DROPDOWNS SIMPLES
+// =================================================================================================================================================
+// Ao final desse bloco de cÃ³digo devemos informar quais elementos farÃ£o parte dessa configuraÃ§Ã£o
+
+function configurarDropdown(inputCampo, listaUl, dados) {
+  if (!inputCampo || !listaUl) return;
+  let timeoutId = null;
+
+  // EVENTO: DIGITAÃ‡ÃƒO NO CAMPO DE PESQUISA =======================================================
+  inputCampo.addEventListener('input', function (e) {
+    const texto = e.target.value;
+
+    // Cancela timeout anterior (debounce)
+    if (timeoutId) clearTimeout(timeoutId);
+
+    // Aguarda 300ms apÃ³s parar de digitar para filtrar
+    timeoutId = setTimeout(function () {
+      filtrarEMostrarSugestoes(texto, dados, listaUl, inputCampo);
+    }, 300);
+  });
+
+  document.addEventListener('click', function (e) {
+  // NÃƒO fecha se clicou dentro do prÃ³prio input ou dentro da lista
+  if (e.target === inputCampo || listaUl.contains(e.target)) return;
+
+  // NÃƒO fecha se clicou dentro do container do dropdown
+  if (e.target.closest('.dropdown-container')) return;
+
+  esconderSugestoes(listaUl);
+  });
+
+  // EVENTO: FOCO NO CAMPO - MOSTRA TODAS AS OPÃ‡Ã•ES ================================================
+  inputCampo.addEventListener('focus', function () {
+      mostrarSugestoes(dados, listaUl, inputCampo);
+  });
+
+  inputCampo.addEventListener('click', function () {
+    mostrarSugestoes(dados, listaUl, inputCampo);
+});
+
+  // EVENTO: CLICAR FORA - FECHA DROPDOWN ==========================================================
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('.dropdown-container')) {
+      esconderSugestoes(listaUl);
+    }
+  });
+
+  // EVENTO: NAVEGAÃ‡ÃƒO POR TECLADO =================================================================
+  inputCampo.addEventListener('keydown', function (e) {
+    const items = listaUl.querySelectorAll('li');
+    const selected = listaUl.querySelector('li.selected');
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        navegarSugestoes(items, selected, 'down');
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        navegarSugestoes(items, selected, 'up');
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selected) {
+          selecionarOpcao(selected.textContent, inputCampo, listaUl);
+        }
+        break;
+      case 'Escape':
+        esconderSugestoes(listaUl);
+        break;
+    }
+  });
+}
+
+
+// FUNÃ‡Ã•ES AUXILIARES==================================================================================================
+
+
+// Filtra dados e exibe sugestÃµes ===================================================================================
+function filtrarEMostrarSugestoes(texto, dados, listaUl, inputCampo) {
+ const textoFiltro = (texto || '').trim().toLowerCase();
+  if (textoFiltro === '') {
+    mostrarSugestoes(dados, listaUl, inputCampo);
+    return;
+  }
+  const filtrados = dados.filter(item => item.toLowerCase().includes(textoFiltro));
+  mostrarSugestoes(filtrados, listaUl, inputCampo);
+}
+
+// Exibe a lista de sugestÃµes =======================================================================================
+function mostrarSugestoes(lista, listaUl, inputCampo) {
+  listaUl.innerHTML = '';
+
+  if (lista.length === 0) {
+    const noResults = document.createElement('li');
+    noResults.textContent = 'Nenhum resultado encontrado';
+    noResults.style.cssText = 'padding: 10px; color: #666; font-style: italic;';
+    listaUl.appendChild(noResults);
+  } else {
+    lista.forEach(item => {
+      const li = document.createElement('li');
+      li.textContent = item;
+      li.style.cssText = 'padding: 10px; cursor: pointer; border-bottom: 1px solid #eee;';
+
+      // Evento de clique no item
+      li.addEventListener('click', function () {
+        selecionarOpcao(item, inputCampo, listaUl);
+      });
+
+      // Evento de hover
+      li.addEventListener('mouseenter', function () {
+        const selected = listaUl.querySelector('li.selected');
+        if (selected) {
+          selected.classList.remove('selected');
+          selected.style.backgroundColor = '';
+        }
+        li.classList.add('selected');
+        li.style.backgroundColor = '#f5f5f5';
+      });
+
+      listaUl.appendChild(li);
+    });
+  }
+
+  listaUl.style.display = 'block';
+}
+
+// Esconde o dropdown ===============================================================================================
+function esconderSugestoes(listaUl) {
+  listaUl.style.display = 'none';
+}
+
+// Seleciona uma opÃ§Ã£o ==============================================================================================
+function selecionarOpcao(valor, inputCampo, listaUl) {
+  inputCampo.value = valor;
+  esconderSugestoes(listaUl);
+}
+
+// Navega pelas sugestÃµes com setas =================================================================================
+function navegarSugestoes(items, selected, direction) {
+  if (items.length === 0) return;
+
+  let index = -1;
+  if (selected) {
+    index = Array.from(items).indexOf(selected);
+    selected.classList.remove('selected');
+    selected.style.backgroundColor = '';
+  }
+
+  if (direction === 'down') {
+    index = index < items.length - 1 ? index + 1 : 0;
+  } else {
+    index = index > 0 ? index - 1 : items.length - 1;
+  }
+
+  items[index].classList.add('selected');
+  items[index].style.backgroundColor = '#f5f5f5';
+  items[index].scrollIntoView({ block: 'nearest' });
+}
+
+
+// CONFIGURAÃ‡ÃƒO DE TODOS OS DROPDOWNS DA PÃGINA ======================================================================
+
+function configurarTodosDropdowns() {
+  configurarDropdown(inputEditarCategoria, listaUlEditarCategoria, todascategorias);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =================================================================================================================================================
+// CONFIGURAÃ‡ÃƒO GERAL DOS DROPDOWNS MULTISELEÃ‡ÃƒO - USADOS NA PARTE DE PESQUISA
+// =================================================================================================================================================
+// Essa funÃ§Ã£o serÃ¡ chamada dentro da funÃ§Ã£o de abrir modal de pesquisa, onde passaremos os elementos que farÃ£o parte dessa configuraÃ§Ã£o
+
+function configurarDropdownMulti(inputCampo, listaUl, dados, separador = "; ") {
+  if (!inputCampo || !listaUl) return;
+
+  // Guarda os selecionados (mantÃ©m mesmo com filtro)
+  const selecionados = new Set();
+
+  const normalizar = (v) => String(v ?? "").trim();
+  const lower = (v) => normalizar(v).toLowerCase();
+
+  function obterOpcoesValidas() {
+    return Array.from(new Set((dados || []).map(normalizar).filter(Boolean)));
+  }
+
+  String(inputCampo.value || "")
+    .split(";")
+    .map(normalizar)
+    .filter(Boolean)
+    .forEach(valor => selecionados.add(valor));
+
+  function atualizarInput() {
+    inputCampo.value = Array.from(selecionados).join(separador);
+  }
+
+  function render(lista) {
+    listaUl.innerHTML = "";
+
+    const opcoesTodas = obterOpcoesValidas();
+
+    if (opcoesTodas.length) {
+      const todosSelecionados = opcoesTodas.every(valor => selecionados.has(valor));
+      const algunsSelecionados = opcoesTodas.some(valor => selecionados.has(valor));
+      const liTodos = document.createElement("li");
+      liTodos.style.cssText = "padding: 10px; border-bottom: 1px solid #ddd; display:flex; align-items:center; gap:10px; font-weight:700;";
+
+      const chkTodos = document.createElement("input");
+      chkTodos.type = "checkbox";
+      chkTodos.checked = todosSelecionados;
+      chkTodos.indeterminate = !todosSelecionados && algunsSelecionados;
+      chkTodos.style.cursor = "pointer";
+
+      const labelTodos = document.createElement("span");
+      labelTodos.textContent = "Selecionar todos";
+      labelTodos.style.cssText = "cursor: pointer; user-select: none;";
+
+      liTodos.addEventListener("click", () => {
+        const marcarTodos = !opcoesTodas.every(valor => selecionados.has(valor));
+        opcoesTodas.forEach(valor => {
+          if (marcarTodos) selecionados.add(valor);
+          else selecionados.delete(valor);
+        });
+        atualizarInput();
+        render(lista);
+      });
+
+      liTodos.appendChild(chkTodos);
+      liTodos.appendChild(labelTodos);
+      listaUl.appendChild(liTodos);
+    }
+
+    if (!lista || lista.length === 0) {
+      const li = document.createElement("li");
+      li.textContent = "Nenhum resultado encontrado";
+      li.style.cssText = "padding: 10px; color: #666; font-style: italic;";
+      listaUl.appendChild(li);
+      listaUl.style.display = "block";
+      return;
+    }
+
+    lista.forEach(item => {
+      const valor = normalizar(item);
+      if (!valor) return;
+
+      const li = document.createElement("li");
+      li.style.cssText = "padding: 10px; border-bottom: 1px solid #eee; display:flex; align-items:center; gap:10px;";
+
+      const chk = document.createElement("input");
+      chk.type = "checkbox";
+      chk.checked = selecionados.has(valor);
+      chk.style.cursor = "pointer";
+
+      const label = document.createElement("span");
+      label.textContent = valor;
+      label.style.cssText = "cursor: pointer; user-select: none;";
+
+      function alternar() {
+        if (chk.checked) selecionados.add(valor);
+        else selecionados.delete(valor);
+        atualizarInput();
+      }
+
+      // clique no checkbox
+      chk.addEventListener("change", alternar);
+
+      // clique no texto tambÃ©m alterna
+      label.addEventListener("click", () => {
+        chk.checked = !chk.checked;
+        alternar();
+      });
+
+      li.appendChild(chk);
+      li.appendChild(label);
+      listaUl.appendChild(li);
+    });
+
+    listaUl.style.display = "block";
+  }
+
+  function mostrarTudo() {
+    render(dados);
+  }
+
+  function filtrar() {
+    const texto = lower(inputCampo.value);
+    // Filtra digitando: aqui vamos considerar o "Ãºltimo termo" apÃ³s ';'
+    // para permitir que o usuÃ¡rio continue digitando mesmo com itens jÃ¡ selecionados.
+    const ultimoTermo = texto.split(";").pop().trim();
+
+    if (!ultimoTermo) {
+      mostrarTudo();
+      return;
+    }
+
+    const filtrados = dados.filter(item => lower(item).includes(ultimoTermo));
+    render(filtrados);
+  }
+
+  // Abre no clique/focus
+  inputCampo.addEventListener("focus", mostrarTudo);
+  inputCampo.addEventListener("click", mostrarTudo);
+
+  // Filtra ao digitar
+  inputCampo.addEventListener("input", () => {
+    // debounce simples (opcional)
+    clearTimeout(inputCampo._ddTimeout);
+    inputCampo._ddTimeout = setTimeout(filtrar, 150);
+  });
+
+  // Fechar ao clicar fora
+  document.addEventListener("click", (e) => {
+    if (e.target === inputCampo) return;
+    if (listaUl.contains(e.target)) return;
+    if (e.target.closest(".dropdown-container")) return;
+    listaUl.style.display = "none";
+  });
+
+  // (Opcional) ESC fecha
+  inputCampo.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") listaUl.style.display = "none";
+  });
+
+  // Exponho um helper se vocÃª quiser limpar depois
+  inputCampo._clearMulti = () => {
+    selecionados.clear();
+    atualizarInput();
+    listaUl.style.display = "none";
+  };
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ==============================================================================================================================================
+// FUNÃ‡ÃƒO: EXTRAIR DADOS
+// ==============================================================================================================================================
+
+function exportarTabelaParaCSV(nomeArquivo) {
+  const thead = document.querySelector("#tb_cabecalho");
+  const tbody = document.querySelector("#tb_corpo");
+
+  if (!thead || !tbody) {
+    console.warn("CabeÃ§alho ou corpo da tabela nÃ£o encontrado.");
+    return;
+  }
+
+  // ===== helpers =====
+  const limparTexto = (t) => String(t ?? "").replace(/\s+/g, " ").trim();
+
+  // Escapa CSV: aspas duplas e vÃ­rgulas/quebras de linha
+  const csvEscape = (valor) => {
+    const v = limparTexto(valor);
+    const precisaAspas = /[",\n\r]/.test(v);
+    const vEsc = v.replace(/"/g, '""');
+    return precisaAspas ? `"${vEsc}"` : vEsc;
+  };
+
+  const linhasCSV = [];
+
+  // ===== cabeÃ§alho =====
+  const ths = Array.from(thead.querySelectorAll("th"));
+  const cabecalho = ths.map(th => csvEscape(th.textContent));
+  linhasCSV.push(cabecalho.join(",")); // separado por vÃ­rgula
+
+  // ===== corpo =====
+  const trs = Array.from(tbody.querySelectorAll("tr"));
+  trs.forEach(tr => {
+    const tds = Array.from(tr.querySelectorAll("td"));
+    const linha = tds.map(td => csvEscape(td.textContent));
+    linhasCSV.push(linha.join(","));
+  });
+
+  // Monta arquivo (UTF-8 com BOM pra abrir bem no Excel PT-BR)
+  const csvFinal = "\uFEFF" + linhasCSV.join("\r\n");
+  const blob = new Blob([csvFinal], { type: "text/csv;charset=utf-8;" });
+
+  // Download
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = nomeArquivo || "export.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =========================================================================================================================================================
+// FUNÃ‡ÃƒO: LIMPAR FILTROS
+// =========================================================================================================================================================
+// Remove filtros e restaura tabela completa
+
+function Limpar() {
+    
+    // Recarrega todos os dados
+    carregarDadosIniciais();
+    document.getElementById("inputPesquisarCategoria").value = "";
+    document.getElementById("inputPesquisarSubcategoria").value = "";
+    document.getElementById("inputPesquisarDataCadastro").value = "";
+    
+    toastr.info('Filtros removidos com sucesso!');
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ==================================================================================================================================================
+// MODAL DE PESQUISA
+// ==================================================================================================================================================
+
+// Abre o modal de pesquisa --------------------------------------------------------------------------------------
+
+function abrirModalPesquisa() {
+    // 1) Abre o modal
+    const modal = document.getElementById("modalPesquisa");
+    if (!modal) return;
+    modal.classList.add("ativo");
+
+    // 2) Pega as linhas atualmente exibidas na tabela (interface)
+    const tbody = document.getElementById("tb_corpo");
+    if (!tbody) return;
+
+    const linhas = Array.from(tbody.querySelectorAll("tr"));
+
+    // 3) Coleta valores distintos (coluna 3 = index 2 / coluna 5 = index 4)
+    const setCategorias = new Set();
+    const setSubcategorias = new Set();
+
+    linhas.forEach(tr => {
+      const tds = tr.querySelectorAll("td");
+      if (!tds || tds.length < 5) return;
+
+      const categoria = (tds[1].textContent || "").trim(); // 2Âª coluna
+      const subcategoria = (tds[2].textContent || "").trim(); // 3Âª coluna
+
+      if (categoria) setCategorias.add(categoria);
+      if (subcategoria) setSubcategorias.add(subcategoria);
+    });
+
+    // 4) Ordena (opcional, fica melhor)
+    const categorias = Array.from(setCategorias).sort((a, b) => a.localeCompare(b));
+    const subcategorias = Array.from(setSubcategorias).sort((a, b) => a.localeCompare(b));
+
+    configurarDropdownMulti(inputPesquisarCategoria, listaUlPesquisarCategoria, categorias);
+    configurarDropdownMulti(inputPesquisarSubcategoria, listaUlPesquisarSubcategoria, subcategorias);
+
+}
+
+
+
+
+
+
+// Fecha o modal e limpa os campos ------------------------------------------------------------------------------------
+
+function fecharModalPesquisa() {
+    document.getElementById("modalPesquisa").classList.remove("ativo");
+    document.querySelectorAll("#modalPesquisa .sugestoes").forEach(lista => lista.style.display = "none");
+}
+
+
+
+
+
+// Pega os dados dos inputs e aplica a pesquisa na tabela --------------------------------------------------------------
+
+function aplicarPesquisaNaTabela() {
+
+  const inputCat = document.getElementById("inputPesquisarCategoria");
+  const inputSub = document.getElementById("inputPesquisarSubcategoria");
+  const inputCad = document.getElementById("inputPesquisarDataCadastro");
+
+  const catRaw = (inputCat?.value || "").trim();
+  const subRaw = (inputSub?.value || "").trim();
+  const cadRaw = (inputCad?.value || "").trim();
+
+  // 2) Se nenhum campo preenchido
+  if (!catRaw && !subRaw && !cadRaw) {
+    // Use sua lib de toast se existir, senÃ£o alert
+    if (window.toastr) toastr.warning("Preencha ao menos um campo!");
+    else alert("Preencha ao menos um campo!");
+    return;
+  }
+
+  // Pega linhas atuais exibidas
+  const tbody = document.getElementById("tb_corpo");
+  if (!tbody) return;
+
+  const linhasDOM = Array.from(tbody.querySelectorAll("tr"));
+
+  // Transforma as linhas DOM em array de textos [col1..col8]
+  const linhas = linhasDOM.map(tr => Array.from(tr.querySelectorAll("td")).map(td => (td.textContent || "").trim()));
+
+  // ====== Monta critÃ©rios ======
+  const normalizar = (v) => String(v ?? "").trim();
+  const normLower = (v) => normalizar(v).toLowerCase();
+
+  // Atividade / Filial: split por ";" e OR dentro do campo
+  const listaCat = parseListaMulti(catRaw); // array de strings
+  const listaSub = parseListaMulti(subRaw);
+
+  // Datas: "dd/MM/yyyy - dd/MM/yyyy"
+  const rangeCad = parseRangeBR(cadRaw);
+
+  // ====== Filtra (AND entre campos) ======
+  const filtradas = linhas.filter(r => {
+    // r[1] = Categoria, r[2] = Subcategoria, r[6] = Data CriaÃ§Ã£o
+
+    // AND 1: Categoria
+    if (listaCat.length > 0) {
+      const valor = normLower(r[1]);
+      const ok = listaCat.some(x => normLower(x) === valor);
+      if (!ok) return false;
+    }
+
+    // AND 2: Subcategoria
+    if (listaSub.length > 0) {
+      const valor = normLower(r[2]);
+      const ok = listaSub.some(x => normLower(x) === valor);
+      if (!ok) return false;
+    }
+
+    // AND 4: PerÃ­odo de cadastro
+    if (rangeCad) {
+      const ts = parseDataHoraBRToTS(r[3]);
+      if (!ts) return false;
+      if (ts < rangeCad.iniTS || ts > rangeCad.fimTS) return false;
+    }
+
+    return true;
+  });
+
+  // ====== Renderiza a tabela com o resultado filtrado ======
+  renderTabelaAPartirDeArray(filtradas);
+  fecharModalPesquisa();
+
+  // (Opcional) fechar modal de pesquisa se quiser
+  // document.getElementById("modalPesquisa")?.classList.remove("ativo");
+}
+
+
+// ===== Helpers =====
+
+// "nome1; nome2; nome3" -> ["nome1","nome2","nome3"]
+function parseListaMulti(str) {
+  const s = String(str || "").trim();
+  if (!s) return [];
+  return s
+    .split(";")
+    .map(x => x.trim())
+    .filter(Boolean);
+}
+
+// "dd/MM/yyyy - dd/MM/yyyy" -> {iniTS, fimTS} (fim no final do dia)
+function parseRangeBR(str) {
+  const s = String(str || "").trim();
+  if (!s) return null;
+
+  const parts = s.split("-").map(p => p.trim());
+  if (parts.length < 2) return null;
+
+  const ini = parseDataBRToTS(parts[0], false);
+  const fim = parseDataBRToTS(parts[1], true);
+
+  if (!ini || !fim) return null;
+
+  return { iniTS: ini, fimTS: fim };
+}
+
+// "dd/MM/yyyy" -> timestamp (00:00:00) ou (23:59:59)
+function parseDataBRToTS(str, fimDoDia) {
+  const s = String(str || "").trim();
+  const [dd, MM, yyyy] = s.split("/").map(n => parseInt(n, 10));
+  if (!yyyy || !MM || !dd) return 0;
+
+  const h = fimDoDia ? 23 : 0;
+  const m = fimDoDia ? 59 : 0;
+  const sec = fimDoDia ? 59 : 0;
+
+  return new Date(yyyy, MM - 1, dd, h, m, sec).getTime();
+}
+
+// "dd/MM/yyyy HH:mm:ss" OU "dd/MM/yyyy" -> timestamp
+function parseDataHoraBRToTS(str) {
+  const s = String(str || "").trim();
+  if (!s) return 0;
+
+  const [dataParte, horaParte] = s.split(" ");
+  if (!dataParte) return 0;
+
+  const [dd, MM, yyyy] = dataParte.split("/").map(n => parseInt(n, 10));
+  if (!yyyy || !MM || !dd) return 0;
+
+  let hh = 0, mm = 0, ss = 0;
+  if (horaParte) {
+    const hparts = horaParte.split(":").map(n => parseInt(n, 10));
+    hh = isNaN(hparts[0]) ? 0 : hparts[0];
+    mm = isNaN(hparts[1]) ? 0 : hparts[1];
+    ss = isNaN(hparts[2]) ? 0 : hparts[2];
+  }
+
+  return new Date(yyyy, MM - 1, dd, hh, mm, ss).getTime();
+}
+
+// Renderiza a tabela (sÃ³ reescreve o tbody com as linhas filtradas)
+function renderTabelaAPartirDeArray(linhas) {
+  const tbody = document.getElementById("tb_corpo");
+  if (!tbody) return;
+
+  // limpa
+  while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+
+  // popula
+  linhas.forEach(r => {
+    const tr = document.createElement("tr");
+
+    for (let i = 0; i < r.length && i < 5; i++) {
+      const td = document.createElement("td");
+      td.textContent = r[i];
+      tr.appendChild(td);
+    }
+
+    tr.addEventListener("click", function (evento) {
+      selecionarLinha(this, evento);
+    });
+
+    tbody.appendChild(tr);
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ==================================================================================================================================================
+// MODAL DE CADASTRO
+// ==================================================================================================================================================
+
+function obterBlocosSubcategoriaLote() {
+    return Array.from(document.querySelectorAll('#containerLoteSubcategorias .bloco-subcat-lote'));
+}
+
+function categoriaMaeExiste(nomeCategoria) {
+    const nomeNormalizado = String(nomeCategoria || "").trim().toUpperCase();
+    return nomeNormalizado !== "" && todascategorias.some(function(categoria) {
+        return String(categoria || "").trim().toUpperCase() === nomeNormalizado;
+    });
+}
+
+function atualizarBotoesRemoverSubcategoriaLote() {
+    obterBlocosSubcategoriaLote().forEach(function(bloco, indice) {
+        const btnRemover = bloco.querySelector('.btn-remover-subcat-lote');
+        if (btnRemover) btnRemover.classList.toggle('oculto', indice === 0);
+    });
+}
+
+function atualizarEstadoBotaoAdicionarSubcategoriaLote() {
+    const btnAdicionar = document.getElementById("btnAdicionarSubcategoriaLote");
+    if (!btnAdicionar) return;
+
+    const blocos = obterBlocosSubcategoriaLote();
+    const totalBlocos = blocos.length;
+
+    const existeBlocoIncompleto = blocos.some(bloco => {
+        const inputCategoria = bloco.querySelector('.input-categoria-lote-subcat');
+        const inputSubcategoria = bloco.querySelector('.input-subcategoria-lote');
+        return !inputCategoria || !inputSubcategoria ||
+               inputCategoria.value.trim() === "" ||
+               inputSubcategoria.value.trim() === "";
+    });
+
+    btnAdicionar.disabled = totalBlocos >= LIMITE_MAXIMO_SUBCATEGORIAS_LOTE || existeBlocoIncompleto;
+    atualizarBotoesRemoverSubcategoriaLote();
+}
+
+function adicionarEventosControleBlocoSubcategoria(bloco) {
+    if (!bloco) return;
+
+    const inputCategoria = bloco.querySelector('.input-categoria-lote-subcat');
+    const listaCategoria = bloco.querySelector('.lista-categoria-lote-subcat');
+    const inputSubcategoria = bloco.querySelector('.input-subcategoria-lote');
+    const btnRemover = bloco.querySelector('.btn-remover-subcat-lote');
+
+    if (inputCategoria && listaCategoria) {
+        configurarDropdown(inputCategoria, listaCategoria, todascategorias);
+        inputCategoria.addEventListener("input", atualizarEstadoBotaoAdicionarSubcategoriaLote);
+        inputCategoria.addEventListener("blur", function() {
+            setTimeout(function() {
+                if (inputCategoria.value.trim() !== "" && !categoriaMaeExiste(inputCategoria.value)) {
+                    inputCategoria.value = "";
+                    toastr.warning("Selecione uma categoria mÃ£e existente na lista.");
+                }
+                atualizarEstadoBotaoAdicionarSubcategoriaLote();
+            }, 120);
+        });
+    }
+
+    if (inputSubcategoria) {
+        inputSubcategoria.addEventListener("input", function() {
+            this.value = this.value.toUpperCase();
+            atualizarEstadoBotaoAdicionarSubcategoriaLote();
+        });
+    }
+
+    if (btnRemover) {
+        btnRemover.addEventListener("click", function() {
+            removerBlocoSubcategoriaLote(bloco);
+        });
+    }
+}
+
+function criarBlocoSubcategoriaLote() {
+    const bloco = document.createElement("div");
+    bloco.className = "bloco-subcat-lote";
+
+    bloco.innerHTML = `
+      <div class="form-field dropdown-container form-field-lote-subcat">
+        <input type="text" class="input-moderno input-categoria-lote-subcat" placeholder="Digite e selecione a categoria">
+        <ul class="sugestoes lista-categoria-lote-subcat"></ul>
+      </div>
+
+      <div class="form-field form-field-lote-subcat">
+        <input type="text" class="input-moderno input-subcategoria-lote" placeholder="Digite o nome da subcategoria" maxlength="40">
+      </div>
+
+      <button type="button" class="btn-remover-subcat-lote" title="Remover linha">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    `;
+
+    return bloco;
+}
+
+function removerBlocoSubcategoriaLote(bloco) {
+    const blocos = obterBlocosSubcategoriaLote();
+    if (blocos.length <= 1) {
+        toastr.warning("O cadastro precisa ter ao menos uma linha.");
+        return;
+    }
+
+    bloco.remove();
+    atualizarEstadoBotaoAdicionarSubcategoriaLote();
+}
+
+function adicionarNovoBlocoSubcategoriaLote() {
+    const container = document.getElementById("containerLoteSubcategorias");
+    if (!container) return;
+
+    const blocos = obterBlocosSubcategoriaLote();
+
+    if (blocos.length >= LIMITE_MAXIMO_SUBCATEGORIAS_LOTE) {
+        toastr.warning("Limite mÃ¡ximo de 20 subcategorias por cadastro.");
+        atualizarEstadoBotaoAdicionarSubcategoriaLote();
+        return;
+    }
+
+    const ultimoBloco = blocos[blocos.length - 1];
+    if (ultimoBloco) {
+        const inputCategoria = ultimoBloco.querySelector('.input-categoria-lote-subcat');
+        const inputSubcategoria = ultimoBloco.querySelector('.input-subcategoria-lote');
+
+        if (!inputCategoria || !inputSubcategoria ||
+            inputCategoria.value.trim() === "" ||
+            inputSubcategoria.value.trim() === "") {
+            toastr.warning("Preencha a categoria e a subcategoria atuais antes de adicionar outra.");
+            if (inputCategoria && inputCategoria.value.trim() === "") inputCategoria.focus();
+            else if (inputSubcategoria) inputSubcategoria.focus();
+            atualizarEstadoBotaoAdicionarSubcategoriaLote();
+            return;
+        }
+    }
+
+    const novoBloco = criarBlocoSubcategoriaLote();
+    container.appendChild(novoBloco);
+    adicionarEventosControleBlocoSubcategoria(novoBloco);
+    atualizarEstadoBotaoAdicionarSubcategoriaLote();
+
+    const primeiroCampo = novoBloco.querySelector('.input-categoria-lote-subcat');
+    if (primeiroCampo) primeiroCampo.focus();
+}
+
+function resetarCadastroLoteSubcategoria() {
+    const container = document.getElementById("containerLoteSubcategorias");
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    const primeiroBloco = criarBlocoSubcategoriaLote();
+    container.appendChild(primeiroBloco);
+
+    adicionarEventosControleBlocoSubcategoria(primeiroBloco);
+    atualizarEstadoBotaoAdicionarSubcategoriaLote();
+}
+
+function obterDadosCadastroLoteSubcategoria() {
+    const blocos = obterBlocosSubcategoriaLote();
+
+    return blocos.map(bloco => {
+        const categoria = (bloco.querySelector('.input-categoria-lote-subcat')?.value || "").trim().toUpperCase();
+        const subcategoria = (bloco.querySelector('.input-subcategoria-lote')?.value || "").trim().toUpperCase();
+
+        return {
+            categoria: categoria,
+            subcategoria: subcategoria
+        };
+    }).filter(item => item.categoria !== "" || item.subcategoria !== "");
+}
+
+// FunÃ§Ã£o para abrir o modal
+function abrirModalCadastro() {
+    document.getElementById("modalCadastro").classList.add("ativo");
+    resetarCadastroLoteSubcategoria();
+}
+
+function fecharModalCadastro() {
+    document.getElementById("modalCadastro").classList.remove("ativo");
+    resetarCadastroLoteSubcategoria();
+}
+
+
+// FunÃ§Ã£o para cadastrar categoria
+function cadastrar() {
+
+    const itensLote = obterDadosCadastroLoteSubcategoria();
+
+    if (itensLote.length === 0) {
+        toastr.warning("Preencha ao menos uma categoria e uma subcategoria.");
+        return;
+    }
+
+    const existeBlocoIncompleto = itensLote.some(item => item.categoria === "" || item.subcategoria === "");
+    if (existeBlocoIncompleto) {
+        toastr.warning("Existem linhas incompletas no cadastro em lote.");
+        return;
+    }
+
+    const categoriaInvalida = itensLote.find(item => !categoriaMaeExiste(item.categoria));
+    if (categoriaInvalida) {
+        toastr.warning(`A categoria mÃ£e "${categoriaInvalida.categoria}" nÃ£o existe. Selecione uma opÃ§Ã£o da lista.`);
+        return;
+    }
+
+    const chaves = itensLote.map(item => `${item.categoria}|||${item.subcategoria}`);
+    const chavesUnicas = new Set(chaves);
+
+    if (chaves.length !== chavesUnicas.size) {
+        toastr.warning("Existem combinaÃ§Ãµes repetidas de categoria e subcategoria no lote.");
+        return;
+    }
+
+    mostrarCarregamentoModal();
+
+    google.script.run
+        .withSuccessHandler(function(resultado) {
+            if (resultado.sucesso) {
+                atualizarDados();
+                fecharModalCadastro();
+                esconderCarregamentoModal();
+                toastr.success(resultado.mensagem || "Subcategorias cadastradas com sucesso!");
+            } else {
+                esconderCarregamentoModal();
+                toastr.error(resultado.mensagem || "Erro ao cadastrar subcategorias!");
+            }
+        })
+        .withFailureHandler(function(erro) {
+            console.error("Erro ao cadastrar subcategorias em lote:", erro);
+            esconderCarregamentoModal();
+            toastr.error("Erro ao cadastrar subcategorias. Verifique o console.");
+        })
+        .cadastrarSubcategoriasEmLote(itensLote);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ==================================================================================================================================================
+// MODAL DE EXCLUSÃƒO
+// ==================================================================================================================================================
+
+// FunÃ§Ã£o para abrir modal de exclusÃ£o --------------------------------------------------------------------
+function abrirModalExclusao() {
+    const linhas = obterLinhasSelecionadasValidas();
+    if (!linhas.length) {
+        toastr.warning("Selecione uma subcategoria na tabela antes de excluir!");
+        return;
+    }
+
+    const nomesSubcategorias = linhas.map(function(linha) {
+        return String(linha.cells[2]?.textContent || "").trim();
+    }).filter(Boolean);
+
+    const textoSelecionados = nomesSubcategorias.length === 1
+        ? nomesSubcategorias[0]
+        : nomesSubcategorias.length + " subcategorias selecionadas: " + nomesSubcategorias.join("; ");
+
+    document.getElementById("subcategoriaSelecionada").textContent = textoSelecionados;
+    document.getElementById("modalExclusao").classList.add("ativo");
+}
+
+// Função para fechar modal de exclusão --------------------------------------------------------------------
+function fecharModalExclusao() {
+    document.getElementById("modalExclusao").classList.remove("ativo");
+}
+
+// Função para confirmar exclusão --------------------------------------------------------------------------
+function confirmarExclusao() {
+    const linhas = obterLinhasSelecionadasValidas();
+    if (!linhas.length) {
+        toastr.error("Nenhuma linha selecionada!");
+        return;
+    }
+
+    const idsSubcategorias = linhas.map(function(linha) {
+        return String(linha.cells[0]?.textContent || "").trim();
+    }).filter(Boolean);
+
+    fecharModalExclusao();
+    mostrarCarregamentoModal();
+
+    google.script.run
+        .withSuccessHandler(function(resultado) {
+            if (resultado.sucesso) {
+                google.script.run
+                    .withSuccessHandler(function(resultadoAtualizacao) {
+                        if (resultadoAtualizacao.sucesso) {
+                            dadosTabela = resultadoAtualizacao.dadosCompletos;
+                            carregarDadosIniciais();
+                            limparSelecaoLinhas();
+
+                            esconderCarregamentoModal();
+                            toastr.success(idsSubcategorias.length === 1 ? "Subcategoria excluída com sucesso!" : "Subcategorias excluídas com sucesso!");
+                        } else {
+                            esconderCarregamentoModal();
+                            toastr.error("Erro ao atualizar dados!");
+                        }
+                    })
+                    .withFailureHandler(function(erro) {
+                        esconderCarregamentoModal();
+                        console.error("Erro ao atualizar:", erro);
+                        toastr.error("Erro ao atualizar dados.");
+                    })
+                    .buscarDadosAtualizadosSubcategoria();
+            } else {
+                esconderCarregamentoModal();
+                toastr.error(resultado.mensagem || "Erro ao excluir subcategoria!");
+            }
+        })
+        .withFailureHandler(function(erro) {
+            esconderCarregamentoModal();
+            console.error("Erro ao excluir:", erro);
+            toastr.error("Erro ao excluir subcategoria. Verifique o console.");
+        })
+        .excluirSubcategoriasEmLote(idsSubcategorias);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ==================================================================================================================================================
+// MODAL DE EDIÃ‡ÃƒO
+// ==================================================================================================================================================
+
+// FunÃ§Ã£o para abrir modal de ediÃ§Ã£o ----------------------------------------------------------------------------
+
+function abrirModalEdicao() {
+
+    if (!linhaSelecionada) {
+        toastr.warning("Selecione uma subcategoria na tabela antes de editar!");
+        return;
+    }
+
+    // Pegar o nome da categoria (coluna 2, Ã­ndice 1)
+    var nomeSubCat = linhaSelecionada.cells[2].textContent;
+    var nomeCat = linhaSelecionada.cells[1].textContent;
+    
+    // Preencher o input com o nome atual
+    document.getElementById("inputEditarCategoria").value = nomeCat;
+    document.getElementById("inputEditarSubcategoria").value = nomeSubCat;
+    
+    // Mostrar modal e focar no input
+    document.getElementById("modalEdicao").classList.add("ativo");
+  
+}
+
+
+
+
+// FunÃ§Ã£o para fechar modal de ediÃ§Ã£o ---------------------------------------------------------------------------
+
+function fecharModalEdicao() {
+
+    document.getElementById("modalEdicao").classList.remove("ativo");
+    document.getElementById("inputEditarCategoria").value = "";
+    document.getElementById("inputEditarSubcategoria").value = "";
+
+}
+
+
+
+
+
+// FunÃ§Ã£o para confirmar ediÃ§Ã£o ----------------------------------------------------------------------------------
+
+function confirmarEdicao() {
+
+    if (!linhaSelecionada) {
+        toastr.error("Nenhuma linha selecionada!");
+        return;
+    }
+
+    const inputCategoria = document.getElementById("inputEditarCategoria");
+    const inputSubcategoria = document.getElementById("inputEditarSubcategoria");
+    const novoNomeCategoria = inputCategoria.value.trim().toUpperCase();
+    const novoNomeSubcategoria = inputSubcategoria.value.trim().toUpperCase();
+
+    if (novoNomeCategoria === "") {
+        toastr.warning("Por favor, informe o nome da categoria!");
+        inputCategoria.focus();
+        return;
+    }
+
+    if (!categoriaMaeExiste(novoNomeCategoria)) {
+        toastr.warning("Selecione uma categoria mÃ£e existente na lista.");
+        inputCategoria.focus();
+        return;
+    }
+
+    if (novoNomeSubcategoria === "") {
+        toastr.warning("Por favor, informe o nome da subcategoria!");
+        inputSubcategoria.focus();
+        return;
+    }
+
+    // Pegar o ID da linha selecionada (coluna 1, Ã­ndice 0)
+    var idSubcategoria = linhaSelecionada.cells[0].textContent;
+
+    // Fechar modal de ediÃ§Ã£o e mostrar loading
+    fecharModalEdicao();
+    mostrarCarregamentoModal();
+
+    // Chamar funÃ§Ã£o GS para editar
+    google.script.run
+        .withSuccessHandler(function(resultado) {
+            if (resultado.sucesso) {
+                // Atualizar dados
+                google.script.run
+                    .withSuccessHandler(function(resultadoAtualizacao) {
+                        if (resultadoAtualizacao.sucesso) {
+
+                            dadosTabela = resultadoAtualizacao.dadosCompletos;
+                            carregarDadosIniciais();
+                            
+                            // Limpar seleÃ§Ã£o
+                            linhaSelecionada = null;
+                            
+                            esconderCarregamentoModal();
+                            toastr.success("Subcategoria editada com sucesso!");
+                        } else {
+                            esconderCarregamentoModal();
+                            toastr.error("Erro ao atualizar dados!");
+                        }
+                    })
+                    .withFailureHandler(function(erro) {
+                        esconderCarregamentoModal();
+                        console.error("Erro ao atualizar:", erro);
+                        toastr.error("Erro ao atualizar dados.");
+                    })
+                    .buscarDadosAtualizadosSubcategoria();
+            } else {
+                esconderCarregamentoModal();
+                toastr.error(resultado.mensagem || "Erro ao editar subcategoria!");
+            }
+        })
+        .withFailureHandler(function(erro) {
+            esconderCarregamentoModal();
+            console.error("Erro ao editar:", erro);
+            toastr.error("Erro ao editar subcategoria. Verifique o console.");
+        })
+        .editarSubcategoria(idSubcategoria, novoNomeCategoria, novoNomeSubcategoria);
+}
+
+
+</script>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #000000;
+        color: #ffffff;
+      }
+
+      #login-page {
+        width: 100vw;
+        height: 100vh;
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at 26% 44%, rgba(66, 220, 250, 0.13), transparent 27%),
+          radial-gradient(circle at 78% 48%, rgba(66, 220, 250, 0.09), transparent 28%),
+          linear-gradient(135deg, #000000 0%, #03090b 51%, #000000 100%);
+      }
+    </style>
+
+    <link rel="preload" as="style" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    </noscript>
+
+    <?!=Chamar("Login_Estilo") ?>
+  </head>
+
+  <body>
+
+    <main id="login-page">
+      <div class="login-bg-effects" aria-hidden="true">
+        <span class="hud-corner hud-corner-left"></span>
+        <span class="hud-corner hud-corner-right"></span>
+        <span class="hud-radar"></span>
+        <span class="hud-line-chart"></span>
+        <span class="hud-bars">
+          <i></i><i></i><i></i><i></i><i></i><i></i>
+        </span>
+      </div>
+
+      <section id="login-layout">
+
+        <aside id="login-hero">
+          <img id="login-logo-principal" src="https://drive.google.com/thumbnail?id=1T6pWIpQeH-jPowvh63mPQDJVIjA3VJBJ&sz=w2000" alt="Insight Pad" decoding="async" fetchpriority="high">
+        </aside>
+
+        <section id="login-card">
+          <div id="login-header">
+            <h2>Bem-vindo ao Insight Pad</h2>
+            <p>A plataforma completa para gestão, vendas<br>e inteligência do seu negócio.</p>
+          </div>
+
+          <form id="formLogin" method="post" action="<?= urlWebApp ?>" target="_top" autocomplete="off">
+            <input type="hidden" name="acao" value="login">
+            <input type="hidden" id="inputNextLogin" name="next" value="Menu">
+            <input type="hidden" id="inputUserAgentLogin" name="userAgent" value="">
+            <input type="hidden" id="inputDispositivoLogin" name="idDispositivo" value="">
+            <div class="form-field">
+              <label class="input-label" for="inputLogin">USUÁRIO</label>
+              <div class="input-wrapper">
+                <i class="bi bi-person input-icon" aria-hidden="true"></i>
+                <input type="text" id="inputLogin" name="login" class="input-moderno" placeholder="Digite seu usuário">
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label class="input-label" for="inputSenha">SENHA</label>
+              <div class="input-wrapper senha-wrapper">
+                <i class="bi bi-lock input-icon" aria-hidden="true"></i>
+                <input type="password" id="inputSenha" name="senha" class="input-moderno" placeholder="Digite sua senha">
+                <button type="button" id="btnAlternarSenha" title="Mostrar senha" aria-label="Mostrar senha">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+            </div>
+
+            <button type="submit" id="btnEntrar">ENTRAR</button>
+          </form>
+        </section>
+      </section>
+
+      <footer id="login-footer">
+        <div class="login-footer-brand">
+          <img id="login-logo-data-dazzle" src="https://drive.google.com/thumbnail?id=1RMePnzCwzaKXK0Gz-bw0TKG2zIOnwzHC&sz=w2000" alt="Data Dazzle" decoding="async" fetchpriority="low">
+          <span>Um produto Data Dazzle</span>
+        </div>
+
+        <a id="login-contato-whatsapp" href="https://wa.me/5521985795316" target="_blank" rel="noopener noreferrer" aria-label="Fale Conosco pelo WhatsApp">
+          <span>Fale Conosco</span>
+          <i class="bi bi-whatsapp" aria-hidden="true"></i>
+        </a>
+      </footer>
+    </main>
+
+    <div id="modalCarregamento" class="loading-overlay">
+      <div class="loading-box">
+        <div class="loading-container">
+          <img src="https://drive.google.com/thumbnail?id=1T6pWIpQeH-jPowvh63mPQDJVIjA3VJBJ" alt="Logo" class="loading-logo">
+          <div class="loading-spinner"></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+    <?!=Chamar("Login_JS") ?>
+  </body>
+
+</html>

@@ -1,0 +1,451 @@
+<script>
+let dadosAcessos = {
+  usuarios: [],
+  perfis: [],
+  paginas: [],
+  permissoesPerfil: {},
+  permissoesUsuario: {},
+  usuarioAtual: null
+};
+
+const CAMPOS_PERMISSAO = [
+  { chave: "podeAcessar", label: "ACESSAR" },
+  { chave: "podeCadastrar", label: "CADASTRAR" },
+  { chave: "podeEditar", label: "EDITAR" },
+  { chave: "podeExcluir", label: "EXCLUIR" },
+  { chave: "podeExportar", label: "EXPORTAR" },
+  { chave: "podeGerenciar", label: "GERENCIAR" }
+];
+
+document.addEventListener("DOMContentLoaded", function() {
+  configurarToastrAcessos();
+  document.getElementById("btnVoltar")?.addEventListener("click", voltarMenu);
+  document.getElementById("btnCriarUsuario")?.addEventListener("click", abrirControleUsuarios);
+  document.getElementById("btnRecarregarAcessos")?.addEventListener("click", carregarDadosAcessos);
+  document.getElementById("btnSalvarAcessos")?.addEventListener("click", salvarPermissoesAcessos);
+  document.getElementById("selectEscopoAcesso")?.addEventListener("change", trocarEscopoAcesso);
+  document.getElementById("selectEntidadeAcesso")?.addEventListener("change", renderizarTabelaAcessos);
+  configurarDropdownsAcessos();
+  carregarDadosAcessos();
+});
+
+function configurarToastrAcessos() {
+  if (!window.toastr) return;
+
+  toastr.options = {
+    closeButton: true,
+    progressBar: true,
+    newestOnTop: true,
+    preventDuplicates: true,
+    positionClass: "toast-top-center",
+    timeOut: "3000",
+    extendedTimeOut: "0",
+    showMethod: "fadeIn",
+    hideMethod: "fadeOut"
+  };
+}
+
+function mostrarCarregamentoAcessos() {
+  document.getElementById("modalCarregamento")?.classList.add("ativo");
+}
+
+function esconderCarregamentoAcessos() {
+  document.getElementById("modalCarregamento")?.classList.remove("ativo");
+}
+
+function voltarMenu() {
+  navegarGestaoAcessos("Menu");
+}
+
+function abrirControleUsuarios() {
+  navegarGestaoAcessos("Controle_Usuarios");
+}
+
+function obterBaseWebAppGestaoAcessos() {
+  const linkWebApp = document.querySelector('#links a[href*="script.google.com/macros/s/"][href*="/exec"]');
+  if (linkWebApp) {
+    return String(linkWebApp.href || "").split("?")[0];
+  }
+
+  return String(window.location.href || "").split("?")[0];
+}
+
+function navegarGestaoAcessos(pageKey) {
+  const link = document.createElement("a");
+  link.href = obterBaseWebAppGestaoAcessos() + "?page=" + encodeURIComponent(pageKey);
+  link.target = "_top";
+  link.rel = "noopener";
+  link.style.display = "none";
+  document.body.appendChild(link);
+  link.click();
+
+  setTimeout(function() {
+    link.remove();
+  }, 1000);
+}
+
+function normalizarTextoAcessos(valor) {
+  return String(valor || "")
+    .trim()
+    .toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function entidadePodeSerEditada(entidade, escopo) {
+  const nivelAtual = normalizarTextoAcessos(dadosAcessos.usuarioAtual?.nivelUsuario || "");
+  if (nivelAtual === "MASTER") return true;
+
+  if (nivelAtual === "ADMIN") {
+    const nivelAlvo = escopo === "usuario"
+      ? normalizarTextoAcessos(entidade.nivelUsuario || "")
+      : normalizarTextoAcessos(entidade.nomePerfil || entidade.nome || "");
+
+    return nivelAlvo !== "MASTER" && nivelAlvo !== "ADMIN";
+  }
+
+  return false;
+}
+
+function usuarioAtualEhMaster() {
+  return normalizarTextoAcessos(dadosAcessos.usuarioAtual?.nivelUsuario || "") === "MASTER";
+}
+
+function atualizarBotaoCriarUsuario() {
+  const btn = document.getElementById("btnCriarUsuario");
+  if (!btn) return;
+  btn.classList.toggle("ativo", usuarioAtualEhMaster());
+}
+
+function opcoesSelectAcessos(select) {
+  return Array.from(select?.options || []).map(function(option) {
+    return {
+      valor: option.value,
+      texto: option.textContent || ""
+    };
+  });
+}
+
+function atualizarInputDropdownAcessos(selectId, inputId) {
+  const select = document.getElementById(selectId);
+  const input = document.getElementById(inputId);
+  if (!select || !input) return;
+
+  const selecionada = select.options[select.selectedIndex];
+  input.value = selecionada && selecionada.value ? selecionada.textContent : "";
+}
+
+function renderizarListaDropdownAcessos(select, input, lista, mostrarTudo) {
+  const termo = mostrarTudo ? "" : normalizarTextoAcessos(input.value);
+  const opcoes = opcoesSelectAcessos(select).filter(function(opcao) {
+    if (!opcao.valor) return false;
+    return !termo || normalizarTextoAcessos(opcao.texto).includes(termo);
+  });
+
+  lista.innerHTML = "";
+
+  if (!opcoes.length) {
+    const li = document.createElement("li");
+    li.textContent = "Nenhum resultado encontrado";
+    li.style.color = "#666";
+    li.style.fontStyle = "italic";
+    lista.appendChild(li);
+    lista.style.display = "block";
+    return;
+  }
+
+  opcoes.forEach(function(opcao) {
+    const li = document.createElement("li");
+    li.textContent = opcao.texto;
+    li.addEventListener("click", function(evento) {
+      evento.stopPropagation();
+      select.value = opcao.valor;
+      input.value = opcao.texto;
+      lista.style.display = "none";
+      select.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    lista.appendChild(li);
+  });
+
+  lista.style.display = "block";
+}
+
+function configurarDropdownSelectAcessos(selectId, inputId, listaId) {
+  const select = document.getElementById(selectId);
+  const input = document.getElementById(inputId);
+  const lista = document.getElementById(listaId);
+  if (!select || !input || !lista || input.dataset.dropdownConfigurado === "S") return;
+
+  input.dataset.dropdownConfigurado = "S";
+
+  input.addEventListener("click", function(evento) {
+    evento.stopPropagation();
+    renderizarListaDropdownAcessos(select, input, lista, true);
+  });
+
+  input.addEventListener("focus", function() {
+    renderizarListaDropdownAcessos(select, input, lista, true);
+  });
+
+  input.addEventListener("input", function() {
+    renderizarListaDropdownAcessos(select, input, lista, false);
+  });
+
+  input.addEventListener("keydown", function(evento) {
+    if (evento.key === "Escape") lista.style.display = "none";
+  });
+}
+
+function configurarDropdownsAcessos() {
+  configurarDropdownSelectAcessos("selectEscopoAcesso", "inputEscopoAcesso", "listaEscopoAcesso");
+  configurarDropdownSelectAcessos("selectEntidadeAcesso", "inputEntidadeAcesso", "listaEntidadeAcesso");
+
+  document.addEventListener("click", function(evento) {
+    if (evento.target.closest(".dropdown-container")) return;
+    document.querySelectorAll(".sugestoes").forEach(function(lista) {
+      lista.style.display = "none";
+    });
+  });
+
+  atualizarInputDropdownAcessos("selectEscopoAcesso", "inputEscopoAcesso");
+  atualizarInputDropdownAcessos("selectEntidadeAcesso", "inputEntidadeAcesso");
+}
+
+function carregarDadosAcessos() {
+  mostrarCarregamentoAcessos();
+
+  google.script.run
+    .withSuccessHandler(function(resposta) {
+      esconderCarregamentoAcessos();
+
+      if (!resposta || !resposta.sucesso) {
+        toastr.error(resposta?.mensagem || "Não foi possível carregar as permissões.");
+        if (resposta && resposta.autorizado === false) {
+          setTimeout(voltarMenu, 900);
+        }
+        return;
+      }
+
+      dadosAcessos = resposta;
+      atualizarBotaoCriarUsuario();
+      preencherEntidadesAcessos();
+      renderizarTabelaAcessos();
+    })
+    .withFailureHandler(function(erro) {
+      esconderCarregamentoAcessos();
+      console.error("Erro ao carregar gestão de acessos:", erro);
+      toastr.error("Erro ao carregar gestão de acessos.");
+    })
+    .buscarDadosGestaoAcessos();
+}
+
+function trocarEscopoAcesso() {
+  atualizarInputDropdownAcessos("selectEscopoAcesso", "inputEscopoAcesso");
+  preencherEntidadesAcessos();
+  renderizarTabelaAcessos();
+}
+
+function preencherEntidadesAcessos() {
+  const selectEscopo = document.getElementById("selectEscopoAcesso");
+  const selectEntidade = document.getElementById("selectEntidadeAcesso");
+  if (!selectEscopo || !selectEntidade) return;
+
+  const escopo = selectEscopo.value || "perfil";
+  const lista = escopo === "usuario" ? dadosAcessos.usuarios : dadosAcessos.perfis;
+
+  selectEntidade.innerHTML = "";
+
+  const opcoesEditaveis = (lista || []).filter(function(item) {
+    return entidadePodeSerEditada(item, escopo);
+  });
+
+  if (!opcoesEditaveis.length) {
+    const option = document.createElement("option");
+    option.value = "";
+    option.textContent = "NENHUM REGISTRO DISPONÍVEL";
+    selectEntidade.appendChild(option);
+    atualizarInputDropdownAcessos("selectEntidadeAcesso", "inputEntidadeAcesso");
+    return;
+  }
+
+  opcoesEditaveis.forEach(function(item) {
+    const option = document.createElement("option");
+    option.value = escopo === "usuario" ? item.idUsuario : item.idPerfil;
+    option.textContent = escopo === "usuario"
+      ? `${item.nome} - ${item.nivelUsuario}`
+      : `${item.nomePerfil || item.nome}`;
+    selectEntidade.appendChild(option);
+  });
+
+  atualizarInputDropdownAcessos("selectEntidadeAcesso", "inputEntidadeAcesso");
+}
+
+function obterPermissoesSelecionadas() {
+  const escopo = document.getElementById("selectEscopoAcesso")?.value || "perfil";
+  const idEntidade = document.getElementById("selectEntidadeAcesso")?.value || "";
+  const mapa = escopo === "usuario" ? dadosAcessos.permissoesUsuario : dadosAcessos.permissoesPerfil;
+
+  return {
+    escopo,
+    idEntidade,
+    permissoes: mapa && mapa[idEntidade] ? mapa[idEntidade] : {}
+  };
+}
+
+function atualizarResumoAcesso(entidade, escopo) {
+  const resumo = document.getElementById("resumoAlvoAcesso");
+  const aviso = document.getElementById("avisoAcesso");
+
+  if (!resumo || !aviso) return;
+
+  if (!entidade) {
+    resumo.textContent = "-";
+    aviso.textContent = "";
+    return;
+  }
+
+  resumo.textContent = escopo === "usuario"
+    ? `${entidade.nome} - ${entidade.nivelUsuario}`
+    : `${entidade.nomePerfil || entidade.nome}`;
+
+  aviso.textContent = escopo === "usuario"
+    ? "As permissões por usuário sobrescrevem as permissões do perfil quando existirem."
+    : "As permissões por perfil serão usadas como padrão para os usuários vinculados ao perfil.";
+}
+
+function renderizarTabelaAcessos() {
+  atualizarInputDropdownAcessos("selectEntidadeAcesso", "inputEntidadeAcesso");
+  const tbody = document.getElementById("tb_corpo");
+  if (!tbody) return;
+
+  const contexto = obterPermissoesSelecionadas();
+  const listaEntidades = contexto.escopo === "usuario" ? dadosAcessos.usuarios : dadosAcessos.perfis;
+  const entidade = (listaEntidades || []).find(function(item) {
+    return String(contexto.escopo === "usuario" ? item.idUsuario : item.idPerfil) === String(contexto.idEntidade);
+  });
+
+  atualizarResumoAcesso(entidade, contexto.escopo);
+  tbody.innerHTML = "";
+
+  if (!entidade || !contexto.idEntidade) {
+    tbody.innerHTML = '<tr><td colspan="8" class="linha-vazia">Selecione um registro para editar as permissões.</td></tr>';
+    return;
+  }
+
+  const podeEditar = entidadePodeSerEditada(entidade, contexto.escopo);
+
+  (dadosAcessos.paginas || []).forEach(function(pagina) {
+    const permissao = contexto.permissoes[pagina.idPagina] || {};
+    const tr = document.createElement("tr");
+    tr.dataset.idPagina = pagina.idPagina;
+
+    tr.innerHTML = `
+      <td>${pagina.modulo || "-"}</td>
+      <td>${pagina.nomeExibicao || pagina.pageKey || "-"}</td>
+      ${CAMPOS_PERMISSAO.map(function(campo) {
+        const ativo = permissao[campo.chave] === "S";
+        return `
+          <td>
+            <button type="button"
+              class="toggle-permissao ${ativo ? "ativo" : "inativo"}"
+              data-campo="${campo.chave}"
+              data-valor="${ativo ? "S" : "N"}"
+              ${podeEditar ? "" : "disabled"}>
+              ${ativo ? "SIM" : "NÃO"}
+            </button>
+          </td>
+        `;
+      }).join("")}
+    `;
+
+    tbody.appendChild(tr);
+  });
+
+  tbody.querySelectorAll(".toggle-permissao").forEach(function(botao) {
+    botao.addEventListener("click", alternarPermissao);
+  });
+}
+
+function alternarPermissao(evento) {
+  const botao = evento.currentTarget;
+  const valorAtual = botao.dataset.valor === "S";
+  const novoValor = valorAtual ? "N" : "S";
+
+  definirEstadoBotaoPermissao(botao, novoValor);
+
+  if (botao.dataset.campo === "podeAcessar" && novoValor === "N") {
+    const linha = botao.closest("tr");
+    linha?.querySelectorAll(".toggle-permissao").forEach(function(item) {
+      definirEstadoBotaoPermissao(item, "N");
+    });
+  }
+}
+
+function definirEstadoBotaoPermissao(botao, valor) {
+  if (!botao) return;
+
+  const ativo = valor === "S";
+  botao.dataset.valor = ativo ? "S" : "N";
+  botao.textContent = ativo ? "SIM" : "NÃO";
+  botao.classList.toggle("ativo", ativo);
+  botao.classList.toggle("inativo", !ativo);
+}
+
+function coletarPermissoesTabela() {
+  const linhas = Array.from(document.querySelectorAll("#tb_corpo tr[data-id-pagina]"));
+
+  return linhas.map(function(linha) {
+    const permissao = {
+      idPagina: linha.dataset.idPagina
+    };
+
+    CAMPOS_PERMISSAO.forEach(function(campo) {
+      const botao = linha.querySelector(`[data-campo="${campo.chave}"]`);
+      permissao[campo.chave] = botao?.dataset.valor === "S" ? "S" : "N";
+    });
+
+    return permissao;
+  });
+}
+
+function salvarPermissoesAcessos() {
+  const escopo = document.getElementById("selectEscopoAcesso")?.value || "perfil";
+  const idEntidade = document.getElementById("selectEntidadeAcesso")?.value || "";
+
+  if (!idEntidade) {
+    toastr.warning("Selecione um perfil ou usuário para salvar.");
+    return;
+  }
+
+  const permissoes = coletarPermissoesTabela();
+  if (!permissoes.length) {
+    toastr.warning("Nenhuma permissão encontrada para salvar.");
+    return;
+  }
+
+  mostrarCarregamentoAcessos();
+
+  google.script.run
+    .withSuccessHandler(function(resposta) {
+      esconderCarregamentoAcessos();
+
+      if (!resposta || !resposta.sucesso) {
+        toastr.error(resposta?.mensagem || "Não foi possível salvar as permissões.");
+        return;
+      }
+
+      toastr.success(resposta.mensagem || "Permissões salvas com sucesso.");
+      carregarDadosAcessos();
+    })
+    .withFailureHandler(function(erro) {
+      esconderCarregamentoAcessos();
+      console.error("Erro ao salvar permissões:", erro);
+      toastr.error("Erro ao salvar permissões.");
+    })
+    .salvarPermissoesGestaoAcessos({
+      escopo,
+      idEntidade,
+      permissoes
+    });
+}
+</script>

@@ -1,0 +1,4356 @@
+<script>
+
+
+// ==========================================================================================================================================
+// VARIÁVEIS GLOBAIS
+// ==========================================================================================================================================
+
+let todosprodutos = [];
+let todasfilais = [];
+
+// Timeout para controlar o debounce da pesquisa
+let timeoutId = null;
+
+// Armazena a referência da linha selecionada na tabela
+let linhaSelecionada = null;
+
+let clienteSelecionadoPDV = null;
+
+let sincronizandoFilaOfflineCaixa = false;
+let dadosConsultaCaixaCarregados = false;
+
+const CAIXA_OFFLINE_DB = "InsightPad_Caixa_Offline";
+const CAIXA_OFFLINE_DB_VERSION = 1;
+const CAIXA_OFFLINE_STORE_SNAPSHOT = "snapshot";
+const CAIXA_OFFLINE_STORE_FILA = "filaVendas";
+
+const CaixaOfflineDB = (() => {
+  function abrir() {
+    return new Promise((resolve, reject) => {
+      if (!window.indexedDB) {
+        reject(new Error("IndexedDB indisponível neste navegador."));
+        return;
+      }
+
+      const req = indexedDB.open(CAIXA_OFFLINE_DB, CAIXA_OFFLINE_DB_VERSION);
+
+      req.onupgradeneeded = (ev) => {
+        const db = ev.target.result;
+
+        if (!db.objectStoreNames.contains(CAIXA_OFFLINE_STORE_SNAPSHOT)) {
+          db.createObjectStore(CAIXA_OFFLINE_STORE_SNAPSHOT, { keyPath: "id" });
+        }
+
+        if (!db.objectStoreNames.contains(CAIXA_OFFLINE_STORE_FILA)) {
+          const fila = db.createObjectStore(CAIXA_OFFLINE_STORE_FILA, { keyPath: "idLocal" });
+          fila.createIndex("criadoEm", "criadoEm", { unique: false });
+          fila.createIndex("status", "status", { unique: false });
+        }
+      };
+
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error || new Error("Falha ao abrir armazenamento offline."));
+    });
+  }
+
+  function transacao(storeName, mode, executor) {
+    return abrir().then((db) => new Promise((resolve, reject) => {
+      const tx = db.transaction(storeName, mode);
+      const store = tx.objectStore(storeName);
+      let resultado;
+
+      tx.oncomplete = () => {
+        db.close();
+        resolve(resultado);
+      };
+      tx.onerror = () => {
+        db.close();
+        reject(tx.error || new Error("Falha na transação offline."));
+      };
+
+      resultado = executor(store);
+    }));
+  }
+
+  return {
+    salvarSnapshot(dados) {
+      return transacao(CAIXA_OFFLINE_STORE_SNAPSHOT, "readwrite", (store) => {
+        store.put({ id: "caixa", atualizadoEm: new Date().toISOString(), dados });
+      });
+    },
+
+    carregarSnapshot() {
+      return abrir().then((db) => new Promise((resolve, reject) => {
+        const tx = db.transaction(CAIXA_OFFLINE_STORE_SNAPSHOT, "readonly");
+        const store = tx.objectStore(CAIXA_OFFLINE_STORE_SNAPSHOT);
+        const req = store.get("caixa");
+
+        req.onsuccess = () => resolve(req.result ? req.result.dados : null);
+        req.onerror = () => reject(req.error || new Error("Falha ao carregar snapshot offline."));
+        tx.oncomplete = () => db.close();
+        tx.onerror = () => db.close();
+      }));
+    },
+
+    adicionarVenda(payload) {
+      const registro = {
+        idLocal: gerarIdLocalVendaOfflineCaixa(),
+        criadoEm: new Date().toISOString(),
+        status: "PENDENTE",
+        tentativas: 0,
+        payload
+      };
+
+      return transacao(CAIXA_OFFLINE_STORE_FILA, "readwrite", (store) => {
+        store.put(registro);
+      }).then(() => registro);
+    },
+
+    listarPendencias() {
+      return abrir().then((db) => new Promise((resolve, reject) => {
+        const tx = db.transaction(CAIXA_OFFLINE_STORE_FILA, "readonly");
+        const store = tx.objectStore(CAIXA_OFFLINE_STORE_FILA);
+        const req = store.getAll();
+
+        req.onsuccess = () => {
+          const lista = Array.isArray(req.result) ? req.result : [];
+          resolve(lista
+            .filter(item => item && item.status !== "SINCRONIZADO")
+            .sort((a, b) => String(a.criadoEm || "").localeCompare(String(b.criadoEm || ""))));
+        };
+        req.onerror = () => reject(req.error || new Error("Falha ao listar pendências offline."));
+        tx.oncomplete = () => db.close();
+        tx.onerror = () => db.close();
+      }));
+    },
+
+    removerVenda(idLocal) {
+      return transacao(CAIXA_OFFLINE_STORE_FILA, "readwrite", (store) => {
+        store.delete(idLocal);
+      });
+    },
+
+    marcarErro(idLocal, mensagem) {
+      return abrir().then((db) => new Promise((resolve, reject) => {
+        const tx = db.transaction(CAIXA_OFFLINE_STORE_FILA, "readwrite");
+        const store = tx.objectStore(CAIXA_OFFLINE_STORE_FILA);
+        const req = store.get(idLocal);
+
+        req.onsuccess = () => {
+          const item = req.result;
+          if (item) {
+            item.status = "ERRO";
+            item.tentativas = Number(item.tentativas || 0) + 1;
+            item.ultimoErro = mensagem || "Erro ao sincronizar.";
+            item.atualizadoEm = new Date().toISOString();
+            store.put(item);
+          }
+        };
+        req.onerror = () => reject(req.error || new Error("Falha ao atualizar pendência offline."));
+        tx.oncomplete = () => {
+          db.close();
+          resolve();
+        };
+        tx.onerror = () => {
+          db.close();
+          reject(tx.error || new Error("Falha ao marcar erro offline."));
+        };
+      }));
+    }
+  };
+})();
+
+function gerarIdLocalVendaOfflineCaixa() {
+  const rnd = Math.random().toString(36).slice(2, 10);
+  return `PDV-${Date.now()}-${rnd}`;
+}
+
+function caixaEstaOnline() {
+  return navigator.onLine !== false;
+}
+
+function obterGoogleRunCaixa() {
+  return (typeof google !== "undefined" && google.script && google.script.run) ? google.script.run : null;
+}
+
+function dispararAtualizacaoDashboardAnaliticoCaixa(idCarrinho) {
+  const run = obterGoogleRunCaixa();
+  if (!run || !run.atualizarDashboardAnaliticoSegundoPlano || !idCarrinho) return;
+
+  run
+    .withFailureHandler((err) => {
+      console.warn("Atualizacao analitica de venda nao concluida em segundo plano.", err);
+    })
+    .atualizarDashboardAnaliticoSegundoPlano("VENDA", idCarrinho, "REPROCESSAR");
+}
+
+function montarSnapshotCaixaAtual() {
+  return {
+    itensProd: Array.isArray(itensProd) ? itensProd : [],
+    itensSaida: Array.isArray(itensSaida) ? itensSaida : [],
+    itensFil: Array.isArray(itensFil) ? itensFil : [],
+    itensEst: Array.isArray(itensEst) ? itensEst : [],
+    itensPromo: Array.isArray(itensPromo) ? itensPromo : [],
+    itensCli: Array.isArray(itensCli) ? itensCli : [],
+    resumoClientesVenda: resumoClientesVenda || {}
+  };
+}
+
+function salvarSnapshotCaixaAtual() {
+  return CaixaOfflineDB.salvarSnapshot(montarSnapshotCaixaAtual()).catch((err) => {
+    console.warn("Não foi possível salvar snapshot offline do Caixa.", err);
+  });
+}
+
+function atualizarIndicadorOfflineCaixa() {
+  const box = document.getElementById("pdv_offline_box");
+  const statusConexao = document.getElementById("pdv_status_conexao");
+  const statusPendencias = document.getElementById("pdv_status_pendencias");
+  const btnSync = document.getElementById("btnResincronizarPDV");
+
+  return CaixaOfflineDB.listarPendencias()
+    .then((pendencias) => {
+      const qtd = pendencias.length;
+      const online = caixaEstaOnline();
+
+      if (statusConexao) {
+        statusConexao.textContent = sincronizandoFilaOfflineCaixa ? "SINCRONIZANDO" : (online ? "ONLINE" : "OFFLINE");
+      }
+
+      if (statusPendencias) {
+        statusPendencias.textContent = `${qtd} ${qtd === 1 ? "PENDÊNCIA" : "PENDÊNCIAS"}`;
+      }
+
+      if (box) {
+        box.classList.toggle("online", online && qtd === 0 && !sincronizandoFilaOfflineCaixa);
+        box.classList.toggle("offline", !online || qtd > 0);
+        box.classList.toggle("sincronizando", sincronizandoFilaOfflineCaixa);
+      }
+
+      document.body.classList.toggle("pdv-offline", !online);
+
+      if (btnSync) {
+        btnSync.disabled = !online || qtd === 0 || sincronizandoFilaOfflineCaixa;
+        btnSync.classList.toggle("sincronizando", sincronizandoFilaOfflineCaixa);
+      }
+    })
+    .catch((err) => {
+      console.warn("Falha ao atualizar indicador offline.", err);
+    });
+}
+
+function bloquearNavegacaoOfflineCaixa() {
+  document.addEventListener("click", (ev) => {
+    if (caixaEstaOnline()) return;
+
+    const alvo = ev.target.closest("a[href], #btnGerenciarAcessosCabecalho, #btnLogoutCabecalho, button[data-page], [data-navegar]");
+    if (!alvo) return;
+
+    const dentroCaixa = alvo.id === "btnResincronizarPDV";
+    if (dentroCaixa) return;
+
+    ev.preventDefault();
+    ev.stopPropagation();
+
+    if (window.toastr) {
+      toastr.warning("Você está offline. Finalize as vendas pendentes antes de sair do Caixa.");
+    }
+  }, true);
+}
+
+function salvarVendaOfflineCaixa(payload) {
+  return CaixaOfflineDB.adicionarVenda(payload)
+    .then((registro) => {
+      if (Array.isArray(itensEst) && Array.isArray(payload?.movimentos)) {
+        payload.movimentos.forEach((m) => {
+          itensEst.push({
+            codigoprod: String(m?.codigosaida || "").trim(),
+            tipomov: String(m?.tipomov || "SAÍDA VENDA").trim(),
+            qtd: String(m?.qtd || "").trim(),
+            filial: String(m?.filial || "").trim(),
+            status: "S"
+          });
+        });
+      }
+
+      salvarSnapshotCaixaAtual();
+      limparVendaAposFinalizarCaixa();
+      atualizarIndicadorOfflineCaixa();
+
+      if (window.toastr) {
+        toastr.warning(`Venda salva na fila offline (${registro.idLocal}). Resincronize quando a internet voltar.`);
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      if (window.toastr) toastr.error("Não foi possível gravar a venda na fila offline.");
+    });
+}
+
+function sincronizarPendenciasOfflineCaixa(manual = false) {
+  if (sincronizandoFilaOfflineCaixa) return;
+
+  if (!caixaEstaOnline()) {
+    if (manual && window.toastr) toastr.warning("Sem internet para resincronizar agora.");
+    atualizarIndicadorOfflineCaixa();
+    return;
+  }
+
+  CaixaOfflineDB.listarPendencias()
+    .then((pendencias) => {
+      if (!pendencias.length) {
+        if (manual && window.toastr) toastr.info("Não há vendas pendentes para sincronizar.");
+        atualizarIndicadorOfflineCaixa();
+        return;
+      }
+
+      const run = obterGoogleRunCaixa();
+
+      if (!run || !run.sincronizarVendasOfflineCaixa) {
+        if (window.toastr) toastr.error("Backend de resincronização não encontrado.");
+        return;
+      }
+
+      sincronizandoFilaOfflineCaixa = true;
+      atualizarIndicadorOfflineCaixa();
+      if (typeof mostrarCarregamentoModal === "function") mostrarCarregamentoModal();
+
+      const lote = pendencias.map((item) => ({
+        idLocal: item.idLocal,
+        payload: item.payload
+      }));
+
+      run
+        .withSuccessHandler((resp) => {
+          const resultados = Array.isArray(resp?.resultados) ? resp.resultados : [];
+          const operacoes = resultados.map((r) => {
+            if (r && r.sucesso) return CaixaOfflineDB.removerVenda(r.idLocal);
+            return CaixaOfflineDB.marcarErro(r?.idLocal, r?.mensagem || "Erro ao sincronizar venda.");
+          });
+
+          Promise.allSettled(operacoes).then(() => {
+            sincronizandoFilaOfflineCaixa = false;
+            if (typeof esconderCarregamentoModal === "function") esconderCarregamentoModal();
+            atualizarIndicadorOfflineCaixa();
+
+            const sincronizadas = resultados.filter(r => r && r.sucesso).length;
+            const comErro = resultados.length - sincronizadas;
+
+            if (sincronizadas > 0) {
+              atualizarDadosCaixaAposVenda(() => {
+                if (comErro > 0) {
+                  if (window.toastr) toastr.warning(`${sincronizadas} venda(s) sincronizada(s). ${comErro} pendência(s) ficaram com erro.`);
+                } else if (window.toastr) {
+                  toastr.success(`${sincronizadas} venda(s) offline sincronizada(s) com sucesso.`);
+                }
+                resultados
+                  .filter(r => r && r.sucesso && r.idCarrinho)
+                  .forEach(r => dispararAtualizacaoDashboardAnaliticoCaixa(r.idCarrinho));
+              });
+            } else if (window.toastr) {
+              toastr.error(resp?.mensagem || "Nenhuma venda pendente foi sincronizada.");
+            }
+          });
+        })
+        .withFailureHandler((err) => {
+          console.error(err);
+          sincronizandoFilaOfflineCaixa = false;
+          if (typeof esconderCarregamentoModal === "function") esconderCarregamentoModal();
+          atualizarIndicadorOfflineCaixa();
+          if (window.toastr) toastr.error("Erro ao resincronizar vendas offline.");
+        })
+        .sincronizarVendasOfflineCaixa(lote);
+    })
+    .catch((err) => {
+      console.error(err);
+      if (manual && window.toastr) toastr.error("Não foi possível ler a fila offline.");
+      atualizarIndicadorOfflineCaixa();
+    });
+}
+
+function inicializarCaixaOffline() {
+  bloquearNavegacaoOfflineCaixa();
+  salvarSnapshotCaixaAtual();
+  atualizarIndicadorOfflineCaixa();
+
+  const btnSync = document.getElementById("btnResincronizarPDV");
+  if (btnSync) {
+    btnSync.addEventListener("click", () => sincronizarPendenciasOfflineCaixa(true));
+  }
+
+  window.addEventListener("online", () => {
+    if (window.toastr) toastr.info("Conexão restabelecida. Verificando pendências do Caixa.");
+    atualizarIndicadorOfflineCaixa();
+    sincronizarPendenciasOfflineCaixa(false);
+  });
+
+  window.addEventListener("offline", () => {
+    if (window.toastr) toastr.warning("Conexão perdida. O Caixa continuará registrando vendas na fila offline.");
+    atualizarIndicadorOfflineCaixa();
+  });
+
+  if (!caixaEstaOnline()) {
+    CaixaOfflineDB.carregarSnapshot()
+      .then((snapshot) => {
+        if (snapshot) {
+          reaplicarDadosCaixaAtualizados({ sucesso: true, ...snapshot });
+          if (window.toastr) toastr.info("Dados locais do Caixa carregados para operação offline.");
+        }
+      })
+      .catch((err) => console.warn("Não foi possível carregar snapshot offline do Caixa.", err))
+      .finally(() => atualizarIndicadorOfflineCaixa());
+  } else {
+    sincronizarPendenciasOfflineCaixa(false);
+  }
+}
+
+
+
+
+
+// ===========================================================================================================================================
+// ELEMENTOS DO DOM
+// ===========================================================================================================================================
+
+// Input de pesquisa
+const inputProduto = document.getElementById('inputProduto');
+const inputFilial = document.getElementById('inputFilial');
+
+// Lista de sugestões do dropdown
+const listaUlProduto = document.getElementById('listaProduto');
+const listaUlFilial = document.getElementById('listaFilial');
+
+
+function normalizarTextoCaixa(valor) {
+  return String(valor || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+function parseNumeroCaixa(valor) {
+  if (valor === null || valor === undefined) return 0;
+  if (typeof valor === 'number') return Number.isFinite(valor) ? valor : 0;
+
+  let s = String(valor).trim();
+  if (!s) return 0;
+
+  s = s.replace(/\u00A0/g, ' ');
+  s = s.replace(/[Rr]\$\s*/g, '');
+  s = s.replace(/\s/g, '');
+
+  const lastComma = s.lastIndexOf(',');
+  const lastDot = s.lastIndexOf('.');
+
+  if (lastComma > -1 && lastDot > -1) {
+    if (lastComma > lastDot) s = s.replace(/\./g, '').replace(',', '.');
+    else s = s.replace(/,/g, '');
+  } else if (lastComma > -1) {
+    s = s.replace(/\./g, '').replace(',', '.');
+  } else if (lastDot > -1) {
+    const parts = s.split('.');
+    if (parts.length > 2) {
+      const dec = parts.pop();
+      s = parts.join('') + '.' + dec;
+    }
+  }
+
+  const n = Number(s);
+  return Number.isFinite(n) ? n : 0;
+}
+
+let mapaPromocaoCaixa = null;
+
+function obterMapaPromocaoCaixa() {
+  if (mapaPromocaoCaixa) return mapaPromocaoCaixa;
+
+  mapaPromocaoCaixa = new Map();
+  (Array.isArray(itensPromo) ? itensPromo : []).forEach(promo => {
+    const id = String(promo?.idPromocao || '').trim();
+    if (id && !mapaPromocaoCaixa.has(id)) mapaPromocaoCaixa.set(id, promo);
+  });
+
+  return mapaPromocaoCaixa;
+}
+
+function obterPrecoVendaProdutoCaixa(prod) {
+  const emPromocao = normalizarTextoCaixa(prod?.emPromocao) === 'sim';
+  const idPromocao = String(prod?.idPromocaoVigente || '').trim();
+
+  if (emPromocao && idPromocao) {
+    const promo = obterMapaPromocaoCaixa().get(idPromocao);
+    const statusPromo = String(promo?.status || '').trim();
+    const precoPromo = parseNumeroCaixa(promo?.precoPromocao);
+
+    if (promo && statusPromo === '2' && precoPromo > 0) return precoPromo;
+  }
+
+  return parseNumeroCaixa(prod?.preco);
+}
+
+function somenteDigitosCaixa(valor) {
+  return String(valor || '').replace(/\D/g, '');
+}
+
+function aplicarMascaraCPFCaixaValor(valor) {
+  const v = somenteDigitosCaixa(valor).slice(0, 11);
+  return v
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+}
+
+function calcularIdadeClienteCaixa(dataNascimento) {
+  const texto = String(dataNascimento || '').trim();
+  if (!texto) return '';
+
+  let dia, mes, ano;
+
+  const br = texto.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  const iso = texto.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+
+  if (br) {
+    dia = Number(br[1]);
+    mes = Number(br[2]);
+    ano = Number(br[3]);
+  } else if (iso) {
+    ano = Number(iso[1]);
+    mes = Number(iso[2]);
+    dia = Number(iso[3]);
+  } else {
+    return '';
+  }
+
+  const nasc = new Date(ano, mes - 1, dia);
+  if (Number.isNaN(nasc.getTime()) || nasc > new Date()) return '';
+
+  const hoje = new Date();
+  let idade = hoje.getFullYear() - nasc.getFullYear();
+  const antesAniversario =
+    hoje.getMonth() < nasc.getMonth() ||
+    (hoje.getMonth() === nasc.getMonth() && hoje.getDate() < nasc.getDate());
+
+  if (antesAniversario) idade--;
+  return idade >= 0 ? String(idade) : '';
+}
+
+function obterResumoClienteCaixa(idCliente) {
+  const resumo = (resumoClientesVenda && resumoClientesVenda[String(idCliente || '').trim()]) || {};
+  return {
+    qtdCompras: Number(resumo.qtdCompras || 0),
+    totalCompras: Number(resumo.totalCompras || 0)
+  };
+}
+
+function reaplicarDadosCaixaAtualizados(resp) {
+  if (!resp || !resp.sucesso) return false;
+
+  itensProd = Array.isArray(resp.itensProd) ? resp.itensProd : [];
+  itensSaida = Array.isArray(resp.itensSaida) ? resp.itensSaida : [];
+  itensFil = Array.isArray(resp.itensFil) ? resp.itensFil : [];
+  itensEst = Array.isArray(resp.itensEst) ? resp.itensEst : [];
+  itensPromo = Array.isArray(resp.itensPromo) ? resp.itensPromo : [];
+  itensCli = Array.isArray(resp.itensCli) ? resp.itensCli : [];
+  resumoClientesVenda = resp.resumoClientesVenda || {};
+
+  mapaPromocaoCaixa = null;
+
+  const novosProdutos = itensProd
+    .filter(item => item && item.nome && item.nome.trim() !== '')
+    .map(item => item.nome);
+
+  const novasFiliais = itensFil
+    .filter(item => item && item.nome && item.nome.trim() !== '')
+    .map(item => item.nome);
+
+  todosprodutos.length = 0;
+  todosprodutos.push(...novosProdutos);
+
+  todasfilais.length = 0;
+  todasfilais.push(...novasFiliais);
+
+  if (typeof window.__pdvClientePagamento_recarregarClientes === "function") {
+    window.__pdvClientePagamento_recarregarClientes();
+  }
+
+  if (typeof window.__pdvRecalcularSaldoPorFilialAtual === "function") {
+    window.__pdvRecalcularSaldoPorFilialAtual();
+  }
+
+  return true;
+}
+
+function aplicarDadosConsultaCaixa(resp) {
+  if (!resp || !resp.sucesso) return false;
+
+  itensEst = Array.isArray(resp.itensEst) ? resp.itensEst : [];
+  itensCli = Array.isArray(resp.itensCli) ? resp.itensCli : [];
+  resumoClientesVenda = resp.resumoClientesVenda || {};
+  dadosConsultaCaixaCarregados = true;
+
+  if (typeof window.__pdvClientePagamento_recarregarClientes === "function") {
+    window.__pdvClientePagamento_recarregarClientes();
+  }
+
+  if (typeof window.__pdvRecalcularSaldoPorFilialAtual === "function") {
+    window.__pdvRecalcularSaldoPorFilialAtual();
+  }
+
+  salvarSnapshotCaixaAtual();
+  return true;
+}
+
+function carregarDadosConsultaCaixaPosRender() {
+  if (!caixaEstaOnline()) return;
+
+  const run = obterGoogleRunCaixa();
+  if (!run || !run.buscarDadosConsultaCaixa) return;
+
+  run
+    .withSuccessHandler((resp) => {
+      const ok = aplicarDadosConsultaCaixa(resp);
+      if (!ok && window.toastr) toastr.warning(resp?.mensagem || "Nao foi possivel carregar dados de consulta do Caixa.");
+    })
+    .withFailureHandler((err) => {
+      console.error(err);
+      if (window.toastr) toastr.warning("Nao foi possivel carregar os dados de consulta do Caixa.");
+    })
+    .buscarDadosConsultaCaixa();
+}
+
+function limparVendaAposFinalizarCaixa() {
+  const tbody = document.getElementById("tb_carrinho_corpo");
+  const ftTotal = document.getElementById("ftVlrTotal");
+  const campos = [
+    "inputEAN",
+    "inputCodigo",
+    "inputProduto",
+    "inputQtdEstoque",
+    "inputQuantidade",
+    "inputValorUnitario",
+    "inputValorTotal"
+  ];
+
+  if (tbody) tbody.innerHTML = "";
+  if (ftTotal) ftTotal.textContent = "R$ 0,00";
+
+  campos.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+
+  if (typeof fecharModalPagamento === "function") fecharModalPagamento();
+}
+
+function cancelarItemCaixa() {
+  const camposProduto = [
+    "inputEAN",
+    "inputCodigo",
+    "inputProduto",
+    "inputQtdEstoque",
+    "inputQuantidade",
+    "inputValorUnitario",
+    "inputValorTotal"
+  ];
+
+  camposProduto.forEach(id => {
+    const campo = document.getElementById(id);
+    if (campo) campo.value = "";
+  });
+
+  const listaProduto = document.getElementById("listaProduto");
+  if (listaProduto) {
+    listaProduto.innerHTML = "";
+    listaProduto.style.display = "none";
+  }
+
+  const inputEAN = document.getElementById("inputEAN");
+  if (inputEAN) setTimeout(() => inputEAN.focus(), 0);
+}
+
+function limparCarrinhoCaixa() {
+  const tbody = document.getElementById("tb_carrinho_corpo");
+  const ftTotal = document.getElementById("ftVlrTotal");
+
+  if (tbody) tbody.innerHTML = "";
+  if (ftTotal) ftTotal.textContent = "R$ 0,00";
+
+  if (typeof salvarSnapshotCaixaAtual === "function") {
+    salvarSnapshotCaixaAtual();
+  }
+
+  if (window.toastr) toastr.info("Carrinho limpo com sucesso.");
+}
+
+function atualizarDadosCaixaAposVenda(callback) {
+  const run = obterGoogleRunCaixa();
+
+  if (!run || !run.buscarDadosAtualizadosCaixa) {
+    if (typeof callback === "function") callback(false);
+    return;
+  }
+
+  run
+    .withSuccessHandler((resp) => {
+      const ok = reaplicarDadosCaixaAtualizados(resp);
+      if (ok) salvarSnapshotCaixaAtual();
+      if (typeof callback === "function") callback(ok);
+    })
+    .withFailureHandler((err) => {
+      console.error(err);
+      if (typeof callback === "function") callback(false);
+    })
+    .buscarDadosAtualizadosCaixa();
+}
+
+
+
+
+// ===========================================================================================================================================
+// INICIALIZAÇÃO DA PÁGINA
+// ===========================================================================================================================================
+
+// Executa quando o DOM estiver completamente carregado
+document.addEventListener('DOMContentLoaded', function() {
+
+    // CONFIGURAÇÃO DO TOASTR (NOTIFICAÇÕES) ===================================================
+    toastr.options = {
+        "closeButton": true,              // Mostra botão de fechar
+        "debug": false,                   // Modo debug desativado
+        "newestOnTop": true,              // Notificações mais recentes no topo
+        "progressBar": true,              // Mostra barra de progresso
+        "preventDuplicates": true,        // Evita notificações duplicadas
+        "onclick": null,                  // Sem ação ao clicar
+        "showDuration": "300",            // Duração da animação de entrada
+        "hideDuration": "1000",           // Duração da animação de saída
+        "timeOut": "3000",                // Tempo de exibição (3 segundos)
+        "extendedTimeOut": "0",           // Tempo extra ao passar mouse
+        "showEasing": "swing",            // Efeito de entrada
+        "hideEasing": "linear",           // Efeito de saída
+        "showMethod": "fadeIn",           // Método de entrada
+        "hideMethod": "fadeOut"           // Método de saída
+    };
+
+
+    // ====== CARREGANDO OS DADOS CAPTURADOS DAS LISTAS SUSPENSAS DENTRO DAS LISTAS EM BRANCO CRIADAS NO INÍCIO DO CÓDIGO======
+
+    // Pega os nomes das filiais passadas pelo template GS
+    if (typeof itensFil !== 'undefined' && itensFil && itensFil.length > 0) {
+        // Filtra itens vazios ou com espaços em branco
+        todasfilais = itensFil
+            .filter(item => item && item.nome && item.nome.trim() !== '')
+            .map(item => item.nome);
+    } else {
+        todasfilais = [];
+    }
+
+
+    if (typeof itensProd !== 'undefined' && itensProd && itensProd.length > 0) {
+        // Filtra itens vazios ou com espaços em branco
+        todosprodutos = itensProd
+            .filter(item => item && item.nome && item.nome.trim() !== '')
+            .map(item => item.nome);
+    } else {
+        todosprodutos = [];
+    }
+
+
+
+
+
+
+
+
+    // CONFIGURAÇÃO DOS EVENT LISTENERS ===========================================================
+
+
+    // PÁGINA INICIAL ====================================================
+
+    // Botão para cancelar produto =======================================
+    const btnCancelar = document.getElementById("btnCancelarItem");
+    if (btnCancelar) {
+        btnCancelar.addEventListener("click", cancelarItemCaixa);
+    }
+
+    // Botão para inserir produto =======================================
+    const btnInserir = document.getElementById("btnIncluirItem");
+    if (btnInserir) {
+        btnInserir.addEventListener("click", inserir);
+    }
+
+    // Botão para abrir o modal de pagamento =============================
+    const btnPagamento = document.getElementById("btnIrPagamento");
+    if (btnPagamento) {
+        btnPagamento.addEventListener("click", abrirModalPagamento);
+    }
+
+    // Botão para limpar o carrinho =======================================
+    const btnLimpar = document.getElementById("btnLimparCarrinho");
+    if (btnLimpar) {
+        btnLimpar.addEventListener("click", limparCarrinhoCaixa);
+    }
+
+
+    // Botão para limpar o carrinho =======================================
+    const saldoestoque = document.getElementById("btnAbrirModalEstoqueFilial");
+    if (saldoestoque) {
+        saldoestoque.addEventListener("click", iniciarModalEstoquePorFilial);
+    }
+
+
+
+
+    // MODAL DE PAGAMENTO ====================================================
+
+    // Botão Confirmar Cadastro - executa cadastro =====================================
+    const btnConfirmarCadastro = document.getElementById("btnFinalizarCompra");
+    if (btnConfirmarCadastro) {
+        btnConfirmarCadastro.addEventListener("click", encerrar);
+    }
+
+    // Botão para cancelar cadastro, fecha o modal =====================================
+    const cancelarPagamento = document.getElementById("btnCancelarPagamento");
+    if (cancelarPagamento) {
+        cancelarPagamento.addEventListener("click", fecharModalPagamento);
+    }
+
+    iniciarInteracoesClientePagamentoPDV();
+
+    // Fechar modal de pagamento ao clicar fora =========================================
+    const modalpagamento = document.getElementById("modalPagamento");
+    if (modalpagamento) {
+        modalpagamento.addEventListener("click", function(e) {
+            if (e.target === modalpagamento) {
+                fecharModalPagamento();
+            }
+        });
+    }
+
+
+
+
+    // MODAL DE EDIÇÃO ====================================================
+
+    const btnFecharModalEdicao = document.getElementById("btnCancelarEdicaoItem");
+    if (btnFecharModalEdicao) {
+        btnFecharModalEdicao.addEventListener("click", fecharModalEdicaoItem);
+    }
+
+    // Fechar modal de edição ao clicar fora =========================================
+    const fecharmodaledicao = document.getElementById("modalEdicaoItem");
+    if (fecharmodaledicao) {
+        fecharmodaledicao.addEventListener("click", function(e) {
+            if (e.target === fecharmodaledicao) {
+                fecharModalEdicaoItem();
+            }
+        });
+    }
+
+    // Botão Confirmar Edição =====================================
+    const btnConfirmarEdicao = document.getElementById("btnConfirmarEdicaoItem");
+    if (btnConfirmarEdicao) {
+        btnConfirmarEdicao.addEventListener("click", confirmarEdicaoItemCarrinho);
+    }
+
+
+
+
+
+    // MODAL DE EXCLUSÃO ====================================================
+
+    // Botão Confirmar Exclusão - executa exclusão =====================================
+    const btnConfirmarExclusao = document.getElementById("btnConfirmarExclusaoItem");
+    if (btnConfirmarExclusao) {
+        btnConfirmarExclusao.addEventListener("click", confirmarExclusaoItemCarrinho);
+    }
+
+    // Botão para cancelar exclusão, fecha o modal =====================================
+    const cancelarExclusao = document.getElementById("btnCancelarExclusaoItem");
+    if (cancelarExclusao) {
+        cancelarExclusao.addEventListener("click", fecharModalExclusaoItem);
+    }
+
+    // Fechar modal de edição ao clicar fora =========================================
+    const modalexclusao = document.getElementById("modalExclusaoItem");
+    if (modalexclusao) {
+        modalexclusao.addEventListener("click", function(e) {
+            if (e.target === modalexclusao) {
+                fecharModalExclusaoItem();
+            }
+        });
+    }   
+
+
+
+
+
+
+
+
+
+    // CONFIGURAR OS DROPDOWNS SIMPLES =============================================================
+
+    configurarTodosDropdowns();
+
+    // COLOCAR APENAS NÚMEROS =============================================================
+
+    aplicarMascaraApenasNumeros3("inputQuantidade");
+    aplicarMascaraApenasNumeros3("inputCodigo");
+
+    // MÁSCARA DE VALOR =============================================================
+
+    aplicarMascaraValor("pag_valor1");
+    aplicarMascaraValor("pag_valor2");
+    aplicarMascaraValor("desconto_compra");
+
+    // FUNÇÃO PARA O RELÓGIO =============================================================
+
+    iniciarRelogioPDV();
+
+    // FUNÇÃO PARA SNAPSHOT, FILA OFFLINE E RESINCRONIZAÇÃO DO CAIXA =====================
+
+    inicializarCaixaOffline();
+    carregarDadosConsultaCaixaPosRender();
+
+    // FUNÇÃO PARA INTERAÇÕES ENTRE CAMPOS DE INSERÇÃO DE PRODUTO =================================
+
+    iniciarInteracoesProdutoPDV();
+
+    // FUNÇÕES PARA INSERÇÃO DA FILIAL E BLOQUEIO DA FALTA DE FILIAL ==============================
+
+    iniciarBloqueioPorFilialPDV();
+    habilitarDesbloqueioAoSelecionarFilial()
+
+    // FUNÇÃO PARA LIMPAR INFORMAÇÕES AO TROCAR FILIAL =============================================
+
+    resetarPDVAoClicarFilial();
+
+    // INTERAÇÕES ENTRE CAMPOS NO MODAL DE PAGAMENTO ==============================================
+
+    iniciarInteracoesPagamentoPDV();
+    habilitarAtalhosPagamentoPDV();
+
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ===============================================================================================================================================================================================
+// FUNÇÃO QUE BLOQUEIA A TELA CASO A FILIAL NÃO SEJA INSERIDA
+// ===============================================================================================================================================================================================
+function iniciarBloqueioPorFilialPDV() {
+  if (window.__pdv_bloqueio_filial_iniciado) return;
+  window.__pdv_bloqueio_filial_iniciado = true;
+
+  const inputFilial = document.getElementById("inputFilial");
+  const areaConteudo = document.getElementById("pdv_content");
+
+  if (!inputFilial || !areaConteudo) {
+    console.error("PDV: inputFilial ou pdv_content não encontrado.");
+    return;
+  }
+
+  const toastWarn = (msg) => (window.toastr ? toastr.warning(msg) : alert(msg));
+
+  // Campos/botões que serão bloqueados (não inclui inputFilial nem btnVoltar)
+  const idsParaBloquear = [
+    "inputEAN",
+    "inputCodigo",
+    "inputProduto",
+    "inputQuantidade",
+    "btnCancelarItem",
+    "btnIncluirItem",
+    "btnLimparCarrinho",
+    "btnIrPagamento",
+  ];
+
+  const elementos = idsParaBloquear
+    .map((id) => document.getElementById(id))
+    .filter(Boolean);
+
+  // Guarda o estado original (pra restaurar depois)
+  const estadoOriginalDisabled = new Map();
+  elementos.forEach((el) => estadoOriginalDisabled.set(el, !!el.disabled));
+
+  // Cria overlay (sem precisar mexer no HTML)
+  let overlay = document.getElementById("pdv_lock_overlay");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "pdv_lock_overlay";
+    overlay.innerHTML = `
+      <div class="pdv-lock-box">
+        <i class="bi bi-shop"></i>
+        <span>Selecione a filial para iniciar o PDV</span>
+      </div>
+    `;
+    areaConteudo.appendChild(overlay);
+
+    overlay.addEventListener("click", () => {
+      toastWarn("Selecione a filial para iniciar o PDV.");
+      inputFilial.focus();
+      try { inputFilial.select(); } catch (e) {}
+    });
+  }
+
+  function filialOk() {
+    return String(inputFilial.value || "").trim() !== "";
+  }
+
+  function aplicarBloqueio() {
+    const bloquear = !filialOk();
+
+    // overlay por cima do conteúdo
+    overlay.style.display = bloquear ? "flex" : "none";
+
+    // desabilita/restaura campos e botões
+    elementos.forEach((el) => {
+      el.disabled = bloquear ? true : estadoOriginalDisabled.get(el);
+    });
+
+    // Fecha dropdown de produto se estiver aberto
+    if (bloquear) {
+      const listaProduto = document.getElementById("listaProduto");
+      if (listaProduto) listaProduto.style.display = "none";
+    }
+  }
+
+  // Reage quando o usuário seleciona/digita filial
+  inputFilial.addEventListener("input", aplicarBloqueio);
+  inputFilial.addEventListener("change", aplicarBloqueio);
+  inputFilial.addEventListener("blur", aplicarBloqueio);
+
+  // Estado inicial
+  aplicarBloqueio();
+}
+
+function habilitarDesbloqueioAoSelecionarFilial() {
+  const inputFilial = document.getElementById('inputFilial');
+  const listaFilial = document.getElementById('listaFilial');
+  const overlay = document.getElementById('pdv_lock_overlay');
+
+  if (!inputFilial || !listaFilial || !overlay) return;
+
+  // ✅ Ajuste aqui quais elementos devem ser bloqueados
+  const elementosParaBloquear = [
+    '#inputEAN',
+    '#inputCodigo',
+    '#inputProduto',
+    '#inputQuantidade',
+    '#btnCancelarItem',
+    '#btnIncluirItem',
+    '#btnLimparCarrinho',
+    '#btnIrPagamento'
+  ];
+
+  function setBloqueio(bloqueado) {
+    // blur
+    overlay.style.display = bloqueado ? 'flex' : 'none';
+
+    // desabilita/habilita campos e botões
+    elementosParaBloquear.forEach(sel => {
+      const el = document.querySelector(sel);
+      if (!el) return;
+
+      // inputs / buttons
+      if ('disabled' in el) el.disabled = bloqueado;
+
+      // opcional: trava clique mesmo se algum elemento não tiver disabled
+      el.style.pointerEvents = bloqueado ? 'none' : '';
+      el.style.userSelect = bloqueado ? 'none' : '';
+    });
+
+    // se bloqueou, força foco na filial
+    if (bloqueado) {
+      setTimeout(() => {
+        try { inputFilial.focus(); } catch (e) {}
+      }, 0);
+    }
+  }
+
+  function atualizarLock() {
+    const temFilial = String(inputFilial.value || '').trim() !== '';
+    setBloqueio(!temFilial);
+  }
+
+  // ✅ Clique em uma opção da lista -> some o blur imediatamente
+  listaFilial.addEventListener('click', (e) => {
+    const li = e.target.closest('li');
+    if (!li) return;
+
+    const txt = (li.textContent || '').trim();
+    if (!txt || /nenhum resultado/i.test(txt)) return;
+
+    // espera o seu código preencher o input
+    setTimeout(atualizarLock, 0);
+  }, true);
+
+  // ✅ Mantém funcionando se o usuário digitar manualmente também
+  inputFilial.addEventListener('input', atualizarLock);
+  inputFilial.addEventListener('change', atualizarLock);
+
+  atualizarLock(); // estado inicial
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ================================================================================================================================================================================================
+// FUNÇÃO PARA LIMPAR INFORMAÇÕES AO TROCARMOS DE FILIAL
+// =================================================================================================================================================================================================
+
+function resetarPDVAoClicarFilial() {
+  const inputFilial = document.getElementById('inputFilial');
+  const listaFilial = document.getElementById('listaFilial');
+
+  const tbody = document.getElementById('tb_carrinho_corpo');
+  const ftTotal = document.getElementById('ftVlrTotal');
+
+  if (!inputFilial || !listaFilial) return;
+
+  function limparCamposProduto() {
+    const ids = [
+      'inputEAN',
+      'inputCodigo',
+      'inputProduto',
+      'inputQtdEstoque',
+      'inputQuantidade',
+      'inputValorUnitario',
+      'inputValorTotal'
+    ];
+
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+  }
+
+  function limparCarrinho() {
+    if (tbody) tbody.innerHTML = '';
+    if (ftTotal) ftTotal.textContent = 'R$ 0,00';
+  }
+
+  listaFilial.addEventListener('click', (e) => {
+    const li = e.target.closest('li');
+    if (!li) return;
+
+    const filialClicada = (li.textContent || '').trim();
+    if (!filialClicada || /nenhum resultado/i.test(filialClicada)) return;
+
+    const filialAntes = (inputFilial.value || '').trim();
+
+    // espera seu código preencher o inputFilial ao clicar
+    setTimeout(() => {
+      const filialDepois = (inputFilial.value || '').trim();
+
+      // Se já mudou (ou vai mudar) para uma filial diferente -> reseta PDV
+      // (uso a filialClicada como referência do clique)
+      if (filialClicada !== filialAntes) {
+        limparCamposProduto();
+        limparCarrinho();
+      }
+
+      // opcional: foco volta pro EAN
+      const inputEAN = document.getElementById('inputEAN');
+      inputEAN?.focus?.();
+    }, 0);
+  }, true);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =======================================================================================================================================
+// FUNÇÃO: RELÓGIO NA TELA
+// =======================================================================================================================================
+
+function iniciarRelogioPDV() {
+  const el = document.getElementById('pdv_relogio');
+  if (!el) return;
+
+  // Nomes dos dias em PT-BR
+  const dias = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+
+  // Gera data/hora no fuso de Brasília (America/Sao_Paulo)
+  const fmtData = new Intl.DateTimeFormat('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+
+  const fmtHora = new Intl.DateTimeFormat('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  });
+
+  function tick() {
+    // Pega o "agora" no fuso de Brasília e extrai o dia da semana também no mesmo fuso
+    const agora = new Date();
+
+    // Para obter o dia da semana no fuso desejado, usamos formatToParts
+    const parts = new Intl.DateTimeFormat('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      weekday: 'long'
+    }).formatToParts(agora);
+
+    const weekdayLong = parts.find(p => p.type === 'weekday')?.value || '';
+    // Converte "domingo" -> "Domingo"
+    const diaSemana = weekdayLong.charAt(0).toUpperCase() + weekdayLong.slice(1);
+
+    el.textContent = `${diaSemana} - ${fmtData.format(agora)} ${fmtHora.format(agora)}`;
+  }
+
+  tick();                  // mostra imediatamente
+  setInterval(tick, 1000); // atualiza a cada segundo
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =======================================================================================================================================
+// FUNÇÃO: MASCARA PARA INSERIR APENAS NUMEROS
+// =======================================================================================================================================
+
+function aplicarMascaraApenasNumeros3(idCampo) {
+  const campo = document.getElementById(idCampo);
+  if (!campo) return console.error('Campo não encontrado:', idCampo);
+
+  // (opcional) ajuda no mobile
+  campo.setAttribute('inputmode', 'numeric');
+  campo.setAttribute('maxlength', '15');
+
+  // Bloqueia teclas não numéricas (mas permite navegação/atalhos)
+  campo.addEventListener('keydown', (e) => {
+    const permitidas = [
+      'Backspace', 'Delete', 'Tab', 'Enter', 'Escape',
+      'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
+      'Home', 'End'
+    ];
+
+    if (permitidas.includes(e.key)) return;
+
+    // Ctrl/Cmd + A/C/V/X
+    if ((e.ctrlKey || e.metaKey) && ['a', 'c', 'v', 'x'].includes(e.key.toLowerCase())) return;
+
+    // Só aceita dígitos 0-9
+    if (!/^\d$/.test(e.key)) e.preventDefault();
+
+    // Limite de 3 dígitos (respeita seleção: se tiver texto selecionado, permite substituir)
+    const selLen = (campo.selectionEnd ?? 0) - (campo.selectionStart ?? 0);
+    const futuroLen = campo.value.length - selLen + 1;
+    if (futuroLen > 15) e.preventDefault();
+  });
+
+  // Sanitiza qualquer colagem/arrasto (remove não-dígitos e corta em 3)
+  campo.addEventListener('input', (e) => {
+    let v = e.target.value.replace(/\D/g, '').slice(0, 15);
+    if (e.target.value !== v) e.target.value = v;
+  });
+
+  // Sanitiza também no paste (para evitar piscadas)
+  campo.addEventListener('paste', (e) => {
+    e.preventDefault();
+    const texto = (e.clipboardData || window.clipboardData).getData('text') || '';
+    const v = texto.replace(/\D/g, '').slice(0, 15);
+
+    const start = campo.selectionStart ?? campo.value.length;
+    const end = campo.selectionEnd ?? campo.value.length;
+
+    const novo = (campo.value.slice(0, start) + v + campo.value.slice(end)).replace(/\D/g, '').slice(0, 15);
+    campo.value = novo;
+
+    const pos = Math.min((campo.value.length), start + v.length);
+    campo.setSelectionRange(pos, pos);
+
+    campo.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =======================================================================================================================================
+// FUNÇÃO: APLICAR MÁSCARA DE VALOR
+// =======================================================================================================================================
+
+// Aplica máscara R$ 0,00 com entrada da direita para esquerda
+// Agora: não preenche o campo no início (placeholder aparece). Só mostra "R$ 0,00" quando o usuário começar a digitar.
+function aplicarMascaraValor(idCampo) {
+  const campo = document.getElementById(idCampo);
+  if (!campo) return console.error('Campo não encontrado:', idCampo);
+
+  // NÃO define valor inicial -> permite placeholder
+  // campo.value = 'R$ 0,00';
+
+  // Flag para evitar loops quando setamos value via código
+  let atualizando = false;
+
+  campo.addEventListener('focus', e => {
+    setTimeout(() => {
+      const len = e.target.value.length;
+      e.target.setSelectionRange(len, len);
+    });
+  });
+
+  campo.addEventListener('keydown', e => {
+    const permitidas = [8, 9, 13, 27, 46]; // backspace, tab, enter, esc, del
+    const ctrl = e.ctrlKey && [65, 67, 86, 88].includes(e.keyCode); // A,C,V,X
+    const nav = e.keyCode >= 35 && e.keyCode <= 39; // setas, home, end
+    const num = (!e.shiftKey && ((e.keyCode >= 48 && e.keyCode <= 57) || (e.keyCode >= 96 && e.keyCode <= 105)));
+
+    if (!(permitidas.includes(e.keyCode) || ctrl || nav || num)) e.preventDefault();
+  });
+
+  campo.addEventListener('input', e => {
+    if (atualizando) return;
+
+    // Se o usuário apagou tudo, mantém vazio para aparecer o placeholder
+    const soNumeros = e.target.value.replace(/\D/g, '');
+    if (soNumeros.length === 0) {
+      atualizando = true;
+      e.target.value = '';
+      atualizando = false;
+      return;
+    }
+
+    // Mantém sua lógica original, só que só roda quando houver dígitos
+    let v = soNumeros.slice(0, 9) || '0';
+    v = v.padStart(3, '0');
+    const reais = v.slice(0, -2).replace(/^0+/, '') || '0';
+    const centavos = v.slice(-2);
+
+    atualizando = true;
+    e.target.value = `R$ ${reais.replace(/\B(?=(\d{3})+(?!\d))/g, '.')},${centavos}`;
+    atualizando = false;
+  });
+
+  campo.obterValor = () => parseInt((campo.value || '').replace(/\D/g, '')) / 100 || 0;
+
+  campo.definirValor = valor => {
+    // Se quiser "definir vazio", passe null/undefined/NaN
+    if (valor === null || valor === undefined || Number.isNaN(valor)) {
+      campo.value = '';
+      return;
+    }
+
+    let v = Math.round(valor * 100).toString().padStart(3, '0').slice(0, 9);
+    const reais = v.slice(0, -2).replace(/^0+/, '') || '0';
+    const centavos = v.slice(-2);
+
+    campo.value = `R$ ${reais.replace(/\B(?=(\d{3})+(?!\d))/g, '.')},${centavos}`;
+  };
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =======================================================================================================================================================================================
+// FUNÇÃO PARA ESTABELECER RELAÇÃO ENTRE CAMPOS
+// =======================================================================================================================================================================================
+// Saldo de estoque
+// Pesquisas por código
+
+function iniciarInteracoesProdutoPDV() {
+  if (window.__pdv_interacoes_produto_iniciadas) return;
+  window.__pdv_interacoes_produto_iniciadas = true;
+
+  const inputEAN         = document.getElementById('inputEAN');
+  const inputCodigo      = document.getElementById('inputCodigo');
+  const inputProduto     = document.getElementById('inputProduto');
+  const listaProduto     = document.getElementById('listaProduto');
+
+  const inputQtdEstoque  = document.getElementById('inputQtdEstoque');
+  const inputQuantidade  = document.getElementById('inputQuantidade');
+
+  const inputVlrUnit     = document.getElementById('inputValorUnitario');
+  const inputVlrTotal    = document.getElementById('inputValorTotal');
+
+  const inputFilial     = document.getElementById('inputFilial');
+  const listaFilial     = document.getElementById('listaFilial'); 
+
+  if (!inputEAN || !inputCodigo || !inputProduto || !inputQuantidade || !inputVlrUnit || !inputVlrTotal) {
+    console.error('PDV: Campos obrigatórios não encontrados no DOM.');
+    return;
+  }
+
+  // -------------------------------
+  // HELPERS
+  // -------------------------------
+  const toastWarn = (msg) => (window.toastr ? toastr.warning(msg) : alert(msg));
+
+  function soDigitos(v) {
+    return String(v || '').replace(/\D/g, '');
+  }
+
+  function normalizaTexto(v) {
+    return String(v || '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  }
+
+  function isComboNao(valor) {
+    return normalizaTexto(valor) === 'nao';
+  }
+
+  // ✅ FIX 2: parser BR robusto (aceita "R$49,90", "49,90", "49.9", 49.9, "1.234,56")
+  function parseNumeroBR(v) {
+    if (v === null || v === undefined) return 0;
+
+    if (typeof v === 'number') {
+      return Number.isFinite(v) ? v : 0;
+    }
+
+    let s = String(v).trim();
+    if (!s) return 0;
+
+    // remove símbolos e espaços
+    s = s.replace(/[R$\s]/g, '');
+
+    const temVirgula = s.includes(',');
+    const temPonto = s.includes('.');
+
+    if (temVirgula && temPonto) {
+      // padrão BR: 1.234,56
+      s = s.replace(/\./g, '').replace(',', '.');
+      const n = parseFloat(s);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    if (temVirgula && !temPonto) {
+      // padrão BR: 49,90
+      s = s.replace(',', '.');
+      const n = parseFloat(s);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    if (!temVirgula && temPonto) {
+      // padrão US/numérico: 49.9
+      // (se tiver mais de um ponto, considera o último como decimal)
+      const parts = s.split('.');
+      if (parts.length > 2) {
+        const dec = parts.pop();
+        s = parts.join('') + '.' + dec; // remove pontos de milhar
+      }
+      const n = parseFloat(s);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    // só dígitos (inteiro)
+    const n = parseFloat(s);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function parseBRL(valorTexto) {
+      if (valorTexto === null || valorTexto === undefined) return 0;
+
+      let s = String(valorTexto).trim();
+
+      // Remove "R$" e espaços (inclui NBSP)
+      s = s.replace(/\u00A0/g, " ");
+      s = s.replace(/[Rr]\$\s*/g, "");
+      s = s.replace(/\s/g, "");
+
+      // Detecta separador decimal pelo ÚLTIMO '.' ou ',' encontrado
+      const lastComma = s.lastIndexOf(",");
+      const lastDot = s.lastIndexOf(".");
+
+      if (lastComma > lastDot) {
+        // PT-BR: vírgula decimal, ponto milhar
+        s = s.replace(/\./g, "").replace(",", ".");
+      } else if (lastDot > lastComma) {
+        // EN: ponto decimal, vírgula milhar
+        s = s.replace(/,/g, "");
+        // '.' fica como decimal
+      } else {
+        // Sem separador: se vier tipo "4990", trata como centavos (49.90)
+        if (/^\d+$/.test(s) && s.length >= 3) {
+          s = s.slice(0, -2) + "." + s.slice(-2);
+        }
+      }
+
+      const n = Number(s);
+      return Number.isFinite(n) ? n : 0;
+  }
+
+  function formatBRL(valor) {
+    const n = Number(valor || 0);
+    return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  // ✅ FIX 1: normaliza código para comparar (resolve "0012" vs "12")
+  function normalizaCodigo(v) {
+    const s = String(v ?? '').trim();
+    if (!s) return '';
+    if (/^\d+$/.test(s)) return s.replace(/^0+/, '') || '0';
+    return s.toUpperCase();
+  }
+
+  function limparCamposItem() {
+    inputEAN.value = '';
+    inputCodigo.value = '';
+    inputProduto.value = '';
+    if (inputQtdEstoque) inputQtdEstoque.value = '';
+    inputQuantidade.value = '';
+    inputVlrUnit.value = '';
+    inputVlrTotal.value = '';
+
+    if (document.activeElement && typeof document.activeElement.blur === 'function') {
+      document.activeElement.blur();
+    }
+
+    setTimeout(() => inputEAN.focus(), 0);
+  }
+
+  // -------------------------------
+  // ✅ SALDO POR PRODUTO (AGORA FILTRADO POR FILIAL SELECIONADA)
+  // saldo = ENTRADA - SAÍDA
+  // -------------------------------
+
+  // Mapa: nome(normalizado) -> codigo da filial
+  const mapaFilialNomeCodigo = new Map();
+  (Array.isArray(itensFil) ? itensFil : []).forEach(f => {
+    const nomeKey = normalizaTexto(f?.nome);
+    if (!nomeKey) return;
+    if (!mapaFilialNomeCodigo.has(nomeKey)) mapaFilialNomeCodigo.set(nomeKey, f?.codigo);
+  });
+
+  function obterCodigoFilialSelecionada() {
+    const nome = String(inputFilial?.value || '').trim();
+    if (!nome) return null;
+
+    const cod = mapaFilialNomeCodigo.get(normalizaTexto(nome));
+    if (cod === undefined || cod === null || String(cod).trim() === '') return null;
+
+    const n = parseInt(String(cod).trim(), 10);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  // tenta achar o campo da filial em itensEst (prioriza mov.filial)
+  function extrairCodigoFilialMov(mov) {
+    const candidatos = [
+      mov?.filial,
+      mov?.codfilial,
+      mov?.codigoFilial,
+      mov?.codigofilial,
+      mov?.codFilial
+    ];
+
+    for (const c of candidatos) {
+      if (c === undefined || c === null) continue;
+      const n = parseInt(String(c).trim(), 10);
+      if (Number.isFinite(n)) return n;
+    }
+    return null;
+  }
+
+  // ✅ agora o saldoPorProduto vira "dinâmico"
+  let saldoPorProduto = new Map();
+
+  function recalcularSaldoPorFilialAtual() {
+    saldoPorProduto = new Map();
+
+    const codFilial = obterCodigoFilialSelecionada();
+    const base = Array.isArray(itensEst) ? itensEst : [];
+
+    // se não tiver filial ainda, não calcula saldo (ou pode calcular geral, se preferir)
+    if (codFilial === null) {
+      return; // <- mais seguro pro seu lock (sem filial, sem saldo)
+      // se você quiser calcular geral quando não tiver filial, troque por:
+      // movs = base;
+    }
+
+    const movs = base.filter(mov => extrairCodigoFilialMov(mov) === codFilial);
+
+    movs.forEach(mov => {
+      if (!mov) return;
+
+      const key = normalizaCodigo(mov.codigoprod);
+      if (!key) return;
+
+      const tipo = normalizaTexto(mov.tipomov);
+      const qtd  = parseNumeroBR(mov.qtd);
+
+      if (!Number.isFinite(qtd) || qtd === 0) return;
+
+      const atual = saldoPorProduto.get(key) || 0;
+
+      if (tipo.includes('entrada')) saldoPorProduto.set(key, atual + qtd);
+      if (tipo.includes('saida'))   saldoPorProduto.set(key, atual - qtd);
+    });
+  }
+
+  // calcula uma vez ao iniciar
+  recalcularSaldoPorFilialAtual();
+
+  // recalcula quando a filial mudar (digitando/alterando)
+  if (inputFilial) {
+    inputFilial.addEventListener('change', recalcularSaldoPorFilialAtual);
+    inputFilial.addEventListener('input',  () => setTimeout(recalcularSaldoPorFilialAtual, 0));
+  }
+
+  // recalcula quando escolher na lista (clique)
+  if (listaFilial) {
+    listaFilial.addEventListener('click', () => {
+      // espera o seu código preencher o inputFilial
+      setTimeout(recalcularSaldoPorFilialAtual, 0);
+    }, true);
+  }
+
+  function obterSaldoEstoque(codProd) {
+    return saldoPorProduto.get(normalizaCodigo(codProd)) || 0;
+  }
+
+  window.__pdvRecalcularSaldoPorFilialAtual = function() {
+    recalcularSaldoPorFilialAtual();
+
+    const codProdutoAtual = String(inputCodigo?.value || '').trim();
+    if (codProdutoAtual && inputQtdEstoque) {
+      inputQtdEstoque.value = String(obterSaldoEstoque(codProdutoAtual));
+    }
+  };
+
+  function calcularTotal() {
+    const qtd = parseFloat(String(inputQuantidade.value || '').replace(',', '.'));
+    const unit = parseBRL(inputVlrUnit.value);
+
+    if (!Number.isFinite(qtd) || qtd <= 0 || !Number.isFinite(unit) || unit <= 0) {
+      inputVlrTotal.value = '';
+      return;
+    }
+
+    inputVlrTotal.value = formatBRL(qtd * unit);
+  }
+
+  function acionarInserirEFinalizar() {
+    if (typeof inserir === 'function') {
+      inserir();
+    } else {
+      console.warn('Função inserir() não encontrada no escopo global.');
+      toastWarn('Função inserir() não encontrada. Verifique seu JS.');
+    }
+  }
+
+  function preencherCamposProduto(prod, preencherEAN = false) {
+    if (preencherEAN) inputEAN.value = prod.ean || '';
+
+    inputCodigo.value = prod.codigo || '';
+    inputProduto.value = prod.nome || '';
+
+    // preço: agora parseia certo "49.9" e "R$49,90"
+    const precoNum = obterPrecoVendaProdutoCaixa(prod);
+    inputVlrUnit.value = precoNum ? formatBRL(precoNum) : '';
+
+    // estoque (só se combo == "Não")
+    if (inputQtdEstoque) {
+      if (isComboNao(prod.combo)) {
+        inputQtdEstoque.value = String(obterSaldoEstoque(prod.codigo));
+      } else {
+        inputQtdEstoque.value = '';
+      }
+    }
+
+    setTimeout(() => {
+      inputQuantidade.focus();
+
+      const qtd = parseInt(String(inputQuantidade.value || '').trim(), 10);
+      if (Number.isFinite(qtd) && qtd > 0) {
+        calcularTotal();
+        acionarInserirEFinalizar();
+      } else {
+        try { inputQuantidade.select(); } catch(e) {}
+      }
+    }, 0);
+  }
+
+  // -------------------------------
+  // MAPAS PARA BUSCA RÁPIDA
+  // -------------------------------
+  const mapaEAN = new Map();
+  const mapaCodigo = new Map();
+  const mapaNome = new Map();
+
+  (Array.isArray(itensProd) ? itensProd : []).forEach(p => {
+    if (!p) return;
+
+    const eanKey = soDigitos(p.ean);
+    const codKey = normalizaCodigo(p.codigo);
+    const nomeKey = normalizaTexto(p.nome);
+
+    if (eanKey && !mapaEAN.has(eanKey)) mapaEAN.set(eanKey, p);
+    if (codKey && !mapaCodigo.has(codKey)) mapaCodigo.set(codKey, p);
+    if (nomeKey && !mapaNome.has(nomeKey)) mapaNome.set(nomeKey, p);
+  });
+
+  function buscarPorEAN(valor) {
+    return mapaEAN.get(soDigitos(valor)) || null;
+  }
+  function buscarPorCodigo(valor) {
+    return mapaCodigo.get(normalizaCodigo(valor)) || null;
+  }
+  function buscarPorNome(valor) {
+    return mapaNome.get(normalizaTexto(valor)) || null;
+  }
+
+  // -------------------------------
+  // EVENTOS
+  // -------------------------------
+  inputEAN.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+
+    const prod = buscarPorEAN(inputEAN.value);
+    if (!prod) {
+      toastWarn('Código de barras (EAN) não encontrado!');
+      inputEAN.focus();
+      try { inputEAN.select(); } catch(err) {}
+      return;
+    }
+
+    preencherCamposProduto(prod, false);
+  });
+
+  inputCodigo.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+
+    const prod = buscarPorCodigo(inputCodigo.value);
+    if (!prod) {
+      toastWarn('Código do produto não encontrado!');
+      inputCodigo.focus();
+      try { inputCodigo.select(); } catch(err) {}
+      return;
+    }
+
+    preencherCamposProduto(prod, true); // preenche EAN também
+  });
+
+  if (listaProduto) {
+    listaProduto.addEventListener('click', (e) => {
+      const li = e.target.closest('li');
+      if (!li) return;
+
+      const nomeSelecionado = (li.textContent || '').trim();
+      if (!nomeSelecionado || /nenhum resultado/i.test(nomeSelecionado)) return;
+
+      const prod = buscarPorNome(nomeSelecionado);
+      if (!prod) return;
+
+      preencherCamposProduto(prod, true);
+    });
+  }
+
+  inputProduto.addEventListener('change', () => {
+    const prod = buscarPorNome(inputProduto.value);
+    if (!prod) return;
+    preencherCamposProduto(prod, true);
+  });
+
+  inputQuantidade.addEventListener('input', () => {
+    calcularTotal();
+  });
+
+  inputQuantidade.addEventListener('focus', () => {
+    const qtd = parseInt(String(inputQuantidade.value || '').trim(), 10);
+    if (Number.isFinite(qtd) && qtd > 0) {
+      calcularTotal();
+      acionarInserirEFinalizar();
+    }
+  });
+
+  inputQuantidade.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    calcularTotal();
+    acionarInserirEFinalizar();
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =============================================================================================================================================================================================
+// INSERIR OS DADOS DO PRODUTO NO CARRINHO
+// =============================================================================================================================================================================================
+
+function inserir() {
+  const elProduto = document.getElementById("inputProduto");
+  const elQtd = document.getElementById("inputQuantidade");
+
+  const elEAN = document.getElementById("inputEAN");
+  const elCodigo = document.getElementById("inputCodigo");
+  const elQtdEstoque = document.getElementById("inputQtdEstoque");
+  const elVlrUnit = document.getElementById("inputValorUnitario");
+  const elVlrTotal = document.getElementById("inputValorTotal");
+
+  const tbody = document.getElementById("tb_carrinho_corpo");
+  const elFooterTotal = document.getElementById("ftVlrTotal");
+
+  if (!tbody || !elFooterTotal) {
+    console.error("Tabela do carrinho não encontrada (tb_carrinho_corpo / ftVlrTotal).");
+    return;
+  }
+
+  const nomeProduto = (elProduto?.value || "").trim();
+  const qtdTxt = (elQtd?.value || "").trim();
+  const qtdNum = parseInt(qtdTxt, 10);
+
+  // ✅ Campos obrigatórios
+  const produtoVazio = nomeProduto === "";
+  const qtdVaziaOuInvalida = qtdTxt === "" || !Number.isFinite(qtdNum) || qtdNum <= 0;
+
+  if (produtoVazio || qtdVaziaOuInvalida) {
+    if (window.toastr) toastr.warning("O nome do produto e quantidade são campos obrigatórios!");
+    else alert("O nome do produto e quantidade são campos obrigatórios!");
+    (produtoVazio ? elProduto : elQtd)?.focus();
+    return;
+  }
+
+  // Busca o produto na lista (case-insensitive)
+  const prodObj = (Array.isArray(itensProd) ? itensProd : []).find(p =>
+    (p?.nome || "").trim().toUpperCase() === nomeProduto.toUpperCase()
+  );
+
+  if (!prodObj) {
+    (window.toastr ? toastr.error : alert)("Produto não encontrado na base.");
+    elProduto?.focus();
+    return;
+  }
+
+  // ✅ PREÇO: parse robusto (aceita "R$49,90", "49,90", "49.9", "49.90", "1.234,56", etc.)
+  const valorUnitNum = obterPrecoVendaProdutoCaixa(prodObj);
+
+  if (!Number.isFinite(valorUnitNum) || valorUnitNum < 0) {
+    (window.toastr ? toastr.error : alert)("Preço do produto inválido no cadastro.");
+    return;
+  }
+
+  const valorTotalNum = qtdNum * valorUnitNum;
+
+  const valorUnitFmt = formatBRL(valorUnitNum);
+  const valorTotalFmt = formatBRL(valorTotalNum);
+
+  // ✅ NOVO: AGRUPAR SE O PRODUTO JÁ EXISTE NO CARRINHO
+  const linhasCarrinho = Array.from(tbody.querySelectorAll("tr"));
+
+  const chaveCodigo = String(prodObj.codigo || "").trim();
+  const chaveNome = String(prodObj.nome || "").trim().toUpperCase();
+
+  const linhaExistente = linhasCarrinho.find(tr => {
+    const cod = String(tr.dataset.codigo || "").trim();
+    const nome = String(tr.dataset.nome || "").trim().toUpperCase();
+
+    // prioriza código; se não houver, usa nome
+    if (chaveCodigo && cod) return cod === chaveCodigo;
+    return nome === chaveNome;
+  });
+
+  if (linhaExistente) {
+    const tdQtdExist   = linhaExistente.children[1]; // coluna 2
+    const tdUnitExist  = linhaExistente.children[2]; // coluna 3
+    const tdTotalExist = linhaExistente.children[3]; // coluna 4
+
+    const qtdAnt = parseInt(String(tdQtdExist.textContent || "0").trim(), 10) || 0;
+    const totalAnt = parseBRL(tdTotalExist.textContent || "R$ 0,00") || 0;
+
+    const novaQtd = qtdAnt + qtdNum;
+    const novoTotal = totalAnt + valorTotalNum;
+
+    // mantém coerência: unitário = total / qtd (média ponderada)
+    const novoUnit = novaQtd > 0 ? (novoTotal / novaQtd) : 0;
+
+    tdQtdExist.textContent = String(novaQtd);
+    tdTotalExist.textContent = formatBRL(novoTotal);
+    tdUnitExist.textContent = formatBRL(novoUnit);
+
+    atualizarTotalCarrinho();
+    limparCamposItem();
+    elEAN?.focus();
+    return;
+  }
+
+  // --- Cria a linha ---
+  const tr = document.createElement("tr");
+
+  // (Opcional) guardar infos úteis na linha
+  tr.dataset.codigo = prodObj.codigo || "";
+  tr.dataset.nome = prodObj.nome || "";
+  tr.dataset.ean = prodObj.ean || "";
+
+  // Coluna 1: Produto
+  const tdProd = document.createElement("td");
+  tdProd.textContent = prodObj.nome;
+
+  // Coluna 2: Quantidade
+  const tdQtd = document.createElement("td");
+  tdQtd.textContent = String(qtdNum);
+
+  // Coluna 3: Valor unitário
+  const tdVlrUnit = document.createElement("td");
+  tdVlrUnit.textContent = valorUnitFmt;
+
+  // Coluna 4: Valor total
+  const tdVlrTotal = document.createElement("td");
+  tdVlrTotal.textContent = valorTotalFmt;
+
+  // Coluna 5: Ações (editar + excluir)
+  const tdAcoes = document.createElement("td");
+  tdAcoes.style.whiteSpace = "nowrap";
+
+  const wrapAcoes = document.createElement("div");
+  wrapAcoes.style.display = "inline-flex";
+  wrapAcoes.style.alignItems = "center";
+  wrapAcoes.style.justifyContent = "center";
+  wrapAcoes.style.gap = "8px";
+  wrapAcoes.style.width = "100%";
+
+  const iconEdit = document.createElement("i");
+  iconEdit.className = "bi bi-pencil-square iconEdit";
+  iconEdit.title = "Editar item";
+
+  const iconDel = document.createElement("i");
+  iconDel.className = "bi bi-trash3 iconDelete";
+  iconDel.title = "Excluir item";
+
+  iconEdit.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (typeof abrirModalEdicaoItem === "function") abrirModalEdicaoItem(tr);
+    else console.log("Clique editar:", tr.dataset);
+  });
+
+  iconDel.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (typeof abrirModalExclusaoItem === "function") abrirModalExclusaoItem(tr);
+    else {
+      tr.remove();
+      atualizarTotalCarrinho();
+    }
+  });
+
+  wrapAcoes.appendChild(iconEdit);
+  wrapAcoes.appendChild(iconDel);
+  tdAcoes.appendChild(wrapAcoes);
+
+  tr.appendChild(tdProd);
+  tr.appendChild(tdQtd);
+  tr.appendChild(tdVlrUnit);
+  tr.appendChild(tdVlrTotal);
+  tr.appendChild(tdAcoes);
+
+  tbody.appendChild(tr);
+
+  // Atualiza total do rodapé
+  atualizarTotalCarrinho();
+
+  // (Opcional) atualiza os campos da esquerda com os valores formatados
+  if (elVlrUnit) elVlrUnit.value = valorUnitFmt;
+  if (elVlrTotal) elVlrTotal.value = valorTotalFmt;
+
+  // Limpa campos e volta foco pro EAN
+  limparCamposItem();
+  elEAN?.focus();
+
+  // ---------------- helpers internos ----------------
+
+  function atualizarTotalCarrinho() {
+    const linhas = Array.from(tbody.querySelectorAll("tr"));
+    let soma = 0;
+
+    for (const linha of linhas) {
+      const tdTotal = linha.children?.[3]; // 4ª coluna
+      const v = parseBRL(tdTotal?.textContent || "");
+      if (Number.isFinite(v)) soma += v;
+    }
+
+    elFooterTotal.textContent = formatBRL(soma);
+  }
+
+  function limparCamposItem() {
+    if (elEAN) elEAN.value = "";
+    if (elCodigo) elCodigo.value = "";
+    if (elProduto) elProduto.value = "";
+    if (elQtd) elQtd.value = "";
+    if (elQtdEstoque) elQtdEstoque.value = "";
+    if (elVlrUnit) elVlrUnit.value = "";
+    if (elVlrTotal) elVlrTotal.value = "";
+    document.activeElement?.blur?.();
+  }
+
+  // ✅ parse BRL ROBUSTO (resolve seu "49.9" -> 49.9 e NÃO 499)
+  function parseBRL(valorTexto) {
+    if (valorTexto === null || valorTexto === undefined) return 0;
+
+    // número já vem numérico (ex: 49.9)
+    if (typeof valorTexto === "number") return Number.isFinite(valorTexto) ? valorTexto : 0;
+
+    let s = String(valorTexto).trim();
+    if (!s) return 0;
+
+    // remove R$ e espaços (inclui NBSP)
+    s = s.replace(/\u00A0/g, " ");
+    s = s.replace(/[Rr]\$\s*/g, "");
+    s = s.replace(/\s/g, "");
+
+    const lastComma = s.lastIndexOf(",");
+    const lastDot = s.lastIndexOf(".");
+
+    if (lastComma > -1 && lastDot > -1) {
+      // tem os dois: decide pelo último separador
+      if (lastComma > lastDot) {
+        // BR: 1.234,56
+        s = s.replace(/\./g, "").replace(",", ".");
+      } else {
+        // EN: 1,234.56
+        s = s.replace(/,/g, "");
+      }
+    } else if (lastComma > -1) {
+      // só vírgula: BR decimal
+      s = s.replace(/\./g, "").replace(",", ".");
+    } else if (lastDot > -1) {
+      // só ponto: EN decimal (ou múltiplos pontos -> último é decimal)
+      const parts = s.split(".");
+      if (parts.length > 2) {
+        const dec = parts.pop();
+        s = parts.join("") + "." + dec; // remove pontos de milhar
+      }
+      s = s.replace(/,/g, ""); // remove vírgulas caso existam como milhar
+    } else {
+      // só dígitos: mantém como inteiro normal (ex: "50" => 50)
+      // (se você quiser tratar "4990" como 49.90, dá pra mudar aqui)
+    }
+
+    const n = Number(s);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function formatBRL(n) {
+    const fmt = new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(Number(n) || 0);
+
+    return fmt.replace(/\u00A0/g, " ");
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function iniciarModalEstoquePorFilial() {
+  if (window.__modal_estoque_filial_iniciado) return;
+  window.__modal_estoque_filial_iniciado = true;
+
+  const btnLupa   = document.getElementById('btnAbrirModalEstoqueFilial');
+  const modal     = document.getElementById('modalEstoqueFilial');
+  const btnFechar = document.getElementById('btnFecharModalEstoqueFilial');
+  const tbody     = document.getElementById('tb_estoque_filial_corpo');
+
+  const inputCodigo  = document.getElementById('inputCodigo');
+  const inputProduto = document.getElementById('inputProduto');
+
+  const toastWarn = (msg) => (window.toastr ? toastr.warning(msg) : alert(msg));
+  const toastErr  = (msg) => (window.toastr ? toastr.error(msg) : alert(msg));
+
+  if (!btnLupa || !modal || !tbody) {
+    console.warn('Modal estoque: elementos não encontrados (lupa/modal/tbody).');
+    return;
+  }
+
+  // ---------------- helpers ----------------
+  function normalizaTexto(v) {
+    return String(v || '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  }
+
+  function normalizaCodigo(v) {
+    const s = String(v ?? '').trim();
+    if (!s) return '';
+    if (/^\d+$/.test(s)) return s.replace(/^0+/, '') || '0';
+    return s.toUpperCase();
+  }
+
+  function parseNumeroBR(v) {
+    if (v === null || v === undefined) return 0;
+    if (typeof v === 'number') return Number.isFinite(v) ? v : 0;
+
+    let s = String(v).trim();
+    if (!s) return 0;
+
+    // remove R$, espaços e NBSP
+    s = s.replace(/\u00A0/g, ' ');
+    s = s.replace(/[Rr]\$\s*/g, '');
+    s = s.replace(/\s/g, '');
+
+    const lastComma = s.lastIndexOf(',');
+    const lastDot   = s.lastIndexOf('.');
+
+    if (lastComma > -1 && lastDot > -1) {
+      // decide pelo último separador
+      if (lastComma > lastDot) {
+        s = s.replace(/\./g, '').replace(',', '.'); // BR
+      } else {
+        s = s.replace(/,/g, ''); // EN
+      }
+    } else if (lastComma > -1) {
+      s = s.replace(/\./g, '').replace(',', '.'); // BR
+    } else if (lastDot > -1) {
+      const parts = s.split('.');
+      if (parts.length > 2) {
+        const dec = parts.pop();
+        s = parts.join('') + '.' + dec;
+      }
+      s = s.replace(/,/g, '');
+    }
+
+    const n = Number(s);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function obterCodigoProdutoSelecionado() {
+    const codCampo = normalizaCodigo(inputCodigo?.value);
+    if (codCampo) return codCampo;
+
+    const nome = (inputProduto?.value || '').trim();
+    if (!nome) return '';
+
+    const prod = (Array.isArray(itensProd) ? itensProd : []).find(p =>
+      normalizaTexto(p?.nome) === normalizaTexto(nome)
+    );
+
+    return normalizaCodigo(prod?.codigo);
+  }
+
+  function calcularSaldoPorFilial(codProd) {
+    const saldo = new Map(); // filialCodigo -> saldo
+
+    const est = Array.isArray(itensEst) ? itensEst : [];
+    for (const mov of est) {
+      if (!mov) continue;
+
+      const codMov = normalizaCodigo(mov.codigoprod);
+      if (!codMov || codMov !== codProd) continue;
+
+      const filialCod = normalizaCodigo(mov.filial); // <- precisa existir em itensEst
+      if (!filialCod) continue;
+
+      const tipo = normalizaTexto(mov.tipomov);
+      const qtd  = parseNumeroBR(mov.qtd);
+      if (!Number.isFinite(qtd) || qtd === 0) continue;
+
+      const atual = saldo.get(filialCod) || 0;
+      if (tipo.includes('entrada')) saldo.set(filialCod, atual + qtd);
+      else if (tipo.includes('saida')) saldo.set(filialCod, atual - qtd);
+    }
+
+    return saldo;
+  }
+
+  function renderTabela(saldoMap) {
+    tbody.innerHTML = '';
+
+    const filiais = Array.isArray(itensFil) ? itensFil : [];
+    if (!filiais.length) {
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      td.colSpan = 2;
+      td.textContent = 'Nenhuma filial cadastrada.';
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+      return;
+    }
+
+    // ordena por nome (opcional)
+    const filiaisOrdenadas = [...filiais].sort((a, b) =>
+      String(a?.nome || '').localeCompare(String(b?.nome || ''), 'pt-BR', { sensitivity: 'base' })
+    );
+
+    for (const f of filiaisOrdenadas) {
+      const codFil = normalizaCodigo(f?.codigo);
+      const nomeFil = String(f?.nome || '').trim() || '(Sem nome)';
+
+      const qtd = saldoMap.get(codFil) ?? 0;
+
+      const tr = document.createElement('tr');
+
+      const tdFil = document.createElement('td');
+      tdFil.textContent = nomeFil;
+
+      const tdQtd = document.createElement('td');
+      tdQtd.textContent = String(qtd);
+
+      tr.appendChild(tdFil);
+      tr.appendChild(tdQtd);
+      tbody.appendChild(tr);
+    }
+  }
+
+  function abrirModal() {
+    const codProd = obterCodigoProdutoSelecionado();
+    if (!codProd) {
+      toastWarn('Selecione um produto antes de abrir a disponibilidade em estoque.');
+      return;
+    }
+
+    // valida se itensEst tem filial
+    const temFilialEmEst = (Array.isArray(itensEst) ? itensEst : []).some(m => m && m.filial !== undefined);
+    if (!temFilialEmEst) {
+      toastErr('Não encontrei a coluna "filial" em itensEst. Verifique se ela está sendo enviada no JSON.');
+      return;
+    }
+
+    const saldoMap = calcularSaldoPorFilial(codProd);
+    renderTabela(saldoMap);
+
+    modal.classList.add('ativo');
+  }
+
+  function fecharModal() {
+    modal.classList.remove('ativo');
+  }
+
+  // ---------------- eventos ----------------
+  btnLupa.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    abrirModal();
+  });
+
+  if (btnFechar) {
+    btnFechar.addEventListener('click', (e) => {
+      e.preventDefault();
+      fecharModal();
+    });
+  }
+
+  // (Opcional) clicar fora da caixa fecha também
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) fecharModal();
+  });
+
+  // ESC fecha
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('ativo')) fecharModal();
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ===============================================================================================================================================
+// FUNÇÃO: SELECIONAR/DESSELECIONAR LINHA
+// ===============================================================================================================================================
+
+// Marca linha selecionada (verde) ou desmarca se clicar novamente
+function selecionarLinha(linha) {
+    
+    // Verifica se a linha clicada já está selecionada
+    if (linhaSelecionada === linha) {
+        // Se sim, desseleciona (remove classe verde)
+        linha.classList.remove("selecionada");
+        linhaSelecionada = null;
+    } else {
+        // Remove seleção anterior se existir
+        if (linhaSelecionada) {
+            linhaSelecionada.classList.remove("selecionada");
+        }
+        
+        // Adiciona seleção na nova linha (classe verde)
+        linha.classList.add("selecionada");
+        linhaSelecionada = linha;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ==================================================================================================================================================
+// FUNÇÕES: CONTROLE DO MODAL DE CARREGAMENTO
+// ==================================================================================================================================================
+
+// Exibe o modal de carregamento (tela preta com logo girando)
+function mostrarCarregamentoModal() {
+    document.getElementById('modalCarregamento').classList.add('ativo');
+}
+
+// Esconde o modal de carregamento
+function esconderCarregamentoModal() {
+    document.getElementById('modalCarregamento').classList.remove('ativo');
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =================================================================================================================================================
+// CONFIGURAÇÃO GERAL DOS DROPDOWNS SIMPLES
+// =================================================================================================================================================
+// Ao final desse bloco de código devemos informar quais elementos farão parte dessa configuração
+
+function configurarDropdown(inputCampo, listaUl, dados) {
+  if (!inputCampo || !listaUl) return;
+  let timeoutId = null;
+
+  // EVENTO: DIGITAÇÃO NO CAMPO DE PESQUISA =======================================================
+  inputCampo.addEventListener('input', function (e) {
+    const texto = e.target.value;
+
+    // Cancela timeout anterior (debounce)
+    if (timeoutId) clearTimeout(timeoutId);
+
+    // Aguarda 300ms após parar de digitar para filtrar
+    timeoutId = setTimeout(function () {
+      filtrarEMostrarSugestoes(texto, dados, listaUl, inputCampo);
+    }, 300);
+  });
+
+  document.addEventListener('click', function (e) {
+  // NÃO fecha se clicou dentro do próprio input ou dentro da lista
+  if (e.target === inputCampo || listaUl.contains(e.target)) return;
+
+  // NÃO fecha se clicou dentro do container do dropdown
+  if (e.target.closest('.dropdown-container')) return;
+
+  esconderSugestoes(listaUl);
+  });
+
+  // EVENTO: FOCO NO CAMPO - MOSTRA TODAS AS OPÇÕES ================================================
+  inputCampo.addEventListener('focus', function () {
+      mostrarSugestoes(dados, listaUl, inputCampo);
+  });
+
+  // EVENTO: CLICAR FORA - FECHA DROPDOWN ==========================================================
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('.dropdown-container')) {
+      esconderSugestoes(listaUl);
+    }
+  });
+
+  // EVENTO: NAVEGAÇÃO POR TECLADO =================================================================
+  inputCampo.addEventListener('keydown', function (e) {
+    const items = listaUl.querySelectorAll('li');
+    const selected = listaUl.querySelector('li.selected');
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        navegarSugestoes(items, selected, 'down');
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        navegarSugestoes(items, selected, 'up');
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selected) {
+          selecionarOpcao(selected.textContent, inputCampo, listaUl);
+        }
+        break;
+      case 'Escape':
+        esconderSugestoes(listaUl);
+        break;
+    }
+  });
+}
+
+
+// FUNÇÕES AUXILIARES==================================================================================================
+
+
+// Filtra dados e exibe sugestões ===================================================================================
+function filtrarEMostrarSugestoes(texto, dados, listaUl, inputCampo) {
+ const textoFiltro = (texto || '').trim().toLowerCase();
+  if (textoFiltro === '') {
+    mostrarSugestoes(dados, listaUl, inputCampo);
+    return;
+  }
+  const filtrados = dados.filter(item => item.toLowerCase().includes(textoFiltro));
+  mostrarSugestoes(filtrados, listaUl, inputCampo);
+}
+
+// Exibe a lista de sugestões =======================================================================================
+function mostrarSugestoes(lista, listaUl, inputCampo) {
+  listaUl.innerHTML = '';
+
+  if (lista.length === 0) {
+    const noResults = document.createElement('li');
+    noResults.textContent = 'Nenhum resultado encontrado';
+    noResults.style.cssText = 'padding: 10px; color: #666; font-style: italic;';
+    listaUl.appendChild(noResults);
+  } else {
+    lista.forEach(item => {
+      const li = document.createElement('li');
+      li.textContent = item;
+      li.style.cssText = 'padding: 10px; cursor: pointer; border-bottom: 1px solid #eee;';
+
+      // Evento de clique no item
+      li.addEventListener('click', function () {
+        selecionarOpcao(item, inputCampo, listaUl);
+      });
+
+      // Evento de hover
+      li.addEventListener('mouseenter', function () {
+        const selected = listaUl.querySelector('li.selected');
+        if (selected) {
+          selected.classList.remove('selected');
+          selected.style.backgroundColor = '';
+        }
+        li.classList.add('selected');
+        li.style.backgroundColor = '#f5f5f5';
+      });
+
+      listaUl.appendChild(li);
+    });
+  }
+
+  listaUl.style.display = 'block';
+}
+
+// Esconde o dropdown ===============================================================================================
+function esconderSugestoes(listaUl) {
+  listaUl.style.display = 'none';
+}
+
+// Seleciona uma opção ==============================================================================================
+function selecionarOpcao(valor, inputCampo, listaUl) {
+  inputCampo.value = valor;
+  esconderSugestoes(listaUl);
+}
+
+// Navega pelas sugestões com setas =================================================================================
+function navegarSugestoes(items, selected, direction) {
+  if (items.length === 0) return;
+
+  let index = -1;
+  if (selected) {
+    index = Array.from(items).indexOf(selected);
+    selected.classList.remove('selected');
+    selected.style.backgroundColor = '';
+  }
+
+  if (direction === 'down') {
+    index = index < items.length - 1 ? index + 1 : 0;
+  } else {
+    index = index > 0 ? index - 1 : items.length - 1;
+  }
+
+  items[index].classList.add('selected');
+  items[index].style.backgroundColor = '#f5f5f5';
+  items[index].scrollIntoView({ block: 'nearest' });
+}
+
+
+// CONFIGURAÇÃO DE TODOS OS DROPDOWNS DA PÁGINA ======================================================================
+
+function configurarTodosDropdowns() {
+
+  configurarDropdown(inputFilial, listaUlFilial, todasfilais);
+  configurarDropdown(inputProduto, listaUlProduto, todosprodutos);
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ===================================================================================================================================================
+// MODAL EDIÇÃO - ABRIR / FECHAR
+// ===================================================================================================================================================
+
+// guarda a linha que está sendo editada (para usar depois no "confirmar", se você quiser)
+let __linhaEditandoCarrinho = null;
+
+function abrirModalEdicaoItem(tr) {
+  const modal = document.getElementById("modalEdicaoItem");
+  if (!modal || !tr || !tr.children || tr.children.length < 4) return;
+
+  // inputs do modal
+  const inpProd   = document.getElementById("edit_produto");
+  const inpQtd    = document.getElementById("edit_quantidade");
+  const inpUnit   = document.getElementById("edit_valor_unit");
+  const inpTotal  = document.getElementById("edit_valor_total");
+
+  if (!inpProd || !inpQtd || !inpUnit || !inpTotal) return;
+
+  // pega valores da linha
+  const vProd  = (tr.children[0].textContent || "").trim();
+  const vQtd   = (tr.children[1].textContent || "").trim();
+  const vUnit  = (tr.children[2].textContent || "").trim();
+  const vTotal = (tr.children[3].textContent || "").trim();
+
+  // preenche modal
+  inpProd.value  = vProd;
+  inpQtd.value   = vQtd;     // número
+  inpUnit.value  = vUnit;    // "R$ xx,xx"
+  inpTotal.value = vTotal;   // "R$ xx,xx"
+
+  // guarda referência da linha
+  __linhaEditandoCarrinho = tr;
+
+  // cria (ou reutiliza) handler de recalculo sem duplicar listeners
+  if (!inpQtd.__pdvEditHandler) {
+    inpQtd.__pdvEditHandler = () => {
+      const qtdNum = parseFloat(String(inpQtd.value || "").replace(",", "."));
+      const unitNum = parseBRL(inpUnit.value);
+
+      if (!Number.isFinite(qtdNum) || qtdNum <= 0 || !Number.isFinite(unitNum) || unitNum < 0) {
+        inpTotal.value = "";
+        return;
+      }
+      inpTotal.value = formatBRL(qtdNum * unitNum);
+    };
+
+    inpQtd.addEventListener("input", inpQtd.__pdvEditHandler);
+    inpQtd.addEventListener("change", inpQtd.__pdvEditHandler);
+  }
+
+  // força um recalculo ao abrir (caso a qtd esteja diferente)
+  inpQtd.__pdvEditHandler();
+
+  // abre o modal
+  modal.classList.add("ativo");
+
+  // foca no campo editável
+  setTimeout(() => inpQtd.focus(), 0);
+
+  // ---------------- helpers locais ----------------
+  function parseBRL(valorTexto) {
+    if (valorTexto === null || valorTexto === undefined) return 0;
+    if (typeof valorTexto === "number") return Number.isFinite(valorTexto) ? valorTexto : 0;
+
+    let s = String(valorTexto).trim();
+    if (!s) return 0;
+
+    s = s.replace(/\u00A0/g, " ");
+    s = s.replace(/[Rr]\$\s*/g, "");
+    s = s.replace(/\s/g, "");
+
+    const lastComma = s.lastIndexOf(",");
+    const lastDot = s.lastIndexOf(".");
+
+    if (lastComma > -1 && lastDot > -1) {
+      if (lastComma > lastDot) s = s.replace(/\./g, "").replace(",", ".");
+      else s = s.replace(/,/g, "");
+    } else if (lastComma > -1) {
+      s = s.replace(/\./g, "").replace(",", ".");
+    } else if (lastDot > -1) {
+      const parts = s.split(".");
+      if (parts.length > 2) {
+        const dec = parts.pop();
+        s = parts.join("") + "." + dec;
+      }
+      s = s.replace(/,/g, "");
+    }
+
+    const n = Number(s);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function formatBRL(n) {
+    const fmt = new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(Number(n) || 0);
+
+    return fmt.replace(/\u00A0/g, " ");
+  }
+}
+
+
+// FECHAR MODAL DE EDIÇÃO ============================================================
+
+function fecharModalEdicaoItem() {
+  const modal = document.getElementById("modalEdicaoItem");
+  if (!modal) return;
+
+  // limpa inputs
+  const inpProd   = document.getElementById("edit_produto");
+  const inpQtd    = document.getElementById("edit_quantidade");
+  const inpUnit   = document.getElementById("edit_valor_unit");
+  const inpTotal  = document.getElementById("edit_valor_total");
+
+  if (inpProd)  inpProd.value = "";
+  if (inpQtd)   inpQtd.value = "";
+  if (inpUnit)  inpUnit.value = "";
+  if (inpTotal) inpTotal.value = "";
+
+  __linhaEditandoCarrinho = null;
+
+  modal.classList.remove("ativo");
+}
+
+
+
+// FUNÇÃO PARA REALIZAR A EDIÇÃO =====================================================
+
+function confirmarEdicaoItemCarrinho() {
+  const tr = window.__linhaEditandoCarrinho || __linhaEditandoCarrinho;
+  if (!tr || !tr.children || tr.children.length < 4) {
+    if (window.toastr) toastr.warning("Nenhum item selecionado para edição.");
+    else alert("Nenhum item selecionado para edição.");
+    return false;
+  }
+
+  const inpQtd   = document.getElementById("edit_quantidade");
+  const inpUnit  = document.getElementById("edit_valor_unit");
+  const inpTotal = document.getElementById("edit_valor_total");
+
+  const tbody = document.getElementById("tb_carrinho_corpo");
+  const ftTotal = document.getElementById("ftVlrTotal");
+
+  if (!inpQtd || !inpUnit || !inpTotal || !tbody || !ftTotal) {
+    console.error("Campos do modal ou tabela não encontrados.");
+    return false;
+  }
+
+  // 1) valida quantidade
+  const qtdTxt = String(inpQtd.value || "").trim();
+  const qtdNum = parseInt(qtdTxt, 10);
+
+  if (!qtdTxt || !Number.isFinite(qtdNum) || qtdNum <= 0) {
+    if (window.toastr) toastr.warning("Informe uma quantidade válida para editar.");
+    else alert("Informe uma quantidade válida para editar.");
+    inpQtd.focus();
+    return false;
+  }
+
+  // 2) calcula total com base no unitário do modal
+  const unitNum = parseBRL(inpUnit.value);
+  if (!Number.isFinite(unitNum) || unitNum < 0) {
+    if (window.toastr) toastr.error("Valor unitário inválido.");
+    else alert("Valor unitário inválido.");
+    return false;
+  }
+
+  const totalNum = qtdNum * unitNum;
+  const totalFmt = formatBRL(totalNum);
+
+  // mantém o campo total do modal consistente (caso não tenha sido atualizado ainda)
+  inpTotal.value = totalFmt;
+
+  // 3) atualiza a linha do carrinho
+  // col1 produto (0) não muda
+  // col2 quantidade (1)
+  // col3 unitário (2) não muda
+  // col4 total (3)
+  tr.children[1].textContent = String(qtdNum);
+  tr.children[3].textContent = totalFmt;
+
+  // 4) recalcula total do rodapé
+  let soma = 0;
+  const linhas = Array.from(tbody.querySelectorAll("tr"));
+  for (const linha of linhas) {
+    const v = parseBRL(linha.children?.[3]?.textContent || "");
+    if (Number.isFinite(v)) soma += v;
+  }
+  ftTotal.textContent = formatBRL(soma);
+
+  // 5) fechar modal aqui
+  fecharModalEdicaoItem();
+
+  return true;
+
+  // ---------------- helpers ----------------
+  function parseBRL(valorTexto) {
+    if (valorTexto === null || valorTexto === undefined) return 0;
+    if (typeof valorTexto === "number") return Number.isFinite(valorTexto) ? valorTexto : 0;
+
+    let s = String(valorTexto).trim();
+    if (!s) return 0;
+
+    // remove R$ e espaços (inclui NBSP)
+    s = s.replace(/\u00A0/g, " ");
+    s = s.replace(/[Rr]\$\s*/g, "");
+    s = s.replace(/\s/g, "");
+
+    const lastComma = s.lastIndexOf(",");
+    const lastDot = s.lastIndexOf(".");
+
+    if (lastComma > -1 && lastDot > -1) {
+      if (lastComma > lastDot) s = s.replace(/\./g, "").replace(",", ".");
+      else s = s.replace(/,/g, "");
+    } else if (lastComma > -1) {
+      s = s.replace(/\./g, "").replace(",", ".");
+    } else if (lastDot > -1) {
+      const parts = s.split(".");
+      if (parts.length > 2) {
+        const dec = parts.pop();
+        s = parts.join("") + "." + dec;
+      }
+      s = s.replace(/,/g, "");
+    }
+
+    const n = Number(s);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function formatBRL(n) {
+    const fmt = new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(Number(n) || 0);
+
+    return fmt.replace(/\u00A0/g, " ");
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =========================================================================================================================================================
+// MODAL EXCLUSÃO - ABRIR / FECHAR 
+// =========================================================================================================================================================
+
+// guarda a linha que será excluída (para usar depois no confirmarExclusaoItemCarrinho)
+let __linhaExcluindoCarrinho = null;
+
+// ABRIR MODAL DE EXCLUSÃO ===============================================================================
+
+function abrirModalExclusaoItem(tr) {
+  const modal = document.getElementById("modalExclusaoItem");
+  const elNome = document.getElementById("excluir_nome_prod");
+  const elQtd = document.getElementById("excluir_qtd_prod");
+
+  if (!modal || !elNome || !elQtd) {
+    console.error("Modal de exclusão ou elementos não encontrados no DOM.");
+    return;
+  }
+
+  if (!tr || !tr.children || tr.children.length < 2) {
+    if (window.toastr) toastr.warning("Linha do carrinho inválida para exclusão.");
+    else alert("Linha do carrinho inválida para exclusão.");
+    return;
+  }
+
+  // Coluna 1 = Produto, Coluna 2 = Quantidade
+  const nomeProduto = String(tr.children[0].textContent || "").trim();
+  const qtdProduto = String(tr.children[1].textContent || "").trim();
+
+  elNome.textContent = nomeProduto || "(Sem nome)";
+  elQtd.textContent = qtdProduto || "0";
+
+  __linhaExcluindoCarrinho = tr;
+
+  modal.classList.add("ativo");
+}
+
+
+// FECHAR MODAL DE EXCLUSÃO =================================================================
+
+function fecharModalExclusaoItem() {
+  const modal = document.getElementById("modalExclusaoItem");
+  const elNome = document.getElementById("excluir_nome_prod");
+  const elQtd = document.getElementById("excluir_qtd_prod");
+
+  if (elNome) elNome.textContent = "";
+  if (elQtd) elQtd.textContent = "";
+
+  __linhaExcluindoCarrinho = null;
+
+  if (modal) modal.classList.remove("ativo");
+}
+
+
+// CONFIRMAR EXCLUSÃO ========================================================================
+
+function confirmarExclusaoItemCarrinho() {
+  const tr = __linhaExcluindoCarrinho;
+
+  const tbody = document.getElementById("tb_carrinho_corpo");
+  const ftTotal = document.getElementById("ftVlrTotal");
+  const inputEAN = document.getElementById("inputEAN");
+
+  const toastOk = (msg) => (window.toastr ? toastr.success(msg) : alert(msg));
+  const toastWarn = (msg) => (window.toastr ? toastr.warning(msg) : alert(msg));
+  const toastErr = (msg) => (window.toastr ? toastr.error(msg) : alert(msg));
+
+  if (!tbody || !ftTotal) {
+    console.error("Carrinho não encontrado (tb_carrinho_corpo / ftVlrTotal).");
+    toastErr("Erro: carrinho não encontrado.");
+    return false;
+  }
+
+  if (!tr || !tr.parentNode) {
+    toastWarn("Nenhum item selecionado para exclusão.");
+    return false;
+  }
+
+  // captura infos antes de remover (para mensagem)
+  const nomeProduto = String(tr.children?.[0]?.textContent || "").trim();
+  const qtdProduto = String(tr.children?.[1]?.textContent || "").trim();
+
+  // Remove a linha
+  tr.remove();
+  __linhaExcluindoCarrinho = null;
+
+  // Recalcula total do rodapé
+  let soma = 0;
+  const linhas = Array.from(tbody.querySelectorAll("tr"));
+  for (const linha of linhas) {
+    const v = parseBRL(linha.children?.[3]?.textContent || "");
+    if (Number.isFinite(v)) soma += v;
+  }
+  ftTotal.textContent = formatBRL(soma);
+
+  // Fecha modal
+  if (typeof fecharModalExclusaoItem === "function") {
+    fecharModalExclusaoItem();
+  } else {
+    // fallback se você ainda não colou a função de fechar
+    const modal = document.getElementById("modalExclusaoItem");
+    if (modal) modal.classList.remove("ativo");
+  }
+
+  // Toast sucesso
+  if (nomeProduto) {
+    toastOk(`Item removido: ${nomeProduto} (Qtd: ${qtdProduto || "0"})`);
+  } else {
+    toastOk("Item removido do carrinho.");
+  }
+
+  // Volta foco pro EAN
+  if (inputEAN) setTimeout(() => inputEAN.focus(), 0);
+
+  return true;
+
+  // ---------------- helpers ----------------
+  function parseBRL(valorTexto) {
+    if (valorTexto === null || valorTexto === undefined) return 0;
+    if (typeof valorTexto === "number") return Number.isFinite(valorTexto) ? valorTexto : 0;
+
+    let s = String(valorTexto).trim();
+    if (!s) return 0;
+
+    s = s.replace(/\u00A0/g, " ");
+    s = s.replace(/[Rr]\$\s*/g, "");
+    s = s.replace(/\s/g, "");
+
+    const lastComma = s.lastIndexOf(",");
+    const lastDot = s.lastIndexOf(".");
+
+    if (lastComma > -1 && lastDot > -1) {
+      if (lastComma > lastDot) s = s.replace(/\./g, "").replace(",", ".");
+      else s = s.replace(/,/g, "");
+    } else if (lastComma > -1) {
+      s = s.replace(/\./g, "").replace(",", ".");
+    } else if (lastDot > -1) {
+      const parts = s.split(".");
+      if (parts.length > 2) {
+        const dec = parts.pop();
+        s = parts.join("") + "." + dec;
+      }
+      s = s.replace(/,/g, "");
+    }
+
+    const n = Number(s);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function formatBRL(n) {
+    const fmt = new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(Number(n) || 0);
+
+    return fmt.replace(/\u00A0/g, " ");
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =======================================================================================================================================================
+// FUNÇÕES DO MODAL DE PAGAMENTO
+// =======================================================================================================================================================
+
+// INTERAÇÕES DO CLIENTE NO PAGAMENTO =========================================================
+
+function iniciarInteracoesClientePagamentoPDV() {
+  if (window.__pdv_cliente_pagamento_iniciado) return;
+  window.__pdv_cliente_pagamento_iniciado = true;
+
+  const btnAbrir = document.getElementById("btnClientePagamento");
+  const modal = document.getElementById("modalClientePagamento");
+  const box = document.getElementById("boxClientePagamento");
+  const btnCancelar = document.getElementById("btnCancelarClientePagamento");
+  const btnConfirmar = document.getElementById("btnConfirmarClientePagamento");
+
+  const inputNome = document.getElementById("inputClientePagamentoNome");
+  const inputCPF = document.getElementById("inputClientePagamentoCPF");
+  const inputSexo = document.getElementById("inputClientePagamentoSexo");
+  const inputNascimento = document.getElementById("inputClientePagamentoNascimento");
+  const inputIdade = document.getElementById("inputClientePagamentoIdade");
+  const inputEmail = document.getElementById("inputClientePagamentoEmail");
+  const listaNome = document.getElementById("listaClientePagamentoNome");
+  const qtdCompras = document.getElementById("clienteQtdCompras");
+  const totalCompras = document.getElementById("clienteTotalCompras");
+  const nomeSelecionado = document.getElementById("nomeClientePagamento");
+
+  if (!btnAbrir || !modal || !box || !btnCancelar || !btnConfirmar || !inputNome || !inputCPF ||
+      !inputSexo || !inputNascimento || !inputIdade || !inputEmail || !listaNome || !qtdCompras ||
+      !totalCompras || !nomeSelecionado) {
+    console.error("Cliente no pagamento: elementos não encontrados.");
+    return;
+  }
+
+  const nomesClientes = [];
+  const toastWarn = (msg) => (window.toastr ? toastr.warning(msg) : alert(msg));
+
+  let mapaClientePorNome = new Map();
+  let mapaClientePorCPF = new Map();
+
+  function reconstruirBaseClientes() {
+    const clientes = Array.isArray(itensCli) ? itensCli : [];
+    const novosNomes = clientes.map(c => c.nome).filter(Boolean).sort((a, b) => a.localeCompare(b));
+    const novoMapaNome = new Map();
+    const novoMapaCPF = new Map();
+
+    clientes.forEach(cliente => {
+      const nomeKey = normalizarTextoCaixa(cliente?.nome);
+      const cpfKey = somenteDigitosCaixa(cliente?.cpf);
+
+      if (nomeKey && !novoMapaNome.has(nomeKey)) novoMapaNome.set(nomeKey, cliente);
+      if (cpfKey && !novoMapaCPF.has(cpfKey)) novoMapaCPF.set(cpfKey, cliente);
+    });
+
+    nomesClientes.length = 0;
+    nomesClientes.push(...novosNomes);
+    mapaClientePorNome = novoMapaNome;
+    mapaClientePorCPF = novoMapaCPF;
+  }
+
+  reconstruirBaseClientes();
+
+  if (typeof configurarDropdown === "function") {
+    configurarDropdown(inputNome, listaNome, nomesClientes);
+  }
+
+  window.__pdvClientePagamento_recarregarClientes = reconstruirBaseClientes;
+
+  function preencherCamposCliente(cliente) {
+    if (!cliente) return;
+
+    const resumo = obterResumoClienteCaixa(cliente.idCliente);
+
+    inputNome.value = cliente.nome || "";
+    inputCPF.value = aplicarMascaraCPFCaixaValor(cliente.cpf || "");
+    inputSexo.value = cliente.sexo || "";
+    inputNascimento.value = cliente.dataNascimento || "";
+    inputIdade.value = cliente.idade || calcularIdadeClienteCaixa(cliente.dataNascimento);
+    inputEmail.value = cliente.email || "";
+    qtdCompras.textContent = String(resumo.qtdCompras || 0);
+    totalCompras.textContent = formatBRL(resumo.totalCompras || 0);
+  }
+
+  function limparCamposCliente() {
+    inputNome.value = "";
+    inputCPF.value = "";
+    inputSexo.value = "";
+    inputNascimento.value = "";
+    inputIdade.value = "";
+    inputEmail.value = "";
+    qtdCompras.textContent = "0";
+    totalCompras.textContent = formatBRL(0);
+  }
+
+  function abrirModalCliente() {
+    limparCamposCliente();
+
+    if (clienteSelecionadoPDV) {
+      preencherCamposCliente(clienteSelecionadoPDV);
+      btnConfirmar.textContent = "EDITAR";
+    } else {
+      btnConfirmar.textContent = "CONFIRMAR";
+    }
+
+    modal.classList.add("ativo");
+    esconderSugestoes(listaNome);
+    if (document.activeElement && typeof document.activeElement.blur === "function") {
+      document.activeElement.blur();
+    }
+  }
+
+  function fecharModalCliente() {
+    modal.classList.remove("ativo");
+  }
+
+  function obterClienteDigitado() {
+    const cpf = somenteDigitosCaixa(inputCPF.value);
+    if (cpf.length === 11 && mapaClientePorCPF.has(cpf)) return mapaClientePorCPF.get(cpf);
+
+    const nomeKey = normalizarTextoCaixa(inputNome.value);
+    if (nomeKey && mapaClientePorNome.has(nomeKey)) return mapaClientePorNome.get(nomeKey);
+
+    return null;
+  }
+
+  function atualizarResumoCabecalho() {
+    if (clienteSelecionadoPDV) {
+      nomeSelecionado.textContent = clienteSelecionadoPDV.nome || "";
+      btnAbrir.title = "Editar cliente";
+      btnAbrir.classList.add("editar");
+      const icone = btnAbrir.querySelector("i");
+      if (icone) icone.className = "bi bi-person-check-fill";
+    } else {
+      nomeSelecionado.textContent = "";
+      btnAbrir.title = "Adicionar cliente";
+      btnAbrir.classList.remove("editar");
+      const icone = btnAbrir.querySelector("i");
+      if (icone) icone.className = "bi bi-person-plus-fill";
+    }
+  }
+
+  btnAbrir.addEventListener("click", abrirModalCliente);
+  btnCancelar.addEventListener("click", fecharModalCliente);
+
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) fecharModalCliente();
+  });
+
+  box.addEventListener("click", (e) => e.stopPropagation());
+
+  listaNome.addEventListener("click", () => {
+    setTimeout(() => {
+      const cliente = mapaClientePorNome.get(normalizarTextoCaixa(inputNome.value));
+      if (cliente) preencherCamposCliente(cliente);
+    }, 0);
+  }, true);
+
+  inputNome.addEventListener("change", () => {
+    const cliente = mapaClientePorNome.get(normalizarTextoCaixa(inputNome.value));
+    if (cliente) preencherCamposCliente(cliente);
+  });
+
+  inputCPF.addEventListener("input", () => {
+    inputCPF.value = aplicarMascaraCPFCaixaValor(inputCPF.value);
+    const cpf = somenteDigitosCaixa(inputCPF.value);
+    if (cpf.length === 11) {
+      const cliente = mapaClientePorCPF.get(cpf);
+      if (cliente) preencherCamposCliente(cliente);
+      else toastWarn("Cliente não encontrado para este CPF.");
+    }
+  });
+
+  btnConfirmar.addEventListener("click", () => {
+    const cliente = obterClienteDigitado();
+    if (!cliente) {
+      toastWarn("Selecione um cliente ativo pelo nome ou CPF completo.");
+      return;
+    }
+
+    clienteSelecionadoPDV = cliente;
+    atualizarResumoCabecalho();
+    fecharModalCliente();
+  });
+
+  window.__pdvClientePagamento_limpar = function() {
+    clienteSelecionadoPDV = null;
+    atualizarResumoCabecalho();
+  };
+
+  window.__pdvClientePagamento_atualizarHeader = atualizarResumoCabecalho;
+  atualizarResumoCabecalho();
+}
+
+
+// INTERAÇÕES ENTRE CAMPOS  =========================================================
+
+function iniciarInteracoesPagamentoPDV() {
+  if (window.__pdv_pagamento_iniciado) return;
+  window.__pdv_pagamento_iniciado = true;
+
+  const modal            = document.getElementById("modalPagamento");
+
+  const totalCompra      = document.getElementById("pag_total_compra");
+  const descontoCompra   = document.getElementById("desconto_compra");
+  const totalComDesconto = document.getElementById("pag_desconto_compra");
+
+  const troco            = document.getElementById("pag_troco");
+
+  const forma1           = document.getElementById("pag_forma1");
+  const forma2           = document.getElementById("pag_forma2");
+
+  const valor1           = document.getElementById("pag_valor1");
+  const valor2           = document.getElementById("pag_valor2");
+
+  const lista1           = document.getElementById("pag_lista_forma1");
+  const lista2           = document.getElementById("pag_lista_forma2");
+
+  if (!modal || !totalCompra || !descontoCompra || !totalComDesconto || !troco ||
+      !forma1 || !forma2 || !valor1 || !valor2 || !lista1 || !lista2) {
+    console.error("Pagamento: elementos do modal não encontrados.");
+    return;
+  }
+
+  const toastWarn = (msg) => (window.toastr ? toastr.warning(msg) : alert(msg));
+
+  // --------- opções fixas ----------
+  const formasPagamento = ["DINHEIRO", "PIX", "CARTÃO DÉBITO", "CARTÃO CRÉDITO"];
+
+  if (typeof configurarDropdown === "function") {
+    configurarDropdown(forma1, lista1, formasPagamento);
+    configurarDropdown(forma2, lista2, formasPagamento);
+  }
+
+  // Flags para saber se o valor foi “auto-preenchido” ou digitado pelo usuário
+  valor1.dataset.auto = "1";
+  valor2.dataset.auto = "1";
+
+  // Estado inicial (sempre que abrir)
+  function resetarPagamento() {
+    forma1.value = "";
+    forma2.value = "";
+
+    descontoCompra.value = "";
+    totalComDesconto.value = totalCompra.value || "R$ 0,00";
+
+    valor1.value = "";
+    valor2.value = "";
+
+    forma2.disabled = true;
+    valor1.disabled = true;
+    valor2.disabled = true;
+
+    troco.value = "R$ 0,00";
+
+    valor1.dataset.auto = "1";
+    valor2.dataset.auto = "1";
+  }
+
+  // (1) Atualiza total com desconto
+  function atualizarTotalComDesconto() {
+    const total = parseBRL(totalCompra.value);
+    const descTxt = String(descontoCompra.value || "").trim();
+
+    // se vazio -> total com desconto = total
+    if (!descTxt) {
+      totalComDesconto.value = formatBRL(total);
+      return;
+    }
+
+    let desconto = parseBRL(descTxt);
+
+    // valida desconto <= total
+    if (desconto > total) {
+      desconto = total;
+      toastWarn("O desconto não pode ser maior que o valor total!");
+      // ajusta visualmente o campo para o máximo permitido
+      descontoCompra.value = formatBRL(desconto);
+    }
+
+    const novoTotal = Math.max(0, total - desconto);
+    totalComDesconto.value = formatBRL(novoTotal);
+  }
+
+  // (3) Troco: max(0, (valor1 + valor2) - totalComDesconto)
+  function atualizarTroco() {
+    const total = parseBRL(totalComDesconto.value);
+    const v1 = parseBRL(valor1.value);
+    const v2 = parseBRL(valor2.value);
+
+    const pago = (Number.isFinite(v1) ? v1 : 0) + (Number.isFinite(v2) ? v2 : 0);
+    const trocoNum = Math.max(0, pago - total);
+
+    troco.value = formatBRL(trocoNum);
+  }
+
+  // (2) Habilitação em cadeia + auto preenchimentos
+  function atualizarEstadoPagamento() {
+    // sempre recalcula o total com desconto antes
+    atualizarTotalComDesconto();
+
+    const totalDesc = parseBRL(totalComDesconto.value);
+
+    const temForma1 = String(forma1.value || "").trim() !== "";
+    const v1 = parseBRL(valor1.value);
+
+    // Forma1 -> Valor1
+    valor1.disabled = !temForma1;
+
+    // Se forma1 acabou de ser selecionada e o valor1 estiver em "auto"
+    if (temForma1 && valor1.dataset.auto === "1") {
+      valor1.value = formatBRL(totalDesc);
+    }
+
+    // Decide se pode habilitar a forma2:
+    // Só faz sentido se tiver forma1 e valor1 menor que total com desconto (ainda falta pagar)
+    const faltaPagar = Math.max(0, totalDesc - (Number.isFinite(v1) ? v1 : 0));
+    const podeForma2 = temForma1 && Number.isFinite(v1) && v1 > 0 && faltaPagar > 0.00001;
+
+    forma2.disabled = !podeForma2;
+
+    // Se não pode forma2, limpa tudo da forma2/valor2
+    if (!podeForma2) {
+      forma2.value = "";
+      valor2.value = "";
+      valor2.disabled = true;
+      valor2.dataset.auto = "1";
+    }
+
+    const temForma2 = String(forma2.value || "").trim() !== "";
+
+    // Forma2 -> Valor2
+    valor2.disabled = !(podeForma2 && temForma2);
+
+    // Se forma2 selecionada, valor2 auto = restante (se ainda em auto)
+    if (podeForma2 && temForma2 && valor2.dataset.auto === "1") {
+      const restante = Math.max(0, totalDesc - (Number.isFinite(v1) ? v1 : 0));
+      valor2.value = formatBRL(restante);
+    }
+
+    atualizarTroco();
+  }
+
+  // ============================================================
+  // EVENTOS
+  // ============================================================
+
+  // Desconto: recalcula total com desconto e (se valor1 auto) atualiza valor1 + estado
+  descontoCompra.addEventListener("input", () => {
+    atualizarTotalComDesconto();
+
+    // se forma1 já escolhida e valor1 ainda é auto, acompanha o novo total
+    if (String(forma1.value || "").trim() !== "" && valor1.dataset.auto === "1") {
+      const totalDesc = parseBRL(totalComDesconto.value);
+      valor1.value = formatBRL(totalDesc);
+    }
+
+    // se forma2 selecionada e valor2 auto, recalcula restante
+    if (String(forma2.value || "").trim() !== "" && valor2.dataset.auto === "1") {
+      const totalDesc = parseBRL(totalComDesconto.value);
+      const v1 = parseBRL(valor1.value);
+      const restante = Math.max(0, totalDesc - (Number.isFinite(v1) ? v1 : 0));
+      valor2.value = formatBRL(restante);
+    }
+
+    atualizarEstadoPagamento();
+  });
+
+  // Clique na lista da forma1 -> depois do click seu dropdown preenche o input
+  lista1.addEventListener("click", () => {
+    setTimeout(() => {
+      // marcou como auto (queremos preencher automaticamente)
+      valor1.dataset.auto = "1";
+      atualizarEstadoPagamento();
+    }, 0);
+  }, true);
+
+  // Digitação manual na forma1 também
+  forma1.addEventListener("input", () => {
+    // quando o usuário digita e escolhe, mantém auto inicialmente
+    valor1.dataset.auto = "1";
+    atualizarEstadoPagamento();
+  });
+
+  // Valor1 manual -> desliga auto
+  valor1.addEventListener("input", () => {
+    valor1.dataset.auto = "0";
+
+    // se forma2 estiver selecionada e valor2 ainda auto, atualiza restante
+    if (String(forma2.value || "").trim() !== "" && valor2.dataset.auto === "1") {
+      const totalDesc = parseBRL(totalComDesconto.value);
+      const v1 = parseBRL(valor1.value);
+      const restante = Math.max(0, totalDesc - (Number.isFinite(v1) ? v1 : 0));
+      valor2.value = formatBRL(restante);
+    }
+
+    atualizarEstadoPagamento();
+  });
+
+  // Clique na lista da forma2 -> valida + calcula valor2
+  lista2.addEventListener("click", () => {
+    setTimeout(() => {
+      const totalDesc = parseBRL(totalComDesconto.value);
+      const v1 = parseBRL(valor1.value);
+
+      // Regra: se valor1 já pagou tudo, não deixa usar forma2
+      if (Math.abs(v1 - totalDesc) < 0.00001) {
+        toastWarn("O valor total já foi inserido na forma de pagamento 1");
+        forma2.value = "";
+        valor2.value = "";
+        valor2.disabled = true;
+        valor2.dataset.auto = "1";
+        atualizarEstadoPagamento();
+        return;
+      }
+
+      // Auto: valor2 = totalDesc - valor1
+      valor2.dataset.auto = "1";
+      atualizarEstadoPagamento();
+    }, 0);
+  }, true);
+
+  // Digitação manual na forma2 (caso permita)
+  forma2.addEventListener("input", () => {
+    valor2.dataset.auto = "1";
+    atualizarEstadoPagamento();
+  });
+
+  // Valor2 manual -> desliga auto
+  valor2.addEventListener("input", () => {
+    valor2.dataset.auto = "0";
+    atualizarEstadoPagamento();
+  });
+
+  // Exponho utilitários simples pra você chamar no abrir/fechar
+  window.__pdvPagamento_resetar = resetarPagamento;
+  window.__pdvPagamento_atualizar = atualizarEstadoPagamento;
+
+  // Helpers BRL (iguais ao seu padrão robusto)
+  function parseBRL(valorTexto) {
+    if (valorTexto === null || valorTexto === undefined) return 0;
+    if (typeof valorTexto === "number") return Number.isFinite(valorTexto) ? valorTexto : 0;
+
+    let s = String(valorTexto).trim();
+    if (!s) return 0;
+
+    s = s.replace(/\u00A0/g, " ");
+    s = s.replace(/[Rr]\$\s*/g, "");
+    s = s.replace(/\s/g, "");
+
+    const lastComma = s.lastIndexOf(",");
+    const lastDot = s.lastIndexOf(".");
+
+    if (lastComma > -1 && lastDot > -1) {
+      if (lastComma > lastDot) s = s.replace(/\./g, "").replace(",", ".");
+      else s = s.replace(/,/g, "");
+    } else if (lastComma > -1) {
+      s = s.replace(/\./g, "").replace(",", ".");
+    } else if (lastDot > -1) {
+      const parts = s.split(".");
+      if (parts.length > 2) {
+        const dec = parts.pop();
+        s = parts.join("") + "." + dec;
+      }
+      s = s.replace(/,/g, "");
+    }
+
+    const n = Number(s);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function formatBRL(n) {
+    const fmt = new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(Number(n) || 0);
+
+    return fmt.replace(/\u00A0/g, " ");
+  }
+}
+
+
+// FUNÇÃO PARA HABILITAR FUNÇÕES COM O TECLADO ==============================
+
+function habilitarAtalhosPagamentoPDV() {
+  if (window.__pdv_pagamento_atalhos) return;
+  window.__pdv_pagamento_atalhos = true;
+
+  const modal = document.getElementById("modalPagamento");
+  const box = document.getElementById("modalPagamentoBox");
+
+  const desconto = document.getElementById("desconto_compra");
+
+  const forma1 = document.getElementById("pag_forma1");
+  const lista1 = document.getElementById("pag_lista_forma1");
+
+  const valor1 = document.getElementById("pag_valor1");
+
+  const forma2 = document.getElementById("pag_forma2");
+  const lista2 = document.getElementById("pag_lista_forma2");
+
+  const valor2 = document.getElementById("pag_valor2");
+
+  const btnFinalizar = document.getElementById("btnFinalizarCompra");
+
+  if (!modal || !box || !desconto || !forma1 || !valor1 || !forma2 || !valor2) {
+    console.error("Atalhos pagamento: elementos não encontrados.");
+    return;
+  }
+
+  // Ordem de navegação
+  const ordem = [desconto, forma1, valor1, forma2, valor2, btnFinalizar].filter(Boolean);
+
+  function dentroDoModal(target) {
+    return box.contains(target);
+  }
+
+  function isDisabled(el) {
+    return !el || el.disabled || el.getAttribute("disabled") !== null;
+  }
+
+  function proximoCampo(atual) {
+    const i = ordem.indexOf(atual);
+    for (let k = i + 1; k < ordem.length; k++) {
+      if (!isDisabled(ordem[k])) return ordem[k];
+    }
+    return null;
+  }
+
+  function campoAnterior(atual) {
+    const i = ordem.indexOf(atual);
+    for (let k = i - 1; k >= 0; k--) {
+      if (!isDisabled(ordem[k])) return ordem[k];
+    }
+    return null;
+  }
+
+  function abrirDropdown(input, ul) {
+    if (!input) return;
+    input.focus();
+    // dispara seu listener de focus do configurarDropdown (abre sugestões)
+    try { input.dispatchEvent(new Event("focus")); } catch (e) {}
+    // fallback caso a lista já tenha itens
+    if (ul) ul.style.display = "block";
+  }
+
+  // Se a lista estiver aberta e o usuário estiver navegando nela,
+  // deixamos o Enter selecionar a opção, e só depois avançamos.
+  function listaAberta(ul) {
+    return !!ul && ul.style.display === "block";
+  }
+
+  document.addEventListener("keydown", (e) => {
+    // Só quando o modal estiver aberto e o foco estiver dentro dele
+    if (!modal.classList.contains("ativo")) return;
+    if (!dentroDoModal(e.target)) return;
+
+    // TAB = navegação padrão
+    if (e.key === "Tab") return;
+
+    // ESC = fechar modal
+    if (e.key === "Escape") {
+      e.preventDefault();
+      if (typeof fecharModalPagamento === "function") fecharModalPagamento();
+      return;
+    }
+
+    // F9 = encerrar
+    if (e.key === "F9") {
+      e.preventDefault();
+      if (typeof encerrar === "function") encerrar();
+      else console.warn("Função encerrar() não encontrada.");
+      return;
+    }
+
+    // ENTER / SHIFT+ENTER
+    if (e.key !== "Enter") return;
+
+    // SHIFT+ENTER = voltar
+    if (e.shiftKey) {
+      e.preventDefault();
+      const prev = campoAnterior(e.target);
+      if (!prev) return;
+
+      // se voltar para forma, abre a lista (fica bom no PDV)
+      if (prev === forma1) return abrirDropdown(forma1, lista1);
+      if (prev === forma2) return abrirDropdown(forma2, lista2);
+
+      prev.focus();
+      try { prev.select?.(); } catch (err) {}
+      return;
+    }
+
+    // ENTER normal = avançar com regras
+    // 1) Desconto -> Forma1 (abrindo lista)
+    if (e.target === desconto) {
+      e.preventDefault();
+      return abrirDropdown(forma1, lista1);
+    }
+
+    // 2) Forma1 -> Valor1
+    if (e.target === forma1) {
+      // Se a lista está aberta, deixa o Enter selecionar primeiro
+      if (listaAberta(lista1) && String(forma1.value || "").trim() === "") return;
+
+      // avança após seleção
+      e.preventDefault();
+      valor1.focus();
+      try { valor1.select?.(); } catch (err) {}
+      return;
+    }
+
+    // 3) Valor1 -> (Forma2 se habilitado) senão -> Finalizar
+    if (e.target === valor1) {
+      e.preventDefault();
+      if (!isDisabled(forma2)) return abrirDropdown(forma2, lista2);
+      if (btnFinalizar) btnFinalizar.focus();
+      return;
+    }
+
+    // 4) Forma2 -> Valor2
+    if (e.target === forma2) {
+      if (listaAberta(lista2) && String(forma2.value || "").trim() === "") return;
+
+      e.preventDefault();
+      valor2.focus();
+      try { valor2.select?.(); } catch (err) {}
+      return;
+    }
+
+    // 5) Valor2 -> Finalizar
+    if (e.target === valor2) {
+      e.preventDefault();
+      if (btnFinalizar) btnFinalizar.focus();
+      return;
+    }
+
+    // 6) Se estiver em algum outro elemento dentro do modal: segue ordem padrão
+    e.preventDefault();
+    const prox = proximoCampo(e.target);
+    if (prox === forma1) return abrirDropdown(forma1, lista1);
+    if (prox === forma2) return abrirDropdown(forma2, lista2);
+    prox?.focus();
+  });
+}
+
+
+// ABRIR MODAL DE PAGAMENTO ========================================================================
+
+function abrirModalPagamento() {
+  const modal = document.getElementById("modalPagamento");
+  const tdTotalCarrinho = document.getElementById("ftVlrTotal");
+
+  const inputTotalCompra = document.getElementById("pag_total_compra");
+  const inputDesconto = document.getElementById("desconto_compra");
+  const inputTotalComDesconto = document.getElementById("pag_desconto_compra");
+
+  const forma1 = document.getElementById("pag_forma1");
+
+  if (!modal || !tdTotalCarrinho || !inputTotalCompra || !inputDesconto || !inputTotalComDesconto) {
+    console.error("Elementos do modal de pagamento não encontrados.");
+    return;
+  }
+
+  // garante que listeners do pagamento existam
+  iniciarInteracoesPagamentoPDV();
+  if (typeof window.__pdvClientePagamento_limpar === "function") window.__pdvClientePagamento_limpar();
+
+  // Total do carrinho -> normaliza e formata
+  const totalTxt = String(tdTotalCarrinho.textContent || "").trim() || "R$ 0,00";
+
+  // Usa suas helpers globais (as que você já tem no arquivo)
+  const totalNum = (typeof parseBRL === "function") ? parseBRL(totalTxt) : 0;
+  const totalFmt = (typeof formatBRL === "function") ? formatBRL(totalNum) : totalTxt;
+
+  // Preenche total e total com desconto (inicialmente igual)
+  inputTotalCompra.value = totalFmt;
+  inputDesconto.value = "";
+  inputTotalComDesconto.value = totalFmt;
+
+  // reseta e atualiza estado (mantém suas regras de habilitação)
+  if (typeof window.__pdvPagamento_resetar === "function") window.__pdvPagamento_resetar();
+  if (typeof window.__pdvPagamento_atualizar === "function") window.__pdvPagamento_atualizar();
+
+  modal.classList.add("ativo");
+  setTimeout(() => forma1?.focus(), 0);
+}
+
+/* =========================================================================================
+   Helpers BRL (mesmo padrão robusto que você já usa)
+   ========================================================================================= */
+
+function parseBRL(valorTexto) {
+  if (valorTexto === null || valorTexto === undefined) return 0;
+  if (typeof valorTexto === "number") return Number.isFinite(valorTexto) ? valorTexto : 0;
+
+  let s = String(valorTexto).trim();
+  if (!s) return 0;
+
+  s = s.replace(/\u00A0/g, " ");
+  s = s.replace(/[Rr]\$\s*/g, "");
+  s = s.replace(/\s/g, "");
+
+  const lastComma = s.lastIndexOf(",");
+  const lastDot = s.lastIndexOf(".");
+
+  if (lastComma > -1 && lastDot > -1) {
+    if (lastComma > lastDot) s = s.replace(/\./g, "").replace(",", ".");
+    else s = s.replace(/,/g, "");
+  } else if (lastComma > -1) {
+    s = s.replace(/\./g, "").replace(",", ".");
+  } else if (lastDot > -1) {
+    const parts = s.split(".");
+    if (parts.length > 2) {
+      const dec = parts.pop();
+      s = parts.join("") + "." + dec;
+    }
+    s = s.replace(/,/g, "");
+  }
+
+  const n = Number(s);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function formatBRL(n) {
+  const fmt = new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(Number(n) || 0);
+
+  return fmt.replace(/\u00A0/g, " ");
+}
+
+
+// FUNÇÃO PARA FECHAR MODAL =================================================================
+
+function fecharModalPagamento() {
+  const modal = document.getElementById("modalPagamento");
+  if (!modal) return;
+
+  // Reseta a lógica interna (forma1/2, valores, troco, etc.)
+  if (typeof window.__pdvPagamento_resetar === "function") {
+    window.__pdvPagamento_resetar();
+  }
+
+  // Limpa campos extras do novo layout
+  const inputDesconto = document.getElementById("desconto_compra");
+  const inputTotalComDesconto = document.getElementById("pag_desconto_compra");
+  const inputTotalCompra = document.getElementById("pag_total_compra");
+
+  if (inputDesconto) inputDesconto.value = "";
+  if (inputTotalComDesconto) inputTotalComDesconto.value = "";
+  if (inputTotalCompra) inputTotalCompra.value = "";
+  if (typeof window.__pdvClientePagamento_limpar === "function") window.__pdvClientePagamento_limpar();
+
+  modal.classList.remove("ativo");
+
+  // Volta foco pro EAN (padrão PDV)
+  const inputEAN = document.getElementById("inputEAN");
+  if (inputEAN) setTimeout(() => inputEAN.focus(), 0);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =================================================================================================
+// FINALIZAR VENDA (PDV) - tudo no JS, GS só insere
+// =================================================================================================
+function encerrar() {
+  const toast = {
+    ok: (m) => (window.toastr ? toastr.success(m) : alert(m)),
+    warn: (m) => (window.toastr ? toastr.warning(m) : alert(m)),
+    err: (m) => (window.toastr ? toastr.error(m) : alert(m))
+  };
+
+  // -----------------------------
+  // ELEMENTOS
+  // -----------------------------
+  const tbody = document.getElementById("tb_carrinho_corpo");
+  const inputFilial = document.getElementById("inputFilial");
+
+  // Campos do pagamento
+  const pag_total_compra = document.getElementById("pag_total_compra");
+  const desconto_compra = document.getElementById("desconto_compra");
+  const pag_desconto_compra = document.getElementById("pag_desconto_compra");
+
+  const pag_forma1 = document.getElementById("pag_forma1");
+  const pag_valor1 = document.getElementById("pag_valor1");
+  const pag_forma2 = document.getElementById("pag_forma2");
+  const pag_valor2 = document.getElementById("pag_valor2");
+  const pag_troco = document.getElementById("pag_troco");
+
+  if (!tbody) return toast.err("Carrinho não encontrado (tb_carrinho_corpo).");
+  if (!inputFilial) return toast.err("Campo de filial não encontrado (inputFilial).");
+
+  // -----------------------------
+  // HELPERS
+  // -----------------------------
+  function normalizaTexto(v) {
+    return String(v || "")
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+  }
+
+  // BRL -> centavos (robusto)
+  function parseBRLtoCents(v) {
+    if (v === null || v === undefined) return 0;
+    if (typeof v === "number") return Math.round((Number.isFinite(v) ? v : 0) * 100);
+
+    let s = String(v).trim();
+    if (!s) return 0;
+
+    s = s.replace(/\u00A0/g, " ");
+    s = s.replace(/[Rr]\$\s*/g, "");
+    s = s.replace(/\s/g, "");
+
+    const lastComma = s.lastIndexOf(",");
+    const lastDot = s.lastIndexOf(".");
+
+    if (lastComma > -1 && lastDot > -1) {
+      if (lastComma > lastDot) s = s.replace(/\./g, "").replace(",", ".");
+      else s = s.replace(/,/g, "");
+    } else if (lastComma > -1) {
+      s = s.replace(/\./g, "").replace(",", ".");
+    } else if (lastDot > -1) {
+      const parts = s.split(".");
+      if (parts.length > 2) {
+        const dec = parts.pop();
+        s = parts.join("") + "." + dec;
+      }
+      s = s.replace(/,/g, "");
+    }
+
+    const n = Number(s);
+    return Number.isFinite(n) ? Math.round(n * 100) : 0;
+  }
+
+  function centsToNumber(cents) {
+    return (Number(cents) || 0) / 100;
+  }
+
+  // qtd pode vir "2", "2,5", etc
+  function parseNumeroBR(v) {
+    if (v === null || v === undefined) return 0;
+    if (typeof v === "number") return Number.isFinite(v) ? v : 0;
+
+    let s = String(v).trim();
+    if (!s) return 0;
+
+    s = s.replace(/\u00A0/g, " ");
+    s = s.replace(/[R$\s]/g, "");
+
+    const temVirgula = s.includes(",");
+    const temPonto = s.includes(".");
+
+    if (temVirgula && temPonto) s = s.replace(/\./g, "").replace(",", ".");
+    else if (temVirgula && !temPonto) s = s.replace(",", ".");
+    else if (!temVirgula && temPonto) {
+      const parts = s.split(".");
+      if (parts.length > 2) {
+        const dec = parts.pop();
+        s = parts.join("") + "." + dec;
+      }
+    }
+
+    const n = parseFloat(s);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  // data BR (usa hora local da máquina)
+  function agoraBR() {
+    const d = new Date();
+    const pad = (x) => String(x).padStart(2, "0");
+    const dd = pad(d.getDate());
+    const mm = pad(d.getMonth() + 1);
+    const yyyy = d.getFullYear();
+    const hh = pad(d.getHours());
+    const mi = pad(d.getMinutes());
+    const ss = pad(d.getSeconds());
+    return {
+      data: `${dd}/${mm}/${yyyy}`,
+      dataHora: `${dd}/${mm}/${yyyy} ${hh}:${mi}:${ss}`
+    };
+  }
+
+  // -----------------------------
+  // MAPAS (DE->PARA)
+  // -----------------------------
+  const mapaProdPorNome = new Map();
+  (Array.isArray(itensProd) ? itensProd : []).forEach((p) => {
+    const k = normalizaTexto(p?.nome);
+    if (k && !mapaProdPorNome.has(k)) mapaProdPorNome.set(k, p);
+  });
+
+  const mapaFilPorNome = new Map();
+  (Array.isArray(itensFil) ? itensFil : []).forEach((f) => {
+    const k = normalizaTexto(f?.nome);
+    if (k && !mapaFilPorNome.has(k)) mapaFilPorNome.set(k, f);
+  });
+
+  // codigoprod -> lista de saídas
+  const mapaSaidasPorProd = new Map();
+  (Array.isArray(itensSaida) ? itensSaida : []).forEach((s) => {
+    const k = String(s?.codigoprod || "").trim();
+    if (!k) return;
+    if (!mapaSaidasPorProd.has(k)) mapaSaidasPorProd.set(k, []);
+    mapaSaidasPorProd.get(k).push(s);
+  });
+
+  // -----------------------------
+  // 4) FILIAL NOME -> CÓDIGO
+  // -----------------------------
+  const nomeFilial = String(inputFilial.value || "").trim();
+  if (!nomeFilial) return toast.warn("Selecione uma filial antes de finalizar.");
+
+  const filObj = mapaFilPorNome.get(normalizaTexto(nomeFilial));
+  if (!filObj) return toast.err(`Filial não encontrada no cadastro: "${nomeFilial}"`);
+
+  const codigoFilial = String(filObj.codigo || "").trim();
+  if (!codigoFilial) return toast.err("Código da filial inválido no cadastro.");
+
+  // -----------------------------
+  // 1) LER CARRINHO (COL 1..4) + DE->PARA NOME->CÓDIGO
+  // -----------------------------
+  const trs = Array.from(tbody.querySelectorAll("tr"));
+  if (trs.length === 0) return toast.warn("Carrinho vazio.");
+
+  const vendidos = [];
+  for (const tr of trs) {
+    const tds = tr.querySelectorAll("td");
+    if (tds.length < 4) continue;
+
+    const nome = String(tds[0].textContent || "").trim();
+    const qtd = parseInt(String(tds[1].textContent || "").trim(), 10);
+
+    const unitCents = parseBRLtoCents(tds[2].textContent || "");
+    let totalCents = parseBRLtoCents(tds[3].textContent || "");
+
+    if (!nome || !Number.isFinite(qtd) || qtd <= 0) continue;
+
+    const prod = mapaProdPorNome.get(normalizaTexto(nome));
+    if (!prod) return toast.err(`Produto não encontrado no cadastro: "${nome}"`);
+
+    if (!totalCents && unitCents) totalCents = unitCents * qtd;
+
+    vendidos.push({
+      soldIndex: vendidos.length,
+      nome,
+      codigo: String(prod.codigo || "").trim(),
+      qtd,
+      totalBrutoCents: totalCents
+    });
+  }
+
+  if (vendidos.length === 0) return toast.warn("Nenhum item válido no carrinho.");
+
+  const totalBrutoCarrinhoCents = vendidos.reduce((a, b) => a + (b.totalBrutoCents || 0), 0);
+  if (totalBrutoCarrinhoCents <= 0) return toast.warn("Total do carrinho inválido.");
+
+  // -----------------------------
+  // 5) CAMPOS DO PAGAMENTO
+  // -----------------------------
+  const totalCompraCents = parseBRLtoCents(pag_total_compra?.value || "");
+  const descontoCents = parseBRLtoCents(desconto_compra?.value || "");
+  const totalComDescontoCentsCampo = parseBRLtoCents(pag_desconto_compra?.value || "");
+
+  const totalBaseCents = totalCompraCents > 0 ? totalCompraCents : totalBrutoCarrinhoCents;
+  const totalComDescontoCents =
+    totalComDescontoCentsCampo > 0 ? totalComDescontoCentsCampo : Math.max(0, totalBaseCents - descontoCents);
+
+  if (descontoCents > totalBaseCents) {
+    return toast.warn("Desconto não pode ser maior que o total da compra.");
+  }
+
+  const forma1 = String(pag_forma1?.value || "").trim();
+  const forma2 = String(pag_forma2?.value || "").trim();
+  const valor1Cents = parseBRLtoCents(pag_valor1?.value || "");
+  const valor2Cents = parseBRLtoCents(pag_valor2?.value || "");
+  const trocoCents = parseBRLtoCents(pag_troco?.value || "");
+
+  // -----------------------------
+  // 3) DESCONTO PONDERADO (1º nível: entre produtos vendidos)
+  // -----------------------------
+  const descPorProduto = new Array(vendidos.length).fill(0);
+
+  if (descontoCents > 0) {
+    let resto = descontoCents;
+    for (let i = 0; i < vendidos.length; i++) {
+      const v = vendidos[i];
+      if (i === vendidos.length - 1) {
+        descPorProduto[i] = resto;
+      } else {
+        const parte = Math.round(descontoCents * (v.totalBrutoCents / totalBrutoCarrinhoCents));
+        descPorProduto[i] = parte;
+        resto -= parte;
+      }
+    }
+  }
+
+  vendidos.forEach((v, i) => {
+    v.descCents = descPorProduto[i] || 0;
+    v.totalLiquidoCents = Math.max(0, v.totalBrutoCents - v.descCents);
+  });
+
+  // -----------------------------
+  // 2 + 3) MOVIMENTAÇÕES DE ESTOQUE (com desconto ponderado 2º nível)
+  // -----------------------------
+  const movimentos = [];
+
+for (const v of vendidos) {
+  const listaSaidas = mapaSaidasPorProd.get(v.codigo) || [];
+
+  // fallback: se não existir mapeamento, trata como "o próprio produto sai"
+  const saidas = (listaSaidas.length > 0)
+    ? listaSaidas
+    : [{ codigosaida: v.codigo, qtd: 1, preco: centsToNumber(v.totalLiquidoCents / v.qtd) }];
+
+  const comps = [];
+
+  for (const s of saidas) {
+    const codSaida = String(s?.codigosaida || "").trim();
+    if (!codSaida) continue;
+
+    // qtd de saída por 1 unidade vendida
+    const qtdSaidaBase = parseNumeroBR(s?.qtd);
+    const qtdSaidaBaseOk = (Number.isFinite(qtdSaidaBase) && qtdSaidaBase > 0) ? qtdSaidaBase : 1;
+
+    // quantidade TOTAL que sai do estoque = qtdSaidaBase * qtdVendida
+    const qtdTotalSaida = qtdSaidaBaseOk * v.qtd;
+
+    // preço unitário de saída
+    const precoUnitCents = parseBRLtoCents(s?.preco);
+
+    // ✅ VALOR TOTAL = qtdTotalSaida * preçoUnitário
+    const valorTotalCents = Math.round(qtdTotalSaida * (precoUnitCents > 0 ? precoUnitCents : 0));
+
+    comps.push({
+      soldIndex: v.soldIndex,
+      codigosaida: codSaida,
+      qtd: qtdTotalSaida,
+      valorTotalCents,
+      valorUnitarioCents: precoUnitCents > 0 ? precoUnitCents : 0
+    });
+  }
+
+  // Se por algum motivo não montou nada, fallback simples
+  if (comps.length === 0) {
+    comps.push({
+      soldIndex: v.soldIndex,
+      codigosaida: v.codigo,
+      qtd: v.qtd,
+      valorTotalCents: v.totalLiquidoCents,
+      valorUnitarioCents: v.qtd > 0 ? Math.round(v.totalLiquidoCents / v.qtd) : 0
+    });
+  }
+
+  // 2º nível: distribui desconto do produto vendido entre suas saídas
+  const somaValorComp = comps.reduce((acc, c) => acc + (c.valorTotalCents || 0), 0);
+
+  if (v.descCents > 0 && somaValorComp > 0) {
+    let resto = v.descCents;
+
+    for (let i = 0; i < comps.length; i++) {
+      const c = comps[i];
+      let descComp = 0;
+
+      if (i === comps.length - 1) {
+        descComp = resto;
+      } else {
+        descComp = Math.round(v.descCents * ((c.valorTotalCents || 0) / somaValorComp));
+        resto -= descComp;
+      }
+
+      c.valorTotalCents = Math.max(0, (c.valorTotalCents || 0) - descComp);
+    }
+  }
+
+  comps.forEach(c => {
+    c.valorUnitarioCents = c.qtd > 0 ? Math.round((c.valorTotalCents || 0) / c.qtd) : 0;
+  });
+
+  comps.forEach(c => movimentos.push(c));
+}
+
+  // -----------------------------
+  // PAYLOAD FINAL
+  // -----------------------------
+  const { data, dataHora } = agoraBR();
+
+  const payload = {
+    carrinho: {
+      idCliente: clienteSelecionadoPDV ? String(clienteSelecionadoPDV.idCliente || "").trim() : "",
+      total: centsToNumber(totalBaseCents),
+      desconto: centsToNumber(descontoCents),
+      totalComDesconto: centsToNumber(totalComDescontoCents),
+      forma1,
+      valor1: centsToNumber(valor1Cents),
+      forma2,
+      valor2: centsToNumber(valor2Cents),
+      troco: centsToNumber(trocoCents),
+      filial: codigoFilial,
+      dataHora
+    },
+
+    // VENDA_PRODUTO: valor = total do item após desconto ponderado
+    produtos: vendidos.map((v) => ({
+      soldIndex: v.soldIndex,
+      codigoprod: v.codigo,
+      valor: centsToNumber(v.totalLiquidoCents),
+      qtd: v.qtd
+    })),
+
+    // EST_MOVIMENTACOES: valor = preço total do componente após ponderações
+    movimentos: movimentos.map((m) => ({
+      soldIndex: m.soldIndex,
+      codigosaida: m.codigosaida,
+      qtd: Number(m.qtd || 0),
+      valor: centsToNumber(m.valorUnitarioCents || 0),
+      filial: codigoFilial,
+      tipomov: "SAÍDA VENDA",
+      dataMov: data,
+      dataHora
+    }))
+  };
+
+  // -----------------------------
+  // CHAMA GS
+  // -----------------------------
+  const run = obterGoogleRunCaixa();
+
+  if (!run || !run.salvarVendaPDV) {
+    if (!caixaEstaOnline()) return salvarVendaOfflineCaixa(payload);
+    return toast.err("Backend não encontrado: salvarVendaPDV().");
+  }
+
+  if (!caixaEstaOnline()) {
+    return salvarVendaOfflineCaixa(payload);
+  }
+
+  if (typeof mostrarCarregamentoModal === "function") mostrarCarregamentoModal();
+
+  run
+    .withSuccessHandler((resp) => {
+      if (!resp || !resp.sucesso) {
+        if (typeof esconderCarregamentoModal === "function") esconderCarregamentoModal();
+        return toast.err(resp?.mensagem || "Erro ao salvar venda.");
+      }
+
+      atualizarDadosCaixaAposVenda((ok) => {
+        if (typeof esconderCarregamentoModal === "function") esconderCarregamentoModal();
+
+        if (!ok) {
+          toast.warn("Venda salva, mas não foi possível atualizar os dados da tela automaticamente.");
+          return;
+        }
+
+        limparVendaAposFinalizarCaixa();
+        toast.ok(`Venda salva com sucesso! Carrinho #${resp.idCarrinho}`);
+        dispararAtualizacaoDashboardAnaliticoCaixa(resp.idCarrinho);
+      });
+    })
+    .withFailureHandler((err) => {
+      if (typeof esconderCarregamentoModal === "function") esconderCarregamentoModal();
+      console.error(err);
+
+      if (!caixaEstaOnline()) {
+        salvarVendaOfflineCaixa(payload);
+        return;
+      }
+
+      toast.err("Erro no Apps Script ao salvar venda.");
+    })
+    .salvarVendaPDV(payload);
+}
+
+
+</script>

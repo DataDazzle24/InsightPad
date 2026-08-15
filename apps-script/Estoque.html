@@ -1,0 +1,744 @@
+<!-- Esse Será o HTML principal da página de Cadastro de Fornecedores -->
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <base target="_top">
+
+    <!-- Importação das bibliotecas de ícones e estilos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,250,0,200" />
+    
+    <!-- jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    
+    <!-- Toastr para notificações -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+
+    <!-- Chamada dos estilos customizados -->
+    <?!=Chamar("EstiloCabecalho") ?>
+    <?!=Chamar("Estoque_Estilo") ?>
+
+  </head>
+
+
+  <body>
+
+    <!-- Cabeçalho da página -->
+    <?!= Chamar("Cabecalho", { tituloPagina: tituloPagina }) ?>
+
+    <!-- Container geral da página -->
+    <div id="geral">
+
+      <!-- Seção superior com botões de ação -->
+      <div id="cad_superior">
+
+        <!-- Botões da esquerda: Voltar, Cadastrar, Editar, Excluir -->
+        <div id="cad_esquerda">
+
+          <!-- Botão Voltar - retorna ao menu de cadastros -->
+          <button id="btnVoltar" type="button" data-insight-page="Menu">
+            <i id="cad_icone" class="bi bi-arrow-left-circle"></i>
+          </button>
+
+          <!-- Botão Cadastrar - abre modal de cadastro -->
+          <button id="btnCadastrar">
+            <i id="cad_icone" class="bi bi-plus-circle"></i>
+          </button> 
+
+          <!-- Botão Editar - abre modal de edição da filial selecionada -->
+          <button id="btnEditar">
+            <i id="cad_icone" class="bi bi-pencil-square"></i>
+          </button> 
+
+          <button id="btnTransferirEstoque">
+            <i id="cad_icone" class="bi bi-arrow-left-right"></i>
+          </button>
+
+          <!-- Botão Excluir - abre modal de confirmação de exclusão -->
+          <button id="btnExcluir">
+            <i id="cad_icone" class="bi bi-trash3"></i> 
+          </button>
+
+        </div>
+
+
+        <!-- Botões da direita: Campo de pesquisa e ações -->
+        <div id="cad_centro">
+          <div class="estoque-toggle">
+            <button id="btnToggleMovimentacoesPrincipal" class="estoque-toggle-opcao ativo" type="button">MOVIMENTAÇÕES</button>
+            <button id="btnToggleSaldoPrincipal" class="estoque-toggle-opcao" type="button">SALDO</button>
+          </div>
+        </div>
+
+        <div id="cad_direita">
+
+          <!-- Botão Pesquisar - filtra dados na tabela -->
+          <button id="btnExtrair">
+            <i id="cad_icone" class="bi bi-filetype-csv"></i> 
+          </button>
+
+          <!-- Botão Pesquisar - filtra dados na tabela -->
+          <button id="btnPesquisar">
+            <i id="cad_icone" class="bi bi-funnel"></i> 
+          </button>
+
+          <!-- Botão Limpar - remove filtros e restaura tabela completa -->
+          <button id="btnLimpar">
+            <i id="cad_limpar" class="bi bi-eraser"></i> 
+          </button>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- Seção inferior com a tabela de dados -->
+      <div id="cad_inferior">
+
+        <div id="container_tabela">
+
+          <div id="tabela_scroll">
+          
+            <!-- Cabeçalho da tabela (fixo) -->
+            <table id="tb">
+
+              <thead id="tb_cabecalho">
+                <tr>
+                  <th id="tb_col_id">ID</th>
+                  <th id="tb_col_tipo">TIPO</th>
+                  <th id="tb_col_idtransferencia">ID_TRANSFERÊNCIA</th>
+                  <th id="tb_col_idvenda">ID_VENDA</th>
+                  <th id="tb_col_produto">PRODUTO</th>
+                  <th id="tb_col_qtd">QUANTIDADE</th>
+                  <th id="tb_col_valor">VALOR UNITÁRIO BRUTO</th>
+                  <th id="tb_col_valor_calc">VALOR UNITÁRIO COM CUSTOS</th>
+                  <th id="tb_col_filial">FILIAL</th>
+                  <th id="tb_col_dtmovimentacao">DATA DA MOVIMENTAÇÃO</th>
+                  <th id="tb_col_nf">ID_NF</th>
+                  <th id="tb_col_numero_nf">NÚMERO NF</th>
+                  <th id="tb_col_emissao_nf">EMISSÃO NF</th>
+                  <th id="tb_col_valor_nf">VALOR NF</th>
+                  <th id="tb_col_frete_nf">FRETE</th>
+                  <th id="tb_col_seguro_nf">SEGURO</th>
+                  <th id="tb_col_icms_nf">ICMS</th>
+                  <th id="tb_col_icms_st_nf">ICMS ST</th>
+                  <th id="tb_col_ipi_nf">IPI</th>
+                  <th id="tb_col_cpf_nf">CPF NF</th>
+                  <th id="tb_col_cnpj_nf">CNPJ NF</th>
+                  <th id="tb_col_estado_nf">ESTADO NF</th>
+                  <th id="tb_col_dtcriacao">DATA DE CRIAÇÃO</th>
+                  <th id="tb_col_alteracao">ÚLTIMA ALTERAÇÃO</th>
+                </tr>
+              </thead>
+
+              <tbody id="tb_corpo">
+                <!-- Corpo será preenchido dinamicamente via JavaScript -->
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- MODAIS -------------------------------------------------------------------------------------------------->
+
+
+<!-- Modal de Cadastro de Novo Fornecedor ------------------------------------------->
+
+    <div id="modalCadastro" class="modal-estoque-full">
+      <div class="estoque-full-pagina">
+
+        <div class="estoque-full-topo">
+          <div class="estoque-full-topo-esquerda">
+            <button id="btnCancelarCadastro" class="saldo-btn-icone" type="button" title="Voltar">
+              <i class="bi bi-arrow-left-circle"></i>
+            </button>
+
+            <h2 class="saldo-titulo">REGISTRAR MOVIMENTAÇÃO</h2>
+
+            <div class="form-field dropdown-container campo-tipo-movimentacao">
+              <input type="text" id="inputTipo" class="input-moderno" placeholder="Tipo de movimentação *">
+              <ul id="listaTipo" class="sugestoes"></ul>
+            </div>
+
+            <div class="form-field dropdown-container campo-filial-movimentacao">
+              <input type="text" id="inputFilial" class="input-moderno" placeholder="Filial *">
+              <ul id="listaFilial" class="sugestoes"></ul>
+            </div>
+
+            <div class="form-field campo-data-movimentacao">
+              <input type="text" id="inputDataMovimentacao" class="input-moderno datepicker" placeholder="Data *">
+            </div>
+          </div>
+
+          <button id="btnAdicionarItemMovimentacao" class="btn-add-transferencia" type="button" title="Adicionar produto">+</button>
+        </div>
+
+        <div class="estoque-full-conteudo">
+          <section id="quadroNfCadastro" class="nf-card">
+            <div class="nf-card-topo">
+              <h3>Informações NF</h3>
+              <label class="nf-toggle">
+                <input type="checkbox" id="checkHabilitarNf" checked>
+                <span>Habilitar NF</span>
+              </label>
+            </div>
+
+            <div class="nf-grid nf-grid-linha-1">
+              <div class="form-field">
+                <label class="input-label">Número NF</label>
+                <input type="text" id="inputNumeroNF" class="input-moderno" placeholder="Somente números">
+              </div>
+              <div class="form-field">
+                <label class="input-label">Emissão NF</label>
+                <input type="text" id="inputEmissaoNF" class="input-moderno datepicker" placeholder="DD/MM/AAAA">
+              </div>
+              <div class="form-field">
+                <label class="input-label">Valor NF</label>
+                <input type="text" id="inputValorNF" class="input-moderno" placeholder="R$ 0,00">
+              </div>
+              <div class="form-field">
+                <label class="input-label">Frete</label>
+                <input type="text" id="inputFreteNF" class="input-moderno input-extra-nf-cadastro" placeholder="R$ 0,00">
+              </div>
+              <div class="form-field">
+                <label class="input-label">Seguro</label>
+                <input type="text" id="inputSeguroNF" class="input-moderno input-extra-nf-cadastro" placeholder="R$ 0,00">
+              </div>
+              <div class="form-field">
+                <label class="input-label">ICMS</label>
+                <input type="text" id="inputIcmsNF" class="input-moderno input-extra-nf-cadastro" placeholder="R$ 0,00">
+              </div>
+            </div>
+
+            <div class="nf-grid nf-grid-linha-2">
+              <div class="form-field">
+                <label class="input-label">ICMS ST</label>
+                <input type="text" id="inputIcmsStNF" class="input-moderno input-extra-nf-cadastro" placeholder="R$ 0,00">
+              </div>
+              <div class="form-field">
+                <label class="input-label">IPI</label>
+                <input type="text" id="inputIpiNF" class="input-moderno input-extra-nf-cadastro" placeholder="R$ 0,00">
+              </div>
+              <div class="form-field">
+                <label class="input-label">CPF</label>
+                <input type="text" id="inputCpfNF" class="input-moderno" placeholder="000.000.000-00">
+              </div>
+              <div class="form-field">
+                <label class="input-label">CNPJ</label>
+                <input type="text" id="inputCnpjNF" class="input-moderno" placeholder="00.000.000/0000-00">
+              </div>
+              <div class="form-field dropdown-container">
+                <label class="input-label">Estado</label>
+                <input type="text" id="inputEstadoNF" class="input-moderno" placeholder="UF">
+                <ul id="listaEstadoNF" class="sugestoes"></ul>
+              </div>
+            </div>
+          </section>
+
+          <section class="nf-card produtos-nf-card">
+            <div class="nf-card-topo">
+              <h3>Produtos da movimentação</h3>
+            </div>
+
+            <div id="containerItensMovimentacao" class="movimentacao-itens"></div>
+          </section>
+        </div>
+
+        <div class="modal-botoes estoque-full-botoes">
+          <button id="btnCancelarCadastroRodape" class="btn-cancelar" type="button">CANCELAR</button>
+          <button id="btnConfirmarCadastro" class="btn-cadastrar" type="button">CADASTRAR</button>
+        </div>
+
+      </div>
+    </div>
+
+
+
+
+
+
+
+
+
+<!-- Modal de Transferencia de Estoque ------------------------------------------------------------------->
+
+    <div id="modalTransferencia" class="modal-overlay">
+      <div class="modal-box-large modal-transferencia-box">
+
+        <div class="modal-transferencia-topo">
+          <h2 class="modal-titulo">TRANSFERÊNCIA DE ESTOQUE</h2>
+
+          <button id="btnAdicionarItemTransferencia" class="btn-add-transferencia" type="button">+</button>
+        </div>
+
+        <div class="transferencia-rota">
+          <div class="form-field dropdown-container transferencia-filial">
+            <label class="input-label campo-obrigatorio">Filial de origem</label>
+            <input type="text" id="inputTransferenciaFilialOrigem" class="input-moderno" placeholder="Selecione a filial de origem ...">
+            <ul id="listaTransferenciaFilialOrigem" class="sugestoes"></ul>
+          </div>
+
+          <div class="transferencia-ilustracao">
+            <i class="bi bi-box-seam"></i>
+            <i class="bi bi-arrow-right"></i>
+          </div>
+
+          <div class="form-field dropdown-container transferencia-filial">
+            <label class="input-label campo-obrigatorio">Filial de destino</label>
+            <input type="text" id="inputTransferenciaFilialDestino" class="input-moderno" placeholder="Selecione a filial de destino ...">
+            <ul id="listaTransferenciaFilialDestino" class="sugestoes"></ul>
+          </div>
+        </div>
+
+        <div id="containerItensTransferencia" class="transferencia-itens"></div>
+
+        <div class="modal-botoes">
+          <button id="btnCancelarTransferencia" class="btn-cancelar">CANCELAR</button>
+          <button id="btnEditarTransferencia" class="btn-editar-transferencia">EDITAR</button>
+          <button id="btnConfirmarTransferencia" class="btn-cadastrar">TRANSFERIR</button>
+        </div>
+
+      </div>
+    </div>
+
+
+
+<!-- Modal de Carregamento ------------------------------------------------------------------------------->
+
+    <div id="modalCarregamento" class="loading-overlay">
+      <div class="loading-box">
+        <div class="loading-container">
+          <!-- Logo da empresa com animação de spinner -->
+          <img src="https://drive.google.com/thumbnail?id=1T6pWIpQeH-jPowvh63mPQDJVIjA3VJBJ" alt="Logo" class="loading-logo">
+          <div class="loading-spinner"></div>
+        </div>
+      </div>
+    </div>
+
+
+
+
+
+
+
+
+
+<!-- Modal de Confirmação de Exclusão ----------------------------------------------------------------------->
+
+    <div id="modalExclusao" class="modal-overlay">
+      <div id="boxModalExclusao" class="modal-box modal-exclusao-box">
+        <h2 class="modal-titulo">EXCLUIR MOVIMENTAÇÃO</h2>
+        
+        <div id="exclusaoSemNf" class="form-group">
+          <!-- Texto dinâmico com o nome do fornecedor a ser excluída -->
+          <p class="texto-confirmacao">Deseja, realmente, excluir a movimentação <strong id="movimentacaoSelecionada"></strong>? Produto: <strong id="produtoSelecionado"></strong>; Tipo de movimentação: <strong id="tipoSelecionado"></strong>; Filial: <strong id="filialSelecionada"></strong>; Data de movimentação: <strong id="dataSelecionada"></strong></p>
+        </div>
+
+        <div id="exclusaoComNf" class="exclusao-com-nf">
+          <section class="exclusao-card exclusao-card-movimentacao">
+            <h3>Movimentação selecionada</h3>
+            <div id="infoMovimentacaoExclusao" class="exclusao-info-grid"></div>
+          </section>
+
+          <div class="exclusao-grid-duplo">
+            <section class="exclusao-card">
+              <h3>Informações da NF</h3>
+              <div id="infoNfExclusao" class="exclusao-info-grid"></div>
+            </section>
+
+            <section class="exclusao-card">
+              <h3>Produtos da NF</h3>
+              <div class="exclusao-produtos-scroll">
+                <table class="exclusao-produtos-tabela">
+                  <thead>
+                    <tr>
+                      <th>PRODUTO</th>
+                      <th>QTD</th>
+                      <th>VALOR UNIT. BRUTO</th>
+                      <th>VALOR UNIT. COM CUSTOS</th>
+                    </tr>
+                  </thead>
+                  <tbody id="corpoProdutosNfExclusao"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        </div>
+        
+        <div class="modal-botoes">
+          <button id="btnNaoExcluir" class="btn-nao">NÃO</button>
+          <div class="exclusao-botoes-direita">
+            <button id="btnSimExcluir" class="btn-sim">SIM</button>
+            <button id="btnExcluirNf" class="btn-excluir-nf">EXCLUIR NF</button>
+            <button id="btnExcluirProdutoNf" class="btn-sim">EXCLUIR PRODUTO</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+<!-- Modal de Edição de Fornecedor ---------------------------------------------------------------------------->
+
+    <div id="modalEdicao" class="modal-estoque-full">
+      <div class="estoque-full-pagina">
+
+        <div class="estoque-full-topo">
+          <div class="estoque-full-topo-esquerda">
+            <button id="btnCancelarEdicao" class="saldo-btn-icone" type="button" title="Voltar">
+              <i class="bi bi-arrow-left-circle"></i>
+            </button>
+
+            <h2 class="saldo-titulo">EDITAR MOVIMENTAÇÃO</h2>
+
+            <div class="form-field dropdown-container campo-tipo-movimentacao">
+              <input type="text" id="inputEditarTipo" class="input-moderno" placeholder="Tipo de movimentação *">
+              <ul id="listaEditarTipo" class="sugestoes"></ul>
+            </div>
+
+            <div class="form-field dropdown-container campo-filial-movimentacao">
+              <input type="text" id="inputEditarFilial" class="input-moderno" placeholder="Filial *">
+              <ul id="listaEditarFilial" class="sugestoes"></ul>
+            </div>
+
+            <div class="form-field campo-data-movimentacao">
+              <input type="text" id="inputEditarDataMovimentacao" class="input-moderno datepicker" placeholder="Data *">
+            </div>
+          </div>
+
+          <button id="btnAdicionarItemMovimentacaoEdicao" class="btn-add-transferencia" type="button" title="Adicionar produto">+</button>
+        </div>
+
+        <div class="estoque-full-conteudo">
+          <section id="quadroNfEdicao" class="nf-card">
+            <div class="nf-card-topo">
+              <h3>Informações NF</h3>
+              <label class="nf-toggle">
+                <input type="checkbox" id="checkEditarHabilitarNf" checked>
+                <span>Habilitar NF</span>
+              </label>
+            </div>
+
+            <div class="nf-grid nf-grid-linha-1">
+              <div class="form-field">
+                <label class="input-label">Número NF</label>
+                <input type="text" id="inputEditarNumeroNF" class="input-moderno" placeholder="Somente números">
+              </div>
+              <div class="form-field">
+                <label class="input-label">Emissão NF</label>
+                <input type="text" id="inputEditarEmissaoNF" class="input-moderno datepicker" placeholder="DD/MM/AAAA">
+              </div>
+              <div class="form-field">
+                <label class="input-label">Valor NF</label>
+                <input type="text" id="inputEditarValorNF" class="input-moderno" placeholder="R$ 0,00">
+              </div>
+              <div class="form-field">
+                <label class="input-label">Frete</label>
+                <input type="text" id="inputEditarFreteNF" class="input-moderno input-extra-nf-edicao" placeholder="R$ 0,00">
+              </div>
+              <div class="form-field">
+                <label class="input-label">Seguro</label>
+                <input type="text" id="inputEditarSeguroNF" class="input-moderno input-extra-nf-edicao" placeholder="R$ 0,00">
+              </div>
+              <div class="form-field">
+                <label class="input-label">ICMS</label>
+                <input type="text" id="inputEditarIcmsNF" class="input-moderno input-extra-nf-edicao" placeholder="R$ 0,00">
+              </div>
+            </div>
+
+            <div class="nf-grid nf-grid-linha-2">
+              <div class="form-field">
+                <label class="input-label">ICMS ST</label>
+                <input type="text" id="inputEditarIcmsStNF" class="input-moderno input-extra-nf-edicao" placeholder="R$ 0,00">
+              </div>
+              <div class="form-field">
+                <label class="input-label">IPI</label>
+                <input type="text" id="inputEditarIpiNF" class="input-moderno input-extra-nf-edicao" placeholder="R$ 0,00">
+              </div>
+              <div class="form-field">
+                <label class="input-label">CPF</label>
+                <input type="text" id="inputEditarCpfNF" class="input-moderno" placeholder="000.000.000-00">
+              </div>
+              <div class="form-field">
+                <label class="input-label">CNPJ</label>
+                <input type="text" id="inputEditarCnpjNF" class="input-moderno" placeholder="00.000.000/0000-00">
+              </div>
+              <div class="form-field dropdown-container">
+                <label class="input-label">Estado</label>
+                <input type="text" id="inputEditarEstadoNF" class="input-moderno" placeholder="UF">
+                <ul id="listaEditarEstadoNF" class="sugestoes"></ul>
+              </div>
+            </div>
+          </section>
+
+          <section class="nf-card produtos-nf-card">
+            <div class="nf-card-topo">
+              <h3>Produtos da movimentação</h3>
+            </div>
+
+            <div id="containerItensMovimentacaoEdicao" class="movimentacao-itens"></div>
+          </section>
+        </div>
+
+        <div class="modal-botoes estoque-full-botoes">
+          <button id="btnCancelarEdicaoRodape" class="btn-cancelar" type="button">CANCELAR</button>
+          <button id="btnConfirmarEdicao" class="btn-cadastrar" type="button">EDITAR</button>
+        </div>
+
+      </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+<!-- MODAL DE PESQUISA ---------------------------------------------------------------------------------->
+
+    <div id="modalPesquisa" class="modal-overlay">
+
+      <div class="modal-box-large">
+
+        
+
+        <h2 class="modal-titulo">PESQUISA</h2>
+
+        
+
+        <!-- Container dos campos -->
+        <div class="form-container">
+
+          <div class="form-column">
+            
+            <!-- Campo de categoria, acoplado a uma lista suspensa-->
+            <div class="form-field dropdown-container">
+              <label class="input-label">Tipo de movimentação</label>
+              <input type="text" id="inputPesquisarTipo" class="input-moderno" placeholder="Digite e selecione o tipo de movimentação">
+              <ul id="listaPesquisarTipo" class="sugestoes"></ul>
+            </div>
+
+            <div class="form-field dropdown-container">
+              <label class="input-label">Produto</label>
+              <input type="text" id="inputPesquisarProduto" class="input-moderno" placeholder="Digite e selecione o produto desejado">
+              <ul id="listaPesquisarProduto" class="sugestoes"></ul>
+            </div>
+
+            <div class="form-field dropdown-container">
+              <label class="input-label">Filial</label>
+              <input type="text" id="inputPesquisarFilial" class="input-moderno" placeholder="Digite e selecione a filial desejada">
+              <ul id="listaPesquisarFilial" class="sugestoes"></ul>
+            </div>
+
+
+          </div>
+
+          <div class="form-column">
+
+            <!-- Campo de data, acoplada a um calendário -->
+            <div class="form-field">
+              <label for="inputData" class="input-label">Data da movimentação</label>
+              <input type="text" id="inputPesquisarDataMovimentacao" class="input-moderno datepicker" placeholder="Selecione a data de movimentação">
+            </div>
+
+            <div class="form-field">
+              <label for="inputData" class="input-label">Período de cadastro</label>
+              <input type="text" id="inputPesquisarDataCadastro" class="input-moderno datepicker" placeholder="Selecione a data de cadastro da movimentação">
+            </div>
+          
+          </div>
+
+        </div>
+
+
+
+        <!-- Botões de ação do modal -->
+        <div class="modal-botoes">
+          <button id="btnCancelarPesquisa" class="btn-cancelar">CANCELAR</button>
+          <button id="btnConfirmarPesquisa" class="btn-cadastrar">PESQUISAR</button>
+        </div>
+
+
+        
+      </div>
+
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- MODAL DE SALDO DE ESTOQUE -------------------------------------------------------------------------->
+
+    <div id="modalSaldoEstoque" class="modal-saldo-overlay">
+
+      <div class="saldo-pagina">
+
+        <div class="saldo-acoes">
+          <div class="saldo-acoes-esquerda">
+            <button id="btnVoltarSaldo" class="saldo-btn-icone" title="Voltar">
+              <i class="bi bi-arrow-left-circle"></i>
+            </button>
+
+            <h2 class="saldo-titulo">SALDO DE ESTOQUE</h2>
+          </div>
+
+          <div class="estoque-toggle saldo-toggle">
+            <button id="btnToggleMovimentacoesSaldo" class="estoque-toggle-opcao" type="button">MOVIMENTAÇÕES</button>
+            <button id="btnToggleSaldoSaldo" class="estoque-toggle-opcao ativo" type="button">SALDO</button>
+          </div>
+
+          <div class="saldo-acoes-direita">
+            <button id="btnFiltroSaldo" class="saldo-btn-icone" title="Filtrar saldo">
+              <i class="bi bi-funnel"></i>
+            </button>
+
+            <button id="btnLimparFiltroSaldo" class="saldo-btn-icone saldo-btn-limpar" title="Limpar filtros">
+              <i class="bi bi-eraser"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="saldo-conteudo">
+          <div id="saldo_container_tabela">
+            <div id="saldo_tabela_scroll">
+              <table id="tb_saldo">
+                <thead id="tb_saldo_cabecalho">
+                  <tr>
+                    <th id="saldo_col_filial">FILIAL</th>
+                    <th id="saldo_col_produto">PRODUTO</th>
+                    <th id="saldo_col_saldo" class="saldo-ordenavel">SALDO <span id="iconeOrdenacaoSaldo"></span></th>
+                  </tr>
+                </thead>
+
+                <tbody id="tb_saldo_corpo"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+
+<!-- MODAL DE PESQUISA DO SALDO ------------------------------------------------------------------------->
+
+    <div id="modalPesquisaSaldo" class="modal-overlay">
+
+      <div class="modal-box-large">
+
+        <h2 class="modal-titulo">PESQUISA DE SALDO</h2>
+
+        <div class="form-container">
+
+          <div class="form-column">
+
+            <div class="form-field dropdown-container">
+              <label class="input-label">Produto</label>
+              <input type="text" id="inputPesquisarSaldoProduto" class="input-moderno" placeholder="Digite e selecione o produto desejado">
+              <ul id="listaPesquisarSaldoProduto" class="sugestoes"></ul>
+            </div>
+
+          </div>
+
+          <div class="form-column">
+
+            <div class="form-field dropdown-container">
+              <label class="input-label">Filial</label>
+              <input type="text" id="inputPesquisarSaldoFilial" class="input-moderno" placeholder="Digite e selecione a filial desejada">
+              <ul id="listaPesquisarSaldoFilial" class="sugestoes"></ul>
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="modal-botoes">
+          <button id="btnCancelarPesquisaSaldo" class="btn-cancelar">CANCELAR</button>
+          <button id="btnConfirmarPesquisaSaldo" class="btn-cadastrar">PESQUISAR</button>
+        </div>
+
+      </div>
+
+    </div>
+
+
+
+    <!-- Scripts necessários -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+
+
+
+    <script>
+      
+      var itensProd = <?!= JSON.stringify(itensProd) ?>;
+      var itensFil = <?!= JSON.stringify(itensFil) ?>;
+      var dadosNfs = <?!= JSON.stringify(dadosNfs || []) ?>;
+      var listasFiltrosEstoque = <?!= JSON.stringify(listasFiltrosEstoque || {}) ?>;
+      var paginacaoEstoque = <?!= JSON.stringify(paginacaoEstoque || {}) ?>;
+
+      // dadosTabela: array completo com todos os dados das filiais
+      var dadosTabela = <?!= JSON.stringify(dadosTabela) ?>;
+
+    </script>
+
+
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+
+
+
+    <!-- Importa o JavaScript customizado -->
+    <?!=Chamar("Estoque_JS") ?>
+
+  </body>
+</html>

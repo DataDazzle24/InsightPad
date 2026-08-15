@@ -1,0 +1,4201 @@
+<script>
+(function() {
+  let pacote = window.DASHBOARD_OPERACIONAL_INICIAL || {};
+  const estado = {
+    visao: "vendas",
+    periodo: "mes",
+    metrica: "volume",
+    metricas: ["volume"],
+    janelaInicio: null,
+    periodoSelecionado: "",
+    itemSelecionado: "",
+    sort: { campo: "", direcao: "" },
+    estoque: {
+      periodo: "mes",
+      metricas: ["volume"],
+      tipos: ["entrada"],
+      janelaInicio: null,
+      periodoSelecionado: "",
+      itemSelecionado: "",
+      sort: { campo: "", direcao: "" },
+      chart: null,
+      periodosVisiveis: [],
+      tabelaItens: []
+    },
+    clientes: {
+      pagina: "pagina1",
+      metricaAbc: "volume",
+      classeSelecionada: "",
+      regiaoDimensao: "municipio",
+      regiaoMetrica: "volume",
+      aniversariantesTodos: false,
+      chartRegiao: null,
+      sort: { campo: "qtdCompras", direcao: "desc" },
+      tabela: []
+    },
+    categorias: {
+      pagina: "pagina1",
+      participacaoDimensao: "categoria",
+      participacaoMetrica: "volume",
+      tornadoDimensao: "categoria",
+      detalheDimensao: "categoria",
+      detalheSort: { campo: "", direcao: "" },
+      chartParticipacao: null,
+      chartTornado: null
+    },
+    filtros: {
+      produto: "",
+      produtoNome: "",
+      fornecedor: "",
+      fornecedorNome: "",
+      categoria: "",
+      categoriaNome: "",
+      subcategoria: "",
+      subcategoriaNome: "",
+      filial: "",
+      filialNome: "",
+      periodo: ""
+    },
+    filtrosClientes: {
+      cliente: "",
+      clienteNome: "",
+      cidade: "",
+      cidadeNome: "",
+      bairro: "",
+      bairroNome: "",
+      classe: "",
+      classeNome: "",
+      periodo: ""
+    },
+    mapaProdutos: new Map(),
+    mapaVendas: new Map(),
+    dadosBrutos: {
+      pacote: null,
+      carregando: false,
+      pronto: false,
+      erro: false,
+      progresso: 0,
+      timer: null
+    },
+    chart: null,
+    periodosVisiveis: [],
+    tabelaItens: []
+  };
+
+  document.addEventListener("DOMContentLoaded", iniciarDashboard);
+
+  function iniciarDashboard() {
+    configurarToasts();
+    if (!pacote.modoAgregado) montarIndices();
+    preencherFiltros();
+    configurarCalendarioPeriodo();
+    configurarEventos();
+
+    if (!pacote.sucesso && pacote.mensagem) {
+      toastErr(pacote.mensagem);
+    }
+
+    document.getElementById("dashboardAtualizacao").textContent = "Ultima atualizacao: " + (pacote.atualizadoEm || "-");
+    document.getElementById("dashboardEstoqueAtualizacao").textContent = "Ultima atualizacao: " + (pacote.atualizadoEm || "-");
+    document.getElementById("dashboardClientesAtualizacao").textContent = "Ultima atualizacao: " + (pacote.atualizadoEm || "-");
+    document.getElementById("dashboardCategoriasAtualizacao").textContent = "Ultima atualizacao: " + (pacote.atualizadoEm || "-");
+    atualizarDashboard();
+    setTimeout(function() {
+      document.getElementById("loadingDashboard")?.classList.remove("ativo");
+      redimensionarGrafico();
+      iniciarCargaDadosBrutosDashboard(false);
+    }, 250);
+  }
+
+  function configurarToasts() {
+    if (!window.toastr) return;
+    toastr.options = {
+      closeButton: true,
+      debug: false,
+      newestOnTop: true,
+      progressBar: true,
+      preventDuplicates: true,
+      onclick: null,
+      showDuration: "300",
+      hideDuration: "1000",
+      timeOut: "3000",
+      extendedTimeOut: "0",
+      showEasing: "swing",
+      hideEasing: "linear",
+      showMethod: "fadeIn",
+      hideMethod: "fadeOut",
+      positionClass: "toast-top-center"
+    };
+  }
+
+  function montarIndices() {
+    estado.mapaProdutos.clear();
+    estado.mapaVendas.clear();
+
+    (pacote.produtos || []).forEach(function(produto) {
+      estado.mapaProdutos.set(String(produto.idProduto), produto);
+    });
+
+    (pacote.vendas || []).forEach(function(venda) {
+      estado.mapaVendas.set(String(venda.idCarrinho), venda);
+    });
+  }
+
+  function configurarEventos() {
+    document.querySelectorAll(".dashboard-nav-btn").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        trocarVisao(btn.dataset.visao);
+      });
+    });
+
+    document.querySelectorAll("[data-periodo]").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        estado.periodo = btn.dataset.periodo;
+        estado.janelaInicio = null;
+        estado.periodoSelecionado = "";
+        marcarAtivo("[data-periodo]", btn);
+        if (pacote.modoAgregado) carregarResumoVendasDashboard(true);
+        else atualizarDashboard();
+      });
+    });
+
+    document.querySelectorAll("[data-metrica]").forEach(function(btn) {
+      btn.addEventListener("click", function(e) {
+        alternarSelecaoMetricasVendas(btn, e.ctrlKey || e.metaKey);
+      });
+    });
+
+    document.querySelectorAll("[data-estoque-periodo]").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        estado.estoque.periodo = btn.dataset.estoquePeriodo;
+        estado.estoque.janelaInicio = null;
+        estado.estoque.periodoSelecionado = "";
+        marcarAtivo("[data-estoque-periodo]", btn);
+        if (pacote.modoAgregado) carregarResumoEstoqueDashboard(true);
+        else atualizarDashboard();
+      });
+    });
+
+    document.querySelectorAll("[data-estoque-metrica]").forEach(function(btn) {
+      btn.addEventListener("click", function(e) {
+        alternarSelecaoMultipla(btn, "metricas", e.ctrlKey || e.metaKey);
+      });
+    });
+
+    document.querySelectorAll("[data-estoque-tipo]").forEach(function(btn) {
+      btn.addEventListener("click", function(e) {
+        alternarSelecaoMultipla(btn, "tipos", e.ctrlKey || e.metaKey);
+      });
+    });
+
+    document.getElementById("btnJanelaAnterior")?.addEventListener("click", function() {
+      moverJanela(-1);
+    });
+
+    document.getElementById("btnJanelaProxima")?.addEventListener("click", function() {
+      moverJanela(1);
+    });
+
+    document.getElementById("btnLimparSelecaoGrafico")?.addEventListener("click", function() {
+      estado.periodoSelecionado = "";
+      if (pacote.modoAgregado) carregarResumoVendasDashboard(true);
+      else atualizarDashboard();
+    });
+
+    document.getElementById("btnLimparSelecaoItem")?.addEventListener("click", function() {
+      estado.itemSelecionado = "";
+      if (pacote.modoAgregado) carregarResumoVendasDashboard(true);
+      else atualizarDashboard();
+    });
+
+    document.getElementById("btnAbrirFiltrosDashboard")?.addEventListener("click", abrirFiltros);
+    document.getElementById("btnAtualizarDashboard")?.addEventListener("click", atualizarDadosDashboard);
+    document.getElementById("btnLimparFiltrosTopoDashboard")?.addEventListener("click", limparFiltros);
+    document.getElementById("btnAbrirFiltrosEstoqueDashboard")?.addEventListener("click", abrirFiltros);
+    document.getElementById("btnAtualizarEstoqueDashboard")?.addEventListener("click", atualizarDadosDashboard);
+    document.getElementById("btnLimparFiltrosEstoqueDashboard")?.addEventListener("click", limparFiltros);
+    document.getElementById("btnAbrirFiltrosClientesDashboard")?.addEventListener("click", abrirFiltros);
+    document.getElementById("btnAtualizarClientesDashboard")?.addEventListener("click", atualizarDadosDashboard);
+    document.getElementById("btnLimparFiltrosClientesDashboard")?.addEventListener("click", limparFiltros);
+    document.getElementById("btnAbrirFiltrosCategoriasDashboard")?.addEventListener("click", abrirFiltros);
+    document.getElementById("btnAtualizarCategoriasDashboard")?.addEventListener("click", atualizarDadosDashboard);
+    document.getElementById("btnLimparFiltrosCategoriasDashboard")?.addEventListener("click", limparFiltros);
+    document.getElementById("btnFecharFiltrosDashboard")?.addEventListener("click", fecharFiltros);
+    document.getElementById("btnAplicarFiltrosDashboard")?.addEventListener("click", aplicarFiltros);
+    document.getElementById("btnCancelarFiltrosDashboard")?.addEventListener("click", fecharFiltros);
+    document.getElementById("modalFiltrosDashboard")?.addEventListener("click", function(e) {
+      if (e.target.id === "modalFiltrosDashboard") fecharFiltros();
+    });
+
+    document.querySelectorAll(".tabela-dashboard th[data-sort]").forEach(function(th) {
+      th.addEventListener("click", function() {
+        alternarOrdenacao(th.dataset.sort);
+      });
+    });
+
+    document.querySelectorAll(".tabela-dashboard th[data-sort-estoque]").forEach(function(th) {
+      th.addEventListener("click", function() {
+        alternarOrdenacaoEstoque(th.dataset.sortEstoque);
+      });
+    });
+
+    document.querySelectorAll("[data-clientes-pagina]").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        trocarPaginaClientes(btn.dataset.clientesPagina);
+      });
+    });
+
+    document.querySelectorAll(".tabela-dashboard th[data-sort-clientes]").forEach(function(th) {
+      th.addEventListener("click", function() {
+        alternarOrdenacaoClientes(th.dataset.sortClientes);
+      });
+    });
+
+    document.querySelectorAll("[data-clientes-metrica]").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        estado.clientes.metricaAbc = btn.dataset.clientesMetrica || "volume";
+        estado.clientes.classeSelecionada = "";
+        estado.clientes.sort = { campo: campoMetricaClientes(estado.clientes.metricaAbc), direcao: "desc" };
+        marcarAtivo("[data-clientes-metrica]", btn);
+        aplicarMetricaClientesLocal();
+      });
+    });
+
+    document.querySelectorAll("[data-classe-clientes]").forEach(function(card) {
+      card.addEventListener("click", function() {
+        const classe = card.dataset.classeClientes || "";
+        estado.clientes.classeSelecionada = estado.clientes.classeSelecionada === classe ? "" : classe;
+        atualizarCardsClasseSelecionada();
+        renderizarTabelaClientesResumo();
+      });
+    });
+
+    document.getElementById("btnLimparClasseClientes")?.addEventListener("click", function() {
+      estado.clientes.classeSelecionada = "";
+      atualizarCardsClasseSelecionada();
+      renderizarTabelaClientesResumo();
+    });
+
+    document.querySelectorAll("[data-clientes-regiao-dimensao]").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        estado.clientes.regiaoDimensao = btn.dataset.clientesRegiaoDimensao || "municipio";
+        marcarAtivo("[data-clientes-regiao-dimensao]", btn);
+        renderizarGraficoClientesRegiao();
+      });
+    });
+
+    document.querySelectorAll("[data-clientes-regiao-metrica]").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        estado.clientes.regiaoMetrica = btn.dataset.clientesRegiaoMetrica || "volume";
+        marcarAtivo("[data-clientes-regiao-metrica]", btn);
+        renderizarGraficoClientesRegiao();
+      });
+    });
+
+    document.getElementById("btnVerTodosAniversariantes")?.addEventListener("click", function() {
+      estado.clientes.aniversariantesTodos = !estado.clientes.aniversariantesTodos;
+      renderizarTabelaClientesAniversariantes();
+    });
+
+    document.querySelectorAll("[data-categorias-pagina]").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        trocarPaginaCategorias(btn.dataset.categoriasPagina);
+      });
+    });
+
+    document.querySelectorAll("[data-cat-part-dimensao]").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        estado.categorias.participacaoDimensao = btn.dataset.catPartDimensao || "categoria";
+        marcarAtivo("[data-cat-part-dimensao]", btn);
+        renderizarGraficoCategoriasParticipacao();
+      });
+    });
+
+    document.querySelectorAll("[data-cat-part-metrica]").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        estado.categorias.participacaoMetrica = btn.dataset.catPartMetrica || "volume";
+        marcarAtivo("[data-cat-part-metrica]", btn);
+        renderizarGraficoCategoriasParticipacao();
+      });
+    });
+
+    document.querySelectorAll("[data-cat-tornado-dimensao]").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        estado.categorias.tornadoDimensao = btn.dataset.catTornadoDimensao || "categoria";
+        marcarAtivo("[data-cat-tornado-dimensao]", btn);
+        renderizarGraficoCategoriasTornado();
+      });
+    });
+
+    document.querySelectorAll("[data-cat-detalhe-dimensao]").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        estado.categorias.detalheDimensao = btn.dataset.catDetalheDimensao || "categoria";
+        estado.categorias.detalheSort = { campo: "", direcao: "" };
+        marcarAtivo("[data-cat-detalhe-dimensao]", btn);
+        renderizarTabelaCategoriasDetalhe();
+      });
+    });
+
+    document.getElementById("theadCategoriasDetalhe")?.addEventListener("click", function(e) {
+      const th = e.target.closest("th[data-sort-categorias]");
+      if (!th) return;
+      alternarOrdenacaoCategoriasDetalhe(th.dataset.sortCategorias || "");
+    });
+
+    document.getElementById("btnEstoqueJanelaAnterior")?.addEventListener("click", function() {
+      moverJanelaEstoque(-1);
+    });
+    document.getElementById("btnEstoqueJanelaProxima")?.addEventListener("click", function() {
+      moverJanelaEstoque(1);
+    });
+    document.getElementById("btnLimparSelecaoGraficoEstoque")?.addEventListener("click", function() {
+      estado.estoque.periodoSelecionado = "";
+      if (pacote.modoAgregado) carregarResumoEstoqueDashboard(true);
+      else atualizarDashboard();
+    });
+    document.getElementById("btnLimparSelecaoItemEstoque")?.addEventListener("click", function() {
+      estado.estoque.itemSelecionado = "";
+      if (pacote.modoAgregado) carregarResumoEstoqueDashboard(true);
+      else atualizarDashboard();
+    });
+    document.getElementById("btnInfoEstoque")?.addEventListener("click", abrirInfoEstoque);
+    document.getElementById("btnFecharInfoEstoque")?.addEventListener("click", fecharInfoEstoque);
+    document.getElementById("modalInfoEstoque")?.addEventListener("click", function(e) {
+      if (e.target.id === "modalInfoEstoque") fecharInfoEstoque();
+    });
+    document.getElementById("btnInfoVendas")?.addEventListener("click", abrirInfoVendas);
+    document.getElementById("btnFecharInfoVendas")?.addEventListener("click", fecharInfoVendas);
+    document.getElementById("modalInfoVendas")?.addEventListener("click", function(e) {
+      if (e.target.id === "modalInfoVendas") fecharInfoVendas();
+    });
+
+    document.getElementById("btnExportarDashboard")?.addEventListener("click", exportarPDF);
+    window.addEventListener("resize", redimensionarGrafico);
+  }
+
+  function alternarSelecaoMultipla(btn, campo, manter) {
+    const valorBtn = campo === "metricas" ? btn.dataset.estoqueMetrica : btn.dataset.estoqueTipo;
+    if (!valorBtn) return;
+
+    let lista = estado.estoque[campo].slice();
+    if (manter) {
+      if (lista.includes(valorBtn)) {
+        lista = lista.filter(function(valor) { return valor !== valorBtn; });
+      } else {
+        lista.push(valorBtn);
+      }
+      if (!lista.length) lista = [valorBtn];
+    } else {
+      lista = [valorBtn];
+    }
+
+    estado.estoque[campo] = lista;
+    estado.estoque.janelaInicio = null;
+    estado.estoque.periodoSelecionado = "";
+
+    const selector = campo === "metricas" ? "[data-estoque-metrica]" : "[data-estoque-tipo]";
+    document.querySelectorAll(selector).forEach(function(item) {
+      const valorItem = campo === "metricas" ? item.dataset.estoqueMetrica : item.dataset.estoqueTipo;
+      item.classList.toggle("ativo", lista.includes(valorItem));
+    });
+
+    if (pacote.modoAgregado) renderizarResumoEstoqueDashboard();
+    else atualizarDashboard();
+  }
+
+  function alternarSelecaoMetricasVendas(btn, manter) {
+    const valorBtn = btn.dataset.metrica;
+    if (!valorBtn) return;
+
+    let lista = (estado.metricas || [estado.metrica || "volume"]).slice();
+    if (manter) {
+      if (lista.includes(valorBtn)) {
+        lista = lista.filter(function(valor) { return valor !== valorBtn; });
+      } else {
+        lista.push(valorBtn);
+      }
+      if (!lista.length) lista = [valorBtn];
+    } else {
+      lista = [valorBtn];
+    }
+
+    estado.metricas = lista;
+    estado.metrica = lista[0] || "volume";
+
+    document.querySelectorAll("[data-metrica]").forEach(function(item) {
+      item.classList.toggle("ativo", lista.includes(item.dataset.metrica));
+    });
+
+    if (pacote.modoAgregado) renderizarResumoVendasDashboard();
+    else atualizarDashboard();
+  }
+
+  function marcarAtivo(selector, alvo) {
+    document.querySelectorAll(selector).forEach(function(btn) {
+      btn.classList.toggle("ativo", btn === alvo);
+    });
+  }
+
+  function trocarVisao(visao) {
+    if (!visao) return;
+    estado.visao = visao;
+
+    document.querySelectorAll(".dashboard-nav-btn").forEach(function(btn) {
+      btn.classList.toggle("ativo", btn.dataset.visao === visao);
+    });
+
+    document.querySelectorAll(".dashboard-visao").forEach(function(painel) {
+      painel.classList.toggle("ativo", painel.dataset.painel === visao);
+    });
+
+    redimensionarGrafico();
+    if (visao === "vendas" && pacote.modoAgregado && !pacote.vendasResumo) {
+      carregarResumoVendasDashboard(true);
+    }
+    if (visao === "estoque" && pacote.modoAgregado && !pacote.estoqueResumo) {
+      carregarResumoEstoqueDashboard(true);
+    }
+    if (visao === "clientes" && !pacote.modoAgregado && !pacote.clientesResumo) {
+      calcularResumoClientesLocal();
+      renderizarResumoClientesDashboard();
+    } else if (visao === "clientes" && !pacote.clientesResumo) {
+      carregarResumoClientesDashboard(true);
+    }
+    if (visao === "clientes" && pacote.clientesResumo) {
+      renderizarResumoClientesDashboard();
+    }
+    if (visao === "categorias" && !pacote.modoAgregado && !pacote.categoriasResumo) {
+      calcularResumoCategoriasLocal();
+      renderizarResumoCategoriasDashboard();
+    } else if (visao === "categorias" && !pacote.categoriasResumo) {
+      carregarResumoCategoriasDashboard(true);
+    }
+    if (visao === "categorias" && pacote.categoriasResumo) {
+      renderizarResumoCategoriasDashboard();
+    }
+  }
+
+  function trocarPaginaClientes(pagina) {
+    if (!pagina) return;
+    estado.clientes.pagina = pagina;
+
+    document.querySelectorAll("[data-clientes-pagina]").forEach(function(btn) {
+      btn.classList.toggle("ativo", btn.dataset.clientesPagina === pagina);
+    });
+
+    document.querySelectorAll("[data-clientes-painel]").forEach(function(painel) {
+      painel.classList.toggle("ativo", painel.dataset.clientesPainel === pagina);
+    });
+
+    if (pagina === "pagina2") {
+      setTimeout(function() {
+        renderizarPagina2Clientes();
+        if (estado.clientes.chartRegiao) estado.clientes.chartRegiao.resize();
+      }, 60);
+    }
+  }
+
+  function trocarPaginaCategorias(pagina) {
+    if (!pagina) return;
+    estado.categorias.pagina = pagina;
+
+    document.querySelectorAll("[data-categorias-pagina]").forEach(function(btn) {
+      btn.classList.toggle("ativo", btn.dataset.categoriasPagina === pagina);
+    });
+
+    document.querySelectorAll("[data-categorias-painel]").forEach(function(painel) {
+      painel.classList.toggle("ativo", painel.dataset.categoriasPainel === pagina);
+    });
+
+    if (pagina === "pagina1") {
+      setTimeout(function() {
+        renderizarResumoCategoriasDashboard();
+        if (estado.categorias.chartParticipacao) estado.categorias.chartParticipacao.resize();
+        if (estado.categorias.chartTornado) estado.categorias.chartTornado.resize();
+      }, 60);
+    } else if (pagina === "pagina2") {
+      setTimeout(renderizarTabelaCategoriasDetalhe, 60);
+    }
+  }
+
+  function preencherFiltros() {
+    configurarDropdownFiltro("filtroProdutoDash", "listaFiltroProdutoDash", opcoesProdutosFiltro());
+    configurarDropdownFiltro("filtroFornecedorDash", "listaFiltroFornecedorDash", pacote.filtros?.fornecedores || []);
+    configurarDropdownFiltro("filtroCategoriaDash", "listaFiltroCategoriaDash", pacote.filtros?.categorias || []);
+    configurarDropdownFiltro("filtroSubcategoriaDash", "listaFiltroSubcategoriaDash", pacote.filtros?.subcategorias || []);
+    configurarDropdownFiltro("filtroFilialDash", "listaFiltroFilialDash", pacote.filtros?.filiais || []);
+    configurarDropdownFiltro("filtroClienteDash", "listaFiltroClienteDash", pacote.filtros?.clientes || []);
+    configurarDropdownFiltro("filtroCidadeClienteDash", "listaFiltroCidadeClienteDash", pacote.filtros?.cidadesClientes || []);
+    configurarDropdownFiltro("filtroBairroClienteDash", "listaFiltroBairroClienteDash", pacote.filtros?.bairrosClientes || []);
+    configurarDropdownFiltro("filtroClasseClienteDash", "listaFiltroClasseClienteDash", pacote.filtros?.classesClientes || [
+      { id: "A", nome: "Clientes A" },
+      { id: "B", nome: "Clientes B" },
+      { id: "C", nome: "Clientes C" }
+    ]);
+
+    setValueCampo("filtroProdutoDash", estado.filtros.produtoNome);
+    setValueCampo("filtroFornecedorDash", estado.filtros.fornecedorNome);
+    setValueCampo("filtroCategoriaDash", estado.filtros.categoriaNome);
+    setValueCampo("filtroSubcategoriaDash", estado.filtros.subcategoriaNome);
+    setValueCampo("filtroFilialDash", estado.filtros.filialNome);
+    setValueCampo("filtroClienteDash", estado.filtrosClientes.clienteNome);
+    setValueCampo("filtroCidadeClienteDash", estado.filtrosClientes.cidadeNome);
+    setValueCampo("filtroBairroClienteDash", estado.filtrosClientes.bairroNome);
+    setValueCampo("filtroClasseClienteDash", estado.filtrosClientes.classeNome);
+    setValueCampo("filtroPeriodoDash", estado.visao === "clientes" ? estado.filtrosClientes.periodo : estado.filtros.periodo);
+  }
+
+  function opcoesProdutosFiltro() {
+    const produtos = pacote.modoAgregado ? (pacote.filtros?.produtos || []) : (pacote.produtos || []);
+    return produtos
+      .map(function(produto) {
+        return {
+          id: String(produto.id || produto.idProduto || ""),
+          nome: String(produto.nome || produto.idProduto || produto.id || "")
+        };
+      })
+      .filter(function(item) {
+        return item.id && item.nome;
+      })
+      .sort(function(a, b) {
+        return a.nome.localeCompare(b.nome, "pt-BR");
+      });
+  }
+
+  function configurarDropdownFiltro(inputId, listaId, opcoes) {
+    const input = document.getElementById(inputId);
+    const lista = document.getElementById(listaId);
+    if (!input || !lista) return;
+
+    input._opcoesFiltroDashboard = opcoes || [];
+
+    if (input.dataset.dropdownConfigurado === "S") {
+      renderizarDropdownFiltro(input, lista);
+      return;
+    }
+
+    input.dataset.dropdownConfigurado = "S";
+    input.addEventListener("focus", function() {
+      renderizarDropdownFiltro(input, lista);
+    });
+    input.addEventListener("click", function() {
+      renderizarDropdownFiltro(input, lista);
+    });
+    input.addEventListener("input", function() {
+      input.dataset.valorSelecionado = "";
+      renderizarDropdownFiltro(input, lista);
+    });
+  }
+
+  function renderizarDropdownFiltro(input, lista) {
+    const termo = normalizarTexto(input.value);
+    const opcoes = (input._opcoesFiltroDashboard || []).filter(function(opcao) {
+      return !termo || normalizarTexto(opcao.nome).includes(termo);
+    }).slice(0, 80);
+
+    lista.innerHTML = "";
+    if (!opcoes.length) {
+      lista.style.display = "none";
+      return;
+    }
+
+    opcoes.forEach(function(opcao) {
+      const li = document.createElement("li");
+      li.textContent = opcao.nome;
+      li.addEventListener("mousedown", function(e) {
+        e.preventDefault();
+        input.value = opcao.nome;
+        input.dataset.valorSelecionado = opcao.id;
+        lista.style.display = "none";
+      });
+      lista.appendChild(li);
+    });
+
+    lista.style.display = "block";
+  }
+
+  function resolverOpcaoFiltro(opcoes, texto) {
+    const nome = String(texto || "").trim();
+    if (!nome) return { id: "", nome: "" };
+
+    const nomeNormalizado = normalizarTexto(nome);
+    const encontrada = (opcoes || []).find(function(opcao) {
+      return normalizarTexto(opcao.nome) === nomeNormalizado;
+    });
+
+    return encontrada ? { id: String(encontrada.id || ""), nome: encontrada.nome || nome } : { id: "__SEM_RESULTADO__", nome: nome };
+  }
+
+  function normalizarTexto(texto) {
+    return String(texto || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim()
+      .toLowerCase();
+  }
+
+  function configurarFechamentoDropdowns() {
+    if (document.body.dataset.dropdownDashboardConfigurado === "S") return;
+    document.body.dataset.dropdownDashboardConfigurado = "S";
+
+    document.addEventListener("click", function(e) {
+      if (e.target.closest("#modalFiltrosDashboard .dropdown-container")) return;
+      document.querySelectorAll("#modalFiltrosDashboard .sugestoes").forEach(function(lista) {
+        lista.style.display = "none";
+      });
+    });
+  }
+
+  function configurarCalendarioPeriodo() {
+    configurarFechamentoDropdowns();
+
+    const input = document.getElementById("filtroPeriodoDash");
+    if (!input || !window.M || !M.Datepicker || input.dataset.datepickerConfigurado === "S") return;
+
+    input.dataset.datepickerConfigurado = "S";
+    const i18nBR = {
+      cancel: "Cancelar",
+      clear: "Limpar",
+      done: "OK",
+      months: ["Janeiro","Fevereiro","Marco","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"],
+      monthsShort: ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"],
+      weekdays: ["Domingo","Segunda","Terca","Quarta","Quinta","Sexta","Sabado"],
+      weekdaysShort: ["Dom","Seg","Ter","Qua","Qui","Sex","Sab"],
+      weekdaysAbbrev: ["D","S","T","Q","Q","S","S"]
+    };
+
+    initDatepickerRangeDashboard(input, i18nBR);
+  }
+
+  function initDatepickerRangeDashboard(input, i18nBR) {
+    const fmt = function(d) {
+      const dd = String(d.getDate()).padStart(2, "0");
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      return dd + "/" + mm + "/" + d.getFullYear();
+    };
+
+    let start = null;
+    let end = null;
+    const instance = M.Datepicker.init(input, {
+      format: "dd/mm/yyyy",
+      maxDate: new Date(),
+      autoClose: false,
+      showClearBtn: true,
+      yearRange: 100,
+      i18n: i18nBR,
+      onOpen: function() {
+        const rangeAtual = datasPeriodoAnalise(input.value);
+        start = rangeAtual.start;
+        end = rangeAtual.end;
+        setTimeout(function() {
+          highlightRangeDashboard(instance, start, end);
+        }, 0);
+      },
+      onSelect: function(date) {
+        if (!start || (start && end)) {
+          start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+          end = null;
+          input.value = fmt(start) + " - ";
+          setTimeout(function() {
+            highlightRangeDashboard(instance, start, end);
+          }, 0);
+          return;
+        }
+
+        const picked = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        if (picked.getTime() < start.getTime()) {
+          end = start;
+          start = picked;
+        } else {
+          end = picked;
+        }
+
+        input.value = fmt(start) + " - " + fmt(end);
+        setTimeout(function() {
+          highlightRangeDashboard(instance, start, end);
+        }, 0);
+        instance.close();
+      }
+    });
+
+    input.addEventListener("input", function() {
+      if (!input.value.trim()) {
+        start = null;
+        end = null;
+        setTimeout(function() {
+          highlightRangeDashboard(instance, start, end);
+        }, 0);
+      }
+    });
+  }
+
+  function datasPeriodoAnalise(texto) {
+    const bruto = String(texto || "").trim();
+    if (!bruto) return { start: null, end: null };
+
+    const partes = bruto.split(/\s+-\s+/).filter(Boolean);
+    return {
+      start: parseDataBR(partes[0]),
+      end: parseDataBR(partes[1])
+    };
+  }
+
+  function highlightRangeDashboard(instance, start, end) {
+    if (!instance || !instance.datepickerEl) return;
+
+    const tds = instance.datepickerEl.querySelectorAll(".datepicker-table td");
+    tds.forEach(function(td) {
+      td.classList.remove("range-start", "range-end", "range-between");
+    });
+    if (!start) return;
+
+    const startT = start.getTime();
+    const endT = end ? end.getTime() : null;
+
+    tds.forEach(function(td) {
+      const btn = td.querySelector(".datepicker-day-button");
+      if (!btn) return;
+
+      const day = parseInt(btn.getAttribute("data-day"), 10);
+      const month = parseInt(btn.getAttribute("data-month"), 10);
+      const year = parseInt(btn.getAttribute("data-year"), 10);
+      if (Number.isNaN(day) || Number.isNaN(month) || Number.isNaN(year)) return;
+
+      const cellT = new Date(year, month, day).getTime();
+      if (!endT && cellT === startT) td.classList.add("range-start");
+      if (endT && cellT === startT) td.classList.add("range-start");
+      if (endT && cellT === endT) td.classList.add("range-end");
+      if (endT && cellT > startT && cellT < endT) td.classList.add("range-between");
+    });
+  }
+
+  function abrirFiltros() {
+    if (!podeUsarFiltrosDashboard()) return;
+    atualizarCamposFiltroDashboard();
+    preencherFiltros();
+    document.getElementById("modalFiltrosDashboard")?.classList.add("ativo");
+  }
+
+  function fecharFiltros() {
+    document.getElementById("modalFiltrosDashboard")?.classList.remove("ativo");
+  }
+
+  function atualizarCamposFiltroDashboard() {
+    document.querySelectorAll("#modalFiltrosDashboard [data-filtro-grupo]").forEach(function(campo) {
+      const grupos = String(campo.dataset.filtroGrupo || "").split(/\s+/).filter(Boolean);
+      campo.style.display = grupos.includes(estado.visao) ? "flex" : "none";
+    });
+    setValueCampo("filtroPeriodoDash", estado.visao === "clientes" ? estado.filtrosClientes.periodo : estado.filtros.periodo);
+  }
+
+  function aplicarFiltros() {
+    if (!podeUsarFiltrosDashboard()) return;
+
+    if (estado.visao === "clientes") {
+      aplicarFiltrosClientes();
+      return;
+    }
+
+    const visao = estado.visao;
+    const produto = campoFiltroPermitido("produto", visao) ? resolverOpcaoFiltro(opcoesProdutosFiltro(), valor("filtroProdutoDash")) : { id: "", nome: "" };
+    const fornecedor = campoFiltroPermitido("fornecedor", visao) ? resolverOpcaoFiltro(pacote.filtros?.fornecedores || [], valor("filtroFornecedorDash")) : { id: "", nome: "" };
+    const categoria = campoFiltroPermitido("categoria", visao) ? resolverOpcaoFiltro(pacote.filtros?.categorias || [], valor("filtroCategoriaDash")) : { id: "", nome: "" };
+    const subcategoria = campoFiltroPermitido("subcategoria", visao) ? resolverOpcaoFiltro(pacote.filtros?.subcategorias || [], valor("filtroSubcategoriaDash")) : { id: "", nome: "" };
+    const filial = campoFiltroPermitido("filial", visao) ? resolverOpcaoFiltro(pacote.filtros?.filiais || [], valor("filtroFilialDash")) : { id: "", nome: "" };
+
+    estado.filtros = {
+      produto: produto.id,
+      produtoNome: produto.nome,
+      fornecedor: fornecedor.id,
+      fornecedorNome: fornecedor.nome,
+      categoria: categoria.id,
+      categoriaNome: categoria.nome,
+      subcategoria: subcategoria.id,
+      subcategoriaNome: subcategoria.nome,
+      filial: filial.id,
+      filialNome: filial.nome,
+      periodo: valor("filtroPeriodoDash")
+    };
+    estado.periodoSelecionado = "";
+    estado.itemSelecionado = "";
+    estado.janelaInicio = null;
+    estado.estoque.periodoSelecionado = "";
+    estado.estoque.itemSelecionado = "";
+    estado.estoque.janelaInicio = null;
+    fecharFiltros();
+    if (!pacote.modoAgregado && estado.visao === "categorias") {
+      calcularResumoCategoriasLocal();
+      renderizarResumoCategoriasDashboard();
+      return;
+    }
+    if (pacote.modoAgregado) {
+      pacote.vendasResumo = null;
+      pacote.estoqueResumo = null;
+      if (estado.visao === "estoque") carregarResumoEstoqueDashboard(true);
+      else if (estado.visao === "categorias") carregarResumoCategoriasDashboard(true);
+      else carregarResumoVendasDashboard(true);
+      return;
+    }
+    atualizarDashboard();
+  }
+
+  function aplicarFiltrosClientes() {
+    if (!podeUsarFiltrosDashboard()) return;
+
+    const cliente = resolverOpcaoFiltro(pacote.filtros?.clientes || [], valor("filtroClienteDash"));
+    const cidade = resolverOpcaoFiltro(pacote.filtros?.cidadesClientes || [], valor("filtroCidadeClienteDash"));
+    const bairro = resolverOpcaoFiltro(pacote.filtros?.bairrosClientes || [], valor("filtroBairroClienteDash"));
+    const classe = resolverOpcaoFiltro(pacote.filtros?.classesClientes || [], valor("filtroClasseClienteDash"));
+
+    estado.filtrosClientes = {
+      cliente: cliente.id,
+      clienteNome: cliente.nome,
+      cidade: cidade.id,
+      cidadeNome: cidade.nome,
+      bairro: bairro.id,
+      bairroNome: bairro.nome,
+      classe: classe.id,
+      classeNome: classe.nome,
+      periodo: valor("filtroPeriodoDash")
+    };
+    estado.clientes.classeSelecionada = classe.id && classe.id !== "__SEM_RESULTADO__" ? classe.id : "";
+
+    fecharFiltros();
+    if (pacote.modoAgregado) {
+      pacote.clientesResumo = null;
+      carregarResumoClientesDashboard(true);
+      return;
+    }
+    calcularResumoClientesLocal();
+    renderizarResumoClientesDashboard();
+  }
+
+  function limparFiltros() {
+    if (!podeUsarFiltrosDashboard()) return;
+
+    const campos = camposFiltroPorVisao(estado.visao).map(function(campo) {
+      return campo.id;
+    });
+    campos.forEach(function(id) {
+      const el = document.getElementById(id);
+      if (el) el.value = "";
+    });
+    aplicarFiltros();
+  }
+
+  function camposFiltroPorVisao(visao) {
+    const todos = {
+      produto: { id: "filtroProdutoDash" },
+      categoria: { id: "filtroCategoriaDash" },
+      subcategoria: { id: "filtroSubcategoriaDash" },
+      fornecedor: { id: "filtroFornecedorDash" },
+      filial: { id: "filtroFilialDash" },
+      cliente: { id: "filtroClienteDash" },
+      classe: { id: "filtroClasseClienteDash" },
+      cidade: { id: "filtroCidadeClienteDash" },
+      bairro: { id: "filtroBairroClienteDash" },
+      periodo: { id: "filtroPeriodoDash" }
+    };
+
+    const mapa = {
+      vendas: ["produto", "categoria", "filial", "subcategoria", "periodo"],
+      estoque: ["produto", "categoria", "subcategoria", "fornecedor", "filial", "periodo"],
+      clientes: ["cliente", "classe", "cidade", "bairro", "periodo"],
+      categorias: ["categoria", "subcategoria", "filial", "periodo"]
+    };
+
+    return (mapa[visao] || mapa.vendas).map(function(chave) {
+      return todos[chave];
+    });
+  }
+
+  function campoFiltroPermitido(campo, visao) {
+    return camposFiltroPorVisao(visao).some(function(item) {
+      if (campo === "produto") return item.id === "filtroProdutoDash";
+      if (campo === "categoria") return item.id === "filtroCategoriaDash";
+      if (campo === "subcategoria") return item.id === "filtroSubcategoriaDash";
+      if (campo === "fornecedor") return item.id === "filtroFornecedorDash";
+      if (campo === "filial") return item.id === "filtroFilialDash";
+      return false;
+    });
+  }
+
+  function podeUsarFiltrosDashboard() {
+    if (estado.dadosBrutos.pronto) return true;
+    if (estado.dadosBrutos.erro) return true;
+
+    if (estado.dadosBrutos.carregando) {
+      toastWarn("Aguarde a conclusao da carga completa dos dados para usar os filtros.");
+      return false;
+    }
+
+    iniciarCargaDadosBrutosDashboard(false);
+    toastWarn("Os filtros serao liberados quando a carga completa dos dados terminar.");
+    return false;
+  }
+
+  function atualizarDadosDashboard() {
+    document.getElementById("loadingDashboard")?.classList.add("ativo");
+
+    if (pacote.modoAgregado || estado.dadosBrutos.pronto) {
+      carregarResumosRapidosTodasVisoes(function() {
+        document.getElementById("loadingDashboard")?.classList.remove("ativo");
+        pacote.modoAgregado = true;
+        atualizarDashboard();
+        toastOk("Atualização concluída");
+        iniciarCargaDadosBrutosDashboard(true);
+      });
+      return;
+    }
+
+    if (pacote.modoAgregado) {
+      const finalizar = function() {
+        document.getElementById("loadingDashboard")?.classList.remove("ativo");
+        toastOk("AtualizaÃ§Ã£o concluÃ­da");
+      };
+
+      if (estado.visao === "estoque") carregarResumoEstoqueDashboard(false, finalizar);
+      else if (estado.visao === "clientes") carregarResumoClientesDashboard(false, finalizar);
+      else if (estado.visao === "categorias") carregarResumoCategoriasDashboard(false, finalizar);
+      else carregarResumoVendasDashboard(false, finalizar);
+      return;
+    }
+
+    google.script.run
+      .withSuccessHandler(function(resp) {
+        document.getElementById("loadingDashboard")?.classList.remove("ativo");
+
+        if (!resp || !resp.sucesso) {
+          toastErr(resp?.mensagem || "Erro ao atualizar dados do dashboard.");
+          return;
+        }
+
+        pacote = resp;
+        estado.periodoSelecionado = "";
+        estado.itemSelecionado = "";
+        estado.janelaInicio = null;
+        estado.estoque.periodoSelecionado = "";
+        estado.estoque.itemSelecionado = "";
+        estado.estoque.janelaInicio = null;
+        montarIndices();
+        preencherFiltros();
+        document.getElementById("dashboardAtualizacao").textContent = "Ultima atualizacao: " + (pacote.atualizadoEm || "-");
+        document.getElementById("dashboardEstoqueAtualizacao").textContent = "Ultima atualizacao: " + (pacote.atualizadoEm || "-");
+        atualizarDashboard();
+        toastOk("Atualização concluída");
+      })
+      .withFailureHandler(function(erro) {
+        document.getElementById("loadingDashboard")?.classList.remove("ativo");
+        console.error(erro);
+        toastErr("Erro no Apps Script ao atualizar dashboard.");
+      })
+      .buscarPacoteDashboardOperacional();
+  }
+
+  function carregarResumosRapidosTodasVisoes(callback) {
+    const tarefas = [
+      ["VENDAS", opcoesResumoVendas()],
+      ["ESTOQUE", opcoesResumoEstoque()],
+      ["CLIENTES", opcoesResumoClientes()],
+      ["CATEGORIAS", opcoesResumoCategorias()]
+    ];
+    let pendentes = tarefas.length;
+    let houveErro = false;
+
+    tarefas.forEach(function(tarefa) {
+      google.script.run
+        .withSuccessHandler(function(resp) {
+          if (!resp || !resp.sucesso) {
+            houveErro = true;
+          } else {
+            receberResumoRapidoDashboard(tarefa[0], resp);
+          }
+          finalizarTarefa();
+        })
+        .withFailureHandler(function(erro) {
+          houveErro = true;
+          console.error(erro);
+          finalizarTarefa();
+        })
+        .buscarPacoteDashboardOperacional(tarefa[0], tarefa[1]);
+    });
+
+    function finalizarTarefa() {
+      pendentes--;
+      if (pendentes > 0) return;
+      if (houveErro) toastWarn("Alguns resumos nao puderam ser atualizados agora.");
+      if (callback) callback(!houveErro);
+    }
+  }
+
+  function receberResumoRapidoDashboard(modo, resp) {
+    if (modo === "VENDAS") {
+      pacote.vendasResumo = resp;
+      document.getElementById("dashboardAtualizacao").textContent = "Ultima atualizacao: " + (resp.atualizadoEm || "-");
+    }
+    if (modo === "ESTOQUE") {
+      pacote.estoqueResumo = resp;
+      document.getElementById("dashboardEstoqueAtualizacao").textContent = "Ultima atualizacao: " + (resp.atualizadoEm || "-");
+    }
+    if (modo === "CLIENTES") {
+      pacote.clientesResumo = resp;
+      document.getElementById("dashboardClientesAtualizacao").textContent = "Ultima atualizacao: " + (resp.atualizadoEm || "-");
+      if (resp.filtros) pacote.filtros = Object.assign({}, pacote.filtros || {}, resp.filtros);
+    }
+    if (modo === "CATEGORIAS") {
+      pacote.categoriasResumo = resp;
+      document.getElementById("dashboardCategoriasAtualizacao").textContent = "Ultima atualizacao: " + (resp.atualizadoEm || "-");
+    }
+  }
+
+  function iniciarCargaDadosBrutosDashboard(forcar) {
+    if (estado.dadosBrutos.carregando) return;
+    if (estado.dadosBrutos.pronto && !forcar) return;
+
+    estado.dadosBrutos.carregando = true;
+    estado.dadosBrutos.pronto = false;
+    estado.dadosBrutos.erro = false;
+    if (!forcar) estado.dadosBrutos.pacote = null;
+    atualizarProgressoDadosBrutos(10);
+    alternarFiltrosDashboardBloqueados(true);
+    document.getElementById("dashboardCargaBruta")?.classList.add("ativo");
+
+    if (estado.dadosBrutos.timer) clearInterval(estado.dadosBrutos.timer);
+    estado.dadosBrutos.timer = setInterval(function() {
+      const atual = Number(estado.dadosBrutos.progresso || 10);
+      const proximo = atual < 70 ? atual + 9 : atual < 90 ? atual + 3 : 92;
+      atualizarProgressoDadosBrutos(proximo);
+    }, 900);
+
+    google.script.run
+      .withSuccessHandler(function(resp) {
+        finalizarCargaDadosBrutosDashboard();
+
+        if (!resp || !resp.sucesso) {
+          estado.dadosBrutos.erro = true;
+          document.getElementById("dashboardCargaBruta")?.classList.remove("ativo");
+          alternarFiltrosDashboardBloqueados(false);
+          toastWarn(resp?.mensagem || "Nao foi possivel carregar os dados completos. Os resumos continuam disponiveis.");
+          return;
+        }
+
+        estado.dadosBrutos.pacote = resp;
+        estado.dadosBrutos.pronto = true;
+        ativarDadosBrutosDashboard(resp);
+        atualizarProgressoDadosBrutos(100);
+        setTimeout(function() {
+          document.getElementById("dashboardCargaBruta")?.classList.remove("ativo");
+        }, 450);
+        alternarFiltrosDashboardBloqueados(false);
+      })
+      .withFailureHandler(function(erro) {
+        finalizarCargaDadosBrutosDashboard();
+        estado.dadosBrutos.erro = true;
+        document.getElementById("dashboardCargaBruta")?.classList.remove("ativo");
+        alternarFiltrosDashboardBloqueados(false);
+        console.error(erro);
+        toastWarn("Nao foi possivel carregar os dados completos. Os resumos continuam disponiveis.");
+      })
+      .buscarPacoteDashboardOperacional("BRUTO", {});
+  }
+
+  function ativarDadosBrutosDashboard(resp) {
+    const resumos = {
+      vendasResumo: pacote.vendasResumo || null,
+      estoqueResumo: pacote.estoqueResumo || null,
+      clientesResumo: pacote.clientesResumo || null,
+      categoriasResumo: pacote.categoriasResumo || null
+    };
+    const filtros = Object.assign({}, pacote.filtros || {}, resp.filtros || {});
+
+    pacote = Object.assign({}, pacote, resp, resumos, {
+      modoAgregado: false,
+      filtros: filtros
+    });
+
+    montarIndices();
+    preencherFiltros();
+    atualizarDashboard();
+  }
+
+  function finalizarCargaDadosBrutosDashboard() {
+    estado.dadosBrutos.carregando = false;
+    if (estado.dadosBrutos.timer) {
+      clearInterval(estado.dadosBrutos.timer);
+      estado.dadosBrutos.timer = null;
+    }
+  }
+
+  function atualizarProgressoDadosBrutos(valor) {
+    estado.dadosBrutos.progresso = Math.max(0, Math.min(100, Number(valor || 0)));
+    const barra = document.getElementById("dashboardCargaBrutaBarra");
+    if (barra) barra.style.width = estado.dadosBrutos.progresso + "%";
+  }
+
+  function alternarFiltrosDashboardBloqueados(bloqueado) {
+    [
+      "btnAbrirFiltrosDashboard",
+      "btnLimparFiltrosTopoDashboard",
+      "btnAbrirFiltrosEstoqueDashboard",
+      "btnLimparFiltrosEstoqueDashboard",
+      "btnAbrirFiltrosClientesDashboard",
+      "btnLimparFiltrosClientesDashboard",
+      "btnAbrirFiltrosCategoriasDashboard",
+      "btnLimparFiltrosCategoriasDashboard",
+      "btnAplicarFiltrosDashboard"
+    ].forEach(function(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.toggle("dashboard-controle-bloqueado", bloqueado);
+      el.disabled = !!bloqueado;
+    });
+  }
+
+  function valor(id) {
+    return String(document.getElementById(id)?.value || "").trim();
+  }
+
+  function setValueCampo(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.value = value || "";
+  }
+
+  function opcoesResumoVendas() {
+    return {
+      filtros: estado.filtros,
+      periodoGrafico: estado.periodo,
+      periodoSelecionado: estado.periodoSelecionado,
+      itemSelecionado: estado.itemSelecionado,
+      sort: estado.sort
+    };
+  }
+
+  function opcoesResumoEstoque() {
+    return {
+      filtros: estado.filtros,
+      periodoGrafico: estado.estoque.periodo,
+      periodoSelecionado: estado.estoque.periodoSelecionado,
+      itemSelecionado: estado.estoque.itemSelecionado,
+      sort: estado.estoque.sort
+    };
+  }
+
+  function opcoesResumoClientes() {
+    const filtros = Object.assign({}, estado.filtrosClientes, { classe: "" });
+    return {
+      filtros: filtros,
+      metricaAbc: estado.clientes.metricaAbc,
+      sort: estado.clientes.sort
+    };
+  }
+
+  function opcoesResumoCategorias() {
+    return {
+      filtros: {
+        categoria: estado.filtros.categoria,
+        categoriaNome: estado.filtros.categoriaNome,
+        subcategoria: estado.filtros.subcategoria,
+        subcategoriaNome: estado.filtros.subcategoriaNome,
+        filial: estado.filtros.filial,
+        filialNome: estado.filtros.filialNome,
+        periodo: estado.filtros.periodo
+      }
+    };
+  }
+
+  function carregarResumoVendasDashboard(mostrarLoading, callback) {
+    if (mostrarLoading) document.getElementById("loadingDashboard")?.classList.add("ativo");
+
+    google.script.run
+      .withSuccessHandler(function(resp) {
+        if (mostrarLoading) document.getElementById("loadingDashboard")?.classList.remove("ativo");
+
+        if (!resp || !resp.sucesso) {
+          toastErr(resp?.mensagem || "Erro ao carregar resumo de vendas.");
+          if (callback) callback(false);
+          return;
+        }
+
+        pacote.vendasResumo = resp;
+        document.getElementById("dashboardAtualizacao").textContent = "Ultima atualizacao: " + (resp.atualizadoEm || "-");
+        renderizarResumoVendasDashboard();
+        if (callback) callback(true);
+      })
+      .withFailureHandler(function(erro) {
+        if (mostrarLoading) document.getElementById("loadingDashboard")?.classList.remove("ativo");
+        console.error(erro);
+        toastErr("Erro no Apps Script ao carregar vendas.");
+        if (callback) callback(false);
+      })
+      .buscarPacoteDashboardOperacional("VENDAS", opcoesResumoVendas());
+  }
+
+  function carregarResumoEstoqueDashboard(mostrarLoading, callback) {
+    if (mostrarLoading) document.getElementById("loadingDashboard")?.classList.add("ativo");
+
+    google.script.run
+      .withSuccessHandler(function(resp) {
+        if (mostrarLoading) document.getElementById("loadingDashboard")?.classList.remove("ativo");
+
+        if (!resp || !resp.sucesso) {
+          toastErr(resp?.mensagem || "Erro ao carregar resumo de estoque.");
+          if (callback) callback(false);
+          return;
+        }
+
+        pacote.estoqueResumo = resp;
+        document.getElementById("dashboardEstoqueAtualizacao").textContent = "Ultima atualizacao: " + (resp.atualizadoEm || "-");
+        renderizarResumoEstoqueDashboard();
+        if (callback) callback(true);
+      })
+      .withFailureHandler(function(erro) {
+        if (mostrarLoading) document.getElementById("loadingDashboard")?.classList.remove("ativo");
+        console.error(erro);
+        toastErr("Erro no Apps Script ao carregar estoque.");
+        if (callback) callback(false);
+      })
+      .buscarPacoteDashboardOperacional("ESTOQUE", opcoesResumoEstoque());
+  }
+
+  function carregarResumoClientesDashboard(mostrarLoading, callback) {
+    if (mostrarLoading) document.getElementById("loadingDashboard")?.classList.add("ativo");
+
+    google.script.run
+      .withSuccessHandler(function(resp) {
+        if (mostrarLoading) document.getElementById("loadingDashboard")?.classList.remove("ativo");
+
+        if (!resp || !resp.sucesso) {
+          toastErr(resp?.mensagem || "Erro ao carregar resumo de clientes.");
+          if (callback) callback(false);
+          return;
+        }
+
+        pacote.clientesResumo = resp;
+        if (resp.filtros) {
+          pacote.filtros = Object.assign({}, pacote.filtros || {}, resp.filtros);
+          preencherFiltros();
+        }
+        document.getElementById("dashboardClientesAtualizacao").textContent = "Ultima atualizacao: " + (resp.atualizadoEm || "-");
+        renderizarResumoClientesDashboard();
+        if (callback) callback(true);
+      })
+      .withFailureHandler(function(erro) {
+        if (mostrarLoading) document.getElementById("loadingDashboard")?.classList.remove("ativo");
+        console.error(erro);
+        toastErr("Erro no Apps Script ao carregar clientes.");
+        if (callback) callback(false);
+      })
+      .buscarPacoteDashboardOperacional("CLIENTES", opcoesResumoClientes());
+  }
+
+  function carregarResumoCategoriasDashboard(mostrarLoading, callback) {
+    if (mostrarLoading) document.getElementById("loadingDashboard")?.classList.add("ativo");
+
+    google.script.run
+      .withSuccessHandler(function(resp) {
+        if (mostrarLoading) document.getElementById("loadingDashboard")?.classList.remove("ativo");
+
+        if (!resp || !resp.sucesso) {
+          toastErr(resp?.mensagem || "Erro ao carregar resumo de categorias.");
+          if (callback) callback(false);
+          return;
+        }
+
+        pacote.categoriasResumo = resp;
+        document.getElementById("dashboardCategoriasAtualizacao").textContent = "Ultima atualizacao: " + (resp.atualizadoEm || "-");
+        renderizarResumoCategoriasDashboard();
+        if (callback) callback(true);
+      })
+      .withFailureHandler(function(erro) {
+        if (mostrarLoading) document.getElementById("loadingDashboard")?.classList.remove("ativo");
+        console.error(erro);
+        toastErr("Erro no Apps Script ao carregar categorias.");
+        if (callback) callback(false);
+      })
+      .buscarPacoteDashboardOperacional("CATEGORIAS", opcoesResumoCategorias());
+  }
+
+  function renderizarResumoVendasDashboard() {
+    const resumo = pacote.vendasResumo;
+    if (!resumo || !resumo.sucesso) return;
+
+    const cards = resumo.cards || {};
+    setText("cardVolume", formatQtd(cards.carrinhos));
+    setText("cardFaturamento", formatBRL(cards.faturamento));
+    setText("cardLucro", formatBRL(cards.lucro));
+    setText("cardLucroMargem", "Margem " + formatPercent(cards.margem));
+    setText("cardTicket", formatBRL(cards.ticket));
+
+    preencherCardComposto("Volume", resumo.compostos?.volume || { ultimo: 0, media: 0, crescimento: 0, qtdMeses: 0 }, false);
+    preencherCardComposto("Lucro", resumo.compostos?.lucro || { ultimo: 0, media: 0, crescimento: 0, qtdMeses: 0 }, true);
+    renderizarGraficoVendasResumo();
+    renderizarTabelaVendasResumo();
+  }
+
+  function renderizarGraficoVendasResumo() {
+    const resumo = pacote.vendasResumo || {};
+    const agregados = Array.isArray(resumo.grafico) ? resumo.grafico : [];
+    const limite = estado.periodo === "mes" ? 12 : 14;
+    const maxInicio = Math.max(0, agregados.length - limite);
+    if (estado.janelaInicio === null || estado.janelaInicio === undefined) estado.janelaInicio = maxInicio;
+    if (estado.janelaInicio > maxInicio) estado.janelaInicio = maxInicio;
+    if (estado.janelaInicio < 0) estado.janelaInicio = 0;
+
+    const visiveis = agregados.slice(estado.janelaInicio, estado.janelaInicio + limite);
+    estado.periodosVisiveis = visiveis;
+    setText("tituloGrafico", tituloMetricasVendas() + (estado.periodo === "mes" ? " por mes" : " por dia"));
+    document.getElementById("legendaMediaMensal")?.classList.toggle("oculta", estado.periodo !== "mes");
+
+    if (!estado.chart) {
+      estado.chart = echarts.init(document.getElementById("graficoVendas"));
+      estado.chart.on("click", function(params) {
+        const item = estado.periodosVisiveis[params.dataIndex];
+        if (!item) return;
+        estado.periodoSelecionado = estado.periodoSelecionado === item.key ? "" : item.key;
+        carregarResumoVendasDashboard(true);
+      });
+    }
+
+    estado.chart.setOption({
+      legend: {
+        show: metricasVendasSelecionadas().length > 1,
+        top: 0,
+        right: 0,
+        textStyle: { color: "#64748b", fontSize: 10 }
+      },
+      grid: { left: 48, right: temVolumeSecundarioVendas() ? 48 : 20, top: metricasVendasSelecionadas().length > 1 ? 38 : 30, bottom: 48 },
+      tooltip: {
+        trigger: "axis",
+        axisPointer: { type: "shadow" },
+        formatter: function(params) {
+          const lista = Array.isArray(params) ? params : [];
+          if (!lista.length) return "";
+          const dado = visiveis[lista[0].dataIndex];
+          let html = "<strong>" + escapeHtml(dado.label) + "</strong>";
+          lista.forEach(function(p) {
+            const metrica = p.seriesId || metricaPorNomeSerieVendas(p.seriesName);
+            html += "<br>" + escapeHtml(p.seriesName) + ": " + formatValorMetrica(p.value, metrica);
+          });
+          return html;
+        }
+      },
+      xAxis: {
+        type: "category",
+        data: visiveis.map(function(item) { return item.label; }),
+        axisTick: { show: false },
+        axisLine: { lineStyle: { color: "#e2e8f0" } },
+        axisLabel: { color: "#334155", fontSize: 10 }
+      },
+      yAxis: montarEixosVendas(),
+      series: montarSeriesVendas(visiveis, agregados)
+    }, true);
+  }
+
+  function metricasVendasSelecionadas() {
+    const lista = Array.isArray(estado.metricas) && estado.metricas.length ? estado.metricas : [estado.metrica || "volume"];
+    return lista.filter(function(metrica, index) {
+      return ["volume", "faturamento", "lucro"].includes(metrica) && lista.indexOf(metrica) === index;
+    });
+  }
+
+  function tituloMetricasVendas() {
+    const lista = metricasVendasSelecionadas();
+    if (lista.length === 1) return rotuloMetrica(lista[0]);
+    return lista.map(rotuloMetrica).join(" / ");
+  }
+
+  function temVolumeSecundarioVendas() {
+    const lista = metricasVendasSelecionadas();
+    return lista.includes("volume") && lista.some(function(metrica) { return metrica !== "volume"; });
+  }
+
+  function indiceEixoMetricaVendas(metrica) {
+    return temVolumeSecundarioVendas() && metrica === "volume" ? 1 : 0;
+  }
+
+  function montarEixosVendas() {
+    const volumeSecundario = temVolumeSecundarioVendas();
+    const apenasVolume = metricasVendasSelecionadas().every(function(metrica) { return metrica === "volume"; });
+    const eixoPrincipal = {
+      type: "value",
+      axisLine: { show: false },
+      splitLine: { lineStyle: { color: "#edf2f7" } },
+      axisLabel: {
+        color: "#64748b",
+        formatter: function(value) {
+          return apenasVolume ? abreviarNumero(value) : abreviarMoeda(value);
+        }
+      }
+    };
+
+    if (!volumeSecundario) return eixoPrincipal;
+
+    return [
+      eixoPrincipal,
+      {
+        type: "value",
+        axisLine: { show: false },
+        splitLine: { show: false },
+        axisLabel: {
+          color: "#64748b",
+          formatter: function(value) { return abreviarNumero(value); }
+        }
+      }
+    ];
+  }
+
+  function montarSeriesVendas(visiveis, agregados) {
+    const cores = {
+      volume: "#b9ddff",
+      faturamento: "#b8f2b0",
+      lucro: "#c8d7ff"
+    };
+
+    return metricasVendasSelecionadas().map(function(metrica) {
+      return {
+        id: metrica,
+        name: rotuloMetrica(metrica),
+        type: "bar",
+        yAxisIndex: indiceEixoMetricaVendas(metrica),
+        data: visiveis.map(function(item) {
+          return {
+            value: item[metrica] || 0,
+            itemStyle: {
+              color: estado.periodoSelecionado === item.key ? "#1d4ed8" : cores[metrica],
+              borderRadius: [7, 7, 0, 0]
+            }
+          };
+        }),
+        barCategoryGap: visiveis.length <= 2 ? "34%" : "24%",
+        barGap: "18%",
+        emphasis: { itemStyle: { color: "#42DCFA" } },
+        label: {
+          show: true,
+          position: "top",
+          color: "#334155",
+          fontSize: 9,
+          formatter: function(params) {
+            return metrica === "volume" ? abreviarNumero(params.value) : abreviarMoeda(params.value);
+          }
+        },
+        markLine: montarLinhaMediaMensalVendas(agregados, metrica)
+      };
+    });
+  }
+
+  function calcularMediaMensalVendas(agregados, metrica) {
+    if (estado.periodo !== "mes" || !agregados.length) return null;
+    return agregados.reduce(function(acc, item) {
+      return acc + Number(item[metrica] || 0);
+    }, 0) / agregados.length;
+  }
+
+  function montarLinhaMediaMensalVendas(agregados, metrica) {
+    const media = calcularMediaMensalVendas(agregados, metrica);
+    if (media === null) return undefined;
+    return {
+      silent: true,
+      symbol: "none",
+      lineStyle: { color: metrica === "volume" ? "#87c9ff" : "#8af084", width: 2, type: "solid" },
+      label: {
+        show: true,
+        position: "insideEndTop",
+        distance: [0, 8],
+        formatter: function() { return formatValorMetrica(media, metrica); },
+        color: metrica === "volume" ? "#1d4ed8" : "#249b20",
+        fontWeight: 800,
+        fontSize: 10
+      },
+      data: [{ yAxis: media }]
+    };
+  }
+
+  function renderizarTabelaVendasResumo() {
+    const tbody = document.getElementById("tbodyItensVendas");
+    if (!tbody) return;
+    const lista = ordenarLista((pacote.vendasResumo?.tabela || []).slice());
+    tbody.innerHTML = "";
+
+    if (!lista.length) {
+      const trVazio = document.createElement("tr");
+      trVazio.innerHTML = '<td colspan="8">Nenhum item encontrado para o contexto atual.</td>';
+      tbody.appendChild(trVazio);
+      return;
+    }
+
+    const resumo = lista.reduce(function(acc, item) {
+      acc.volume += Number(item.volume || 0);
+      acc.faturamento += Number(item.faturamento || 0);
+      acc.lucro += Number(item.lucro || 0);
+      return acc;
+    }, { volume: 0, faturamento: 0, lucro: 0 });
+    const margem = resumo.faturamento > 0 ? (resumo.lucro / resumo.faturamento) * 100 : 0;
+    const escalas = calcularEscalasTabela(lista);
+
+    lista.forEach(function(item) {
+      const tr = document.createElement("tr");
+      tr.dataset.idProduto = item.idProduto;
+      tr.classList.toggle("selecionada", estado.itemSelecionado === item.idProduto);
+      tr.innerHTML =
+        "<td>" + escapeHtml(item.nome) + "</td>" +
+        "<td>" + escapeHtml(item.categoria) + "</td>" +
+        "<td>" + escapeHtml(item.subcategoria) + "</td>" +
+        "<td style=\"" + heatmapStyle(item.volume, escalas.volume) + "\">" + escapeHtml(formatQtd(item.volume)) + "</td>" +
+        "<td style=\"" + heatmapStyle(item.faturamento, escalas.faturamento) + "\">" + escapeHtml(formatBRL(item.faturamento)) + "</td>" +
+        "<td style=\"" + heatmapStyle(item.lucro, escalas.lucro) + "\">" + escapeHtml(formatBRL(item.lucro)) + "</td>" +
+        "<td style=\"" + heatmapStyle(item.lucroMedio, escalas.lucroMedio) + "\">" + escapeHtml(formatBRL(item.lucroMedio)) + "</td>" +
+        "<td style=\"" + heatmapStyle(item.margemMedia, escalas.margemMedia) + "\">" + escapeHtml(formatPercent(item.margemMedia)) + "</td>";
+      tr.addEventListener("click", function() {
+        estado.itemSelecionado = estado.itemSelecionado === item.idProduto ? "" : item.idProduto;
+        carregarResumoVendasDashboard(true);
+      });
+      tbody.appendChild(tr);
+    });
+
+    const trTotal = document.createElement("tr");
+    trTotal.className = "linha-total-dashboard";
+    trTotal.innerHTML = [
+      "Total", "", "",
+      formatQtd(resumo.volume),
+      formatBRL(resumo.faturamento),
+      formatBRL(resumo.lucro),
+      formatBRL(lista.length ? resumo.lucro / lista.length : 0),
+      formatPercent(margem)
+    ].map(function(valor) { return "<td>" + escapeHtml(valor) + "</td>"; }).join("");
+    tbody.appendChild(trTotal);
+  }
+
+  function renderizarResumoEstoqueDashboard() {
+    const resumo = pacote.estoqueResumo;
+    if (!resumo || !resumo.sucesso) return;
+    const cards = resumo.cards || {};
+    setText("cardEstQtdEntrada", formatQtd(cards.qtdEntrada));
+    setText("cardEstValorEntrada", formatBRL(cards.valorEntrada));
+    setText("cardEstFrete", formatBRL(cards.frete));
+    setText("cardEstOutrasCustas", formatBRL(cards.outrasCustas));
+    setText("cardEstQtdSaidaVenda", formatQtd(cards.qtdSaidaVenda));
+    setText("cardEstCustoSaidaVenda", formatBRL(cards.custoSaidaVenda));
+    setText("cardEstLucroSaidaVenda", formatBRL(cards.lucroSaidaVenda));
+    setText("cardEstQtdSaidaPerda", formatQtd(cards.qtdSaidaPerda));
+    setText("cardEstValorSaidaPerda", formatBRL(cards.valorSaidaPerda));
+    renderizarGraficoEstoqueResumo();
+    renderizarTabelaEstoqueResumo();
+  }
+
+  function renderizarGraficoEstoqueResumo() {
+    const agregados = Array.isArray(pacote.estoqueResumo?.grafico) ? pacote.estoqueResumo.grafico : [];
+    const limite = estado.estoque.periodo === "mes" ? 12 : 14;
+    const maxInicio = Math.max(0, agregados.length - limite);
+    if (estado.estoque.janelaInicio === null || estado.estoque.janelaInicio === undefined) estado.estoque.janelaInicio = maxInicio;
+    if (estado.estoque.janelaInicio > maxInicio) estado.estoque.janelaInicio = maxInicio;
+    if (estado.estoque.janelaInicio < 0) estado.estoque.janelaInicio = 0;
+
+    const visiveis = agregados.slice(estado.estoque.janelaInicio, estado.estoque.janelaInicio + limite);
+    estado.estoque.periodosVisiveis = visiveis;
+    const metricaLabel = estado.estoque.metricas.length > 1 ? "Volume e faturamento" : rotuloMetricaEstoque(estado.estoque.metricas[0]);
+    setText("tituloGraficoEstoque", metricaLabel + (estado.estoque.periodo === "mes" ? " por mes" : " por dia"));
+
+    if (!estado.estoque.chart) {
+      estado.estoque.chart = echarts.init(document.getElementById("graficoEstoque"));
+      estado.estoque.chart.on("click", function(params) {
+        const item = estado.estoque.periodosVisiveis[params.dataIndex];
+        if (!item) return;
+        estado.estoque.periodoSelecionado = estado.estoque.periodoSelecionado === item.key ? "" : item.key;
+        carregarResumoEstoqueDashboard(true);
+      });
+    }
+
+    estado.estoque.chart.setOption({
+      legend: { show: true, top: 0, right: 0, textStyle: { color: "#64748b", fontSize: 10 } },
+      grid: { left: 48, right: 20, top: 34, bottom: 42 },
+      tooltip: {
+        trigger: "axis",
+        axisPointer: { type: "shadow" },
+        formatter: function(params) {
+          const lista = Array.isArray(params) ? params : [];
+          if (!lista.length) return "";
+          const dado = visiveis[lista[0].dataIndex];
+          let html = "<strong>" + escapeHtml(dado.label) + "</strong>";
+          lista.forEach(function(p) {
+            html += "<br>" + escapeHtml(p.seriesName) + ": " + formatValorMetricaEstoque(p.value, p.seriesName);
+          });
+          return html;
+        }
+      },
+      xAxis: {
+        type: "category",
+        data: visiveis.map(function(item) { return item.label; }),
+        axisTick: { show: false },
+        axisLine: { lineStyle: { color: "#e2e8f0" } },
+        axisLabel: { color: "#334155", fontSize: 10 }
+      },
+      yAxis: {
+        type: "value",
+        axisLine: { show: false },
+        splitLine: { lineStyle: { color: "#edf2f7" } },
+        axisLabel: { color: "#64748b", formatter: function(value) { return abreviarNumero(value); } }
+      },
+      series: montarSeriesEstoque(visiveis)
+    }, true);
+  }
+
+  function renderizarTabelaEstoqueResumo() {
+    const tbody = document.getElementById("tbodyItensEstoque");
+    if (!tbody) return;
+
+    const lista = ordenarListaEstoque((pacote.estoqueResumo?.tabela || []).slice());
+    tbody.innerHTML = "";
+
+    if (!lista.length) {
+      const trVazio = document.createElement("tr");
+      trVazio.innerHTML = '<td colspan="13">Nenhum item encontrado para o contexto atual.</td>';
+      tbody.appendChild(trVazio);
+      return;
+    }
+
+    const escalas = calcularEscalasEstoque(lista);
+    const total = lista.reduce(function(acc, item) {
+      acc.qtdEntrada += Number(item.qtdEntrada || 0);
+      acc.valorEntrada += Number(item.valorEntrada || 0);
+      acc.qtdSaidaVenda += Number(item.qtdSaidaVenda || 0);
+      acc.custoSaidaVenda += Number(item.custoSaidaVenda || 0);
+      acc.lucroSaidaVenda += Number(item.lucroSaidaVenda || 0);
+      acc.qtdSaidaPerda += Number(item.qtdSaidaPerda || 0);
+      acc.valorSaidaPerda += Number(item.valorSaidaPerda || 0);
+      acc.saldo += Number(item.saldo || 0);
+      return acc;
+    }, { qtdEntrada: 0, valorEntrada: 0, qtdSaidaVenda: 0, custoSaidaVenda: 0, lucroSaidaVenda: 0, qtdSaidaPerda: 0, valorSaidaPerda: 0, saldo: 0 });
+
+    lista.forEach(function(item) {
+      const tr = document.createElement("tr");
+      tr.dataset.idProduto = item.idProduto;
+      tr.classList.toggle("selecionada", estado.estoque.itemSelecionado === item.idProduto);
+      const statusSaldo = statusSaldoEstoque(item);
+      tr.innerHTML =
+        "<td>" + escapeHtml(item.nome) + "</td>" +
+        "<td>" + escapeHtml(item.categoria) + "</td>" +
+        "<td>" + escapeHtml(item.subcategoria) + "</td>" +
+        "<td>" + escapeHtml(formatQtd(item.estMinimo)) + "</td>" +
+        "<td>" + escapeHtml(formatQtd(item.estMaximo)) + "</td>" +
+        "<td class=\"" + statusSaldo.classe + "\">" + statusSaldo.icone + " " + escapeHtml(formatQtd(item.saldo)) + "</td>" +
+        "<td>" + escapeHtml(formatQtd(item.qtdEntrada)) + "</td>" +
+        "<td>" + escapeHtml(formatBRL(item.valorEntrada)) + "</td>" +
+        "<td style=\"" + heatmapStyle(item.qtdSaidaVenda, escalas.qtdSaidaVenda) + "\">" + escapeHtml(formatQtd(item.qtdSaidaVenda)) + "</td>" +
+        "<td style=\"" + heatmapStyle(item.custoSaidaVenda, escalas.custoSaidaVenda) + "\">" + escapeHtml(formatBRL(item.custoSaidaVenda)) + "</td>" +
+        "<td style=\"" + heatmapStyle(item.lucroSaidaVenda, escalas.lucroSaidaVenda) + "\">" + escapeHtml(formatBRL(item.lucroSaidaVenda)) + "</td>" +
+        "<td style=\"" + heatmapStyleVermelho(item.qtdSaidaPerda, escalas.qtdSaidaPerda) + "\">" + escapeHtml(formatQtd(item.qtdSaidaPerda)) + "</td>" +
+        "<td style=\"" + heatmapStyleVermelho(item.valorSaidaPerda, escalas.valorSaidaPerda) + "\">" + escapeHtml(formatBRL(item.valorSaidaPerda)) + "</td>";
+      tr.addEventListener("click", function() {
+        estado.estoque.itemSelecionado = estado.estoque.itemSelecionado === item.idProduto ? "" : item.idProduto;
+        carregarResumoEstoqueDashboard(true);
+      });
+      tbody.appendChild(tr);
+    });
+
+    const trTotal = document.createElement("tr");
+    trTotal.className = "linha-total-dashboard";
+    trTotal.innerHTML = [
+      "Total", "", "", "", "",
+      formatQtd(total.saldo),
+      formatQtd(total.qtdEntrada),
+      formatBRL(total.valorEntrada),
+      formatQtd(total.qtdSaidaVenda),
+      formatBRL(total.custoSaidaVenda),
+      formatBRL(total.lucroSaidaVenda),
+      formatQtd(total.qtdSaidaPerda),
+      formatBRL(total.valorSaidaPerda)
+    ].map(function(valor) { return "<td>" + escapeHtml(valor) + "</td>"; }).join("");
+    tbody.appendChild(trTotal);
+  }
+
+  function renderizarResumoClientesDashboard() {
+    const resumo = pacote.clientesResumo;
+    if (!resumo || !resumo.sucesso) return;
+
+    const cards = resumo.cards || {};
+    setText("cardClientesAtivos", formatQtd(cards.clientesAtivos));
+    setText("cardClientesNovos", formatQtd(cards.novosClientes));
+    setText("cardClientesInativos", cards.clientesInativosMensagem || formatQtd(cards.clientesInativos));
+    setText("cardClientesInativosInfo", cards.clientesInativosMensagem ? "Aplique um periodo para calcular" : "Sem compras no periodo");
+    setText("cardClientesTicket", formatBRL(cards.ticketMedio));
+    setText("cardClientesFrequencia", formatDecimal(cards.frequenciaMedia));
+    setText("cardClientesFrequenciaInfo", cards.frequenciaLabel || "Compras por cliente");
+
+    estado.clientes.tabela = Array.isArray(resumo.tabela) ? resumo.tabela.slice() : [];
+    aplicarClassesClientesPorMetrica();
+    const abc = obterAbcClientesAtual();
+    preencherCardClasseCliente("A", abc.A || {});
+    preencherCardClasseCliente("B", abc.B || {});
+    preencherCardClasseCliente("C", abc.C || {});
+    atualizarCardsClasseSelecionada();
+
+    renderizarTabelaClientesResumo();
+    renderizarPagina2Clientes();
+    atualizarIndicadoresOrdenacaoClientes();
+  }
+
+  function preencherCardClasseCliente(classe, dados) {
+    setText("cardClasse" + classe + "Qtd", formatQtd(dados.clientes));
+    setText("cardClasse" + classe + "Base", formatPercent(dados.percentBase) + " da base");
+    setText("cardClasse" + classe + "Fat", formatPercent(dados.percentMetrica) + " do " + rotuloMetricaClientes(estado.clientes.metricaAbc).toLowerCase());
+  }
+
+  function aplicarMetricaClientesLocal() {
+    aplicarClassesClientesPorMetrica();
+    const abc = obterAbcClientesAtual();
+    preencherCardClasseCliente("A", abc.A || {});
+    preencherCardClasseCliente("B", abc.B || {});
+    preencherCardClasseCliente("C", abc.C || {});
+    atualizarCardsClasseSelecionada();
+    renderizarTabelaClientesResumo();
+    atualizarIndicadoresOrdenacaoClientes();
+  }
+
+  function obterAbcClientesAtual() {
+    const resumo = pacote.clientesResumo || {};
+    const porMetrica = resumo.abcPorMetrica || {};
+    return porMetrica[estado.clientes.metricaAbc] || resumo.abc || {};
+  }
+
+  function aplicarClassesClientesPorMetrica() {
+    const metrica = estado.clientes.metricaAbc || "volume";
+    (estado.clientes.tabela || []).forEach(function(item) {
+      const classes = item.classesPorMetrica || {};
+      item.classe = classes[metrica] || item.classe || "C";
+      item.valorMetricaAbc = valorMetricaClienteLocal(item, metrica);
+    });
+  }
+
+  function valorMetricaClienteLocal(item, metrica) {
+    if (metrica === "faturamento") return Number(item.faturamento || 0);
+    if (metrica === "lucro") return Number(item.lucro || 0);
+    return Number(item.qtdCompras || 0);
+  }
+
+  function atualizarCardsClasseSelecionada() {
+    document.querySelectorAll("[data-classe-clientes]").forEach(function(card) {
+      card.classList.toggle("selecionado", card.dataset.classeClientes === estado.clientes.classeSelecionada);
+    });
+  }
+
+  function renderizarTabelaClientesResumo() {
+    const tbody = document.getElementById("tbodyClientesABC");
+    if (!tbody) return;
+
+    const classeSelecionada = estado.clientes.classeSelecionada;
+    const lista = ordenarListaClientes((estado.clientes.tabela || []).filter(function(item) {
+      return !classeSelecionada || String(item.classe || "").toUpperCase() === classeSelecionada;
+    }).slice());
+    tbody.innerHTML = "";
+
+    if (!lista.length) {
+      const trVazio = document.createElement("tr");
+      trVazio.innerHTML = '<td colspan="8">Nenhum cliente encontrado para o contexto atual.</td>';
+      tbody.appendChild(trVazio);
+      renderizarRodapeClientesResumo([]);
+      return;
+    }
+
+    lista.forEach(function(item) {
+      const classe = String(item.classe || "C").toUpperCase();
+      const tr = document.createElement("tr");
+      tr.innerHTML =
+        "<td>" + escapeHtml(item.nome || "SEM CLIENTE") + "</td>" +
+        "<td>" + escapeHtml(item.cidade || "-") + "</td>" +
+        "<td>" + escapeHtml(formatQtd(item.qtdCompras)) + "</td>" +
+        "<td>" + escapeHtml(formatBRL(item.faturamento)) + "</td>" +
+        "<td>" + escapeHtml(formatBRL(item.lucro)) + "</td>" +
+        "<td>" + escapeHtml(formatBRL(item.ticketMedio)) + "</td>" +
+        "<td>" + escapeHtml(formatDecimal(item.frequenciaMensal)) + "</td>" +
+        '<td><span class="cliente-classe-tag cliente-classe-' + escapeHtml(classe.toLowerCase()) + '">' + escapeHtml(classe) + "</span></td>";
+      tbody.appendChild(tr);
+    });
+
+    renderizarRodapeClientesResumo(lista);
+  }
+
+  function renderizarRodapeClientesResumo(lista) {
+    const tr = document.getElementById("tfootClientesABC");
+    if (!tr) return;
+
+    const total = (lista || []).reduce(function(acc, item) {
+      acc.qtdCompras += Number(item.qtdCompras || 0);
+      acc.faturamento += Number(item.faturamento || 0);
+      acc.lucro += Number(item.lucro || 0);
+      acc.ticketMedio += Number(item.ticketMedio || 0);
+      acc.frequenciaMensal += Number(item.frequenciaMensal || 0);
+      return acc;
+    }, { qtdCompras: 0, faturamento: 0, lucro: 0, ticketMedio: 0, frequenciaMensal: 0 });
+
+    const qtd = (lista || []).length;
+    const valores = [
+      qtd ? "Total (" + formatQtd(qtd) + ")" : "Total",
+      "",
+      formatQtd(total.qtdCompras),
+      formatBRL(total.faturamento),
+      formatBRL(total.lucro),
+      formatBRL(qtd ? total.ticketMedio / qtd : 0),
+      formatDecimal(qtd ? total.frequenciaMensal / qtd : 0),
+      ""
+    ];
+    tr.innerHTML = valores.map(function(valor) {
+      return "<td>" + escapeHtml(valor) + "</td>";
+    }).join("");
+  }
+
+  function renderizarPagina2Clientes() {
+    renderizarGraficoClientesRegiao();
+    renderizarTabelaClientesAniversariantes();
+    renderizarTabelaClientesSemComprar();
+  }
+
+  function renderizarGraficoClientesRegiao() {
+    const alvo = document.getElementById("graficoClientesRegiao");
+    if (!alvo) return;
+    if (!alvo.offsetParent) return;
+
+    const resumo = pacote.clientesResumo || {};
+    const dimensao = estado.clientes.regiaoDimensao === "bairro" ? "bairro" : "municipio";
+    const metrica = estado.clientes.regiaoMetrica || "volume";
+    const regioes = resumo.regioes || {};
+    const lista = ((regioes[dimensao] || []).slice()).sort(function(a, b) {
+      return Number(b[metrica] || 0) - Number(a[metrica] || 0);
+    });
+
+    alvo.style.height = "100%";
+    const qtdBarras = Math.max(1, lista.length);
+    const barWidth = Math.max(2, Math.min(18, Math.floor(190 / qtdBarras)));
+    const labelFont = qtdBarras > 70 ? 6 : (qtdBarras > 45 ? 7 : (qtdBarras > 25 ? 8 : 9));
+    const axisFont = qtdBarras > 70 ? 6 : (qtdBarras > 45 ? 7 : (qtdBarras > 25 ? 8 : 10));
+
+    if (!estado.clientes.chartRegiao) {
+      estado.clientes.chartRegiao = echarts.init(alvo);
+    }
+    estado.clientes.chartRegiao.off("click");
+    estado.clientes.chartRegiao.on("click", function(params) {
+      const item = lista[params.dataIndex];
+      if (!item) return;
+      selecionarRegiaoClientes(dimensao, item.nome);
+    });
+
+    if (!lista.length) {
+      estado.clientes.chartRegiao.setOption({
+        title: { text: "Nenhuma regiao encontrada", left: "center", top: "middle", textStyle: { color: "#94a3b8", fontSize: 13 } },
+        xAxis: { show: false },
+        yAxis: { show: false },
+        series: []
+      }, true);
+      return;
+    }
+
+    estado.clientes.chartRegiao.setOption({
+      grid: { left: qtdBarras > 45 ? 96 : 128, right: 34, top: 10, bottom: 20 },
+      tooltip: {
+        trigger: "axis",
+        axisPointer: { type: "shadow" },
+        formatter: function(params) {
+          const p = Array.isArray(params) ? params[0] : params;
+          const item = lista[p.dataIndex] || {};
+          return "<strong>" + escapeHtml(item.nome || "") + "</strong><br>" +
+            escapeHtml(rotuloMetricaClientes(metrica)) + ": " + escapeHtml(formatValorMetricaClientes(item[metrica], metrica));
+        }
+      },
+      xAxis: {
+        type: "value",
+        axisLine: { show: false },
+        splitLine: { lineStyle: { color: "#edf2f7" } },
+        axisLabel: {
+          color: "#64748b",
+          formatter: function(value) {
+            return metrica === "volume" ? abreviarNumero(value) : abreviarMoeda(value);
+          }
+        }
+      },
+      yAxis: {
+        type: "category",
+        inverse: true,
+        data: lista.map(function(item) { return item.nome; }),
+        axisTick: { show: false },
+        axisLine: { show: false },
+        axisLabel: {
+          color: "#334155",
+          fontSize: axisFont,
+          width: qtdBarras > 45 ? 86 : 116,
+          overflow: "truncate",
+          interval: 0
+        }
+      },
+      series: [{
+        name: rotuloMetricaClientes(metrica),
+        type: "bar",
+        data: lista.map(function(item) {
+          return {
+            value: item[metrica] || 0,
+            itemStyle: { color: filtroRegiaoClientesAtivo(dimensao, item.nome) ? "#1d8fe8" : (metrica === "lucro" ? "#c8d7ff" : (metrica === "faturamento" ? "#b8f2b0" : "#b9ddff")), borderRadius: [0, 7, 7, 0] }
+          };
+        }),
+        barWidth: barWidth,
+        label: {
+          show: qtdBarras <= 45,
+          position: "right",
+          color: "#334155",
+          fontSize: labelFont,
+          formatter: function(params) { return formatValorMetricaClientes(params.value, metrica); }
+        }
+      }]
+    }, true);
+  }
+
+  function renderizarTabelaClientesAniversariantes() {
+    const tbody = document.getElementById("tbodyClientesAniversariantes");
+    const btn = document.getElementById("btnVerTodosAniversariantes");
+    if (!tbody) return;
+
+    const listaCompleta = Array.isArray(pacote.clientesResumo?.aniversariantes) ? pacote.clientesResumo.aniversariantes : [];
+    const lista = estado.clientes.aniversariantesTodos ? listaCompleta : listaCompleta.slice(0, 10);
+    const maxProximo = lista.length ? Math.max.apply(null, lista.map(function(item) { return Number(item.proximoTS || 0); })) : 0;
+    const minProximo = lista.length ? Math.min.apply(null, lista.map(function(item) { return Number(item.proximoTS || 0); })) : 0;
+    tbody.innerHTML = "";
+
+    if (btn) {
+      btn.textContent = estado.clientes.aniversariantesTodos ? "VER MENOS" : "VER TODOS";
+      btn.style.display = listaCompleta.length > 10 ? "block" : "none";
+    }
+
+    if (!lista.length) {
+      const trVazio = document.createElement("tr");
+      trVazio.innerHTML = '<td colspan="3">Nenhum aniversariante encontrado.</td>';
+      tbody.appendChild(trVazio);
+      return;
+    }
+
+    lista.forEach(function(item) {
+      const tr = document.createElement("tr");
+      const estiloAniversario = heatmapAzulInvertido(Number(item.proximoTS || 0), { min: minProximo, max: maxProximo });
+      tr.innerHTML =
+        "<td>" + escapeHtml(item.nome || "SEM CLIENTE") + "</td>" +
+        "<td>" + escapeHtml(item.cidade || "-") + "</td>" +
+        "<td style=\"" + estiloAniversario + "\">" + escapeHtml(item.aniversario || "-") + "</td>";
+      tbody.appendChild(tr);
+    });
+  }
+
+  function renderizarTabelaClientesSemComprar() {
+    const tbody = document.getElementById("tbodyClientesSemComprar");
+    if (!tbody) return;
+
+    const lista = Array.isArray(pacote.clientesResumo?.semComprar) ? pacote.clientesResumo.semComprar : [];
+    const escalaDias = lista.length ? {
+      min: Math.min.apply(null, lista.map(function(item) { return Number(item.diasSemComprar || 0); })),
+      max: Math.max.apply(null, lista.map(function(item) { return Number(item.diasSemComprar || 0); }))
+    } : { min: 0, max: 0 };
+    tbody.innerHTML = "";
+
+    if (!lista.length) {
+      const trVazio = document.createElement("tr");
+      trVazio.innerHTML = '<td colspan="5">Nenhum cliente encontrado para o contexto atual.</td>';
+      tbody.appendChild(trVazio);
+      return;
+    }
+
+    lista.forEach(function(item) {
+      const tr = document.createElement("tr");
+      tr.innerHTML =
+        "<td>" + escapeHtml(item.nome || "SEM CLIENTE") + "</td>" +
+        "<td>" + escapeHtml(item.cidade || "-") + "</td>" +
+        "<td>" + escapeHtml(item.bairro || "-") + "</td>" +
+        "<td>" + escapeHtml(item.ultimaCompra || "-") + "</td>" +
+        "<td style=\"" + heatmapStyleVermelho(item.diasSemComprar, escalaDias) + "\">" + escapeHtml(formatQtd(item.diasSemComprar)) + "</td>";
+      tbody.appendChild(tr);
+    });
+  }
+
+  function heatmapAzulInvertido(valor, escala) {
+    const min = Number(escala && escala.min || 0);
+    const max = Number(escala && escala.max || 0);
+    const n = Number(valor || 0);
+    const ratio = max === min ? 1 : 1 - Math.max(0, Math.min(1, (n - min) / (max - min)));
+    const intensidade = Math.max(0.1, Math.min(0.36, 0.1 + ratio * 0.26));
+    return "background: rgba(66, 220, 250, " + intensidade.toFixed(3) + "); color: #0f3f56; font-weight: 800;";
+  }
+
+  function formatValorMetricaClientes(valor, metrica) {
+    return metrica === "volume" ? formatQtd(valor) : formatBRL(valor);
+  }
+
+  function selecionarRegiaoClientes(dimensao, nome) {
+    const valorSelecionado = String(nome || "").trim();
+    if (!valorSelecionado) return;
+
+    if (dimensao === "bairro") {
+      const jaSelecionado = normalizarTexto(estado.filtrosClientes.bairro) === normalizarTexto(valorSelecionado);
+      estado.filtrosClientes.bairro = jaSelecionado ? "" : valorSelecionado;
+      estado.filtrosClientes.bairroNome = jaSelecionado ? "" : valorSelecionado;
+      if (!jaSelecionado) {
+        estado.filtrosClientes.cidade = "";
+        estado.filtrosClientes.cidadeNome = "";
+      }
+    } else {
+      const jaSelecionado = normalizarTexto(estado.filtrosClientes.cidade) === normalizarTexto(valorSelecionado);
+      estado.filtrosClientes.cidade = jaSelecionado ? "" : valorSelecionado;
+      estado.filtrosClientes.cidadeNome = jaSelecionado ? "" : valorSelecionado;
+      if (!jaSelecionado) {
+        estado.filtrosClientes.bairro = "";
+        estado.filtrosClientes.bairroNome = "";
+      }
+    }
+
+    estado.clientes.classeSelecionada = "";
+    if (pacote.modoAgregado) {
+      pacote.clientesResumo = null;
+      carregarResumoClientesDashboard(true);
+    } else {
+      calcularResumoClientesLocal();
+      renderizarResumoClientesDashboard();
+    }
+    preencherFiltros();
+  }
+
+  function filtroRegiaoClientesAtivo(dimensao, nome) {
+    const valor = String(nome || "").trim();
+    if (!valor) return false;
+    if (dimensao === "bairro") return normalizarTexto(estado.filtrosClientes.bairro) === normalizarTexto(valor);
+    return normalizarTexto(estado.filtrosClientes.cidade) === normalizarTexto(valor);
+  }
+
+  function calcularResumoClientesLocal() {
+    const filtros = estado.filtrosClientes || {};
+    const periodo = parsePeriodoAnalise(filtros.periodo);
+    const temPeriodo = !!(periodo.inicioTS || periodo.fimTS);
+    const metricaAbc = ["volume", "faturamento", "lucro"].includes(estado.clientes.metricaAbc) ? estado.clientes.metricaAbc : "volume";
+    const mapaClientes = montarMapaClientesLocal();
+    const custoPorVenda = calcularCustoPorVendaLocal();
+    const primeiraCompraTS = {};
+    const vendasHistoricas = [];
+
+    (pacote.vendas || []).forEach(function(venda) {
+      const idCliente = String(venda.idCliente || "").trim();
+      if (!idCliente) return;
+      const cliente = mapaClientes.get(idCliente) || { idCliente: idCliente, nome: idCliente, cidade: "", bairro: "", dataNascimento: "" };
+      if (!passaFiltroClienteLocal(cliente, filtros)) return;
+
+      const dataTS = Number(venda.dataTS || 0);
+      const item = {
+        idCarrinho: String(venda.idCarrinho || ""),
+        idCliente: idCliente,
+        cliente: cliente,
+        faturamento: Number(venda.faturamento || 0),
+        lucro: Number(venda.faturamento || 0) - Number(custoPorVenda.get(String(venda.idCarrinho)) || 0),
+        dataTS: dataTS,
+        mesKey: venda.mesKey || ""
+      };
+
+      vendasHistoricas.push(item);
+      if (dataTS && (!primeiraCompraTS[idCliente] || dataTS < primeiraCompraTS[idCliente])) primeiraCompraTS[idCliente] = dataTS;
+    });
+
+    const vendasContexto = vendasHistoricas.filter(function(venda) {
+      if (periodo.inicioTS && Number(venda.dataTS || 0) < periodo.inicioTS) return false;
+      if (periodo.fimTS && Number(venda.dataTS || 0) > periodo.fimTS) return false;
+      return true;
+    });
+
+    const regioesMunicipio = new Map();
+    const regioesBairro = new Map();
+    const ultimaCompraPorCliente = new Map();
+
+    vendasContexto.forEach(function(venda) {
+      acumularRegiaoClienteLocal(regioesMunicipio, venda.cliente.cidade || "SEM MUNICIPIO", venda);
+      acumularRegiaoClienteLocal(regioesBairro, venda.cliente.bairro || "SEM BAIRRO", venda);
+
+      const atual = ultimaCompraPorCliente.get(venda.idCliente);
+      if (!atual || Number(venda.dataTS || 0) > Number(atual.dataTS || 0)) ultimaCompraPorCliente.set(venda.idCliente, venda);
+    });
+
+    const hojeBase = new Date();
+    const hojeInicio = new Date(hojeBase.getFullYear(), hojeBase.getMonth(), hojeBase.getDate()).getTime();
+    const aniversariantes = (pacote.clientes || []).filter(function(cliente) {
+      return passaFiltroClienteLocal(cliente, filtros);
+    }).map(function(cliente) {
+      const info = infoAniversarioLocal(cliente.dataNascimento, hojeBase);
+      if (!info) return null;
+      return {
+        idCliente: cliente.idCliente,
+        nome: cliente.nome || cliente.idCliente,
+        cidade: cliente.cidade || "",
+        aniversario: info.label,
+        proximoTS: info.proximoTS
+      };
+    }).filter(Boolean).sort(function(a, b) {
+      return Number(a.proximoTS || 0) - Number(b.proximoTS || 0);
+    });
+
+    const semComprar = Array.from(ultimaCompraPorCliente.values()).map(function(venda) {
+      const dataUltima = venda.dataTS ? new Date(venda.dataTS) : null;
+      const ultimaInicio = dataUltima ? new Date(dataUltima.getFullYear(), dataUltima.getMonth(), dataUltima.getDate()).getTime() : 0;
+      return {
+        idCliente: venda.idCliente,
+        nome: venda.cliente.nome || venda.idCliente,
+        cidade: venda.cliente.cidade || "",
+        bairro: venda.cliente.bairro || "",
+        ultimaCompra: dataUltima ? formatDataLocal(dataUltima) : "",
+        ultimaCompraTS: Number(venda.dataTS || 0),
+        diasSemComprar: ultimaInicio ? Math.max(0, Math.floor((hojeInicio - ultimaInicio) / 86400000)) : 0
+      };
+    }).sort(function(a, b) {
+      return Number(b.diasSemComprar || 0) - Number(a.diasSemComprar || 0);
+    });
+
+    const tabelaMap = new Map();
+    vendasContexto.forEach(function(venda) {
+      if (!tabelaMap.has(venda.idCliente)) {
+        tabelaMap.set(venda.idCliente, {
+          idCliente: venda.idCliente,
+          nome: venda.cliente.nome || venda.idCliente,
+          cidade: venda.cliente.cidade || "",
+          bairro: venda.cliente.bairro || "",
+          qtdCompras: 0,
+          faturamento: 0,
+          lucro: 0,
+          meses: {}
+        });
+      }
+      const item = tabelaMap.get(venda.idCliente);
+      item.qtdCompras += 1;
+      item.faturamento += Number(venda.faturamento || 0);
+      item.lucro += Number(venda.lucro || 0);
+      if (venda.mesKey) item.meses[venda.mesKey] = true;
+    });
+
+    const tabelaBase = Array.from(tabelaMap.values());
+    tabelaBase.forEach(function(item) {
+      const mesesCliente = Math.max(1, Object.keys(item.meses || {}).length);
+      item.ticketMedio = item.qtdCompras ? item.faturamento / item.qtdCompras : 0;
+      item.frequenciaMensal = item.qtdCompras / mesesCliente;
+      item.classesPorMetrica = {};
+      item.valoresMetricaAbc = {
+        volume: Number(item.qtdCompras || 0),
+        faturamento: Number(item.faturamento || 0),
+        lucro: Number(item.lucro || 0)
+      };
+      delete item.meses;
+    });
+
+    const abcPorMetrica = {
+      volume: calcularAbcClientesLocal(tabelaBase, "volume"),
+      faturamento: calcularAbcClientesLocal(tabelaBase, "faturamento"),
+      lucro: calcularAbcClientesLocal(tabelaBase, "lucro")
+    };
+
+    tabelaBase.forEach(function(item) {
+      item.classe = item.classesPorMetrica[metricaAbc] || "C";
+      item.valorMetricaAbc = valorMetricaClienteLocal(item, metricaAbc);
+    });
+
+    const clientesAtivosSet = {};
+    let carrinhos = 0;
+    let faturamento = 0;
+    let lucro = 0;
+    vendasContexto.forEach(function(venda) {
+      clientesAtivosSet[venda.idCliente] = true;
+      carrinhos += 1;
+      faturamento += Number(venda.faturamento || 0);
+      lucro += Number(venda.lucro || 0);
+    });
+
+    let novosClientes = 0;
+    Object.keys(primeiraCompraTS).forEach(function(idCliente) {
+      const ts = Number(primeiraCompraTS[idCliente] || 0);
+      if (!ts) return;
+      if (!temPeriodo || ((!periodo.inicioTS || ts >= periodo.inicioTS) && (!periodo.fimTS || ts <= periodo.fimTS))) novosClientes += 1;
+    });
+
+    let clientesInativos = 0;
+    if (temPeriodo) {
+      Object.keys(primeiraCompraTS).forEach(function(idCliente) {
+        if (periodo.inicioTS && Number(primeiraCompraTS[idCliente] || 0) >= periodo.inicioTS) return;
+        if (!clientesAtivosSet[idCliente]) clientesInativos += 1;
+      });
+    }
+
+    const qtdClientesAtivos = Object.keys(clientesAtivosSet).length;
+    const mesesFrequencia = temPeriodo ? 1 : qtdMesesDistintosLocal(vendasContexto);
+    const frequenciaMedia = qtdClientesAtivos ? carrinhos / qtdClientesAtivos / mesesFrequencia : 0;
+
+    pacote.clientesResumo = {
+      sucesso: true,
+      atualizadoEm: pacote.atualizadoEm || "",
+      filtros: pacote.filtros || {},
+      cards: {
+        clientesAtivos: qtdClientesAtivos,
+        novosClientes: novosClientes,
+        clientesInativos: temPeriodo ? clientesInativos : 0,
+        clientesInativosMensagem: temPeriodo ? "" : "selecione um periodo",
+        ticketMedio: carrinhos ? faturamento / carrinhos : 0,
+        frequenciaMedia: frequenciaMedia,
+        frequenciaLabel: temPeriodo ? "Compras por cliente no periodo" : "Media mensal por cliente"
+      },
+      totais: { carrinhos: carrinhos, faturamento: faturamento, lucro: lucro, metricaAbc: metricaAbc },
+      abc: abcPorMetrica[metricaAbc] || abcPorMetrica.volume,
+      abcPorMetrica: abcPorMetrica,
+      regioes: {
+        municipio: Array.from(regioesMunicipio.values()).sort(function(a, b) { return Number(b.volume || 0) - Number(a.volume || 0); }),
+        bairro: Array.from(regioesBairro.values()).sort(function(a, b) { return Number(b.volume || 0) - Number(a.volume || 0); })
+      },
+      aniversariantes: aniversariantes,
+      semComprar: semComprar,
+      tabela: tabelaBase
+    };
+  }
+
+  function calcularResumoCategoriasLocal() {
+    const filtros = estado.filtros || {};
+    const periodo = parsePeriodoAnalise(filtros.periodo);
+    const categorias = new Map();
+    const subcategorias = new Map();
+    const crescimentoAtual = new Map();
+    const crescimentoAnterior = new Map();
+    const crescimentoAtualSub = new Map();
+    const crescimentoAnteriorSub = new Map();
+    const nomesCategoriasCrescimento = new Map();
+    const ultimoMesFechado = ultimoMesFechadoLocal();
+    const mesAnterior = deslocarMesKeyLocal(ultimoMesFechado, -1);
+
+    (pacote.itensVenda || []).forEach(function(item) {
+      const venda = estado.mapaVendas.get(String(item.idCarrinho));
+      const produto = estado.mapaProdutos.get(String(item.idProduto));
+      if (!venda || !produto) return;
+      if (filtros.filial && String(venda.idFilial) !== String(filtros.filial)) return;
+      if (filtros.categoria && String(produto.idCategoria) !== String(filtros.categoria)) return;
+      if (filtros.subcategoria && String(produto.idSubcategoria) !== String(filtros.subcategoria)) return;
+
+      const qtd = Number(item.qtd || 0);
+      const faturamento = Number(item.valorVenda || 0);
+      const lucro = faturamento - Number(item.custoTotal || 0);
+      const idCategoria = String(produto.idCategoria || produto.categoria || "SEM CATEGORIA");
+      const idSubcategoria = String(produto.idSubcategoria || produto.subcategoria || "SEM SUBCATEGORIA");
+      nomesCategoriasCrescimento.set(idCategoria, produto.categoria || idCategoria);
+
+      if (venda.mesKey === ultimoMesFechado) {
+        crescimentoAtual.set(idCategoria, (crescimentoAtual.get(idCategoria) || 0) + qtd);
+        crescimentoAtualSub.set(idSubcategoria, (crescimentoAtualSub.get(idSubcategoria) || 0) + qtd);
+      }
+      if (venda.mesKey === mesAnterior) {
+        crescimentoAnterior.set(idCategoria, (crescimentoAnterior.get(idCategoria) || 0) + qtd);
+        crescimentoAnteriorSub.set(idSubcategoria, (crescimentoAnteriorSub.get(idSubcategoria) || 0) + qtd);
+      }
+
+      if (periodo.inicioTS && Number(venda.dataTS || 0) < periodo.inicioTS) return;
+      if (periodo.fimTS && Number(venda.dataTS || 0) > periodo.fimTS) return;
+
+      acumularCategoriaLocal(categorias, idCategoria, produto.categoria || idCategoria, qtd, faturamento, lucro);
+      acumularCategoriaLocal(subcategorias, idSubcategoria, produto.subcategoria || idSubcategoria, qtd, faturamento, lucro, produto.categoria || idCategoria);
+    });
+
+    const listaCategorias = finalizarCategoriasLocal(Array.from(categorias.values()));
+    const listaSubcategorias = finalizarCategoriasLocal(Array.from(subcategorias.values()));
+    const totalVolumeCat = somarCampoLocal(listaCategorias, "volume");
+    const totalVolumeSub = somarCampoLocal(listaSubcategorias, "volume");
+    const topCategoria = maiorPorLocal(listaCategorias, "volume");
+    const topSubcategoria = maiorPorLocal(listaSubcategorias, "volume");
+    const melhorMargem = maiorPorLocal(listaCategorias, "margem");
+    const maiorFaturamento = maiorPorLocal(listaCategorias, "faturamento");
+    const maiorLucro = maiorPorLocal(listaCategorias, "lucro");
+    let maiorCrescimento = { nome: "-", valor: 0 };
+
+    const idsCrescimento = new Set();
+    crescimentoAtual.forEach(function(_, id) { idsCrescimento.add(id); });
+    crescimentoAnterior.forEach(function(_, id) { idsCrescimento.add(id); });
+    idsCrescimento.forEach(function(id) {
+      const atual = Number(crescimentoAtual.get(String(id)) || 0);
+      const anterior = Number(crescimentoAnterior.get(String(id)) || 0);
+      const crescimento = anterior ? ((atual - anterior) / anterior) * 100 : (atual > 0 ? 100 : 0);
+      if (crescimento > Number(maiorCrescimento.valor || 0)) {
+        maiorCrescimento = { nome: nomesCategoriasCrescimento.get(String(id)) || String(id), valor: crescimento };
+      }
+    });
+
+    aplicarCrescimentoCategoriasLocal(listaCategorias, crescimentoAtual, crescimentoAnterior);
+    aplicarCrescimentoCategoriasLocal(listaSubcategorias, crescimentoAtualSub, crescimentoAnteriorSub);
+
+    pacote.categoriasResumo = {
+      sucesso: true,
+      atualizadoEm: pacote.atualizadoEm || "",
+      cards: {
+        topCategoria: cardPercentualCategoriaLocal(topCategoria, totalVolumeCat, "volume"),
+        topSubcategoria: cardPercentualCategoriaLocal(topSubcategoria, totalVolumeSub, "volume"),
+        melhorMargem: { nome: melhorMargem.nome || "-", valor: Number(melhorMargem.margem || 0) },
+        maiorCrescimento: maiorCrescimento,
+        maiorFaturamento: { nome: maiorFaturamento.nome || "-", valor: Number(maiorFaturamento.faturamento || 0) },
+        maiorLucro: { nome: maiorLucro.nome || "-", valor: Number(maiorLucro.lucro || 0) }
+      },
+      categorias: listaCategorias.sort(function(a, b) { return Number(b.volume || 0) - Number(a.volume || 0); }),
+      subcategorias: listaSubcategorias.sort(function(a, b) { return Number(b.volume || 0) - Number(a.volume || 0); })
+    };
+  }
+
+  function montarMapaClientesLocal() {
+    const mapa = new Map();
+    (pacote.clientes || []).forEach(function(cliente) {
+      mapa.set(String(cliente.idCliente || ""), cliente);
+    });
+    return mapa;
+  }
+
+  function calcularCustoPorVendaLocal() {
+    const mapa = new Map();
+    (pacote.itensVenda || []).forEach(function(item) {
+      const idCarrinho = String(item.idCarrinho || "");
+      mapa.set(idCarrinho, (mapa.get(idCarrinho) || 0) + Number(item.custoTotal || 0));
+    });
+    return mapa;
+  }
+
+  function passaFiltroClienteLocal(cliente, filtros) {
+    filtros = filtros || {};
+    if (!cliente) return false;
+    if (filtros.cliente && String(cliente.idCliente) !== String(filtros.cliente)) return false;
+    if (filtros.cidade && normalizarTexto(cliente.cidade) !== normalizarTexto(filtros.cidade)) return false;
+    if (filtros.bairro && normalizarTexto(cliente.bairro) !== normalizarTexto(filtros.bairro)) return false;
+    return true;
+  }
+
+  function acumularRegiaoClienteLocal(mapa, nome, venda) {
+    const chave = String(nome || "-").trim() || "-";
+    if (!mapa.has(chave)) mapa.set(chave, { nome: chave, volume: 0, faturamento: 0, lucro: 0 });
+    const item = mapa.get(chave);
+    item.volume += 1;
+    item.faturamento += Number(venda.faturamento || 0);
+    item.lucro += Number(venda.lucro || 0);
+  }
+
+  function infoAniversarioLocal(valor, hoje) {
+    const data = parseDataBR(valor);
+    if (!data) return null;
+
+    const dia = data.getDate();
+    const mes = data.getMonth();
+    const hojeInicio = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate()).getTime();
+    let proximo = new Date(hoje.getFullYear(), mes, dia);
+    if (proximo.getTime() < hojeInicio) proximo = new Date(hoje.getFullYear() + 1, mes, dia);
+
+    return {
+      label: String(dia).padStart(2, "0") + "/" + String(mes + 1).padStart(2, "0"),
+      proximoTS: proximo.getTime()
+    };
+  }
+
+  function formatDataLocal(data) {
+    return String(data.getDate()).padStart(2, "0") + "/" + String(data.getMonth() + 1).padStart(2, "0") + "/" + data.getFullYear();
+  }
+
+  function calcularAbcClientesLocal(lista, metrica) {
+    const ordenada = (lista || []).slice().sort(function(a, b) {
+      return valorMetricaClienteLocal(b, metrica) - valorMetricaClienteLocal(a, metrica);
+    });
+    const totalMetrica = ordenada.reduce(function(acc, item) {
+      return acc + Math.max(0, valorMetricaClienteLocal(item, metrica));
+    }, 0);
+    let acumulado = 0;
+    const abc = {
+      A: { clientes: 0, faturamento: 0, metrica: 0 },
+      B: { clientes: 0, faturamento: 0, metrica: 0 },
+      C: { clientes: 0, faturamento: 0, metrica: 0 }
+    };
+
+    ordenada.forEach(function(item) {
+      const valorParticipacao = Math.max(0, valorMetricaClienteLocal(item, metrica));
+      const percAntes = totalMetrica ? acumulado / totalMetrica : 1;
+      let classe = "C";
+      if (totalMetrica > 0 && percAntes < 0.8) classe = "A";
+      else if (totalMetrica > 0 && percAntes < 0.95) classe = "B";
+
+      item.classesPorMetrica[metrica] = classe;
+      abc[classe].clientes += 1;
+      abc[classe].faturamento += Number(item.faturamento || 0);
+      abc[classe].metrica += valorParticipacao;
+      acumulado += valorParticipacao;
+    });
+
+    Object.keys(abc).forEach(function(classe) {
+      abc[classe].percentBase = ordenada.length ? (abc[classe].clientes / ordenada.length) * 100 : 0;
+      abc[classe].percentMetrica = totalMetrica ? (abc[classe].metrica / totalMetrica) * 100 : 0;
+    });
+    return abc;
+  }
+
+  function qtdMesesDistintosLocal(vendas) {
+    const meses = new Set();
+    (vendas || []).forEach(function(venda) {
+      if (venda.mesKey) meses.add(venda.mesKey);
+    });
+    return Math.max(1, meses.size);
+  }
+
+  function ultimoMesFechadoLocal() {
+    const hoje = new Date();
+    const data = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
+    return data.getFullYear() + "-" + String(data.getMonth() + 1).padStart(2, "0");
+  }
+
+  function deslocarMesKeyLocal(mesKey, delta) {
+    const partes = String(mesKey || "").split("-");
+    if (partes.length !== 2) return "";
+    const data = new Date(Number(partes[0]), Number(partes[1]) - 1 + Number(delta || 0), 1);
+    return data.getFullYear() + "-" + String(data.getMonth() + 1).padStart(2, "0");
+  }
+
+  function acumularCategoriaLocal(mapa, id, nome, qtd, faturamento, lucro, categoria) {
+    const chave = id || nome || "-";
+    if (!mapa.has(chave)) {
+      mapa.set(chave, { id: chave, nome: nome || "-", volume: 0, faturamento: 0, lucro: 0, margem: 0, qtdLinhas: 0 });
+    }
+    const item = mapa.get(chave);
+    item.volume += Number(qtd || 0);
+    item.faturamento += Number(faturamento || 0);
+    item.lucro += Number(lucro || 0);
+    item.qtdLinhas += 1;
+    if (categoria) item.categoria = categoria;
+  }
+
+  function finalizarCategoriasLocal(lista) {
+    return (lista || []).map(function(item) {
+      item.margem = item.faturamento ? (Number(item.lucro || 0) / Number(item.faturamento || 0)) * 100 : 0;
+      return item;
+    });
+  }
+
+  function somarCampoLocal(lista, campo) {
+    return (lista || []).reduce(function(acc, item) {
+      return acc + Number(item[campo] || 0);
+    }, 0);
+  }
+
+  function maiorPorLocal(lista, campo) {
+    return (lista || []).slice().sort(function(a, b) {
+      return Number(b[campo] || 0) - Number(a[campo] || 0);
+    })[0] || { nome: "-", valor: 0 };
+  }
+
+  function aplicarCrescimentoCategoriasLocal(lista, atualMap, anteriorMap) {
+    (lista || []).forEach(function(item) {
+      const atual = Number(atualMap.get(String(item.id)) || 0);
+      const anterior = Number(anteriorMap.get(String(item.id)) || 0);
+      item.crescimento = anterior ? ((atual - anterior) / anterior) * 100 : (atual > 0 ? 100 : 0);
+    });
+  }
+
+  function cardPercentualCategoriaLocal(item, total, campo) {
+    return {
+      nome: item.nome || "-",
+      valor: total ? (Number(item[campo] || 0) / total) * 100 : 0
+    };
+  }
+
+  function renderizarResumoCategoriasDashboard() {
+    const resumo = pacote.categoriasResumo;
+    if (!resumo || !resumo.sucesso) return;
+
+    const cards = resumo.cards || {};
+    preencherCardCategoria("TopCategoria", cards.topCategoria, false, " em vendas");
+    preencherCardCategoria("TopSubcategoria", cards.topSubcategoria, false, " em vendas");
+    preencherCardCategoria("MelhorMargem", cards.melhorMargem, false, " de margem");
+    preencherCardCategoria("MaiorCrescimento", cards.maiorCrescimento, false, " vs. mes anterior");
+    preencherCardCategoria("MaiorFaturamento", cards.maiorFaturamento, true, "");
+    preencherCardCategoria("MaiorLucro", cards.maiorLucro, true, "");
+    renderizarGraficoCategoriasParticipacao();
+    renderizarGraficoCategoriasTornado();
+    renderizarTabelaCategoriasDetalhe();
+  }
+
+  function preencherCardCategoria(prefixo, dados, moeda, sufixo) {
+    dados = dados || {};
+    setText("cardCat" + prefixo + "Nome", dados.nome || "-");
+    setText("cardCat" + prefixo + "Valor", moeda ? formatBRL(dados.valor) : formatPercent(dados.valor));
+  }
+
+  function listaCategoriasPorDimensao(dimensao) {
+    const resumo = pacote.categoriasResumo || {};
+    const dados = resumo[dimensao === "subcategoria" ? "subcategorias" : "categorias"] || [];
+    return Array.isArray(dados) ? dados.slice() : [];
+  }
+
+  function renderizarTabelaCategoriasDetalhe() {
+    const thead = document.getElementById("theadCategoriasDetalhe");
+    const tbody = document.getElementById("tbodyCategoriasDetalhe");
+    const tabela = document.querySelector(".tabela-dashboard-categorias-detalhe");
+    if (!thead || !tbody || !tabela) return;
+
+    const dimensao = estado.categorias.detalheDimensao === "subcategoria" ? "subcategoria" : "categoria";
+    const mostrarSubcategoria = dimensao === "subcategoria";
+    tabela.classList.toggle("sem-subcategoria", !mostrarSubcategoria);
+    setText("tituloCategoriasDetalhe", mostrarSubcategoria ? "Detalhamento por categoria e subcategoria" : "Detalhamento por categoria");
+
+    thead.innerHTML = "<tr>" +
+      "<th data-sort-categorias=\"categoria\">Categoria</th>" +
+      (mostrarSubcategoria ? "<th data-sort-categorias=\"subcategoria\">Subcategoria</th>" : "") +
+      "<th data-sort-categorias=\"volume\">Quantidade de vendas</th>" +
+      "<th data-sort-categorias=\"participacaoVendas\">Particip. vendas</th>" +
+      "<th data-sort-categorias=\"faturamento\">Faturamento</th>" +
+      "<th data-sort-categorias=\"participacaoFaturamento\">Particip. fatur.</th>" +
+      "<th data-sort-categorias=\"lucro\">Lucro</th>" +
+      "<th data-sort-categorias=\"participacaoLucro\">Particip. lucros</th>" +
+      "<th data-sort-categorias=\"margem\">Margem media</th>" +
+      "<th data-sort-categorias=\"crescimento\">Crescimento vendas</th>" +
+      "</tr>";
+
+    const listaBase = listaCategoriasPorDimensao(dimensao);
+
+    if (!listaBase.length) {
+      tbody.innerHTML = "<tr><td colspan=\"" + (mostrarSubcategoria ? 10 : 9) + "\">Nenhum dado encontrado.</td></tr>";
+      return;
+    }
+
+    const totais = listaBase.reduce(function(acc, item) {
+      acc.volume += Number(item.volume || 0);
+      acc.faturamento += Number(item.faturamento || 0);
+      acc.lucro += Number(item.lucro || 0);
+      return acc;
+    }, { volume: 0, faturamento: 0, lucro: 0 });
+
+    const dados = listaBase.map(function(item) {
+      const participacaoVendas = percentualMetrica(item.volume, totais.volume);
+      const participacaoFaturamento = percentualMetrica(item.faturamento, totais.faturamento);
+      const participacaoLucro = percentualMetrica(item.lucro, totais.lucro);
+      const crescimento = Number(item.crescimento || 0);
+      const categoria = mostrarSubcategoria ? (item.categoria || "-") : (item.nome || "-");
+      const subcategoria = item.nome || "-";
+
+      return Object.assign({}, item, {
+        categoria: categoria,
+        subcategoria: subcategoria,
+        participacaoVendas: participacaoVendas,
+        participacaoFaturamento: participacaoFaturamento,
+        participacaoLucro: participacaoLucro,
+        crescimento: crescimento
+      });
+    });
+
+    ordenarDadosCategoriasDetalhe(dados);
+
+    const linhas = dados.map(function(item) {
+      const crescimento = Number(item.crescimento || 0);
+      const classeCrescimento = crescimento < 0 ? "negativo" : "positivo";
+      const iconeCrescimento = crescimento < 0 ? "bi-arrow-down-right" : "bi-arrow-up-right";
+
+      return "<tr>" +
+        "<td title=\"" + escapeHtml(item.categoria) + "\">" + escapeHtml(item.categoria) + "</td>" +
+        (mostrarSubcategoria ? "<td title=\"" + escapeHtml(item.subcategoria) + "\">" + escapeHtml(item.subcategoria) + "</td>" : "") +
+        "<td>" + escapeHtml(formatQtd(item.volume)) + "</td>" +
+        "<td style=\"" + heatmapStyleAzul(item.participacaoVendas) + "\">" + escapeHtml(formatPercent(item.participacaoVendas)) + "</td>" +
+        "<td>" + escapeHtml(formatBRL(item.faturamento)) + "</td>" +
+        "<td style=\"" + heatmapStyleAzul(item.participacaoFaturamento) + "\">" + escapeHtml(formatPercent(item.participacaoFaturamento)) + "</td>" +
+        "<td>" + escapeHtml(formatBRL(item.lucro)) + "</td>" +
+        "<td style=\"" + heatmapStyleAzul(item.participacaoLucro) + "\">" + escapeHtml(formatPercent(item.participacaoLucro)) + "</td>" +
+        "<td>" + escapeHtml(formatPercent(item.margem)) + "</td>" +
+        "<td><span class=\"crescimento-categorias " + classeCrescimento + "\"><i class=\"bi " + iconeCrescimento + "\"></i>" + escapeHtml(formatPercent(crescimento)) + "</span></td>" +
+        "</tr>";
+    });
+
+    tbody.innerHTML = linhas.join("");
+  }
+
+  function heatmapStyleAzul(valor) {
+    const n = Math.max(0, Math.min(100, Number(valor || 0)));
+    const intensidade = Math.max(0.14, Math.min(0.48, 0.14 + (n / 100) * 0.34));
+    return "background: rgba(66, 153, 225, " + intensidade.toFixed(3) + "); color: #12365f; font-weight: 850;";
+  }
+
+  function alternarOrdenacaoCategoriasDetalhe(campo) {
+    if (!campo) return;
+    const atual = estado.categorias.detalheSort || { campo: "", direcao: "" };
+    if (atual.campo !== campo) {
+      estado.categorias.detalheSort = { campo: campo, direcao: "desc" };
+    } else if (atual.direcao === "desc") {
+      estado.categorias.detalheSort = { campo: campo, direcao: "asc" };
+    } else {
+      estado.categorias.detalheSort = { campo: "", direcao: "" };
+    }
+    renderizarTabelaCategoriasDetalhe();
+  }
+
+  function ordenarDadosCategoriasDetalhe(dados) {
+    const sort = estado.categorias.detalheSort || { campo: "", direcao: "" };
+    const campo = sort.campo || "";
+    const direcao = sort.direcao || "";
+
+    dados.sort(function(a, b) {
+      if (!campo || !direcao) return Number(b.volume || 0) - Number(a.volume || 0);
+
+      const va = a[campo];
+      const vb = b[campo];
+      let comp;
+      if (typeof va === "string" || typeof vb === "string") {
+        comp = String(va || "").localeCompare(String(vb || ""), "pt-BR");
+      } else {
+        comp = Number(va || 0) - Number(vb || 0);
+      }
+      return direcao === "desc" ? -comp : comp;
+    });
+  }
+
+  function dataZoomVerticalCategorias(total) {
+    if (Number(total || 0) <= 10) return [];
+    return [{
+      type: "slider",
+      yAxisIndex: 0,
+      right: 2,
+      width: 10,
+      startValue: 0,
+      endValue: 9,
+      zoomLock: true,
+      brushSelect: false,
+      showDetail: false,
+      filterMode: "empty"
+    }];
+  }
+
+  function configurarScrollMouseCategorias(alvo, chart, total) {
+    const totalItens = Number(total || 0);
+    if (alvo._categoriasWheelHandler) {
+      alvo.removeEventListener("wheel", alvo._categoriasWheelHandler);
+      alvo._categoriasWheelHandler = null;
+    }
+    if (chart._categoriasDataZoomHandler) {
+      chart.off("datazoom", chart._categoriasDataZoomHandler);
+      chart._categoriasDataZoomHandler = null;
+    }
+    alvo._categoriasZoomInicio = 0;
+    if (totalItens <= 10) return;
+
+    const maxInicio = Math.max(0, totalItens - 10);
+    const moverJanela = function(inicio) {
+      const novoInicio = Math.max(0, Math.min(maxInicio, Number(inicio || 0)));
+      alvo._categoriasZoomInicio = novoInicio;
+      chart.dispatchAction({
+        type: "dataZoom",
+        dataZoomIndex: 0,
+        startValue: novoInicio,
+        endValue: novoInicio + 9
+      });
+    };
+
+    alvo._categoriasWheelHandler = function(evento) {
+      evento.preventDefault();
+      const passo = evento.deltaY > 0 ? 1 : -1;
+      const atual = Number(alvo._categoriasZoomInicio || 0);
+      moverJanela(atual + passo);
+    };
+
+    chart._categoriasDataZoomHandler = function() {
+      const opcoes = chart.getOption();
+      const zoom = Array.isArray(opcoes.dataZoom) ? opcoes.dataZoom[0] : null;
+      if (zoom && zoom.startValue !== undefined) {
+        alvo._categoriasZoomInicio = Number(zoom.startValue || 0);
+      }
+    };
+
+    alvo.addEventListener("wheel", alvo._categoriasWheelHandler, { passive: false });
+    chart.on("datazoom", chart._categoriasDataZoomHandler);
+  }
+
+  function filtroCategoriaAtivo(dimensao, item) {
+    if (!item) return false;
+    if (dimensao === "subcategoria") return String(estado.filtros.subcategoria || "") === String(item.id || "");
+    return String(estado.filtros.categoria || "") === String(item.id || "");
+  }
+
+  function selecionarDimensaoCategorias(dimensao, item) {
+    if (!item) return;
+    const id = String(item.id || "").trim();
+    const nome = String(item.nome || "").trim();
+    if (!id) return;
+
+    if (dimensao === "subcategoria") {
+      const jaSelecionado = String(estado.filtros.subcategoria || "") === id;
+      estado.filtros.subcategoria = jaSelecionado ? "" : id;
+      estado.filtros.subcategoriaNome = jaSelecionado ? "" : nome;
+      if (!jaSelecionado) {
+        estado.filtros.categoria = "";
+        estado.filtros.categoriaNome = "";
+      }
+    } else {
+      const jaSelecionado = String(estado.filtros.categoria || "") === id;
+      estado.filtros.categoria = jaSelecionado ? "" : id;
+      estado.filtros.categoriaNome = jaSelecionado ? "" : nome;
+      if (!jaSelecionado) {
+        estado.filtros.subcategoria = "";
+        estado.filtros.subcategoriaNome = "";
+      }
+    }
+
+    if (pacote.modoAgregado) {
+      pacote.categoriasResumo = null;
+      carregarResumoCategoriasDashboard(true);
+    } else {
+      calcularResumoCategoriasLocal();
+      renderizarResumoCategoriasDashboard();
+    }
+    preencherFiltros();
+  }
+
+  function renderizarGraficoCategoriasParticipacao() {
+    const alvo = document.getElementById("graficoCategoriasParticipacao");
+    if (!alvo || !alvo.offsetParent) return;
+
+    const dimensao = estado.categorias.participacaoDimensao === "subcategoria" ? "subcategoria" : "categoria";
+    const metrica = estado.categorias.participacaoMetrica || "volume";
+    const lista = listaCategoriasPorDimensao(dimensao).sort(function(a, b) {
+      return Number(b[metrica] || 0) - Number(a[metrica] || 0);
+    });
+    const total = lista.reduce(function(acc, item) {
+      return acc + Math.max(0, Number(item[metrica] || 0));
+    }, 0);
+
+    alvo.style.height = "100%";
+
+    if (!estado.categorias.chartParticipacao) {
+      estado.categorias.chartParticipacao = echarts.init(alvo);
+    }
+    estado.categorias.chartParticipacao.off("click");
+    estado.categorias.chartParticipacao.on("click", function(params) {
+      const item = lista[params.dataIndex];
+      if (!item) return;
+      selecionarDimensaoCategorias(dimensao, item);
+    });
+    estado.categorias.chartParticipacao.resize();
+
+    if (!lista.length) {
+      estado.categorias.chartParticipacao.setOption({
+        title: { text: "Nenhum dado encontrado", left: "center", top: "middle", textStyle: { color: "#94a3b8", fontSize: 13 } },
+        xAxis: { show: false },
+        yAxis: { show: false },
+        series: []
+      }, true);
+      return;
+    }
+
+    estado.categorias.chartParticipacao.setOption({
+      grid: { left: 120, right: 78, top: 12, bottom: 24 },
+      tooltip: {
+        trigger: "axis",
+        axisPointer: { type: "shadow" },
+        formatter: function(params) {
+          const p = Array.isArray(params) ? params[0] : params;
+          const item = lista[p.dataIndex] || {};
+          return "<strong>" + escapeHtml(item.nome || "") + "</strong><br>" +
+            "Participacao: " + escapeHtml(formatPercent(percentualMetrica(item[metrica], total))) + "<br>" +
+            escapeHtml(rotuloMetricaClientes(metrica)) + ": " + escapeHtml(formatValorMetricaClientes(item[metrica], metrica));
+        }
+      },
+      xAxis: {
+        type: "value",
+        max: 100,
+        axisLine: { show: false },
+        splitLine: { lineStyle: { color: "#edf2f7" } },
+        axisLabel: { color: "#64748b", formatter: function(value) { return value + "%"; } }
+      },
+      yAxis: {
+        type: "category",
+        inverse: true,
+        data: lista.map(function(item) { return item.nome; }),
+        axisTick: { show: false },
+        axisLine: { show: false },
+        axisLabel: { color: "#334155", fontSize: 10, width: 110, overflow: "truncate" }
+      },
+      dataZoom: dataZoomVerticalCategorias(lista.length),
+      series: [{
+        type: "bar",
+        data: lista.map(function(item) {
+          const perc = percentualMetrica(item[metrica], total);
+          return {
+            value: perc,
+            itemStyle: { color: filtroCategoriaAtivo(dimensao, item) ? "#1d8fe8" : "#b9ddff", borderRadius: [0, 7, 7, 0] },
+            valorReal: item[metrica] || 0
+          };
+        }),
+        barWidth: "42%",
+        barCategoryGap: "30%",
+        label: {
+          show: true,
+          position: "right",
+          color: "#334155",
+          fontSize: 11,
+          formatter: function(params) {
+            const item = lista[params.dataIndex] || {};
+            return formatPercent(params.value) + " | " + formatValorMetricaClientes(item[metrica], metrica);
+          }
+        }
+      }]
+    }, true);
+    configurarScrollMouseCategorias(alvo, estado.categorias.chartParticipacao, lista.length);
+  }
+
+  function renderizarGraficoCategoriasTornado() {
+    const alvo = document.getElementById("graficoCategoriasTornado");
+    if (!alvo || !alvo.offsetParent) return;
+
+    const dimensao = estado.categorias.tornadoDimensao === "subcategoria" ? "subcategoria" : "categoria";
+    const listaBase = listaCategoriasPorDimensao(dimensao);
+    const totalVolume = listaBase.reduce(function(acc, item) {
+      return acc + Number(item.volume || 0);
+    }, 0);
+    const lista = listaBase.map(function(item) {
+      const participacao = percentualMetrica(item.volume, totalVolume);
+      const margem = Number(item.margem || 0);
+      return Object.assign({}, item, { participacao: participacao, scoreTornado: participacao + margem });
+    }).sort(function(a, b) {
+      return Number(b.scoreTornado || 0) - Number(a.scoreTornado || 0);
+    });
+
+    alvo.style.height = "100%";
+
+    if (!estado.categorias.chartTornado) {
+      estado.categorias.chartTornado = echarts.init(alvo);
+    }
+    estado.categorias.chartTornado.off("click");
+    estado.categorias.chartTornado.on("click", function(params) {
+      const item = lista[params.dataIndex];
+      if (!item) return;
+      selecionarDimensaoCategorias(dimensao, item);
+    });
+    estado.categorias.chartTornado.resize();
+
+    if (!lista.length) {
+      estado.categorias.chartTornado.setOption({
+        title: { text: "Nenhum dado encontrado", left: "center", top: "middle", textStyle: { color: "#94a3b8", fontSize: 13 } },
+        xAxis: { show: false },
+        yAxis: { show: false },
+        series: []
+      }, true);
+      return;
+    }
+
+    estado.categorias.chartTornado.setOption({
+      legend: { show: true, top: 0, left: "center", textStyle: { color: "#64748b", fontSize: 10 } },
+      grid: { left: 142, right: 64, top: 34, bottom: 24 },
+      tooltip: {
+        trigger: "axis",
+        axisPointer: { type: "shadow" },
+        formatter: function(params) {
+          const listaParams = Array.isArray(params) ? params : [];
+          const item = lista[listaParams[0]?.dataIndex] || {};
+          return "<strong>" + escapeHtml(item.nome || "") + "</strong><br>" +
+            "Participacao em vendas: " + escapeHtml(formatPercent(item.participacao)) + "<br>" +
+            "Margem media: " + escapeHtml(formatPercent(item.margem));
+        }
+      },
+      xAxis: {
+        type: "value",
+        min: -70,
+        max: 70,
+        axisLabel: { color: "#64748b", formatter: function(value) { return Math.abs(value) + "%"; } },
+        axisLine: { show: false },
+        splitLine: { lineStyle: { color: "#edf2f7" } }
+      },
+      yAxis: {
+        type: "category",
+        inverse: true,
+        data: lista.map(function(item) { return item.nome; }),
+        axisTick: { show: false },
+        axisLine: { show: false },
+        axisLabel: { color: "#334155", fontSize: 10, width: 110, overflow: "truncate" }
+      },
+      dataZoom: dataZoomVerticalCategorias(lista.length),
+      series: [
+        {
+          name: "Participacao em vendas",
+          type: "bar",
+          stack: "total",
+          data: lista.map(function(item) {
+            return {
+              value: -Number(item.participacao || 0),
+              itemStyle: { color: filtroCategoriaAtivo(dimensao, item) ? "#1d8fe8" : "#8fc5ff", borderRadius: [7, 0, 0, 7] }
+            };
+          }),
+          barWidth: "42%",
+          barCategoryGap: "30%",
+          label: { show: true, position: "left", color: "#334155", fontSize: 11, formatter: function(params) { return formatPercent(Math.abs(params.value)); } }
+        },
+        {
+          name: "Margem media",
+          type: "bar",
+          stack: "total",
+          data: lista.map(function(item) {
+            return {
+              value: Number(item.margem || 0),
+              itemStyle: { color: filtroCategoriaAtivo(dimensao, item) ? "#36DB2E" : "#7bd778", borderRadius: [0, 7, 7, 0] }
+            };
+          }),
+          barWidth: "42%",
+          barCategoryGap: "30%",
+          label: { show: true, position: "right", color: "#334155", fontSize: 11, formatter: function(params) { return formatPercent(params.value); } }
+        }
+      ]
+    }, true);
+    configurarScrollMouseCategorias(alvo, estado.categorias.chartTornado, lista.length);
+  }
+
+  function percentualMetrica(valor, total) {
+    return total ? (Number(valor || 0) / Number(total || 0)) * 100 : 0;
+  }
+
+  function atualizarDashboard() {
+    if (pacote.modoAgregado) {
+      renderizarResumoVendasDashboard();
+      if (pacote.estoqueResumo) renderizarResumoEstoqueDashboard();
+      if (pacote.clientesResumo) renderizarResumoClientesDashboard();
+      if (pacote.categoriasResumo) renderizarResumoCategoriasDashboard();
+      return;
+    }
+
+    const contexto = obterContextoFiltrado();
+    atualizarCards(contexto);
+    atualizarGrafico(contexto);
+    atualizarTabela(contexto);
+    const contextoEstoque = obterContextoEstoqueFiltrado();
+    atualizarCardsEstoque(contextoEstoque);
+    atualizarGraficoEstoque(contextoEstoque);
+    atualizarTabelaEstoque(contextoEstoque);
+    if (pacote.clientesResumo) renderizarResumoClientesDashboard();
+    if (pacote.categoriasResumo) renderizarResumoCategoriasDashboard();
+  }
+
+  function obterContextoFiltrado() {
+    const vendasPermitidas = new Set();
+    const produtosPermitidos = new Set();
+    const periodo = parsePeriodoAnalise(estado.filtros.periodo);
+
+    (pacote.itensVenda || []).forEach(function(item) {
+      const produto = estado.mapaProdutos.get(String(item.idProduto));
+      const venda = estado.mapaVendas.get(String(item.idCarrinho));
+      if (!produto || !venda) return;
+
+      if (estado.filtros.produto && String(item.idProduto) !== estado.filtros.produto) return;
+      if (estado.filtros.fornecedor && String(produto.idFornecedor) !== estado.filtros.fornecedor) return;
+      if (estado.filtros.categoria && String(produto.idCategoria) !== estado.filtros.categoria) return;
+      if (estado.filtros.subcategoria && String(produto.idSubcategoria) !== estado.filtros.subcategoria) return;
+      if (estado.filtros.filial && String(venda.idFilial) !== estado.filtros.filial) return;
+      if (periodo.inicioTS && Number(venda.dataTS || 0) < periodo.inicioTS) return;
+      if (periodo.fimTS && Number(venda.dataTS || 0) > periodo.fimTS) return;
+      if (estado.periodoSelecionado) {
+        const chave = estado.periodo === "mes" ? venda.mesKey : venda.diaKey;
+        if (chave !== estado.periodoSelecionado) return;
+      }
+      if (estado.itemSelecionado && String(item.idProduto) !== estado.itemSelecionado) return;
+
+      vendasPermitidas.add(String(item.idCarrinho));
+      produtosPermitidos.add(String(item.idProduto));
+    });
+
+    const vendas = (pacote.vendas || []).filter(function(venda) {
+      return vendasPermitidas.has(String(venda.idCarrinho));
+    });
+
+    const itens = (pacote.itensVenda || []).filter(function(item) {
+      return vendasPermitidas.has(String(item.idCarrinho)) && produtosPermitidos.has(String(item.idProduto));
+    });
+
+    return { vendas: vendas, itens: itens };
+  }
+
+  function parsePeriodoAnalise(texto) {
+    const bruto = String(texto || "").trim();
+    if (!bruto) return { inicioTS: 0, fimTS: 0 };
+
+    const partes = bruto.split(/\s+-\s+/).filter(Boolean);
+    const inicio = parseDataBR(partes[0]);
+    const fim = parseDataBR(partes[1] || partes[0]);
+
+    return {
+      inicioTS: inicio ? new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate(), 0, 0, 0, 0).getTime() : 0,
+      fimTS: fim ? new Date(fim.getFullYear(), fim.getMonth(), fim.getDate(), 23, 59, 59, 999).getTime() : 0
+    };
+  }
+
+  function parseDataBR(texto) {
+    const match = String(texto || "").trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (!match) return null;
+
+    const data = new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1]));
+    return isNaN(data.getTime()) ? null : data;
+  }
+
+  function calcularResumo(contexto) {
+    const vendas = contexto.vendas || [];
+    const itens = contexto.itens || [];
+    const custoPorVenda = new Map();
+    let volume = 0;
+    let custoTotal = 0;
+
+    itens.forEach(function(item) {
+      const custo = Number(item.custoTotal || 0);
+      volume += Number(item.qtd || 0);
+      custoTotal += custo;
+      custoPorVenda.set(String(item.idCarrinho), (custoPorVenda.get(String(item.idCarrinho)) || 0) + custo);
+    });
+
+    const faturamento = vendas.reduce(function(acc, venda) {
+      return acc + Number(venda.faturamento || 0);
+    }, 0);
+
+    const lucro = faturamento - custoTotal;
+    const margem = faturamento > 0 ? (lucro / faturamento) * 100 : 0;
+
+    return {
+      qtdVendas: vendas.length,
+      volume: vendas.length,
+      qtdItens: volume,
+      faturamento: faturamento,
+      custoTotal: custoTotal,
+      lucro: lucro,
+      margem: margem,
+      ticket: vendas.length ? faturamento / vendas.length : 0,
+      custoPorVenda: custoPorVenda
+    };
+  }
+
+  function atualizarCards(contexto) {
+    const resumo = calcularResumo(contexto);
+    setText("cardVolume", formatQtd(resumo.volume));
+    setText("cardFaturamento", formatBRL(resumo.faturamento));
+    setText("cardLucro", formatBRL(resumo.lucro));
+    setText("cardLucroMargem", "Margem " + formatPercent(resumo.margem));
+    setText("cardTicket", formatBRL(resumo.ticket));
+    atualizarCardsCompostosFixos();
+  }
+
+  function atualizarCardsCompostosFixos() {
+    const mensal = calcularResumoMensalFixo();
+    preencherCardComposto("Volume", mensal.volume, false);
+    preencherCardComposto("Lucro", mensal.lucro, true);
+  }
+
+  function preencherCardComposto(prefixo, dados, moeda) {
+    setText("card" + prefixo + "MesFechado", moeda ? formatBRL(dados.ultimo) : formatQtd(dados.ultimo));
+    setText("card" + prefixo + "MediaLabel", "Media " + dados.qtdMeses + (dados.qtdMeses === 1 ? " mes" : " meses"));
+    setText("card" + prefixo + "Media", moeda ? formatBRL(dados.media) : formatQtd(dados.media));
+
+    const el = document.getElementById("card" + prefixo + "Crescimento");
+    if (!el) return;
+
+    el.textContent = formatPercent(dados.crescimento);
+    el.classList.remove("positivo", "negativo");
+    if (dados.crescimento > 0) el.classList.add("positivo");
+    if (dados.crescimento < 0) el.classList.add("negativo");
+  }
+
+  function calcularResumoMensalFixo() {
+    const custoPorVenda = new Map();
+
+    (pacote.itensVenda || []).forEach(function(item) {
+      custoPorVenda.set(String(item.idCarrinho), (custoPorVenda.get(String(item.idCarrinho)) || 0) + Number(item.custoTotal || 0));
+    });
+
+    const porMes = new Map();
+
+    (pacote.vendas || []).forEach(function(venda) {
+      const key = venda.mesKey;
+      if (!key) return;
+
+      if (!porMes.has(key)) {
+        porMes.set(key, { key: key, volume: 0, lucro: 0 });
+      }
+
+      const item = porMes.get(key);
+      item.volume += 1;
+      item.lucro += Number(venda.faturamento || 0) - Number(custoPorVenda.get(String(venda.idCarrinho)) || 0);
+    });
+
+    function obterMesFechadoAnterior() {
+      const hoje = new Date();
+      return new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1).toISOString().slice(0, 7);
+    }
+
+    const ultimoMesFechado = obterMesFechadoAnterior();
+    if (!porMes.has(ultimoMesFechado)) {
+      porMes.set(ultimoMesFechado, { key: ultimoMesFechado, volume: 0, lucro: 0 });
+    }
+
+    const fechados = Array.from(porMes.values()).filter(function(item) {
+      return item.key <= ultimoMesFechado;
+    }).sort(function(a, b) {
+      return a.key.localeCompare(b.key);
+    });
+
+    const janela = fechados.slice(-12);
+    const ultimo = janela.find(function(item) {
+      return item.key === ultimoMesFechado;
+    }) || { key: ultimoMesFechado, volume: 0, lucro: 0 };
+
+    function resumo(campo) {
+      const soma = janela.reduce(function(acc, item) {
+        return acc + Number(item[campo] || 0);
+      }, 0);
+      const media = janela.length ? soma / janela.length : 0;
+      const valorUltimo = Number(ultimo[campo] || 0);
+
+      return {
+        ultimo: valorUltimo,
+        media: media,
+        crescimento: media ? ((valorUltimo - media) / media) * 100 : 0,
+        qtdMeses: janela.length
+      };
+    }
+
+    return {
+      volume: resumo("volume"),
+      lucro: resumo("lucro")
+    };
+  }
+
+  function atualizarGrafico(contexto) {
+    const agregados = agregarPorPeriodo(contexto);
+    const limite = estado.periodo === "mes" ? 12 : 14;
+    const maxInicio = Math.max(0, agregados.length - limite);
+    if (estado.janelaInicio === null || estado.janelaInicio === undefined) estado.janelaInicio = maxInicio;
+    if (estado.janelaInicio > maxInicio) estado.janelaInicio = maxInicio;
+    if (estado.janelaInicio < 0) estado.janelaInicio = 0;
+
+    const visiveis = agregados.slice(estado.janelaInicio, estado.janelaInicio + limite);
+    estado.periodosVisiveis = visiveis;
+    const titulo = tituloMetricasVendas() + (estado.periodo === "mes" ? " por mes" : " por dia");
+    setText("tituloGrafico", titulo);
+    document.getElementById("legendaMediaMensal")?.classList.toggle("oculta", estado.periodo !== "mes");
+    const series = montarSeriesGrafico(visiveis, agregados);
+
+    if (!estado.chart) {
+      estado.chart = echarts.init(document.getElementById("graficoVendas"));
+      estado.chart.on("click", function(params) {
+        const item = estado.periodosVisiveis[params.dataIndex];
+        if (!item) return;
+        estado.periodoSelecionado = estado.periodoSelecionado === item.key ? "" : item.key;
+        atualizarDashboard();
+      });
+    }
+
+    estado.chart.setOption({
+      legend: {
+        show: metricasVendasSelecionadas().length > 1,
+        top: 0,
+        right: 0,
+        textStyle: { color: "#64748b", fontSize: 10 }
+      },
+      grid: { left: 48, right: temVolumeSecundarioVendas() ? 48 : 20, top: metricasVendasSelecionadas().length > 1 ? 38 : 30, bottom: 48 },
+      tooltip: {
+        trigger: "axis",
+        axisPointer: { type: "shadow" },
+        formatter: function(params) {
+          const lista = Array.isArray(params) ? params : [];
+          if (!lista.length) return "";
+          const dado = visiveis[lista[0].dataIndex];
+          let html = "<strong>" + escapeHtml(dado.label) + "</strong>";
+          lista.forEach(function(p) {
+            const metrica = p.seriesId || metricaPorNomeSerieVendas(p.seriesName);
+            html += "<br>" + escapeHtml(p.seriesName) + ": " + formatValorMetrica(p.value, metrica);
+          });
+          return html;
+        }
+      },
+      xAxis: {
+        type: "category",
+        data: visiveis.map(function(item) { return item.label; }),
+        axisTick: { show: false },
+        axisLine: { lineStyle: { color: "#e2e8f0" } },
+        axisLabel: { color: "#334155", fontSize: 10 }
+      },
+      yAxis: montarEixosVendas(),
+      series: series
+    }, true);
+  }
+
+  function montarSeriesGrafico(visiveis, agregados) {
+    return montarSeriesVendas(visiveis, agregados);
+  }
+
+  function agregarPorPeriodo(contexto) {
+    const mapa = new Map();
+    const vendasContexto = new Set((contexto.vendas || []).map(function(venda) { return String(venda.idCarrinho); }));
+    const custoPorVenda = new Map();
+
+    (contexto.itens || []).forEach(function(item) {
+      custoPorVenda.set(String(item.idCarrinho), (custoPorVenda.get(String(item.idCarrinho)) || 0) + Number(item.custoTotal || 0));
+    });
+
+    (pacote.vendas || []).forEach(function(venda) {
+      if (!vendasContexto.has(String(venda.idCarrinho))) return;
+      const key = estado.periodo === "mes" ? venda.mesKey : venda.diaKey;
+      if (!key) return;
+      if (!mapa.has(key)) {
+        mapa.set(key, { key: key, label: estado.periodo === "mes" ? formatMes(key) : formatDia(key), volume: 0, faturamento: 0, lucro: 0 });
+      }
+      const agg = mapa.get(key);
+      agg.volume += 1;
+      agg.faturamento += Number(venda.faturamento || 0);
+      agg.lucro += Number(venda.faturamento || 0) - Number(custoPorVenda.get(String(venda.idCarrinho)) || 0);
+    });
+
+    return Array.from(mapa.values()).sort(function(a, b) {
+      return a.key.localeCompare(b.key);
+    });
+  }
+
+  function moverJanela(delta) {
+    if (pacote.modoAgregado) {
+      const agregados = pacote.vendasResumo?.grafico || [];
+      const limite = estado.periodo === "mes" ? 12 : 14;
+      const maxInicio = Math.max(0, agregados.length - limite);
+      estado.janelaInicio = Math.max(0, Math.min(maxInicio, estado.janelaInicio + delta));
+      renderizarGraficoVendasResumo();
+      return;
+    }
+
+    const agregados = agregarPorPeriodo(obterContextoFiltrado());
+    const limite = estado.periodo === "mes" ? 12 : 14;
+    const maxInicio = Math.max(0, agregados.length - limite);
+    estado.janelaInicio = Math.max(0, Math.min(maxInicio, estado.janelaInicio + delta));
+    atualizarDashboard();
+  }
+
+  function atualizarTabela(contexto) {
+    const tbody = document.getElementById("tbodyItensVendas");
+    if (!tbody) return;
+
+    estado.tabelaItens = agregarPorProduto(contexto);
+    const lista = ordenarLista(estado.tabelaItens.slice());
+    const resumo = lista.reduce(function(acc, item) {
+      acc.volume += item.volume;
+      acc.faturamento += item.faturamento;
+      acc.lucro += item.lucro;
+      return acc;
+    }, { volume: 0, faturamento: 0, lucro: 0 });
+    const margem = resumo.faturamento > 0 ? (resumo.lucro / resumo.faturamento) * 100 : 0;
+
+    tbody.innerHTML = "";
+
+    if (!lista.length) {
+      const trVazio = document.createElement("tr");
+      trVazio.innerHTML = '<td colspan="8">Nenhum item encontrado para o contexto atual.</td>';
+      tbody.appendChild(trVazio);
+      return;
+    }
+
+    const escalas = calcularEscalasTabela(lista);
+
+    lista.forEach(function(item) {
+      const tr = document.createElement("tr");
+      tr.dataset.idProduto = item.idProduto;
+      tr.classList.toggle("selecionada", estado.itemSelecionado === item.idProduto);
+      tr.innerHTML =
+        "<td>" + escapeHtml(item.nome) + "</td>" +
+        "<td>" + escapeHtml(item.categoria) + "</td>" +
+        "<td>" + escapeHtml(item.subcategoria) + "</td>" +
+        "<td style=\"" + heatmapStyle(item.volume, escalas.volume) + "\">" + escapeHtml(formatQtd(item.volume)) + "</td>" +
+        "<td style=\"" + heatmapStyle(item.faturamento, escalas.faturamento) + "\">" + escapeHtml(formatBRL(item.faturamento)) + "</td>" +
+        "<td style=\"" + heatmapStyle(item.lucro, escalas.lucro) + "\">" + escapeHtml(formatBRL(item.lucro)) + "</td>" +
+        "<td style=\"" + heatmapStyle(item.lucroMedio, escalas.lucroMedio) + "\">" + escapeHtml(formatBRL(item.lucroMedio)) + "</td>" +
+        "<td style=\"" + heatmapStyle(item.margemMedia, escalas.margemMedia) + "\">" + escapeHtml(formatPercent(item.margemMedia)) + "</td>";
+      tr.addEventListener("click", function() {
+        estado.itemSelecionado = estado.itemSelecionado === item.idProduto ? "" : item.idProduto;
+        atualizarDashboard();
+      });
+      tbody.appendChild(tr);
+    });
+
+    const trTotal = document.createElement("tr");
+    trTotal.className = "linha-total-dashboard";
+    trTotal.innerHTML = [
+      "Total",
+      "",
+      "",
+      formatQtd(resumo.volume),
+      formatBRL(resumo.faturamento),
+      formatBRL(resumo.lucro),
+      formatBRL(lista.length ? resumo.lucro / lista.length : 0),
+      formatPercent(margem)
+    ].map(function(valor) {
+      return "<td>" + escapeHtml(valor) + "</td>";
+    }).join("");
+    tbody.appendChild(trTotal);
+  }
+
+  function calcularEscalasTabela(lista) {
+    const campos = ["volume", "faturamento", "lucro", "lucroMedio", "margemMedia"];
+    const escalas = {};
+
+    campos.forEach(function(campo) {
+      const valores = lista.map(function(item) {
+        return Number(item[campo] || 0);
+      });
+      escalas[campo] = {
+        min: Math.min.apply(null, valores),
+        max: Math.max.apply(null, valores)
+      };
+    });
+
+    return escalas;
+  }
+
+  function heatmapStyle(valor, escala) {
+    const min = Number(escala && escala.min || 0);
+    const max = Number(escala && escala.max || 0);
+    const n = Number(valor || 0);
+    const intensidade = max === min ? 0.18 : Math.max(0.08, Math.min(0.38, 0.08 + ((n - min) / (max - min)) * 0.3));
+    return "background: rgba(54, 219, 46, " + intensidade.toFixed(3) + "); color: #0f3f16; font-weight: 800;";
+  }
+
+  function agregarPorProduto(contexto) {
+    const mapa = new Map();
+    (contexto.itens || []).forEach(function(item) {
+      const produto = estado.mapaProdutos.get(String(item.idProduto));
+      if (!produto) return;
+      if (!mapa.has(String(item.idProduto))) {
+        mapa.set(String(item.idProduto), {
+          idProduto: String(item.idProduto),
+          nome: produto.nome || item.idProduto,
+          categoria: produto.categoria || "",
+          subcategoria: produto.subcategoria || "",
+          volume: 0,
+          faturamento: 0,
+          lucro: 0,
+          qtdLinhas: 0
+        });
+      }
+      const agg = mapa.get(String(item.idProduto));
+      const custo = Number(item.custoTotal || 0);
+      const faturamento = Number(item.valorVenda || 0);
+      agg.volume += Number(item.qtd || 0);
+      agg.faturamento += faturamento;
+      agg.lucro += faturamento - custo;
+      agg.qtdLinhas++;
+    });
+
+    return Array.from(mapa.values()).map(function(item) {
+      item.lucroMedio = item.qtdLinhas ? item.lucro / item.qtdLinhas : 0;
+      item.margemMedia = item.faturamento > 0 ? (item.lucro / item.faturamento) * 100 : 0;
+      return item;
+    });
+  }
+
+  function alternarOrdenacao(campo) {
+    if (estado.sort.campo !== campo) {
+      estado.sort = { campo: campo, direcao: "desc" };
+    } else if (estado.sort.direcao === "desc") {
+      estado.sort.direcao = "asc";
+    } else if (estado.sort.direcao === "asc") {
+      estado.sort = { campo: "", direcao: "" };
+    } else {
+      estado.sort = { campo: campo, direcao: "desc" };
+    }
+    atualizarIndicadoresOrdenacao();
+    if (pacote.modoAgregado) {
+      renderizarTabelaVendasResumo();
+      return;
+    }
+    atualizarTabela(obterContextoFiltrado());
+  }
+
+  function atualizarIndicadoresOrdenacao() {
+    document.querySelectorAll(".tabela-dashboard th[data-sort]").forEach(function(th) {
+      const texto = th.textContent.replace(/\s*[▲▼]$/, "");
+      const ativo = th.dataset.sort === estado.sort.campo && estado.sort.direcao;
+      th.textContent = texto + (ativo ? (estado.sort.direcao === "asc" ? " ▲" : " ▼") : "");
+    });
+  }
+
+  function ordenarLista(lista) {
+    if (!estado.sort.campo || !estado.sort.direcao) {
+      return lista.sort(function(a, b) {
+        return b.faturamento - a.faturamento;
+      });
+    }
+
+    const campo = estado.sort.campo;
+    const direcao = estado.sort.direcao;
+    return lista.sort(function(a, b) {
+      const va = a[campo];
+      const vb = b[campo];
+      let r;
+      if (typeof va === "number" || typeof vb === "number") {
+        r = Number(va || 0) - Number(vb || 0);
+      } else {
+        r = String(va || "").localeCompare(String(vb || ""), "pt-BR", { numeric: true });
+      }
+      return direcao === "asc" ? r : -r;
+    });
+  }
+
+  function obterContextoEstoqueFiltrado() {
+    const periodo = parsePeriodoAnalise(estado.filtros.periodo);
+    const movimentos = [];
+
+    (pacote.movimentacoesEstoque || []).forEach(function(mov) {
+      const produto = estado.mapaProdutos.get(String(mov.idProduto));
+      if (!produto) return;
+
+      if (estado.filtros.produto && String(mov.idProduto) !== estado.filtros.produto) return;
+      if (estado.filtros.fornecedor && String(produto.idFornecedor) !== estado.filtros.fornecedor) return;
+      if (estado.filtros.categoria && String(produto.idCategoria) !== estado.filtros.categoria) return;
+      if (estado.filtros.subcategoria && String(produto.idSubcategoria) !== estado.filtros.subcategoria) return;
+      if (estado.filtros.filial && String(mov.idFilial) !== estado.filtros.filial) return;
+      if (periodo.inicioTS && Number(mov.dataTS || 0) < periodo.inicioTS) return;
+      if (periodo.fimTS && Number(mov.dataTS || 0) > periodo.fimTS) return;
+      if (estado.estoque.periodoSelecionado) {
+        const chave = estado.estoque.periodo === "mes" ? mov.mesKey : mov.diaKey;
+        if (chave !== estado.estoque.periodoSelecionado) return;
+      }
+      if (estado.estoque.itemSelecionado && String(mov.idProduto) !== estado.estoque.itemSelecionado) return;
+
+      movimentos.push(mov);
+    });
+
+    return { movimentos: movimentos };
+  }
+
+  function tipoEstoqueChave(tipo) {
+    const texto = normalizarTexto(tipo);
+    if (texto.includes("entrada")) return "entrada";
+    if (texto.includes("perda")) return "saidaPerda";
+    if (texto.includes("venda")) return "saidaVenda";
+    return "";
+  }
+
+  function resumoEstoque(contexto) {
+    const resumo = {
+      qtdEntrada: 0,
+      valorEntrada: 0,
+      frete: 0,
+      outrasCustas: 0,
+      qtdSaidaVenda: 0,
+      custoSaidaVenda: 0,
+      lucroSaidaVenda: 0,
+      qtdSaidaPerda: 0,
+      valorSaidaPerda: 0
+    };
+    const nfsSomadas = new Set();
+    const vendasSaida = new Set();
+
+    (contexto.movimentos || []).forEach(function(mov) {
+      const tipo = tipoEstoqueChave(mov.tipoMov);
+      const qtd = Number(mov.qtd || 0);
+      const valor = Number(mov.valorTotal || 0);
+
+      if (tipo === "entrada") {
+        resumo.qtdEntrada += qtd;
+        resumo.valorEntrada += valor;
+        if (mov.idNf && !nfsSomadas.has(String(mov.idNf))) {
+          nfsSomadas.add(String(mov.idNf));
+          const nf = obterNfEstoque(mov.idNf);
+          resumo.frete += Number(mov.freteTransporte || nf.freteTransporte || 0);
+          resumo.outrasCustas += Number(mov.outrasCustas || nf.outrasCustas || 0);
+        }
+      }
+
+      if (tipo === "saidaVenda") {
+        resumo.qtdSaidaVenda += qtd;
+        resumo.custoSaidaVenda += valor;
+        if (mov.idVenda) vendasSaida.add(String(mov.idVenda));
+      }
+
+      if (tipo === "saidaPerda") {
+        resumo.qtdSaidaPerda += qtd;
+        resumo.valorSaidaPerda += valor;
+      }
+    });
+
+    if (vendasSaida.size) {
+      resumo.lucroSaidaVenda = calcularLucroCarrinhos(Array.from(vendasSaida));
+    }
+
+    return resumo;
+  }
+
+  function obterNfEstoque(idNf) {
+    const alvo = String(idNf || "").trim();
+    if (!alvo) return {};
+    const alvoCanonico = idCanonico(alvo);
+
+    return (pacote.nfsEstoque || []).find(function(nf) {
+      const id = String(nf.idNf || "").trim();
+      return id === alvo || idCanonico(id) === alvoCanonico;
+    }) || {};
+  }
+
+  function idCanonico(valor) {
+    const texto = String(valor || "").trim();
+    if (!texto) return "";
+    const numerico = texto.replace(",", ".");
+    if (/^\d+(?:\.0+)?$/.test(numerico)) return String(parseInt(numerico, 10));
+    return texto.toUpperCase();
+  }
+
+  function calcularLucroCarrinhos(idsCarrinhos) {
+    const ids = new Set((idsCarrinhos || []).map(function(id) { return String(id); }));
+    const custoPorVenda = new Map();
+
+    (pacote.itensVenda || []).forEach(function(item) {
+      const id = String(item.idCarrinho);
+      if (!ids.has(id)) return;
+      custoPorVenda.set(id, (custoPorVenda.get(id) || 0) + Number(item.custoTotal || 0));
+    });
+
+    return (pacote.vendas || []).reduce(function(acc, venda) {
+      const id = String(venda.idCarrinho);
+      if (!ids.has(id)) return acc;
+      return acc + Number(venda.faturamento || 0) - Number(custoPorVenda.get(id) || 0);
+    }, 0);
+  }
+
+  function atualizarCardsEstoque(contexto) {
+    const resumo = resumoEstoque(contexto);
+    setText("cardEstQtdEntrada", formatQtd(resumo.qtdEntrada));
+    setText("cardEstValorEntrada", formatBRL(resumo.valorEntrada));
+    setText("cardEstFrete", formatBRL(resumo.frete));
+    setText("cardEstOutrasCustas", formatBRL(resumo.outrasCustas));
+    setText("cardEstQtdSaidaVenda", formatQtd(resumo.qtdSaidaVenda));
+    setText("cardEstCustoSaidaVenda", formatBRL(resumo.custoSaidaVenda));
+    setText("cardEstLucroSaidaVenda", formatBRL(resumo.lucroSaidaVenda));
+    setText("cardEstQtdSaidaPerda", formatQtd(resumo.qtdSaidaPerda));
+    setText("cardEstValorSaidaPerda", formatBRL(resumo.valorSaidaPerda));
+  }
+
+  function atualizarGraficoEstoque(contexto) {
+    const agregados = agregarEstoquePorPeriodo(contexto);
+    const limite = estado.estoque.periodo === "mes" ? 12 : 14;
+    const maxInicio = Math.max(0, agregados.length - limite);
+    if (estado.estoque.janelaInicio === null || estado.estoque.janelaInicio === undefined) estado.estoque.janelaInicio = maxInicio;
+    if (estado.estoque.janelaInicio > maxInicio) estado.estoque.janelaInicio = maxInicio;
+    if (estado.estoque.janelaInicio < 0) estado.estoque.janelaInicio = 0;
+
+    const visiveis = agregados.slice(estado.estoque.janelaInicio, estado.estoque.janelaInicio + limite);
+    estado.estoque.periodosVisiveis = visiveis;
+
+    const metricaLabel = estado.estoque.metricas.length > 1 ? "Volume e faturamento" : rotuloMetricaEstoque(estado.estoque.metricas[0]);
+    setText("tituloGraficoEstoque", metricaLabel + (estado.estoque.periodo === "mes" ? " por mes" : " por dia"));
+
+    if (!estado.estoque.chart) {
+      estado.estoque.chart = echarts.init(document.getElementById("graficoEstoque"));
+      estado.estoque.chart.on("click", function(params) {
+        const item = estado.estoque.periodosVisiveis[params.dataIndex];
+        if (!item) return;
+        estado.estoque.periodoSelecionado = estado.estoque.periodoSelecionado === item.key ? "" : item.key;
+        atualizarDashboard();
+      });
+    }
+
+    estado.estoque.chart.setOption({
+      legend: {
+        show: true,
+        top: 0,
+        right: 0,
+        textStyle: { color: "#64748b", fontSize: 10 }
+      },
+      grid: { left: 48, right: 20, top: 34, bottom: 42 },
+      tooltip: {
+        trigger: "axis",
+        axisPointer: { type: "shadow" },
+        formatter: function(params) {
+          const lista = Array.isArray(params) ? params : [];
+          if (!lista.length) return "";
+          const dado = visiveis[lista[0].dataIndex];
+          let html = "<strong>" + escapeHtml(dado.label) + "</strong>";
+          lista.forEach(function(p) {
+            html += "<br>" + escapeHtml(p.seriesName) + ": " + formatValorMetricaEstoque(p.value, p.seriesName);
+          });
+          return html;
+        }
+      },
+      xAxis: {
+        type: "category",
+        data: visiveis.map(function(item) { return item.label; }),
+        axisTick: { show: false },
+        axisLine: { lineStyle: { color: "#e2e8f0" } },
+        axisLabel: { color: "#334155", fontSize: 10 }
+      },
+      yAxis: {
+        type: "value",
+        axisLine: { show: false },
+        splitLine: { lineStyle: { color: "#edf2f7" } },
+        axisLabel: {
+          color: "#64748b",
+          formatter: function(value) {
+            return abreviarNumero(value);
+          }
+        }
+      },
+      series: montarSeriesEstoque(visiveis)
+    }, true);
+  }
+
+  function montarSeriesEstoque(visiveis) {
+    const cores = ["#a8d7ff", "#b8f2b0", "#7fc5ef", "#7ee58a", "#c9e6ff", "#d4f8cd"];
+    const series = [];
+    let corIndex = 0;
+
+    estado.estoque.tipos.forEach(function(tipo) {
+      estado.estoque.metricas.forEach(function(metrica) {
+        const campo = tipo + "_" + metrica;
+        const nome = rotuloTipoEstoque(tipo) + " - " + rotuloMetricaEstoque(metrica);
+        series.push({
+          name: nome,
+          type: "bar",
+          data: visiveis.map(function(item) {
+            return {
+              value: item[campo] || 0,
+              itemStyle: {
+                color: estado.estoque.periodoSelecionado === item.key ? "#1d4ed8" : cores[corIndex % cores.length],
+                borderRadius: [7, 7, 0, 0]
+              }
+            };
+          }),
+          barCategoryGap: visiveis.length <= 2 ? "34%" : "24%",
+          emphasis: { itemStyle: { color: "#42DCFA" } },
+          label: {
+            show: true,
+            position: "top",
+            color: "#334155",
+            fontSize: 9,
+            formatter: function(params) {
+              return metrica === "volume" ? abreviarNumero(params.value) : abreviarMoeda(params.value);
+            }
+          }
+        });
+        corIndex++;
+      });
+    });
+
+    return series;
+  }
+
+  function agregarEstoquePorPeriodo(contexto) {
+    const mapa = new Map();
+
+    (contexto.movimentos || []).forEach(function(mov) {
+      const tipo = tipoEstoqueChave(mov.tipoMov);
+      if (!tipo) return;
+      const key = estado.estoque.periodo === "mes" ? mov.mesKey : mov.diaKey;
+      if (!key) return;
+
+      if (!mapa.has(key)) {
+        mapa.set(key, {
+          key: key,
+          label: estado.estoque.periodo === "mes" ? formatMes(key) : formatDia(key),
+          entrada_volume: 0,
+          entrada_faturamento: 0,
+          saidaVenda_volume: 0,
+          saidaVenda_faturamento: 0,
+          saidaPerda_volume: 0,
+          saidaPerda_faturamento: 0
+        });
+      }
+
+      const item = mapa.get(key);
+      item[tipo + "_volume"] += Number(mov.qtd || 0);
+      item[tipo + "_faturamento"] += Number(mov.valorTotal || 0);
+    });
+
+    return Array.from(mapa.values()).sort(function(a, b) {
+      return a.key.localeCompare(b.key);
+    });
+  }
+
+  function moverJanelaEstoque(delta) {
+    if (pacote.modoAgregado) {
+      const agregados = pacote.estoqueResumo?.grafico || [];
+      const limite = estado.estoque.periodo === "mes" ? 12 : 14;
+      const maxInicio = Math.max(0, agregados.length - limite);
+      estado.estoque.janelaInicio = Math.max(0, Math.min(maxInicio, estado.estoque.janelaInicio + delta));
+      renderizarGraficoEstoqueResumo();
+      return;
+    }
+
+    const agregados = agregarEstoquePorPeriodo(obterContextoEstoqueFiltrado());
+    const limite = estado.estoque.periodo === "mes" ? 12 : 14;
+    const maxInicio = Math.max(0, agregados.length - limite);
+    estado.estoque.janelaInicio = Math.max(0, Math.min(maxInicio, estado.estoque.janelaInicio + delta));
+    atualizarDashboard();
+  }
+
+  function atualizarTabelaEstoque(contexto) {
+    const tbody = document.getElementById("tbodyItensEstoque");
+    if (!tbody) return;
+
+    estado.estoque.tabelaItens = agregarEstoquePorProduto(contexto);
+    const lista = ordenarListaEstoque(estado.estoque.tabelaItens.slice());
+    tbody.innerHTML = "";
+
+    if (!lista.length) {
+      const trVazio = document.createElement("tr");
+      trVazio.innerHTML = '<td colspan="13">Nenhum item encontrado para o contexto atual.</td>';
+      tbody.appendChild(trVazio);
+      return;
+    }
+
+    const escalas = calcularEscalasEstoque(lista);
+    const total = lista.reduce(function(acc, item) {
+      acc.qtdEntrada += item.qtdEntrada;
+      acc.valorEntrada += item.valorEntrada;
+      acc.qtdSaidaVenda += item.qtdSaidaVenda;
+      acc.custoSaidaVenda += item.custoSaidaVenda;
+      acc.lucroSaidaVenda += item.lucroSaidaVenda;
+      acc.qtdSaidaPerda += item.qtdSaidaPerda;
+      acc.valorSaidaPerda += item.valorSaidaPerda;
+      acc.saldo += item.saldo;
+      return acc;
+    }, { qtdEntrada: 0, valorEntrada: 0, qtdSaidaVenda: 0, custoSaidaVenda: 0, lucroSaidaVenda: 0, qtdSaidaPerda: 0, valorSaidaPerda: 0, saldo: 0 });
+
+    lista.forEach(function(item) {
+      const tr = document.createElement("tr");
+      tr.dataset.idProduto = item.idProduto;
+      tr.classList.toggle("selecionada", estado.estoque.itemSelecionado === item.idProduto);
+      const statusSaldo = statusSaldoEstoque(item);
+      tr.innerHTML =
+        "<td>" + escapeHtml(item.nome) + "</td>" +
+        "<td>" + escapeHtml(item.categoria) + "</td>" +
+        "<td>" + escapeHtml(item.subcategoria) + "</td>" +
+        "<td>" + escapeHtml(formatQtd(item.estMinimo)) + "</td>" +
+        "<td>" + escapeHtml(formatQtd(item.estMaximo)) + "</td>" +
+        "<td class=\"" + statusSaldo.classe + "\">" + statusSaldo.icone + " " + escapeHtml(formatQtd(item.saldo)) + "</td>" +
+        "<td>" + escapeHtml(formatQtd(item.qtdEntrada)) + "</td>" +
+        "<td>" + escapeHtml(formatBRL(item.valorEntrada)) + "</td>" +
+        "<td style=\"" + heatmapStyle(item.qtdSaidaVenda, escalas.qtdSaidaVenda) + "\">" + escapeHtml(formatQtd(item.qtdSaidaVenda)) + "</td>" +
+        "<td style=\"" + heatmapStyle(item.custoSaidaVenda, escalas.custoSaidaVenda) + "\">" + escapeHtml(formatBRL(item.custoSaidaVenda)) + "</td>" +
+        "<td style=\"" + heatmapStyle(item.lucroSaidaVenda, escalas.lucroSaidaVenda) + "\">" + escapeHtml(formatBRL(item.lucroSaidaVenda)) + "</td>" +
+        "<td style=\"" + heatmapStyleVermelho(item.qtdSaidaPerda, escalas.qtdSaidaPerda) + "\">" + escapeHtml(formatQtd(item.qtdSaidaPerda)) + "</td>" +
+        "<td style=\"" + heatmapStyleVermelho(item.valorSaidaPerda, escalas.valorSaidaPerda) + "\">" + escapeHtml(formatBRL(item.valorSaidaPerda)) + "</td>";
+      tr.addEventListener("click", function() {
+        estado.estoque.itemSelecionado = estado.estoque.itemSelecionado === item.idProduto ? "" : item.idProduto;
+        atualizarDashboard();
+      });
+      tbody.appendChild(tr);
+    });
+
+    const trTotal = document.createElement("tr");
+    trTotal.className = "linha-total-dashboard";
+    trTotal.innerHTML = [
+      "Total",
+      "",
+      "",
+      "",
+      "",
+      formatQtd(total.saldo),
+      formatQtd(total.qtdEntrada),
+      formatBRL(total.valorEntrada),
+      formatQtd(total.qtdSaidaVenda),
+      formatBRL(total.custoSaidaVenda),
+      formatBRL(total.lucroSaidaVenda),
+      formatQtd(total.qtdSaidaPerda),
+      formatBRL(total.valorSaidaPerda)
+    ].map(function(valor) {
+      return "<td>" + escapeHtml(valor) + "</td>";
+    }).join("");
+    tbody.appendChild(trTotal);
+  }
+
+  function agregarEstoquePorProduto(contexto) {
+    const mapa = new Map();
+
+    (contexto.movimentos || []).forEach(function(mov) {
+      const produto = estado.mapaProdutos.get(String(mov.idProduto));
+      if (!produto) return;
+
+      if (!mapa.has(String(mov.idProduto))) {
+        mapa.set(String(mov.idProduto), {
+          idProduto: String(mov.idProduto),
+          nome: produto.nome || mov.idProduto,
+          categoria: produto.categoria || "",
+          subcategoria: produto.subcategoria || "",
+          estMinimo: Number(produto.estMinimo || 0),
+          estMaximo: Number(produto.estMaximo || 0),
+          qtdEntrada: 0,
+          valorEntrada: 0,
+          qtdSaidaVenda: 0,
+          custoSaidaVenda: 0,
+          lucroSaidaVenda: 0,
+          qtdSaidaPerda: 0,
+          valorSaidaPerda: 0,
+          saldo: 0
+        });
+      }
+
+      const item = mapa.get(String(mov.idProduto));
+      const tipo = tipoEstoqueChave(mov.tipoMov);
+      const qtd = Number(mov.qtd || 0);
+      const valor = Number(mov.valorTotal || 0);
+
+      if (tipo === "entrada") {
+        item.qtdEntrada += qtd;
+        item.valorEntrada += valor;
+        item.saldo += qtd;
+      }
+      if (tipo === "saidaVenda") {
+        item.qtdSaidaVenda += qtd;
+        item.custoSaidaVenda += valor;
+        item.lucroSaidaVenda += Number(mov.lucroVenda || 0);
+        item.saldo -= qtd;
+      }
+      if (tipo === "saidaPerda") {
+        item.qtdSaidaPerda += qtd;
+        item.valorSaidaPerda += valor;
+        item.saldo -= qtd;
+      }
+    });
+
+    return Array.from(mapa.values());
+  }
+
+  function statusSaldoEstoque(item) {
+    const minimo = Number(item.estMinimo || 0);
+    const maximo = Number(item.estMaximo || 0);
+    const saldo = Number(item.saldo || 0);
+    if (minimo && saldo < minimo) return { classe: "status-saldo-alerta", icone: '<span class="saldo-icone">▼</span>' };
+    if (maximo && saldo > maximo) return { classe: "status-saldo-alerta", icone: '<span class="saldo-icone">▲</span>' };
+    return { classe: "status-saldo-ok", icone: '<span class="saldo-icone">✓</span>' };
+  }
+
+  function calcularEscalasEstoque(lista) {
+    const campos = ["qtdSaidaVenda", "custoSaidaVenda", "lucroSaidaVenda", "qtdSaidaPerda", "valorSaidaPerda"];
+    const escalas = {};
+    campos.forEach(function(campo) {
+      const valores = lista.map(function(item) {
+        return Number(item[campo] || 0);
+      });
+      escalas[campo] = {
+        min: Math.min.apply(null, valores),
+        max: Math.max.apply(null, valores)
+      };
+    });
+    return escalas;
+  }
+
+  function heatmapStyleVermelho(valor, escala) {
+    const min = Number(escala && escala.min || 0);
+    const max = Number(escala && escala.max || 0);
+    const n = Number(valor || 0);
+    const intensidade = max === min ? 0.14 : Math.max(0.08, Math.min(0.34, 0.08 + ((n - min) / (max - min)) * 0.26));
+    return "background: rgba(220, 38, 38, " + intensidade.toFixed(3) + "); color: #7f1d1d; font-weight: 800;";
+  }
+
+  function alternarOrdenacaoEstoque(campo) {
+    if (estado.estoque.sort.campo !== campo) {
+      estado.estoque.sort = { campo: campo, direcao: "desc" };
+    } else if (estado.estoque.sort.direcao === "desc") {
+      estado.estoque.sort.direcao = "asc";
+    } else if (estado.estoque.sort.direcao === "asc") {
+      estado.estoque.sort = { campo: "", direcao: "" };
+    } else {
+      estado.estoque.sort = { campo: campo, direcao: "desc" };
+    }
+    atualizarIndicadoresOrdenacaoEstoque();
+    if (pacote.modoAgregado) {
+      renderizarTabelaEstoqueResumo();
+      return;
+    }
+    atualizarTabelaEstoque(obterContextoEstoqueFiltrado());
+  }
+
+  function atualizarIndicadoresOrdenacaoEstoque() {
+    document.querySelectorAll(".tabela-dashboard th[data-sort-estoque]").forEach(function(th) {
+      const texto = th.textContent.replace(/\s*[â–²â–¼]$/, "");
+      const ativo = th.dataset.sortEstoque === estado.estoque.sort.campo && estado.estoque.sort.direcao;
+      th.textContent = texto + (ativo ? (estado.estoque.sort.direcao === "asc" ? " â–²" : " â–¼") : "");
+    });
+  }
+
+  function ordenarListaEstoque(lista) {
+    if (!estado.estoque.sort.campo || !estado.estoque.sort.direcao) {
+      return lista.sort(function(a, b) {
+        return b.valorEntrada - a.valorEntrada;
+      });
+    }
+
+    const campo = estado.estoque.sort.campo;
+    const direcao = estado.estoque.sort.direcao;
+    return lista.sort(function(a, b) {
+      const va = a[campo];
+      const vb = b[campo];
+      let r;
+      if (typeof va === "number" || typeof vb === "number") {
+        r = Number(va || 0) - Number(vb || 0);
+      } else {
+        r = String(va || "").localeCompare(String(vb || ""), "pt-BR", { numeric: true });
+      }
+      return direcao === "asc" ? r : -r;
+    });
+  }
+
+  function alternarOrdenacaoClientes(campo) {
+    if (estado.clientes.sort.campo !== campo) {
+      estado.clientes.sort = { campo: campo, direcao: "desc" };
+    } else if (estado.clientes.sort.direcao === "desc") {
+      estado.clientes.sort.direcao = "asc";
+    } else if (estado.clientes.sort.direcao === "asc") {
+      estado.clientes.sort = { campo: "", direcao: "" };
+    } else {
+      estado.clientes.sort = { campo: campo, direcao: "desc" };
+    }
+    atualizarIndicadoresOrdenacaoClientes();
+    renderizarTabelaClientesResumo();
+  }
+
+  function atualizarIndicadoresOrdenacaoClientes() {
+    document.querySelectorAll(".tabela-dashboard th[data-sort-clientes]").forEach(function(th) {
+      const texto = th.textContent.replace(/\s*[▲▼]$/, "");
+      const ativo = th.dataset.sortClientes === estado.clientes.sort.campo && estado.clientes.sort.direcao;
+      th.textContent = texto + (ativo ? (estado.clientes.sort.direcao === "asc" ? " ▲" : " ▼") : "");
+    });
+  }
+
+  function ordenarListaClientes(lista) {
+    if (!estado.clientes.sort.campo || !estado.clientes.sort.direcao) {
+      return lista.sort(function(a, b) {
+        return Number(b.faturamento || 0) - Number(a.faturamento || 0);
+      });
+    }
+
+    const campo = estado.clientes.sort.campo;
+    const direcao = estado.clientes.sort.direcao;
+    return lista.sort(function(a, b) {
+      const va = a[campo];
+      const vb = b[campo];
+      let r;
+      if (typeof va === "number" || typeof vb === "number") {
+        r = Number(va || 0) - Number(vb || 0);
+      } else {
+        r = String(va || "").localeCompare(String(vb || ""), "pt-BR", { numeric: true });
+      }
+      return direcao === "asc" ? r : -r;
+    });
+  }
+
+  function rotuloTipoEstoque(tipo) {
+    if (tipo === "entrada") return "Entrada";
+    if (tipo === "saidaVenda") return "Saida venda";
+    if (tipo === "saidaPerda") return "Saida perda";
+    return tipo;
+  }
+
+  function rotuloMetricaEstoque(metrica) {
+    return metrica === "faturamento" ? "Faturamento" : "Volume";
+  }
+
+  function formatValorMetricaEstoque(valor, nomeSerie) {
+    return String(nomeSerie || "").toLowerCase().includes("faturamento") ? formatBRL(valor) : formatQtd(valor);
+  }
+
+  function abrirInfoEstoque() {
+    document.getElementById("modalInfoEstoque")?.classList.add("ativo");
+  }
+
+  function fecharInfoEstoque() {
+    document.getElementById("modalInfoEstoque")?.classList.remove("ativo");
+  }
+
+  function abrirInfoVendas() {
+    document.getElementById("modalInfoVendas")?.classList.add("ativo");
+  }
+
+  function fecharInfoVendas() {
+    document.getElementById("modalInfoVendas")?.classList.remove("ativo");
+  }
+
+  function carregarScriptDashboard(src, globalName) {
+    if (globalName && window[globalName]) return Promise.resolve();
+
+    return new Promise(function(resolve, reject) {
+      const existente = document.querySelector('script[data-dashboard-src="' + src + '"]');
+      if (existente) {
+        existente.addEventListener("load", resolve, { once: true });
+        existente.addEventListener("error", reject, { once: true });
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.src = src;
+      script.async = true;
+      script.dataset.dashboardSrc = src;
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  }
+
+  function carregarBibliotecasExportacao() {
+    return carregarScriptDashboard("https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js", "html2canvas")
+      .then(function() {
+        return carregarScriptDashboard("https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js", "jspdf");
+      });
+  }
+
+  function exportarPDF() {
+    if (document.activeElement && typeof document.activeElement.blur === "function") {
+      document.activeElement.blur();
+    }
+
+    const alvo = document.querySelector('.dashboard-visao.ativo');
+    const areaConteudo = document.getElementById("dashboard_conteudo");
+    if (!alvo) {
+      toastWarn("Nao foi possivel encontrar a visao ativa para exportar.");
+      return;
+    }
+
+    document.getElementById("loadingDashboard")?.classList.add("ativo");
+    carregarBibliotecasExportacao()
+      .then(function() {
+        if (!window.html2canvas || !window.jspdf) throw new Error("Bibliotecas de exportacao indisponiveis.");
+        redimensionarGrafico();
+        return new Promise(function(resolve) {
+          setTimeout(resolve, 160);
+        });
+      })
+      .then(function() {
+        const area = areaConteudo || alvo;
+        const rect = area.getBoundingClientRect();
+        const larguraCaptura = Math.ceil(rect.width || area.scrollWidth || area.offsetWidth || area.clientWidth);
+        const alturaCaptura = Math.ceil(rect.height || area.scrollHeight || area.offsetHeight || area.clientHeight);
+        const xCaptura = Math.max(0, Math.floor(rect.left + window.scrollX));
+        const yCaptura = Math.max(0, Math.floor(rect.top + window.scrollY));
+
+        return html2canvas(document.body, {
+          scale: Math.min(2.5, Math.max(2, window.devicePixelRatio || 1)),
+          backgroundColor: "#eef3f8",
+          useCORS: true,
+          x: xCaptura,
+          y: yCaptura,
+          width: larguraCaptura,
+          height: alturaCaptura,
+          windowWidth: document.documentElement.clientWidth,
+          windowHeight: document.documentElement.clientHeight,
+          scrollX: 0,
+          scrollY: 0,
+          ignoreElements: function(elemento) {
+            return elemento && (elemento.id === "loadingDashboard" || !!elemento.closest?.("#loadingDashboard"));
+          }
+        });
+      })
+      .then(function(canvas) {
+        const imgData = canvas.toDataURL("image/png");
+        const largura = canvas.width;
+        const altura = canvas.height;
+        const pdf = new jspdf.jsPDF({
+          orientation: largura >= altura ? "landscape" : "portrait",
+          unit: "px",
+          format: [largura, altura],
+          compress: true
+        });
+        pdf.addImage(imgData, "PNG", 0, 0, largura, altura, undefined, "FAST");
+        pdf.save("Relatorio_Operacional_" + estado.visao + ".pdf");
+      })
+      .catch(function(erro) {
+        console.error(erro);
+        toastErr("Erro ao exportar PDF.");
+      })
+      .finally(function() {
+        document.getElementById("loadingDashboard")?.classList.remove("ativo");
+      });
+  }
+
+  function redimensionarGrafico() {
+    if (estado.chart) estado.chart.resize();
+    if (estado.estoque.chart) estado.estoque.chart.resize();
+    if (estado.clientes.chartRegiao) estado.clientes.chartRegiao.resize();
+    if (estado.categorias.chartParticipacao) estado.categorias.chartParticipacao.resize();
+    if (estado.categorias.chartTornado) estado.categorias.chartTornado.resize();
+  }
+
+  function setText(id, texto) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = texto;
+  }
+
+  function rotuloMetrica(metrica) {
+    if (metrica === "faturamento") return "Faturamento";
+    if (metrica === "lucro") return "Lucro";
+    return "Volume";
+  }
+
+  function rotuloMetricaClientes(metrica) {
+    if (metrica === "faturamento") return "Faturamento";
+    if (metrica === "lucro") return "Lucro";
+    return "Volume";
+  }
+
+  function campoMetricaClientes(metrica) {
+    if (metrica === "faturamento") return "faturamento";
+    if (metrica === "lucro") return "lucro";
+    return "qtdCompras";
+  }
+
+  function metricaPorNomeSerieVendas(nomeSerie) {
+    const texto = normalizarTexto(nomeSerie);
+    if (texto.includes("faturamento")) return "faturamento";
+    if (texto.includes("lucro")) return "lucro";
+    return "volume";
+  }
+
+  function formatValorMetrica(valor, metrica) {
+    return metrica === "volume" ? formatQtd(valor) : formatBRL(valor);
+  }
+
+  function formatBRL(valor) {
+    return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(valor || 0)).replace(/\u00A0/g, " ");
+  }
+
+  function formatQtd(valor) {
+    return new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 }).format(Number(valor || 0));
+  }
+
+  function formatDecimal(valor) {
+    return new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(Number(valor || 0));
+  }
+
+  function formatPercent(valor) {
+    return new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(Number(valor || 0)) + "%";
+  }
+
+  function abreviarNumero(valor) {
+    const n = Number(valor || 0);
+    if (Math.abs(n) >= 1000000) return (n / 1000000).toFixed(1).replace(".", ",") + "M";
+    if (Math.abs(n) >= 1000) return (n / 1000).toFixed(0).replace(".", ",") + "k";
+    return String(Math.round(n));
+  }
+
+  function abreviarMoeda(valor) {
+    const n = Number(valor || 0);
+    if (Math.abs(n) >= 1000000) return "R$ " + (n / 1000000).toFixed(1).replace(".", ",") + "M";
+    if (Math.abs(n) >= 1000) return "R$ " + (n / 1000).toFixed(0).replace(".", ",") + "k";
+    return "R$ " + Math.round(n);
+  }
+
+  function formatMes(key) {
+    const partes = String(key || "").split("-");
+    if (partes.length !== 2) return key;
+    const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+    return meses[Number(partes[1]) - 1] + "/" + partes[0].slice(2);
+  }
+
+  function formatDia(key) {
+    const partes = String(key || "").split("-");
+    if (partes.length !== 3) return key;
+    return partes[2] + "/" + partes[1] + "/" + partes[0];
+  }
+
+  function escapeHtml(valor) {
+    return String(valor || "").replace(/[&<>"']/g, function(ch) {
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[ch];
+    });
+  }
+
+  function toastWarn(msg) {
+    if (window.toastr) toastr.warning(msg);
+  }
+
+  function toastOk(msg) {
+    if (window.toastr) toastr.success(msg);
+  }
+
+  function toastErr(msg) {
+    if (window.toastr) toastr.error(msg);
+  }
+})();
+</script>

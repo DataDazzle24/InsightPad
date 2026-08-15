@@ -1,0 +1,27 @@
+<script>
+
+document.querySelectorAll('#Btn_cad').forEach(btn => {
+  btn.addEventListener('click', e => {
+    const bloqueado = btn.classList.contains('btn-bloqueado');
+    if (bloqueado) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (window.toastr) {
+        toastr.warning('Este módulo ainda não está disponível.');
+      }
+
+      btn.classList.remove('clicked');
+      void btn.offsetWidth;
+      btn.classList.add('clicked');
+
+      return;
+    }
+
+    btn.classList.remove('clicked');
+    void btn.offsetWidth;
+    btn.classList.add('clicked');
+  });
+});
+
+</script>

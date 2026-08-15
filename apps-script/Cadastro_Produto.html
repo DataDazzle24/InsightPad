@@ -1,0 +1,868 @@
+<!-- Esse Será o HTML principal da página de Cadastro de Fornecedores -->
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <base target="_top">
+
+    <!-- Importação das bibliotecas de ícones e estilos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,250,0,200" />
+    
+    <!-- jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    
+    <!-- Toastr para notificações -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+
+    <!-- Chamada dos estilos customizados -->
+    <?!=Chamar("EstiloCabecalho") ?>
+    <?!=Chamar("Cadastro_Produto_Estilo") ?>
+
+  </head>
+
+
+  <body>
+
+    <!-- Cabeçalho da página -->
+    <?!= Chamar("Cabecalho", { tituloPagina: tituloPagina }) ?>
+
+    <!-- Container geral da página -->
+    <div id="geral">
+
+      <!-- Seção superior com botões de ação -->
+      <div id="cad_superior">
+
+        <!-- Botões da esquerda: Voltar, Cadastrar, Editar, Excluir -->
+        <div id="cad_esquerda">
+
+          <!-- Botão Voltar - retorna ao menu de cadastros -->
+          <button id="btnVoltar" type="button" data-insight-page="MenuCadastro">
+            <i id="cad_icone" class="bi bi-arrow-left-circle"></i>
+          </button>
+
+          <!-- Botão Cadastrar - abre modal de cadastro -->
+          <button id="btnCadastrar">
+            <i id="cad_icone" class="bi bi-plus-circle"></i>
+          </button> 
+
+          <!-- Botão Editar - abre modal de edição da filial selecionada -->
+          <button id="btnEditar">
+            <i id="cad_icone" class="bi bi-pencil-square"></i>
+          </button> 
+
+          <button id="btnPromocao" title="Gerenciar promoção">
+            <i id="cad_icone" class="bi bi-tags"></i>
+          </button>
+
+          <!-- Botão Excluir - abre modal de confirmação de exclusão -->
+          <button id="btnExcluir">
+            <i id="cad_icone" class="bi bi-trash3"></i> 
+          </button>
+
+        </div>
+
+
+        <!-- Botões da direita: Campo de pesquisa e ações -->
+        <div id="legenda_promocao" aria-label="Legenda de promoção">
+          <div class="legenda-promocao-item">
+            <span class="status-promocao-dot status-promocao-dot--nao"></span>
+            <span>ITEM SEM PROMOÇÃO</span>
+          </div>
+          <div class="legenda-promocao-item">
+            <span class="status-promocao-dot status-promocao-dot--sim"></span>
+            <span>ITEM EM PROMOÇÃO</span>
+          </div>
+        </div>
+
+        <div id="cad_direita">
+
+          <!-- Botão Pesquisar - filtra dados na tabela -->
+          <button id="btnExtrair">
+            <i id="cad_icone" class="bi bi-filetype-csv"></i> 
+          </button>
+
+          <!-- Botão Pesquisar - filtra dados na tabela -->
+          <button id="btnPesquisar">
+            <i id="cad_icone" class="bi bi-funnel"></i> 
+          </button>
+
+          <!-- Botão Limpar - remove filtros e restaura tabela completa -->
+          <button id="btnLimpar">
+            <i id="cad_limpar" class="bi bi-eraser"></i> 
+          </button>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- Seção inferior com a tabela de dados -->
+      <div id="cad_inferior">
+
+        <div id="container_tabela">
+
+          <div id="tabela_scroll">
+          
+            <!-- Cabeçalho da tabela (fixo) -->
+            <table id="tb_fornecedor">
+
+              <thead id="tb_cabecalho">
+                <tr>
+                  <th id="tb_col_id">ID</th>
+                  <th id="tb_col_promocao">EM PROMOÇÃO</th>
+                  <th id="tb_col_nome">NOME</th>
+                  <th id="tb_col_codinterno">CÓDIGO INTERNO</th>
+                  <th id="tb_col_categoria">CATEGORIA</th>
+                  <th id="tb_col_subcategoria">SUBCATEGORIA</th>
+                  <th id="tb_col_ean">EAN</th>
+                  <th id="tb_col_marca">MARCA</th>
+                  <th id="tb_col_tipotamanho">TIPO TAMANHO</th>
+                  <th id="tb_col_tamanho">TAMANHO</th>
+                  <th id="tb_col_cor">COR</th>
+                  <th id="tb_col_fornecedor">FORNECEDOR</th>
+                  <th id="tb_col_estmaximo">ESTOQUE MÁXIMO</th>
+                  <th id="tb_col_estminimo">ESTOQUE MÍNIMO</th>
+                  <th id="tb_col_precovenda">PREÇO DE VENDA</th>
+                  <th id="tb_col_precocusto">PREÇO DE CUSTO</th>
+                  <th id="tb_col_observacao">OBSERVAÇÃO</th>
+                  <th id="tb_col_combo">COMBO</th>
+                  <th id="tb_col_saidaest">PRODUTO DE SAÍDA</th>
+                  <th id="tb_col_qtdsaidaest">QTD. SAÍDA</th>
+                  <th id="tb_col_valorunitario">VALOR UNITÁRIO</th>
+                  <th id="tb_col_dtcriacao">DATA DE CRIAÇÃO</th>
+                  <th id="tb_col_alteracao">ÚLTIMA ALTERAÇÃO</th>
+                </tr>
+              </thead>
+
+              <tbody id="tb_corpo">
+                <!-- Corpo será preenchido dinamicamente via JavaScript -->
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+
+
+
+
+
+
+
+<!-- MODAIS -->
+
+
+
+    <!-- Modal de Cadastro de Novo Fornecedor -->
+
+    <div id="modalCadastro" class="modal-overlay">
+      <div class="modal-box-large">
+        
+        <!-- Título do modal -->
+        <h2 class="modal-titulo">CADASTRAR PRODUTO</h2>
+        
+        <!-- Container dos campos em 3 colunas -->
+        <div class="form-container">
+
+          <div class="form-column">
+            <div class="titulo-secao-modal">IDENTIFICAÇÃO E CLASSIFICAÇÃO</div>
+
+            <div class="form-field">
+              <label class="input-label campo-obrigatorio">Nome</label>
+              <input type="text" id="inputNome" class="input-moderno" placeholder="Digite o nome do produto..." maxlength="100">
+            </div>
+
+            <div class="form-field">
+              <label class="input-label">Código interno</label>
+              <input type="text" id="inputCodigoInterno" class="input-moderno" placeholder="Digite o código interno..." maxlength="40">
+            </div>
+
+            <div class="form-field dropdown-container">
+              <label class="input-label">Categoria</label>
+              <input type="text" id="inputCategoria" class="input-moderno" placeholder="Digite e selecione a categoria desejada">
+              <ul id="listaCadCategoria" class="sugestoes"></ul>
+            </div>
+
+            <div class="form-field dropdown-container">
+              <label class="input-label">Subcategoria</label>
+              <input type="text" id="inputSubcategoria" class="input-moderno" placeholder="Selecione a subcategoria">
+              <ul id="listaCadSubcategoria" class="sugestoes"></ul>
+            </div>
+
+            <div class="form-field">
+              <label class="input-label">EAN</label>
+              <input type="text" id="inputEAN" class="input-moderno" placeholder="Digite ou escaneie o código de barras..." maxlength="30" autocomplete="off">
+            </div>
+
+            <div class="form-field">
+              <label class="input-label">Marca</label>
+              <input type="text" id="inputMarca" class="input-moderno" placeholder="Digite a marca do produto..." maxlength="40">
+            </div>
+
+            <div class="form-field dropdown-container">
+              <label class="input-label">Cor</label>
+              <input type="text" id="inputCor" class="input-moderno" placeholder="Selecione a cor">
+              <ul id="listaCadCor" class="sugestoes"></ul>
+            </div>
+          </div>
+
+          <div class="form-column">
+            <div class="titulo-secao-modal">ESTOQUE E PRECIFICAÇÃO</div>
+
+            <div class="form-field dropdown-container">
+              <label class="input-label">Fornecedor</label>
+              <input type="text" id="inputFornecedor" class="input-moderno" placeholder="Digite e selecione o fornecedor desejado">
+              <ul id="listaCadFornecedor" class="sugestoes"></ul>
+            </div>
+
+            <div class="form-field">
+              <label class="input-label campo-obrigatorio">Estoque máximo</label>
+              <input type="text" id="inputEstmaximo" class="input-moderno" placeholder="Informe o estoque máximo..." maxlength="5">
+            </div>
+
+            <div class="form-field">
+              <label class="input-label campo-obrigatorio">Estoque mínimo</label>
+              <input type="text" id="inputEstminimo" class="input-moderno" placeholder="Informe o estoque mínimo..." maxlength="5">
+            </div>
+
+            <div class="form-field">
+              <div class="campo-duplo">
+                <div class="campo-duplo-item dropdown-container">
+                  <label class="input-label campo-obrigatorio">Tipo de tamanho</label>
+                  <input type="text" id="inputTipoTamanho" class="input-moderno" placeholder="Tipo">
+                  <ul id="listaCadTipoTamanho" class="sugestoes"></ul>
+                </div>
+                <div class="campo-duplo-item dropdown-container">
+                  <label class="input-label campo-obrigatorio">Tamanho</label>
+                  <input type="text" id="inputTamanho" class="input-moderno" placeholder="Tamanho">
+                  <ul id="listaCadTamanho" class="sugestoes"></ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label class="input-label campo-obrigatorio">Preço de venda</label>
+              <input type="text" id="inputPrecoVenda" class="input-moderno" placeholder="Digite o preço de venda..." maxlength="15">
+            </div>
+
+            <div class="form-field">
+              <label class="input-label">Preço de custo</label>
+              <input type="text" id="inputPrecoCusto" class="input-moderno" placeholder="Digite o preço de custo..." maxlength="15">
+            </div>
+
+            <div class="form-field">
+              <label class="input-label">Lucro</label>
+              <input type="text" id="inputLucro" class="input-moderno input-bloqueado" placeholder="Calculado automaticamente" readonly>
+            </div>
+
+            <div class="form-field">
+              <label class="input-label">Observação</label>
+              <input type="text" id="inputObservacao" class="input-moderno" placeholder="Digite uma observação..." maxlength="300">
+            </div>
+          </div>
+
+          <div class="form-column">
+            <div class="titulo-secao-modal">COMPOSIÇÃO DO COMBO</div>
+
+            <div class="form-field">
+              <input type="checkbox" id="inputProdutoCombo" class="input-checkbox">
+              <label for="inputProdutoCombo" class="checkbox-label">Esse produto é um combo?</label>
+            </div>
+
+            <div class="form-field dropdown-container">
+              <div class="prod-saida">
+                <label class="input-label">Produto saída 1</label>
+                <input type="text" id="inputProdsaida1" class="input-moderno" placeholder="Digite e selecione o produto desejado...">
+                <ul id="listaCadProdsaida1" class="sugestoes"></ul>
+              </div>
+
+              <div class="qtd-prod-saida">
+                <label class="input-label">Qtd. saída 1</label>
+                <input type="text" id="inputQtdsaida1" class="input-moderno" placeholder="Qtd." maxlength="3">
+              </div>
+
+              <div class="valor-atual-prod-saida">
+                <label class="input-label">Valor atual</label>
+                <input type="text" id="inputValorAtualSaida1" class="input-moderno input-bloqueado" placeholder="R$ 0,00" disabled>
+              </div>
+
+              <div class="valor-prod-saida">
+                <label class="input-label">Valor saída 1</label>
+                <input type="text" id="inputValorsaida1" class="input-moderno" placeholder="Valor..." maxlength="15">
+              </div>
+            </div>
+
+            <div class="form-field dropdown-container">
+              <div class="prod-saida">
+                <label class="input-label">Produto saída 2</label>
+                <input type="text" id="inputProdsaida2" class="input-moderno" placeholder="Digite e selecione o produto desejado...">
+                <ul id="listaCadProdsaida2" class="sugestoes"></ul>
+              </div>
+
+              <div class="qtd-prod-saida">
+                <label class="input-label">Qtd. saída 2</label>
+                <input type="text" id="inputQtdsaida2" class="input-moderno" placeholder="Qtd." maxlength="3">
+              </div>
+
+              <div class="valor-atual-prod-saida">
+                <label class="input-label">Valor atual</label>
+                <input type="text" id="inputValorAtualSaida2" class="input-moderno input-bloqueado" placeholder="R$ 0,00" disabled>
+              </div>
+
+              <div class="valor-prod-saida">
+                <label class="input-label">Valor saída 2</label>
+                <input type="text" id="inputValorsaida2" class="input-moderno" placeholder="Valor..." maxlength="15">
+              </div>
+            </div>
+
+            <div class="form-field dropdown-container">
+              <div class="prod-saida">
+                <label class="input-label">Produto saída 3</label>
+                <input type="text" id="inputProdsaida3" class="input-moderno" placeholder="Digite e selecione o produto desejado...">
+                <ul id="listaCadProdsaida3" class="sugestoes"></ul>
+              </div>
+
+              <div class="qtd-prod-saida">
+                <label class="input-label">Qtd. saída 3</label>
+                <input type="text" id="inputQtdsaida3" class="input-moderno" placeholder="Qtd." maxlength="3">
+              </div>
+
+              <div class="valor-atual-prod-saida">
+                <label class="input-label">Valor atual</label>
+                <input type="text" id="inputValorAtualSaida3" class="input-moderno input-bloqueado" placeholder="R$ 0,00" disabled>
+              </div>
+
+              <div class="valor-prod-saida">
+                <label class="input-label">Valor saída 3</label>
+                <input type="text" id="inputValorsaida3" class="input-moderno" placeholder="Valor..." maxlength="15">
+              </div>
+            </div>
+          </div>
+
+        </div>
+        
+        <!-- Botões de ação do modal -->
+        <div class="modal-botoes">
+          <button id="btnCancelarCadastro" class="btn-cancelar">CANCELAR</button>
+          <button id="btnConfirmarCadastro" class="btn-cadastrar">CADASTRAR</button>
+        </div>
+
+      </div>
+    </div>
+
+
+
+
+    <!-- Modal de Carregamento -->
+    <div id="modalCarregamento" class="loading-overlay">
+      <div class="loading-box">
+        <div class="loading-container">
+          <!-- Logo da empresa com animação de spinner -->
+          <img src="https://drive.google.com/thumbnail?id=1T6pWIpQeH-jPowvh63mPQDJVIjA3VJBJ" alt="Logo" class="loading-logo">
+          <div class="loading-spinner"></div>
+        </div>
+      </div>
+    </div>
+
+
+
+
+    <!-- Modal de Confirmação de Exclusão -->
+    <div id="modalExclusao" class="modal-overlay">
+      <div class="modal-box">
+        <h2 class="modal-titulo">EXCLUIR PRODUTO</h2>
+        
+        <div class="form-group">
+          <!-- Texto dinâmico com o nome do fornecedor a ser excluída -->
+          <p class="texto-confirmacao">Deseja, realmente, excluir o produto <strong id="produtoSelecionado"></strong>?</p>
+        </div>
+        
+        <div class="modal-botoes">
+          <button id="btnNaoExcluir" class="btn-nao">NÃO</button>
+          <button id="btnSimExcluir" class="btn-sim">SIM</button>
+        </div>
+      </div>
+    </div>
+
+
+
+
+
+    <!-- Modal de Edição de Fornecedor -->
+    <div id="modalEdicao" class="modal-overlay">
+      <div class="modal-box-large">
+        
+        <h2 class="modal-titulo">EDITAR PRODUTO</h2>
+        
+        <!-- Container dos campos em 3 colunas (igual ao cadastro) -->
+        <div class="form-container">
+
+          <div class="form-column">
+            <div class="titulo-secao-modal">IDENTIFICAÇÃO E CLASSIFICAÇÃO</div>
+
+            <div class="form-field">
+              <label class="input-label campo-obrigatorio">Nome</label>
+              <input type="text" id="inputEditarNome" class="input-moderno" placeholder="Digite o nome do produto..." maxlength="100">
+            </div>
+
+            <div class="form-field">
+              <label class="input-label">Código interno</label>
+              <input type="text" id="inputEditarCodigoInterno" class="input-moderno" placeholder="Digite o código interno..." maxlength="40">
+            </div>
+
+            <div class="form-field dropdown-container">
+              <label class="input-label">Categoria</label>
+              <input type="text" id="inputEditarCategoria" class="input-moderno" placeholder="Digite e selecione a categoria desejada">
+              <ul id="listaEditarCategoria" class="sugestoes"></ul>
+            </div>
+
+            <div class="form-field dropdown-container">
+              <label class="input-label">Subcategoria</label>
+              <input type="text" id="inputEditarSubcategoria" class="input-moderno" placeholder="Selecione a subcategoria">
+              <ul id="listaEditarSubcategoria" class="sugestoes"></ul>
+            </div>
+
+            <div class="form-field">
+              <label class="input-label">EAN</label>
+              <input type="text" id="inputEditarEAN" class="input-moderno" placeholder="Digite ou escaneie o código de barras..." maxlength="30" autocomplete="off">
+            </div>
+
+            <div class="form-field">
+              <label class="input-label">Marca</label>
+              <input type="text" id="inputEditarMarca" class="input-moderno" placeholder="Digite a marca do produto..." maxlength="40">
+            </div>
+
+            <div class="form-field dropdown-container">
+              <label class="input-label">Cor</label>
+              <input type="text" id="inputEditarCor" class="input-moderno" placeholder="Selecione a cor">
+              <ul id="listaEditCor" class="sugestoes"></ul>
+            </div>
+          </div>
+
+          <div class="form-column">
+            <div class="titulo-secao-modal">ESTOQUE E PRECIFICAÇÃO</div>
+
+            <div class="form-field dropdown-container">
+              <label class="input-label">Fornecedor</label>
+              <input type="text" id="inputEditarFornecedor" class="input-moderno" placeholder="Digite e selecione o fornecedor desejado">
+              <ul id="listaEditarFornecedor" class="sugestoes"></ul>
+            </div>
+
+            <div class="form-field">
+              <label class="input-label campo-obrigatorio">Estoque máximo</label>
+              <input type="text" id="inputEditarEstmaximo" class="input-moderno" placeholder="Informe o estoque máximo..." maxlength="5">
+            </div>
+
+            <div class="form-field">
+              <label class="input-label campo-obrigatorio">Estoque mínimo</label>
+              <input type="text" id="inputEditarEstminimo" class="input-moderno" placeholder="Informe o estoque mínimo..." maxlength="5">
+            </div>
+
+            <div class="form-field">
+              <div class="campo-duplo">
+                <div class="campo-duplo-item dropdown-container">
+                  <label class="input-label campo-obrigatorio">Tipo de tamanho</label>
+                  <input type="text" id="inputEditarTipoTamanho" class="input-moderno" placeholder="Tipo">
+                  <ul id="listaEditTipoTamanho" class="sugestoes"></ul>
+                </div>
+                <div class="campo-duplo-item dropdown-container">
+                  <label class="input-label campo-obrigatorio">Tamanho</label>
+                  <input type="text" id="inputEditarTamanho" class="input-moderno" placeholder="Tamanho">
+                  <ul id="listaEditTamanho" class="sugestoes"></ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label class="input-label campo-obrigatorio">Preço de venda</label>
+              <input type="text" id="inputEditarPrecoVenda" class="input-moderno" placeholder="Digite o preço de venda..." maxlength="15">
+            </div>
+
+            <div class="form-field">
+              <label class="input-label">Preço de custo</label>
+              <input type="text" id="inputEditarPrecoCusto" class="input-moderno" placeholder="Digite o preço de custo..." maxlength="15">
+            </div>
+
+            <div class="form-field">
+              <label class="input-label">Lucro</label>
+              <input type="text" id="inputEditarLucro" class="input-moderno input-bloqueado" placeholder="Calculado automaticamente" readonly>
+            </div>
+
+            <div class="form-field">
+              <label class="input-label">Observação</label>
+              <input type="text" id="inputEditarObservacao" class="input-moderno" placeholder="Digite uma observação..." maxlength="300">
+            </div>
+          </div>
+
+          <div class="form-column">
+            <div class="titulo-secao-modal">COMPOSIÇÃO DO COMBO</div>
+
+            <div class="form-field">
+              <input type="checkbox" id="inputEditarProdutoCombo" class="input-checkbox">
+              <label for="inputEditarProdutoCombo" class="checkbox-label">Esse produto é um combo?</label>
+            </div>
+
+            <div class="form-field dropdown-container">
+              <div class="prod-saida">
+                <label class="input-label">Produto saída 1</label>
+                <input type="text" id="inputEditarProdsaida1" class="input-moderno" placeholder="Digite e selecione o produto desejado...">
+                <ul id="listaEditarProdsaida1" class="sugestoes"></ul>
+              </div>
+
+              <div class="qtd-prod-saida">
+                <label class="input-label">Qtd. saída 1</label>
+                <input type="text" id="inputEditarQtdsaida1" class="input-moderno" placeholder="Qtd." maxlength="3">
+              </div>
+
+              <div class="valor-atual-prod-saida">
+                <label class="input-label">Valor atual</label>
+                <input type="text" id="inputEditarValorAtualSaida1" class="input-moderno input-bloqueado" placeholder="R$ 0,00" disabled>
+              </div>
+
+              <div class="valor-prod-saida">
+                <label class="input-label">Valor saída 1</label>
+                <input type="text" id="inputEditarValorsaida1" class="input-moderno" placeholder="Valor..." maxlength="15">
+              </div>
+            </div>
+
+            <div class="form-field dropdown-container">
+              <div class="prod-saida">
+                <label class="input-label">Produto saída 2</label>
+                <input type="text" id="inputEditarProdsaida2" class="input-moderno" placeholder="Digite e selecione o produto desejado...">
+                <ul id="listaEditarProdsaida2" class="sugestoes"></ul>
+              </div>
+
+              <div class="qtd-prod-saida">
+                <label class="input-label">Qtd. saída 2</label>
+                <input type="text" id="inputEditarQtdsaida2" class="input-moderno" placeholder="Qtd." maxlength="3">
+              </div>
+
+              <div class="valor-atual-prod-saida">
+                <label class="input-label">Valor atual</label>
+                <input type="text" id="inputEditarValorAtualSaida2" class="input-moderno input-bloqueado" placeholder="R$ 0,00" disabled>
+              </div>
+
+              <div class="valor-prod-saida">
+                <label class="input-label">Valor saída 2</label>
+                <input type="text" id="inputEditarValorsaida2" class="input-moderno" placeholder="Valor..." maxlength="15">
+              </div>
+            </div>
+
+            <div class="form-field dropdown-container">
+              <div class="prod-saida">
+                <label class="input-label">Produto saída 3</label>
+                <input type="text" id="inputEditarProdsaida3" class="input-moderno" placeholder="Digite e selecione o produto desejado...">
+                <ul id="listaEditarProdsaida3" class="sugestoes"></ul>
+              </div>
+
+              <div class="qtd-prod-saida">
+                <label class="input-label">Qtd. saída 3</label>
+                <input type="text" id="inputEditarQtdsaida3" class="input-moderno" placeholder="Qtd." maxlength="3">
+              </div>
+
+              <div class="valor-atual-prod-saida">
+                <label class="input-label">Valor atual</label>
+                <input type="text" id="inputEditarValorAtualSaida3" class="input-moderno input-bloqueado" placeholder="R$ 0,00" disabled>
+              </div>
+
+              <div class="valor-prod-saida">
+                <label class="input-label">Valor saída 3</label>
+                <input type="text" id="inputEditarValorsaida3" class="input-moderno" placeholder="Valor..." maxlength="15">
+              </div>
+            </div>
+          </div>
+
+        </div>
+        
+        <div class="modal-botoes">
+          <button id="btnCancelarEdicao" class="btn-cancelar">CANCELAR</button>
+          <button id="btnConfirmarEdicao" class="btn-cadastrar">EDITAR</button>
+        </div>
+        
+      </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Modal de Promoção -->
+<div id="modalPromocao" class="modal-overlay">
+  <div class="modal-box-large modal-box-promocao">
+
+    <div class="modal-header-promocao">
+      <h2 class="modal-titulo">GERENCIAR PROMOÇÃO</h2>
+      <button id="btnExportarHistoricoPromocao" class="btn-promocao-csv" title="Extrair histórico de promoções">
+        <i class="bi bi-filetype-csv"></i>
+      </button>
+    </div>
+
+    <!-- Campos técnicos ocultos -->
+    <input type="hidden" id="inputPromoIdPromocao">
+    <input type="hidden" id="inputPromoIdProduto">
+
+    <div class="form-container-promocao">
+
+      <!-- Coluna esquerda -->
+      <div class="form-column-promocao">
+        <div class="titulo-secao-modal">INFORMAÇÕES DA PROMOÇÃO</div>
+
+        <div class="form-field dropdown-container">
+          <label class="input-label">Produto</label>
+          <input type="text" id="inputPromocaoProduto" class="input-moderno" placeholder="Digite e selecione o produto...">
+          <ul id="listaPromocaoProduto" class="sugestoes"></ul>
+        </div>
+
+        <div class="form-field">
+          <div class="campo-duplo">
+            <div class="campo-duplo-item">
+              <label class="input-label">Preço atual</label>
+              <input type="text" id="inputPromocaoPrecoAtual" class="input-moderno input-bloqueado" placeholder="Carregado automaticamente" disabled>
+            </div>
+            <div class="campo-duplo-item">
+              <label class="input-label">Preço promocional</label>
+              <input type="text" id="inputPromocaoPrecoVenda" class="input-moderno" placeholder="Digite o preço promocional..." maxlength="15">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="input-label">Preço de custo</label>
+          <input type="text" id="inputPromocaoPrecoCusto" class="input-moderno input-bloqueado" placeholder="Carregado automaticamente" readonly>
+        </div>
+
+        <div class="form-field">
+          <label class="input-label">Lucro</label>
+          <input type="text" id="inputPromocaoLucro" class="input-moderno input-bloqueado" placeholder="Calculado automaticamente" readonly>
+        </div>
+      </div>
+
+      <!-- Coluna direita -->
+      <div class="form-column-promocao">
+        <div class="titulo-secao-modal">PERÍODO DA PROMOÇÃO</div>
+
+        <div class="form-field">
+          <label class="input-label">Início da promoção</label>
+          <input type="datetime-local" id="inputPromocaoInicio" class="input-moderno input-datetime-promocao">
+        </div>
+
+        <div class="form-field">
+          <label class="input-label">Fim da promoção</label>
+          <input type="datetime-local" id="inputPromocaoFim" class="input-moderno input-datetime-promocao">
+        </div>
+      </div>
+
+    </div>
+
+    <div class="modal-botoes modal-botoes-promocao">
+      <button id="btnCancelarPromocao" class="btn-cancelar">CANCELAR</button>
+      <button id="btnExcluirPromocao" class="btn-nao" disabled>EXCLUIR</button>
+      <button id="btnEditarPromocao" class="btn-cadastrar" disabled>EDITAR</button>
+      <button id="btnCadastrarPromocao" class="btn-cadastrar">CADASTRAR</button>
+    </div>
+
+  </div>
+</div>
+
+
+
+
+<!-- Modal de Extração do Histórico de Promoções -->
+<div id="modalExtracaoPromocao" class="modal-overlay modal-overlay-secundario">
+  <div class="modal-box-extracao-promocao">
+
+    <div class="modal-extracao-topo">
+      <h2 class="modal-titulo modal-titulo-extracao-promocao">EXTRAIR PROMOÇÕES</h2>
+      <label class="checkbox-extrair-tudo-promocao">
+        <input type="checkbox" id="checkExtrairTudoPromocao">
+        <span>EXTRAIR TUDO</span>
+      </label>
+    </div>
+
+    <div class="form-field dropdown-container">
+      <label class="input-label">Produto</label>
+      <input type="text" id="inputExtracaoPromocaoProduto" class="input-moderno" placeholder="Digite e selecione o produto...">
+      <ul id="listaExtracaoPromocaoProduto" class="sugestoes"></ul>
+    </div>
+
+    <div class="form-field">
+      <label class="input-label">Período da promoção</label>
+      <input type="text" id="inputExtracaoPromocaoPeriodo" class="input-moderno datepicker" placeholder="Selecione o período da extração">
+    </div>
+
+    <div class="modal-botoes">
+      <button id="btnCancelarExtracaoPromocao" class="btn-cancelar">CANCELAR</button>
+      <button id="btnConfirmarExtracaoPromocao" class="btn-cadastrar">EXTRAIR</button>
+    </div>
+
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- MODAL DE PESQUISA ---------------------------------------------------------------------------------->
+
+    <div id="modalPesquisa" class="modal-overlay">
+
+      <div class="modal-box-large">
+
+        
+
+        <h2 class="modal-titulo">PESQUISA</h2>
+
+        
+
+        <!-- Container dos campos -->
+        <div class="form-container">
+
+          <div class="form-column">
+            
+            <!-- Campo de categoria, acoplado a uma lista suspensa-->
+            <div class="form-field dropdown-container">
+              <label class="input-label">Nome do produto</label>
+              <input type="text" id="inputPesquisarNome" class="input-moderno" placeholder="Digite e selecione o nome do produto ...">
+              <ul id="listaPesquisarNome" class="sugestoes"></ul>
+            </div>
+
+            <div class="form-field dropdown-container">
+              <label class="input-label">Categoria</label>
+              <input type="text" id="inputPesquisarCategoria" class="input-moderno" placeholder="Digite e selecione a categoria ...">
+              <ul id="listaPesquisarCategoria" class="sugestoes"></ul>
+            </div>
+
+            <div class="form-field dropdown-container">
+              <label class="input-label">EAN</label>
+              <input type="text" id="inputPesquisarEAN" class="input-moderno" placeholder="Digite e selecione o EAN do produtoo ...">
+              <ul id="listaPesquisarEAN" class="sugestoes"></ul>
+            </div>
+
+
+          </div>
+
+          <div class="form-column">
+
+            <div class="form-field dropdown-container">
+              <label class="input-label">Marca</label>
+              <input type="text" id="inputPesquisarMarca" class="input-moderno" placeholder="Digite e selecione a marca do produto ....">
+              <ul id="listaPesquisarMarca" class="sugestoes"></ul>
+            </div>
+
+            <div class="form-field dropdown-container">
+              <label class="input-label">Fornecedor</label>
+              <input type="text" id="inputPesquisarFornecedor" class="input-moderno" placeholder="Digite e selecione o fornecedor ...">
+              <ul id="listaPesquisarFornecedor" class="sugestoes"></ul>
+            </div>
+
+            <div class="form-field dropdown-container">
+              <label class="input-label">Produto de saída</label>
+              <input type="text" id="inputPesquisarProdSaida" class="input-moderno" placeholder="Digite e selecione o produto de saída ...">
+              <ul id="listaPesquisarProdSaida" class="sugestoes"></ul>
+            </div>
+          
+          </div>
+
+          <div class="form-column">
+
+            <div class="form-field dropdown-container">
+              <label class="input-label">Combo ?</label>
+              <input type="text" id="inputPesquisarCombo" class="input-moderno" placeholder="Selecione se o produto é um combo ...">
+              <ul id="listaPesquisarCombo" class="sugestoes"></ul>
+            </div>
+
+            <!-- Campo de data, acoplada a um calendário -->
+            <div class="form-field">
+              <label for="inputPesquisarDataCadastro" class="input-label">Período de cadastro</label>
+              <input type="text" id="inputPesquisarDataCadastro" class="input-moderno datepicker" placeholder="Selecione o período de cadastro do produto">
+            </div>
+          
+          </div>
+
+        </div>
+
+
+
+        <!-- Botões de ação do modal -->
+        <div class="modal-botoes">
+          <button id="btnCancelarPesquisa" class="btn-cancelar">CANCELAR</button>
+          <button id="btnConfirmarPesquisa" class="btn-cadastrar">PESQUISAR</button>
+        </div>
+
+
+        
+      </div>
+
+    </div>
+
+
+
+
+
+    <!-- Scripts necessários -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+
+
+
+    <script>
+      // Passa os dados do template GS para JavaScript
+      // itens: lista de nomes de filiais para o dropdown de pesquisa
+      var itensCat = <?!= JSON.stringify(itensCat) ?>;
+       var itensSubcat = <?!= JSON.stringify(itensSubcat) ?>;
+      var itensForn = <?!= JSON.stringify(itensForn) ?>;
+      
+      
+      // dadosTabela: array completo com todos os dados das filiais
+      var dadosTabelaProd = <?!= JSON.stringify(dadosTabelaProd) ?>;
+      var dadosTabelaSaida = <?!= JSON.stringify(dadosTabelaSaida) ?>;
+    </script>
+
+
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+
+
+
+    <!-- Importa o JavaScript customizado -->
+    <?!=Chamar("Cadastro_Produto_JS") ?>
+
+  </body>
+</html>
