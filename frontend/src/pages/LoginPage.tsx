@@ -54,30 +54,18 @@ export function LoginPage() {
     <main className="login-page">
       <section className="login-visual" aria-label="Apresentação do Insight Pad">
         <div className="login-visual__content">
-          <div className="brand-lockup brand-lockup--light">
-            <div className="brand-mark" aria-hidden="true">
-              <span />
-              <span />
-              <span />
-            </div>
-            <div>
-              <strong>Insight Pad</strong>
-              <small>by Data Dazzle</small>
-            </div>
-          </div>
+          <img className="official-login-logo" src="https://drive.google.com/thumbnail?id=1cUQw1yH0k3fdMKIIeKBMaUkhD23oJ4Eh&sz=w2000" alt="Insight Pad" />
 
           <div className="login-visual__copy">
             <span className="eyebrow">GESTÃO QUE CABE NA SUA ROTINA</span>
-            <h1>Decisões mais simples. Negócios mais fortes.</h1>
+            <h1>Seu negócio, mais simples de administrar.</h1>
             <p>
               Vendas, estoque e gestão conectados em um ambiente seguro e
               preparado para crescer com sua empresa.
             </p>
           </div>
 
-          <p className="login-visual__footer">
-            Ambiente de desenvolvimento protegido
-          </p>
+          <div className="login-visual__footer"><img src="https://drive.google.com/thumbnail?id=1CLFb1HP_w1WITW7HlSmPV1JN6auYURHY&sz=w2000" alt="Data Dazzle" /><span>Um produto Data Dazzle</span></div>
         </div>
       </section>
 
