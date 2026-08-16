@@ -12,10 +12,12 @@ For each operation, there is a wrapper hook that can be used to call the operati
 
 Here are all of the hooks that get generated:
 ```ts
-import { useGetCurrentUser } from '@insightpad/dataconnect/react';
+import { useGetCurrentUser, useGetCurrentUserAccess } from '@insightpad/dataconnect/react';
 // The types of these hooks are available in react/index.d.ts
 
 const { data, isPending, isSuccess, isError, error } = useGetCurrentUser();
+
+const { data, isPending, isSuccess, isError, error } = useGetCurrentUserAccess();
 
 ```
 
@@ -54,11 +56,14 @@ If a user is not using a supported framework, they can use the generated SDK dir
 Here's an example of how to use it with the first 5 operations:
 
 ```js
-import { getCurrentUser } from '@insightpad/dataconnect';
+import { getCurrentUser, getCurrentUserAccess } from '@insightpad/dataconnect';
 
 
 // Operation GetCurrentUser: 
 const { data } = await GetCurrentUser(dataConnect);
+
+// Operation GetCurrentUserAccess: 
+const { data } = await GetCurrentUserAccess(dataConnect);
 
 
 ```

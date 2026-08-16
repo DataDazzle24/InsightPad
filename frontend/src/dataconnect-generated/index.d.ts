@@ -45,6 +45,56 @@ export interface FiscalDocument_Key {
   __typename?: 'FiscalDocument_Key';
 }
 
+export interface GetCurrentUserAccessData {
+  user?: {
+    id: string;
+    tenant: {
+      id: UUIDString;
+    } & Tenant_Key;
+    role: {
+      id: UUIDString;
+      rolePagePermissions_on_role: ({
+        canAccess: boolean;
+        canCreate: boolean;
+        canUpdate: boolean;
+        canDelete: boolean;
+        canExport: boolean;
+        canManage: boolean;
+        page: {
+          id: UUIDString;
+          pageKey: string;
+          displayName: string;
+          module: string;
+          route: string;
+          icon?: string | null;
+          displayOrder: number;
+          requiresLogin: boolean;
+          active: boolean;
+        } & AppPage_Key;
+      })[];
+    } & Role_Key;
+    userPagePermissions_on_user: ({
+      canAccess: boolean;
+      canCreate: boolean;
+      canUpdate: boolean;
+      canDelete: boolean;
+      canExport: boolean;
+      canManage: boolean;
+      page: {
+        id: UUIDString;
+        pageKey: string;
+        displayName: string;
+        module: string;
+        route: string;
+        icon?: string | null;
+        displayOrder: number;
+        requiresLogin: boolean;
+        active: boolean;
+      } & AppPage_Key;
+    })[];
+  } & User_Key;
+}
+
 export interface GetCurrentUserData {
   user?: {
     id: string;
@@ -184,4 +234,16 @@ export const getCurrentUserRef: GetCurrentUserRef;
 
 export function getCurrentUser(options?: ExecuteQueryOptions): QueryPromise<GetCurrentUserData, undefined>;
 export function getCurrentUser(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetCurrentUserData, undefined>;
+
+interface GetCurrentUserAccessRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<GetCurrentUserAccessData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<GetCurrentUserAccessData, undefined>;
+  operationName: string;
+}
+export const getCurrentUserAccessRef: GetCurrentUserAccessRef;
+
+export function getCurrentUserAccess(options?: ExecuteQueryOptions): QueryPromise<GetCurrentUserAccessData, undefined>;
+export function getCurrentUserAccess(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetCurrentUserAccessData, undefined>;
 

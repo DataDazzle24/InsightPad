@@ -21,3 +21,18 @@ exports.getCurrentUser = function getCurrentUser(dcOrOptions, options) {
   return executeQuery(getCurrentUserRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;
+
+const getCurrentUserAccessRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetCurrentUserAccess');
+}
+getCurrentUserAccessRef.operationName = 'GetCurrentUserAccess';
+exports.getCurrentUserAccessRef = getCurrentUserAccessRef;
+
+exports.getCurrentUserAccess = function getCurrentUserAccess(dcOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(getCurrentUserAccessRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;

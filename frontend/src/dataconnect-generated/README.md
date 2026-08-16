@@ -11,6 +11,7 @@ This README will guide you through the process of using the generated JavaScript
   - [*Connecting to the local Emulator*](#connecting-to-the-local-emulator)
 - [**Queries**](#queries)
   - [*GetCurrentUser*](#getcurrentuser)
+  - [*GetCurrentUserAccess*](#getcurrentuseraccess)
 - [**Mutations**](#mutations)
 
 # Accessing the connector
@@ -155,6 +156,143 @@ const ref = getCurrentUserRef();
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
 const ref = getCurrentUserRef(dataConnect);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.user);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.user);
+});
+```
+
+## GetCurrentUserAccess
+You can execute the `GetCurrentUserAccess` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+getCurrentUserAccess(options?: ExecuteQueryOptions): QueryPromise<GetCurrentUserAccessData, undefined>;
+
+interface GetCurrentUserAccessRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<GetCurrentUserAccessData, undefined>;
+}
+export const getCurrentUserAccessRef: GetCurrentUserAccessRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+getCurrentUserAccess(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetCurrentUserAccessData, undefined>;
+
+interface GetCurrentUserAccessRef {
+  ...
+  (dc: DataConnect): QueryRef<GetCurrentUserAccessData, undefined>;
+}
+export const getCurrentUserAccessRef: GetCurrentUserAccessRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the getCurrentUserAccessRef:
+```typescript
+const name = getCurrentUserAccessRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `GetCurrentUserAccess` query has no variables.
+### Return Type
+Recall that executing the `GetCurrentUserAccess` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `GetCurrentUserAccessData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface GetCurrentUserAccessData {
+  user?: {
+    id: string;
+    tenant: {
+      id: UUIDString;
+    } & Tenant_Key;
+    role: {
+      id: UUIDString;
+      rolePagePermissions_on_role: ({
+        canAccess: boolean;
+        canCreate: boolean;
+        canUpdate: boolean;
+        canDelete: boolean;
+        canExport: boolean;
+        canManage: boolean;
+        page: {
+          id: UUIDString;
+          pageKey: string;
+          displayName: string;
+          module: string;
+          route: string;
+          icon?: string | null;
+          displayOrder: number;
+          requiresLogin: boolean;
+          active: boolean;
+        } & AppPage_Key;
+      })[];
+    } & Role_Key;
+    userPagePermissions_on_user: ({
+      canAccess: boolean;
+      canCreate: boolean;
+      canUpdate: boolean;
+      canDelete: boolean;
+      canExport: boolean;
+      canManage: boolean;
+      page: {
+        id: UUIDString;
+        pageKey: string;
+        displayName: string;
+        module: string;
+        route: string;
+        icon?: string | null;
+        displayOrder: number;
+        requiresLogin: boolean;
+        active: boolean;
+      } & AppPage_Key;
+    })[];
+  } & User_Key;
+}
+```
+### Using `GetCurrentUserAccess`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, getCurrentUserAccess } from '@insightpad/dataconnect';
+
+
+// Call the `getCurrentUserAccess()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await getCurrentUserAccess();
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await getCurrentUserAccess(dataConnect);
+
+console.log(data.user);
+
+// Or, you can use the `Promise` API.
+getCurrentUserAccess().then((response) => {
+  const data = response.data;
+  console.log(data.user);
+});
+```
+
+### Using `GetCurrentUserAccess`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, getCurrentUserAccessRef } from '@insightpad/dataconnect';
+
+
+// Call the `getCurrentUserAccessRef()` function to get a reference to the query.
+const ref = getCurrentUserAccessRef();
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = getCurrentUserAccessRef(dataConnect);
 
 // Call `executeQuery()` on the reference to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
