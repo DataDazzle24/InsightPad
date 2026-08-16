@@ -461,6 +461,131 @@ type StockTransferItem @table(name: "stock_transfer_items", key: "id") {
   createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
 }
 
+# Financial and cash-control foundation. These entities complete the pages that
+# already exist in the navigation catalog and keep all values in integer cents.
+type UserBranch @table(name: "user_branches", key: ["user", "branch"]) {
+  user: User!
+  branch: Branch!
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  defaultBranch: Boolean! @default(value: false) @col(name: "default_branch")
+  active: Boolean! @default(value: true)
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+}
+
+type FinancialCategory @table(name: "financial_categories", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  name: String! @col(dataType: "varchar(120)")
+  direction: String! @col(dataType: "varchar(12)")
+  active: Boolean! @default(value: true)
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+}
+
+type FinancialAccount @table(name: "financial_accounts", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  branch: Branch @ref(fields: "branchId", references: "id")
+  branchId: UUID @col(name: "branch_id")
+  name: String! @col(dataType: "varchar(120)")
+  accountType: String! @col(name: "account_type", dataType: "varchar(40)")
+  openingBalanceCents: Int64! @default(value: 0) @col(name: "opening_balance_cents")
+  active: Boolean! @default(value: true)
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+}
+
+type AccountPayable @table(name: "accounts_payable", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  branch: Branch! @ref(fields: "branchId", references: "id")
+  branchId: UUID! @col(name: "branch_id")
+  supplier: Supplier @ref(fields: "supplierId", references: "id")
+  supplierId: UUID @col(name: "supplier_id")
+  category: FinancialCategory @ref(fields: "categoryId", references: "id")
+  categoryId: UUID @col(name: "category_id")
+  account: FinancialAccount @ref(fields: "accountId", references: "id")
+  accountId: UUID @col(name: "account_id")
+  description: String! @col(dataType: "varchar(180)")
+  documentNumber: String @col(name: "document_number", dataType: "varchar(80)")
+  amountCents: Int64! @col(name: "amount_cents")
+  dueDate: Date! @col(name: "due_date")
+  paidAt: Timestamp @col(name: "paid_at")
+  paidAmountCents: Int64 @col(name: "paid_amount_cents")
+  status: String! @default(value: "OPEN") @col(dataType: "varchar(30)")
+  notes: String
+  createdByUid: String! @col(name: "created_by_uid", dataType: "varchar(128)")
+  active: Boolean! @default(value: true)
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+}
+
+type AccountReceivable @table(name: "accounts_receivable", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  branch: Branch! @ref(fields: "branchId", references: "id")
+  branchId: UUID! @col(name: "branch_id")
+  customer: Customer @ref(fields: "customerId", references: "id")
+  customerId: UUID @col(name: "customer_id")
+  sale: Sale @ref(fields: "saleId", references: "id")
+  saleId: UUID @col(name: "sale_id")
+  category: FinancialCategory @ref(fields: "categoryId", references: "id")
+  categoryId: UUID @col(name: "category_id")
+  account: FinancialAccount @ref(fields: "accountId", references: "id")
+  accountId: UUID @col(name: "account_id")
+  description: String! @col(dataType: "varchar(180)")
+  amountCents: Int64! @col(name: "amount_cents")
+  dueDate: Date! @col(name: "due_date")
+  receivedAt: Timestamp @col(name: "received_at")
+  receivedAmountCents: Int64 @col(name: "received_amount_cents")
+  status: String! @default(value: "OPEN") @col(dataType: "varchar(30)")
+  notes: String
+  createdByUid: String! @col(name: "created_by_uid", dataType: "varchar(128)")
+  active: Boolean! @default(value: true)
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+}
+
+type CashSession @table(name: "cash_sessions", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  branch: Branch! @ref(fields: "branchId", references: "id")
+  branchId: UUID! @col(name: "branch_id")
+  openedByUid: String! @col(name: "opened_by_uid", dataType: "varchar(128)")
+  closedByUid: String @col(name: "closed_by_uid", dataType: "varchar(128)")
+  openedAt: Timestamp! @default(expr: "request.time") @col(name: "opened_at")
+  closedAt: Timestamp @col(name: "closed_at")
+  openingAmountCents: Int64! @default(value: 0) @col(name: "opening_amount_cents")
+  expectedAmountCents: Int64 @col(name: "expected_amount_cents")
+  countedAmountCents: Int64 @col(name: "counted_amount_cents")
+  differenceCents: Int64 @col(name: "difference_cents")
+  status: String! @default(value: "OPEN") @col(dataType: "varchar(30)")
+  notes: String
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+}
+
+type CashMovement @table(name: "cash_movements", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  session: CashSession! @ref(fields: "sessionId", references: "id")
+  sessionId: UUID! @col(name: "session_id")
+  sale: Sale @ref(fields: "saleId", references: "id")
+  saleId: UUID @col(name: "sale_id")
+  movementType: String! @col(name: "movement_type", dataType: "varchar(30)")
+  amountCents: Int64! @col(name: "amount_cents")
+  description: String! @col(dataType: "varchar(180)")
+  createdByUid: String! @col(name: "created_by_uid", dataType: "varchar(128)")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+}
+
 type OfflineOperation @table(name: "offline_operations", key: "id") {
   id: UUID! @default(expr: "uuidV4()")
   tenant: Tenant! @ref(fields: "tenantId", references: "id")
