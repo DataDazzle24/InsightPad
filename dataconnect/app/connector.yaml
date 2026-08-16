@@ -1,1 +1,8 @@
-connectorId: "insightpad-app"
+connectorId: app
+
+generate:
+  javascriptSdk:
+    outputDir: ../../frontend/src/dataconnect-generated
+    package: "@insightpad/dataconnect"
+    packageJsonDir: ../../frontend
+    react: true
