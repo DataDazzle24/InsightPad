@@ -1,0 +1,5 @@
+# Insight Pad seed data
+#
+# Intentionally empty.
+# Development seed data will be generated from sanitized migration fixtures.
+# Never place production customer data or credentials in this repository.

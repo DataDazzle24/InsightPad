@@ -1,0 +1,27 @@
+# Insight Pad client queries.
+# The first connector surface is intentionally minimal.
+# Tenant-wide queries will be added only after authorization checks are validated.
+
+query GetCurrentUser @auth(level: USER) {
+  user(key: { id_expr: "auth.uid" }) {
+    id
+    name
+    email
+    active
+    onboardingPending
+    tenant {
+      id
+      legalName
+      tradeName
+      active
+      timezone
+      currencyCode
+    }
+    role {
+      id
+      name
+      hierarchyLevel
+      active
+    }
+  }
+}

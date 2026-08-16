@@ -1,0 +1,12 @@
+specVersion: "v1"
+serviceId: "insightpad"
+location: "southamerica-east1"
+schemas:
+  - source: "./schema"
+    datasource:
+      postgresql:
+        database: "fdcdb"
+        cloudSql:
+          instanceId: "insightpad-fdc"
+          schemaValidation: "STRICT"
+connectorDirs: ["./app"]
