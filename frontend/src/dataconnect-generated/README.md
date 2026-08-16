@@ -13,6 +13,7 @@ This README will guide you through the process of using the generated JavaScript
   - [*GetCurrentUser*](#getcurrentuser)
   - [*GetCurrentUserAccess*](#getcurrentuseraccess)
 - [**Mutations**](#mutations)
+  - [*BootstrapNavigationCatalog*](#bootstrapnavigationcatalog)
 
 # Accessing the connector
 A connector is a collection of Queries and Mutations. One SDK is generated for each connector - this SDK is generated for the connector `app`. You can find more information about connectors in the [Data Connect documentation](https://firebase.google.com/docs/data-connect#how-does).
@@ -309,7 +310,253 @@ executeQuery(ref).then((response) => {
 
 # Mutations
 
-No mutations were generated for the `app` connector.
+There are two ways to execute a Data Connect Mutation using the generated Web SDK:
+- Using a Mutation Reference function, which returns a `MutationRef`
+  - The `MutationRef` can be used as an argument to `executeMutation()`, which will execute the Mutation and return a `MutationPromise`
+- Using an action shortcut function, which returns a `MutationPromise`
+  - Calling the action shortcut function will execute the Mutation and return a `MutationPromise`
 
-If you want to learn more about how to use mutations in Data Connect, you can follow the examples from the [Data Connect documentation](https://firebase.google.com/docs/data-connect/web-sdk#using-mutations).
+The following is true for both the action shortcut function and the `MutationRef` function:
+- The `MutationPromise` returned will resolve to the result of the Mutation once it has finished executing
+- If the Mutation accepts arguments, both the action shortcut function and the `MutationRef` function accept a single argument: an object that contains all the required variables (and the optional variables) for the Mutation
+- Both functions can be called with or without passing in a `DataConnect` instance as an argument. If no `DataConnect` argument is passed in, then the generated SDK will call `getDataConnect(connectorConfig)` behind the scenes for you.
+
+Below are examples of how to use the `app` connector's generated functions to execute each mutation. You can also follow the examples from the [Data Connect documentation](https://firebase.google.com/docs/data-connect/web-sdk#using-mutations).
+
+## BootstrapNavigationCatalog
+You can execute the `BootstrapNavigationCatalog` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+bootstrapNavigationCatalog(vars: BootstrapNavigationCatalogVariables): MutationPromise<BootstrapNavigationCatalogData, BootstrapNavigationCatalogVariables>;
+
+interface BootstrapNavigationCatalogRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: BootstrapNavigationCatalogVariables): MutationRef<BootstrapNavigationCatalogData, BootstrapNavigationCatalogVariables>;
+}
+export const bootstrapNavigationCatalogRef: BootstrapNavigationCatalogRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+bootstrapNavigationCatalog(dc: DataConnect, vars: BootstrapNavigationCatalogVariables): MutationPromise<BootstrapNavigationCatalogData, BootstrapNavigationCatalogVariables>;
+
+interface BootstrapNavigationCatalogRef {
+  ...
+  (dc: DataConnect, vars: BootstrapNavigationCatalogVariables): MutationRef<BootstrapNavigationCatalogData, BootstrapNavigationCatalogVariables>;
+}
+export const bootstrapNavigationCatalogRef: BootstrapNavigationCatalogRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the bootstrapNavigationCatalogRef:
+```typescript
+const name = bootstrapNavigationCatalogRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `BootstrapNavigationCatalog` mutation requires an argument of type `BootstrapNavigationCatalogVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface BootstrapNavigationCatalogVariables {
+  tenantId: UUIDString;
+  platformAdminRoleId: UUIDString;
+}
+```
+### Return Type
+Recall that executing the `BootstrapNavigationCatalog` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `BootstrapNavigationCatalogData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface BootstrapNavigationCatalogData {
+  pageCaixa: AppPage_Key;
+  pageGestaoVendas: AppPage_Key;
+  pageEstoque: AppPage_Key;
+  pageContasPagar: AppPage_Key;
+  pageContasReceber: AppPage_Key;
+  pageCategoria: AppPage_Key;
+  pageSubcategoria: AppPage_Key;
+  pageProduto: AppPage_Key;
+  pageCliente: AppPage_Key;
+  pageFornecedor: AppPage_Key;
+  pageFilial: AppPage_Key;
+  pageRelatorios: AppPage_Key;
+  pageGestaoAcessos: AppPage_Key;
+  permissionCaixa: RolePagePermission_Key;
+  permissionGestaoVendas: RolePagePermission_Key;
+  permissionEstoque: RolePagePermission_Key;
+  permissionContasPagar: RolePagePermission_Key;
+  permissionContasReceber: RolePagePermission_Key;
+  permissionCategoria: RolePagePermission_Key;
+  permissionSubcategoria: RolePagePermission_Key;
+  permissionProduto: RolePagePermission_Key;
+  permissionCliente: RolePagePermission_Key;
+  permissionFornecedor: RolePagePermission_Key;
+  permissionFilial: RolePagePermission_Key;
+  permissionRelatorios: RolePagePermission_Key;
+  permissionGestaoAcessos: RolePagePermission_Key;
+}
+```
+### Using `BootstrapNavigationCatalog`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, bootstrapNavigationCatalog, BootstrapNavigationCatalogVariables } from '@insightpad/dataconnect';
+
+// The `BootstrapNavigationCatalog` mutation requires an argument of type `BootstrapNavigationCatalogVariables`:
+const bootstrapNavigationCatalogVars: BootstrapNavigationCatalogVariables = {
+  tenantId: ..., 
+  platformAdminRoleId: ..., 
+};
+
+// Call the `bootstrapNavigationCatalog()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await bootstrapNavigationCatalog(bootstrapNavigationCatalogVars);
+// Variables can be defined inline as well.
+const { data } = await bootstrapNavigationCatalog({ tenantId: ..., platformAdminRoleId: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await bootstrapNavigationCatalog(dataConnect, bootstrapNavigationCatalogVars);
+
+console.log(data.pageCaixa);
+console.log(data.pageGestaoVendas);
+console.log(data.pageEstoque);
+console.log(data.pageContasPagar);
+console.log(data.pageContasReceber);
+console.log(data.pageCategoria);
+console.log(data.pageSubcategoria);
+console.log(data.pageProduto);
+console.log(data.pageCliente);
+console.log(data.pageFornecedor);
+console.log(data.pageFilial);
+console.log(data.pageRelatorios);
+console.log(data.pageGestaoAcessos);
+console.log(data.permissionCaixa);
+console.log(data.permissionGestaoVendas);
+console.log(data.permissionEstoque);
+console.log(data.permissionContasPagar);
+console.log(data.permissionContasReceber);
+console.log(data.permissionCategoria);
+console.log(data.permissionSubcategoria);
+console.log(data.permissionProduto);
+console.log(data.permissionCliente);
+console.log(data.permissionFornecedor);
+console.log(data.permissionFilial);
+console.log(data.permissionRelatorios);
+console.log(data.permissionGestaoAcessos);
+
+// Or, you can use the `Promise` API.
+bootstrapNavigationCatalog(bootstrapNavigationCatalogVars).then((response) => {
+  const data = response.data;
+  console.log(data.pageCaixa);
+  console.log(data.pageGestaoVendas);
+  console.log(data.pageEstoque);
+  console.log(data.pageContasPagar);
+  console.log(data.pageContasReceber);
+  console.log(data.pageCategoria);
+  console.log(data.pageSubcategoria);
+  console.log(data.pageProduto);
+  console.log(data.pageCliente);
+  console.log(data.pageFornecedor);
+  console.log(data.pageFilial);
+  console.log(data.pageRelatorios);
+  console.log(data.pageGestaoAcessos);
+  console.log(data.permissionCaixa);
+  console.log(data.permissionGestaoVendas);
+  console.log(data.permissionEstoque);
+  console.log(data.permissionContasPagar);
+  console.log(data.permissionContasReceber);
+  console.log(data.permissionCategoria);
+  console.log(data.permissionSubcategoria);
+  console.log(data.permissionProduto);
+  console.log(data.permissionCliente);
+  console.log(data.permissionFornecedor);
+  console.log(data.permissionFilial);
+  console.log(data.permissionRelatorios);
+  console.log(data.permissionGestaoAcessos);
+});
+```
+
+### Using `BootstrapNavigationCatalog`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, bootstrapNavigationCatalogRef, BootstrapNavigationCatalogVariables } from '@insightpad/dataconnect';
+
+// The `BootstrapNavigationCatalog` mutation requires an argument of type `BootstrapNavigationCatalogVariables`:
+const bootstrapNavigationCatalogVars: BootstrapNavigationCatalogVariables = {
+  tenantId: ..., 
+  platformAdminRoleId: ..., 
+};
+
+// Call the `bootstrapNavigationCatalogRef()` function to get a reference to the mutation.
+const ref = bootstrapNavigationCatalogRef(bootstrapNavigationCatalogVars);
+// Variables can be defined inline as well.
+const ref = bootstrapNavigationCatalogRef({ tenantId: ..., platformAdminRoleId: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = bootstrapNavigationCatalogRef(dataConnect, bootstrapNavigationCatalogVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.pageCaixa);
+console.log(data.pageGestaoVendas);
+console.log(data.pageEstoque);
+console.log(data.pageContasPagar);
+console.log(data.pageContasReceber);
+console.log(data.pageCategoria);
+console.log(data.pageSubcategoria);
+console.log(data.pageProduto);
+console.log(data.pageCliente);
+console.log(data.pageFornecedor);
+console.log(data.pageFilial);
+console.log(data.pageRelatorios);
+console.log(data.pageGestaoAcessos);
+console.log(data.permissionCaixa);
+console.log(data.permissionGestaoVendas);
+console.log(data.permissionEstoque);
+console.log(data.permissionContasPagar);
+console.log(data.permissionContasReceber);
+console.log(data.permissionCategoria);
+console.log(data.permissionSubcategoria);
+console.log(data.permissionProduto);
+console.log(data.permissionCliente);
+console.log(data.permissionFornecedor);
+console.log(data.permissionFilial);
+console.log(data.permissionRelatorios);
+console.log(data.permissionGestaoAcessos);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.pageCaixa);
+  console.log(data.pageGestaoVendas);
+  console.log(data.pageEstoque);
+  console.log(data.pageContasPagar);
+  console.log(data.pageContasReceber);
+  console.log(data.pageCategoria);
+  console.log(data.pageSubcategoria);
+  console.log(data.pageProduto);
+  console.log(data.pageCliente);
+  console.log(data.pageFornecedor);
+  console.log(data.pageFilial);
+  console.log(data.pageRelatorios);
+  console.log(data.pageGestaoAcessos);
+  console.log(data.permissionCaixa);
+  console.log(data.permissionGestaoVendas);
+  console.log(data.permissionEstoque);
+  console.log(data.permissionContasPagar);
+  console.log(data.permissionContasReceber);
+  console.log(data.permissionCategoria);
+  console.log(data.permissionSubcategoria);
+  console.log(data.permissionProduto);
+  console.log(data.permissionCliente);
+  console.log(data.permissionFornecedor);
+  console.log(data.permissionFilial);
+  console.log(data.permissionRelatorios);
+  console.log(data.permissionGestaoAcessos);
+});
+```
 
