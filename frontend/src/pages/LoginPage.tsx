@@ -54,7 +54,7 @@ export function LoginPage() {
     <main className="login-page">
       <section className="login-visual" aria-label="Apresentação do Insight Pad">
         <div className="login-visual__content">
-          <img className="official-login-logo" src="https://drive.google.com/thumbnail?id=1cUQw1yH0k3fdMKIIeKBMaUkhD23oJ4Eh&sz=w2000" alt="Insight Pad" />
+          <img className="official-login-logo" src="https://drive.google.com/thumbnail?id=1T6pWIpQeH-jPowvh63mPQDJVIjA3VJBJ&sz=w2000" alt="Insight Pad" />
 
           <div className="login-visual__copy">
             <span className="eyebrow">GESTÃO QUE CABE NA SUA ROTINA</span>
@@ -65,7 +65,7 @@ export function LoginPage() {
             </p>
           </div>
 
-          <div className="login-visual__footer"><img src="https://drive.google.com/thumbnail?id=1CLFb1HP_w1WITW7HlSmPV1JN6auYURHY&sz=w2000" alt="Data Dazzle" /><span>Um produto Data Dazzle</span></div>
+          <div className="login-visual__footer"><img src="https://drive.google.com/thumbnail?id=1RMePnzCwzaKXK0Gz-bw0TKG2zIOnwzHC&sz=w2000" alt="Data Dazzle" /><span>Um produto Data Dazzle</span></div>
         </div>
       </section>
 
