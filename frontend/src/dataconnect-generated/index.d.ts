@@ -15,6 +15,16 @@ export interface AccessLog_Key {
   __typename?: 'AccessLog_Key';
 }
 
+export interface AccountPayable_Key {
+  id: UUIDString;
+  __typename?: 'AccountPayable_Key';
+}
+
+export interface AccountReceivable_Key {
+  id: UUIDString;
+  __typename?: 'AccountReceivable_Key';
+}
+
 export interface AppPage_Key {
   id: UUIDString;
   __typename?: 'AppPage_Key';
@@ -64,6 +74,16 @@ export interface Branch_Key {
   __typename?: 'Branch_Key';
 }
 
+export interface CashMovement_Key {
+  id: UUIDString;
+  __typename?: 'CashMovement_Key';
+}
+
+export interface CashSession_Key {
+  id: UUIDString;
+  __typename?: 'CashSession_Key';
+}
+
 export interface Category_Key {
   id: UUIDString;
   __typename?: 'Category_Key';
@@ -72,6 +92,16 @@ export interface Category_Key {
 export interface Customer_Key {
   id: UUIDString;
   __typename?: 'Customer_Key';
+}
+
+export interface FinancialAccount_Key {
+  id: UUIDString;
+  __typename?: 'FinancialAccount_Key';
+}
+
+export interface FinancialCategory_Key {
+  id: UUIDString;
+  __typename?: 'FinancialCategory_Key';
 }
 
 export interface FiscalDocument_Key {
@@ -244,6 +274,12 @@ export interface Supplier_Key {
 export interface Tenant_Key {
   id: UUIDString;
   __typename?: 'Tenant_Key';
+}
+
+export interface UserBranch_Key {
+  userId: string;
+  branchId: UUIDString;
+  __typename?: 'UserBranch_Key';
 }
 
 export interface UserPagePermission_Key {

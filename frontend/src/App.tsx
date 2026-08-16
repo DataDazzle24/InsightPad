@@ -3,7 +3,7 @@ import { AppLayout } from './layout/AppLayout'
 import { AccessDeniedPage } from './pages/AccessDeniedPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
-import { ModulePlaceholderPage } from './pages/ModulePlaceholderPage'
+import { BusinessModulePage } from './pages/BusinessModulePage'
 import { appRoutes } from './config/pages'
 import { PermissionRoute } from './routes/PermissionRoute'
 import { ProtectedRoute } from './routes/ProtectedRoute'
@@ -20,7 +20,7 @@ export default function App() {
           <Route index element={<DashboardPage />} />
           {appRoutes.map(({ pageKey, route }) => (
             <Route element={<PermissionRoute pageKey={pageKey} />} key={pageKey}>
-              <Route path={route} element={<ModulePlaceholderPage pageKey={pageKey} />} />
+              <Route path={route} element={<BusinessModulePage pageKey={pageKey} />} />
             </Route>
           ))}
         </Route>
