@@ -1,0 +1,15 @@
+export const appRoutes = [
+  { pageKey: 'CAIXA', route: '/vendas/frente-de-caixa' },
+  { pageKey: 'GESTAO_VENDAS', route: '/vendas/registros' },
+  { pageKey: 'ESTOQUE', route: '/estoque' },
+  { pageKey: 'CONTAS_PAGAR', route: '/financeiro/contas-a-pagar' },
+  { pageKey: 'CONTAS_RECEBER', route: '/financeiro/contas-a-receber' },
+  { pageKey: 'CAD_CATEGORIA', route: '/cadastros/categorias' },
+  { pageKey: 'CAD_SUBCATEGORIA', route: '/cadastros/subcategorias' },
+  { pageKey: 'CAD_PRODUTO', route: '/cadastros/produtos' },
+  { pageKey: 'CAD_CLIENTE', route: '/cadastros/clientes' },
+  { pageKey: 'CAD_FORNECEDOR', route: '/cadastros/fornecedores' },
+  { pageKey: 'CAD_FILIAL', route: '/cadastros/filiais' },
+  { pageKey: 'RELATORIOS_OPERACIONAIS', route: '/dashboards/operacional' },
+  { pageKey: 'GESTAO_ACESSOS', route: '/configuracoes/acessos' },
+] as const
