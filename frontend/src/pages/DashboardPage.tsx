@@ -1,45 +1,29 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
+import { navigationModules } from '../config/navigation'
 
 export function DashboardPage() {
-  const { profile, permissions } = useAuth()
-  const tenantName =
-    profile?.tenant.tradeName ?? profile?.tenant.legalName ?? 'Sua empresa'
-  const allowedPages = Object.values(permissions)
-    .filter((permission) => permission.canAccess && permission.page.active)
-    .sort((a, b) => a.page.displayOrder - b.page.displayOrder)
+  const { profile, canAccess } = useAuth()
+  const modules = navigationModules.filter((module) => module.pageKeys.some(canAccess))
 
   return (
-    <section className="dashboard">
-      <div className="dashboard__intro">
-        <span className="eyebrow">VISÃO GERAL</span>
-        <h1>Olá, {profile?.name?.split(' ')[0]}.</h1>
-        <p>{tenantName} · {profile?.role.name}</p>
+    <section className="home-menu">
+      <div className="home-menu__brand">
+        <div className="home-menu__welcome"><span>Bem-vindo,</span><strong>{profile?.name?.split(' ')[0]}</strong></div>
+        <img className="home-menu__insight-logo" src="/brand/insight-pad-logo-dark.png" alt="Insight Pad" />
+        <p className="home-menu__slogan">Dados para o presente.<br /><strong>Insights para o futuro.</strong></p>
+        <footer><span>Um produto</span><img src="/brand/data-dazzle-logo-dark.png" alt="Data Dazzle" /></footer>
       </div>
-
-      {allowedPages.length ? (
-        <div className="module-grid">
-          {allowedPages.map(({ page }) => (
-            <Link className="module-card" key={page.pageKey} to={page.route}>
-              <span>{String(page.displayOrder).padStart(2, '0')}</span>
-              <div>
-                <small>{page.module}</small>
-                <strong>{page.displayName}</strong>
-                <p>Acesso liberado pelo seu perfil.</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      ) : (
-        <section className="empty-access-card">
-          <span className="eyebrow">CATÁLOGO DE ACESSOS</span>
-          <h2>Nenhum módulo liberado</h2>
-          <p>
-            Seu login está ativo, mas ainda não existem páginas associadas ao
-            seu perfil. Um administrador deverá configurar as permissões.
-          </p>
-        </section>
-      )}
+      <div className="home-menu__modules">
+        {modules.map((module) => (
+          <Link className={'legacy-tile legacy-tile--' + module.accent} key={module.label} to={module.to}>
+            <span className="legacy-tile__bar" />
+            <span className="material-symbols-rounded legacy-tile__icon" aria-hidden="true">{module.icon}</span>
+            <span><strong>{module.label}</strong><small>{module.description}</small></span>
+            <span className="material-symbols-rounded legacy-tile__arrow" aria-hidden="true">arrow_forward</span>
+          </Link>
+        ))}
+      </div>
     </section>
   )
 }

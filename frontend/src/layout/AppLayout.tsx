@@ -1,73 +1,74 @@
 import { useMemo, useState } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
+import { navigationModules } from '../config/navigation'
 
 export function AppLayout() {
-  const { profile, permissions, signOut } = useAuth()
+  const { profile, permissions, canAccess, signOut } = useAuth()
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const [leaving, setLeaving] = useState(false)
+  const location = useLocation()
 
-  const modules = useMemo(() => {
-    const grouped = new Map<string, typeof permissions[string][]>()
-
-    Object.values(permissions)
-      .filter((permission) => permission.canAccess && permission.page.active)
-      .sort((a, b) => a.page.displayOrder - b.page.displayOrder)
-      .forEach((permission) => {
-        const list = grouped.get(permission.page.module) ?? []
-        list.push(permission)
-        grouped.set(permission.page.module, list)
-      })
-
-    return [...grouped.entries()]
-  }, [permissions])
+  const modules = useMemo(
+    () => navigationModules.filter((module) => module.pageKeys.some(canAccess)),
+    [canAccess],
+  )
+  const pageTitle = useMemo(() => {
+    if (location.pathname === '/') return 'Menu Principal'
+    const permission = Object.values(permissions).find(({ page }) => page.route === location.pathname)
+    return permission?.page.displayName ?? modules.find(({ to }) => to === location.pathname)?.label ?? 'Insight Pad'
+  }, [location.pathname, modules, permissions])
 
   async function handleSignOut() {
     setLeaving(true)
-    try {
-      await signOut()
-    } finally {
-      setLeaving(false)
-    }
+    try { await signOut() } finally { setLeaving(false) }
   }
 
   return (
-    <main className="workspace">
-      <aside className="sidebar">
-        <NavLink className="brand-lockup brand-lockup--light" to="/">
-          <div className="brand-mark" aria-hidden="true"><span /><span /><span /></div>
-          <div><strong>Insight Pad</strong><small>by Data Dazzle</small></div>
-        </NavLink>
-
-        <nav className="sidebar__nav" aria-label="Navegação principal">
-          <NavLink className="sidebar__link" to="/" end>Visão geral</NavLink>
-          {modules.map(([module, items]) => (
-            <section className="sidebar__group" key={module}>
-              <span>{module}</span>
-              {items.map(({ page }) => (
-                <NavLink className="sidebar__link" key={page.pageKey} to={page.route}>
-                  {page.displayName}
-                </NavLink>
-              ))}
-            </section>
+    <main className="app-frame">
+      <header className="legacy-header">
+        <Link className="legacy-header__brand" to="/" aria-label="Insight Pad — início">
+          <img src="/brand/insight-pad-logo-dark.png" alt="Insight Pad" />
+        </Link>
+        <div className="legacy-header__title"><span>{pageTitle}</span><small>{profile?.tenant.tradeName ?? profile?.tenant.legalName}</small></div>
+        <nav className="legacy-header__nav" aria-label="Módulos do Insight Pad">
+          {modules.map((module) => (
+            <NavLink className="header-nav-item" key={module.label} to={module.to}>
+              <span className="material-symbols-rounded" aria-hidden="true">{module.icon}</span>
+              <span className="header-nav-item__tooltip">{module.label}</span>
+            </NavLink>
           ))}
+          <NavLink className="header-nav-item" to="/" end>
+            <span className="material-symbols-rounded" aria-hidden="true">home</span>
+            <span className="header-nav-item__tooltip">Início</span>
+          </NavLink>
         </nav>
+        <button className="legacy-header__user" type="button" onClick={() => setDrawerOpen(true)} aria-label="Abrir painel do usuário">
+          <span className="material-symbols-rounded" aria-hidden="true">person</span>
+          <span>{profile?.name?.split(' ')[0]}</span>
+        </button>
+      </header>
 
-        <footer className="sidebar__footer">
-          <strong>{profile?.name}</strong>
-          <span>{profile?.role.name}</span>
-          <button type="button" onClick={() => void handleSignOut()} disabled={leaving}>
-            {leaving ? 'Saindo...' : 'Sair'}
-          </button>
-        </footer>
+      <button className={drawerOpen ? 'drawer-backdrop drawer-backdrop--open' : 'drawer-backdrop'} onClick={() => setDrawerOpen(false)} aria-label="Fechar painel" />
+      <aside className={drawerOpen ? 'user-drawer user-drawer--open' : 'user-drawer'} aria-hidden={!drawerOpen}>
+        <button className="user-drawer__close" type="button" onClick={() => setDrawerOpen(false)} aria-label="Fechar">
+          <span className="material-symbols-rounded">close</span>
+        </button>
+        <img className="user-drawer__logo" src="/brand/insight-pad-logo-dark.png" alt="Insight Pad" />
+        <div className="user-drawer__identity">
+          <span className="material-symbols-rounded">account_circle</span>
+          <div><strong>{profile?.name}</strong><small>{profile?.role.name}</small></div>
+        </div>
+        <div className="user-drawer__company"><small>EMPRESA</small><strong>{profile?.tenant.tradeName ?? profile?.tenant.legalName}</strong></div>
+        <nav className="user-drawer__actions">
+          {canAccess('GESTAO_ACESSOS') && <Link to="/configuracoes/acessos" onClick={() => setDrawerOpen(false)}><span className="material-symbols-rounded">manage_accounts</span>Gerenciar acessos</Link>}
+          <a href="https://wa.me/5521985795316" target="_blank" rel="noreferrer"><span className="material-symbols-rounded">support_agent</span>Suporte</a>
+          <button type="button" onClick={() => void handleSignOut()} disabled={leaving}><span className="material-symbols-rounded">logout</span>{leaving ? 'Saindo...' : 'Sair do sistema'}</button>
+        </nav>
+        <footer><img src="/brand/data-dazzle-logo-dark.png" alt="Data Dazzle" /><span>Um produto Data Dazzle</span></footer>
       </aside>
 
-      <section className="workspace__content">
-        <header className="workspace__header">
-          <div><strong>{profile?.tenant.tradeName ?? profile?.tenant.legalName}</strong><span>Ambiente de desenvolvimento</span></div>
-          <div className="workspace__identity"><strong>{profile?.name}</strong><span>{profile?.role.name}</span></div>
-        </header>
-        <Outlet />
-      </section>
+      <section className="app-stage"><Outlet /></section>
     </main>
   )
 }

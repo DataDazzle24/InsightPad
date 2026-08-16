@@ -9,147 +9,40 @@ export function LoginPage() {
   const [message, setMessage] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
-  if (status === 'authenticated') {
-    return <Navigate to="/" replace />
-  }
-
-  if (status === 'unauthorized') {
-    return <Navigate to="/acesso-negado" replace />
-  }
+  if (status === 'authenticated') return <Navigate to="/" replace />
+  if (status === 'unauthorized') return <Navigate to="/acesso-negado" replace />
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setMessage(null)
-    setSubmitting(true)
-
-    try {
-      await signIn(email, password)
-    } catch {
-      // O contexto fornece uma mensagem genérica para não expor detalhes da conta.
-    } finally {
-      setSubmitting(false)
-    }
+    event.preventDefault(); setMessage(null); setSubmitting(true)
+    try { await signIn(email, password) } catch { /* contexto fornece mensagem segura */ } finally { setSubmitting(false) }
   }
-
   async function handlePasswordReset() {
-    if (!email.trim()) {
-      setMessage('Informe seu e-mail para solicitar uma nova senha.')
-      return
-    }
-
-    try {
-      await resetPassword(email)
-    } catch {
-      // A resposta permanece genérica para impedir enumeração de contas.
-    }
-
-    setMessage(
-      'Se o e-mail estiver cadastrado, você receberá as instruções de recuperação.',
-    )
+    if (!email.trim()) { setMessage('Informe seu e-mail para solicitar uma nova senha.'); return }
+    try { await resetPassword(email) } catch { /* resposta genérica */ }
+    setMessage('Se o e-mail estiver cadastrado, você receberá as instruções de recuperação.')
   }
-
   const busy = submitting || status === 'loading'
 
   return (
-    <main className="login-page">
-      <section className="login-visual" aria-label="Apresentação do Insight Pad">
-        <div className="login-visual__content">
-          <div className="brand-lockup brand-lockup--light">
-            <div className="brand-mark" aria-hidden="true">
-              <span />
-              <span />
-              <span />
-            </div>
-            <div>
-              <strong>Insight Pad</strong>
-              <small>by Data Dazzle</small>
-            </div>
-          </div>
-
-          <div className="login-visual__copy">
-            <span className="eyebrow">GESTÃO QUE CABE NA SUA ROTINA</span>
-            <h1>Decisões mais simples. Negócios mais fortes.</h1>
-            <p>
-              Vendas, estoque e gestão conectados em um ambiente seguro e
-              preparado para crescer com sua empresa.
-            </p>
-          </div>
-
-          <p className="login-visual__footer">
-            Ambiente de desenvolvimento protegido
-          </p>
-        </div>
+    <main className="brand-login">
+      <section className="brand-login__hero">
+        <img className="brand-login__logo" src="/brand/insight-pad-logo-dark.png" alt="Insight Pad" />
+        <div className="brand-login__statement"><span>GESTÃO INTELIGENTE</span><h1>Seu negócio.<br />Seus dados.<br /><em>Suas decisões.</em></h1><p>Dados para o presente. Insights para o futuro.</p></div>
+        <footer><span>Um produto</span><img src="/brand/data-dazzle-logo-dark.png" alt="Data Dazzle" /></footer>
       </section>
-
-      <section className="login-panel">
-        <div className="login-card">
-          <div className="brand-lockup brand-lockup--mobile">
-            <div className="brand-mark" aria-hidden="true">
-              <span />
-              <span />
-              <span />
-            </div>
-            <div>
-              <strong>Insight Pad</strong>
-              <small>by Data Dazzle</small>
-            </div>
-          </div>
-
-          <header className="login-card__header">
-            <span className="eyebrow">BEM-VINDO DE VOLTA</span>
-            <h2>Acesse sua conta</h2>
-            <p>Use as credenciais fornecidas pelo administrador.</p>
-          </header>
-
-          <form className="login-form" onSubmit={handleSubmit}>
+      <section className="brand-login__access">
+        <div className="login-hud">
+          <span className="login-hud__corner login-hud__corner--tl" /><span className="login-hud__corner login-hud__corner--br" />
+          <header><span className="eyebrow">ACESSO SEGURO</span><h2>Bem-vindo de volta</h2><p>Entre com as credenciais da sua empresa.</p></header>
+          <form onSubmit={handleSubmit}>
             <label htmlFor="email">E-mail</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              autoComplete="email"
-              placeholder="voce@empresa.com.br"
-              disabled={busy}
-              required
-            />
-
-            <div className="login-form__password-row">
-              <label htmlFor="password">Senha</label>
-              <button
-                className="text-button"
-                type="button"
-                onClick={() => void handlePasswordReset()}
-                disabled={busy}
-              >
-                Esqueci minha senha
-              </button>
-            </div>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              autoComplete="current-password"
-              placeholder="Digite sua senha"
-              disabled={busy}
-              required
-            />
-
-            <div className="form-feedback" aria-live="polite">
-              {error && <p className="form-feedback--error">{error}</p>}
-              {message && <p className="form-feedback--info">{message}</p>}
-            </div>
-
-            <button className="primary-button" type="submit" disabled={busy}>
-              {busy ? 'Validando acesso...' : 'Entrar no Insight Pad'}
-            </button>
+            <div className="hud-input"><span className="material-symbols-rounded">mail</span><input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" placeholder="voce@empresa.com.br" disabled={busy} required /></div>
+            <div className="password-label"><label htmlFor="password">Senha</label><button type="button" onClick={() => void handlePasswordReset()} disabled={busy}>Esqueci minha senha</button></div>
+            <div className="hud-input"><span className="material-symbols-rounded">lock</span><input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" placeholder="Digite sua senha" disabled={busy} required /></div>
+            <div className="form-feedback" aria-live="polite">{error && <p className="form-feedback--error">{error}</p>}{message && <p className="form-feedback--info">{message}</p>}</div>
+            <button className="login-submit" type="submit" disabled={busy}><span>{busy ? 'Validando acesso...' : 'Entrar'}</span><span className="material-symbols-rounded">arrow_forward</span></button>
           </form>
-
-          <footer className="login-card__footer">
-            <span aria-hidden="true">●</span>
-            Autenticação protegida pelo Firebase
-          </footer>
+          <footer><span className="status-dot" />Ambiente protegido pelo Firebase</footer>
         </div>
       </section>
     </main>

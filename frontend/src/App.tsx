@@ -3,6 +3,7 @@ import { AppLayout } from './layout/AppLayout'
 import { AccessDeniedPage } from './pages/AccessDeniedPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
+import { ModuleMenuPage } from './pages/ModuleMenuPage'
 import { ModulePlaceholderPage } from './pages/ModulePlaceholderPage'
 import { appRoutes } from './config/pages'
 import { PermissionRoute } from './routes/PermissionRoute'
@@ -14,10 +15,12 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/acesso-negado" element={<AccessDeniedPage />} />
-
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route index element={<DashboardPage />} />
+          <Route path="/modulos/vendas" element={<ModuleMenuPage moduleKey="vendas" />} />
+          <Route path="/modulos/cadastros" element={<ModuleMenuPage moduleKey="cadastros" />} />
+          <Route path="/modulos/dashboards" element={<ModuleMenuPage moduleKey="dashboards" />} />
           {appRoutes.map(({ pageKey, route }) => (
             <Route element={<PermissionRoute pageKey={pageKey} />} key={pageKey}>
               <Route path={route} element={<ModulePlaceholderPage pageKey={pageKey} />} />
@@ -25,7 +28,6 @@ export default function App() {
           ))}
         </Route>
       </Route>
-
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
