@@ -3,42 +3,9 @@ import { useAuth } from '../auth/useAuth'
 
 export function DashboardPage() {
   const { profile, permissions } = useAuth()
-  const tenantName =
-    profile?.tenant.tradeName ?? profile?.tenant.legalName ?? 'Sua empresa'
-  const allowedPages = Object.values(permissions)
-    .filter((permission) => permission.canAccess && permission.page.active)
-    .sort((a, b) => a.page.displayOrder - b.page.displayOrder)
-
-  return (
-    <section className="dashboard">
-      <div className="dashboard-hero">
-        <div className="dashboard-hero__brand"><img src="https://drive.google.com/thumbnail?id=1cUQw1yH0k3fdMKIIeKBMaUkhD23oJ4Eh&sz=w2000" alt="Insight Pad" /><p>Dados para o presente.<br />Insights para o futuro.</p></div>
-        <div className="dashboard__intro"><span className="eyebrow">BEM-VINDO AO INSIGHT PAD</span><h1>Olá, {profile?.name?.split(' ')[0]}.</h1><p>O que você quer fazer agora?</p><small>{tenantName} · {profile?.role.name}</small></div>
-      </div>
-
-      {allowedPages.length ? (
-        <div className="module-grid">
-          {allowedPages.map(({ page }) => (
-            <Link className="module-card" key={page.pageKey} to={page.route}>
-              <span>{page.module === 'Vendas' ? '▣' : page.module === 'Estoque' ? '◇' : page.module === 'Financeiro' ? '$' : page.module === 'Dashboards' ? '↗' : page.module === 'Configurações' ? '⚙' : '≡'}</span>
-              <div>
-                <small>{page.module}</small>
-                <strong>{page.displayName}</strong>
-                <p>Toque para acessar</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      ) : (
-        <section className="empty-access-card">
-          <span className="eyebrow">CATÁLOGO DE ACESSOS</span>
-          <h2>Nenhum módulo liberado</h2>
-          <p>
-            Seu login está ativo, mas ainda não existem páginas associadas ao
-            seu perfil. Um administrador deverá configurar as permissões.
-          </p>
-        </section>
-      )}
-    </section>
-  )
+  const can = (key: string) => permissions[key]?.canAccess === true
+  return <section className="legacy-home">
+    <div className="legacy-home__brand"><div className="legacy-home__user"><span>◉</span><strong>{profile?.name}</strong><small>{profile?.role.name}</small></div><img className="legacy-home__insight" src="https://drive.google.com/thumbnail?id=1T6pWIpQeH-jPowvh63mPQDJVIjA3VJBJ&sz=w2000" alt="Insight Pad" /><div className="legacy-home__footer"><img src="https://drive.google.com/thumbnail?id=1RMePnzCwzaKXK0Gz-bw0TKG2zIOnwzHC&sz=w2000" alt="Data Dazzle" /><span>Um produto Data Dazzle</span></div></div>
+    <div className="legacy-home__actions"><Link className="legacy-main-button" to="/menu/vendas"><i>▣</i><span>VENDAS</span></Link>{can('ESTOQUE') && <Link className="legacy-main-button" to="/estoque"><i>◇</i><span>ESTOQUE</span></Link>}<div className="legacy-home__row">{can('CONTAS_PAGAR') && <Link className="legacy-main-button legacy-main-button--half" to="/financeiro/contas-a-pagar"><i>$</i><span>CONTAS A PAGAR</span></Link>}{can('CONTAS_RECEBER') && <Link className="legacy-main-button legacy-main-button--half" to="/financeiro/contas-a-receber"><i>＄</i><span>CONTAS A RECEBER</span></Link>}</div><div className="legacy-home__row"><Link className="legacy-main-button legacy-main-button--half" to="/menu/cadastros"><i>≡</i><span>CADASTRO</span></Link><Link className="legacy-main-button legacy-main-button--half" to="/menu/dashboards"><i>↗</i><span>DASHBOARD</span></Link></div></div>
+  </section>
 }
