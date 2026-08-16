@@ -8,8 +8,12 @@ import {
   signOut as firebaseSignOut,
   type User,
 } from 'firebase/auth'
-import { getCurrentUser } from '@insightpad/dataconnect'
-import { auth } from '../lib/firebase'
+import { getDataConnect } from 'firebase/data-connect'
+import {
+  connectorConfig,
+  getCurrentUser,
+} from '@insightpad/dataconnect'
+import { auth, firebaseApp } from '../lib/firebase'
 import {
   AuthContext,
   type AuthContextValue,
@@ -20,6 +24,8 @@ import {
 interface AuthProviderProps {
   children: ReactNode
 }
+
+const dataConnect = getDataConnect(firebaseApp, connectorConfig)
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null)
@@ -46,7 +52,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setStatus('loading')
 
         try {
-          const result = await getCurrentUser()
+          // Garante que o token do Firebase Auth esteja disponível antes
+          // de o SQL Connect avaliar expressões baseadas em auth.uid.
+          await user.getIdToken()
+          const result = await getCurrentUser(dataConnect)
           if (cancelled) return
 
           const currentProfile = result.data.user
@@ -65,8 +74,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
           setProfile(currentProfile)
           setStatus('authenticated')
-        } catch {
+        } catch (cause) {
           if (cancelled) return
+
+          console.error('Falha ao validar perfil no SQL Connect:', cause)
           setProfile(null)
           setStatus('unauthorized')
           setError('Não foi possível validar o perfil do usuário.')
