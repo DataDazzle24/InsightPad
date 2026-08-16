@@ -4,6 +4,7 @@ import { AccessDeniedPage } from './pages/AccessDeniedPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
 import { BusinessModulePage } from './pages/BusinessModulePage'
+import { LegacyModuleMenuPage } from './pages/LegacyModuleMenuPage'
 import { appRoutes } from './config/pages'
 import { PermissionRoute } from './routes/PermissionRoute'
 import { ProtectedRoute } from './routes/ProtectedRoute'
@@ -18,6 +19,9 @@ export default function App() {
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route index element={<DashboardPage />} />
+          <Route path="/menu/vendas" element={<LegacyModuleMenuPage type="vendas" />} />
+          <Route path="/menu/cadastros" element={<LegacyModuleMenuPage type="cadastros" />} />
+          <Route path="/menu/dashboards" element={<LegacyModuleMenuPage type="dashboards" />} />
           {appRoutes.map(({ pageKey, route }) => (
             <Route element={<PermissionRoute pageKey={pageKey} />} key={pageKey}>
               <Route path={route} element={<BusinessModulePage pageKey={pageKey} />} />
