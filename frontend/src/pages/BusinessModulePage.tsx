@@ -85,10 +85,15 @@ export function BusinessModulePage({ pageKey }: { pageKey: string }) {
 
   return (
     <section className="business-page">
-      <header className="page-heading">
-        <div><span className="eyebrow">{definition.module}</span><h1>{definition.title}</h1><p>{definition.description}</p></div>
-        {definition.fields.length > 0 && permission?.canCreate && <button className="primary-button" onClick={openCreate}>+ {definition.primaryAction ?? `Nova ${definition.singular}`}</button>}
-      </header>
+      <div className="legacy-actionbar">
+        <div className="legacy-actionbar__left">
+          <button type="button" onClick={() => history.back()} title="Voltar">←</button>
+          {definition.fields.length > 0 && permission?.canCreate && <button type="button" onClick={openCreate} title={definition.primaryAction ?? `Nova ${definition.singular}`}>＋</button>}
+          {permission?.canUpdate && <button type="button" disabled={!editing} title="Editar">✎</button>}
+          {permission?.canDelete && <button type="button" disabled={!editing} title="Excluir">♲</button>}
+        </div>
+        <div className="legacy-actionbar__right"><button type="button" onClick={exportCsv} title="Extrair CSV">CSV</button><button type="button" title="Pesquisar">▽</button><button type="button" onClick={() => setQuery('')} title="Limpar">⌫</button></div>
+      </div>
 
       {pageKey === 'RELATORIOS_OPERACIONAIS' && <DashboardSummary records={records} />}
 
