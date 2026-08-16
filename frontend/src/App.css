@@ -897,3 +897,116 @@ input:focus-visible {
   .form-modal form > footer button { flex: 1; }
   .summary-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
 }
+
+/* Insight Pad identity — faithful evolution of the Apps Script interface */
+.insight-shell.workspace { display: block; min-height: 100vh; padding-top: 4.8rem; background: #f7f8fa; }
+.insight-header { position: fixed; z-index: 60; inset: 0 0 auto; display: grid; height: 4.8rem; grid-template-columns: 15rem 1fr 14rem; align-items: center; gap: 1rem; padding: .55rem 2rem; color: #fff; background: #050505; box-shadow: 0 5px 22px rgba(0,0,0,.16); }
+.insight-header__brand { display: flex; height: 100%; align-items: center; }
+.insight-header__brand img { display: block; width: 11.5rem; max-height: 3.45rem; object-fit: contain; object-position: left center; }
+.insight-header__nav { display: flex; height: 100%; align-items: center; justify-content: center; gap: .35rem; }
+.insight-nav-link { position: relative; display: grid; min-width: 4.7rem; height: 3.6rem; place-items: center; align-content: center; gap: .12rem; border-radius: .55rem; color: rgba(255,255,255,.76); text-decoration: none; transition: color .18s ease, background .18s ease, transform .18s ease; }
+.insight-nav-link span { font-family: "DejaVu Sans Mono", ui-monospace, monospace; color: #fff; font-size: 1.25rem; font-weight: 900; line-height: 1; }
+.insight-nav-link small { font-size: .58rem; font-weight: 800; letter-spacing: .02em; }
+.insight-nav-link:hover, .insight-nav-link.active { color: #42dcfa; background: rgba(66,220,250,.12); transform: translateY(-1px); }
+.insight-nav-link:hover span, .insight-nav-link.active span { color: #42dcfa; }
+.account-menu { position: relative; justify-self: end; }
+.account-menu__trigger { display: flex; width: 13.5rem; height: 3rem; align-items: center; gap: .65rem; padding: .35rem .65rem; border: 1px solid rgba(66,220,250,.42); border-radius: .55rem; color: #fff; background: rgba(255,255,255,.055); text-align: left; }
+.account-menu__trigger > span:last-child { display: grid; min-width: 0; }
+.account-menu__trigger strong, .account-menu__trigger small { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.account-menu__trigger strong { font-size: .72rem; }
+.account-menu__trigger small { margin-top: .15rem; color: #42dcfa; font-size: .6rem; }
+.account-avatar { display: grid; width: 2rem; height: 2rem; flex: 0 0 auto; place-items: center; border-radius: 50%; color: #050505; background: #42dcfa; font-weight: 900; }
+.account-avatar--large { width: 3.2rem; height: 3.2rem; font-size: 1.25rem; }
+.account-panel { position: fixed; z-index: 80; top: 0; right: 0; display: flex; width: min(25rem, 100vw); height: 100vh; flex-direction: column; gap: 1rem; padding: 1.2rem; color: var(--ink-900); background: #fff; box-shadow: -18px 0 50px rgba(0,0,0,.2); }
+.account-panel > header { display: flex; min-height: 3.5rem; align-items: center; justify-content: space-between; padding-bottom: .8rem; border-bottom: 1px solid var(--border); }
+.account-panel > header img { width: 10rem; max-height: 3rem; object-fit: contain; filter: invert(1); }
+.account-panel > header button { width: 2.5rem; height: 2.5rem; border: 0; border-radius: .55rem; color: var(--ink-700); background: #eef2f5; font-size: 1.5rem; }
+.account-panel__identity { display: flex; align-items: center; gap: .8rem; padding: .8rem 0; }
+.account-panel__identity div { display: grid; }
+.account-panel__identity small { margin-top: .2rem; color: var(--blue-700); font-weight: 800; }
+.account-panel__info { display: grid; gap: .35rem; padding: .85rem; border: 1px solid var(--border); border-radius: .65rem; background: #f8fafb; }
+.account-panel__info small { color: var(--ink-500); font-size: .62rem; font-weight: 850; }
+.account-panel__info strong { font-size: .8rem; }
+.account-panel footer { display: grid; gap: .6rem; margin-top: auto; }
+.account-panel footer a, .account-panel footer button { display: grid; min-height: 2.8rem; place-items: center; border: 0; border-radius: .55rem; color: #fff; font-size: .75rem; font-weight: 850; text-decoration: none; }
+.account-panel footer a { background: #36db2e; }
+.account-panel footer button { background: #e53935; }
+.insight-shell .workspace__content { min-width: 0; }
+.insight-shell .workspace__header { min-height: 3.5rem; padding: .55rem clamp(1rem,4vw,3.5rem); background: #fff; }
+.insight-shell .workspace__header img { width: 7.5rem; height: 2rem; object-fit: contain; object-position: right center; }
+.mobile-app-nav { display: none; }
+
+.dashboard { width: min(82rem, calc(100% - clamp(2rem,6vw,6rem))); margin: 2rem auto 5rem; }
+.dashboard-hero { display: grid; min-height: 17rem; grid-template-columns: minmax(18rem,.8fr) minmax(22rem,1.2fr); overflow: hidden; border: 1px solid var(--border); border-radius: 1.1rem; background: #fff; box-shadow: var(--shadow-sm); }
+.dashboard-hero__brand { display: flex; flex-direction: column; justify-content: center; padding: 2.2rem; background: linear-gradient(135deg,#ecfbfe,#dff7fb); }
+.dashboard-hero__brand img { width: min(22rem,100%); max-height: 8rem; object-fit: contain; object-position: left center; }
+.dashboard-hero__brand p { margin: 1rem 0 0; color: #0b6f85; font-family: "DejaVu Sans Mono",ui-monospace,monospace; font-size: .82rem; font-weight: 800; line-height: 1.5; }
+.dashboard-hero .dashboard__intro { display: flex; flex-direction: column; justify-content: center; padding: clamp(2rem,5vw,4.5rem); }
+.dashboard-hero .dashboard__intro h1 { margin: .6rem 0 .35rem; color: #101820; font-size: clamp(2.4rem,5vw,4.2rem); letter-spacing: -.055em; }
+.dashboard-hero .dashboard__intro p { margin: 0; color: var(--ink-700); font-size: 1.05rem; }
+.dashboard-hero .dashboard__intro small { margin-top: 1.7rem; color: var(--ink-500); font-weight: 700; }
+.module-grid { grid-template-columns: repeat(4,minmax(0,1fr)); margin-top: 1rem; }
+.module-card { min-height: 9.2rem; border-radius: .8rem; box-shadow: 0 5px 18px rgba(20,32,51,.055); }
+.module-card > span { color: #050505; background: #42dcfa; font-family: "DejaVu Sans Mono",ui-monospace,monospace; font-size: 1rem; }
+.module-card:hover { border-color: #42dcfa; box-shadow: 0 9px 25px rgba(66,220,250,.16); }
+.business-page .eyebrow, .dashboard .eyebrow { color: #118ca5; }
+.business-page .primary-button, .login-page .primary-button { color: #050505; background: #42dcfa; box-shadow: 0 8px 20px rgba(66,220,250,.22); }
+.filter-pills button.active { color: #075e72; background: #dff9fd; }
+
+/* Light login: same brand language without turning the product into a dark UI */
+.login-page { background: #f7f9fb; }
+.login-visual { color: var(--ink-900); background: radial-gradient(circle at 20% 20%,rgba(66,220,250,.2),transparent 28%),linear-gradient(145deg,#f4fdff,#e9f8fb); }
+.login-visual::before { border-color: rgba(17,140,165,.13); box-shadow: 0 0 0 5rem rgba(66,220,250,.04),0 0 0 10rem rgba(66,220,250,.025); }
+.login-visual::after { background: linear-gradient(180deg,#42dcfa,transparent); }
+.official-login-logo { display: block; width: min(22rem,70%); max-height: 7rem; object-fit: contain; object-position: left center; }
+.login-visual__copy .eyebrow { color: #08788f; }
+.login-visual__copy h1 { color: #101820; }
+.login-visual__copy p { color: var(--ink-700); }
+.login-visual__footer { display: flex; align-items: center; gap: .7rem; color: var(--ink-500); }
+.login-visual__footer img { width: 7.5rem; height: 2rem; object-fit: contain; object-position: left center; }
+.login-visual__footer span { font-size: .72rem; font-weight: 750; }
+
+@media (max-width: 1040px) {
+  .insight-header { grid-template-columns: 12rem 1fr 3.2rem; padding-inline: 1rem; }
+  .insight-header__brand img { width: 10.5rem; }
+  .account-menu__trigger { width: 3rem; padding: .35rem; border-radius: 50%; }
+  .account-menu__trigger > span:last-child { display: none; }
+  .module-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+}
+
+@media (max-width: 700px) {
+  .insight-shell.workspace { padding-top: 4rem; padding-bottom: calc(4.5rem + env(safe-area-inset-bottom)); }
+  .insight-header { height: 4rem; grid-template-columns: 1fr auto; padding: .45rem .85rem; }
+  .insight-header__brand img { width: 9rem; max-height: 2.9rem; }
+  .insight-header__nav { display: none; }
+  .account-menu__trigger { width: 2.6rem; height: 2.6rem; }
+  .account-avatar { width: 1.85rem; height: 1.85rem; }
+  .insight-shell .workspace__header { min-height: 3rem; padding: .45rem .8rem; }
+  .insight-shell .workspace__header img { display: none; }
+  .insight-shell .workspace__header strong { max-width: 78vw; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .mobile-app-nav { position: fixed; z-index: 55; right: 0; bottom: 0; left: 0; display: grid; height: calc(4.35rem + env(safe-area-inset-bottom)); grid-template-columns: repeat(5,1fr); padding: .35rem .3rem max(.35rem,env(safe-area-inset-bottom)); border-top: 1px solid var(--border); background: rgba(255,255,255,.98); box-shadow: 0 -8px 26px rgba(20,32,51,.08); }
+  .mobile-app-nav a { display: grid; place-items: center; align-content: center; gap: .15rem; border-radius: .55rem; color: var(--ink-500); text-decoration: none; }
+  .mobile-app-nav a span { font-family: "DejaVu Sans Mono",ui-monospace,monospace; font-size: 1.2rem; font-weight: 900; }
+  .mobile-app-nav a small { max-width: 4.5rem; overflow: hidden; font-size: .55rem; font-weight: 800; white-space: nowrap; text-overflow: ellipsis; }
+  .mobile-app-nav a.active { color: #08788f; background: #e4fafd; }
+  .dashboard { width: calc(100% - 1rem); margin: .7rem auto 1.5rem; }
+  .dashboard-hero { min-height: auto; grid-template-columns: 1fr; border-radius: .8rem; }
+  .dashboard-hero__brand { min-height: 8rem; padding: 1.25rem; }
+  .dashboard-hero__brand img { width: 12rem; max-height: 4rem; }
+  .dashboard-hero__brand p { margin-top: .45rem; font-size: .65rem; }
+  .dashboard-hero .dashboard__intro { padding: 1.35rem; }
+  .dashboard-hero .dashboard__intro h1 { font-size: 2rem; }
+  .dashboard-hero .dashboard__intro p { font-size: .9rem; }
+  .dashboard-hero .dashboard__intro small { margin-top: .85rem; font-size: .66rem; }
+  .module-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: .6rem; }
+  .module-card { min-height: 8rem; flex-direction: column; gap: .65rem; padding: .85rem; }
+  .module-card p { display: none; }
+  .login-page { display: block; overflow-y: auto; }
+  .login-visual { min-height: 12rem; padding: 1.4rem; }
+  .login-visual__content { min-height: 9rem; }
+  .official-login-logo { width: 12rem; max-height: 4rem; }
+  .login-visual__copy { margin-top: auto; }
+  .login-visual__copy h1 { margin: .55rem 0 0; font-size: 1.55rem; }
+  .login-visual__copy p, .login-visual__footer { display: none; }
+  .login-panel { min-height: calc(100vh - 12rem); padding: 1.5rem 1.2rem 2rem; place-items: start center; }
+}

@@ -11,21 +11,20 @@ export function DashboardPage() {
 
   return (
     <section className="dashboard">
-      <div className="dashboard__intro">
-        <span className="eyebrow">VISÃO GERAL</span>
-        <h1>Olá, {profile?.name?.split(' ')[0]}.</h1>
-        <p>{tenantName} · {profile?.role.name}</p>
+      <div className="dashboard-hero">
+        <div className="dashboard-hero__brand"><img src="https://drive.google.com/thumbnail?id=1cUQw1yH0k3fdMKIIeKBMaUkhD23oJ4Eh&sz=w2000" alt="Insight Pad" /><p>Dados para o presente.<br />Insights para o futuro.</p></div>
+        <div className="dashboard__intro"><span className="eyebrow">BEM-VINDO AO INSIGHT PAD</span><h1>Olá, {profile?.name?.split(' ')[0]}.</h1><p>O que você quer fazer agora?</p><small>{tenantName} · {profile?.role.name}</small></div>
       </div>
 
       {allowedPages.length ? (
         <div className="module-grid">
           {allowedPages.map(({ page }) => (
             <Link className="module-card" key={page.pageKey} to={page.route}>
-              <span>{String(page.displayOrder).padStart(2, '0')}</span>
+              <span>{page.module === 'Vendas' ? '▣' : page.module === 'Estoque' ? '◇' : page.module === 'Financeiro' ? '$' : page.module === 'Dashboards' ? '↗' : page.module === 'Configurações' ? '⚙' : '≡'}</span>
               <div>
                 <small>{page.module}</small>
                 <strong>{page.displayName}</strong>
-                <p>Acesso liberado pelo seu perfil.</p>
+                <p>Toque para acessar</p>
               </div>
             </Link>
           ))}
