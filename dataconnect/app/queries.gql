@@ -1,6 +1,6 @@
 # Insight Pad client queries.
-# The first connector surface is intentionally minimal.
-# Tenant-wide queries will be added only after authorization checks are validated.
+# Every authenticated query derives tenant, role and user from auth.uid.
+# Client-supplied tenant or role identifiers must not define authorization scope.
 
 query GetCurrentUser @auth(level: USER) {
   user(key: { id_expr: "auth.uid" }) {
@@ -22,6 +22,56 @@ query GetCurrentUser @auth(level: USER) {
       name
       hierarchyLevel
       active
+    }
+  }
+}
+
+query GetCurrentUserAccess @auth(level: USER) {
+  user(key: { id_expr: "auth.uid" }) {
+    id
+    tenant {
+      id
+    }
+    role {
+      id
+      rolePagePermissions_on_role {
+        canAccess
+        canCreate
+        canUpdate
+        canDelete
+        canExport
+        canManage
+        page {
+          id
+          pageKey
+          displayName
+          module
+          route
+          icon
+          displayOrder
+          requiresLogin
+          active
+        }
+      }
+    }
+    userPagePermissions_on_user {
+      canAccess
+      canCreate
+      canUpdate
+      canDelete
+      canExport
+      canManage
+      page {
+        id
+        pageKey
+        displayName
+        module
+        route
+        icon
+        displayOrder
+        requiresLogin
+        active
+      }
     }
   }
 }

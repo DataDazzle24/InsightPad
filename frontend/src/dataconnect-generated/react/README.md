@@ -18,7 +18,9 @@ You can also follow the instructions from the [Data Connect documentation](https
   - [*Connecting to the local Emulator*](#connecting-to-the-local-emulator)
 - [**Queries**](#queries)
   - [*GetCurrentUser*](#getcurrentuser)
+  - [*GetCurrentUserAccess*](#getcurrentuseraccess)
 - [**Mutations**](#mutations)
+  - [*BootstrapNavigationCatalog*](#bootstrapnavigationcatalog)
 
 # TanStack Query Firebase & TanStack React Query
 This SDK provides [React](https://react.dev/) hooks generated specific to your application, for the operations found in the connector `app`. These hooks are generated using [TanStack Query Firebase](https://react-query-firebase.invertase.dev/) by our partners at Invertase, a library built on top of [TanStack React Query v5](https://tanstack.com/query/v5/docs/framework/react/overview).
@@ -199,9 +201,289 @@ export default function GetCurrentUserComponent() {
 }
 ```
 
+## GetCurrentUserAccess
+You can execute the `GetCurrentUserAccess` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
+
+```javascript
+useGetCurrentUserAccess(dc: DataConnect, options?: useDataConnectQueryOptions<GetCurrentUserAccessData>): UseDataConnectQueryResult<GetCurrentUserAccessData, undefined>;
+```
+You can also pass in a `DataConnect` instance to the Query hook function.
+```javascript
+useGetCurrentUserAccess(options?: useDataConnectQueryOptions<GetCurrentUserAccessData>): UseDataConnectQueryResult<GetCurrentUserAccessData, undefined>;
+```
+
+### Variables
+The `GetCurrentUserAccess` Query has no variables.
+### Return Type
+Recall that calling the `GetCurrentUserAccess` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
+
+To check the status of a Query, use the `UseQueryResult.status` field. You can also check for pending / success / error status using the `UseQueryResult.isPending`, `UseQueryResult.isSuccess`, and `UseQueryResult.isError` fields.
+
+To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `GetCurrentUserAccess` Query is of type `GetCurrentUserAccessData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface GetCurrentUserAccessData {
+  user?: {
+    id: string;
+    tenant: {
+      id: UUIDString;
+    } & Tenant_Key;
+    role: {
+      id: UUIDString;
+      rolePagePermissions_on_role: ({
+        canAccess: boolean;
+        canCreate: boolean;
+        canUpdate: boolean;
+        canDelete: boolean;
+        canExport: boolean;
+        canManage: boolean;
+        page: {
+          id: UUIDString;
+          pageKey: string;
+          displayName: string;
+          module: string;
+          route: string;
+          icon?: string | null;
+          displayOrder: number;
+          requiresLogin: boolean;
+          active: boolean;
+        } & AppPage_Key;
+      })[];
+    } & Role_Key;
+    userPagePermissions_on_user: ({
+      canAccess: boolean;
+      canCreate: boolean;
+      canUpdate: boolean;
+      canDelete: boolean;
+      canExport: boolean;
+      canManage: boolean;
+      page: {
+        id: UUIDString;
+        pageKey: string;
+        displayName: string;
+        module: string;
+        route: string;
+        icon?: string | null;
+        displayOrder: number;
+        requiresLogin: boolean;
+        active: boolean;
+      } & AppPage_Key;
+    })[];
+  } & User_Key;
+}
+```
+
+To learn more about the `UseQueryResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery).
+
+### Using `GetCurrentUserAccess`'s Query hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig } from '@insightpad/dataconnect';
+import { useGetCurrentUserAccess } from '@insightpad/dataconnect/react'
+
+export default function GetCurrentUserAccessComponent() {
+  // You don't have to do anything to "execute" the Query.
+  // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
+  const query = useGetCurrentUserAccess();
+
+  // You can also pass in a `DataConnect` instance to the Query hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const query = useGetCurrentUserAccess(dataConnect);
+
+  // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
+  const options = { staleTime: 5 * 1000 };
+  const query = useGetCurrentUserAccess(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = { staleTime: 5 * 1000 };
+  const query = useGetCurrentUserAccess(dataConnect, options);
+
+  // Then, you can render your component dynamically based on the status of the Query.
+  if (query.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
+  }
+
+  // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
+  if (query.isSuccess) {
+    console.log(query.data.user);
+  }
+  return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
 # Mutations
 
-No Mutations were generated for the `app` connector.
+The React generated SDK provides Mutations hook functions that call and return [`useDataConnectMutation`](https://react-query-firebase.invertase.dev/react/data-connect/mutations) hooks from TanStack Query Firebase.
 
-If you want to learn more about how to use Mutations in Data Connect, you can follow the examples from the [Data Connect documentation](https://firebase.google.com/docs/data-connect/web-sdk#operations-react-angular).
+Calling these hook functions will return a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, and the most recent data returned by the Mutation, among other things. To learn more about these hooks and how to use them, see the [TanStack Query Firebase documentation](https://react-query-firebase.invertase.dev/react/data-connect/mutations).
+
+Mutation hooks do not execute their Mutations automatically when called. Rather, after calling the Mutation hook function and getting a `UseMutationResult` object, you must call the `UseMutationResult.mutate()` function to execute the Mutation.
+
+To learn more about TanStack React Query's Mutations, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/guides/mutations).
+
+## Using Mutation Hooks
+Here's a general overview of how to use the generated Mutation hooks in your code:
+
+- Mutation hook functions are not called with the arguments to the Mutation. Instead, arguments are passed to `UseMutationResult.mutate()`.
+- If the Mutation has no variables, the `mutate()` function does not require arguments.
+- If the Mutation has any required variables, the `mutate()` function will require at least one argument: an object that contains all the required variables for the Mutation.
+- If the Mutation has some required and some optional variables, only required variables are necessary in the variables argument object, and optional variables may be provided as well.
+- If all of the Mutation's variables are optional, the Mutation hook function does not require any arguments.
+- Mutation hook functions can be called with or without passing in a `DataConnect` instance as an argument. If no `DataConnect` argument is passed in, then the generated SDK will call `getDataConnect(connectorConfig)` behind the scenes for you.
+- Mutation hooks also accept an `options` argument of type `useDataConnectMutationOptions`. To learn more about the `options` argument, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/guides/mutations#mutation-side-effects).
+  - `UseMutationResult.mutate()` also accepts an `options` argument of type `useDataConnectMutationOptions`.
+  - ***Special case:*** If the Mutation has no arguments (or all optional arguments and you wish to provide none), and you want to pass `options` to `UseMutationResult.mutate()`, you must pass `undefined` where you would normally pass the Mutation's arguments, and then may provide the options argument.
+
+Below are examples of how to use the `app` connector's generated Mutation hook functions to execute each Mutation. You can also follow the examples from the [Data Connect documentation](https://firebase.google.com/docs/data-connect/web-sdk#operations-react-angular).
+
+## BootstrapNavigationCatalog
+You can execute the `BootstrapNavigationCatalog` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useBootstrapNavigationCatalog(options?: useDataConnectMutationOptions<BootstrapNavigationCatalogData, FirebaseError, BootstrapNavigationCatalogVariables>): UseDataConnectMutationResult<BootstrapNavigationCatalogData, BootstrapNavigationCatalogVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useBootstrapNavigationCatalog(dc: DataConnect, options?: useDataConnectMutationOptions<BootstrapNavigationCatalogData, FirebaseError, BootstrapNavigationCatalogVariables>): UseDataConnectMutationResult<BootstrapNavigationCatalogData, BootstrapNavigationCatalogVariables>;
+```
+
+### Variables
+The `BootstrapNavigationCatalog` Mutation requires an argument of type `BootstrapNavigationCatalogVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface BootstrapNavigationCatalogVariables {
+  tenantId: UUIDString;
+  platformAdminRoleId: UUIDString;
+}
+```
+### Return Type
+Recall that calling the `BootstrapNavigationCatalog` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `BootstrapNavigationCatalog` Mutation is of type `BootstrapNavigationCatalogData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface BootstrapNavigationCatalogData {
+  pageCaixa: AppPage_Key;
+  pageGestaoVendas: AppPage_Key;
+  pageEstoque: AppPage_Key;
+  pageContasPagar: AppPage_Key;
+  pageContasReceber: AppPage_Key;
+  pageCategoria: AppPage_Key;
+  pageSubcategoria: AppPage_Key;
+  pageProduto: AppPage_Key;
+  pageCliente: AppPage_Key;
+  pageFornecedor: AppPage_Key;
+  pageFilial: AppPage_Key;
+  pageRelatorios: AppPage_Key;
+  pageGestaoAcessos: AppPage_Key;
+  permissionCaixa: RolePagePermission_Key;
+  permissionGestaoVendas: RolePagePermission_Key;
+  permissionEstoque: RolePagePermission_Key;
+  permissionContasPagar: RolePagePermission_Key;
+  permissionContasReceber: RolePagePermission_Key;
+  permissionCategoria: RolePagePermission_Key;
+  permissionSubcategoria: RolePagePermission_Key;
+  permissionProduto: RolePagePermission_Key;
+  permissionCliente: RolePagePermission_Key;
+  permissionFornecedor: RolePagePermission_Key;
+  permissionFilial: RolePagePermission_Key;
+  permissionRelatorios: RolePagePermission_Key;
+  permissionGestaoAcessos: RolePagePermission_Key;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `BootstrapNavigationCatalog`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, BootstrapNavigationCatalogVariables } from '@insightpad/dataconnect';
+import { useBootstrapNavigationCatalog } from '@insightpad/dataconnect/react'
+
+export default function BootstrapNavigationCatalogComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useBootstrapNavigationCatalog();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useBootstrapNavigationCatalog(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useBootstrapNavigationCatalog(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useBootstrapNavigationCatalog(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useBootstrapNavigationCatalog` Mutation requires an argument of type `BootstrapNavigationCatalogVariables`:
+  const bootstrapNavigationCatalogVars: BootstrapNavigationCatalogVariables = {
+    tenantId: ..., 
+    platformAdminRoleId: ..., 
+  };
+  mutation.mutate(bootstrapNavigationCatalogVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ tenantId: ..., platformAdminRoleId: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(bootstrapNavigationCatalogVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.pageCaixa);
+    console.log(mutation.data.pageGestaoVendas);
+    console.log(mutation.data.pageEstoque);
+    console.log(mutation.data.pageContasPagar);
+    console.log(mutation.data.pageContasReceber);
+    console.log(mutation.data.pageCategoria);
+    console.log(mutation.data.pageSubcategoria);
+    console.log(mutation.data.pageProduto);
+    console.log(mutation.data.pageCliente);
+    console.log(mutation.data.pageFornecedor);
+    console.log(mutation.data.pageFilial);
+    console.log(mutation.data.pageRelatorios);
+    console.log(mutation.data.pageGestaoAcessos);
+    console.log(mutation.data.permissionCaixa);
+    console.log(mutation.data.permissionGestaoVendas);
+    console.log(mutation.data.permissionEstoque);
+    console.log(mutation.data.permissionContasPagar);
+    console.log(mutation.data.permissionContasReceber);
+    console.log(mutation.data.permissionCategoria);
+    console.log(mutation.data.permissionSubcategoria);
+    console.log(mutation.data.permissionProduto);
+    console.log(mutation.data.permissionCliente);
+    console.log(mutation.data.permissionFornecedor);
+    console.log(mutation.data.permissionFilial);
+    console.log(mutation.data.permissionRelatorios);
+    console.log(mutation.data.permissionGestaoAcessos);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
 

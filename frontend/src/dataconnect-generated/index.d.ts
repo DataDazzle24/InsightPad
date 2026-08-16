@@ -1,4 +1,4 @@
-import { ConnectorConfig, DataConnect, QueryRef, QueryPromise, ExecuteQueryOptions } from 'firebase/data-connect';
+import { ConnectorConfig, DataConnect, QueryRef, QueryPromise, ExecuteQueryOptions, MutationRef, MutationPromise } from 'firebase/data-connect';
 
 export const connectorConfig: ConnectorConfig;
 
@@ -25,6 +25,40 @@ export interface AuditLog_Key {
   __typename?: 'AuditLog_Key';
 }
 
+export interface BootstrapNavigationCatalogData {
+  pageCaixa: AppPage_Key;
+  pageGestaoVendas: AppPage_Key;
+  pageEstoque: AppPage_Key;
+  pageContasPagar: AppPage_Key;
+  pageContasReceber: AppPage_Key;
+  pageCategoria: AppPage_Key;
+  pageSubcategoria: AppPage_Key;
+  pageProduto: AppPage_Key;
+  pageCliente: AppPage_Key;
+  pageFornecedor: AppPage_Key;
+  pageFilial: AppPage_Key;
+  pageRelatorios: AppPage_Key;
+  pageGestaoAcessos: AppPage_Key;
+  permissionCaixa: RolePagePermission_Key;
+  permissionGestaoVendas: RolePagePermission_Key;
+  permissionEstoque: RolePagePermission_Key;
+  permissionContasPagar: RolePagePermission_Key;
+  permissionContasReceber: RolePagePermission_Key;
+  permissionCategoria: RolePagePermission_Key;
+  permissionSubcategoria: RolePagePermission_Key;
+  permissionProduto: RolePagePermission_Key;
+  permissionCliente: RolePagePermission_Key;
+  permissionFornecedor: RolePagePermission_Key;
+  permissionFilial: RolePagePermission_Key;
+  permissionRelatorios: RolePagePermission_Key;
+  permissionGestaoAcessos: RolePagePermission_Key;
+}
+
+export interface BootstrapNavigationCatalogVariables {
+  tenantId: UUIDString;
+  platformAdminRoleId: UUIDString;
+}
+
 export interface Branch_Key {
   id: UUIDString;
   __typename?: 'Branch_Key';
@@ -43,6 +77,56 @@ export interface Customer_Key {
 export interface FiscalDocument_Key {
   id: UUIDString;
   __typename?: 'FiscalDocument_Key';
+}
+
+export interface GetCurrentUserAccessData {
+  user?: {
+    id: string;
+    tenant: {
+      id: UUIDString;
+    } & Tenant_Key;
+    role: {
+      id: UUIDString;
+      rolePagePermissions_on_role: ({
+        canAccess: boolean;
+        canCreate: boolean;
+        canUpdate: boolean;
+        canDelete: boolean;
+        canExport: boolean;
+        canManage: boolean;
+        page: {
+          id: UUIDString;
+          pageKey: string;
+          displayName: string;
+          module: string;
+          route: string;
+          icon?: string | null;
+          displayOrder: number;
+          requiresLogin: boolean;
+          active: boolean;
+        } & AppPage_Key;
+      })[];
+    } & Role_Key;
+    userPagePermissions_on_user: ({
+      canAccess: boolean;
+      canCreate: boolean;
+      canUpdate: boolean;
+      canDelete: boolean;
+      canExport: boolean;
+      canManage: boolean;
+      page: {
+        id: UUIDString;
+        pageKey: string;
+        displayName: string;
+        module: string;
+        route: string;
+        icon?: string | null;
+        displayOrder: number;
+        requiresLogin: boolean;
+        active: boolean;
+      } & AppPage_Key;
+    })[];
+  } & User_Key;
 }
 
 export interface GetCurrentUserData {
@@ -173,6 +257,18 @@ export interface User_Key {
   __typename?: 'User_Key';
 }
 
+interface BootstrapNavigationCatalogRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: BootstrapNavigationCatalogVariables): MutationRef<BootstrapNavigationCatalogData, BootstrapNavigationCatalogVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: BootstrapNavigationCatalogVariables): MutationRef<BootstrapNavigationCatalogData, BootstrapNavigationCatalogVariables>;
+  operationName: string;
+}
+export const bootstrapNavigationCatalogRef: BootstrapNavigationCatalogRef;
+
+export function bootstrapNavigationCatalog(vars: BootstrapNavigationCatalogVariables): MutationPromise<BootstrapNavigationCatalogData, BootstrapNavigationCatalogVariables>;
+export function bootstrapNavigationCatalog(dc: DataConnect, vars: BootstrapNavigationCatalogVariables): MutationPromise<BootstrapNavigationCatalogData, BootstrapNavigationCatalogVariables>;
+
 interface GetCurrentUserRef {
   /* Allow users to create refs without passing in DataConnect */
   (): QueryRef<GetCurrentUserData, undefined>;
@@ -184,4 +280,16 @@ export const getCurrentUserRef: GetCurrentUserRef;
 
 export function getCurrentUser(options?: ExecuteQueryOptions): QueryPromise<GetCurrentUserData, undefined>;
 export function getCurrentUser(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetCurrentUserData, undefined>;
+
+interface GetCurrentUserAccessRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<GetCurrentUserAccessData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<GetCurrentUserAccessData, undefined>;
+  operationName: string;
+}
+export const getCurrentUserAccessRef: GetCurrentUserAccessRef;
+
+export function getCurrentUserAccess(options?: ExecuteQueryOptions): QueryPromise<GetCurrentUserAccessData, undefined>;
+export function getCurrentUserAccess(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetCurrentUserAccessData, undefined>;
 

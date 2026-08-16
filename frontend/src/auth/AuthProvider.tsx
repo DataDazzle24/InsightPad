@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import {
   browserLocalPersistence,
   onAuthStateChanged,
@@ -12,8 +12,10 @@ import { getDataConnect } from 'firebase/data-connect'
 import {
   connectorConfig,
   getCurrentUser,
+  getCurrentUserAccess,
 } from '@insightpad/dataconnect'
 import { auth, firebaseApp } from '../lib/firebase'
+import { resolvePermissions, type PermissionMap } from './access-control'
 import {
   AuthContext,
   type AuthContextValue,
@@ -21,15 +23,14 @@ import {
   type UserProfile,
 } from './auth-context'
 
-interface AuthProviderProps {
-  children: ReactNode
-}
+interface AuthProviderProps { children: ReactNode }
 
 const dataConnect = getDataConnect(firebaseApp, connectorConfig)
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [permissions, setPermissions] = useState<PermissionMap>({})
   const [status, setStatus] = useState<AuthStatus>('loading')
   const [error, setError] = useState<string | null>(null)
 
@@ -39,12 +40,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       void (async () => {
         if (cancelled) return
-
         setFirebaseUser(user)
         setError(null)
 
         if (!user) {
           setProfile(null)
+          setPermissions({})
           setStatus('unauthenticated')
           return
         }
@@ -52,33 +53,38 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setStatus('loading')
 
         try {
-          // Garante que o token do Firebase Auth esteja disponível antes
-          // de o SQL Connect avaliar expressões baseadas em auth.uid.
           await user.getIdToken()
-          const result = await getCurrentUser(dataConnect)
+          const [profileResult, accessResult] = await Promise.all([
+            getCurrentUser(dataConnect),
+            getCurrentUserAccess(dataConnect),
+          ])
           if (cancelled) return
 
-          const currentProfile = result.data.user
+          const currentProfile = profileResult.data.user
+          const accessUser = accessResult.data.user
 
           if (
             !currentProfile ||
+            !accessUser ||
             !currentProfile.active ||
             !currentProfile.tenant.active ||
             !currentProfile.role.active
           ) {
             setProfile(null)
+            setPermissions({})
             setStatus('unauthorized')
             setError('Usuário sem acesso ativo ao Insight Pad.')
             return
           }
 
           setProfile(currentProfile)
+          setPermissions(resolvePermissions(accessUser))
           setStatus('authenticated')
         } catch (cause) {
           if (cancelled) return
-
-          console.error('Falha ao validar perfil no SQL Connect:', cause)
+          console.error('Falha ao validar perfil e permissões:', cause)
           setProfile(null)
+          setPermissions({})
           setStatus('unauthorized')
           setError('Não foi possível validar o perfil do usuário.')
         }
@@ -91,10 +97,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [])
 
+  const canAccess = useCallback(
+    (pageKey: string) => permissions[pageKey]?.canAccess === true,
+    [permissions],
+  )
+
   async function signIn(email: string, password: string) {
     setError(null)
     setStatus('loading')
-
     try {
       await setPersistence(auth, browserLocalPersistence)
       await signInWithEmailAndPassword(auth, email.trim(), password)
@@ -118,13 +128,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     () => ({
       firebaseUser,
       profile,
+      permissions,
       status,
       error,
+      canAccess,
       signIn,
       signOut,
       resetPassword,
     }),
-    [firebaseUser, profile, status, error],
+    [firebaseUser, profile, permissions, status, error, canAccess],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

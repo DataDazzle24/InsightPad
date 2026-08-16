@@ -1,0 +1,296 @@
+# Administrative, idempotent bootstrap for Insight Pad navigation.
+# Run only from a trusted administrative environment.
+# Fixed page UUIDs make repeated executions update the catalog instead of duplicating it.
+
+mutation BootstrapNavigationCatalog(
+  $tenantId: UUID!
+  $platformAdminRoleId: UUID!
+) @auth(level: NO_ACCESS) @transaction {
+  pageCaixa: appPage_upsert(data: {
+    id: "10000000-0000-4000-8000-000000000001"
+    pageKey: "CAIXA"
+    displayName: "Frente de Caixa"
+    module: "Vendas"
+    route: "/vendas/frente-de-caixa"
+    icon: "shopping-cart"
+    displayOrder: 10
+    requiresLogin: true
+    active: true
+  })
+  pageGestaoVendas: appPage_upsert(data: {
+    id: "10000000-0000-4000-8000-000000000002"
+    pageKey: "GESTAO_VENDAS"
+    displayName: "Registros de Venda"
+    module: "Vendas"
+    route: "/vendas/registros"
+    icon: "receipt"
+    displayOrder: 20
+    requiresLogin: true
+    active: true
+  })
+  pageEstoque: appPage_upsert(data: {
+    id: "10000000-0000-4000-8000-000000000003"
+    pageKey: "ESTOQUE"
+    displayName: "Estoque"
+    module: "Estoque"
+    route: "/estoque"
+    icon: "boxes"
+    displayOrder: 30
+    requiresLogin: true
+    active: true
+  })
+  pageContasPagar: appPage_upsert(data: {
+    id: "10000000-0000-4000-8000-000000000004"
+    pageKey: "CONTAS_PAGAR"
+    displayName: "Contas a Pagar"
+    module: "Financeiro"
+    route: "/financeiro/contas-a-pagar"
+    icon: "arrow-up-circle"
+    displayOrder: 40
+    requiresLogin: true
+    active: true
+  })
+  pageContasReceber: appPage_upsert(data: {
+    id: "10000000-0000-4000-8000-000000000005"
+    pageKey: "CONTAS_RECEBER"
+    displayName: "Contas a Receber"
+    module: "Financeiro"
+    route: "/financeiro/contas-a-receber"
+    icon: "arrow-down-circle"
+    displayOrder: 50
+    requiresLogin: true
+    active: true
+  })
+  pageCategoria: appPage_upsert(data: {
+    id: "10000000-0000-4000-8000-000000000006"
+    pageKey: "CAD_CATEGORIA"
+    displayName: "Categorias"
+    module: "Cadastros"
+    route: "/cadastros/categorias"
+    icon: "tags"
+    displayOrder: 60
+    requiresLogin: true
+    active: true
+  })
+  pageSubcategoria: appPage_upsert(data: {
+    id: "10000000-0000-4000-8000-000000000007"
+    pageKey: "CAD_SUBCATEGORIA"
+    displayName: "Subcategorias"
+    module: "Cadastros"
+    route: "/cadastros/subcategorias"
+    icon: "tag"
+    displayOrder: 70
+    requiresLogin: true
+    active: true
+  })
+  pageProduto: appPage_upsert(data: {
+    id: "10000000-0000-4000-8000-000000000008"
+    pageKey: "CAD_PRODUTO"
+    displayName: "Produtos"
+    module: "Cadastros"
+    route: "/cadastros/produtos"
+    icon: "package"
+    displayOrder: 80
+    requiresLogin: true
+    active: true
+  })
+  pageCliente: appPage_upsert(data: {
+    id: "10000000-0000-4000-8000-000000000009"
+    pageKey: "CAD_CLIENTE"
+    displayName: "Clientes"
+    module: "Cadastros"
+    route: "/cadastros/clientes"
+    icon: "users"
+    displayOrder: 90
+    requiresLogin: true
+    active: true
+  })
+  pageFornecedor: appPage_upsert(data: {
+    id: "10000000-0000-4000-8000-00000000000a"
+    pageKey: "CAD_FORNECEDOR"
+    displayName: "Fornecedores"
+    module: "Cadastros"
+    route: "/cadastros/fornecedores"
+    icon: "truck"
+    displayOrder: 100
+    requiresLogin: true
+    active: true
+  })
+  pageFilial: appPage_upsert(data: {
+    id: "10000000-0000-4000-8000-00000000000b"
+    pageKey: "CAD_FILIAL"
+    displayName: "Filiais"
+    module: "Cadastros"
+    route: "/cadastros/filiais"
+    icon: "building"
+    displayOrder: 110
+    requiresLogin: true
+    active: true
+  })
+  pageRelatorios: appPage_upsert(data: {
+    id: "10000000-0000-4000-8000-00000000000c"
+    pageKey: "RELATORIOS_OPERACIONAIS"
+    displayName: "Relatórios Operacionais"
+    module: "Dashboards"
+    route: "/dashboards/operacional"
+    icon: "chart-column"
+    displayOrder: 120
+    requiresLogin: true
+    active: true
+  })
+  pageGestaoAcessos: appPage_upsert(data: {
+    id: "10000000-0000-4000-8000-00000000000d"
+    pageKey: "GESTAO_ACESSOS"
+    displayName: "Gestão de Acessos"
+    module: "Configurações"
+    route: "/configuracoes/acessos"
+    icon: "shield-check"
+    displayOrder: 130
+    requiresLogin: true
+    active: true
+  })
+
+  permissionCaixa: rolePagePermission_upsert(data: {
+    roleId: $platformAdminRoleId
+    pageId: "10000000-0000-4000-8000-000000000001"
+    tenantId: $tenantId
+    canAccess: true
+    canCreate: true
+    canUpdate: true
+    canDelete: true
+    canExport: true
+    canManage: true
+  })
+  permissionGestaoVendas: rolePagePermission_upsert(data: {
+    roleId: $platformAdminRoleId
+    pageId: "10000000-0000-4000-8000-000000000002"
+    tenantId: $tenantId
+    canAccess: true
+    canCreate: true
+    canUpdate: true
+    canDelete: true
+    canExport: true
+    canManage: true
+  })
+  permissionEstoque: rolePagePermission_upsert(data: {
+    roleId: $platformAdminRoleId
+    pageId: "10000000-0000-4000-8000-000000000003"
+    tenantId: $tenantId
+    canAccess: true
+    canCreate: true
+    canUpdate: true
+    canDelete: true
+    canExport: true
+    canManage: true
+  })
+  permissionContasPagar: rolePagePermission_upsert(data: {
+    roleId: $platformAdminRoleId
+    pageId: "10000000-0000-4000-8000-000000000004"
+    tenantId: $tenantId
+    canAccess: true
+    canCreate: true
+    canUpdate: true
+    canDelete: true
+    canExport: true
+    canManage: true
+  })
+  permissionContasReceber: rolePagePermission_upsert(data: {
+    roleId: $platformAdminRoleId
+    pageId: "10000000-0000-4000-8000-000000000005"
+    tenantId: $tenantId
+    canAccess: true
+    canCreate: true
+    canUpdate: true
+    canDelete: true
+    canExport: true
+    canManage: true
+  })
+  permissionCategoria: rolePagePermission_upsert(data: {
+    roleId: $platformAdminRoleId
+    pageId: "10000000-0000-4000-8000-000000000006"
+    tenantId: $tenantId
+    canAccess: true
+    canCreate: true
+    canUpdate: true
+    canDelete: true
+    canExport: true
+    canManage: true
+  })
+  permissionSubcategoria: rolePagePermission_upsert(data: {
+    roleId: $platformAdminRoleId
+    pageId: "10000000-0000-4000-8000-000000000007"
+    tenantId: $tenantId
+    canAccess: true
+    canCreate: true
+    canUpdate: true
+    canDelete: true
+    canExport: true
+    canManage: true
+  })
+  permissionProduto: rolePagePermission_upsert(data: {
+    roleId: $platformAdminRoleId
+    pageId: "10000000-0000-4000-8000-000000000008"
+    tenantId: $tenantId
+    canAccess: true
+    canCreate: true
+    canUpdate: true
+    canDelete: true
+    canExport: true
+    canManage: true
+  })
+  permissionCliente: rolePagePermission_upsert(data: {
+    roleId: $platformAdminRoleId
+    pageId: "10000000-0000-4000-8000-000000000009"
+    tenantId: $tenantId
+    canAccess: true
+    canCreate: true
+    canUpdate: true
+    canDelete: true
+    canExport: true
+    canManage: true
+  })
+  permissionFornecedor: rolePagePermission_upsert(data: {
+    roleId: $platformAdminRoleId
+    pageId: "10000000-0000-4000-8000-00000000000a"
+    tenantId: $tenantId
+    canAccess: true
+    canCreate: true
+    canUpdate: true
+    canDelete: true
+    canExport: true
+    canManage: true
+  })
+  permissionFilial: rolePagePermission_upsert(data: {
+    roleId: $platformAdminRoleId
+    pageId: "10000000-0000-4000-8000-00000000000b"
+    tenantId: $tenantId
+    canAccess: true
+    canCreate: true
+    canUpdate: true
+    canDelete: true
+    canExport: true
+    canManage: true
+  })
+  permissionRelatorios: rolePagePermission_upsert(data: {
+    roleId: $platformAdminRoleId
+    pageId: "10000000-0000-4000-8000-00000000000c"
+    tenantId: $tenantId
+    canAccess: true
+    canCreate: true
+    canUpdate: true
+    canDelete: true
+    canExport: true
+    canManage: true
+  })
+  permissionGestaoAcessos: rolePagePermission_upsert(data: {
+    roleId: $platformAdminRoleId
+    pageId: "10000000-0000-4000-8000-00000000000d"
+    tenantId: $tenantId
+    canAccess: true
+    canCreate: true
+    canUpdate: true
+    canDelete: true
+    canExport: true
+    canManage: true
+  })
+}
