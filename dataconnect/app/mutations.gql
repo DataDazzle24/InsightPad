@@ -5,7 +5,7 @@
 mutation BootstrapNavigationCatalog(
   $tenantId: UUID!
   $platformAdminRoleId: UUID!
-) @auth(level: ADMIN) @transaction {
+) @auth(level: NO_ACCESS) @transaction {
   pageCaixa: appPage_upsert(data: {
     id: "10000000-0000-4000-8000-000000000001"
     pageKey: "CAIXA"
