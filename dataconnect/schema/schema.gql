@@ -1,52 +1,519 @@
-# Example schema for simple movie review app
+# Insight Pad - PostgreSQL schema v1
+# Source of truth for Firebase SQL Connect.
+#
+# Design principles:
+# - UUID primary keys for business entities.
+# - Firebase Auth UID as the user primary key.
+# - Explicit tenantId on every tenant-owned table.
+# - Money stored as Int64 cents.
+# - Quantities stored as numeric(18,3).
+# - UTC timestamps (timestamptz).
+# - Soft deletion through active/deletedAt.
+# - legacyId preserves traceability to Google Sheets.
 
-# User table is keyed by Firebase Auth UID.
-type User @table {
-  # `@default(expr: "auth.uid")` sets it to Firebase Auth UID during insert and upsert.
-  id: String! @default(expr: "auth.uid")
-  username: String! @col(dataType: "varchar(50)")
-  # The `user: User!` field in the Review table generates the following one-to-many query field.
-  #  reviews_on_user: [Review!]!
-  # The `Review` join table the following many-to-many query field.
-  #  movies_via_Review: [Movie!]!
+type Tenant @table(name: "tenants", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  legacyId: String @col(name: "legacy_id", dataType: "varchar(64)")
+  legalName: String! @col(name: "legal_name", dataType: "varchar(160)")
+  tradeName: String @col(name: "trade_name", dataType: "varchar(160)")
+  document: String @col(dataType: "varchar(20)")
+  email: String @col(dataType: "varchar(254)")
+  phone: String @col(dataType: "varchar(24)")
+  planCode: String @col(name: "plan_code", dataType: "varchar(40)")
+  startsOn: Date @col(name: "starts_on")
+  expiresOn: Date @col(name: "expires_on")
+  timezone: String! @default(value: "America/Sao_Paulo") @col(dataType: "varchar(64)")
+  currencyCode: String! @default(value: "BRL") @col(name: "currency_code", dataType: "char(3)")
+  active: Boolean! @default(value: true)
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+  deletedAt: Timestamp @col(name: "deleted_at")
 }
 
-# Movie is keyed by a randomly generated UUID.
-type Movie @table {
-  # If you do not pass a 'key' to `@table`, Data Connect automatically adds the following 'id' column.
-  # Feel free to uncomment and customize it.
-  #  id: UUID! @default(expr: "uuidV4()")
-  title: String!
-  imageUrl: String!
-  genre: String
+type Role @table(name: "roles", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  legacyId: String @col(name: "legacy_id", dataType: "varchar(64)")
+  name: String! @col(dataType: "varchar(80)")
+  description: String @col(dataType: "varchar(255)")
+  hierarchyLevel: Int! @default(value: 100) @col(name: "hierarchy_level")
+  systemRole: Boolean! @default(value: false) @col(name: "system_role")
+  active: Boolean! @default(value: true)
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+  deletedAt: Timestamp @col(name: "deleted_at")
 }
 
-# MovieMetadata is a metadata attached to a Movie.
-# Movie <-> MovieMetadata is a one-to-one relationship
-type MovieMetadata @table {
-  # @unique ensures each Movie can only one MovieMetadata.
-  movie: Movie! @unique
-  # The movie field adds the following foreign key field. Feel free to uncomment and customize it.
-  #  movieId: UUID!
-  rating: Float
-  releaseYear: Int
-  description: String
+type AppPage @table(name: "app_pages", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  legacyId: String @col(name: "legacy_id", dataType: "varchar(64)")
+  pageKey: String! @col(name: "page_key", dataType: "varchar(80)")
+  displayName: String! @col(name: "display_name", dataType: "varchar(100)")
+  module: String! @col(dataType: "varchar(80)")
+  route: String! @col(dataType: "varchar(160)")
+  icon: String @col(dataType: "varchar(80)")
+  displayOrder: Int! @default(value: 0) @col(name: "display_order")
+  requiresLogin: Boolean! @default(value: true) @col(name: "requires_login")
+  active: Boolean! @default(value: true)
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
 }
 
-# Reviews is a join table between User and Movie.
-# It has a composite primary keys `userUid` and `movieId`.
-# A user can leave reviews for many movies. A movie can have reviews from many users.
-# User  <-> Review is a one-to-many relationship
-# Movie <-> Review is a one-to-many relationship
-# Movie <-> User is a many-to-many relationship
-type Review @table(name: "Reviews", key: ["movie", "user"]) {
+type User @table(name: "users", key: "id") {
+  id: String! @default(expr: "auth.uid") @col(dataType: "varchar(128)")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  role: Role! @ref(fields: "roleId", references: "id")
+  roleId: UUID! @col(name: "role_id")
+  legacyId: String @col(name: "legacy_id", dataType: "varchar(64)")
+  name: String! @col(dataType: "varchar(160)")
+  email: String! @col(dataType: "varchar(254)")
+  login: String @col(dataType: "varchar(100)")
+  onboardingPending: Boolean! @default(value: false) @col(name: "onboarding_pending")
+  failedLoginAttempts: Int! @default(value: 0) @col(name: "failed_login_attempts")
+  blockedUntil: Timestamp @col(name: "blocked_until")
+  lastLoginAt: Timestamp @col(name: "last_login_at")
+  active: Boolean! @default(value: true)
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+  deletedAt: Timestamp @col(name: "deleted_at")
+}
+
+type RolePagePermission
+  @table(name: "role_page_permissions", key: ["role", "page"]) {
+  role: Role!
+  page: AppPage!
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  canAccess: Boolean! @default(value: false) @col(name: "can_access")
+  canCreate: Boolean! @default(value: false) @col(name: "can_create")
+  canUpdate: Boolean! @default(value: false) @col(name: "can_update")
+  canDelete: Boolean! @default(value: false) @col(name: "can_delete")
+  canExport: Boolean! @default(value: false) @col(name: "can_export")
+  canManage: Boolean! @default(value: false) @col(name: "can_manage")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+}
+
+type UserPagePermission
+  @table(name: "user_page_permissions", key: ["user", "page"]) {
   user: User!
-  # The user field adds the following foreign key field. Feel free to uncomment and customize it.
-  #  userUid: String!
-  movie: Movie!
-  # The movie field adds the following foreign key field. Feel free to uncomment and customize it.
-  #  movieId: UUID!
-  rating: Int
-  reviewText: String
-  reviewDate: Date! @default(expr: "request.time")
+  page: AppPage!
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  canAccess: Boolean! @default(value: false) @col(name: "can_access")
+  canCreate: Boolean! @default(value: false) @col(name: "can_create")
+  canUpdate: Boolean! @default(value: false) @col(name: "can_update")
+  canDelete: Boolean! @default(value: false) @col(name: "can_delete")
+  canExport: Boolean! @default(value: false) @col(name: "can_export")
+  canManage: Boolean! @default(value: false) @col(name: "can_manage")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+}
+
+type Branch @table(name: "branches", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  legacyId: String @col(name: "legacy_id", dataType: "varchar(64)")
+  name: String! @col(dataType: "varchar(160)")
+  internalCode: String @col(name: "internal_code", dataType: "varchar(40)")
+  postalCode: String @col(name: "postal_code", dataType: "varchar(9)")
+  stateCode: String @col(name: "state_code", dataType: "char(2)")
+  city: String @col(dataType: "varchar(120)")
+  district: String @col(dataType: "varchar(120)")
+  street: String @col(dataType: "varchar(160)")
+  streetNumber: String @col(name: "street_number", dataType: "varchar(20)")
+  addressComplement: String @col(name: "address_complement", dataType: "varchar(120)")
+  phone: String @col(dataType: "varchar(24)")
+  active: Boolean! @default(value: true)
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+  deletedAt: Timestamp @col(name: "deleted_at")
+}
+
+type Category @table(name: "categories", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  legacyId: String @col(name: "legacy_id", dataType: "varchar(64)")
+  name: String! @col(dataType: "varchar(120)")
+  active: Boolean! @default(value: true)
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+  deletedAt: Timestamp @col(name: "deleted_at")
+}
+
+type Subcategory @table(name: "subcategories", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  category: Category! @ref(fields: "categoryId", references: "id")
+  categoryId: UUID! @col(name: "category_id")
+  legacyId: String @col(name: "legacy_id", dataType: "varchar(64)")
+  name: String! @col(dataType: "varchar(120)")
+  active: Boolean! @default(value: true)
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+  deletedAt: Timestamp @col(name: "deleted_at")
+}
+
+type Supplier @table(name: "suppliers", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  legacyId: String @col(name: "legacy_id", dataType: "varchar(64)")
+  legalName: String! @col(name: "legal_name", dataType: "varchar(160)")
+  tradeName: String @col(name: "trade_name", dataType: "varchar(160)")
+  internalCode: String @col(name: "internal_code", dataType: "varchar(40)")
+  cpf: String @col(dataType: "varchar(11)")
+  cnpj: String @col(dataType: "varchar(14)")
+  postalCode: String @col(name: "postal_code", dataType: "varchar(9)")
+  stateCode: String @col(name: "state_code", dataType: "char(2)")
+  city: String @col(dataType: "varchar(120)")
+  district: String @col(dataType: "varchar(120)")
+  street: String @col(dataType: "varchar(160)")
+  streetNumber: String @col(name: "street_number", dataType: "varchar(20)")
+  addressComplement: String @col(name: "address_complement", dataType: "varchar(120)")
+  contactName: String @col(name: "contact_name", dataType: "varchar(160)")
+  phonePrimary: String @col(name: "phone_primary", dataType: "varchar(24)")
+  phoneSecondary: String @col(name: "phone_secondary", dataType: "varchar(24)")
+  email: String @col(dataType: "varchar(254)")
+  segment: String @col(dataType: "varchar(100)")
+  paymentTerms: String @col(name: "payment_terms", dataType: "varchar(100)")
+  paymentTermDays: Int @col(name: "payment_term_days")
+  averageDeliveryDays: Int @col(name: "average_delivery_days")
+  notes: String
+  active: Boolean! @default(value: true)
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+  deletedAt: Timestamp @col(name: "deleted_at")
+}
+
+type Customer @table(name: "customers", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  legacyId: String @col(name: "legacy_id", dataType: "varchar(64)")
+  name: String! @col(dataType: "varchar(160)")
+  birthDate: Date @col(name: "birth_date")
+  gender: String @col(dataType: "varchar(30)")
+  cpf: String @col(dataType: "varchar(11)")
+  cnpj: String @col(dataType: "varchar(14)")
+  marketingOptIn: Boolean! @default(value: false) @col(name: "marketing_opt_in")
+  email: String @col(dataType: "varchar(254)")
+  phonePrimary: String @col(name: "phone_primary", dataType: "varchar(24)")
+  phoneSecondary: String @col(name: "phone_secondary", dataType: "varchar(24)")
+  postalCode: String @col(name: "postal_code", dataType: "varchar(9)")
+  stateCode: String @col(name: "state_code", dataType: "char(2)")
+  city: String @col(dataType: "varchar(120)")
+  district: String @col(dataType: "varchar(120)")
+  street: String @col(dataType: "varchar(160)")
+  streetNumber: String @col(name: "street_number", dataType: "varchar(20)")
+  addressComplement: String @col(name: "address_complement", dataType: "varchar(120)")
+  preferences: Any
+  notes: String
+  active: Boolean! @default(value: true)
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+  deletedAt: Timestamp @col(name: "deleted_at")
+}
+
+type Product @table(name: "products", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  category: Category! @ref(fields: "categoryId", references: "id")
+  categoryId: UUID! @col(name: "category_id")
+  subcategory: Subcategory @ref(fields: "subcategoryId", references: "id")
+  subcategoryId: UUID @col(name: "subcategory_id")
+  supplier: Supplier @ref(fields: "supplierId", references: "id")
+  supplierId: UUID @col(name: "supplier_id")
+  legacyId: String @col(name: "legacy_id", dataType: "varchar(64)")
+  name: String! @col(dataType: "varchar(180)")
+  internalCode: String @col(name: "internal_code", dataType: "varchar(60)")
+  ean: String @col(dataType: "varchar(32)")
+  brand: String @col(dataType: "varchar(100)")
+  sizeType: String @col(name: "size_type", dataType: "varchar(40)")
+  size: String @col(dataType: "varchar(40)")
+  color: String @col(dataType: "varchar(60)")
+  maximumStock: Float @col(name: "maximum_stock", dataType: "numeric(18,3)")
+  minimumStock: Float @col(name: "minimum_stock", dataType: "numeric(18,3)")
+  salePriceCents: Int64! @default(value: 0) @col(name: "sale_price_cents")
+  costPriceCents: Int64! @default(value: 0) @col(name: "cost_price_cents")
+  weightedProduct: Boolean! @default(value: false) @col(name: "weighted_product")
+  bundleProduct: Boolean! @default(value: false) @col(name: "bundle_product")
+  allowNegativeStock: Boolean! @default(value: false) @col(name: "allow_negative_stock")
+  notes: String
+  active: Boolean! @default(value: true)
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+  deletedAt: Timestamp @col(name: "deleted_at")
+}
+
+type ProductComponent
+  @table(name: "product_components", key: ["parentProduct", "componentProduct"]) {
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  parentProduct: Product!
+  componentProduct: Product!
+  quantity: Float! @col(dataType: "numeric(18,3)")
+  allocatedUnitPriceCents: Int64 @col(name: "allocated_unit_price_cents")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+}
+
+type Promotion @table(name: "promotions", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  product: Product! @ref(fields: "productId", references: "id")
+  productId: UUID! @col(name: "product_id")
+  legacyId: String @col(name: "legacy_id", dataType: "varchar(64)")
+  promotionalPriceCents: Int64! @col(name: "promotional_price_cents")
+  startsAt: Timestamp! @col(name: "starts_at")
+  endsAt: Timestamp! @col(name: "ends_at")
+  active: Boolean! @default(value: true)
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+  deletedAt: Timestamp @col(name: "deleted_at")
+}
+
+type PaymentMethod @table(name: "payment_methods", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  legacyId: String @col(name: "legacy_id", dataType: "varchar(64)")
+  code: String! @col(dataType: "varchar(40)")
+  name: String! @col(dataType: "varchar(100)")
+  requiresChange: Boolean! @default(value: false) @col(name: "requires_change")
+  active: Boolean! @default(value: true)
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+}
+
+type Sale @table(name: "sales", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  branch: Branch! @ref(fields: "branchId", references: "id")
+  branchId: UUID! @col(name: "branch_id")
+  customer: Customer @ref(fields: "customerId", references: "id")
+  customerId: UUID @col(name: "customer_id")
+  legacyId: String @col(name: "legacy_id", dataType: "varchar(64)")
+  clientOperationId: String! @col(name: "client_operation_id", dataType: "varchar(100)")
+  status: String! @default(value: "COMPLETED") @col(dataType: "varchar(30)")
+  subtotalCents: Int64! @default(value: 0) @col(name: "subtotal_cents")
+  discountCents: Int64! @default(value: 0) @col(name: "discount_cents")
+  surchargeCents: Int64! @default(value: 0) @col(name: "surcharge_cents")
+  totalCents: Int64! @default(value: 0) @col(name: "total_cents")
+  changeCents: Int64! @default(value: 0) @col(name: "change_cents")
+  soldAt: Timestamp! @default(expr: "request.time") @col(name: "sold_at")
+  cancelledAt: Timestamp @col(name: "cancelled_at")
+  cancellationReason: String @col(name: "cancellation_reason", dataType: "varchar(255)")
+  createdByUid: String! @col(name: "created_by_uid", dataType: "varchar(128)")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+}
+
+type SaleItem @table(name: "sale_items", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  sale: Sale! @ref(fields: "saleId", references: "id")
+  saleId: UUID! @col(name: "sale_id")
+  product: Product! @ref(fields: "productId", references: "id")
+  productId: UUID! @col(name: "product_id")
+  legacyId: String @col(name: "legacy_id", dataType: "varchar(64)")
+  quantity: Float! @col(dataType: "numeric(18,3)")
+  unitListPriceCents: Int64! @col(name: "unit_list_price_cents")
+  unitSalePriceCents: Int64! @col(name: "unit_sale_price_cents")
+  unitCostCents: Int64! @default(value: 0) @col(name: "unit_cost_cents")
+  discountCents: Int64! @default(value: 0) @col(name: "discount_cents")
+  totalCents: Int64! @col(name: "total_cents")
+  status: String! @default(value: "ACTIVE") @col(dataType: "varchar(30)")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+}
+
+type SalePayment @table(name: "sale_payments", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  sale: Sale! @ref(fields: "saleId", references: "id")
+  saleId: UUID! @col(name: "sale_id")
+  paymentMethod: PaymentMethod! @ref(fields: "paymentMethodId", references: "id")
+  paymentMethodId: UUID! @col(name: "payment_method_id")
+  amountCents: Int64! @col(name: "amount_cents")
+  sequence: Int! @default(value: 1)
+  externalReference: String @col(name: "external_reference", dataType: "varchar(160)")
+  status: String! @default(value: "CONFIRMED") @col(dataType: "varchar(30)")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+}
+
+type FiscalDocument @table(name: "fiscal_documents", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  branch: Branch! @ref(fields: "branchId", references: "id")
+  branchId: UUID! @col(name: "branch_id")
+  supplier: Supplier @ref(fields: "supplierId", references: "id")
+  supplierId: UUID @col(name: "supplier_id")
+  legacyId: String @col(name: "legacy_id", dataType: "varchar(64)")
+  documentType: String! @default(value: "NF") @col(name: "document_type", dataType: "varchar(20)")
+  documentNumber: String! @col(name: "document_number", dataType: "varchar(60)")
+  accessKey: String @col(name: "access_key", dataType: "varchar(60)")
+  issuedAt: Timestamp @col(name: "issued_at")
+  totalCents: Int64! @default(value: 0) @col(name: "total_cents")
+  freightCents: Int64! @default(value: 0) @col(name: "freight_cents")
+  insuranceCents: Int64! @default(value: 0) @col(name: "insurance_cents")
+  icmsCents: Int64! @default(value: 0) @col(name: "icms_cents")
+  icmsStCents: Int64! @default(value: 0) @col(name: "icms_st_cents")
+  ipiCents: Int64! @default(value: 0) @col(name: "ipi_cents")
+  issuerCpf: String @col(name: "issuer_cpf", dataType: "varchar(11)")
+  issuerCnpj: String @col(name: "issuer_cnpj", dataType: "varchar(14)")
+  stateCode: String @col(name: "state_code", dataType: "char(2)")
+  status: String! @default(value: "REGISTERED") @col(dataType: "varchar(30)")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+}
+
+type StockMovementType @table(name: "stock_movement_types", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  legacyId: String @col(name: "legacy_id", dataType: "varchar(64)")
+  code: String! @col(dataType: "varchar(40)")
+  name: String! @col(dataType: "varchar(100)")
+  direction: String! @col(dataType: "varchar(10)")
+  active: Boolean! @default(value: true)
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+}
+
+type StockMovement @table(name: "stock_movements", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  branch: Branch! @ref(fields: "branchId", references: "id")
+  branchId: UUID! @col(name: "branch_id")
+  product: Product! @ref(fields: "productId", references: "id")
+  productId: UUID! @col(name: "product_id")
+  movementType: StockMovementType! @ref(fields: "movementTypeId", references: "id")
+  movementTypeId: UUID! @col(name: "movement_type_id")
+  sale: Sale @ref(fields: "saleId", references: "id")
+  saleId: UUID @col(name: "sale_id")
+  fiscalDocument: FiscalDocument @ref(fields: "fiscalDocumentId", references: "id")
+  fiscalDocumentId: UUID @col(name: "fiscal_document_id")
+  legacyId: String @col(name: "legacy_id", dataType: "varchar(64)")
+  clientOperationId: String @col(name: "client_operation_id", dataType: "varchar(100)")
+  quantity: Float! @col(dataType: "numeric(18,3)")
+  unitGrossCents: Int64! @default(value: 0) @col(name: "unit_gross_cents")
+  unitCostCents: Int64! @default(value: 0) @col(name: "unit_cost_cents")
+  occurredAt: Timestamp! @default(expr: "request.time") @col(name: "occurred_at")
+  status: String! @default(value: "POSTED") @col(dataType: "varchar(30)")
+  createdByUid: String! @col(name: "created_by_uid", dataType: "varchar(128)")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  reversedAt: Timestamp @col(name: "reversed_at")
+}
+
+type StockBalance
+  @table(name: "stock_balances", key: ["branch", "product"]) {
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  branch: Branch!
+  product: Product!
+  quantity: Float! @default(value: 0) @col(dataType: "numeric(18,3)")
+  averageCostCents: Int64! @default(value: 0) @col(name: "average_cost_cents")
+  version: Int64! @default(value: 0)
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+}
+
+type StockTransfer @table(name: "stock_transfers", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  sourceBranch: Branch! @ref(fields: "sourceBranchId", references: "id")
+  sourceBranchId: UUID! @col(name: "source_branch_id")
+  destinationBranch: Branch! @ref(fields: "destinationBranchId", references: "id")
+  destinationBranchId: UUID! @col(name: "destination_branch_id")
+  legacyId: String @col(name: "legacy_id", dataType: "varchar(64)")
+  clientOperationId: String! @col(name: "client_operation_id", dataType: "varchar(100)")
+  status: String! @default(value: "DRAFT") @col(dataType: "varchar(30)")
+  requestedAt: Timestamp! @default(expr: "request.time") @col(name: "requested_at")
+  completedAt: Timestamp @col(name: "completed_at")
+  notes: String
+  createdByUid: String! @col(name: "created_by_uid", dataType: "varchar(128)")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+}
+
+type StockTransferItem @table(name: "stock_transfer_items", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  transfer: StockTransfer! @ref(fields: "transferId", references: "id")
+  transferId: UUID! @col(name: "transfer_id")
+  product: Product! @ref(fields: "productId", references: "id")
+  productId: UUID! @col(name: "product_id")
+  quantity: Float! @col(dataType: "numeric(18,3)")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+}
+
+type OfflineOperation @table(name: "offline_operations", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  branch: Branch @ref(fields: "branchId", references: "id")
+  branchId: UUID @col(name: "branch_id")
+  operationKey: String! @col(name: "operation_key", dataType: "varchar(120)")
+  operationType: String! @col(name: "operation_type", dataType: "varchar(60)")
+  payloadHash: String! @col(name: "payload_hash", dataType: "varchar(128)")
+  status: String! @default(value: "RECEIVED") @col(dataType: "varchar(30)")
+  attempts: Int! @default(value: 0)
+  lastError: String @col(name: "last_error")
+  receivedAt: Timestamp! @default(expr: "request.time") @col(name: "received_at")
+  processedAt: Timestamp @col(name: "processed_at")
+}
+
+type AccessLog @table(name: "access_logs", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant @ref(fields: "tenantId", references: "id")
+  tenantId: UUID @col(name: "tenant_id")
+  userId: String @col(name: "user_id", dataType: "varchar(128)")
+  legacyId: String @col(name: "legacy_id", dataType: "varchar(64)")
+  action: String! @col(dataType: "varchar(80)")
+  pageKey: String @col(name: "page_key", dataType: "varchar(80)")
+  success: Boolean! @default(value: true)
+  detail: String
+  origin: String @col(dataType: "varchar(160)")
+  userAgent: String @col(name: "user_agent", dataType: "varchar(500)")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+}
+
+type AuditLog @table(name: "audit_logs", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant @ref(fields: "tenantId", references: "id")
+  tenantId: UUID @col(name: "tenant_id")
+  userId: String @col(name: "user_id", dataType: "varchar(128)")
+  legacyId: String @col(name: "legacy_id", dataType: "varchar(64)")
+  module: String! @col(dataType: "varchar(80)")
+  pageKey: String @col(name: "page_key", dataType: "varchar(80)")
+  action: String! @col(dataType: "varchar(80)")
+  functionName: String @col(name: "function_name", dataType: "varchar(160)")
+  entityName: String @col(name: "entity_name", dataType: "varchar(100)")
+  entityId: String @col(name: "entity_id", dataType: "varchar(128)")
+  summary: String
+  success: Boolean! @default(value: true)
+  errorMessage: String @col(name: "error_message")
+  durationMs: Int64 @col(name: "duration_ms")
+  readsCount: Int64 @col(name: "reads_count")
+  writesCount: Int64 @col(name: "writes_count")
+  rowsRead: Int64 @col(name: "rows_read")
+  rowsWritten: Int64 @col(name: "rows_written")
+  origin: String @col(dataType: "varchar(120)")
+  beforeData: Any @col(name: "before_data")
+  afterData: Any @col(name: "after_data")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
 }
