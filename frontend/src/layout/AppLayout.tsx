@@ -1,16 +1,15 @@
 import { useMemo, useState } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
 
 const INSIGHT_LOGO = 'https://drive.google.com/thumbnail?id=1T6pWIpQeH-jPowvh63mPQDJVIjA3VJBJ&sz=w2000'
-const DATA_DAZZLE_LOGO = 'https://drive.google.com/thumbnail?id=1RMePnzCwzaKXK0Gz-bw0TKG2zIOnwzHC&sz=w2000'
-
 const moduleIcons: Record<string, string> = {
   Vendas: '▣', Estoque: '◇', Financeiro: '$', Cadastros: '≡', Dashboards: '↗', Configurações: '⚙',
 }
 
 export function AppLayout() {
   const { profile, permissions, signOut } = useAuth()
+  const location = useLocation()
   const [leaving, setLeaving] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
 
@@ -29,6 +28,9 @@ export function AppLayout() {
   }
 
   const tenantName = profile?.tenant.tradeName ?? profile?.tenant.legalName
+  if (location.pathname === '/') return <Outlet />
+  const moduleTargets: Record<string, string> = { Vendas: '/menu/vendas', Cadastros: '/menu/cadastros', Dashboards: '/menu/dashboards' }
+  const currentPage = Object.values(permissions).find((item) => item.page.route === location.pathname)?.page.displayName ?? (location.pathname.includes('/menu/') ? location.pathname.split('/').pop()?.toUpperCase() : 'INSIGHT PAD')
 
   return (
     <main className="workspace insight-shell">
@@ -40,7 +42,7 @@ export function AppLayout() {
         <nav className="insight-header__nav" aria-label="Navegação principal">
           <NavLink className="insight-nav-link" to="/" end title="Início"><span>⌂</span><small>Início</small></NavLink>
           {modules.map(([module, permission]) => (
-            <NavLink className="insight-nav-link" key={module} to={permission.page.route} title={module}>
+            <NavLink className="insight-nav-link" key={module} to={moduleTargets[module] ?? permission.page.route} title={module}>
               <span>{moduleIcons[module] ?? '•'}</span><small>{module}</small>
             </NavLink>
           ))}
@@ -62,13 +64,13 @@ export function AppLayout() {
       </header>
 
       <section className="workspace__content">
-        <div className="workspace__header"><div><strong>{tenantName}</strong><span>Insight Pad · Gestão simplificada</span></div><img src={DATA_DAZZLE_LOGO} alt="Data Dazzle" /></div>
+        <div className="legacy-page-title">{currentPage}</div>
         <Outlet />
       </section>
 
       <nav className="mobile-app-nav" aria-label="Navegação do aplicativo">
         <NavLink to="/" end><span>⌂</span><small>Início</small></NavLink>
-        {modules.slice(0, 4).map(([module, permission]) => <NavLink key={module} to={permission.page.route}><span>{moduleIcons[module] ?? '•'}</span><small>{module}</small></NavLink>)}
+        {modules.slice(0, 4).map(([module, permission]) => <NavLink key={module} to={moduleTargets[module] ?? permission.page.route}><span>{moduleIcons[module] ?? '•'}</span><small>{module}</small></NavLink>)}
       </nav>
     </main>
   )
