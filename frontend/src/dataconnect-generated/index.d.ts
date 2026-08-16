@@ -1,0 +1,187 @@
+import { ConnectorConfig, DataConnect, QueryRef, QueryPromise, ExecuteQueryOptions } from 'firebase/data-connect';
+
+export const connectorConfig: ConnectorConfig;
+
+export type TimestampString = string;
+export type UUIDString = string;
+export type Int64String = string;
+export type DateString = string;
+
+
+
+
+export interface AccessLog_Key {
+  id: UUIDString;
+  __typename?: 'AccessLog_Key';
+}
+
+export interface AppPage_Key {
+  id: UUIDString;
+  __typename?: 'AppPage_Key';
+}
+
+export interface AuditLog_Key {
+  id: UUIDString;
+  __typename?: 'AuditLog_Key';
+}
+
+export interface Branch_Key {
+  id: UUIDString;
+  __typename?: 'Branch_Key';
+}
+
+export interface Category_Key {
+  id: UUIDString;
+  __typename?: 'Category_Key';
+}
+
+export interface Customer_Key {
+  id: UUIDString;
+  __typename?: 'Customer_Key';
+}
+
+export interface FiscalDocument_Key {
+  id: UUIDString;
+  __typename?: 'FiscalDocument_Key';
+}
+
+export interface GetCurrentUserData {
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+    active: boolean;
+    onboardingPending: boolean;
+    tenant: {
+      id: UUIDString;
+      legalName: string;
+      tradeName?: string | null;
+      active: boolean;
+      timezone: string;
+      currencyCode: string;
+    } & Tenant_Key;
+    role: {
+      id: UUIDString;
+      name: string;
+      hierarchyLevel: number;
+      active: boolean;
+    } & Role_Key;
+  } & User_Key;
+}
+
+export interface OfflineOperation_Key {
+  id: UUIDString;
+  __typename?: 'OfflineOperation_Key';
+}
+
+export interface PaymentMethod_Key {
+  id: UUIDString;
+  __typename?: 'PaymentMethod_Key';
+}
+
+export interface ProductComponent_Key {
+  parentProductId: UUIDString;
+  componentProductId: UUIDString;
+  __typename?: 'ProductComponent_Key';
+}
+
+export interface Product_Key {
+  id: UUIDString;
+  __typename?: 'Product_Key';
+}
+
+export interface Promotion_Key {
+  id: UUIDString;
+  __typename?: 'Promotion_Key';
+}
+
+export interface RolePagePermission_Key {
+  roleId: UUIDString;
+  pageId: UUIDString;
+  __typename?: 'RolePagePermission_Key';
+}
+
+export interface Role_Key {
+  id: UUIDString;
+  __typename?: 'Role_Key';
+}
+
+export interface SaleItem_Key {
+  id: UUIDString;
+  __typename?: 'SaleItem_Key';
+}
+
+export interface SalePayment_Key {
+  id: UUIDString;
+  __typename?: 'SalePayment_Key';
+}
+
+export interface Sale_Key {
+  id: UUIDString;
+  __typename?: 'Sale_Key';
+}
+
+export interface StockBalance_Key {
+  branchId: UUIDString;
+  productId: UUIDString;
+  __typename?: 'StockBalance_Key';
+}
+
+export interface StockMovementType_Key {
+  id: UUIDString;
+  __typename?: 'StockMovementType_Key';
+}
+
+export interface StockMovement_Key {
+  id: UUIDString;
+  __typename?: 'StockMovement_Key';
+}
+
+export interface StockTransferItem_Key {
+  id: UUIDString;
+  __typename?: 'StockTransferItem_Key';
+}
+
+export interface StockTransfer_Key {
+  id: UUIDString;
+  __typename?: 'StockTransfer_Key';
+}
+
+export interface Subcategory_Key {
+  id: UUIDString;
+  __typename?: 'Subcategory_Key';
+}
+
+export interface Supplier_Key {
+  id: UUIDString;
+  __typename?: 'Supplier_Key';
+}
+
+export interface Tenant_Key {
+  id: UUIDString;
+  __typename?: 'Tenant_Key';
+}
+
+export interface UserPagePermission_Key {
+  userId: string;
+  pageId: UUIDString;
+  __typename?: 'UserPagePermission_Key';
+}
+
+export interface User_Key {
+  id: string;
+  __typename?: 'User_Key';
+}
+
+interface GetCurrentUserRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<GetCurrentUserData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<GetCurrentUserData, undefined>;
+  operationName: string;
+}
+export const getCurrentUserRef: GetCurrentUserRef;
+
+export function getCurrentUser(options?: ExecuteQueryOptions): QueryPromise<GetCurrentUserData, undefined>;
+export function getCurrentUser(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetCurrentUserData, undefined>;
+
