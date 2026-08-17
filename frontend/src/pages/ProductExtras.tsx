@@ -3,6 +3,7 @@ import { getDataConnect } from 'firebase/data-connect'
 import { z } from 'zod'
 import { connectorConfig,productPromotions,savePromotion,setPromotionStatus } from '@insightpad/dataconnect'
 import { firebaseApp } from '../lib/firebase'
+import { csvSafe } from '../utils/registration'
 
 const dc=getDataConnect(firebaseApp,connectorConfig)
 const promotionSchema=z.object({
@@ -14,7 +15,6 @@ type Product={id:string;name:unknown;active:boolean;salePriceCents:string;costPr
 const digits=(value:string)=>value.replace(/\D/g,'')
 const money=(cents:unknown)=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(cents??0)/100)
 const maskMoney=(value:string)=>money(digits(value))
-const csvSafe=(value:string)=>/^[=+\-@]/.test(value)?`'${value}`:value
 const toLocalInput=(value:string)=>{const date=new Date(value),offset=date.getTimezoneOffset();return new Date(date.getTime()-offset*60000).toISOString().slice(0,16)}
 const statusLabel:Record<Promotion['status'],string>={ACTIVE:'Ativa',SCHEDULED:'Agendada',ENDED:'Encerrada',INACTIVE:'Inativa'}
 
