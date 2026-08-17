@@ -228,7 +228,7 @@ export interface ListCategoriesVariables {
   search: string;
   limit: number;
   offset: number;
-  requestKey: string;
+  requestKey?: string | null;
 }
 
 export interface ListSubcategoriesData {

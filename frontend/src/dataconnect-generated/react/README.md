@@ -346,7 +346,7 @@ export interface ListCategoriesVariables {
   search: string;
   limit: number;
   offset: number;
-  requestKey: string;
+  requestKey?: string | null;
 }
 ```
 ### Return Type
@@ -376,7 +376,7 @@ export default function ListCategoriesComponent() {
     search: ..., 
     limit: ..., 
     offset: ..., 
-    requestKey: ..., 
+    requestKey: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.

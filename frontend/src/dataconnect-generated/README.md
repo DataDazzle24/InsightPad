@@ -356,7 +356,7 @@ export interface ListCategoriesVariables {
   search: string;
   limit: number;
   offset: number;
-  requestKey: string;
+  requestKey?: string | null;
 }
 ```
 ### Return Type
@@ -379,7 +379,7 @@ const listCategoriesVars: ListCategoriesVariables = {
   search: ..., 
   limit: ..., 
   offset: ..., 
-  requestKey: ..., 
+  requestKey: ..., // optional
 };
 
 // Call the `listCategories()` function to execute the query.
@@ -412,7 +412,7 @@ const listCategoriesVars: ListCategoriesVariables = {
   search: ..., 
   limit: ..., 
   offset: ..., 
-  requestKey: ..., 
+  requestKey: ..., // optional
 };
 
 // Call the `listCategoriesRef()` function to get a reference to the query.
