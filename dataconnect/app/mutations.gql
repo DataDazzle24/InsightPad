@@ -637,3 +637,51 @@ mutation RestoreSubcategory($id: UUID!) @auth(level: USER) @transaction {
     params: [{_expr: "auth.uid"}, $id]
   )
 }
+
+
+mutation SaveBranch($id: UUID, $payload: Any!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u JOIN roles r ON r.id=u.role_id AND r.active
+      JOIN app_pages pg ON pg.page_key='CAD_FILIAL' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
+        AND CASE WHEN $2::uuid IS NULL THEN COALESCE(up.can_create,rp.can_create,false) ELSE COALESCE(up.can_update,rp.can_update,false) END
+    ),saved AS (
+      INSERT INTO branches(id,tenant_id,name,internal_code,postal_code,state_code,city,district,street,street_number,address_complement,phone,active,created_at,updated_at)
+      SELECT COALESCE($2::uuid,gen_random_uuid()),a.tenant_id,btrim($3::jsonb->>'name'),nullif(btrim($3::jsonb->>'internalCode'),''),
+        nullif(regexp_replace($3::jsonb->>'postalCode','\D','','g'),''),nullif(upper($3::jsonb->>'stateCode'),''),
+        nullif(btrim($3::jsonb->>'city'),''),nullif(btrim($3::jsonb->>'district'),''),nullif(btrim($3::jsonb->>'street'),''),
+        nullif(btrim($3::jsonb->>'streetNumber'),''),nullif(btrim($3::jsonb->>'addressComplement'),''),
+        nullif(regexp_replace($3::jsonb->>'phone','\D','','g'),''),true,now(),now() FROM actor a
+      WHERE length(btrim($3::jsonb->>'name'))>=2 AND NOT EXISTS(SELECT 1 FROM branches x WHERE x.tenant_id=a.tenant_id
+        AND x.id<>COALESCE($2::uuid,'00000000-0000-0000-0000-000000000000') AND x.active
+        AND (lower(btrim(x.name))=lower(btrim($3::jsonb->>'name')) OR
+          (nullif(btrim($3::jsonb->>'internalCode'),'') IS NOT NULL AND x.internal_code=btrim($3::jsonb->>'internalCode'))))
+      ON CONFLICT(id) DO UPDATE SET name=EXCLUDED.name,internal_code=EXCLUDED.internal_code,postal_code=EXCLUDED.postal_code,
+        state_code=EXCLUDED.state_code,city=EXCLUDED.city,district=EXCLUDED.district,street=EXCLUDED.street,street_number=EXCLUDED.street_number,
+        address_complement=EXCLUDED.address_complement,phone=EXCLUDED.phone,updated_at=now()
+      WHERE branches.tenant_id=EXCLUDED.tenant_id RETURNING id,tenant_id,name
+    ) INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+      SELECT tenant_id,$1,'Cadastros','CAD_FILIAL',CASE WHEN $2::uuid IS NULL THEN 'CREATE' ELSE 'UPDATE' END,'Branch',id::text,
+      'Filial salva',true,'SQL_CONNECT',jsonb_build_object('id',id,'name',name),now() FROM saved
+  """,params:[{_expr:"auth.uid"},$id,$payload])
+}
+
+mutation SetBranchStatus($id: UUID!, $active: Boolean!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u JOIN app_pages pg ON pg.page_key='CAD_FILIAL'
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id
+      WHERE u.id=$1 AND u.active AND CASE WHEN $3 THEN COALESCE(up.can_update,rp.can_update,false) ELSE COALESCE(up.can_delete,rp.can_delete,false) END
+    ),changed AS (
+      UPDATE branches b SET active=$3,deleted_at=CASE WHEN $3 THEN NULL ELSE now() END,updated_at=now() FROM actor a
+      WHERE b.id=$2 AND b.tenant_id=a.tenant_id AND ($3 OR NOT EXISTS(SELECT 1 FROM cash_sessions cs WHERE cs.branch_id=b.id AND cs.status='OPEN'))
+      RETURNING b.id,b.tenant_id,b.name
+    ) INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+      SELECT tenant_id,$1,'Cadastros','CAD_FILIAL',CASE WHEN $3 THEN 'RESTORE' ELSE 'ARCHIVE' END,'Branch',id::text,
+      'Status da filial alterado',true,'SQL_CONNECT',jsonb_build_object('active',$3,'name',name),now() FROM changed
+  """,params:[{_expr:"auth.uid"},$id,$active])
+}
