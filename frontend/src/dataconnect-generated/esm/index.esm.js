@@ -377,6 +377,54 @@ export function cancelSale(dcOrVars, vars) {
   return executeMutation(cancelSaleRef(dcInstance, inputVars));
 }
 
+export const createPlatformTenantRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'CreatePlatformTenant', inputVars);
+}
+createPlatformTenantRef.operationName = 'CreatePlatformTenant';
+
+export function createPlatformTenant(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(createPlatformTenantRef(dcInstance, inputVars));
+}
+
+export const setPlatformTenantStatusRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'SetPlatformTenantStatus', inputVars);
+}
+setPlatformTenantStatusRef.operationName = 'SetPlatformTenantStatus';
+
+export function setPlatformTenantStatus(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(setPlatformTenantStatusRef(dcInstance, inputVars));
+}
+
+export const linkPlatformUserRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'LinkPlatformUser', inputVars);
+}
+linkPlatformUserRef.operationName = 'LinkPlatformUser';
+
+export function linkPlatformUser(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(linkPlatformUserRef(dcInstance, inputVars));
+}
+
+export const setPlatformUserStatusRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'SetPlatformUserStatus', inputVars);
+}
+setPlatformUserStatusRef.operationName = 'SetPlatformUserStatus';
+
+export function setPlatformUserStatus(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(setPlatformUserStatusRef(dcInstance, inputVars));
+}
+
 export const getCurrentUserRef = (dc) => {
   const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
   dcInstance._useGeneratedSdk();
@@ -570,5 +618,18 @@ export function productPromotions(dcOrVars, varsOrOptions, options) {
   
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(productPromotionsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const platformAdminWorkspaceRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'PlatformAdminWorkspace', inputVars);
+}
+platformAdminWorkspaceRef.operationName = 'PlatformAdminWorkspace';
+
+export function platformAdminWorkspace(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(platformAdminWorkspaceRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 
