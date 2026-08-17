@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { z } from 'zod'
 import {
  archiveCategory,archiveSubcategory,categoryOptions,connectorConfig,createCategoriesBatch,createCategory,createSubcategoriesBatch,
- createSubcategory,listCategories,listSubcategories,restoreCategory,restoreSubcategory,updateCategory,updateSubcategory,
+ createSubcategory,listCategories,listSubcategories,restoreCategory,restoreSubcategory,setCategoriesStatusBatch,setSubcategoriesStatusBatch,updateCategory,updateSubcategory,
 } from '@insightpad/dataconnect'
 import { useAuth } from '../auth/useAuth'
 import { firebaseApp } from '../lib/firebase'
@@ -39,7 +39,7 @@ function CategoryPage(){
   setConfirmation({message:editing?'Confirmar a edição da categoria?':`Cadastrar ${clean.length} categoria(s)?`,run:async()=>{const result=editing?await updateCategory(dc,{id:editing.id,name:clean[0]}):clean.length===1?await createCategory(dc,{name:clean[0]}):await createCategoriesBatch(dc,{names:clean})
    if(!result.data._execute)throw new Error();setModal(false);setNotice({type:'success',text:editing?'Categoria atualizada.':'Categorias cadastradas.'});await load()}})
  }
- async function status(ids:string[],active:boolean){setBusy(true);try{for(const id of ids){const result=active?await restoreCategory(dc,{id}):await archiveCategory(dc,{id});if(!result.data._execute)throw new Error()}setSelected([]);setNotice({type:'success',text:'Status atualizado.'});await load()}
+ async function status(ids:string[],active:boolean){setBusy(true);try{const result=ids.length===1?(active?await restoreCategory(dc,{id:ids[0]}):await archiveCategory(dc,{id:ids[0]})):await setCategoriesStatusBatch(dc,{ids,active});if(Number(result.data._execute)!==ids.length)throw new Error('Nem todos os registros são elegíveis.');setSelected([]);setNotice({type:'success',text:'Status atualizado.'});await load()}
   catch(error){console.error(error);setNotice({type:'error',text:'Não foi possível alterar o status. Verifique vínculos e permissões.'})}finally{setBusy(false)}}
  async function confirm(){if(!confirmation)return;setBusy(true);try{await confirmation.run();setConfirmation(null)}catch(error){console.error(error);setConfirmation(null);setNotice({type:'error',text:'Operação não aplicada. Verifique duplicidades e permissões.'})}finally{setBusy(false)}}
  const options={name:[...new Set(items.map(item=>item.name))].sort().map(value=>({value,label:value})),active:[{value:'true',label:'Ativo'},{value:'false',label:'Inativo'}]}
@@ -71,7 +71,7 @@ function SubcategoryPage(){
   setConfirmation({message:editing?'Confirmar a edição da subcategoria?':`Cadastrar ${clean.length} subcategoria(s)?`,run:async()=>{const first=clean[0],result=editing?await updateSubcategory(dc,{id:editing.id,...first}):clean.length===1?await createSubcategory(dc,first):await createSubcategoriesBatch(dc,{items:clean})
    if(!result.data._execute)throw new Error();setModal(false);setNotice({type:'success',text:editing?'Subcategoria atualizada.':'Subcategorias cadastradas.'});await load()}})
  }
- async function status(ids:string[],active:boolean){setBusy(true);try{for(const id of ids){const result=active?await restoreSubcategory(dc,{id}):await archiveSubcategory(dc,{id});if(!result.data._execute)throw new Error()}setSelected([]);setNotice({type:'success',text:'Status atualizado.'});await load()}
+ async function status(ids:string[],active:boolean){setBusy(true);try{const result=ids.length===1?(active?await restoreSubcategory(dc,{id:ids[0]}):await archiveSubcategory(dc,{id:ids[0]})):await setSubcategoriesStatusBatch(dc,{ids,active});if(Number(result.data._execute)!==ids.length)throw new Error('Nem todos os registros são elegíveis.');setSelected([]);setNotice({type:'success',text:'Status atualizado.'});await load()}
   catch(error){console.error(error);setNotice({type:'error',text:'Não foi possível alterar o status. Verifique produtos vinculados.'})}finally{setBusy(false)}}
  async function confirm(){if(!confirmation)return;setBusy(true);try{await confirmation.run();setConfirmation(null)}catch(error){console.error(error);setConfirmation(null);setNotice({type:'error',text:'Operação não aplicada. Verifique duplicidades e permissões.'})}finally{setBusy(false)}}
  const names=[...new Set(items.map(item=>item.name))].sort().map(value=>({value,label:value})),categoryValues=categories.filter(category=>items.some(item=>item.categoryId===category.id)).map(category=>({value:category.id,label:category.name}))
