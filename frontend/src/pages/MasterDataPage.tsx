@@ -56,10 +56,10 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
  const [rows,setRows]=useState<Row[]>([]),[search,setSearch]=useState(''),[page,setPage]=useState(0),[busy,setBusy]=useState(true),[modal,setModal]=useState(false)
  const [editing,setEditing]=useState<Row|null>(null),[form,setForm]=useState<Record<string,unknown>>({}),[notice,setNotice]=useState(''),[confirm,setConfirm]=useState<null|{text:string;run:()=>Promise<void>}>(null)
  const [selected,setSelected]=useState<string[]>([]),[extras,setExtras]=useState<Row|null>(null),[options,setOptions]=useState<RegistrationOptionSet>({categories:[],subcategories:[],suppliers:[]})
- const query=useMemo(()=>({search:search.trim(),limit:PAGE_SIZE,offset:page*PAGE_SIZE,requestKey:crypto.randomUUID()}),[page,search])
- const load=useCallback(async()=>{setBusy(true);try{let result
-  if(pageKey==='CAD_FILIAL')result=await listBranches(dc,query);else if(pageKey==='CAD_FORNECEDOR')result=await listSuppliers(dc,query)
-  else if(pageKey==='CAD_CLIENTE')result=await listCustomers(dc,query);else result=await listProducts(dc,query)
+ const query=useMemo(()=>({search:search.trim(),limit:PAGE_SIZE,offset:page*PAGE_SIZE}),[page,search])
+ const load=useCallback(async()=>{setBusy(true);try{let result;const freshQuery={...query,requestKey:crypto.randomUUID()}
+  if(pageKey==='CAD_FILIAL')result=await listBranches(dc,freshQuery);else if(pageKey==='CAD_FORNECEDOR')result=await listSuppliers(dc,freshQuery)
+  else if(pageKey==='CAD_CLIENTE')result=await listCustomers(dc,freshQuery);else result=await listProducts(dc,freshQuery)
   setRows((result.data._select??[]) as Row[]);if(pageKey==='CAD_PRODUTO'){const opt=await registrationOptions(dc);const raw=(opt.data._select??[])[0] as {data?:Partial<RegistrationOptionSet>}|undefined;const box=raw?.data;setOptions({categories:box?.categories??[],subcategories:box?.subcategories??[],suppliers:box?.suppliers??[]})}
  }catch(e){console.error(e);setNotice('Não foi possível atualizar as informações.')}finally{setBusy(false)}},[pageKey,query])
  useEffect(()=>{const t=window.setTimeout(()=>void load(),180);return()=>clearTimeout(t)},[load])
