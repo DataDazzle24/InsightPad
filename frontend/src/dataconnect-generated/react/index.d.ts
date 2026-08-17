@@ -1,4 +1,4 @@
-import { BootstrapNavigationCatalogData, BootstrapNavigationCatalogVariables, CreateCategoryData, CreateCategoryVariables, UpdateCategoryData, UpdateCategoryVariables, ArchiveCategoryData, ArchiveCategoryVariables, CreateSubcategoryData, CreateSubcategoryVariables, UpdateSubcategoryData, UpdateSubcategoryVariables, ArchiveSubcategoryData, ArchiveSubcategoryVariables, RestoreCategoryData, RestoreCategoryVariables, RestoreSubcategoryData, RestoreSubcategoryVariables, GetCurrentUserData, GetCurrentUserAccessData, ListCategoriesData, ListCategoriesVariables, ListSubcategoriesData, ListSubcategoriesVariables, CategoryOptionsData } from '../';
+import { BootstrapNavigationCatalogData, BootstrapNavigationCatalogVariables, CreateCategoryData, CreateCategoryVariables, UpdateCategoryData, UpdateCategoryVariables, ArchiveCategoryData, ArchiveCategoryVariables, CreateSubcategoryData, CreateSubcategoryVariables, UpdateSubcategoryData, UpdateSubcategoryVariables, ArchiveSubcategoryData, ArchiveSubcategoryVariables, RestoreCategoryData, RestoreCategoryVariables, RestoreSubcategoryData, RestoreSubcategoryVariables, SaveBranchData, SaveBranchVariables, SetBranchStatusData, SetBranchStatusVariables, SaveSupplierData, SaveSupplierVariables, SetSupplierStatusData, SetSupplierStatusVariables, SaveCustomerData, SaveCustomerVariables, SetCustomerStatusData, SetCustomerStatusVariables, SaveProductData, SaveProductVariables, SetProductStatusData, SetProductStatusVariables, SaveProductComponentsData, SaveProductComponentsVariables, SavePromotionData, SavePromotionVariables, SetPromotionStatusData, SetPromotionStatusVariables, GetCurrentUserData, GetCurrentUserAccessData, ListCategoriesData, ListCategoriesVariables, ListSubcategoriesData, ListSubcategoriesVariables, CategoryOptionsData, ListBranchesData, ListBranchesVariables, ListSuppliersData, ListSuppliersVariables, ListCustomersData, ListCustomersVariables, ListProductsData, ListProductsVariables, RegistrationOptionsData, ProductComponentsData, ProductComponentsVariables, ProductPromotionsData, ProductPromotionsVariables } from '../';
 import { UseDataConnectQueryResult, useDataConnectQueryOptions, UseDataConnectMutationResult, useDataConnectMutationOptions} from '@tanstack-query-firebase/react/data-connect';
 import { UseQueryResult, UseMutationResult} from '@tanstack/react-query';
 import { DataConnect } from 'firebase/data-connect';
@@ -32,6 +32,39 @@ export function useRestoreCategory(dc: DataConnect, options?: useDataConnectMuta
 export function useRestoreSubcategory(options?: useDataConnectMutationOptions<RestoreSubcategoryData, FirebaseError, RestoreSubcategoryVariables>): UseDataConnectMutationResult<RestoreSubcategoryData, RestoreSubcategoryVariables>;
 export function useRestoreSubcategory(dc: DataConnect, options?: useDataConnectMutationOptions<RestoreSubcategoryData, FirebaseError, RestoreSubcategoryVariables>): UseDataConnectMutationResult<RestoreSubcategoryData, RestoreSubcategoryVariables>;
 
+export function useSaveBranch(options?: useDataConnectMutationOptions<SaveBranchData, FirebaseError, SaveBranchVariables>): UseDataConnectMutationResult<SaveBranchData, SaveBranchVariables>;
+export function useSaveBranch(dc: DataConnect, options?: useDataConnectMutationOptions<SaveBranchData, FirebaseError, SaveBranchVariables>): UseDataConnectMutationResult<SaveBranchData, SaveBranchVariables>;
+
+export function useSetBranchStatus(options?: useDataConnectMutationOptions<SetBranchStatusData, FirebaseError, SetBranchStatusVariables>): UseDataConnectMutationResult<SetBranchStatusData, SetBranchStatusVariables>;
+export function useSetBranchStatus(dc: DataConnect, options?: useDataConnectMutationOptions<SetBranchStatusData, FirebaseError, SetBranchStatusVariables>): UseDataConnectMutationResult<SetBranchStatusData, SetBranchStatusVariables>;
+
+export function useSaveSupplier(options?: useDataConnectMutationOptions<SaveSupplierData, FirebaseError, SaveSupplierVariables>): UseDataConnectMutationResult<SaveSupplierData, SaveSupplierVariables>;
+export function useSaveSupplier(dc: DataConnect, options?: useDataConnectMutationOptions<SaveSupplierData, FirebaseError, SaveSupplierVariables>): UseDataConnectMutationResult<SaveSupplierData, SaveSupplierVariables>;
+
+export function useSetSupplierStatus(options?: useDataConnectMutationOptions<SetSupplierStatusData, FirebaseError, SetSupplierStatusVariables>): UseDataConnectMutationResult<SetSupplierStatusData, SetSupplierStatusVariables>;
+export function useSetSupplierStatus(dc: DataConnect, options?: useDataConnectMutationOptions<SetSupplierStatusData, FirebaseError, SetSupplierStatusVariables>): UseDataConnectMutationResult<SetSupplierStatusData, SetSupplierStatusVariables>;
+
+export function useSaveCustomer(options?: useDataConnectMutationOptions<SaveCustomerData, FirebaseError, SaveCustomerVariables>): UseDataConnectMutationResult<SaveCustomerData, SaveCustomerVariables>;
+export function useSaveCustomer(dc: DataConnect, options?: useDataConnectMutationOptions<SaveCustomerData, FirebaseError, SaveCustomerVariables>): UseDataConnectMutationResult<SaveCustomerData, SaveCustomerVariables>;
+
+export function useSetCustomerStatus(options?: useDataConnectMutationOptions<SetCustomerStatusData, FirebaseError, SetCustomerStatusVariables>): UseDataConnectMutationResult<SetCustomerStatusData, SetCustomerStatusVariables>;
+export function useSetCustomerStatus(dc: DataConnect, options?: useDataConnectMutationOptions<SetCustomerStatusData, FirebaseError, SetCustomerStatusVariables>): UseDataConnectMutationResult<SetCustomerStatusData, SetCustomerStatusVariables>;
+
+export function useSaveProduct(options?: useDataConnectMutationOptions<SaveProductData, FirebaseError, SaveProductVariables>): UseDataConnectMutationResult<SaveProductData, SaveProductVariables>;
+export function useSaveProduct(dc: DataConnect, options?: useDataConnectMutationOptions<SaveProductData, FirebaseError, SaveProductVariables>): UseDataConnectMutationResult<SaveProductData, SaveProductVariables>;
+
+export function useSetProductStatus(options?: useDataConnectMutationOptions<SetProductStatusData, FirebaseError, SetProductStatusVariables>): UseDataConnectMutationResult<SetProductStatusData, SetProductStatusVariables>;
+export function useSetProductStatus(dc: DataConnect, options?: useDataConnectMutationOptions<SetProductStatusData, FirebaseError, SetProductStatusVariables>): UseDataConnectMutationResult<SetProductStatusData, SetProductStatusVariables>;
+
+export function useSaveProductComponents(options?: useDataConnectMutationOptions<SaveProductComponentsData, FirebaseError, SaveProductComponentsVariables>): UseDataConnectMutationResult<SaveProductComponentsData, SaveProductComponentsVariables>;
+export function useSaveProductComponents(dc: DataConnect, options?: useDataConnectMutationOptions<SaveProductComponentsData, FirebaseError, SaveProductComponentsVariables>): UseDataConnectMutationResult<SaveProductComponentsData, SaveProductComponentsVariables>;
+
+export function useSavePromotion(options?: useDataConnectMutationOptions<SavePromotionData, FirebaseError, SavePromotionVariables>): UseDataConnectMutationResult<SavePromotionData, SavePromotionVariables>;
+export function useSavePromotion(dc: DataConnect, options?: useDataConnectMutationOptions<SavePromotionData, FirebaseError, SavePromotionVariables>): UseDataConnectMutationResult<SavePromotionData, SavePromotionVariables>;
+
+export function useSetPromotionStatus(options?: useDataConnectMutationOptions<SetPromotionStatusData, FirebaseError, SetPromotionStatusVariables>): UseDataConnectMutationResult<SetPromotionStatusData, SetPromotionStatusVariables>;
+export function useSetPromotionStatus(dc: DataConnect, options?: useDataConnectMutationOptions<SetPromotionStatusData, FirebaseError, SetPromotionStatusVariables>): UseDataConnectMutationResult<SetPromotionStatusData, SetPromotionStatusVariables>;
+
 export function useGetCurrentUser(options?: useDataConnectQueryOptions<GetCurrentUserData>): UseDataConnectQueryResult<GetCurrentUserData, undefined>;
 export function useGetCurrentUser(dc: DataConnect, options?: useDataConnectQueryOptions<GetCurrentUserData>): UseDataConnectQueryResult<GetCurrentUserData, undefined>;
 
@@ -46,3 +79,24 @@ export function useListSubcategories(dc: DataConnect, vars: ListSubcategoriesVar
 
 export function useCategoryOptions(options?: useDataConnectQueryOptions<CategoryOptionsData>): UseDataConnectQueryResult<CategoryOptionsData, undefined>;
 export function useCategoryOptions(dc: DataConnect, options?: useDataConnectQueryOptions<CategoryOptionsData>): UseDataConnectQueryResult<CategoryOptionsData, undefined>;
+
+export function useListBranches(vars: ListBranchesVariables, options?: useDataConnectQueryOptions<ListBranchesData>): UseDataConnectQueryResult<ListBranchesData, ListBranchesVariables>;
+export function useListBranches(dc: DataConnect, vars: ListBranchesVariables, options?: useDataConnectQueryOptions<ListBranchesData>): UseDataConnectQueryResult<ListBranchesData, ListBranchesVariables>;
+
+export function useListSuppliers(vars: ListSuppliersVariables, options?: useDataConnectQueryOptions<ListSuppliersData>): UseDataConnectQueryResult<ListSuppliersData, ListSuppliersVariables>;
+export function useListSuppliers(dc: DataConnect, vars: ListSuppliersVariables, options?: useDataConnectQueryOptions<ListSuppliersData>): UseDataConnectQueryResult<ListSuppliersData, ListSuppliersVariables>;
+
+export function useListCustomers(vars: ListCustomersVariables, options?: useDataConnectQueryOptions<ListCustomersData>): UseDataConnectQueryResult<ListCustomersData, ListCustomersVariables>;
+export function useListCustomers(dc: DataConnect, vars: ListCustomersVariables, options?: useDataConnectQueryOptions<ListCustomersData>): UseDataConnectQueryResult<ListCustomersData, ListCustomersVariables>;
+
+export function useListProducts(vars: ListProductsVariables, options?: useDataConnectQueryOptions<ListProductsData>): UseDataConnectQueryResult<ListProductsData, ListProductsVariables>;
+export function useListProducts(dc: DataConnect, vars: ListProductsVariables, options?: useDataConnectQueryOptions<ListProductsData>): UseDataConnectQueryResult<ListProductsData, ListProductsVariables>;
+
+export function useRegistrationOptions(options?: useDataConnectQueryOptions<RegistrationOptionsData>): UseDataConnectQueryResult<RegistrationOptionsData, undefined>;
+export function useRegistrationOptions(dc: DataConnect, options?: useDataConnectQueryOptions<RegistrationOptionsData>): UseDataConnectQueryResult<RegistrationOptionsData, undefined>;
+
+export function useProductComponents(vars: ProductComponentsVariables, options?: useDataConnectQueryOptions<ProductComponentsData>): UseDataConnectQueryResult<ProductComponentsData, ProductComponentsVariables>;
+export function useProductComponents(dc: DataConnect, vars: ProductComponentsVariables, options?: useDataConnectQueryOptions<ProductComponentsData>): UseDataConnectQueryResult<ProductComponentsData, ProductComponentsVariables>;
+
+export function useProductPromotions(vars: ProductPromotionsVariables, options?: useDataConnectQueryOptions<ProductPromotionsData>): UseDataConnectQueryResult<ProductPromotionsData, ProductPromotionsVariables>;
+export function useProductPromotions(dc: DataConnect, vars: ProductPromotionsVariables, options?: useDataConnectQueryOptions<ProductPromotionsData>): UseDataConnectQueryResult<ProductPromotionsData, ProductPromotionsVariables>;

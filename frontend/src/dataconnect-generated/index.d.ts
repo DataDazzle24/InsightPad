@@ -220,11 +220,44 @@ export interface GetCurrentUserData {
   } & User_Key;
 }
 
+export interface ListBranchesData {
+  _select?: unknown[] | null;
+}
+
+export interface ListBranchesVariables {
+  search: string;
+  limit: number;
+  offset: number;
+  requestKey?: string | null;
+}
+
 export interface ListCategoriesData {
   _select?: unknown[] | null;
 }
 
 export interface ListCategoriesVariables {
+  search: string;
+  limit: number;
+  offset: number;
+  requestKey?: string | null;
+}
+
+export interface ListCustomersData {
+  _select?: unknown[] | null;
+}
+
+export interface ListCustomersVariables {
+  search: string;
+  limit: number;
+  offset: number;
+  requestKey?: string | null;
+}
+
+export interface ListProductsData {
+  _select?: unknown[] | null;
+}
+
+export interface ListProductsVariables {
   search: string;
   limit: number;
   offset: number;
@@ -238,6 +271,17 @@ export interface ListSubcategoriesData {
 export interface ListSubcategoriesVariables {
   search: string;
   categoryId?: UUIDString | null;
+  limit: number;
+  offset: number;
+  requestKey?: string | null;
+}
+
+export interface ListSuppliersData {
+  _select?: unknown[] | null;
+}
+
+export interface ListSuppliersVariables {
+  search: string;
   limit: number;
   offset: number;
   requestKey?: string | null;
@@ -259,6 +303,22 @@ export interface ProductComponent_Key {
   __typename?: 'ProductComponent_Key';
 }
 
+export interface ProductComponentsData {
+  _select?: unknown[] | null;
+}
+
+export interface ProductComponentsVariables {
+  productId: UUIDString;
+}
+
+export interface ProductPromotionsData {
+  _select?: unknown[] | null;
+}
+
+export interface ProductPromotionsVariables {
+  productId: UUIDString;
+}
+
 export interface Product_Key {
   id: UUIDString;
   __typename?: 'Product_Key';
@@ -267,6 +327,10 @@ export interface Product_Key {
 export interface Promotion_Key {
   id: UUIDString;
   __typename?: 'Promotion_Key';
+}
+
+export interface RegistrationOptionsData {
+  _select?: unknown[] | null;
 }
 
 export interface RestoreCategoryData {
@@ -309,6 +373,108 @@ export interface SalePayment_Key {
 export interface Sale_Key {
   id: UUIDString;
   __typename?: 'Sale_Key';
+}
+
+export interface SaveBranchData {
+  _execute?: number | null;
+}
+
+export interface SaveBranchVariables {
+  id?: UUIDString | null;
+  payload: unknown;
+}
+
+export interface SaveCustomerData {
+  _execute?: number | null;
+}
+
+export interface SaveCustomerVariables {
+  id?: UUIDString | null;
+  payload: unknown;
+}
+
+export interface SaveProductComponentsData {
+  _execute?: number | null;
+}
+
+export interface SaveProductComponentsVariables {
+  productId: UUIDString;
+  components: unknown;
+}
+
+export interface SaveProductData {
+  _execute?: number | null;
+}
+
+export interface SaveProductVariables {
+  id?: UUIDString | null;
+  payload: unknown;
+}
+
+export interface SavePromotionData {
+  _execute?: number | null;
+}
+
+export interface SavePromotionVariables {
+  id?: UUIDString | null;
+  productId: UUIDString;
+  promotionalPriceCents: Int64String;
+  startsAt: TimestampString;
+  endsAt: TimestampString;
+}
+
+export interface SaveSupplierData {
+  _execute?: number | null;
+}
+
+export interface SaveSupplierVariables {
+  id?: UUIDString | null;
+  payload: unknown;
+}
+
+export interface SetBranchStatusData {
+  _execute?: number | null;
+}
+
+export interface SetBranchStatusVariables {
+  id: UUIDString;
+  active: boolean;
+}
+
+export interface SetCustomerStatusData {
+  _execute?: number | null;
+}
+
+export interface SetCustomerStatusVariables {
+  id: UUIDString;
+  active: boolean;
+}
+
+export interface SetProductStatusData {
+  _execute?: number | null;
+}
+
+export interface SetProductStatusVariables {
+  id: UUIDString;
+  active: boolean;
+}
+
+export interface SetPromotionStatusData {
+  _execute?: number | null;
+}
+
+export interface SetPromotionStatusVariables {
+  id: UUIDString;
+  active: boolean;
+}
+
+export interface SetSupplierStatusData {
+  _execute?: number | null;
+}
+
+export interface SetSupplierStatusVariables {
+  id: UUIDString;
+  active: boolean;
 }
 
 export interface StockBalance_Key {
@@ -496,6 +662,138 @@ export const restoreSubcategoryRef: RestoreSubcategoryRef;
 export function restoreSubcategory(vars: RestoreSubcategoryVariables): MutationPromise<RestoreSubcategoryData, RestoreSubcategoryVariables>;
 export function restoreSubcategory(dc: DataConnect, vars: RestoreSubcategoryVariables): MutationPromise<RestoreSubcategoryData, RestoreSubcategoryVariables>;
 
+interface SaveBranchRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SaveBranchVariables): MutationRef<SaveBranchData, SaveBranchVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SaveBranchVariables): MutationRef<SaveBranchData, SaveBranchVariables>;
+  operationName: string;
+}
+export const saveBranchRef: SaveBranchRef;
+
+export function saveBranch(vars: SaveBranchVariables): MutationPromise<SaveBranchData, SaveBranchVariables>;
+export function saveBranch(dc: DataConnect, vars: SaveBranchVariables): MutationPromise<SaveBranchData, SaveBranchVariables>;
+
+interface SetBranchStatusRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SetBranchStatusVariables): MutationRef<SetBranchStatusData, SetBranchStatusVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SetBranchStatusVariables): MutationRef<SetBranchStatusData, SetBranchStatusVariables>;
+  operationName: string;
+}
+export const setBranchStatusRef: SetBranchStatusRef;
+
+export function setBranchStatus(vars: SetBranchStatusVariables): MutationPromise<SetBranchStatusData, SetBranchStatusVariables>;
+export function setBranchStatus(dc: DataConnect, vars: SetBranchStatusVariables): MutationPromise<SetBranchStatusData, SetBranchStatusVariables>;
+
+interface SaveSupplierRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SaveSupplierVariables): MutationRef<SaveSupplierData, SaveSupplierVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SaveSupplierVariables): MutationRef<SaveSupplierData, SaveSupplierVariables>;
+  operationName: string;
+}
+export const saveSupplierRef: SaveSupplierRef;
+
+export function saveSupplier(vars: SaveSupplierVariables): MutationPromise<SaveSupplierData, SaveSupplierVariables>;
+export function saveSupplier(dc: DataConnect, vars: SaveSupplierVariables): MutationPromise<SaveSupplierData, SaveSupplierVariables>;
+
+interface SetSupplierStatusRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SetSupplierStatusVariables): MutationRef<SetSupplierStatusData, SetSupplierStatusVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SetSupplierStatusVariables): MutationRef<SetSupplierStatusData, SetSupplierStatusVariables>;
+  operationName: string;
+}
+export const setSupplierStatusRef: SetSupplierStatusRef;
+
+export function setSupplierStatus(vars: SetSupplierStatusVariables): MutationPromise<SetSupplierStatusData, SetSupplierStatusVariables>;
+export function setSupplierStatus(dc: DataConnect, vars: SetSupplierStatusVariables): MutationPromise<SetSupplierStatusData, SetSupplierStatusVariables>;
+
+interface SaveCustomerRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SaveCustomerVariables): MutationRef<SaveCustomerData, SaveCustomerVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SaveCustomerVariables): MutationRef<SaveCustomerData, SaveCustomerVariables>;
+  operationName: string;
+}
+export const saveCustomerRef: SaveCustomerRef;
+
+export function saveCustomer(vars: SaveCustomerVariables): MutationPromise<SaveCustomerData, SaveCustomerVariables>;
+export function saveCustomer(dc: DataConnect, vars: SaveCustomerVariables): MutationPromise<SaveCustomerData, SaveCustomerVariables>;
+
+interface SetCustomerStatusRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SetCustomerStatusVariables): MutationRef<SetCustomerStatusData, SetCustomerStatusVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SetCustomerStatusVariables): MutationRef<SetCustomerStatusData, SetCustomerStatusVariables>;
+  operationName: string;
+}
+export const setCustomerStatusRef: SetCustomerStatusRef;
+
+export function setCustomerStatus(vars: SetCustomerStatusVariables): MutationPromise<SetCustomerStatusData, SetCustomerStatusVariables>;
+export function setCustomerStatus(dc: DataConnect, vars: SetCustomerStatusVariables): MutationPromise<SetCustomerStatusData, SetCustomerStatusVariables>;
+
+interface SaveProductRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SaveProductVariables): MutationRef<SaveProductData, SaveProductVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SaveProductVariables): MutationRef<SaveProductData, SaveProductVariables>;
+  operationName: string;
+}
+export const saveProductRef: SaveProductRef;
+
+export function saveProduct(vars: SaveProductVariables): MutationPromise<SaveProductData, SaveProductVariables>;
+export function saveProduct(dc: DataConnect, vars: SaveProductVariables): MutationPromise<SaveProductData, SaveProductVariables>;
+
+interface SetProductStatusRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SetProductStatusVariables): MutationRef<SetProductStatusData, SetProductStatusVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SetProductStatusVariables): MutationRef<SetProductStatusData, SetProductStatusVariables>;
+  operationName: string;
+}
+export const setProductStatusRef: SetProductStatusRef;
+
+export function setProductStatus(vars: SetProductStatusVariables): MutationPromise<SetProductStatusData, SetProductStatusVariables>;
+export function setProductStatus(dc: DataConnect, vars: SetProductStatusVariables): MutationPromise<SetProductStatusData, SetProductStatusVariables>;
+
+interface SaveProductComponentsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SaveProductComponentsVariables): MutationRef<SaveProductComponentsData, SaveProductComponentsVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SaveProductComponentsVariables): MutationRef<SaveProductComponentsData, SaveProductComponentsVariables>;
+  operationName: string;
+}
+export const saveProductComponentsRef: SaveProductComponentsRef;
+
+export function saveProductComponents(vars: SaveProductComponentsVariables): MutationPromise<SaveProductComponentsData, SaveProductComponentsVariables>;
+export function saveProductComponents(dc: DataConnect, vars: SaveProductComponentsVariables): MutationPromise<SaveProductComponentsData, SaveProductComponentsVariables>;
+
+interface SavePromotionRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SavePromotionVariables): MutationRef<SavePromotionData, SavePromotionVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SavePromotionVariables): MutationRef<SavePromotionData, SavePromotionVariables>;
+  operationName: string;
+}
+export const savePromotionRef: SavePromotionRef;
+
+export function savePromotion(vars: SavePromotionVariables): MutationPromise<SavePromotionData, SavePromotionVariables>;
+export function savePromotion(dc: DataConnect, vars: SavePromotionVariables): MutationPromise<SavePromotionData, SavePromotionVariables>;
+
+interface SetPromotionStatusRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SetPromotionStatusVariables): MutationRef<SetPromotionStatusData, SetPromotionStatusVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SetPromotionStatusVariables): MutationRef<SetPromotionStatusData, SetPromotionStatusVariables>;
+  operationName: string;
+}
+export const setPromotionStatusRef: SetPromotionStatusRef;
+
+export function setPromotionStatus(vars: SetPromotionStatusVariables): MutationPromise<SetPromotionStatusData, SetPromotionStatusVariables>;
+export function setPromotionStatus(dc: DataConnect, vars: SetPromotionStatusVariables): MutationPromise<SetPromotionStatusData, SetPromotionStatusVariables>;
+
 interface GetCurrentUserRef {
   /* Allow users to create refs without passing in DataConnect */
   (): QueryRef<GetCurrentUserData, undefined>;
@@ -555,4 +853,88 @@ export const categoryOptionsRef: CategoryOptionsRef;
 
 export function categoryOptions(options?: ExecuteQueryOptions): QueryPromise<CategoryOptionsData, undefined>;
 export function categoryOptions(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<CategoryOptionsData, undefined>;
+
+interface ListBranchesRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ListBranchesVariables): QueryRef<ListBranchesData, ListBranchesVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ListBranchesVariables): QueryRef<ListBranchesData, ListBranchesVariables>;
+  operationName: string;
+}
+export const listBranchesRef: ListBranchesRef;
+
+export function listBranches(vars: ListBranchesVariables, options?: ExecuteQueryOptions): QueryPromise<ListBranchesData, ListBranchesVariables>;
+export function listBranches(dc: DataConnect, vars: ListBranchesVariables, options?: ExecuteQueryOptions): QueryPromise<ListBranchesData, ListBranchesVariables>;
+
+interface ListSuppliersRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ListSuppliersVariables): QueryRef<ListSuppliersData, ListSuppliersVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ListSuppliersVariables): QueryRef<ListSuppliersData, ListSuppliersVariables>;
+  operationName: string;
+}
+export const listSuppliersRef: ListSuppliersRef;
+
+export function listSuppliers(vars: ListSuppliersVariables, options?: ExecuteQueryOptions): QueryPromise<ListSuppliersData, ListSuppliersVariables>;
+export function listSuppliers(dc: DataConnect, vars: ListSuppliersVariables, options?: ExecuteQueryOptions): QueryPromise<ListSuppliersData, ListSuppliersVariables>;
+
+interface ListCustomersRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ListCustomersVariables): QueryRef<ListCustomersData, ListCustomersVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ListCustomersVariables): QueryRef<ListCustomersData, ListCustomersVariables>;
+  operationName: string;
+}
+export const listCustomersRef: ListCustomersRef;
+
+export function listCustomers(vars: ListCustomersVariables, options?: ExecuteQueryOptions): QueryPromise<ListCustomersData, ListCustomersVariables>;
+export function listCustomers(dc: DataConnect, vars: ListCustomersVariables, options?: ExecuteQueryOptions): QueryPromise<ListCustomersData, ListCustomersVariables>;
+
+interface ListProductsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ListProductsVariables): QueryRef<ListProductsData, ListProductsVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ListProductsVariables): QueryRef<ListProductsData, ListProductsVariables>;
+  operationName: string;
+}
+export const listProductsRef: ListProductsRef;
+
+export function listProducts(vars: ListProductsVariables, options?: ExecuteQueryOptions): QueryPromise<ListProductsData, ListProductsVariables>;
+export function listProducts(dc: DataConnect, vars: ListProductsVariables, options?: ExecuteQueryOptions): QueryPromise<ListProductsData, ListProductsVariables>;
+
+interface RegistrationOptionsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<RegistrationOptionsData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<RegistrationOptionsData, undefined>;
+  operationName: string;
+}
+export const registrationOptionsRef: RegistrationOptionsRef;
+
+export function registrationOptions(options?: ExecuteQueryOptions): QueryPromise<RegistrationOptionsData, undefined>;
+export function registrationOptions(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<RegistrationOptionsData, undefined>;
+
+interface ProductComponentsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ProductComponentsVariables): QueryRef<ProductComponentsData, ProductComponentsVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ProductComponentsVariables): QueryRef<ProductComponentsData, ProductComponentsVariables>;
+  operationName: string;
+}
+export const productComponentsRef: ProductComponentsRef;
+
+export function productComponents(vars: ProductComponentsVariables, options?: ExecuteQueryOptions): QueryPromise<ProductComponentsData, ProductComponentsVariables>;
+export function productComponents(dc: DataConnect, vars: ProductComponentsVariables, options?: ExecuteQueryOptions): QueryPromise<ProductComponentsData, ProductComponentsVariables>;
+
+interface ProductPromotionsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ProductPromotionsVariables): QueryRef<ProductPromotionsData, ProductPromotionsVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ProductPromotionsVariables): QueryRef<ProductPromotionsData, ProductPromotionsVariables>;
+  operationName: string;
+}
+export const productPromotionsRef: ProductPromotionsRef;
+
+export function productPromotions(vars: ProductPromotionsVariables, options?: ExecuteQueryOptions): QueryPromise<ProductPromotionsData, ProductPromotionsVariables>;
+export function productPromotions(dc: DataConnect, vars: ProductPromotionsVariables, options?: ExecuteQueryOptions): QueryPromise<ProductPromotionsData, ProductPromotionsVariables>;
 
