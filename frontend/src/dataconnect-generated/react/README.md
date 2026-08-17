@@ -435,7 +435,7 @@ export interface ListSubcategoriesVariables {
   categoryId?: UUIDString | null;
   limit: number;
   offset: number;
-  requestKey: string;
+  requestKey?: string | null;
 }
 ```
 ### Return Type
@@ -466,7 +466,7 @@ export default function ListSubcategoriesComponent() {
     categoryId: ..., // optional
     limit: ..., 
     offset: ..., 
-    requestKey: ..., 
+    requestKey: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.

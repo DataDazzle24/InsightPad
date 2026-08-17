@@ -475,7 +475,7 @@ export interface ListSubcategoriesVariables {
   categoryId?: UUIDString | null;
   limit: number;
   offset: number;
-  requestKey: string;
+  requestKey?: string | null;
 }
 ```
 ### Return Type
@@ -499,7 +499,7 @@ const listSubcategoriesVars: ListSubcategoriesVariables = {
   categoryId: ..., // optional
   limit: ..., 
   offset: ..., 
-  requestKey: ..., 
+  requestKey: ..., // optional
 };
 
 // Call the `listSubcategories()` function to execute the query.
@@ -533,7 +533,7 @@ const listSubcategoriesVars: ListSubcategoriesVariables = {
   categoryId: ..., // optional
   limit: ..., 
   offset: ..., 
-  requestKey: ..., 
+  requestKey: ..., // optional
 };
 
 // Call the `listSubcategoriesRef()` function to get a reference to the query.

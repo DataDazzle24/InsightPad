@@ -240,7 +240,7 @@ export interface ListSubcategoriesVariables {
   categoryId?: UUIDString | null;
   limit: number;
   offset: number;
-  requestKey: string;
+  requestKey?: string | null;
 }
 
 export interface OfflineOperation_Key {
