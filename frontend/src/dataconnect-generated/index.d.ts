@@ -246,6 +246,12 @@ export interface Tenant_Key {
   __typename?: 'Tenant_Key';
 }
 
+export interface UserBranchAccess_Key {
+  userId: string;
+  branchId: UUIDString;
+  __typename?: 'UserBranchAccess_Key';
+}
+
 export interface UserPagePermission_Key {
   userId: string;
   pageId: UUIDString;
