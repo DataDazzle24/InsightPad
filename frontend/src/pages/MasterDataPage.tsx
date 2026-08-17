@@ -131,7 +131,7 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
   else if(pageKey==='CAD_CLIENTE')result=await listCustomers(dc,freshQuery);else result=await listProducts(dc,freshQuery)
   if(requestId!==requestSequence.current)return;setRows((result.data._select??[]) as Row[]);if(pageKey==='CAD_PRODUTO'){const opt=await registrationOptions(dc,{requestKey:crypto.randomUUID()});const raw=(opt.data._select??[])[0] as {data?:Partial<RegistrationOptionSet>}|undefined;const box=raw?.data;setOptions({categories:box?.categories??[],subcategories:box?.subcategories??[],suppliers:box?.suppliers??[],products:box?.products??[]})}
  }catch(e){if(requestId!==requestSequence.current)return;console.error(e);setNotice('Não foi possível atualizar as informações.')}finally{if(requestId===requestSequence.current)setBusy(false)}},[pageKey,query])
- useEffect(()=>{const t=window.setTimeout(()=>void load(),180);return()=>clearTimeout(t)},[load])
+ useEffect(()=>{const t=window.setTimeout(()=>void load(),350);return()=>clearTimeout(t)},[load])
  useEffect(()=>{if(!notice)return;const t=window.setTimeout(()=>setNotice(''),7000);return()=>window.clearTimeout(t)},[notice])
  async function open(row?:Row){setEditing(row??null);setSection(modalSections[pageKey][0].key);const next:Record<string,unknown>={};let loadedKit:KitItem[]=[]
   for(const field of cfg.fields)next[field.key]=row?.[field.key]??(field.type==='checkbox'?false:'')
