@@ -127,11 +127,13 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
  async function open(row?:Row){setEditing(row??null);setSection(modalSections[pageKey][0].key);const next:Record<string,unknown>={};for(const field of cfg.fields)next[field.key]=row?.[field.key]??(field.type==='checkbox'?false:'')
   if(pageKey==='CAD_CLIENTE')next.preferences=row?.preferences??{}
   if(pageKey==='CAD_PRODUTO'){next.costPriceCents=maskValue('costPriceCents',String(row?.costPriceCents??0));next.salePriceCents=maskValue('salePriceCents',String(row?.salePriceCents??0));if(row){try{const result=await productComponents(dc,{productId:row.id});setKitItems((result.data._select??[]) as KitItem[])}catch{setKitItems([])}}else setKitItems([])}setForm(next);setModal(true)}
- function fieldOptions(field:Field){if(pageKey!=='CAD_PRODUTO')return field.options??[];if(field.key==='categoryId')return options.categories.map(x=>({value:x.id,label:x.name}))
-  if(field.key==='subcategoryId')return options.subcategories.filter(x=>!form.categoryId||x.categoryId===form.categoryId).map(x=>({value:x.id,label:x.name}))
-  if(field.key==='supplierId')return options.suppliers.map(x=>({value:x.id,label:x.name}));if(field.key==='size')return (SIZE_OPTIONS[String(form.sizeType??'')]??[]).map(value=>({value,label:value}))
-  if(field.key==='lowerClothingSize')return (CLOTHING_SIZES[String(form.lowerClothingType??'')]??[]).map(value=>({value,label:value}))
-  if(field.key==='upperClothingSize')return (CLOTHING_SIZES[String(form.upperClothingType??'')]??[]).map(value=>({value,label:value}));return field.options??[]}
+ function fieldOptions(field:Field){if(pageKey==='CAD_PRODUTO'&&field.key==='categoryId')return options.categories.map(x=>({value:x.id,label:x.name}))
+  if(pageKey==='CAD_PRODUTO'&&field.key==='subcategoryId')return options.subcategories.filter(x=>!form.categoryId||x.categoryId===form.categoryId).map(x=>({value:x.id,label:x.name}))
+  if(pageKey==='CAD_PRODUTO'&&field.key==='supplierId')return options.suppliers.map(x=>({value:x.id,label:x.name}))
+  if(pageKey==='CAD_PRODUTO'&&field.key==='size')return (SIZE_OPTIONS[String(form.sizeType??'')]??[]).map(value=>({value,label:value}))
+  if(pageKey==='CAD_CLIENTE'&&field.key==='lowerClothingSize')return (CLOTHING_SIZES[String(form.lowerClothingType??'')]??[]).map(value=>({value,label:value}))
+  if(pageKey==='CAD_CLIENTE'&&field.key==='upperClothingSize')return (CLOTHING_SIZES[String(form.upperClothingType??'')]??[]).map(value=>({value,label:value}))
+  return field.options??[]}
  async function lookupCep(value:unknown){const cep=digits(String(value??''));if(cep.length!==8)return
   try{setBusy(true);const response=await fetch(`https://viacep.com.br/ws/${cep}/json/`);const data=await response.json()
     if(!data.erro)setForm(current=>({...current,postalCode:cep,stateCode:data.uf??'',city:data.localidade??'',district:data.bairro??'',street:data.logradouro??''}))
