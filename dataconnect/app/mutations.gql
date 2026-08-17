@@ -1374,3 +1374,31 @@ mutation CancelSale($saleId: UUID!, $reason: String!) @auth(level: USER) @transa
       SELECT tenant_id,$1,'Vendas','GESTAO_VENDAS','CANCEL','Sale',id::text,'Venda cancelada',true,'SQL_CONNECT',jsonb_build_object('status','COMPLETED','totalCents',total_cents),jsonb_build_object('status','CANCELLED','reason',cancellation_reason),now() FROM cancelled
   """,params:[{_expr:"auth.uid"},$saleId,$reason])
 }
+
+mutation CreatePlatformTenant($payload: Any!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (SELECT u.id FROM users u JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL AND r.system_role AND r.name='Administrador da Plataforma'),
+    input AS (SELECT COALESCE($2::jsonb,'{}'::jsonb) j FROM actor), created AS (
+      INSERT INTO tenants(id,legal_name,trade_name,document,email,phone,plan_code,starts_on,expires_on,timezone,currency_code,active,created_at,updated_at)
+      SELECT gen_random_uuid(),left(btrim(j->>'legalName'),160),NULLIF(left(btrim(j->>'tradeName'),160),''),NULLIF(regexp_replace(j->>'document','\D','','g'),''),NULLIF(lower(left(btrim(j->>'email'),254)),''),NULLIF(left(btrim(j->>'phone'),24),''),COALESCE(NULLIF(left(btrim(j->>'planCode'),40),''),'BRONZE'),COALESCE((j->>'startsOn')::date,current_date),NULLIF(j->>'expiresOn','')::date,'America/Sao_Paulo','BRL',true,now(),now() FROM input WHERE length(btrim(j->>'legalName')) BETWEEN 2 AND 160 RETURNING id
+    ), role_row AS (INSERT INTO roles(id,tenant_id,name,description,hierarchy_level,system_role,active,created_at,updated_at) SELECT gen_random_uuid(),id,'Administrador','Administrador do ambiente',10,true,true,now(),now() FROM created RETURNING id,tenant_id), permissions AS (
+      INSERT INTO role_page_permissions(role_id,page_id,tenant_id,can_access,can_create,can_update,can_delete,can_export,can_manage,created_at,updated_at)
+      SELECT r.id,p.id,r.tenant_id,true,true,true,true,true,true,now(),now() FROM role_row r CROSS JOIN app_pages p WHERE p.active RETURNING role_id
+    ) SELECT id FROM role_row
+  """,params:[{_expr:"auth.uid"},$payload])
+}
+
+mutation SetPlatformTenantStatus($tenantId: UUID!, $active: Boolean!) @auth(level: USER) @transaction {
+  _execute(sql: """WITH actor AS (SELECT u.id,u.tenant_id FROM users u JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND r.active AND r.system_role AND r.name='Administrador da Plataforma') UPDATE tenants t SET active=$3,updated_at=now() FROM actor a WHERE t.id=$2 AND t.id<>a.tenant_id""",params:[{_expr:"auth.uid"},$tenantId,$active])
+}
+
+mutation LinkPlatformUser($payload: Any!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (SELECT u.id FROM users u JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND r.active AND r.system_role AND r.name='Administrador da Plataforma'),input AS (SELECT COALESCE($2::jsonb,'{}'::jsonb) j FROM actor),valid AS (SELECT j,r.tenant_id,r.id role_id FROM input JOIN roles r ON r.id=(j->>'roleId')::uuid AND r.tenant_id=(j->>'tenantId')::uuid AND r.active AND r.deleted_at IS NULL WHERE length(btrim(j->>'uid')) BETWEEN 6 AND 128 AND length(btrim(j->>'name')) BETWEEN 2 AND 160 AND position('@' in j->>'email')>1)
+    INSERT INTO users(id,tenant_id,role_id,name,email,onboarding_pending,failed_login_attempts,active,created_at,updated_at) SELECT btrim(j->>'uid'),tenant_id,role_id,left(btrim(j->>'name'),160),lower(left(btrim(j->>'email'),254)),true,0,true,now(),now() FROM valid ON CONFLICT(id) DO UPDATE SET tenant_id=EXCLUDED.tenant_id,role_id=EXCLUDED.role_id,name=EXCLUDED.name,email=EXCLUDED.email,active=true,deleted_at=NULL,updated_at=now()
+  """,params:[{_expr:"auth.uid"},$payload])
+}
+
+mutation SetPlatformUserStatus($userId: String!, $active: Boolean!) @auth(level: USER) @transaction {
+  _execute(sql: """WITH actor AS (SELECT u.id FROM users u JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND r.active AND r.system_role AND r.name='Administrador da Plataforma') UPDATE users target SET active=$3,updated_at=now() FROM actor WHERE target.id=$2 AND target.id<>actor.id""",params:[{_expr:"auth.uid"},$userId,$active])
+}
