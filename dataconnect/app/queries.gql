@@ -99,10 +99,14 @@ query ListCategories($search: String!, $limit: Int!, $offset: Int!, $requestKey:
         ON t.id = u.tenant_id
        AND t.active
        AND t.deleted_at IS NULL
+      JOIN app_pages pg ON pg.page_key='CAD_CATEGORIA' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
       LEFT JOIN subcategories s
         ON s.category_id = c.id
        AND s.tenant_id = c.tenant_id
-      WHERE ($2 = '' OR c.name ILIKE '%' || $2 || '%')
+      WHERE COALESCE(up.can_access,rp.can_access,false)
+        AND ($2 = '' OR c.name ILIKE '%' || $2 || '%')
         AND ($5 IS NULL OR $5 <> '')
       GROUP BY c.id
       ORDER BY lower(c.name), c.id
@@ -136,7 +140,11 @@ query ListSubcategories($search: String!, $categoryId: UUID, $limit: Int!, $offs
         ON t.id = u.tenant_id
        AND t.active
        AND t.deleted_at IS NULL
-      WHERE ($2 = '' OR s.name ILIKE '%' || $2 || '%' OR c.name ILIKE '%' || $2 || '%')
+      JOIN app_pages pg ON pg.page_key='CAD_SUBCATEGORIA' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE COALESCE(up.can_access,rp.can_access,false)
+        AND ($2 = '' OR s.name ILIKE '%' || $2 || '%' OR c.name ILIKE '%' || $2 || '%')
         AND ($3::uuid IS NULL OR s.category_id = $3)
         AND ($6 IS NULL OR $6 <> '')
       ORDER BY lower(c.name), lower(s.name), s.id
@@ -156,7 +164,11 @@ query CategoryOptions($requestKey: String) @auth(level: USER) {
        AND u.id = $1
        AND u.active
        AND u.deleted_at IS NULL
-      WHERE c.active
+      JOIN app_pages pg ON pg.page_key='CAD_SUBCATEGORIA' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE COALESCE(up.can_access,rp.can_access,false)
+        AND c.active
         AND c.deleted_at IS NULL
         AND ($2 IS NULL OR $2<>'')
       ORDER BY lower(c.name), c.id
@@ -172,7 +184,10 @@ query ListBranches($search: String!, $limit: Int!, $offset: Int!, $requestKey: S
       b.city,b.district,b.street,b.street_number AS "streetNumber",b.address_complement AS "addressComplement",
       b.phone,b.active,b.created_at AS "createdAt",b.updated_at AS "updatedAt"
     FROM branches b JOIN users u ON u.tenant_id=b.tenant_id AND u.id=$1 AND u.active AND u.deleted_at IS NULL
-    WHERE ($2='' OR concat_ws(' ',b.name,b.internal_code,b.city) ILIKE '%'||$2||'%') AND ($5 IS NULL OR $5<>'')
+    JOIN app_pages pg ON pg.page_key='CAD_FILIAL' AND pg.active
+    LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+    LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+    WHERE COALESCE(up.can_access,rp.can_access,false) AND ($2='' OR concat_ws(' ',b.name,b.internal_code,b.city) ILIKE '%'||$2||'%') AND ($5 IS NULL OR $5<>'')
     ORDER BY b.active DESC,lower(b.name),b.id LIMIT $3 OFFSET $4
   """,params:[{_expr:"auth.uid"},$search,$limit,$offset,$requestKey])
 }
@@ -185,7 +200,10 @@ query ListSuppliers($search: String!, $limit: Int!, $offset: Int!, $requestKey: 
       s.phone_secondary AS "phoneSecondary",s.email,s.segment,s.payment_terms AS "paymentTerms",
       s.payment_term_days AS "paymentTermDays",s.average_delivery_days AS "averageDeliveryDays",s.notes,s.active,s.created_at AS "createdAt",s.updated_at AS "updatedAt"
     FROM suppliers s JOIN users u ON u.tenant_id=s.tenant_id AND u.id=$1 AND u.active AND u.deleted_at IS NULL
-    WHERE ($2='' OR concat_ws(' ',s.legal_name,s.trade_name,s.internal_code,s.cpf,s.cnpj,s.segment) ILIKE '%'||$2||'%')
+    JOIN app_pages pg ON pg.page_key='CAD_FORNECEDOR' AND pg.active
+    LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+    LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+    WHERE COALESCE(up.can_access,rp.can_access,false) AND ($2='' OR concat_ws(' ',s.legal_name,s.trade_name,s.internal_code,s.cpf,s.cnpj,s.segment) ILIKE '%'||$2||'%')
       AND ($5 IS NULL OR $5<>'') ORDER BY s.active DESC,lower(s.legal_name),s.id LIMIT $3 OFFSET $4
   """,params:[{_expr:"auth.uid"},$search,$limit,$offset,$requestKey])
 }
@@ -200,7 +218,10 @@ query ListCustomers($search: String!, $limit: Int!, $offset: Int!, $requestKey: 
       c.preferences->>'upperClothingType' AS "upperClothingType",c.preferences->>'upperClothingSize' AS "upperClothingSize",
       c.preferences->>'shoeSize' AS "shoeSize",c.notes,c.active,c.created_at AS "createdAt",c.updated_at AS "updatedAt"
     FROM customers c JOIN users u ON u.tenant_id=c.tenant_id AND u.id=$1 AND u.active AND u.deleted_at IS NULL
-    WHERE ($2='' OR concat_ws(' ',c.name,c.cpf,c.cnpj,c.email,c.phone_primary) ILIKE '%'||$2||'%')
+    JOIN app_pages pg ON pg.page_key='CAD_CLIENTE' AND pg.active
+    LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+    LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+    WHERE COALESCE(up.can_access,rp.can_access,false) AND ($2='' OR concat_ws(' ',c.name,c.cpf,c.cnpj,c.email,c.phone_primary) ILIKE '%'||$2||'%')
       AND ($5 IS NULL OR $5<>'') ORDER BY c.active DESC,lower(c.name),c.id LIMIT $3 OFFSET $4
   """,params:[{_expr:"auth.uid"},$search,$limit,$offset,$requestKey])
 }
@@ -219,10 +240,14 @@ query ListProducts($search: String!, $limit: Int!, $offset: Int!, $requestKey: S
         AND pr.active AND pr.deleted_at IS NULL AND now() BETWEEN pr.starts_at AND pr.ends_at ORDER BY pr.starts_at DESC LIMIT 1),
         p.sale_price_cents::text) AS "effectivePriceCents"
     FROM products p JOIN users u ON u.tenant_id=p.tenant_id AND u.id=$1 AND u.active AND u.deleted_at IS NULL
+    JOIN app_pages pg ON pg.page_key='CAD_PRODUTO' AND pg.active
+    LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+    LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
     JOIN categories c ON c.id=p.category_id AND c.tenant_id=p.tenant_id
     LEFT JOIN subcategories sc ON sc.id=p.subcategory_id AND sc.tenant_id=p.tenant_id
     LEFT JOIN suppliers s ON s.id=p.supplier_id AND s.tenant_id=p.tenant_id
-    WHERE ($2='' OR concat_ws(' ',p.name,p.internal_code,p.ean,p.brand,c.name,sc.name) ILIKE '%'||$2||'%')
+    WHERE COALESCE(up.can_access,rp.can_access,false)
+      AND ($2='' OR concat_ws(' ',p.name,p.internal_code,p.ean,p.brand,c.name,sc.name) ILIKE '%'||$2||'%')
       AND ($5 IS NULL OR $5<>'') ORDER BY p.active DESC,lower(p.name),p.id LIMIT $3 OFFSET $4
   """,params:[{_expr:"auth.uid"},$search,$limit,$offset,$requestKey])
 }
@@ -238,16 +263,24 @@ query RegistrationOptions($requestKey: String) @auth(level: USER) {
         FROM suppliers s WHERE s.tenant_id=u.tenant_id AND s.active AND s.deleted_at IS NULL),'[]'::jsonb),
       'products',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',p.id,'name',p.name,'costPriceCents',p.cost_price_cents::text) ORDER BY lower(p.name))
         FROM products p WHERE p.tenant_id=u.tenant_id AND p.active AND p.deleted_at IS NULL AND NOT p.bundle_product),'[]'::jsonb)
-    ) AS data FROM users u WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND ($2 IS NULL OR $2<>'')
+    ) AS data FROM users u
+    JOIN app_pages pg ON pg.page_key='CAD_PRODUTO' AND pg.active
+    LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+    LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+    WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
+      AND COALESCE(up.can_access,rp.can_access,false) AND ($2 IS NULL OR $2<>'')
   """,params:[{_expr:"auth.uid"},$requestKey])
 }
 
 query ProductComponents($productId: UUID!) @auth(level: USER) {
   _select(sql: """
     SELECT pc.component_product_id AS "productId",p.name,pc.quantity,pc.allocated_unit_price_cents::text AS "allocatedUnitPriceCents"
-    FROM product_components pc JOIN users u ON u.tenant_id=pc.tenant_id AND u.id=$1 AND u.active
+    FROM product_components pc JOIN users u ON u.tenant_id=pc.tenant_id AND u.id=$1 AND u.active AND u.deleted_at IS NULL
+    JOIN app_pages pg ON pg.page_key='CAD_PRODUTO' AND pg.active
+    LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+    LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
     JOIN products p ON p.id=pc.component_product_id AND p.tenant_id=pc.tenant_id
-    WHERE pc.parent_product_id=$2 ORDER BY lower(p.name)
+    WHERE pc.parent_product_id=$2 AND COALESCE(up.can_access,rp.can_access,false) ORDER BY lower(p.name)
   """,params:[{_expr:"auth.uid"},$productId])
 }
 
@@ -257,7 +290,10 @@ query ProductPromotions($productId: UUID!) @auth(level: USER) {
       pr.ends_at AS "endsAt",pr.active,pr.created_at AS "createdAt",pr.updated_at AS "updatedAt",
       CASE WHEN NOT pr.active THEN 'INACTIVE' WHEN now()<pr.starts_at THEN 'SCHEDULED'
         WHEN now()>pr.ends_at THEN 'ENDED' ELSE 'ACTIVE' END AS status
-    FROM promotions pr JOIN users u ON u.tenant_id=pr.tenant_id AND u.id=$1 AND u.active
-    WHERE pr.product_id=$2 ORDER BY pr.starts_at DESC
+    FROM promotions pr JOIN users u ON u.tenant_id=pr.tenant_id AND u.id=$1 AND u.active AND u.deleted_at IS NULL
+    JOIN app_pages pg ON pg.page_key='CAD_PRODUTO' AND pg.active
+    LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+    LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+    WHERE pr.product_id=$2 AND COALESCE(up.can_access,rp.can_access,false) ORDER BY pr.starts_at DESC
   """,params:[{_expr:"auth.uid"},$productId])
 }
