@@ -1026,3 +1026,183 @@ mutation SetPromotionStatus($id: UUID!, $active: Boolean!) @auth(level: USER) @t
       jsonb_build_object('productId',product_id,'active',active),now() FROM changed
   """,params:[{_expr:"auth.uid"},$id,$active])
 }
+
+
+# Atomic status changes. Every requested record must be eligible or the whole batch is rejected.
+mutation SetCategoriesStatusBatch($ids: Any!, $active: Boolean!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u
+      JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+      JOIN app_pages pg ON pg.page_key='CAD_CATEGORIA' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
+        AND CASE WHEN $3 THEN COALESCE(up.can_update,rp.can_update,false) ELSE COALESCE(up.can_delete,rp.can_delete,false) END
+    ),input AS (
+      SELECT DISTINCT value::uuid id FROM jsonb_array_elements_text(COALESCE($2::jsonb,'[]'::jsonb))
+    ),eligible AS (
+      SELECT c.id,c.tenant_id,c.name FROM categories c JOIN actor a ON a.tenant_id=c.tenant_id JOIN input i ON i.id=c.id
+      WHERE ($3 AND NOT EXISTS(SELECT 1 FROM categories x WHERE x.tenant_id=c.tenant_id AND x.id<>c.id AND x.active AND x.deleted_at IS NULL AND lower(btrim(x.name))=lower(btrim(c.name))))
+         OR (NOT $3 AND NOT EXISTS(SELECT 1 FROM subcategories s WHERE s.tenant_id=c.tenant_id AND s.category_id=c.id AND s.active AND s.deleted_at IS NULL)
+                    AND NOT EXISTS(SELECT 1 FROM products p WHERE p.tenant_id=c.tenant_id AND p.category_id=c.id AND p.active AND p.deleted_at IS NULL))
+    ),changed AS (
+      UPDATE categories c SET active=$3,deleted_at=CASE WHEN $3 THEN NULL ELSE now() END,updated_at=now()
+      FROM eligible e WHERE c.id=e.id
+        AND (SELECT count(*) FROM input)>0 AND (SELECT count(*) FROM eligible)=(SELECT count(*) FROM input)
+      RETURNING c.id,c.tenant_id,c.name
+    )
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+    SELECT tenant_id,$1,'Cadastros','CAD_CATEGORIA',CASE WHEN $3 THEN 'RESTORE' ELSE 'ARCHIVE' END,'Category',id::text,
+      'Status da categoria alterado em lote',true,'SQL_CONNECT',jsonb_build_object('active',$3,'name',name),now() FROM changed
+  """,params:[{_expr:"auth.uid"},$ids,$active])
+}
+
+mutation SetSubcategoriesStatusBatch($ids: Any!, $active: Boolean!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u
+      JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+      JOIN app_pages pg ON pg.page_key='CAD_SUBCATEGORIA' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
+        AND CASE WHEN $3 THEN COALESCE(up.can_update,rp.can_update,false) ELSE COALESCE(up.can_delete,rp.can_delete,false) END
+    ),input AS (SELECT DISTINCT value::uuid id FROM jsonb_array_elements_text(COALESCE($2::jsonb,'[]'::jsonb))),
+    eligible AS (
+      SELECT s.id,s.tenant_id,s.name FROM subcategories s JOIN actor a ON a.tenant_id=s.tenant_id JOIN input i ON i.id=s.id
+      JOIN categories c ON c.id=s.category_id AND c.tenant_id=s.tenant_id
+      WHERE ($3 AND c.active AND c.deleted_at IS NULL AND NOT EXISTS(
+              SELECT 1 FROM subcategories x WHERE x.tenant_id=s.tenant_id AND x.id<>s.id AND x.category_id=s.category_id
+                AND x.active AND x.deleted_at IS NULL AND lower(btrim(x.name))=lower(btrim(s.name))))
+         OR (NOT $3 AND NOT EXISTS(SELECT 1 FROM products p WHERE p.tenant_id=s.tenant_id AND p.subcategory_id=s.id AND p.active AND p.deleted_at IS NULL))
+    ),changed AS (
+      UPDATE subcategories s SET active=$3,deleted_at=CASE WHEN $3 THEN NULL ELSE now() END,updated_at=now()
+      FROM eligible e WHERE s.id=e.id AND (SELECT count(*) FROM input)>0
+        AND (SELECT count(*) FROM eligible)=(SELECT count(*) FROM input)
+      RETURNING s.id,s.tenant_id,s.name
+    )
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+    SELECT tenant_id,$1,'Cadastros','CAD_SUBCATEGORIA',CASE WHEN $3 THEN 'RESTORE' ELSE 'ARCHIVE' END,'Subcategory',id::text,
+      'Status da subcategoria alterado em lote',true,'SQL_CONNECT',jsonb_build_object('active',$3,'name',name),now() FROM changed
+  """,params:[{_expr:"auth.uid"},$ids,$active])
+}
+
+mutation SetBranchesStatusBatch($ids: Any!, $active: Boolean!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u
+      JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+      JOIN app_pages pg ON pg.page_key='CAD_FILIAL' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
+        AND CASE WHEN $3 THEN COALESCE(up.can_update,rp.can_update,false) ELSE COALESCE(up.can_delete,rp.can_delete,false) END
+    ),input AS (SELECT DISTINCT value::uuid id FROM jsonb_array_elements_text(COALESCE($2::jsonb,'[]'::jsonb))),
+    eligible AS (
+      SELECT b.id,b.tenant_id,b.name FROM branches b JOIN actor a ON a.tenant_id=b.tenant_id JOIN input i ON i.id=b.id
+      WHERE ($3 AND NOT EXISTS(SELECT 1 FROM branches x WHERE x.tenant_id=b.tenant_id AND x.id<>b.id AND x.active AND x.deleted_at IS NULL
+                 AND (lower(btrim(x.name))=lower(btrim(b.name)) OR (b.internal_code IS NOT NULL AND x.internal_code=b.internal_code))))
+         OR (NOT $3 AND NOT EXISTS(SELECT 1 FROM cash_sessions cs WHERE cs.tenant_id=b.tenant_id AND cs.branch_id=b.id AND cs.status='OPEN'))
+    ),changed AS (
+      UPDATE branches b SET active=$3,deleted_at=CASE WHEN $3 THEN NULL ELSE now() END,updated_at=now()
+      FROM eligible e WHERE b.id=e.id AND (SELECT count(*) FROM input)>0
+        AND (SELECT count(*) FROM eligible)=(SELECT count(*) FROM input)
+      RETURNING b.id,b.tenant_id,b.name
+    )
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+    SELECT tenant_id,$1,'Cadastros','CAD_FILIAL',CASE WHEN $3 THEN 'RESTORE' ELSE 'ARCHIVE' END,'Branch',id::text,
+      'Status da filial alterado em lote',true,'SQL_CONNECT',jsonb_build_object('active',$3,'name',name),now() FROM changed
+  """,params:[{_expr:"auth.uid"},$ids,$active])
+}
+
+mutation SetSuppliersStatusBatch($ids: Any!, $active: Boolean!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u
+      JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+      JOIN app_pages pg ON pg.page_key='CAD_FORNECEDOR' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
+        AND CASE WHEN $3 THEN COALESCE(up.can_update,rp.can_update,false) ELSE COALESCE(up.can_delete,rp.can_delete,false) END
+    ),input AS (SELECT DISTINCT value::uuid id FROM jsonb_array_elements_text(COALESCE($2::jsonb,'[]'::jsonb))),
+    eligible AS (
+      SELECT s.id,s.tenant_id,s.legal_name FROM suppliers s JOIN actor a ON a.tenant_id=s.tenant_id JOIN input i ON i.id=s.id
+      WHERE ($3 AND NOT EXISTS(SELECT 1 FROM suppliers x WHERE x.tenant_id=s.tenant_id AND x.id<>s.id AND x.active AND x.deleted_at IS NULL
+              AND ((s.cpf IS NOT NULL AND x.cpf=s.cpf) OR (s.cnpj IS NOT NULL AND x.cnpj=s.cnpj))))
+         OR (NOT $3 AND NOT EXISTS(SELECT 1 FROM products p WHERE p.tenant_id=s.tenant_id AND p.supplier_id=s.id AND p.active AND p.deleted_at IS NULL))
+    ),changed AS (
+      UPDATE suppliers s SET active=$3,deleted_at=CASE WHEN $3 THEN NULL ELSE now() END,updated_at=now()
+      FROM eligible e WHERE s.id=e.id AND (SELECT count(*) FROM input)>0
+        AND (SELECT count(*) FROM eligible)=(SELECT count(*) FROM input)
+      RETURNING s.id,s.tenant_id,s.legal_name
+    )
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+    SELECT tenant_id,$1,'Cadastros','CAD_FORNECEDOR',CASE WHEN $3 THEN 'RESTORE' ELSE 'ARCHIVE' END,'Supplier',id::text,
+      'Status do fornecedor alterado em lote',true,'SQL_CONNECT',jsonb_build_object('active',$3,'name',legal_name),now() FROM changed
+  """,params:[{_expr:"auth.uid"},$ids,$active])
+}
+
+mutation SetCustomersStatusBatch($ids: Any!, $active: Boolean!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u
+      JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+      JOIN app_pages pg ON pg.page_key='CAD_CLIENTE' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
+        AND CASE WHEN $3 THEN COALESCE(up.can_update,rp.can_update,false) ELSE COALESCE(up.can_delete,rp.can_delete,false) END
+    ),input AS (SELECT DISTINCT value::uuid id FROM jsonb_array_elements_text(COALESCE($2::jsonb,'[]'::jsonb))),
+    eligible AS (
+      SELECT c.id,c.tenant_id,c.name FROM customers c JOIN actor a ON a.tenant_id=c.tenant_id JOIN input i ON i.id=c.id
+      WHERE NOT $3 OR NOT EXISTS(SELECT 1 FROM customers x WHERE x.tenant_id=c.tenant_id AND x.id<>c.id AND x.active AND x.deleted_at IS NULL
+        AND ((c.cpf IS NOT NULL AND x.cpf=c.cpf) OR (c.cnpj IS NOT NULL AND x.cnpj=c.cnpj)))
+    ),changed AS (
+      UPDATE customers c SET active=$3,deleted_at=CASE WHEN $3 THEN NULL ELSE now() END,updated_at=now()
+      FROM eligible e WHERE c.id=e.id AND (SELECT count(*) FROM input)>0
+        AND (SELECT count(*) FROM eligible)=(SELECT count(*) FROM input)
+      RETURNING c.id,c.tenant_id,c.name
+    )
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+    SELECT tenant_id,$1,'Cadastros','CAD_CLIENTE',CASE WHEN $3 THEN 'RESTORE' ELSE 'ARCHIVE' END,'Customer',id::text,
+      'Status do cliente alterado em lote',true,'SQL_CONNECT',jsonb_build_object('active',$3,'name',name),now() FROM changed
+  """,params:[{_expr:"auth.uid"},$ids,$active])
+}
+
+mutation SetProductsStatusBatch($ids: Any!, $active: Boolean!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u
+      JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+      JOIN app_pages pg ON pg.page_key='CAD_PRODUTO' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
+        AND CASE WHEN $3 THEN COALESCE(up.can_update,rp.can_update,false) ELSE COALESCE(up.can_delete,rp.can_delete,false) END
+    ),input AS (SELECT DISTINCT value::uuid id FROM jsonb_array_elements_text(COALESCE($2::jsonb,'[]'::jsonb))),
+    eligible AS (
+      SELECT p.id,p.tenant_id,p.name FROM products p JOIN actor a ON a.tenant_id=p.tenant_id JOIN input i ON i.id=p.id
+      WHERE ($3 AND NOT EXISTS(SELECT 1 FROM products x WHERE x.tenant_id=p.tenant_id AND x.id<>p.id AND x.active AND x.deleted_at IS NULL
+               AND ((p.internal_code IS NOT NULL AND x.internal_code=p.internal_code) OR (p.ean IS NOT NULL AND x.ean=p.ean))))
+         OR (NOT $3 AND NOT EXISTS(SELECT 1 FROM product_components pc JOIN products parent
+               ON parent.id=pc.parent_product_id AND parent.tenant_id=pc.tenant_id
+               WHERE pc.component_product_id=p.id AND parent.active AND parent.deleted_at IS NULL AND parent.bundle_product))
+    ),changed AS (
+      UPDATE products p SET active=$3,deleted_at=CASE WHEN $3 THEN NULL ELSE now() END,updated_at=now()
+      FROM eligible e WHERE p.id=e.id AND (SELECT count(*) FROM input)>0
+        AND (SELECT count(*) FROM eligible)=(SELECT count(*) FROM input)
+      RETURNING p.id,p.tenant_id,p.name
+    )
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+    SELECT tenant_id,$1,'Cadastros','CAD_PRODUTO',CASE WHEN $3 THEN 'RESTORE' ELSE 'ARCHIVE' END,'Product',id::text,
+      'Status do produto alterado em lote',true,'SQL_CONNECT',jsonb_build_object('active',$3,'name',name),now() FROM changed
+  """,params:[{_expr:"auth.uid"},$ids,$active])
+}
