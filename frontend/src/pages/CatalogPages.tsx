@@ -1,4 +1,4 @@
-import { useCallback,useEffect,useMemo,useState,type FormEvent,type ReactNode } from 'react'
+import { useCallback,useEffect,useMemo,useRef,useState,type FormEvent,type ReactNode } from 'react'
 import { getDataConnect } from 'firebase/data-connect'
 import { Link } from 'react-router-dom'
 import { z } from 'zod'
@@ -29,8 +29,9 @@ function CategoryPage(){
  const [modal,setModal]=useState(false),[editing,setEditing]=useState<Category|null>(null),[names,setNames]=useState([''])
  const [selected,setSelected]=useState<string[]>([]),[filters,setFilters]=useState<Record<string,string[]>>({}),[filterSearch,setFilterSearch]=useState<Record<string,string>>({}),[filterModal,setFilterModal]=useState(false)
  const [confirmation,setConfirmation]=useState<Confirmation|null>(null)
- const load=useCallback(async()=>{setBusy(true);try{const result=await listCategories(dc,{search:search.trim(),limit:RESULT_LIMIT,offset:0,requestKey:crypto.randomUUID()});setItems(z.array(categorySchema).parse(result.data._select??[]))}
-  catch(error){console.error(error);setNotice({type:'error',text:'Não foi possível atualizar as categorias.'})}finally{setBusy(false)}},[search])
+ const requestSequence=useRef(0)
+ const load=useCallback(async()=>{const requestId=++requestSequence.current;setBusy(true);try{const result=await listCategories(dc,{search:search.trim(),limit:RESULT_LIMIT,offset:0,requestKey:crypto.randomUUID()});if(requestId===requestSequence.current)setItems(z.array(categorySchema).parse(result.data._select??[]))}
+  catch(error){if(requestId!==requestSequence.current)return;console.error(error);setNotice({type:'error',text:'Não foi possível atualizar as categorias.'})}finally{if(requestId===requestSequence.current)setBusy(false)}},[search])
  useEffect(()=>{const timer=window.setTimeout(()=>void load(),180);return()=>window.clearTimeout(timer)},[load])
  useEffect(()=>{if(!notice)return;const timer=window.setTimeout(()=>setNotice(null),7000);return()=>window.clearTimeout(timer)},[notice])
  const filtered=useMemo(()=>items.filter(item=>Object.entries(filters).every(([key,values])=>values.length===0||values.includes(String(item[key as keyof Category]??'')))),[items,filters])
@@ -61,8 +62,9 @@ function SubcategoryPage(){
  const [items,setItems]=useState<Subcategory[]>([]),[categories,setCategories]=useState<Option[]>([]),[search,setSearch]=useState(''),[busy,setBusy]=useState(true),[notice,setNotice]=useState<Notice|null>(null)
  const [modal,setModal]=useState(false),[editing,setEditing]=useState<Subcategory|null>(null),[batch,setBatch]=useState<BatchSubcategory[]>([{categoryId:'',name:''}])
  const [selected,setSelected]=useState<string[]>([]),[filters,setFilters]=useState<Record<string,string[]>>({}),[filterSearch,setFilterSearch]=useState<Record<string,string>>({}),[filterModal,setFilterModal]=useState(false),[confirmation,setConfirmation]=useState<Confirmation|null>(null)
- const load=useCallback(async()=>{setBusy(true);try{const key=crypto.randomUUID(),[records,options]=await Promise.all([listSubcategories(dc,{search:search.trim(),categoryId:null,limit:RESULT_LIMIT,offset:0,requestKey:key}),categoryOptions(dc,{requestKey:key})]);setItems(z.array(subcategorySchema).parse(records.data._select??[]));setCategories(z.array(optionSchema).parse(options.data._select??[]))}
-  catch(error){console.error(error);setNotice({type:'error',text:'Não foi possível atualizar as subcategorias.'})}finally{setBusy(false)}},[search])
+ const requestSequence=useRef(0)
+ const load=useCallback(async()=>{const requestId=++requestSequence.current;setBusy(true);try{const key=crypto.randomUUID(),[records,options]=await Promise.all([listSubcategories(dc,{search:search.trim(),categoryId:null,limit:RESULT_LIMIT,offset:0,requestKey:key}),categoryOptions(dc,{requestKey:key})]);if(requestId===requestSequence.current){setItems(z.array(subcategorySchema).parse(records.data._select??[]));setCategories(z.array(optionSchema).parse(options.data._select??[]))}}
+  catch(error){if(requestId!==requestSequence.current)return;console.error(error);setNotice({type:'error',text:'Não foi possível atualizar as subcategorias.'})}finally{if(requestId===requestSequence.current)setBusy(false)}},[search])
  useEffect(()=>{const timer=window.setTimeout(()=>void load(),180);return()=>window.clearTimeout(timer)},[load])
  useEffect(()=>{if(!notice)return;const timer=window.setTimeout(()=>setNotice(null),7000);return()=>window.clearTimeout(timer)},[notice])
  const filtered=useMemo(()=>items.filter(item=>Object.entries(filters).every(([key,values])=>values.length===0||values.includes(String(item[key as keyof Subcategory]??'')))),[items,filters])
