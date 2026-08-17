@@ -2,12 +2,14 @@ import { useMemo, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
 import { navigationModules } from '../config/navigation'
+import { useTheme } from '../theme/theme-context'
 
 export function AppLayout() {
   const { profile, permissions, canAccess, signOut } = useAuth()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [leaving, setLeaving] = useState(false)
   const location = useLocation()
+  const { theme, toggleTheme } = useTheme()
 
   const modules = useMemo(
     () => navigationModules.filter((module) => module.pageKeys.some(canAccess)),
@@ -43,6 +45,9 @@ export function AppLayout() {
             <span className="header-nav-item__tooltip">Início</span>
           </NavLink>
         </nav>
+        <button className="theme-switch" type="button" onClick={toggleTheme} aria-label={`Ativar tema ${theme === 'dark' ? 'claro' : 'escuro'}`} aria-pressed={theme === 'light'}>
+          <span className="material-symbols-rounded">light_mode</span><i><b /></i><span className="material-symbols-rounded">dark_mode</span>
+        </button>
         <button className="legacy-header__user" type="button" onClick={() => setDrawerOpen(true)} aria-label="Abrir painel do usuário">
           <span className="material-symbols-rounded" aria-hidden="true">person</span>
           <span>{profile?.name?.split(' ')[0]}</span>
