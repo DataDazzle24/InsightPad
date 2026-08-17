@@ -90,6 +90,15 @@ export interface Branch_Key {
   __typename?: 'Branch_Key';
 }
 
+export interface CancelSaleData {
+  _execute?: number | null;
+}
+
+export interface CancelSaleVariables {
+  saleId: UUIDString;
+  reason: string;
+}
+
 export interface CashMovement_Key {
   id: UUIDString;
   __typename?: 'CashMovement_Key';
@@ -149,6 +158,10 @@ export interface CreateSubcategoryVariables {
 export interface Customer_Key {
   id: UUIDString;
   __typename?: 'Customer_Key';
+}
+
+export interface EnsureSalesDefaultsData {
+  _execute?: number | null;
 }
 
 export interface FinancialAccount_Key {
@@ -284,6 +297,17 @@ export interface ListProductsVariables {
   requestKey?: string | null;
 }
 
+export interface ListSalesData {
+  _select?: unknown[] | null;
+}
+
+export interface ListSalesVariables {
+  filters: unknown;
+  limit: number;
+  offset: number;
+  requestKey: string;
+}
+
 export interface ListSubcategoriesData {
   _select?: unknown[] | null;
 }
@@ -315,6 +339,14 @@ export interface OfflineOperation_Key {
 export interface PaymentMethod_Key {
   id: UUIDString;
   __typename?: 'PaymentMethod_Key';
+}
+
+export interface PostSaleData {
+  _execute?: number | null;
+}
+
+export interface PostSaleVariables {
+  payload: unknown;
 }
 
 export interface ProductComponent_Key {
@@ -384,6 +416,15 @@ export interface Role_Key {
   __typename?: 'Role_Key';
 }
 
+export interface SaleDetailsData {
+  _select?: unknown[] | null;
+}
+
+export interface SaleDetailsVariables {
+  saleId: UUIDString;
+  requestKey: string;
+}
+
 export interface SaleItem_Key {
   id: UUIDString;
   __typename?: 'SaleItem_Key';
@@ -397,6 +438,15 @@ export interface SalePayment_Key {
 export interface Sale_Key {
   id: UUIDString;
   __typename?: 'Sale_Key';
+}
+
+export interface SalesWorkspaceData {
+  _select?: unknown[] | null;
+}
+
+export interface SalesWorkspaceVariables {
+  branchId?: UUIDString | null;
+  requestKey: string;
 }
 
 export interface SaveBranchData {
@@ -969,6 +1019,42 @@ export const setProductsStatusBatchRef: SetProductsStatusBatchRef;
 export function setProductsStatusBatch(vars: SetProductsStatusBatchVariables): MutationPromise<SetProductsStatusBatchData, SetProductsStatusBatchVariables>;
 export function setProductsStatusBatch(dc: DataConnect, vars: SetProductsStatusBatchVariables): MutationPromise<SetProductsStatusBatchData, SetProductsStatusBatchVariables>;
 
+interface EnsureSalesDefaultsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): MutationRef<EnsureSalesDefaultsData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): MutationRef<EnsureSalesDefaultsData, undefined>;
+  operationName: string;
+}
+export const ensureSalesDefaultsRef: EnsureSalesDefaultsRef;
+
+export function ensureSalesDefaults(): MutationPromise<EnsureSalesDefaultsData, undefined>;
+export function ensureSalesDefaults(dc: DataConnect): MutationPromise<EnsureSalesDefaultsData, undefined>;
+
+interface PostSaleRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: PostSaleVariables): MutationRef<PostSaleData, PostSaleVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: PostSaleVariables): MutationRef<PostSaleData, PostSaleVariables>;
+  operationName: string;
+}
+export const postSaleRef: PostSaleRef;
+
+export function postSale(vars: PostSaleVariables): MutationPromise<PostSaleData, PostSaleVariables>;
+export function postSale(dc: DataConnect, vars: PostSaleVariables): MutationPromise<PostSaleData, PostSaleVariables>;
+
+interface CancelSaleRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CancelSaleVariables): MutationRef<CancelSaleData, CancelSaleVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: CancelSaleVariables): MutationRef<CancelSaleData, CancelSaleVariables>;
+  operationName: string;
+}
+export const cancelSaleRef: CancelSaleRef;
+
+export function cancelSale(vars: CancelSaleVariables): MutationPromise<CancelSaleData, CancelSaleVariables>;
+export function cancelSale(dc: DataConnect, vars: CancelSaleVariables): MutationPromise<CancelSaleData, CancelSaleVariables>;
+
 interface GetCurrentUserRef {
   /* Allow users to create refs without passing in DataConnect */
   (): QueryRef<GetCurrentUserData, undefined>;
@@ -992,6 +1078,42 @@ export const getCurrentUserAccessRef: GetCurrentUserAccessRef;
 
 export function getCurrentUserAccess(options?: ExecuteQueryOptions): QueryPromise<GetCurrentUserAccessData, undefined>;
 export function getCurrentUserAccess(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetCurrentUserAccessData, undefined>;
+
+interface SalesWorkspaceRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SalesWorkspaceVariables): QueryRef<SalesWorkspaceData, SalesWorkspaceVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SalesWorkspaceVariables): QueryRef<SalesWorkspaceData, SalesWorkspaceVariables>;
+  operationName: string;
+}
+export const salesWorkspaceRef: SalesWorkspaceRef;
+
+export function salesWorkspace(vars: SalesWorkspaceVariables, options?: ExecuteQueryOptions): QueryPromise<SalesWorkspaceData, SalesWorkspaceVariables>;
+export function salesWorkspace(dc: DataConnect, vars: SalesWorkspaceVariables, options?: ExecuteQueryOptions): QueryPromise<SalesWorkspaceData, SalesWorkspaceVariables>;
+
+interface ListSalesRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ListSalesVariables): QueryRef<ListSalesData, ListSalesVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ListSalesVariables): QueryRef<ListSalesData, ListSalesVariables>;
+  operationName: string;
+}
+export const listSalesRef: ListSalesRef;
+
+export function listSales(vars: ListSalesVariables, options?: ExecuteQueryOptions): QueryPromise<ListSalesData, ListSalesVariables>;
+export function listSales(dc: DataConnect, vars: ListSalesVariables, options?: ExecuteQueryOptions): QueryPromise<ListSalesData, ListSalesVariables>;
+
+interface SaleDetailsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SaleDetailsVariables): QueryRef<SaleDetailsData, SaleDetailsVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SaleDetailsVariables): QueryRef<SaleDetailsData, SaleDetailsVariables>;
+  operationName: string;
+}
+export const saleDetailsRef: SaleDetailsRef;
+
+export function saleDetails(vars: SaleDetailsVariables, options?: ExecuteQueryOptions): QueryPromise<SaleDetailsData, SaleDetailsVariables>;
+export function saleDetails(dc: DataConnect, vars: SaleDetailsVariables, options?: ExecuteQueryOptions): QueryPromise<SaleDetailsData, SaleDetailsVariables>;
 
 interface ListCategoriesRef {
   /* Allow users to create refs without passing in DataConnect */
