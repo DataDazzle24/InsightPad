@@ -235,9 +235,9 @@ query ListProducts($search: String!, $limit: Int!, $offset: Int!, $requestKey: S
       p.subcategory_id AS "subcategoryId",sc.name AS "subcategoryName",p.supplier_id AS "supplierId",
       COALESCE(s.trade_name,s.legal_name) AS "supplierName",p.created_at AS "createdAt",p.updated_at AS "updatedAt",
       EXISTS(SELECT 1 FROM promotions pr WHERE pr.product_id=p.id AND pr.tenant_id=p.tenant_id AND pr.active
-        AND pr.deleted_at IS NULL AND now() BETWEEN pr.starts_at AND pr.ends_at) AS "onPromotion",
+        AND pr.deleted_at IS NULL AND now()>=pr.starts_at AND now()<pr.ends_at) AS "onPromotion",
       COALESCE((SELECT pr.promotional_price_cents::text FROM promotions pr WHERE pr.product_id=p.id AND pr.tenant_id=p.tenant_id
-        AND pr.active AND pr.deleted_at IS NULL AND now() BETWEEN pr.starts_at AND pr.ends_at ORDER BY pr.starts_at DESC LIMIT 1),
+        AND pr.active AND pr.deleted_at IS NULL AND now()>=pr.starts_at AND now()<pr.ends_at ORDER BY pr.starts_at DESC LIMIT 1),
         p.sale_price_cents::text) AS "effectivePriceCents"
     FROM products p JOIN users u ON u.tenant_id=p.tenant_id AND u.id=$1 AND u.active AND u.deleted_at IS NULL
     JOIN app_pages pg ON pg.page_key='CAD_PRODUTO' AND pg.active
@@ -289,7 +289,7 @@ query ProductPromotions($productId: UUID!) @auth(level: USER) {
     SELECT pr.id,pr.promotional_price_cents::text AS "promotionalPriceCents",pr.starts_at AS "startsAt",
       pr.ends_at AS "endsAt",pr.active,pr.created_at AS "createdAt",pr.updated_at AS "updatedAt",
       CASE WHEN NOT pr.active THEN 'INACTIVE' WHEN now()<pr.starts_at THEN 'SCHEDULED'
-        WHEN now()>pr.ends_at THEN 'ENDED' ELSE 'ACTIVE' END AS status
+        WHEN now()>=pr.ends_at THEN 'ENDED' ELSE 'ACTIVE' END AS status
     FROM promotions pr JOIN users u ON u.tenant_id=pr.tenant_id AND u.id=$1 AND u.active AND u.deleted_at IS NULL
     JOIN app_pages pg ON pg.page_key='CAD_PRODUTO' AND pg.active
     LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
