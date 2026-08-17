@@ -16,6 +16,7 @@ type Field={key:string;label:string;type?:'text'|'email'|'date'|'number'|'textar
 type Config={title:string;singular:string;description:string;columns:{key:string;label:string;format?:(v:unknown,r:Row)=>string}[];fields:Field[]}
 type IdName={id:string;name:string};type SubcategoryOption=IdName&{categoryId:string};type RegistrationOptionSet={categories:IdName[];subcategories:SubcategoryOption[];suppliers:IdName[]}
 const digits=(v:string)=>v.replace(/\D/g,'')
+const SIZE_OPTIONS:Record<string,string[]>={ML:['150','250','275','313','330','350','473','500','510','600','750','965','998'],L:['1','1,5','2','2,5','3'],KG:['1','3','5'],G:['76','140','150','500'],UN:['100']}
 const money=(v:unknown)=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(v??0)/100)
 const configs:Record<PageKey,Config>={
  CAD_FILIAL:{title:'Filiais',singular:'filial',description:'Configure unidades e pontos de operação.',columns:[
@@ -44,7 +45,7 @@ const configs:Record<PageKey,Config>={
   {key:'name',label:'Produto'},{key:'internalCode',label:'Código'},{key:'categoryName',label:'Categoria'},{key:'salePriceCents',label:'Preço',format:money}],
   fields:[{key:'name',label:'Nome do produto',required:true},{key:'internalCode',label:'Código interno'},{key:'ean',label:'Código de barras'},
    {key:'categoryId',label:'Categoria',type:'select',required:true},{key:'subcategoryId',label:'Subcategoria',type:'select'},{key:'supplierId',label:'Fornecedor',type:'select'},
-   {key:'brand',label:'Marca'},{key:'sizeType',label:'Tipo de tamanho'},{key:'size',label:'Tamanho'},{key:'color',label:'Cor'},
+   {key:'brand',label:'Marca'},{key:'sizeType',label:'Tipo de tamanho',type:'select',options:Object.keys(SIZE_OPTIONS).map(value=>({value,label:value}))},{key:'size',label:'Tamanho',type:'select'},{key:'color',label:'Cor'},
    {key:'costPriceCents',label:'Preço de custo',type:'money'},{key:'salePriceCents',label:'Preço de venda',type:'money',required:true},
    {key:'minimumStock',label:'Estoque mínimo',type:'number'},{key:'maximumStock',label:'Estoque máximo',type:'number'},
    {key:'weightedProduct',label:'Produto vendido por peso',type:'checkbox'},{key:'allowNegativeStock',label:'Permitir estoque negativo',type:'checkbox'},
@@ -67,7 +68,7 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
   if(pageKey==='CAD_PRODUTO'){next.costPriceCents=Number(row?.costPriceCents??0)/100;next.salePriceCents=Number(row?.salePriceCents??0)/100}setForm(next);setModal(true)}
  function fieldOptions(field:Field){if(pageKey!=='CAD_PRODUTO')return field.options??[];if(field.key==='categoryId')return options.categories.map(x=>({value:x.id,label:x.name}))
   if(field.key==='subcategoryId')return options.subcategories.filter(x=>!form.categoryId||x.categoryId===form.categoryId).map(x=>({value:x.id,label:x.name}))
-  if(field.key==='supplierId')return options.suppliers.map(x=>({value:x.id,label:x.name}));return field.options??[]}
+  if(field.key==='supplierId')return options.suppliers.map(x=>({value:x.id,label:x.name}));if(field.key==='size')return (SIZE_OPTIONS[String(form.sizeType??'')]??[]).map(value=>({value,label:value}));return field.options??[]}
  async function lookupCep(value:unknown){const cep=digits(String(value??''));if(cep.length!==8)return
   try{setBusy(true);const response=await fetch(`https://viacep.com.br/ws/${cep}/json/`);const data=await response.json()
     if(!data.erro)setForm(current=>({...current,postalCode:cep,stateCode:data.uf??'',city:data.localidade??'',district:data.bairro??'',street:data.logradouro??''}))
@@ -104,7 +105,7 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
    <form onSubmit={(e:FormEvent)=>{e.preventDefault();setConfirm({text:'Confirma o salvamento das informações?',run:save})}}><div className="master-form-grid">{cfg.fields.map(field=><label className={field.wide?'wide':''} key={field.key}>
     <span>{field.label}{field.required?' *':''}</span>{field.type==='textarea'?<textarea value={String(form[field.key]??'')} onChange={e=>setForm({...form,[field.key]:e.target.value})}/>:
     field.type==='checkbox'?<input type="checkbox" checked={Boolean(form[field.key])} onChange={e=>setForm({...form,[field.key]:e.target.checked})}/>:
-    field.type==='select'?<select value={String(form[field.key]??'')} onChange={e=>setForm({...form,[field.key]:e.target.value})}><option value="">Selecione</option>{fieldOptions(field).map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</select>:
+    field.type==='select'?<select value={String(form[field.key]??'')} onChange={e=>setForm({...form,[field.key]:e.target.value,...(field.key==='sizeType'?{size:''}:{}),...(field.key==='categoryId'?{subcategoryId:''}:{})})}><option value="">Selecione</option>{fieldOptions(field).map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</select>:
     <input type={field.type==='money'||field.type==='number'?'number':field.type??'text'} step={field.type==='money'?'0.01':undefined} value={String(form[field.key]??'')} onChange={e=>setForm({...form,[field.key]:e.target.value})} onBlur={field.key==='postalCode'?e=>void lookupCep(e.target.value):undefined}/>}</label>)}</div>
     {pageKey==='CAD_PRODUTO'&&<div className="product-margin">Margem estimada: <strong>{Number(form.salePriceCents)>0?(((Number(form.salePriceCents)-Number(form.costPriceCents||0))/Number(form.salePriceCents))*100).toFixed(1):'0.0'}%</strong></div>}
     <footer><button type="button" onClick={()=>setModal(false)}>Cancelar</button><button className="catalog-primary">Continuar</button></footer></form></section></div>}
