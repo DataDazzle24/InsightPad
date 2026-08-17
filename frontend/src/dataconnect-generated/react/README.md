@@ -2701,6 +2701,7 @@ The `SaveProduct` Mutation requires an argument of type `SaveProductVariables`, 
 export interface SaveProductVariables {
   id?: UUIDString | null;
   payload: unknown;
+  components?: unknown | null;
 }
 ```
 ### Return Type
@@ -2752,10 +2753,11 @@ export default function SaveProductComponent() {
   const saveProductVars: SaveProductVariables = {
     id: ..., // optional
     payload: ..., 
+    components: ..., // optional
   };
   mutation.mutate(saveProductVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ id: ..., payload: ..., });
+  mutation.mutate({ id: ..., payload: ..., components: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {

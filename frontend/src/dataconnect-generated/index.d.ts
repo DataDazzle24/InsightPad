@@ -409,6 +409,7 @@ export interface SaveProductData {
 export interface SaveProductVariables {
   id?: UUIDString | null;
   payload: unknown;
+  components?: unknown | null;
 }
 
 export interface SavePromotionData {

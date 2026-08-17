@@ -3292,6 +3292,7 @@ The `SaveProduct` mutation requires an argument of type `SaveProductVariables`, 
 export interface SaveProductVariables {
   id?: UUIDString | null;
   payload: unknown;
+  components?: unknown | null;
 }
 ```
 ### Return Type
@@ -3313,13 +3314,14 @@ import { connectorConfig, saveProduct, SaveProductVariables } from '@insightpad/
 const saveProductVars: SaveProductVariables = {
   id: ..., // optional
   payload: ..., 
+  components: ..., // optional
 };
 
 // Call the `saveProduct()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await saveProduct(saveProductVars);
 // Variables can be defined inline as well.
-const { data } = await saveProduct({ id: ..., payload: ..., });
+const { data } = await saveProduct({ id: ..., payload: ..., components: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -3344,12 +3346,13 @@ import { connectorConfig, saveProductRef, SaveProductVariables } from '@insightp
 const saveProductVars: SaveProductVariables = {
   id: ..., // optional
   payload: ..., 
+  components: ..., // optional
 };
 
 // Call the `saveProductRef()` function to get a reference to the mutation.
 const ref = saveProductRef(saveProductVars);
 // Variables can be defined inline as well.
-const ref = saveProductRef({ id: ..., payload: ..., });
+const ref = saveProductRef({ id: ..., payload: ..., components: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
