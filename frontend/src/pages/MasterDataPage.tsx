@@ -3,8 +3,7 @@ import { getDataConnect } from 'firebase/data-connect'
 import { Link } from 'react-router-dom'
 import {
   connectorConfig,listBranches,listSuppliers,listCustomers,listProducts,registrationOptions,
-  saveBranch,saveSupplier,saveCustomer,saveProduct,setBranchStatus,setSupplierStatus,setCustomerStatus,setProductStatus,
-  setBranchesStatusBatch,setSuppliersStatusBatch,setCustomersStatusBatch,setProductsStatusBatch,productComponents,
+  saveBranch,saveSupplier,saveCustomer,saveProduct,setBranchesStatusBatch,setSuppliersStatusBatch,setCustomersStatusBatch,setProductsStatusBatch,productComponents,
 } from '@insightpad/dataconnect'
 import { useAuth } from '../auth/useAuth'
 import { firebaseApp } from '../lib/firebase'
@@ -173,9 +172,7 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
   if(!result.data._execute)throw new Error();setModal(false);setNotice(`${cfg.singular} salvo com sucesso.`);await load()
  }catch(e){console.error(e);setNotice('Operação não aplicada. Verifique duplicidades, vínculos e dados informados.')}finally{setBusy(false)}}
  async function status(ids:string[],active:boolean){setBusy(true);try{let result
-  if(ids.length===1){const id=ids[0];if(pageKey==='CAD_FILIAL')result=await setBranchStatus(dc,{id,active});else if(pageKey==='CAD_FORNECEDOR')result=await setSupplierStatus(dc,{id,active})
-   else if(pageKey==='CAD_CLIENTE')result=await setCustomerStatus(dc,{id,active});else result=await setProductStatus(dc,{id,active})}
-  else if(pageKey==='CAD_FILIAL')result=await setBranchesStatusBatch(dc,{ids,active});else if(pageKey==='CAD_FORNECEDOR')result=await setSuppliersStatusBatch(dc,{ids,active})
+  if(pageKey==='CAD_FILIAL')result=await setBranchesStatusBatch(dc,{ids,active});else if(pageKey==='CAD_FORNECEDOR')result=await setSuppliersStatusBatch(dc,{ids,active})
   else if(pageKey==='CAD_CLIENTE')result=await setCustomersStatusBatch(dc,{ids,active});else result=await setProductsStatusBatch(dc,{ids,active})
   if(Number(result.data._execute)!==ids.length)throw new Error('Nem todos os registros são elegíveis.');setSelected([]);setNotice('Status atualizado.');await load()
  }catch(e){console.error(e);setNotice('Nenhum registro foi alterado. Verifique permissões, duplicidades e vínculos ativos.');await load()}finally{setBusy(false)}}
