@@ -399,6 +399,48 @@ exports.setProductsStatusBatch = function setProductsStatusBatch(dcOrVars, vars)
 }
 ;
 
+const ensureSalesDefaultsRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'EnsureSalesDefaults');
+}
+ensureSalesDefaultsRef.operationName = 'EnsureSalesDefaults';
+exports.ensureSalesDefaultsRef = ensureSalesDefaultsRef;
+
+exports.ensureSalesDefaults = function ensureSalesDefaults(dc) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dc, undefined);
+  return executeMutation(ensureSalesDefaultsRef(dcInstance, inputVars));
+}
+;
+
+const postSaleRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'PostSale', inputVars);
+}
+postSaleRef.operationName = 'PostSale';
+exports.postSaleRef = postSaleRef;
+
+exports.postSale = function postSale(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(postSaleRef(dcInstance, inputVars));
+}
+;
+
+const cancelSaleRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'CancelSale', inputVars);
+}
+cancelSaleRef.operationName = 'CancelSale';
+exports.cancelSaleRef = cancelSaleRef;
+
+exports.cancelSale = function cancelSale(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(cancelSaleRef(dcInstance, inputVars));
+}
+;
+
 const getCurrentUserRef = (dc) => {
   const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
   dcInstance._useGeneratedSdk();
@@ -426,6 +468,51 @@ exports.getCurrentUserAccess = function getCurrentUserAccess(dcOrOptions, option
   
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
   return executeQuery(getCurrentUserAccessRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const salesWorkspaceRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'SalesWorkspace', inputVars);
+}
+salesWorkspaceRef.operationName = 'SalesWorkspace';
+exports.salesWorkspaceRef = salesWorkspaceRef;
+
+exports.salesWorkspace = function salesWorkspace(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(salesWorkspaceRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const listSalesRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'ListSales', inputVars);
+}
+listSalesRef.operationName = 'ListSales';
+exports.listSalesRef = listSalesRef;
+
+exports.listSales = function listSales(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(listSalesRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const saleDetailsRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'SaleDetails', inputVars);
+}
+saleDetailsRef.operationName = 'SaleDetails';
+exports.saleDetailsRef = saleDetailsRef;
+
+exports.saleDetails = function saleDetails(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(saleDetailsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;
 
