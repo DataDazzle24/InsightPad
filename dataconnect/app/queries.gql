@@ -21,6 +21,7 @@ query GetCurrentUser @auth(level: USER) {
       id
       name
       hierarchyLevel
+      systemRole
       active
     }
   }
@@ -361,4 +362,20 @@ query ProductPromotions($productId: UUID!) @auth(level: USER) {
     LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
     WHERE pr.product_id=$2 AND COALESCE(up.can_access,rp.can_access,false) ORDER BY pr.starts_at DESC
   """,params:[{_expr:"auth.uid"},$productId])
+}
+
+# Data Dazzle control plane. Access is restricted server-side to the platform system role.
+query PlatformAdminWorkspace($requestKey: String!) @auth(level: USER) {
+  _select(sql: """
+    WITH actor AS (
+      SELECT u.id FROM users u JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND r.system_role AND r.name='Administrador da Plataforma'
+    )
+    SELECT jsonb_build_object(
+      'tenants',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',t.id,'legalName',t.legal_name,'tradeName',t.trade_name,'document',t.document,'email',t.email,'phone',t.phone,'planCode',t.plan_code,'startsOn',t.starts_on,'expiresOn',t.expires_on,'active',t.active,'userCount',(SELECT count(*) FROM users u WHERE u.tenant_id=t.id AND u.deleted_at IS NULL),'branchCount',(SELECT count(*) FROM branches b WHERE b.tenant_id=t.id AND b.deleted_at IS NULL)) ORDER BY lower(COALESCE(t.trade_name,t.legal_name))) FROM tenants t WHERE t.deleted_at IS NULL),'[]'::jsonb),
+      'roles',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',r.id,'tenantId',r.tenant_id,'name',r.name,'active',r.active) ORDER BY lower(r.name)) FROM roles r WHERE r.deleted_at IS NULL),'[]'::jsonb),
+      'users',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',u.id,'tenantId',u.tenant_id,'tenantName',COALESCE(t.trade_name,t.legal_name),'roleId',u.role_id,'roleName',r.name,'name',u.name,'email',u.email,'active',u.active,'onboardingPending',u.onboarding_pending,'lastLoginAt',u.last_login_at) ORDER BY lower(u.name)) FROM users u JOIN tenants t ON t.id=u.tenant_id JOIN roles r ON r.id=u.role_id WHERE u.deleted_at IS NULL),'[]'::jsonb)
+    ) AS data FROM actor WHERE $2<>''
+  """,params:[{_expr:"auth.uid"},$requestKey])
 }
