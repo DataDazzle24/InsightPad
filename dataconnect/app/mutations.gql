@@ -778,3 +778,99 @@ mutation SetCustomerStatus($id: UUID!, $active: Boolean!) @auth(level: USER) @tr
       'SQL_CONNECT',jsonb_build_object('active',$3,'name',name),now() FROM changed
   """,params:[{_expr:"auth.uid"},$id,$active])
 }
+
+
+mutation SaveProduct($id: UUID, $payload: Any!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u JOIN app_pages pg ON pg.page_key='CAD_PRODUTO'
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND CASE WHEN $2::uuid IS NULL THEN COALESCE(up.can_create,rp.can_create,false) ELSE COALESCE(up.can_update,rp.can_update,false) END
+    ),saved AS (
+      INSERT INTO products(id,tenant_id,category_id,subcategory_id,supplier_id,name,internal_code,ean,brand,size_type,size,color,maximum_stock,minimum_stock,
+        sale_price_cents,cost_price_cents,weighted_product,bundle_product,allow_negative_stock,notes,active,created_at,updated_at)
+      SELECT COALESCE($2::uuid,gen_random_uuid()),a.tenant_id,($3::jsonb->>'categoryId')::uuid,NULLIF($3::jsonb->>'subcategoryId','')::uuid,
+        NULLIF($3::jsonb->>'supplierId','')::uuid,btrim($3::jsonb->>'name'),nullif(btrim($3::jsonb->>'internalCode'),''),
+        nullif(regexp_replace($3::jsonb->>'ean','\s','','g'),''),nullif(btrim($3::jsonb->>'brand'),''),nullif($3::jsonb->>'sizeType',''),
+        nullif($3::jsonb->>'size',''),nullif($3::jsonb->>'color',''),NULLIF($3::jsonb->>'maximumStock','')::numeric,
+        NULLIF($3::jsonb->>'minimumStock','')::numeric,COALESCE(($3::jsonb->>'salePriceCents')::bigint,0),COALESCE(($3::jsonb->>'costPriceCents')::bigint,0),
+        COALESCE(($3::jsonb->>'weightedProduct')::boolean,false),COALESCE(($3::jsonb->>'bundleProduct')::boolean,false),
+        COALESCE(($3::jsonb->>'allowNegativeStock')::boolean,false),nullif(btrim($3::jsonb->>'notes'),''),true,now(),now() FROM actor a
+      JOIN categories c ON c.id=($3::jsonb->>'categoryId')::uuid AND c.tenant_id=a.tenant_id AND c.active
+      LEFT JOIN subcategories sc ON sc.id=NULLIF($3::jsonb->>'subcategoryId','')::uuid AND sc.tenant_id=a.tenant_id AND sc.category_id=c.id AND sc.active
+      LEFT JOIN suppliers sp ON sp.id=NULLIF($3::jsonb->>'supplierId','')::uuid AND sp.tenant_id=a.tenant_id AND sp.active
+      WHERE length(btrim($3::jsonb->>'name'))>=2 AND COALESCE(($3::jsonb->>'salePriceCents')::bigint,0)>=0 AND COALESCE(($3::jsonb->>'costPriceCents')::bigint,0)>=0
+        AND (NULLIF($3::jsonb->>'subcategoryId','') IS NULL OR sc.id IS NOT NULL) AND (NULLIF($3::jsonb->>'supplierId','') IS NULL OR sp.id IS NOT NULL)
+        AND (NULLIF($3::jsonb->>'maximumStock','') IS NULL OR NULLIF($3::jsonb->>'minimumStock','') IS NULL OR
+             ($3::jsonb->>'maximumStock')::numeric>=($3::jsonb->>'minimumStock')::numeric)
+        AND NOT EXISTS(SELECT 1 FROM products x WHERE x.tenant_id=a.tenant_id AND x.id<>COALESCE($2::uuid,'00000000-0000-0000-0000-000000000000') AND x.active AND
+          ((nullif($3::jsonb->>'internalCode','') IS NOT NULL AND x.internal_code=$3::jsonb->>'internalCode') OR
+           (nullif($3::jsonb->>'ean','') IS NOT NULL AND x.ean=$3::jsonb->>'ean')))
+      ON CONFLICT(id) DO UPDATE SET category_id=EXCLUDED.category_id,subcategory_id=EXCLUDED.subcategory_id,supplier_id=EXCLUDED.supplier_id,name=EXCLUDED.name,
+        internal_code=EXCLUDED.internal_code,ean=EXCLUDED.ean,brand=EXCLUDED.brand,size_type=EXCLUDED.size_type,size=EXCLUDED.size,color=EXCLUDED.color,
+        maximum_stock=EXCLUDED.maximum_stock,minimum_stock=EXCLUDED.minimum_stock,sale_price_cents=EXCLUDED.sale_price_cents,cost_price_cents=EXCLUDED.cost_price_cents,
+        weighted_product=EXCLUDED.weighted_product,bundle_product=EXCLUDED.bundle_product,allow_negative_stock=EXCLUDED.allow_negative_stock,
+        notes=EXCLUDED.notes,updated_at=now() WHERE products.tenant_id=EXCLUDED.tenant_id RETURNING id,tenant_id,name
+    ) INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+      SELECT tenant_id,$1,'Cadastros','CAD_PRODUTO',CASE WHEN $2::uuid IS NULL THEN 'CREATE' ELSE 'UPDATE' END,'Product',id::text,'Produto salvo',true,
+      'SQL_CONNECT',jsonb_build_object('id',id,'name',name),now() FROM saved
+  """,params:[{_expr:"auth.uid"},$id,$payload])
+}
+
+mutation SetProductStatus($id: UUID!, $active: Boolean!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (SELECT u.id,u.tenant_id FROM users u JOIN app_pages pg ON pg.page_key='CAD_PRODUTO'
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id
+      WHERE u.id=$1 AND u.active AND CASE WHEN $3 THEN COALESCE(up.can_update,rp.can_update,false) ELSE COALESCE(up.can_delete,rp.can_delete,false) END),
+    changed AS (UPDATE products p SET active=$3,deleted_at=CASE WHEN $3 THEN NULL ELSE now() END,updated_at=now() FROM actor a
+      WHERE p.id=$2 AND p.tenant_id=a.tenant_id RETURNING p.id,p.tenant_id,p.name)
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+      SELECT tenant_id,$1,'Cadastros','CAD_PRODUTO',CASE WHEN $3 THEN 'RESTORE' ELSE 'ARCHIVE' END,'Product',id::text,'Status do produto alterado',true,
+      'SQL_CONNECT',jsonb_build_object('active',$3,'name',name),now() FROM changed
+  """,params:[{_expr:"auth.uid"},$id,$active])
+}
+
+mutation SaveProductComponents($productId: UUID!, $components: Any!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u JOIN app_pages pg ON pg.page_key='CAD_PRODUTO'
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id
+      WHERE u.id=$1 AND u.active AND COALESCE(up.can_update,rp.can_update,false)
+    ),target AS (SELECT p.id,p.tenant_id FROM products p JOIN actor a ON a.tenant_id=p.tenant_id WHERE p.id=$2 AND p.active),
+    cleared AS (DELETE FROM product_components pc USING target t WHERE pc.parent_product_id=t.id AND pc.tenant_id=t.tenant_id RETURNING pc.parent_product_id),
+    inserted AS (
+      INSERT INTO product_components(tenant_id,parent_product_id,component_product_id,quantity,allocated_unit_price_cents,created_at,updated_at)
+      SELECT t.tenant_id,t.id,(item->>'productId')::uuid,(item->>'quantity')::numeric,NULLIF(item->>'allocatedUnitPriceCents','')::bigint,now(),now()
+      FROM target t CROSS JOIN jsonb_array_elements($3::jsonb) item JOIN products p ON p.id=(item->>'productId')::uuid AND p.tenant_id=t.tenant_id AND p.active
+      WHERE (item->>'productId')::uuid<>t.id AND (item->>'quantity')::numeric>0 RETURNING parent_product_id,tenant_id
+    ) UPDATE products p SET bundle_product=jsonb_array_length($3::jsonb)>0,updated_at=now() FROM target t WHERE p.id=t.id AND p.tenant_id=t.tenant_id
+  """,params:[{_expr:"auth.uid"},$productId,$components])
+}
+
+mutation SavePromotion($id: UUID, $productId: UUID!, $promotionalPriceCents: Int64!, $startsAt: Timestamp!, $endsAt: Timestamp!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u JOIN app_pages pg ON pg.page_key='CAD_PRODUTO'
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id
+      WHERE u.id=$1 AND u.active AND COALESCE(up.can_update,rp.can_update,false)
+    ),saved AS (
+      INSERT INTO promotions(id,tenant_id,product_id,promotional_price_cents,starts_at,ends_at,active,created_at,updated_at)
+      SELECT COALESCE($2::uuid,gen_random_uuid()),a.tenant_id,$3,$4,$5,$6,true,now(),now() FROM actor a JOIN products p ON p.id=$3 AND p.tenant_id=a.tenant_id AND p.active
+      WHERE $4>=0 AND $5<$6 AND NOT EXISTS(SELECT 1 FROM promotions x WHERE x.tenant_id=a.tenant_id AND x.product_id=$3 AND x.active
+        AND x.id<>COALESCE($2::uuid,'00000000-0000-0000-0000-000000000000') AND tstzrange(x.starts_at,x.ends_at,'[]')&&tstzrange($5,$6,'[]'))
+      ON CONFLICT(id) DO UPDATE SET promotional_price_cents=EXCLUDED.promotional_price_cents,starts_at=EXCLUDED.starts_at,ends_at=EXCLUDED.ends_at,updated_at=now()
+      WHERE promotions.tenant_id=EXCLUDED.tenant_id RETURNING id,tenant_id,product_id
+    ) INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+      SELECT tenant_id,$1,'Cadastros','CAD_PRODUTO',CASE WHEN $2::uuid IS NULL THEN 'CREATE_PROMOTION' ELSE 'UPDATE_PROMOTION' END,'Promotion',id::text,
+      'Promoção salva',true,'SQL_CONNECT',jsonb_build_object('productId',product_id),now() FROM saved
+  """,params:[{_expr:"auth.uid"},$id,$productId,$promotionalPriceCents,$startsAt,$endsAt])
+}
+
+mutation SetPromotionStatus($id: UUID!, $active: Boolean!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (SELECT u.id,u.tenant_id FROM users u JOIN app_pages pg ON pg.page_key='CAD_PRODUTO'
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id
+      WHERE u.id=$1 AND u.active AND COALESCE(up.can_update,rp.can_update,false))
+    UPDATE promotions p SET active=$3,deleted_at=CASE WHEN $3 THEN NULL ELSE now() END,updated_at=now() FROM actor a WHERE p.id=$2 AND p.tenant_id=a.tenant_id
+  """,params:[{_expr:"auth.uid"},$id,$active])
+}
