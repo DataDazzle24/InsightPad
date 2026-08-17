@@ -17,7 +17,8 @@ type Category=z.infer<typeof categorySchema>;type Subcategory=z.infer<typeof sub
 type Notice={type:'success'|'error';text:string};type Confirmation={message:string;run:()=>Promise<void>}
 type BatchSubcategory={categoryId:string;name:string}
 const formatDate=(value:string)=>new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short'}).format(new Date(value))
-const csv=(filename:string,headers:string[],lines:string[][])=>{const content=[headers,...lines].map(line=>line.map(value=>`"${String(value??'').replaceAll('"','""')}"`).join(';')).join('\n')
+const csvSafe=(value:string)=>/^[=+\-@]/.test(value)?`'${value}`:value
+const csv=(filename:string,headers:string[],lines:string[][])=>{const content=[headers,...lines].map(line=>line.map(value=>`"${csvSafe(String(value??'')).replaceAll('"','""')}"`).join(';')).join('\n')
  const link=document.createElement('a');link.href=URL.createObjectURL(new Blob([`\uFEFF${content}`],{type:'text/csv'}));link.download=filename;link.click();URL.revokeObjectURL(link.href)}
 
 export function CatalogPages({pageKey}:{pageKey:'CAD_CATEGORIA'|'CAD_SUBCATEGORIA'}){return pageKey==='CAD_CATEGORIA'?<CategoryPage/>:<SubcategoryPage/>}
