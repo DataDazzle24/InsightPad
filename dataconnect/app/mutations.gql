@@ -1033,8 +1033,8 @@ mutation SavePromotion($id: UUID, $productId: UUID!, $promotionalPriceCents: Int
     ),saved AS (
       INSERT INTO promotions(id,tenant_id,product_id,promotional_price_cents,starts_at,ends_at,active,created_at,updated_at)
       SELECT COALESCE($2::uuid,gen_random_uuid()),a.tenant_id,$3,$4,$5,$6,true,now(),now() FROM actor a JOIN products p ON p.id=$3 AND p.tenant_id=a.tenant_id AND p.active
-      WHERE $4>0 AND $5<$6 AND NOT EXISTS(SELECT 1 FROM promotions x WHERE x.tenant_id=a.tenant_id AND x.product_id=$3 AND x.active
-        AND x.id<>COALESCE($2::uuid,'00000000-0000-0000-0000-000000000000') AND tstzrange(x.starts_at,x.ends_at,'[]')&&tstzrange($5,$6,'[]'))
+      WHERE $4>0 AND $4<p.sale_price_cents AND $5<$6 AND NOT EXISTS(SELECT 1 FROM promotions x WHERE x.tenant_id=a.tenant_id AND x.product_id=$3 AND x.active
+        AND x.id<>COALESCE($2::uuid,'00000000-0000-0000-0000-000000000000') AND tstzrange(x.starts_at,x.ends_at,'[)')&&tstzrange($5,$6,'[)'))
       ON CONFLICT(id) DO UPDATE SET promotional_price_cents=EXCLUDED.promotional_price_cents,starts_at=EXCLUDED.starts_at,ends_at=EXCLUDED.ends_at,updated_at=now()
       WHERE promotions.tenant_id=EXCLUDED.tenant_id RETURNING id,tenant_id,product_id
     ) INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
@@ -1058,7 +1058,7 @@ mutation SetPromotionStatus($id: UUID!, $active: Boolean!) @auth(level: USER) @t
         AND product.active AND product.deleted_at IS NULL
         AND (NOT $3 OR NOT EXISTS(
         SELECT 1 FROM promotions x WHERE x.tenant_id=p.tenant_id AND x.product_id=p.product_id AND x.active
-          AND x.deleted_at IS NULL AND x.id<>p.id AND tstzrange(x.starts_at,x.ends_at,'[]')&&tstzrange(p.starts_at,p.ends_at,'[]')))
+          AND x.deleted_at IS NULL AND x.id<>p.id AND tstzrange(x.starts_at,x.ends_at,'[)')&&tstzrange(p.starts_at,p.ends_at,'[)')))
       RETURNING p.id,p.tenant_id,p.product_id,p.active
     )
     INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
