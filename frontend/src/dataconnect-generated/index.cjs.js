@@ -315,6 +315,90 @@ exports.setPromotionStatus = function setPromotionStatus(dcOrVars, vars) {
 }
 ;
 
+const setCategoriesStatusBatchRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'SetCategoriesStatusBatch', inputVars);
+}
+setCategoriesStatusBatchRef.operationName = 'SetCategoriesStatusBatch';
+exports.setCategoriesStatusBatchRef = setCategoriesStatusBatchRef;
+
+exports.setCategoriesStatusBatch = function setCategoriesStatusBatch(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(setCategoriesStatusBatchRef(dcInstance, inputVars));
+}
+;
+
+const setSubcategoriesStatusBatchRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'SetSubcategoriesStatusBatch', inputVars);
+}
+setSubcategoriesStatusBatchRef.operationName = 'SetSubcategoriesStatusBatch';
+exports.setSubcategoriesStatusBatchRef = setSubcategoriesStatusBatchRef;
+
+exports.setSubcategoriesStatusBatch = function setSubcategoriesStatusBatch(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(setSubcategoriesStatusBatchRef(dcInstance, inputVars));
+}
+;
+
+const setBranchesStatusBatchRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'SetBranchesStatusBatch', inputVars);
+}
+setBranchesStatusBatchRef.operationName = 'SetBranchesStatusBatch';
+exports.setBranchesStatusBatchRef = setBranchesStatusBatchRef;
+
+exports.setBranchesStatusBatch = function setBranchesStatusBatch(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(setBranchesStatusBatchRef(dcInstance, inputVars));
+}
+;
+
+const setSuppliersStatusBatchRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'SetSuppliersStatusBatch', inputVars);
+}
+setSuppliersStatusBatchRef.operationName = 'SetSuppliersStatusBatch';
+exports.setSuppliersStatusBatchRef = setSuppliersStatusBatchRef;
+
+exports.setSuppliersStatusBatch = function setSuppliersStatusBatch(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(setSuppliersStatusBatchRef(dcInstance, inputVars));
+}
+;
+
+const setCustomersStatusBatchRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'SetCustomersStatusBatch', inputVars);
+}
+setCustomersStatusBatchRef.operationName = 'SetCustomersStatusBatch';
+exports.setCustomersStatusBatchRef = setCustomersStatusBatchRef;
+
+exports.setCustomersStatusBatch = function setCustomersStatusBatch(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(setCustomersStatusBatchRef(dcInstance, inputVars));
+}
+;
+
+const setProductsStatusBatchRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'SetProductsStatusBatch', inputVars);
+}
+setProductsStatusBatchRef.operationName = 'SetProductsStatusBatch';
+exports.setProductsStatusBatchRef = setProductsStatusBatchRef;
+
+exports.setProductsStatusBatch = function setProductsStatusBatch(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(setProductsStatusBatchRef(dcInstance, inputVars));
+}
+;
+
 const getCurrentUserRef = (dc) => {
   const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
   dcInstance._useGeneratedSdk();

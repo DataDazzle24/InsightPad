@@ -45,6 +45,12 @@ This README will guide you through the process of using the generated JavaScript
   - [*SaveProductComponents*](#saveproductcomponents)
   - [*SavePromotion*](#savepromotion)
   - [*SetPromotionStatus*](#setpromotionstatus)
+  - [*SetCategoriesStatusBatch*](#setcategoriesstatusbatch)
+  - [*SetSubcategoriesStatusBatch*](#setsubcategoriesstatusbatch)
+  - [*SetBranchesStatusBatch*](#setbranchesstatusbatch)
+  - [*SetSuppliersStatusBatch*](#setsuppliersstatusbatch)
+  - [*SetCustomersStatusBatch*](#setcustomersstatusbatch)
+  - [*SetProductsStatusBatch*](#setproductsstatusbatch)
 
 # Accessing the connector
 A connector is a collection of Queries and Mutations. One SDK is generated for each connector - this SDK is generated for the connector `app`. You can find more information about connectors in the [Data Connect documentation](https://firebase.google.com/docs/data-connect#how-does).
@@ -4078,6 +4084,678 @@ const ref = setPromotionStatusRef({ id: ..., active: ..., });
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
 const ref = setPromotionStatusRef(dataConnect, setPromotionStatusVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+## SetCategoriesStatusBatch
+You can execute the `SetCategoriesStatusBatch` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+setCategoriesStatusBatch(vars: SetCategoriesStatusBatchVariables): MutationPromise<SetCategoriesStatusBatchData, SetCategoriesStatusBatchVariables>;
+
+interface SetCategoriesStatusBatchRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SetCategoriesStatusBatchVariables): MutationRef<SetCategoriesStatusBatchData, SetCategoriesStatusBatchVariables>;
+}
+export const setCategoriesStatusBatchRef: SetCategoriesStatusBatchRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+setCategoriesStatusBatch(dc: DataConnect, vars: SetCategoriesStatusBatchVariables): MutationPromise<SetCategoriesStatusBatchData, SetCategoriesStatusBatchVariables>;
+
+interface SetCategoriesStatusBatchRef {
+  ...
+  (dc: DataConnect, vars: SetCategoriesStatusBatchVariables): MutationRef<SetCategoriesStatusBatchData, SetCategoriesStatusBatchVariables>;
+}
+export const setCategoriesStatusBatchRef: SetCategoriesStatusBatchRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the setCategoriesStatusBatchRef:
+```typescript
+const name = setCategoriesStatusBatchRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `SetCategoriesStatusBatch` mutation requires an argument of type `SetCategoriesStatusBatchVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface SetCategoriesStatusBatchVariables {
+  ids: unknown;
+  active: boolean;
+}
+```
+### Return Type
+Recall that executing the `SetCategoriesStatusBatch` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `SetCategoriesStatusBatchData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface SetCategoriesStatusBatchData {
+  _execute?: number | null;
+}
+```
+### Using `SetCategoriesStatusBatch`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, setCategoriesStatusBatch, SetCategoriesStatusBatchVariables } from '@insightpad/dataconnect';
+
+// The `SetCategoriesStatusBatch` mutation requires an argument of type `SetCategoriesStatusBatchVariables`:
+const setCategoriesStatusBatchVars: SetCategoriesStatusBatchVariables = {
+  ids: ..., 
+  active: ..., 
+};
+
+// Call the `setCategoriesStatusBatch()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await setCategoriesStatusBatch(setCategoriesStatusBatchVars);
+// Variables can be defined inline as well.
+const { data } = await setCategoriesStatusBatch({ ids: ..., active: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await setCategoriesStatusBatch(dataConnect, setCategoriesStatusBatchVars);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+setCategoriesStatusBatch(setCategoriesStatusBatchVars).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+### Using `SetCategoriesStatusBatch`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, setCategoriesStatusBatchRef, SetCategoriesStatusBatchVariables } from '@insightpad/dataconnect';
+
+// The `SetCategoriesStatusBatch` mutation requires an argument of type `SetCategoriesStatusBatchVariables`:
+const setCategoriesStatusBatchVars: SetCategoriesStatusBatchVariables = {
+  ids: ..., 
+  active: ..., 
+};
+
+// Call the `setCategoriesStatusBatchRef()` function to get a reference to the mutation.
+const ref = setCategoriesStatusBatchRef(setCategoriesStatusBatchVars);
+// Variables can be defined inline as well.
+const ref = setCategoriesStatusBatchRef({ ids: ..., active: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = setCategoriesStatusBatchRef(dataConnect, setCategoriesStatusBatchVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+## SetSubcategoriesStatusBatch
+You can execute the `SetSubcategoriesStatusBatch` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+setSubcategoriesStatusBatch(vars: SetSubcategoriesStatusBatchVariables): MutationPromise<SetSubcategoriesStatusBatchData, SetSubcategoriesStatusBatchVariables>;
+
+interface SetSubcategoriesStatusBatchRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SetSubcategoriesStatusBatchVariables): MutationRef<SetSubcategoriesStatusBatchData, SetSubcategoriesStatusBatchVariables>;
+}
+export const setSubcategoriesStatusBatchRef: SetSubcategoriesStatusBatchRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+setSubcategoriesStatusBatch(dc: DataConnect, vars: SetSubcategoriesStatusBatchVariables): MutationPromise<SetSubcategoriesStatusBatchData, SetSubcategoriesStatusBatchVariables>;
+
+interface SetSubcategoriesStatusBatchRef {
+  ...
+  (dc: DataConnect, vars: SetSubcategoriesStatusBatchVariables): MutationRef<SetSubcategoriesStatusBatchData, SetSubcategoriesStatusBatchVariables>;
+}
+export const setSubcategoriesStatusBatchRef: SetSubcategoriesStatusBatchRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the setSubcategoriesStatusBatchRef:
+```typescript
+const name = setSubcategoriesStatusBatchRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `SetSubcategoriesStatusBatch` mutation requires an argument of type `SetSubcategoriesStatusBatchVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface SetSubcategoriesStatusBatchVariables {
+  ids: unknown;
+  active: boolean;
+}
+```
+### Return Type
+Recall that executing the `SetSubcategoriesStatusBatch` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `SetSubcategoriesStatusBatchData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface SetSubcategoriesStatusBatchData {
+  _execute?: number | null;
+}
+```
+### Using `SetSubcategoriesStatusBatch`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, setSubcategoriesStatusBatch, SetSubcategoriesStatusBatchVariables } from '@insightpad/dataconnect';
+
+// The `SetSubcategoriesStatusBatch` mutation requires an argument of type `SetSubcategoriesStatusBatchVariables`:
+const setSubcategoriesStatusBatchVars: SetSubcategoriesStatusBatchVariables = {
+  ids: ..., 
+  active: ..., 
+};
+
+// Call the `setSubcategoriesStatusBatch()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await setSubcategoriesStatusBatch(setSubcategoriesStatusBatchVars);
+// Variables can be defined inline as well.
+const { data } = await setSubcategoriesStatusBatch({ ids: ..., active: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await setSubcategoriesStatusBatch(dataConnect, setSubcategoriesStatusBatchVars);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+setSubcategoriesStatusBatch(setSubcategoriesStatusBatchVars).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+### Using `SetSubcategoriesStatusBatch`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, setSubcategoriesStatusBatchRef, SetSubcategoriesStatusBatchVariables } from '@insightpad/dataconnect';
+
+// The `SetSubcategoriesStatusBatch` mutation requires an argument of type `SetSubcategoriesStatusBatchVariables`:
+const setSubcategoriesStatusBatchVars: SetSubcategoriesStatusBatchVariables = {
+  ids: ..., 
+  active: ..., 
+};
+
+// Call the `setSubcategoriesStatusBatchRef()` function to get a reference to the mutation.
+const ref = setSubcategoriesStatusBatchRef(setSubcategoriesStatusBatchVars);
+// Variables can be defined inline as well.
+const ref = setSubcategoriesStatusBatchRef({ ids: ..., active: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = setSubcategoriesStatusBatchRef(dataConnect, setSubcategoriesStatusBatchVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+## SetBranchesStatusBatch
+You can execute the `SetBranchesStatusBatch` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+setBranchesStatusBatch(vars: SetBranchesStatusBatchVariables): MutationPromise<SetBranchesStatusBatchData, SetBranchesStatusBatchVariables>;
+
+interface SetBranchesStatusBatchRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SetBranchesStatusBatchVariables): MutationRef<SetBranchesStatusBatchData, SetBranchesStatusBatchVariables>;
+}
+export const setBranchesStatusBatchRef: SetBranchesStatusBatchRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+setBranchesStatusBatch(dc: DataConnect, vars: SetBranchesStatusBatchVariables): MutationPromise<SetBranchesStatusBatchData, SetBranchesStatusBatchVariables>;
+
+interface SetBranchesStatusBatchRef {
+  ...
+  (dc: DataConnect, vars: SetBranchesStatusBatchVariables): MutationRef<SetBranchesStatusBatchData, SetBranchesStatusBatchVariables>;
+}
+export const setBranchesStatusBatchRef: SetBranchesStatusBatchRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the setBranchesStatusBatchRef:
+```typescript
+const name = setBranchesStatusBatchRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `SetBranchesStatusBatch` mutation requires an argument of type `SetBranchesStatusBatchVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface SetBranchesStatusBatchVariables {
+  ids: unknown;
+  active: boolean;
+}
+```
+### Return Type
+Recall that executing the `SetBranchesStatusBatch` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `SetBranchesStatusBatchData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface SetBranchesStatusBatchData {
+  _execute?: number | null;
+}
+```
+### Using `SetBranchesStatusBatch`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, setBranchesStatusBatch, SetBranchesStatusBatchVariables } from '@insightpad/dataconnect';
+
+// The `SetBranchesStatusBatch` mutation requires an argument of type `SetBranchesStatusBatchVariables`:
+const setBranchesStatusBatchVars: SetBranchesStatusBatchVariables = {
+  ids: ..., 
+  active: ..., 
+};
+
+// Call the `setBranchesStatusBatch()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await setBranchesStatusBatch(setBranchesStatusBatchVars);
+// Variables can be defined inline as well.
+const { data } = await setBranchesStatusBatch({ ids: ..., active: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await setBranchesStatusBatch(dataConnect, setBranchesStatusBatchVars);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+setBranchesStatusBatch(setBranchesStatusBatchVars).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+### Using `SetBranchesStatusBatch`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, setBranchesStatusBatchRef, SetBranchesStatusBatchVariables } from '@insightpad/dataconnect';
+
+// The `SetBranchesStatusBatch` mutation requires an argument of type `SetBranchesStatusBatchVariables`:
+const setBranchesStatusBatchVars: SetBranchesStatusBatchVariables = {
+  ids: ..., 
+  active: ..., 
+};
+
+// Call the `setBranchesStatusBatchRef()` function to get a reference to the mutation.
+const ref = setBranchesStatusBatchRef(setBranchesStatusBatchVars);
+// Variables can be defined inline as well.
+const ref = setBranchesStatusBatchRef({ ids: ..., active: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = setBranchesStatusBatchRef(dataConnect, setBranchesStatusBatchVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+## SetSuppliersStatusBatch
+You can execute the `SetSuppliersStatusBatch` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+setSuppliersStatusBatch(vars: SetSuppliersStatusBatchVariables): MutationPromise<SetSuppliersStatusBatchData, SetSuppliersStatusBatchVariables>;
+
+interface SetSuppliersStatusBatchRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SetSuppliersStatusBatchVariables): MutationRef<SetSuppliersStatusBatchData, SetSuppliersStatusBatchVariables>;
+}
+export const setSuppliersStatusBatchRef: SetSuppliersStatusBatchRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+setSuppliersStatusBatch(dc: DataConnect, vars: SetSuppliersStatusBatchVariables): MutationPromise<SetSuppliersStatusBatchData, SetSuppliersStatusBatchVariables>;
+
+interface SetSuppliersStatusBatchRef {
+  ...
+  (dc: DataConnect, vars: SetSuppliersStatusBatchVariables): MutationRef<SetSuppliersStatusBatchData, SetSuppliersStatusBatchVariables>;
+}
+export const setSuppliersStatusBatchRef: SetSuppliersStatusBatchRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the setSuppliersStatusBatchRef:
+```typescript
+const name = setSuppliersStatusBatchRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `SetSuppliersStatusBatch` mutation requires an argument of type `SetSuppliersStatusBatchVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface SetSuppliersStatusBatchVariables {
+  ids: unknown;
+  active: boolean;
+}
+```
+### Return Type
+Recall that executing the `SetSuppliersStatusBatch` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `SetSuppliersStatusBatchData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface SetSuppliersStatusBatchData {
+  _execute?: number | null;
+}
+```
+### Using `SetSuppliersStatusBatch`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, setSuppliersStatusBatch, SetSuppliersStatusBatchVariables } from '@insightpad/dataconnect';
+
+// The `SetSuppliersStatusBatch` mutation requires an argument of type `SetSuppliersStatusBatchVariables`:
+const setSuppliersStatusBatchVars: SetSuppliersStatusBatchVariables = {
+  ids: ..., 
+  active: ..., 
+};
+
+// Call the `setSuppliersStatusBatch()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await setSuppliersStatusBatch(setSuppliersStatusBatchVars);
+// Variables can be defined inline as well.
+const { data } = await setSuppliersStatusBatch({ ids: ..., active: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await setSuppliersStatusBatch(dataConnect, setSuppliersStatusBatchVars);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+setSuppliersStatusBatch(setSuppliersStatusBatchVars).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+### Using `SetSuppliersStatusBatch`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, setSuppliersStatusBatchRef, SetSuppliersStatusBatchVariables } from '@insightpad/dataconnect';
+
+// The `SetSuppliersStatusBatch` mutation requires an argument of type `SetSuppliersStatusBatchVariables`:
+const setSuppliersStatusBatchVars: SetSuppliersStatusBatchVariables = {
+  ids: ..., 
+  active: ..., 
+};
+
+// Call the `setSuppliersStatusBatchRef()` function to get a reference to the mutation.
+const ref = setSuppliersStatusBatchRef(setSuppliersStatusBatchVars);
+// Variables can be defined inline as well.
+const ref = setSuppliersStatusBatchRef({ ids: ..., active: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = setSuppliersStatusBatchRef(dataConnect, setSuppliersStatusBatchVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+## SetCustomersStatusBatch
+You can execute the `SetCustomersStatusBatch` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+setCustomersStatusBatch(vars: SetCustomersStatusBatchVariables): MutationPromise<SetCustomersStatusBatchData, SetCustomersStatusBatchVariables>;
+
+interface SetCustomersStatusBatchRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SetCustomersStatusBatchVariables): MutationRef<SetCustomersStatusBatchData, SetCustomersStatusBatchVariables>;
+}
+export const setCustomersStatusBatchRef: SetCustomersStatusBatchRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+setCustomersStatusBatch(dc: DataConnect, vars: SetCustomersStatusBatchVariables): MutationPromise<SetCustomersStatusBatchData, SetCustomersStatusBatchVariables>;
+
+interface SetCustomersStatusBatchRef {
+  ...
+  (dc: DataConnect, vars: SetCustomersStatusBatchVariables): MutationRef<SetCustomersStatusBatchData, SetCustomersStatusBatchVariables>;
+}
+export const setCustomersStatusBatchRef: SetCustomersStatusBatchRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the setCustomersStatusBatchRef:
+```typescript
+const name = setCustomersStatusBatchRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `SetCustomersStatusBatch` mutation requires an argument of type `SetCustomersStatusBatchVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface SetCustomersStatusBatchVariables {
+  ids: unknown;
+  active: boolean;
+}
+```
+### Return Type
+Recall that executing the `SetCustomersStatusBatch` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `SetCustomersStatusBatchData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface SetCustomersStatusBatchData {
+  _execute?: number | null;
+}
+```
+### Using `SetCustomersStatusBatch`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, setCustomersStatusBatch, SetCustomersStatusBatchVariables } from '@insightpad/dataconnect';
+
+// The `SetCustomersStatusBatch` mutation requires an argument of type `SetCustomersStatusBatchVariables`:
+const setCustomersStatusBatchVars: SetCustomersStatusBatchVariables = {
+  ids: ..., 
+  active: ..., 
+};
+
+// Call the `setCustomersStatusBatch()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await setCustomersStatusBatch(setCustomersStatusBatchVars);
+// Variables can be defined inline as well.
+const { data } = await setCustomersStatusBatch({ ids: ..., active: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await setCustomersStatusBatch(dataConnect, setCustomersStatusBatchVars);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+setCustomersStatusBatch(setCustomersStatusBatchVars).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+### Using `SetCustomersStatusBatch`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, setCustomersStatusBatchRef, SetCustomersStatusBatchVariables } from '@insightpad/dataconnect';
+
+// The `SetCustomersStatusBatch` mutation requires an argument of type `SetCustomersStatusBatchVariables`:
+const setCustomersStatusBatchVars: SetCustomersStatusBatchVariables = {
+  ids: ..., 
+  active: ..., 
+};
+
+// Call the `setCustomersStatusBatchRef()` function to get a reference to the mutation.
+const ref = setCustomersStatusBatchRef(setCustomersStatusBatchVars);
+// Variables can be defined inline as well.
+const ref = setCustomersStatusBatchRef({ ids: ..., active: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = setCustomersStatusBatchRef(dataConnect, setCustomersStatusBatchVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+## SetProductsStatusBatch
+You can execute the `SetProductsStatusBatch` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+setProductsStatusBatch(vars: SetProductsStatusBatchVariables): MutationPromise<SetProductsStatusBatchData, SetProductsStatusBatchVariables>;
+
+interface SetProductsStatusBatchRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SetProductsStatusBatchVariables): MutationRef<SetProductsStatusBatchData, SetProductsStatusBatchVariables>;
+}
+export const setProductsStatusBatchRef: SetProductsStatusBatchRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+setProductsStatusBatch(dc: DataConnect, vars: SetProductsStatusBatchVariables): MutationPromise<SetProductsStatusBatchData, SetProductsStatusBatchVariables>;
+
+interface SetProductsStatusBatchRef {
+  ...
+  (dc: DataConnect, vars: SetProductsStatusBatchVariables): MutationRef<SetProductsStatusBatchData, SetProductsStatusBatchVariables>;
+}
+export const setProductsStatusBatchRef: SetProductsStatusBatchRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the setProductsStatusBatchRef:
+```typescript
+const name = setProductsStatusBatchRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `SetProductsStatusBatch` mutation requires an argument of type `SetProductsStatusBatchVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface SetProductsStatusBatchVariables {
+  ids: unknown;
+  active: boolean;
+}
+```
+### Return Type
+Recall that executing the `SetProductsStatusBatch` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `SetProductsStatusBatchData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface SetProductsStatusBatchData {
+  _execute?: number | null;
+}
+```
+### Using `SetProductsStatusBatch`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, setProductsStatusBatch, SetProductsStatusBatchVariables } from '@insightpad/dataconnect';
+
+// The `SetProductsStatusBatch` mutation requires an argument of type `SetProductsStatusBatchVariables`:
+const setProductsStatusBatchVars: SetProductsStatusBatchVariables = {
+  ids: ..., 
+  active: ..., 
+};
+
+// Call the `setProductsStatusBatch()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await setProductsStatusBatch(setProductsStatusBatchVars);
+// Variables can be defined inline as well.
+const { data } = await setProductsStatusBatch({ ids: ..., active: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await setProductsStatusBatch(dataConnect, setProductsStatusBatchVars);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+setProductsStatusBatch(setProductsStatusBatchVars).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+### Using `SetProductsStatusBatch`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, setProductsStatusBatchRef, SetProductsStatusBatchVariables } from '@insightpad/dataconnect';
+
+// The `SetProductsStatusBatch` mutation requires an argument of type `SetProductsStatusBatchVariables`:
+const setProductsStatusBatchVars: SetProductsStatusBatchVariables = {
+  ids: ..., 
+  active: ..., 
+};
+
+// Call the `setProductsStatusBatchRef()` function to get a reference to the mutation.
+const ref = setProductsStatusBatchRef(setProductsStatusBatchVars);
+// Variables can be defined inline as well.
+const ref = setProductsStatusBatchRef({ ids: ..., active: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = setProductsStatusBatchRef(dataConnect, setProductsStatusBatchVars);
 
 // Call `executeMutation()` on the reference to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.

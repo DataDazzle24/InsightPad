@@ -466,12 +466,39 @@ export interface SetBranchStatusVariables {
   active: boolean;
 }
 
+export interface SetBranchesStatusBatchData {
+  _execute?: number | null;
+}
+
+export interface SetBranchesStatusBatchVariables {
+  ids: unknown;
+  active: boolean;
+}
+
+export interface SetCategoriesStatusBatchData {
+  _execute?: number | null;
+}
+
+export interface SetCategoriesStatusBatchVariables {
+  ids: unknown;
+  active: boolean;
+}
+
 export interface SetCustomerStatusData {
   _execute?: number | null;
 }
 
 export interface SetCustomerStatusVariables {
   id: UUIDString;
+  active: boolean;
+}
+
+export interface SetCustomersStatusBatchData {
+  _execute?: number | null;
+}
+
+export interface SetCustomersStatusBatchVariables {
+  ids: unknown;
   active: boolean;
 }
 
@@ -484,6 +511,15 @@ export interface SetProductStatusVariables {
   active: boolean;
 }
 
+export interface SetProductsStatusBatchData {
+  _execute?: number | null;
+}
+
+export interface SetProductsStatusBatchVariables {
+  ids: unknown;
+  active: boolean;
+}
+
 export interface SetPromotionStatusData {
   _execute?: number | null;
 }
@@ -493,12 +529,30 @@ export interface SetPromotionStatusVariables {
   active: boolean;
 }
 
+export interface SetSubcategoriesStatusBatchData {
+  _execute?: number | null;
+}
+
+export interface SetSubcategoriesStatusBatchVariables {
+  ids: unknown;
+  active: boolean;
+}
+
 export interface SetSupplierStatusData {
   _execute?: number | null;
 }
 
 export interface SetSupplierStatusVariables {
   id: UUIDString;
+  active: boolean;
+}
+
+export interface SetSuppliersStatusBatchData {
+  _execute?: number | null;
+}
+
+export interface SetSuppliersStatusBatchVariables {
+  ids: unknown;
   active: boolean;
 }
 
@@ -842,6 +896,78 @@ export const setPromotionStatusRef: SetPromotionStatusRef;
 
 export function setPromotionStatus(vars: SetPromotionStatusVariables): MutationPromise<SetPromotionStatusData, SetPromotionStatusVariables>;
 export function setPromotionStatus(dc: DataConnect, vars: SetPromotionStatusVariables): MutationPromise<SetPromotionStatusData, SetPromotionStatusVariables>;
+
+interface SetCategoriesStatusBatchRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SetCategoriesStatusBatchVariables): MutationRef<SetCategoriesStatusBatchData, SetCategoriesStatusBatchVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SetCategoriesStatusBatchVariables): MutationRef<SetCategoriesStatusBatchData, SetCategoriesStatusBatchVariables>;
+  operationName: string;
+}
+export const setCategoriesStatusBatchRef: SetCategoriesStatusBatchRef;
+
+export function setCategoriesStatusBatch(vars: SetCategoriesStatusBatchVariables): MutationPromise<SetCategoriesStatusBatchData, SetCategoriesStatusBatchVariables>;
+export function setCategoriesStatusBatch(dc: DataConnect, vars: SetCategoriesStatusBatchVariables): MutationPromise<SetCategoriesStatusBatchData, SetCategoriesStatusBatchVariables>;
+
+interface SetSubcategoriesStatusBatchRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SetSubcategoriesStatusBatchVariables): MutationRef<SetSubcategoriesStatusBatchData, SetSubcategoriesStatusBatchVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SetSubcategoriesStatusBatchVariables): MutationRef<SetSubcategoriesStatusBatchData, SetSubcategoriesStatusBatchVariables>;
+  operationName: string;
+}
+export const setSubcategoriesStatusBatchRef: SetSubcategoriesStatusBatchRef;
+
+export function setSubcategoriesStatusBatch(vars: SetSubcategoriesStatusBatchVariables): MutationPromise<SetSubcategoriesStatusBatchData, SetSubcategoriesStatusBatchVariables>;
+export function setSubcategoriesStatusBatch(dc: DataConnect, vars: SetSubcategoriesStatusBatchVariables): MutationPromise<SetSubcategoriesStatusBatchData, SetSubcategoriesStatusBatchVariables>;
+
+interface SetBranchesStatusBatchRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SetBranchesStatusBatchVariables): MutationRef<SetBranchesStatusBatchData, SetBranchesStatusBatchVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SetBranchesStatusBatchVariables): MutationRef<SetBranchesStatusBatchData, SetBranchesStatusBatchVariables>;
+  operationName: string;
+}
+export const setBranchesStatusBatchRef: SetBranchesStatusBatchRef;
+
+export function setBranchesStatusBatch(vars: SetBranchesStatusBatchVariables): MutationPromise<SetBranchesStatusBatchData, SetBranchesStatusBatchVariables>;
+export function setBranchesStatusBatch(dc: DataConnect, vars: SetBranchesStatusBatchVariables): MutationPromise<SetBranchesStatusBatchData, SetBranchesStatusBatchVariables>;
+
+interface SetSuppliersStatusBatchRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SetSuppliersStatusBatchVariables): MutationRef<SetSuppliersStatusBatchData, SetSuppliersStatusBatchVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SetSuppliersStatusBatchVariables): MutationRef<SetSuppliersStatusBatchData, SetSuppliersStatusBatchVariables>;
+  operationName: string;
+}
+export const setSuppliersStatusBatchRef: SetSuppliersStatusBatchRef;
+
+export function setSuppliersStatusBatch(vars: SetSuppliersStatusBatchVariables): MutationPromise<SetSuppliersStatusBatchData, SetSuppliersStatusBatchVariables>;
+export function setSuppliersStatusBatch(dc: DataConnect, vars: SetSuppliersStatusBatchVariables): MutationPromise<SetSuppliersStatusBatchData, SetSuppliersStatusBatchVariables>;
+
+interface SetCustomersStatusBatchRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SetCustomersStatusBatchVariables): MutationRef<SetCustomersStatusBatchData, SetCustomersStatusBatchVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SetCustomersStatusBatchVariables): MutationRef<SetCustomersStatusBatchData, SetCustomersStatusBatchVariables>;
+  operationName: string;
+}
+export const setCustomersStatusBatchRef: SetCustomersStatusBatchRef;
+
+export function setCustomersStatusBatch(vars: SetCustomersStatusBatchVariables): MutationPromise<SetCustomersStatusBatchData, SetCustomersStatusBatchVariables>;
+export function setCustomersStatusBatch(dc: DataConnect, vars: SetCustomersStatusBatchVariables): MutationPromise<SetCustomersStatusBatchData, SetCustomersStatusBatchVariables>;
+
+interface SetProductsStatusBatchRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SetProductsStatusBatchVariables): MutationRef<SetProductsStatusBatchData, SetProductsStatusBatchVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SetProductsStatusBatchVariables): MutationRef<SetProductsStatusBatchData, SetProductsStatusBatchVariables>;
+  operationName: string;
+}
+export const setProductsStatusBatchRef: SetProductsStatusBatchRef;
+
+export function setProductsStatusBatch(vars: SetProductsStatusBatchVariables): MutationPromise<SetProductsStatusBatchData, SetProductsStatusBatchVariables>;
+export function setProductsStatusBatch(dc: DataConnect, vars: SetProductsStatusBatchVariables): MutationPromise<SetProductsStatusBatchData, SetProductsStatusBatchVariables>;
 
 interface GetCurrentUserRef {
   /* Allow users to create refs without passing in DataConnect */
