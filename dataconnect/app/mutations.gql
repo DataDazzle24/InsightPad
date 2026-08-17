@@ -688,8 +688,16 @@ mutation CreateSubcategoriesBatch($items: Any!) @auth(level: USER) @transaction 
       JOIN categories c ON c.id=v.category_id AND c.tenant_id=a.tenant_id AND c.active AND c.deleted_at IS NULL
       CROSS JOIN guard g
       WHERE g.input_count BETWEEN 1 AND 20 AND g.input_count=g.distinct_count
+        AND NOT EXISTS(
+          SELECT 1 FROM validated invalid
+          LEFT JOIN categories valid_category
+            ON valid_category.id=invalid.category_id AND valid_category.tenant_id=a.tenant_id
+           AND valid_category.active AND valid_category.deleted_at IS NULL
+          WHERE valid_category.id IS NULL
+        )
         AND NOT EXISTS(SELECT 1 FROM validated candidate JOIN subcategories existing
-          ON existing.tenant_id=a.tenant_id AND existing.category_id=candidate.category_id AND existing.active
+          ON existing.tenant_id=a.tenant_id AND existing.category_id=candidate.category_id
+         AND existing.active AND existing.deleted_at IS NULL
           AND lower(btrim(existing.name))=lower(candidate.name))
       RETURNING id,tenant_id,category_id,name
     )
@@ -1003,8 +1011,11 @@ mutation SetPromotionStatus($id: UUID!, $active: Boolean!) @auth(level: USER) @t
       WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_update,rp.can_update,false)
     ),changed AS (
       UPDATE promotions p SET active=$3,deleted_at=CASE WHEN $3 THEN NULL ELSE now() END,updated_at=now()
-      FROM actor a JOIN products product ON product.id=p.product_id AND product.tenant_id=a.tenant_id AND product.active
-      WHERE p.id=$2 AND p.tenant_id=a.tenant_id AND (NOT $3 OR NOT EXISTS(
+      FROM actor a, products product
+      WHERE p.id=$2 AND p.tenant_id=a.tenant_id
+        AND product.id=p.product_id AND product.tenant_id=a.tenant_id
+        AND product.active AND product.deleted_at IS NULL
+        AND (NOT $3 OR NOT EXISTS(
         SELECT 1 FROM promotions x WHERE x.tenant_id=p.tenant_id AND x.product_id=p.product_id AND x.active
           AND x.deleted_at IS NULL AND x.id<>p.id AND tstzrange(x.starts_at,x.ends_at,'[]')&&tstzrange(p.starts_at,p.ends_at,'[]')))
       RETURNING p.id,p.tenant_id,p.product_id,p.active
