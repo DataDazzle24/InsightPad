@@ -30,6 +30,22 @@ export interface AppPage_Key {
   __typename?: 'AppPage_Key';
 }
 
+export interface ArchiveCategoryData {
+  _execute?: number | null;
+}
+
+export interface ArchiveCategoryVariables {
+  id: UUIDString;
+}
+
+export interface ArchiveSubcategoryData {
+  _execute?: number | null;
+}
+
+export interface ArchiveSubcategoryVariables {
+  id: UUIDString;
+}
+
 export interface AuditLog_Key {
   id: UUIDString;
   __typename?: 'AuditLog_Key';
@@ -84,9 +100,30 @@ export interface CashSession_Key {
   __typename?: 'CashSession_Key';
 }
 
+export interface CategoryOptionsData {
+  _select?: unknown[] | null;
+}
+
 export interface Category_Key {
   id: UUIDString;
   __typename?: 'Category_Key';
+}
+
+export interface CreateCategoryData {
+  _execute?: number | null;
+}
+
+export interface CreateCategoryVariables {
+  name: string;
+}
+
+export interface CreateSubcategoryData {
+  _execute?: number | null;
+}
+
+export interface CreateSubcategoryVariables {
+  categoryId: UUIDString;
+  name: string;
 }
 
 export interface Customer_Key {
@@ -183,6 +220,27 @@ export interface GetCurrentUserData {
   } & User_Key;
 }
 
+export interface ListCategoriesData {
+  _select?: unknown[] | null;
+}
+
+export interface ListCategoriesVariables {
+  search: string;
+  limit: number;
+  offset: number;
+}
+
+export interface ListSubcategoriesData {
+  _select?: unknown[] | null;
+}
+
+export interface ListSubcategoriesVariables {
+  search: string;
+  categoryId?: UUIDString | null;
+  limit: number;
+  offset: number;
+}
+
 export interface OfflineOperation_Key {
   id: UUIDString;
   __typename?: 'OfflineOperation_Key';
@@ -276,6 +334,25 @@ export interface Tenant_Key {
   __typename?: 'Tenant_Key';
 }
 
+export interface UpdateCategoryData {
+  _execute?: number | null;
+}
+
+export interface UpdateCategoryVariables {
+  id: UUIDString;
+  name: string;
+}
+
+export interface UpdateSubcategoryData {
+  _execute?: number | null;
+}
+
+export interface UpdateSubcategoryVariables {
+  id: UUIDString;
+  categoryId: UUIDString;
+  name: string;
+}
+
 export interface UserBranch_Key {
   userId: string;
   branchId: UUIDString;
@@ -305,6 +382,78 @@ export const bootstrapNavigationCatalogRef: BootstrapNavigationCatalogRef;
 export function bootstrapNavigationCatalog(vars: BootstrapNavigationCatalogVariables): MutationPromise<BootstrapNavigationCatalogData, BootstrapNavigationCatalogVariables>;
 export function bootstrapNavigationCatalog(dc: DataConnect, vars: BootstrapNavigationCatalogVariables): MutationPromise<BootstrapNavigationCatalogData, BootstrapNavigationCatalogVariables>;
 
+interface CreateCategoryRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CreateCategoryVariables): MutationRef<CreateCategoryData, CreateCategoryVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: CreateCategoryVariables): MutationRef<CreateCategoryData, CreateCategoryVariables>;
+  operationName: string;
+}
+export const createCategoryRef: CreateCategoryRef;
+
+export function createCategory(vars: CreateCategoryVariables): MutationPromise<CreateCategoryData, CreateCategoryVariables>;
+export function createCategory(dc: DataConnect, vars: CreateCategoryVariables): MutationPromise<CreateCategoryData, CreateCategoryVariables>;
+
+interface UpdateCategoryRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: UpdateCategoryVariables): MutationRef<UpdateCategoryData, UpdateCategoryVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: UpdateCategoryVariables): MutationRef<UpdateCategoryData, UpdateCategoryVariables>;
+  operationName: string;
+}
+export const updateCategoryRef: UpdateCategoryRef;
+
+export function updateCategory(vars: UpdateCategoryVariables): MutationPromise<UpdateCategoryData, UpdateCategoryVariables>;
+export function updateCategory(dc: DataConnect, vars: UpdateCategoryVariables): MutationPromise<UpdateCategoryData, UpdateCategoryVariables>;
+
+interface ArchiveCategoryRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ArchiveCategoryVariables): MutationRef<ArchiveCategoryData, ArchiveCategoryVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ArchiveCategoryVariables): MutationRef<ArchiveCategoryData, ArchiveCategoryVariables>;
+  operationName: string;
+}
+export const archiveCategoryRef: ArchiveCategoryRef;
+
+export function archiveCategory(vars: ArchiveCategoryVariables): MutationPromise<ArchiveCategoryData, ArchiveCategoryVariables>;
+export function archiveCategory(dc: DataConnect, vars: ArchiveCategoryVariables): MutationPromise<ArchiveCategoryData, ArchiveCategoryVariables>;
+
+interface CreateSubcategoryRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CreateSubcategoryVariables): MutationRef<CreateSubcategoryData, CreateSubcategoryVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: CreateSubcategoryVariables): MutationRef<CreateSubcategoryData, CreateSubcategoryVariables>;
+  operationName: string;
+}
+export const createSubcategoryRef: CreateSubcategoryRef;
+
+export function createSubcategory(vars: CreateSubcategoryVariables): MutationPromise<CreateSubcategoryData, CreateSubcategoryVariables>;
+export function createSubcategory(dc: DataConnect, vars: CreateSubcategoryVariables): MutationPromise<CreateSubcategoryData, CreateSubcategoryVariables>;
+
+interface UpdateSubcategoryRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: UpdateSubcategoryVariables): MutationRef<UpdateSubcategoryData, UpdateSubcategoryVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: UpdateSubcategoryVariables): MutationRef<UpdateSubcategoryData, UpdateSubcategoryVariables>;
+  operationName: string;
+}
+export const updateSubcategoryRef: UpdateSubcategoryRef;
+
+export function updateSubcategory(vars: UpdateSubcategoryVariables): MutationPromise<UpdateSubcategoryData, UpdateSubcategoryVariables>;
+export function updateSubcategory(dc: DataConnect, vars: UpdateSubcategoryVariables): MutationPromise<UpdateSubcategoryData, UpdateSubcategoryVariables>;
+
+interface ArchiveSubcategoryRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ArchiveSubcategoryVariables): MutationRef<ArchiveSubcategoryData, ArchiveSubcategoryVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ArchiveSubcategoryVariables): MutationRef<ArchiveSubcategoryData, ArchiveSubcategoryVariables>;
+  operationName: string;
+}
+export const archiveSubcategoryRef: ArchiveSubcategoryRef;
+
+export function archiveSubcategory(vars: ArchiveSubcategoryVariables): MutationPromise<ArchiveSubcategoryData, ArchiveSubcategoryVariables>;
+export function archiveSubcategory(dc: DataConnect, vars: ArchiveSubcategoryVariables): MutationPromise<ArchiveSubcategoryData, ArchiveSubcategoryVariables>;
+
 interface GetCurrentUserRef {
   /* Allow users to create refs without passing in DataConnect */
   (): QueryRef<GetCurrentUserData, undefined>;
@@ -328,4 +477,40 @@ export const getCurrentUserAccessRef: GetCurrentUserAccessRef;
 
 export function getCurrentUserAccess(options?: ExecuteQueryOptions): QueryPromise<GetCurrentUserAccessData, undefined>;
 export function getCurrentUserAccess(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetCurrentUserAccessData, undefined>;
+
+interface ListCategoriesRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ListCategoriesVariables): QueryRef<ListCategoriesData, ListCategoriesVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ListCategoriesVariables): QueryRef<ListCategoriesData, ListCategoriesVariables>;
+  operationName: string;
+}
+export const listCategoriesRef: ListCategoriesRef;
+
+export function listCategories(vars: ListCategoriesVariables, options?: ExecuteQueryOptions): QueryPromise<ListCategoriesData, ListCategoriesVariables>;
+export function listCategories(dc: DataConnect, vars: ListCategoriesVariables, options?: ExecuteQueryOptions): QueryPromise<ListCategoriesData, ListCategoriesVariables>;
+
+interface ListSubcategoriesRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ListSubcategoriesVariables): QueryRef<ListSubcategoriesData, ListSubcategoriesVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ListSubcategoriesVariables): QueryRef<ListSubcategoriesData, ListSubcategoriesVariables>;
+  operationName: string;
+}
+export const listSubcategoriesRef: ListSubcategoriesRef;
+
+export function listSubcategories(vars: ListSubcategoriesVariables, options?: ExecuteQueryOptions): QueryPromise<ListSubcategoriesData, ListSubcategoriesVariables>;
+export function listSubcategories(dc: DataConnect, vars: ListSubcategoriesVariables, options?: ExecuteQueryOptions): QueryPromise<ListSubcategoriesData, ListSubcategoriesVariables>;
+
+interface CategoryOptionsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<CategoryOptionsData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<CategoryOptionsData, undefined>;
+  operationName: string;
+}
+export const categoryOptionsRef: CategoryOptionsRef;
+
+export function categoryOptions(options?: ExecuteQueryOptions): QueryPromise<CategoryOptionsData, undefined>;
+export function categoryOptions(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<CategoryOptionsData, undefined>;
 
