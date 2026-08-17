@@ -7,6 +7,7 @@ import {
 } from '@insightpad/dataconnect'
 import { useAuth } from '../auth/useAuth'
 import { firebaseApp } from '../lib/firebase'
+import { csvSafe,digits,isValidCnpj,isValidCpf,maskRegistrationValue,moneyFromCents } from '../utils/registration'
 import { ProductExtras } from './ProductExtras'
 
 const dc=getDataConnect(firebaseApp,connectorConfig),RESULT_LIMIT=5000
@@ -16,28 +17,13 @@ type Field={key:string;label:string;type?:'text'|'email'|'date'|'number'|'textar
 type Config={title:string;singular:string;description:string;columns:{key:string;label:string;format?:(v:unknown,r:Row)=>string}[];fields:Field[]}
 type IdName={id:string;name:string};type SubcategoryOption=IdName&{categoryId:string};type ProductOption=IdName&{costPriceCents:string};type KitItem={productId:string;quantity:number;allocatedUnitPriceCents?:string};type RegistrationOptionSet={categories:IdName[];subcategories:SubcategoryOption[];suppliers:IdName[];products:ProductOption[]}
 type ModalSection={key:string;label:string;icon:string}
-const digits=(v:string)=>v.replace(/\D/g,'')
-const maskValue=(key:string,value:string)=>{const d=digits(value)
- if(key==='cpf')return d.slice(0,11).replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2')
- if(key==='cnpj')return d.slice(0,14).replace(/(\d{2})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1/$2').replace(/(\d{4})(\d{1,2})$/,'$1-$2')
- if(key==='postalCode')return d.slice(0,8).replace(/(\d{5})(\d)/,'$1-$2')
- if(key.toLowerCase().includes('phone'))return d.slice(0,11).replace(/(\d{2})(\d)/,'($1) $2').replace(/(\d{5})(\d{4})$/,'$1-$2')
- if(key==='costPriceCents'||key==='salePriceCents')return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(d||0)/100)
- return value}
 const moneyToNumber=(value:unknown)=>Number(digits(String(value??'')))/100
-const validCpf=(value:unknown)=>{const cpf=digits(String(value??''));if(!/^\d{11}$/.test(cpf)||/^(\d)\1{10}$/.test(cpf))return false
- const calc=(length:number)=>{let sum=0;for(let i=0;i<length;i++)sum+=Number(cpf[i])*(length+1-i);const rest=(sum*10)%11;return rest===10?0:rest}
- return calc(9)===Number(cpf[9])&&calc(10)===Number(cpf[10])}
-const validCnpj=(value:unknown)=>{const cnpj=digits(String(value??''));if(!/^\d{14}$/.test(cnpj)||/^(\d)\1{13}$/.test(cnpj))return false
- const digit=(base:string,weights:number[])=>{const rest=base.split('').reduce((sum,n,index)=>sum+Number(n)*weights[index],0)%11;return rest<2?0:11-rest}
- return digit(cnpj.slice(0,12),[5,4,3,2,9,8,7,6,5,4,3,2])===Number(cnpj[12])&&digit(cnpj.slice(0,13),[6,5,4,3,2,9,8,7,6,5,4,3,2])===Number(cnpj[13])}
 const UF_OPTIONS='AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO'.split(' ').map(value=>({value,label:value}))
 const SIZE_OPTIONS:Record<string,string[]>={ML:['150','250','275','313','330','350','473','500','510','600','750','965','998'],L:['1','1,5','2','2,5','3'],KG:['1','3','5'],G:['76','140','150','500'],UN:['100']}
 const CLOTHING_TYPES=[{value:'NUMERICO',label:'Numérico'},{value:'LETRAS',label:'PP ao XGG'}]
 const CLOTHING_SIZES:Record<string,string[]>={NUMERICO:['34','36','38','40','42','44','46','48','50','52','54'],LETRAS:['PP','P','M','G','GG','XG','XGG']}
 const SHOE_SIZES=Array.from({length:18},(_,index)=>String(index+28))
-const csvSafe=(value:string)=>/^[=+\-@]/.test(value)?`'${value}`:value
-const money=(v:unknown)=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(v??0)/100)
+const money=moneyFromCents
 const configs:Record<PageKey,Config>={
  CAD_FILIAL:{title:'Filiais',singular:'filial',description:'Configure unidades e pontos de operação.',columns:[
   {key:'name',label:'Filial'},{key:'internalCode',label:'Código'},{key:'city',label:'Cidade / UF',format:(_,r)=>[r.city,r.stateCode].filter(Boolean).join(' / ')||'—'},{key:'phone',label:'Telefone'}],
@@ -137,7 +123,7 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
  async function open(row?:Row){setEditing(row??null);setSection(modalSections[pageKey][0].key);const next:Record<string,unknown>={};let loadedKit:KitItem[]=[]
   for(const field of cfg.fields)next[field.key]=row?.[field.key]??(field.type==='checkbox'?false:'')
   if(pageKey==='CAD_CLIENTE')next.preferences=row?.preferences??{}
-  if(pageKey==='CAD_PRODUTO'){next.costPriceCents=maskValue('costPriceCents',String(row?.costPriceCents??0));next.salePriceCents=maskValue('salePriceCents',String(row?.salePriceCents??0))
+  if(pageKey==='CAD_PRODUTO'){next.costPriceCents=maskRegistrationValue('costPriceCents',String(row?.costPriceCents??0));next.salePriceCents=maskRegistrationValue('salePriceCents',String(row?.salePriceCents??0))
    if(row){try{const result=await productComponents(dc,{productId:row.id});loadedKit=(result.data._select??[]) as KitItem[]}catch{loadedKit=[]}}}
   setKitItems(loadedKit);setForm(next);setBaseline(JSON.stringify({form:next,kit:loadedKit}));setShowErrors(false);setModal(true)}
  function fieldOptions(field:Field){if(pageKey==='CAD_PRODUTO'&&field.key==='categoryId')return options.categories.map(x=>({value:x.id,label:x.name}))
@@ -154,8 +140,8 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
   }catch(error){console.error(error);setNotice('Não foi possível consultar o CEP. Preencha o endereço manualmente.')}finally{setBusy(false)}
  }
  function validate(){if(cfg.fields.some(f=>f.required&&!String(form[f.key]??'').trim()))return 'Preencha todos os campos obrigatórios.'
-  if(form.cpf&&!validCpf(form.cpf))return 'Informe um CPF válido, incluindo os dígitos verificadores.'
-  if(form.cnpj&&!validCnpj(form.cnpj))return 'Informe um CNPJ válido, incluindo os dígitos verificadores.'
+  if(form.cpf&&!isValidCpf(form.cpf))return 'Informe um CPF válido, incluindo os dígitos verificadores.'
+  if(form.cnpj&&!isValidCnpj(form.cnpj))return 'Informe um CNPJ válido, incluindo os dígitos verificadores.'
   if(form.cpf&&form.cnpj)return 'Informe apenas CPF ou CNPJ para o mesmo cadastro.'
   if(form.email&&!/^\S+@\S+\.\S+$/.test(String(form.email)))return 'E-mail inválido.'
   if(form.postalCode&&digits(String(form.postalCode)).length!==8)return 'O CEP deve possuir oito dígitos.'
@@ -218,7 +204,7 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
     <span>{field.label}{field.required?' *':''}</span>{field.type==='textarea'?<textarea value={String(form[field.key]??'')} onChange={e=>setForm({...form,[field.key]:e.target.value})}/>:
     field.type==='checkbox'?<input type="checkbox" checked={Boolean(form[field.key])} onChange={e=>{const checked=e.target.checked;setForm({...form,[field.key]:checked});if(field.key==='bundleProduct'&&!checked)setKitItems([])}}/>:
     field.type==='select'?<select value={String(form[field.key]??'')} onChange={e=>setForm({...form,[field.key]:e.target.value,...(field.key==='sizeType'?{size:''}:{}),...(field.key==='categoryId'?{subcategoryId:''}:{}),...(field.key==='lowerClothingType'?{lowerClothingSize:''}:{}),...(field.key==='upperClothingType'?{upperClothingSize:''}:{})})}><option value="">Selecione</option>{fieldOptions(field).map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</select>:
-    <input type={field.type==='number'?'number':field.type==='money'?'text':field.type??'text'} min={field.type==='number'?0:undefined} inputMode={field.type==='money'?'numeric':undefined} disabled={field.key==='costPriceCents'&&Boolean(form.bundleProduct)} value={String(field.key==='costPriceCents'&&form.bundleProduct?maskValue('costPriceCents',String(Math.round(comboCostCents))):form[field.key]??'')} onChange={e=>setForm({...form,[field.key]:maskValue(field.key,e.target.value)})} aria-invalid={showErrors&&field.required&&!String(form[field.key]??'').trim()} onBlur={field.key==='postalCode'?e=>void lookupCep(e.target.value):undefined}/>}
+    <input type={field.type==='number'?'number':field.type==='money'?'text':field.type??'text'} min={field.type==='number'?0:undefined} inputMode={field.type==='money'?'numeric':undefined} disabled={field.key==='costPriceCents'&&Boolean(form.bundleProduct)} value={String(field.key==='costPriceCents'&&form.bundleProduct?maskRegistrationValue('costPriceCents',String(Math.round(comboCostCents))):form[field.key]??'')} onChange={e=>setForm({...form,[field.key]:maskRegistrationValue(field.key,e.target.value)})} aria-invalid={showErrors&&field.required&&!String(form[field.key]??'').trim()} onBlur={field.key==='postalCode'?e=>void lookupCep(e.target.value):undefined}/>}
     {showErrors&&field.required&&!String(form[field.key]??'').trim()&&<small className="master-field-error">Este campo é obrigatório.</small>}</label>)}</div>
     {pageKey==='CAD_PRODUTO'&&section==='pricing'&&<div className="product-margin">Margem estimada: <strong>{moneyToNumber(form.salePriceCents)>0?(((moneyToNumber(form.salePriceCents)-(form.bundleProduct?comboCostCents/100:moneyToNumber(form.costPriceCents)))/moneyToNumber(form.salePriceCents))*100).toFixed(1):'0.0'}%</strong>{Boolean(form.bundleProduct)&&<small> Custo calculado automaticamente pelos componentes.</small>}</div>}
     {pageKey==='CAD_PRODUTO'&&section==='kit'&&Boolean(form.bundleProduct)&&<section className="inline-kit"><header><div><strong>Produtos do combo</strong><small>O custo é a soma do custo de cada produto multiplicado pela quantidade.</small></div><button type="button" className="catalog-primary" onClick={()=>{const available=options.products.find(p=>p.id!==editing?.id&&!kitItems.some(k=>k.productId===p.id));if(available)setKitItems(v=>[...v,{productId:available.id,quantity:1}]);else setNotice('Não existem outros produtos disponíveis para adicionar.')}}>+ Adicionar produto</button></header>
