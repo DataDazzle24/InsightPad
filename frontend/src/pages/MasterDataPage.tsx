@@ -36,6 +36,7 @@ const SIZE_OPTIONS:Record<string,string[]>={ML:['150','250','275','313','330','3
 const CLOTHING_TYPES=[{value:'NUMERICO',label:'Numérico'},{value:'LETRAS',label:'PP ao XGG'}]
 const CLOTHING_SIZES:Record<string,string[]>={NUMERICO:['34','36','38','40','42','44','46','48','50','52','54'],LETRAS:['PP','P','M','G','GG','XG','XGG']}
 const SHOE_SIZES=Array.from({length:18},(_,index)=>String(index+28))
+const csvSafe=(value:string)=>/^[=+\-@]/.test(value)?`'${value}`:value
 const money=(v:unknown)=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(v??0)/100)
 const configs:Record<PageKey,Config>={
  CAD_FILIAL:{title:'Filiais',singular:'filial',description:'Configure unidades e pontos de operação.',columns:[
@@ -184,7 +185,7 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
  function exportCsv(){const keys=Array.from(new Set(['id',...cfg.fields.map(field=>field.key),...Object.keys(filteredRows[0]??{}),'active','updatedAt']))
   const labels:Record<string,string>=Object.fromEntries(cfg.fields.map(field=>[field.key,field.label]));Object.assign(labels,{id:'ID',active:'Status',updatedAt:'Última atualização',categoryName:'Categoria',subcategoryName:'Subcategoria',supplierName:'Fornecedor'})
   const cell=(key:string,value:unknown)=>{if(key==='active')return value?'Ativo':'Inativo';const field=cfg.fields.find(item=>item.key===key);if(field?.type==='money')return money(value);if(typeof value==='boolean')return value?'Sim':'Não';if(value&&typeof value==='object')return JSON.stringify(value);return String(value??'')}
-  const lines=filteredRows.map(row=>keys.map(key=>`"${cell(key,row[key]).replaceAll('"','""')}"`).join(';'));const a=document.createElement('a')
+  const lines=filteredRows.map(row=>keys.map(key=>`"${csvSafe(cell(key,row[key])).replaceAll('"','""')}"`).join(';'));const a=document.createElement('a')
   a.href=URL.createObjectURL(new Blob([`\uFEFF${keys.map(key=>labels[key]??key).join(';')}\n${lines.join('\n')}`],{type:'text/csv'}));a.download=`${pageKey.toLowerCase()}-completo.csv`;a.click();URL.revokeObjectURL(a.href)}
 
  return <section className="catalog-page"><header><div><span className="eyebrow">Cadastros</span><h1>{cfg.title}</h1></div><div className="catalog-header-actions">
