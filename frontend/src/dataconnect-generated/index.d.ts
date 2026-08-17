@@ -138,6 +138,14 @@ export interface CreateCategoryVariables {
   name: string;
 }
 
+export interface CreatePlatformTenantData {
+  _execute?: number | null;
+}
+
+export interface CreatePlatformTenantVariables {
+  payload: unknown;
+}
+
 export interface CreateSubcategoriesBatchData {
   _execute?: number | null;
 }
@@ -248,9 +256,18 @@ export interface GetCurrentUserData {
       id: UUIDString;
       name: string;
       hierarchyLevel: number;
+      systemRole: boolean;
       active: boolean;
     } & Role_Key;
   } & User_Key;
+}
+
+export interface LinkPlatformUserData {
+  _execute?: number | null;
+}
+
+export interface LinkPlatformUserVariables {
+  payload: unknown;
 }
 
 export interface ListBranchesData {
@@ -339,6 +356,14 @@ export interface OfflineOperation_Key {
 export interface PaymentMethod_Key {
   id: UUIDString;
   __typename?: 'PaymentMethod_Key';
+}
+
+export interface PlatformAdminWorkspaceData {
+  _select?: unknown[] | null;
+}
+
+export interface PlatformAdminWorkspaceVariables {
+  requestKey: string;
 }
 
 export interface PostSaleData {
@@ -549,6 +574,24 @@ export interface SetCustomersStatusBatchData {
 
 export interface SetCustomersStatusBatchVariables {
   ids: unknown;
+  active: boolean;
+}
+
+export interface SetPlatformTenantStatusData {
+  _execute?: number | null;
+}
+
+export interface SetPlatformTenantStatusVariables {
+  tenantId: UUIDString;
+  active: boolean;
+}
+
+export interface SetPlatformUserStatusData {
+  _execute?: number | null;
+}
+
+export interface SetPlatformUserStatusVariables {
+  userId: string;
   active: boolean;
 }
 
@@ -1055,6 +1098,54 @@ export const cancelSaleRef: CancelSaleRef;
 export function cancelSale(vars: CancelSaleVariables): MutationPromise<CancelSaleData, CancelSaleVariables>;
 export function cancelSale(dc: DataConnect, vars: CancelSaleVariables): MutationPromise<CancelSaleData, CancelSaleVariables>;
 
+interface CreatePlatformTenantRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CreatePlatformTenantVariables): MutationRef<CreatePlatformTenantData, CreatePlatformTenantVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: CreatePlatformTenantVariables): MutationRef<CreatePlatformTenantData, CreatePlatformTenantVariables>;
+  operationName: string;
+}
+export const createPlatformTenantRef: CreatePlatformTenantRef;
+
+export function createPlatformTenant(vars: CreatePlatformTenantVariables): MutationPromise<CreatePlatformTenantData, CreatePlatformTenantVariables>;
+export function createPlatformTenant(dc: DataConnect, vars: CreatePlatformTenantVariables): MutationPromise<CreatePlatformTenantData, CreatePlatformTenantVariables>;
+
+interface SetPlatformTenantStatusRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SetPlatformTenantStatusVariables): MutationRef<SetPlatformTenantStatusData, SetPlatformTenantStatusVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SetPlatformTenantStatusVariables): MutationRef<SetPlatformTenantStatusData, SetPlatformTenantStatusVariables>;
+  operationName: string;
+}
+export const setPlatformTenantStatusRef: SetPlatformTenantStatusRef;
+
+export function setPlatformTenantStatus(vars: SetPlatformTenantStatusVariables): MutationPromise<SetPlatformTenantStatusData, SetPlatformTenantStatusVariables>;
+export function setPlatformTenantStatus(dc: DataConnect, vars: SetPlatformTenantStatusVariables): MutationPromise<SetPlatformTenantStatusData, SetPlatformTenantStatusVariables>;
+
+interface LinkPlatformUserRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: LinkPlatformUserVariables): MutationRef<LinkPlatformUserData, LinkPlatformUserVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: LinkPlatformUserVariables): MutationRef<LinkPlatformUserData, LinkPlatformUserVariables>;
+  operationName: string;
+}
+export const linkPlatformUserRef: LinkPlatformUserRef;
+
+export function linkPlatformUser(vars: LinkPlatformUserVariables): MutationPromise<LinkPlatformUserData, LinkPlatformUserVariables>;
+export function linkPlatformUser(dc: DataConnect, vars: LinkPlatformUserVariables): MutationPromise<LinkPlatformUserData, LinkPlatformUserVariables>;
+
+interface SetPlatformUserStatusRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SetPlatformUserStatusVariables): MutationRef<SetPlatformUserStatusData, SetPlatformUserStatusVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SetPlatformUserStatusVariables): MutationRef<SetPlatformUserStatusData, SetPlatformUserStatusVariables>;
+  operationName: string;
+}
+export const setPlatformUserStatusRef: SetPlatformUserStatusRef;
+
+export function setPlatformUserStatus(vars: SetPlatformUserStatusVariables): MutationPromise<SetPlatformUserStatusData, SetPlatformUserStatusVariables>;
+export function setPlatformUserStatus(dc: DataConnect, vars: SetPlatformUserStatusVariables): MutationPromise<SetPlatformUserStatusData, SetPlatformUserStatusVariables>;
+
 interface GetCurrentUserRef {
   /* Allow users to create refs without passing in DataConnect */
   (): QueryRef<GetCurrentUserData, undefined>;
@@ -1234,4 +1325,16 @@ export const productPromotionsRef: ProductPromotionsRef;
 
 export function productPromotions(vars: ProductPromotionsVariables, options?: ExecuteQueryOptions): QueryPromise<ProductPromotionsData, ProductPromotionsVariables>;
 export function productPromotions(dc: DataConnect, vars: ProductPromotionsVariables, options?: ExecuteQueryOptions): QueryPromise<ProductPromotionsData, ProductPromotionsVariables>;
+
+interface PlatformAdminWorkspaceRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: PlatformAdminWorkspaceVariables): QueryRef<PlatformAdminWorkspaceData, PlatformAdminWorkspaceVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: PlatformAdminWorkspaceVariables): QueryRef<PlatformAdminWorkspaceData, PlatformAdminWorkspaceVariables>;
+  operationName: string;
+}
+export const platformAdminWorkspaceRef: PlatformAdminWorkspaceRef;
+
+export function platformAdminWorkspace(vars: PlatformAdminWorkspaceVariables, options?: ExecuteQueryOptions): QueryPromise<PlatformAdminWorkspaceData, PlatformAdminWorkspaceVariables>;
+export function platformAdminWorkspace(dc: DataConnect, vars: PlatformAdminWorkspaceVariables, options?: ExecuteQueryOptions): QueryPromise<PlatformAdminWorkspaceData, PlatformAdminWorkspaceVariables>;
 
