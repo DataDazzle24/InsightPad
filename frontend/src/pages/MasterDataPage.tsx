@@ -9,7 +9,7 @@ import { useAuth } from '../auth/useAuth'
 import { firebaseApp } from '../lib/firebase'
 import { ProductExtras } from './ProductExtras'
 
-const dc=getDataConnect(firebaseApp,connectorConfig),PAGE_SIZE=20
+const dc=getDataConnect(firebaseApp,connectorConfig),RESULT_LIMIT=5000
 type PageKey='CAD_FILIAL'|'CAD_FORNECEDOR'|'CAD_CLIENTE'|'CAD_PRODUTO'
 type Row={id:string;active:boolean;updatedAt:string;[key:string]:unknown}
 type Field={key:string;label:string;type?:'text'|'email'|'date'|'number'|'textarea'|'checkbox'|'select'|'money';required?:boolean;wide?:boolean;options?:{value:string;label:string}[]}
@@ -51,7 +51,7 @@ const configs:Record<PageKey,Config>={
    {key:'city',label:'Cidade'},{key:'district',label:'Bairro'},{key:'street',label:'Endereço',wide:true},{key:'streetNumber',label:'Número'},
    {key:'addressComplement',label:'Complemento'},{key:'notes',label:'Observações',type:'textarea',wide:true}]},
  CAD_PRODUTO:{title:'Produtos',singular:'produto',description:'Gerencie catálogo, preços, classificação e limites de estoque.',columns:[
-  {key:'name',label:'Produto'},{key:'internalCode',label:'Código'},{key:'categoryName',label:'Categoria'},{key:'salePriceCents',label:'Preço',format:money}],
+  {key:'name',label:'Produto'},{key:'internalCode',label:'Código'},{key:'bundleProduct',label:'Tipo',format:v=>v?'Combo':'Simples'},{key:'categoryName',label:'Categoria'},{key:'salePriceCents',label:'Preço',format:money}],
   fields:[{key:'name',label:'Nome do produto',required:true},{key:'internalCode',label:'Código interno'},{key:'ean',label:'Código de barras'},
    {key:'categoryId',label:'Categoria',type:'select',required:true},{key:'subcategoryId',label:'Subcategoria',type:'select'},{key:'supplierId',label:'Fornecedor',type:'select'},
    {key:'brand',label:'Marca'},{key:'sizeType',label:'Tipo de tamanho',type:'select',options:Object.keys(SIZE_OPTIONS).map(value=>({value,label:value}))},{key:'size',label:'Tamanho',type:'select'},{key:'color',label:'Cor'},
@@ -76,12 +76,24 @@ const sectionFields:Record<PageKey,Record<string,string[]>>={
 
 export function MasterDataPage({pageKey}:{pageKey:PageKey}){
  const cfg=configs[pageKey],permission=useAuth().permissions[pageKey]
- const [rows,setRows]=useState<Row[]>([]),[search,setSearch]=useState(''),[page,setPage]=useState(0),[busy,setBusy]=useState(true),[modal,setModal]=useState(false)
+ const [rows,setRows]=useState<Row[]>([]),[search,setSearch]=useState(''),[busy,setBusy]=useState(true),[modal,setModal]=useState(false)
  const [editing,setEditing]=useState<Row|null>(null),[form,setForm]=useState<Record<string,unknown>>({}),[notice,setNotice]=useState(''),[confirm,setConfirm]=useState<null|{text:string;run:()=>Promise<void>}>(null)
  const [selected,setSelected]=useState<string[]>([]),[extras,setExtras]=useState<Row|null>(null),[options,setOptions]=useState<RegistrationOptionSet>({categories:[],subcategories:[],suppliers:[],products:[]}),[kitItems,setKitItems]=useState<KitItem[]>([]),[section,setSection]=useState(modalSections[pageKey][0].key)
- const query=useMemo(()=>({search:search.trim(),limit:PAGE_SIZE,offset:page*PAGE_SIZE}),[page,search])
+ const [filterModal,setFilterModal]=useState(false),[filters,setFilters]=useState<Record<string,string>>({})
+ const query=useMemo(()=>({search:search.trim(),limit:RESULT_LIMIT,offset:0}),[search])
  const comboCostCents=useMemo(()=>kitItems.reduce((total,item)=>{const product=options.products.find(p=>p.id===item.productId);return total+Number(product?.costPriceCents??0)*Number(item.quantity||0)},0),[kitItems,options.products])
  const sections=modalSections[pageKey],sectionIndex=Math.max(0,sections.findIndex(item=>item.key===section))
+ const filterFieldKeys:Record<PageKey,string[]>={
+  CAD_FILIAL:['name','internalCode','phone','postalCode','city','stateCode'],
+  CAD_FORNECEDOR:['legalName','tradeName','internalCode','cpf','cnpj','segment','contactName','phonePrimary','email','city','stateCode'],
+  CAD_CLIENTE:['name','cpf','cnpj','email','phonePrimary','gender','city','stateCode','marketingOptIn'],
+  CAD_PRODUTO:['name','internalCode','ean','brand','categoryId','subcategoryId','supplierId','sizeType','size','color','costPriceCents','salePriceCents','weightedProduct','bundleProduct'],
+ }
+ const advancedFields=cfg.fields.filter(field=>filterFieldKeys[pageKey].includes(field.key))
+ const filteredRows=useMemo(()=>rows.filter(row=>Object.entries(filters).every(([key,value])=>{if(value==='')return true;if(key==='active')return String(row.active)===value;if(key==='bundleType')return String(Boolean(row.bundleProduct))===value;const raw=row[key],field=cfg.fields.find(item=>item.key===key);if(field?.type==='money')return String(raw??'').includes(digits(value));if(typeof raw==='boolean')return String(raw)===value;return String(raw??'').toLocaleLowerCase('pt-BR').includes(value.toLocaleLowerCase('pt-BR'))})),[rows,filters,cfg.fields])
+ const primaryKeys=new Set(cfg.columns.map(column=>column.key))
+ const detailFields=cfg.fields.filter(field=>!primaryKeys.has(field.key))
+ const activeFilterCount=Object.values(filters).filter(Boolean).length
  const load=useCallback(async()=>{setBusy(true);try{let result;const freshQuery={...query,requestKey:crypto.randomUUID()}
   if(pageKey==='CAD_FILIAL')result=await listBranches(dc,freshQuery);else if(pageKey==='CAD_FORNECEDOR')result=await listSuppliers(dc,freshQuery)
   else if(pageKey==='CAD_CLIENTE')result=await listCustomers(dc,freshQuery);else result=await listProducts(dc,freshQuery)
@@ -91,6 +103,7 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
  useEffect(()=>{if(!notice)return;const t=window.setTimeout(()=>setNotice(''),7000);return()=>window.clearTimeout(t)},[notice])
  async function open(row?:Row){setEditing(row??null);setSection(modalSections[pageKey][0].key);const next:Record<string,unknown>={};for(const field of cfg.fields)next[field.key]=row?.[field.key]??(field.type==='checkbox'?false:'')
   if(pageKey==='CAD_PRODUTO'){next.costPriceCents=maskValue('costPriceCents',String(row?.costPriceCents??0));next.salePriceCents=maskValue('salePriceCents',String(row?.salePriceCents??0));if(row){try{const result=await productComponents(dc,{productId:row.id});setKitItems((result.data._select??[]) as KitItem[])}catch{setKitItems([])}}else setKitItems([])}setForm(next);setModal(true)}
+ function filterOptions(field:Field){if(pageKey==='CAD_PRODUTO'){if(field.key==='categoryId')return options.categories.map(x=>({value:x.id,label:x.name}));if(field.key==='subcategoryId')return options.subcategories.map(x=>({value:x.id,label:x.name}));if(field.key==='supplierId')return options.suppliers.map(x=>({value:x.id,label:x.name}))}return field.options??[]}
  function fieldOptions(field:Field){if(pageKey!=='CAD_PRODUTO')return field.options??[];if(field.key==='categoryId')return options.categories.map(x=>({value:x.id,label:x.name}))
   if(field.key==='subcategoryId')return options.subcategories.filter(x=>!form.categoryId||x.categoryId===form.categoryId).map(x=>({value:x.id,label:x.name}))
   if(field.key==='supplierId')return options.suppliers.map(x=>({value:x.id,label:x.name}));if(field.key==='size')return (SIZE_OPTIONS[String(form.sizeType??'')]??[]).map(value=>({value,label:value}));return field.options??[]}
@@ -114,18 +127,27 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
  async function status(ids:string[],active:boolean){setBusy(true);try{for(const id of ids){if(pageKey==='CAD_FILIAL')await setBranchStatus(dc,{id,active});else if(pageKey==='CAD_FORNECEDOR')await setSupplierStatus(dc,{id,active})
   else if(pageKey==='CAD_CLIENTE')await setCustomerStatus(dc,{id,active});else await setProductStatus(dc,{id,active})}setSelected([]);setNotice('Status atualizado.');await load()
  }catch(e){console.error(e);setNotice('Não foi possível alterar o status. Verifique vínculos ativos.')}finally{setBusy(false)}}
- function exportCsv(){const headers=cfg.columns.map(c=>c.label);const lines=rows.map(r=>cfg.columns.map(c=>`"${String(c.format?c.format(r[c.key],r):r[c.key]??'').replaceAll('"','""')}"`).join(';'))
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([`\uFEFF${headers.join(';')}\n${lines.join('\n')}`],{type:'text/csv'}));a.download=`${pageKey.toLowerCase()}.csv`;a.click();URL.revokeObjectURL(a.href)}
- return <section className="catalog-page"><header><div><span className="eyebrow">Cadastros</span><h1>{cfg.title}</h1><p>{cfg.description}</p></div><div className="catalog-header-actions">
+ function exportCsv(){const keys=Array.from(new Set(['id',...cfg.fields.map(field=>field.key),...Object.keys(filteredRows[0]??{}),'active','updatedAt']))
+  const labels:Record<string,string>=Object.fromEntries(cfg.fields.map(field=>[field.key,field.label]));Object.assign(labels,{id:'ID',active:'Status',updatedAt:'Última atualização',categoryName:'Categoria',subcategoryName:'Subcategoria',supplierName:'Fornecedor'})
+  const cell=(key:string,value:unknown)=>{if(key==='active')return value?'Ativo':'Inativo';const field=cfg.fields.find(item=>item.key===key);if(field?.type==='money')return money(value);if(typeof value==='boolean')return value?'Sim':'Não';if(value&&typeof value==='object')return JSON.stringify(value);return String(value??'')}
+  const lines=filteredRows.map(row=>keys.map(key=>`"${cell(key,row[key]).replaceAll('"','""')}"`).join(';'));const a=document.createElement('a')
+  a.href=URL.createObjectURL(new Blob([`\uFEFF${keys.map(key=>labels[key]??key).join(';')}\n${lines.join('\n')}`],{type:'text/csv'}));a.download=`${pageKey.toLowerCase()}-completo.csv`;a.click();URL.revokeObjectURL(a.href)}
+
+ return <section className="catalog-page"><header><div><span className="eyebrow">Cadastros</span><h1>{cfg.title}</h1></div><div className="catalog-header-actions">
   <Link className="catalog-back" to="/modulos/cadastros"><span className="material-symbols-rounded">arrow_back</span>Voltar</Link>{permission?.canCreate&&<button className="catalog-primary" onClick={()=>open()}>+ Novo cadastro</button>}</div></header>
   {notice&&<div className={`master-toast ${/sucesso|salvo|atualizado/i.test(notice)?'master-toast--success':'master-toast--error'}`} role="alert"><span className="material-symbols-rounded">{/sucesso|salvo|atualizado/i.test(notice)?'check_circle':'error'}</span><strong>{notice}</strong><button onClick={()=>setNotice('')}>×</button></div>}<div className="catalog-panel"><div className="catalog-toolbar"><label><span className="material-symbols-rounded">search</span>
-   <input value={search} onChange={e=>{setSearch(e.target.value);setPage(0)}} placeholder="Pesquisar..."/></label>{selected.length>0&&<><button onClick={()=>setConfirm({text:`Inativar ${selected.length} registros?`,run:()=>status(selected,false)})}>Inativar selecionados</button>
-   <button onClick={()=>setConfirm({text:`Ativar ${selected.length} registros?`,run:()=>status(selected,true)})}>Ativar selecionados</button></>}{permission?.canExport&&<button onClick={exportCsv}>Exportar CSV</button>}</div>
-   <div className="catalog-scroll"><div className="catalog-table"><table><thead><tr><th><input type="checkbox" checked={rows.length>0&&selected.length===rows.length} onChange={e=>setSelected(e.target.checked?rows.map(r=>r.id):[])}/></th>
-    {cfg.columns.map(c=><th key={c.key}>{c.label}</th>)}<th>Status</th><th>Ações</th></tr></thead><tbody>{rows.map(row=><tr key={row.id} className={!row.active?'is-inactive':''}><td><input type="checkbox" checked={selected.includes(row.id)} onChange={e=>setSelected(v=>e.target.checked?[...v,row.id]:v.filter(id=>id!==row.id))}/></td>
-    {cfg.columns.map(c=><td key={c.key}>{c.format?c.format(row[c.key],row):String(row[c.key]??'—')}</td>)}<td><span className={`catalog-status catalog-status--${row.active?'active':'inactive'}`}><i/>{row.active?'Ativo':'Inativo'}</span></td><td><div className="catalog-actions">
-     {row.active&&permission?.canUpdate&&<button onClick={()=>open(row)}>Editar</button>}{pageKey==='CAD_PRODUTO'&&row.active&&permission?.canUpdate&&<button onClick={()=>setExtras(row)}>Promoções</button>}<button className={row.active?'danger':'success'} onClick={()=>setConfirm({text:`${row.active?'Inativar':'Ativar'} “${String(row.name||row.legalName)}”?`,run:()=>status([row.id],!row.active)})}>{row.active?'Inativar':'Ativar'}</button></div></td></tr>)}</tbody></table></div></div>
-   <footer className="catalog-pagination"><button disabled={page===0} onClick={()=>setPage(page-1)}>Anterior</button><span>Página {page+1}</span><button disabled={rows.length<PAGE_SIZE} onClick={()=>setPage(page+1)}>Próxima</button></footer></div>
+   <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Pesquisar..."/></label>{selected.length>0&&<><button onClick={()=>setConfirm({text:`Inativar ${selected.length} registros?`,run:()=>status(selected,false)})}>Inativar selecionados</button>
+   <button onClick={()=>setConfirm({text:`Ativar ${selected.length} registros?`,run:()=>status(selected,true)})}>Ativar selecionados</button></>}<button onClick={()=>setFilterModal(true)}><span className="material-symbols-rounded">tune</span>Pesquisa avançada{activeFilterCount>0&&<b>{activeFilterCount}</b>}</button>{permission?.canExport&&<button onClick={exportCsv}>Exportar CSV</button>}</div>
+   <div className="catalog-scroll"><div className="catalog-table"><table><thead><tr><th><input type="checkbox" checked={filteredRows.length>0&&filteredRows.every(row=>selected.includes(row.id))} onChange={e=>setSelected(e.target.checked?filteredRows.map(r=>r.id):[])}/></th>
+    {cfg.columns.map(c=><th key={c.key}>{c.label}</th>)}<th>Status</th><th>Ações</th>{detailFields.map(field=><th key={field.key}>{field.label}</th>)}<th>Última atualização</th></tr></thead><tbody>{filteredRows.map(row=><tr key={row.id} className={!row.active?'is-inactive':''}><td><input type="checkbox" checked={selected.includes(row.id)} onChange={e=>setSelected(v=>e.target.checked?[...v,row.id]:v.filter(id=>id!==row.id))}/></td>
+    {cfg.columns.map(c=><td key={c.key}>{c.key==='bundleProduct'?<span className={`product-type product-type--${row.bundleProduct?'combo':'simple'}`}><span className="material-symbols-rounded">{row.bundleProduct?'deployed_code':'inventory_2'}</span>{row.bundleProduct?'Combo':'Simples'}</span>:c.format?c.format(row[c.key],row):String(row[c.key]??'—')}</td>)}<td><span className={`catalog-status catalog-status--${row.active?'active':'inactive'}`}><i/>{row.active?'Ativo':'Inativo'}</span></td><td><div className="catalog-actions">
+     {row.active&&permission?.canUpdate&&<button onClick={()=>open(row)}>Editar</button>}{pageKey==='CAD_PRODUTO'&&row.active&&permission?.canUpdate&&<button onClick={()=>setExtras(row)}>Promoções</button>}<button className={row.active?'danger':'success'} onClick={()=>setConfirm({text:`${row.active?'Inativar':'Ativar'} “${String(row.name||row.legalName)}”?`,run:()=>status([row.id],!row.active)})}>{row.active?'Inativar':'Ativar'}</button></div></td>{detailFields.map(field=><td key={field.key}>{field.type==='money'?money(row[field.key]):typeof row[field.key]==='boolean'?(row[field.key]?'Sim':'Não'):String(row[field.key]??'—')}</td>)}<td>{row.updatedAt?new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short'}).format(new Date(String(row.updatedAt))):'—'}</td></tr>)}</tbody></table></div></div>
+   </div>
+  {filterModal&&<div className="catalog-backdrop"><section className="catalog-modal master-modal advanced-search-modal"><header><div><span className="eyebrow">Pesquisa</span><h2>Filtros avançados</h2></div><button onClick={()=>setFilterModal(false)}>×</button></header>
+   <form onSubmit={e=>{e.preventDefault();setSelected([]);setFilterModal(false)}}><div className="master-section-title"><span className="material-symbols-rounded">manage_search</span><div><strong>Refine os resultados</strong><small>Combine quantos campos desejar. A exportação respeitará estes filtros.</small></div></div><div className="master-form-grid">
+    {advancedFields.map(field=><label key={field.key} className={field.wide?'wide':''}><span>{field.label}</span>{field.type==='checkbox'?<select value={filters[field.key]??''} onChange={e=>setFilters(current=>({...current,[field.key]:e.target.value}))}><option value="">Todos</option><option value="true">Sim</option><option value="false">Não</option></select>:field.type==='select'?<select value={filters[field.key]??''} onChange={e=>setFilters(current=>({...current,[field.key]:e.target.value}))}><option value="">Todos</option>{filterOptions(field).map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select>:<input type={field.type==='date'?'date':'text'} value={filters[field.key]??''} onChange={e=>setFilters(current=>({...current,[field.key]:field.type==='money'?maskValue(field.key,e.target.value):e.target.value}))}/>}</label>)}
+    <label><span>Status</span><select value={filters.active??''} onChange={e=>setFilters(current=>({...current,active:e.target.value}))}><option value="">Todos</option><option value="true">Ativos</option><option value="false">Inativos</option></select></label>
+   </div><footer><button type="button" onClick={()=>setFilters({})}>Limpar filtros</button><button type="button" onClick={()=>setFilterModal(false)}>Cancelar</button><button className="catalog-primary">Aplicar filtros</button></footer></form></section></div>}
   {modal&&<div className="catalog-backdrop"><section className="catalog-modal master-modal"><header><div><span className="eyebrow">Cadastro</span><h2>{editing?'Editar':'Novo'} {cfg.singular}</h2></div><button onClick={()=>setModal(false)}>×</button></header>
    <form onSubmit={(e:FormEvent)=>{e.preventDefault();if(sectionIndex<sections.length-1){setSection(sections[sectionIndex+1].key);return}setConfirm({text:'Confirma o salvamento das informações?',run:save})}}>
     <nav className="master-modal-tabs" aria-label="Etapas do cadastro">{sections.map(item=><button type="button" key={item.key} className={section===item.key?'active':''} onClick={()=>setSection(item.key)}><span className="material-symbols-rounded">{item.icon}</span>{item.label}</button>)}</nav>
