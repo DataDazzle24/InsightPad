@@ -5,7 +5,7 @@ const STORAGE_KEY = 'insightpad.theme'
 function initialTheme(): AppTheme {
   const saved = localStorage.getItem(STORAGE_KEY)
   if (saved === 'light' || saved === 'dark') return saved
-  return matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+  return 'dark'
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
