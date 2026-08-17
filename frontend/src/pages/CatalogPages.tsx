@@ -32,7 +32,7 @@ function CategoryPage(){
  const requestSequence=useRef(0)
  const load=useCallback(async()=>{const requestId=++requestSequence.current;setBusy(true);try{const result=await listCategories(dc,{search:search.trim(),limit:RESULT_LIMIT,offset:0,requestKey:crypto.randomUUID()});if(requestId===requestSequence.current)setItems(z.array(categorySchema).parse(result.data._select??[]))}
   catch(error){if(requestId!==requestSequence.current)return;console.error(error);setNotice({type:'error',text:'Não foi possível atualizar as categorias.'})}finally{if(requestId===requestSequence.current)setBusy(false)}},[search])
- useEffect(()=>{const timer=window.setTimeout(()=>void load(),180);return()=>window.clearTimeout(timer)},[load])
+ useEffect(()=>{const timer=window.setTimeout(()=>void load(),350);return()=>window.clearTimeout(timer)},[load])
  useEffect(()=>{if(!notice)return;const timer=window.setTimeout(()=>setNotice(null),7000);return()=>window.clearTimeout(timer)},[notice])
  const filtered=useMemo(()=>items.filter(item=>Object.entries(filters).every(([key,values])=>values.length===0||values.includes(String(item[key as keyof Category]??'')))),[items,filters])
  function open(item?:Category){setEditing(item??null);setNames([item?.name??'']);setModal(true)}
@@ -65,7 +65,7 @@ function SubcategoryPage(){
  const requestSequence=useRef(0)
  const load=useCallback(async()=>{const requestId=++requestSequence.current;setBusy(true);try{const key=crypto.randomUUID(),[records,options]=await Promise.all([listSubcategories(dc,{search:search.trim(),categoryId:null,limit:RESULT_LIMIT,offset:0,requestKey:key}),categoryOptions(dc,{requestKey:key})]);if(requestId===requestSequence.current){setItems(z.array(subcategorySchema).parse(records.data._select??[]));setCategories(z.array(optionSchema).parse(options.data._select??[]))}}
   catch(error){if(requestId!==requestSequence.current)return;console.error(error);setNotice({type:'error',text:'Não foi possível atualizar as subcategorias.'})}finally{if(requestId===requestSequence.current)setBusy(false)}},[search])
- useEffect(()=>{const timer=window.setTimeout(()=>void load(),180);return()=>window.clearTimeout(timer)},[load])
+ useEffect(()=>{const timer=window.setTimeout(()=>void load(),350);return()=>window.clearTimeout(timer)},[load])
  useEffect(()=>{if(!notice)return;const timer=window.setTimeout(()=>setNotice(null),7000);return()=>window.clearTimeout(timer)},[notice])
  const filtered=useMemo(()=>items.filter(item=>Object.entries(filters).every(([key,values])=>values.length===0||values.includes(String(item[key as keyof Subcategory]??'')))),[items,filters])
  function open(item?:Subcategory){setEditing(item??null);setBatch([{categoryId:item?.categoryId??categories[0]?.id??'',name:item?.name??''}]);setModal(true)}
