@@ -773,7 +773,13 @@ mutation SaveSupplier($id: UUID, $payload: Any!) @auth(level: USER) @transaction
         nullif(regexp_replace($3::jsonb->>'phoneSecondary','\D','','g'),''),nullif(lower(btrim($3::jsonb->>'email')),''),
         nullif(btrim($3::jsonb->>'segment'),''),nullif(btrim($3::jsonb->>'paymentTerms'),''),
         NULLIF($3::jsonb->>'paymentTermDays','')::int,NULLIF($3::jsonb->>'averageDeliveryDays','')::int,nullif(btrim($3::jsonb->>'notes'),''),true,now(),now() FROM actor a
-      WHERE length(btrim($3::jsonb->>'legalName'))>=2 AND NOT EXISTS(SELECT 1 FROM suppliers x WHERE x.tenant_id=a.tenant_id
+      WHERE length(btrim($3::jsonb->>'legalName'))>=2
+        AND NOT (NULLIF(regexp_replace($3::jsonb->>'cpf','\D','','g'),'') IS NOT NULL AND NULLIF(regexp_replace($3::jsonb->>'cnpj','\D','','g'),'') IS NOT NULL)
+        AND (NULLIF($3::jsonb->>'cpf','') IS NULL OR length(regexp_replace($3::jsonb->>'cpf','\D','','g'))=11)
+        AND (NULLIF($3::jsonb->>'cnpj','') IS NULL OR length(regexp_replace($3::jsonb->>'cnpj','\D','','g'))=14)
+        AND COALESCE(NULLIF($3::jsonb->>'paymentTermDays','')::int,0)>=0
+        AND COALESCE(NULLIF($3::jsonb->>'averageDeliveryDays','')::int,0)>=0
+        AND NOT EXISTS(SELECT 1 FROM suppliers x WHERE x.tenant_id=a.tenant_id
         AND x.id<>COALESCE($2::uuid,'00000000-0000-0000-0000-000000000000') AND x.active AND
         ((nullif(regexp_replace($3::jsonb->>'cpf','\D','','g'),'') IS NOT NULL AND x.cpf=regexp_replace($3::jsonb->>'cpf','\D','','g')) OR
          (nullif(regexp_replace($3::jsonb->>'cnpj','\D','','g'),'') IS NOT NULL AND x.cnpj=regexp_replace($3::jsonb->>'cnpj','\D','','g'))))
@@ -823,6 +829,9 @@ mutation SaveCustomer($id: UUID, $payload: Any!) @auth(level: USER) @transaction
           'upperClothingType',NULLIF($3::jsonb->>'upperClothingType',''),'upperClothingSize',NULLIF($3::jsonb->>'upperClothingSize',''),
           'shoeSize',NULLIF($3::jsonb->>'shoeSize',''))),
         nullif(btrim($3::jsonb->>'notes'),''),true,now(),now() FROM actor a WHERE length(btrim($3::jsonb->>'name'))>=2
+        AND NOT (NULLIF(regexp_replace($3::jsonb->>'cpf','\D','','g'),'') IS NOT NULL AND NULLIF(regexp_replace($3::jsonb->>'cnpj','\D','','g'),'') IS NOT NULL)
+        AND (NULLIF($3::jsonb->>'cpf','') IS NULL OR length(regexp_replace($3::jsonb->>'cpf','\D','','g'))=11)
+        AND (NULLIF($3::jsonb->>'cnpj','') IS NULL OR length(regexp_replace($3::jsonb->>'cnpj','\D','','g'))=14)
         AND (NULLIF($3::jsonb->>'birthDate','') IS NULL OR ($3::jsonb->>'birthDate')::date<=current_date)
         AND NOT EXISTS(SELECT 1 FROM customers x WHERE x.tenant_id=a.tenant_id AND x.id<>COALESCE($2::uuid,'00000000-0000-0000-0000-000000000000') AND x.active AND
           ((nullif(regexp_replace($3::jsonb->>'cpf','\D','','g'),'') IS NOT NULL AND x.cpf=regexp_replace($3::jsonb->>'cpf','\D','','g')) OR
@@ -872,6 +881,8 @@ mutation SaveProduct($id: UUID, $payload: Any!, $components: Any) @auth(level: U
       LEFT JOIN subcategories sc ON sc.id=NULLIF($3::jsonb->>'subcategoryId','')::uuid AND sc.tenant_id=a.tenant_id AND sc.category_id=c.id AND sc.active
       LEFT JOIN suppliers sp ON sp.id=NULLIF($3::jsonb->>'supplierId','')::uuid AND sp.tenant_id=a.tenant_id AND sp.active
       WHERE length(btrim($3::jsonb->>'name'))>=2 AND COALESCE(($3::jsonb->>'salePriceCents')::bigint,0)>=0 AND COALESCE(($3::jsonb->>'costPriceCents')::bigint,0)>=0
+        AND COALESCE(NULLIF($3::jsonb->>'minimumStock','')::numeric,0)>=0
+        AND COALESCE(NULLIF($3::jsonb->>'maximumStock','')::numeric,0)>=0
         AND (NULLIF($3::jsonb->>'subcategoryId','') IS NULL OR sc.id IS NOT NULL) AND (NULLIF($3::jsonb->>'supplierId','') IS NULL OR sp.id IS NOT NULL)
         AND (NULLIF($3::jsonb->>'maximumStock','') IS NULL OR NULLIF($3::jsonb->>'minimumStock','') IS NULL OR
              ($3::jsonb->>'maximumStock')::numeric>=($3::jsonb->>'minimumStock')::numeric)
