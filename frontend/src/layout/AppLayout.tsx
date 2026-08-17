@@ -57,7 +57,6 @@ export function AppLayout() {
         <button className="user-drawer__close" type="button" onClick={() => setDrawerOpen(false)} aria-label="Fechar">
           <span className="material-symbols-rounded">close</span>
         </button>
-        <img className="user-drawer__logo" src="/brand/insight-pad-logo-dark.png" alt="Insight Pad" />
         <div className="user-drawer__identity">
           <span className="material-symbols-rounded">account_circle</span>
           <div><strong>{profile?.name}</strong><small>{profile?.role.name}</small></div>
@@ -65,12 +64,9 @@ export function AppLayout() {
         <div className="user-drawer__company"><small>EMPRESA</small><strong>{profile?.tenant.tradeName ?? profile?.tenant.legalName}</strong></div>
         <div className="user-drawer__theme"><div><span className="material-symbols-rounded">contrast</span><span><strong>Aparência</strong><small>{theme === 'dark' ? 'Tema escuro' : 'Tema claro'}</small></span></div><button className="theme-switch" type="button" onClick={toggleTheme} aria-label={`Ativar tema ${theme === 'dark' ? 'claro' : 'escuro'}`} aria-pressed={theme === 'light'}><span className="material-symbols-rounded">dark_mode</span><i><b /></i><span className="material-symbols-rounded">light_mode</span></button></div>
         <nav className="user-drawer__actions">
-          {isPlatformAdmin && <Link to="/plataforma/administracao" onClick={() => setDrawerOpen(false)}><span className="material-symbols-rounded">admin_panel_settings</span>Administrar plataforma</Link>}
-          {canAccess('GESTAO_ACESSOS') && <Link to="/configuracoes/acessos" onClick={() => setDrawerOpen(false)}><span className="material-symbols-rounded">manage_accounts</span>Gerenciar acessos</Link>}
-          <a href="https://wa.me/5521985795316" target="_blank" rel="noreferrer"><span className="material-symbols-rounded">support_agent</span>Suporte</a>
-          <button type="button" onClick={() => void handleSignOut()} disabled={leaving}><span className="material-symbols-rounded">logout</span>{leaving ? 'Saindo...' : 'Sair do sistema'}</button>
+          {(isPlatformAdmin || canAccess('GESTAO_ACESSOS')) && <Link to="/configuracoes/acessos" onClick={() => setDrawerOpen(false)}><span className="material-symbols-rounded">admin_panel_settings</span>Gestão de acessos e plataforma</Link>}
         </nav>
-        <footer><img src="/brand/data-dazzle-logo-dark.png" alt="Data Dazzle" /><span>Um produto Data Dazzle</span></footer>
+        <footer className="user-drawer__footer-actions"><a href="https://wa.me/5521985795316" target="_blank" rel="noreferrer"><span className="material-symbols-rounded">support_agent</span>Falar com o suporte</a><button className="drawer-signout" type="button" onClick={() => void handleSignOut()} disabled={leaving}><span className="material-symbols-rounded">logout</span>{leaving ? 'Saindo...' : 'Sair do sistema'}</button></footer>
       </aside>
 
       <section className="app-stage"><Outlet /></section>
