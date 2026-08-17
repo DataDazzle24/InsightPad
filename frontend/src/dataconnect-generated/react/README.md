@@ -39,6 +39,8 @@ You can also follow the instructions from the [Data Connect documentation](https
   - [*ArchiveSubcategory*](#archivesubcategory)
   - [*RestoreCategory*](#restorecategory)
   - [*RestoreSubcategory*](#restoresubcategory)
+  - [*CreateCategoriesBatch*](#createcategoriesbatch)
+  - [*CreateSubcategoriesBatch*](#createsubcategoriesbatch)
   - [*SaveBranch*](#savebranch)
   - [*SetBranchStatus*](#setbranchstatus)
   - [*SaveSupplier*](#savesupplier)
@@ -527,15 +529,21 @@ export default function ListSubcategoriesComponent() {
 You can execute the `CategoryOptions` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
 
 ```javascript
-useCategoryOptions(dc: DataConnect, options?: useDataConnectQueryOptions<CategoryOptionsData>): UseDataConnectQueryResult<CategoryOptionsData, undefined>;
+useCategoryOptions(dc: DataConnect, vars?: CategoryOptionsVariables, options?: useDataConnectQueryOptions<CategoryOptionsData>): UseDataConnectQueryResult<CategoryOptionsData, CategoryOptionsVariables>;
 ```
 You can also pass in a `DataConnect` instance to the Query hook function.
 ```javascript
-useCategoryOptions(options?: useDataConnectQueryOptions<CategoryOptionsData>): UseDataConnectQueryResult<CategoryOptionsData, undefined>;
+useCategoryOptions(vars?: CategoryOptionsVariables, options?: useDataConnectQueryOptions<CategoryOptionsData>): UseDataConnectQueryResult<CategoryOptionsData, CategoryOptionsVariables>;
 ```
 
 ### Variables
-The `CategoryOptions` Query has no variables.
+The `CategoryOptions` Query has an optional argument of type `CategoryOptionsVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface CategoryOptionsVariables {
+  requestKey?: string | null;
+}
+```
 ### Return Type
 Recall that calling the `CategoryOptions` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
 
@@ -554,26 +562,39 @@ To learn more about the `UseQueryResult` object, see the [TanStack React Query d
 
 ```javascript
 import { getDataConnect } from 'firebase/data-connect';
-import { connectorConfig } from '@insightpad/dataconnect';
+import { connectorConfig, CategoryOptionsVariables } from '@insightpad/dataconnect';
 import { useCategoryOptions } from '@insightpad/dataconnect/react'
 
 export default function CategoryOptionsComponent() {
+  // The `useCategoryOptions` Query hook has an optional argument of type `CategoryOptionsVariables`:
+  const categoryOptionsVars: CategoryOptionsVariables = {
+    requestKey: ..., // optional
+  };
+
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
+  const query = useCategoryOptions(categoryOptionsVars);
+  // Variables can be defined inline as well.
+  const query = useCategoryOptions({ requestKey: ..., });
+  // Since all variables are optional for this Query, you can omit the `CategoryOptionsVariables` argument.
+  // (as long as you don't want to provide any `options`!)
   const query = useCategoryOptions();
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
-  const query = useCategoryOptions(dataConnect);
+  const query = useCategoryOptions(dataConnect, categoryOptionsVars);
 
   // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
   const options = { staleTime: 5 * 1000 };
-  const query = useCategoryOptions(options);
+  const query = useCategoryOptions(categoryOptionsVars, options);
+  // If you'd like to provide options without providing any variables, you must
+  // pass `undefined` where you would normally pass the variables.
+  const query = useCategoryOptions(undefined, options);
 
   // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
   const dataConnect = getDataConnect(connectorConfig);
   const options = { staleTime: 5 * 1000 };
-  const query = useCategoryOptions(dataConnect, options);
+  const query = useCategoryOptions(dataConnect, categoryOptionsVars /** or undefined */, options);
 
   // Then, you can render your component dynamically based on the status of the Query.
   if (query.isPending) {
@@ -2109,6 +2130,194 @@ export default function RestoreSubcategoryComponent() {
     onSuccess: () => { console.log('Mutation succeeded!'); }
   };
   mutation.mutate(restoreSubcategoryVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data._execute);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## CreateCategoriesBatch
+You can execute the `CreateCategoriesBatch` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useCreateCategoriesBatch(options?: useDataConnectMutationOptions<CreateCategoriesBatchData, FirebaseError, CreateCategoriesBatchVariables>): UseDataConnectMutationResult<CreateCategoriesBatchData, CreateCategoriesBatchVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useCreateCategoriesBatch(dc: DataConnect, options?: useDataConnectMutationOptions<CreateCategoriesBatchData, FirebaseError, CreateCategoriesBatchVariables>): UseDataConnectMutationResult<CreateCategoriesBatchData, CreateCategoriesBatchVariables>;
+```
+
+### Variables
+The `CreateCategoriesBatch` Mutation requires an argument of type `CreateCategoriesBatchVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface CreateCategoriesBatchVariables {
+  names: unknown;
+}
+```
+### Return Type
+Recall that calling the `CreateCategoriesBatch` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `CreateCategoriesBatch` Mutation is of type `CreateCategoriesBatchData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface CreateCategoriesBatchData {
+  _execute?: number | null;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `CreateCategoriesBatch`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, CreateCategoriesBatchVariables } from '@insightpad/dataconnect';
+import { useCreateCategoriesBatch } from '@insightpad/dataconnect/react'
+
+export default function CreateCategoriesBatchComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useCreateCategoriesBatch();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useCreateCategoriesBatch(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useCreateCategoriesBatch(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useCreateCategoriesBatch(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useCreateCategoriesBatch` Mutation requires an argument of type `CreateCategoriesBatchVariables`:
+  const createCategoriesBatchVars: CreateCategoriesBatchVariables = {
+    names: ..., 
+  };
+  mutation.mutate(createCategoriesBatchVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ names: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(createCategoriesBatchVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data._execute);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## CreateSubcategoriesBatch
+You can execute the `CreateSubcategoriesBatch` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useCreateSubcategoriesBatch(options?: useDataConnectMutationOptions<CreateSubcategoriesBatchData, FirebaseError, CreateSubcategoriesBatchVariables>): UseDataConnectMutationResult<CreateSubcategoriesBatchData, CreateSubcategoriesBatchVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useCreateSubcategoriesBatch(dc: DataConnect, options?: useDataConnectMutationOptions<CreateSubcategoriesBatchData, FirebaseError, CreateSubcategoriesBatchVariables>): UseDataConnectMutationResult<CreateSubcategoriesBatchData, CreateSubcategoriesBatchVariables>;
+```
+
+### Variables
+The `CreateSubcategoriesBatch` Mutation requires an argument of type `CreateSubcategoriesBatchVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface CreateSubcategoriesBatchVariables {
+  items: unknown;
+}
+```
+### Return Type
+Recall that calling the `CreateSubcategoriesBatch` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `CreateSubcategoriesBatch` Mutation is of type `CreateSubcategoriesBatchData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface CreateSubcategoriesBatchData {
+  _execute?: number | null;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `CreateSubcategoriesBatch`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, CreateSubcategoriesBatchVariables } from '@insightpad/dataconnect';
+import { useCreateSubcategoriesBatch } from '@insightpad/dataconnect/react'
+
+export default function CreateSubcategoriesBatchComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useCreateSubcategoriesBatch();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useCreateSubcategoriesBatch(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useCreateSubcategoriesBatch(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useCreateSubcategoriesBatch(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useCreateSubcategoriesBatch` Mutation requires an argument of type `CreateSubcategoriesBatchVariables`:
+  const createSubcategoriesBatchVars: CreateSubcategoriesBatchVariables = {
+    items: ..., 
+  };
+  mutation.mutate(createSubcategoriesBatchVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ items: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(createSubcategoriesBatchVars, options);
 
   // Then, you can render your component dynamically based on the status of the Mutation.
   if (mutation.isPending) {

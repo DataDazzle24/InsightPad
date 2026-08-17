@@ -32,6 +32,8 @@ This README will guide you through the process of using the generated JavaScript
   - [*ArchiveSubcategory*](#archivesubcategory)
   - [*RestoreCategory*](#restorecategory)
   - [*RestoreSubcategory*](#restoresubcategory)
+  - [*CreateCategoriesBatch*](#createcategoriesbatch)
+  - [*CreateSubcategoriesBatch*](#createsubcategoriesbatch)
   - [*SaveBranch*](#savebranch)
   - [*SetBranchStatus*](#setbranchstatus)
   - [*SaveSupplier*](#savesupplier)
@@ -579,22 +581,22 @@ executeQuery(ref).then((response) => {
 ## CategoryOptions
 You can execute the `CategoryOptions` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
 ```typescript
-categoryOptions(options?: ExecuteQueryOptions): QueryPromise<CategoryOptionsData, undefined>;
+categoryOptions(vars?: CategoryOptionsVariables, options?: ExecuteQueryOptions): QueryPromise<CategoryOptionsData, CategoryOptionsVariables>;
 
 interface CategoryOptionsRef {
   ...
   /* Allow users to create refs without passing in DataConnect */
-  (): QueryRef<CategoryOptionsData, undefined>;
+  (vars?: CategoryOptionsVariables): QueryRef<CategoryOptionsData, CategoryOptionsVariables>;
 }
 export const categoryOptionsRef: CategoryOptionsRef;
 ```
 You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
 ```typescript
-categoryOptions(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<CategoryOptionsData, undefined>;
+categoryOptions(dc: DataConnect, vars?: CategoryOptionsVariables, options?: ExecuteQueryOptions): QueryPromise<CategoryOptionsData, CategoryOptionsVariables>;
 
 interface CategoryOptionsRef {
   ...
-  (dc: DataConnect): QueryRef<CategoryOptionsData, undefined>;
+  (dc: DataConnect, vars?: CategoryOptionsVariables): QueryRef<CategoryOptionsData, CategoryOptionsVariables>;
 }
 export const categoryOptionsRef: CategoryOptionsRef;
 ```
@@ -606,7 +608,13 @@ console.log(name);
 ```
 
 ### Variables
-The `CategoryOptions` query has no variables.
+The `CategoryOptions` query has an optional argument of type `CategoryOptionsVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface CategoryOptionsVariables {
+  requestKey?: string | null;
+}
+```
 ### Return Type
 Recall that executing the `CategoryOptions` query returns a `QueryPromise` that resolves to an object with a `data` property.
 
@@ -620,21 +628,29 @@ export interface CategoryOptionsData {
 
 ```typescript
 import { getDataConnect } from 'firebase/data-connect';
-import { connectorConfig, categoryOptions } from '@insightpad/dataconnect';
+import { connectorConfig, categoryOptions, CategoryOptionsVariables } from '@insightpad/dataconnect';
 
+// The `CategoryOptions` query has an optional argument of type `CategoryOptionsVariables`:
+const categoryOptionsVars: CategoryOptionsVariables = {
+  requestKey: ..., // optional
+};
 
 // Call the `categoryOptions()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await categoryOptions(categoryOptionsVars);
+// Variables can be defined inline as well.
+const { data } = await categoryOptions({ requestKey: ..., });
+// Since all variables are optional for this query, you can omit the `CategoryOptionsVariables` argument.
 const { data } = await categoryOptions();
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
-const { data } = await categoryOptions(dataConnect);
+const { data } = await categoryOptions(dataConnect, categoryOptionsVars);
 
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
-categoryOptions().then((response) => {
+categoryOptions(categoryOptionsVars).then((response) => {
   const data = response.data;
   console.log(data._select);
 });
@@ -644,15 +660,23 @@ categoryOptions().then((response) => {
 
 ```typescript
 import { getDataConnect, executeQuery } from 'firebase/data-connect';
-import { connectorConfig, categoryOptionsRef } from '@insightpad/dataconnect';
+import { connectorConfig, categoryOptionsRef, CategoryOptionsVariables } from '@insightpad/dataconnect';
 
+// The `CategoryOptions` query has an optional argument of type `CategoryOptionsVariables`:
+const categoryOptionsVars: CategoryOptionsVariables = {
+  requestKey: ..., // optional
+};
 
 // Call the `categoryOptionsRef()` function to get a reference to the query.
+const ref = categoryOptionsRef(categoryOptionsVars);
+// Variables can be defined inline as well.
+const ref = categoryOptionsRef({ requestKey: ..., });
+// Since all variables are optional for this query, you can omit the `CategoryOptionsVariables` argument.
 const ref = categoryOptionsRef();
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
-const ref = categoryOptionsRef(dataConnect);
+const ref = categoryOptionsRef(dataConnect, categoryOptionsVars);
 
 // Call `executeQuery()` on the reference to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
@@ -2592,6 +2616,224 @@ const ref = restoreSubcategoryRef({ id: ..., });
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
 const ref = restoreSubcategoryRef(dataConnect, restoreSubcategoryVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+## CreateCategoriesBatch
+You can execute the `CreateCategoriesBatch` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+createCategoriesBatch(vars: CreateCategoriesBatchVariables): MutationPromise<CreateCategoriesBatchData, CreateCategoriesBatchVariables>;
+
+interface CreateCategoriesBatchRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CreateCategoriesBatchVariables): MutationRef<CreateCategoriesBatchData, CreateCategoriesBatchVariables>;
+}
+export const createCategoriesBatchRef: CreateCategoriesBatchRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+createCategoriesBatch(dc: DataConnect, vars: CreateCategoriesBatchVariables): MutationPromise<CreateCategoriesBatchData, CreateCategoriesBatchVariables>;
+
+interface CreateCategoriesBatchRef {
+  ...
+  (dc: DataConnect, vars: CreateCategoriesBatchVariables): MutationRef<CreateCategoriesBatchData, CreateCategoriesBatchVariables>;
+}
+export const createCategoriesBatchRef: CreateCategoriesBatchRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the createCategoriesBatchRef:
+```typescript
+const name = createCategoriesBatchRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `CreateCategoriesBatch` mutation requires an argument of type `CreateCategoriesBatchVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface CreateCategoriesBatchVariables {
+  names: unknown;
+}
+```
+### Return Type
+Recall that executing the `CreateCategoriesBatch` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `CreateCategoriesBatchData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface CreateCategoriesBatchData {
+  _execute?: number | null;
+}
+```
+### Using `CreateCategoriesBatch`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, createCategoriesBatch, CreateCategoriesBatchVariables } from '@insightpad/dataconnect';
+
+// The `CreateCategoriesBatch` mutation requires an argument of type `CreateCategoriesBatchVariables`:
+const createCategoriesBatchVars: CreateCategoriesBatchVariables = {
+  names: ..., 
+};
+
+// Call the `createCategoriesBatch()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await createCategoriesBatch(createCategoriesBatchVars);
+// Variables can be defined inline as well.
+const { data } = await createCategoriesBatch({ names: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await createCategoriesBatch(dataConnect, createCategoriesBatchVars);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+createCategoriesBatch(createCategoriesBatchVars).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+### Using `CreateCategoriesBatch`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, createCategoriesBatchRef, CreateCategoriesBatchVariables } from '@insightpad/dataconnect';
+
+// The `CreateCategoriesBatch` mutation requires an argument of type `CreateCategoriesBatchVariables`:
+const createCategoriesBatchVars: CreateCategoriesBatchVariables = {
+  names: ..., 
+};
+
+// Call the `createCategoriesBatchRef()` function to get a reference to the mutation.
+const ref = createCategoriesBatchRef(createCategoriesBatchVars);
+// Variables can be defined inline as well.
+const ref = createCategoriesBatchRef({ names: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = createCategoriesBatchRef(dataConnect, createCategoriesBatchVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+## CreateSubcategoriesBatch
+You can execute the `CreateSubcategoriesBatch` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+createSubcategoriesBatch(vars: CreateSubcategoriesBatchVariables): MutationPromise<CreateSubcategoriesBatchData, CreateSubcategoriesBatchVariables>;
+
+interface CreateSubcategoriesBatchRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CreateSubcategoriesBatchVariables): MutationRef<CreateSubcategoriesBatchData, CreateSubcategoriesBatchVariables>;
+}
+export const createSubcategoriesBatchRef: CreateSubcategoriesBatchRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+createSubcategoriesBatch(dc: DataConnect, vars: CreateSubcategoriesBatchVariables): MutationPromise<CreateSubcategoriesBatchData, CreateSubcategoriesBatchVariables>;
+
+interface CreateSubcategoriesBatchRef {
+  ...
+  (dc: DataConnect, vars: CreateSubcategoriesBatchVariables): MutationRef<CreateSubcategoriesBatchData, CreateSubcategoriesBatchVariables>;
+}
+export const createSubcategoriesBatchRef: CreateSubcategoriesBatchRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the createSubcategoriesBatchRef:
+```typescript
+const name = createSubcategoriesBatchRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `CreateSubcategoriesBatch` mutation requires an argument of type `CreateSubcategoriesBatchVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface CreateSubcategoriesBatchVariables {
+  items: unknown;
+}
+```
+### Return Type
+Recall that executing the `CreateSubcategoriesBatch` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `CreateSubcategoriesBatchData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface CreateSubcategoriesBatchData {
+  _execute?: number | null;
+}
+```
+### Using `CreateSubcategoriesBatch`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, createSubcategoriesBatch, CreateSubcategoriesBatchVariables } from '@insightpad/dataconnect';
+
+// The `CreateSubcategoriesBatch` mutation requires an argument of type `CreateSubcategoriesBatchVariables`:
+const createSubcategoriesBatchVars: CreateSubcategoriesBatchVariables = {
+  items: ..., 
+};
+
+// Call the `createSubcategoriesBatch()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await createSubcategoriesBatch(createSubcategoriesBatchVars);
+// Variables can be defined inline as well.
+const { data } = await createSubcategoriesBatch({ items: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await createSubcategoriesBatch(dataConnect, createSubcategoriesBatchVars);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+createSubcategoriesBatch(createSubcategoriesBatchVars).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+### Using `CreateSubcategoriesBatch`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, createSubcategoriesBatchRef, CreateSubcategoriesBatchVariables } from '@insightpad/dataconnect';
+
+// The `CreateSubcategoriesBatch` mutation requires an argument of type `CreateSubcategoriesBatchVariables`:
+const createSubcategoriesBatchVars: CreateSubcategoriesBatchVariables = {
+  items: ..., 
+};
+
+// Call the `createSubcategoriesBatchRef()` function to get a reference to the mutation.
+const ref = createSubcategoriesBatchRef(createSubcategoriesBatchVars);
+// Variables can be defined inline as well.
+const ref = createSubcategoriesBatchRef({ items: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = createSubcategoriesBatchRef(dataConnect, createSubcategoriesBatchVars);
 
 // Call `executeMutation()` on the reference to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.

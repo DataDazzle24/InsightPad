@@ -113,6 +113,30 @@ export function restoreSubcategory(dcOrVars, vars) {
   return executeMutation(restoreSubcategoryRef(dcInstance, inputVars));
 }
 
+export const createCategoriesBatchRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'CreateCategoriesBatch', inputVars);
+}
+createCategoriesBatchRef.operationName = 'CreateCategoriesBatch';
+
+export function createCategoriesBatch(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(createCategoriesBatchRef(dcInstance, inputVars));
+}
+
+export const createSubcategoriesBatchRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'CreateSubcategoriesBatch', inputVars);
+}
+createSubcategoriesBatchRef.operationName = 'CreateSubcategoriesBatch';
+
+export function createSubcategoriesBatch(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(createSubcategoriesBatchRef(dcInstance, inputVars));
+}
+
 export const saveBranchRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
@@ -297,16 +321,16 @@ export function listSubcategories(dcOrVars, varsOrOptions, options) {
   return executeQuery(listSubcategoriesRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 
-export const categoryOptionsRef = (dc) => {
-  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+export const categoryOptionsRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
   dcInstance._useGeneratedSdk();
-  return queryRef(dcInstance, 'CategoryOptions');
+  return queryRef(dcInstance, 'CategoryOptions', inputVars);
 }
 categoryOptionsRef.operationName = 'CategoryOptions';
 
-export function categoryOptions(dcOrOptions, options) {
+export function categoryOptions(dcOrVars, varsOrOptions, options) {
   
-  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
   return executeQuery(categoryOptionsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 

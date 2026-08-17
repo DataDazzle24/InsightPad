@@ -104,9 +104,21 @@ export interface CategoryOptionsData {
   _select?: unknown[] | null;
 }
 
+export interface CategoryOptionsVariables {
+  requestKey?: string | null;
+}
+
 export interface Category_Key {
   id: UUIDString;
   __typename?: 'Category_Key';
+}
+
+export interface CreateCategoriesBatchData {
+  _execute?: number | null;
+}
+
+export interface CreateCategoriesBatchVariables {
+  names: unknown;
 }
 
 export interface CreateCategoryData {
@@ -115,6 +127,14 @@ export interface CreateCategoryData {
 
 export interface CreateCategoryVariables {
   name: string;
+}
+
+export interface CreateSubcategoriesBatchData {
+  _execute?: number | null;
+}
+
+export interface CreateSubcategoriesBatchVariables {
+  items: unknown;
 }
 
 export interface CreateSubcategoryData {
@@ -667,6 +687,30 @@ export const restoreSubcategoryRef: RestoreSubcategoryRef;
 export function restoreSubcategory(vars: RestoreSubcategoryVariables): MutationPromise<RestoreSubcategoryData, RestoreSubcategoryVariables>;
 export function restoreSubcategory(dc: DataConnect, vars: RestoreSubcategoryVariables): MutationPromise<RestoreSubcategoryData, RestoreSubcategoryVariables>;
 
+interface CreateCategoriesBatchRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CreateCategoriesBatchVariables): MutationRef<CreateCategoriesBatchData, CreateCategoriesBatchVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: CreateCategoriesBatchVariables): MutationRef<CreateCategoriesBatchData, CreateCategoriesBatchVariables>;
+  operationName: string;
+}
+export const createCategoriesBatchRef: CreateCategoriesBatchRef;
+
+export function createCategoriesBatch(vars: CreateCategoriesBatchVariables): MutationPromise<CreateCategoriesBatchData, CreateCategoriesBatchVariables>;
+export function createCategoriesBatch(dc: DataConnect, vars: CreateCategoriesBatchVariables): MutationPromise<CreateCategoriesBatchData, CreateCategoriesBatchVariables>;
+
+interface CreateSubcategoriesBatchRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CreateSubcategoriesBatchVariables): MutationRef<CreateSubcategoriesBatchData, CreateSubcategoriesBatchVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: CreateSubcategoriesBatchVariables): MutationRef<CreateSubcategoriesBatchData, CreateSubcategoriesBatchVariables>;
+  operationName: string;
+}
+export const createSubcategoriesBatchRef: CreateSubcategoriesBatchRef;
+
+export function createSubcategoriesBatch(vars: CreateSubcategoriesBatchVariables): MutationPromise<CreateSubcategoriesBatchData, CreateSubcategoriesBatchVariables>;
+export function createSubcategoriesBatch(dc: DataConnect, vars: CreateSubcategoriesBatchVariables): MutationPromise<CreateSubcategoriesBatchData, CreateSubcategoriesBatchVariables>;
+
 interface SaveBranchRef {
   /* Allow users to create refs without passing in DataConnect */
   (vars: SaveBranchVariables): MutationRef<SaveBranchData, SaveBranchVariables>;
@@ -849,15 +893,15 @@ export function listSubcategories(dc: DataConnect, vars: ListSubcategoriesVariab
 
 interface CategoryOptionsRef {
   /* Allow users to create refs without passing in DataConnect */
-  (): QueryRef<CategoryOptionsData, undefined>;
+  (vars?: CategoryOptionsVariables): QueryRef<CategoryOptionsData, CategoryOptionsVariables>;
   /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect): QueryRef<CategoryOptionsData, undefined>;
+  (dc: DataConnect, vars?: CategoryOptionsVariables): QueryRef<CategoryOptionsData, CategoryOptionsVariables>;
   operationName: string;
 }
 export const categoryOptionsRef: CategoryOptionsRef;
 
-export function categoryOptions(options?: ExecuteQueryOptions): QueryPromise<CategoryOptionsData, undefined>;
-export function categoryOptions(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<CategoryOptionsData, undefined>;
+export function categoryOptions(vars?: CategoryOptionsVariables, options?: ExecuteQueryOptions): QueryPromise<CategoryOptionsData, CategoryOptionsVariables>;
+export function categoryOptions(dc: DataConnect, vars?: CategoryOptionsVariables, options?: ExecuteQueryOptions): QueryPromise<CategoryOptionsData, CategoryOptionsVariables>;
 
 interface ListBranchesRef {
   /* Allow users to create refs without passing in DataConnect */
