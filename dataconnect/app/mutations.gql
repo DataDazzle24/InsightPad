@@ -644,8 +644,8 @@ mutation CreateCategoriesBatch($names: Any!) @auth(level: USER) @transaction {
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN app_pages pg ON pg.page_key='CAD_CATEGORIA' AND pg.active
-      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id
-      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
       WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_create,rp.can_create,false)
     ),input AS (
       SELECT upper(btrim(value)) name FROM jsonb_array_elements_text(COALESCE($2::jsonb,'[]'::jsonb))
@@ -672,8 +672,8 @@ mutation CreateSubcategoriesBatch($items: Any!) @auth(level: USER) @transaction 
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN app_pages pg ON pg.page_key='CAD_SUBCATEGORIA' AND pg.active
-      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id
-      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
       WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_create,rp.can_create,false)
     ),input AS (
       SELECT (item->>'categoryId')::uuid category_id,upper(btrim(item->>'name')) name
@@ -712,8 +712,8 @@ mutation SaveBranch($id: UUID, $payload: Any!) @auth(level: USER) @transaction {
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN roles r ON r.id=u.role_id AND r.active
       JOIN app_pages pg ON pg.page_key='CAD_FILIAL' AND pg.active
-      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id
-      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
       WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
         AND CASE WHEN $2::uuid IS NULL THEN COALESCE(up.can_create,rp.can_create,false) ELSE COALESCE(up.can_update,rp.can_update,false) END
     ),saved AS (
@@ -741,8 +741,8 @@ mutation SetBranchStatus($id: UUID!, $active: Boolean!) @auth(level: USER) @tran
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN app_pages pg ON pg.page_key='CAD_FILIAL'
-      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id
-      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
       WHERE u.id=$1 AND u.active AND CASE WHEN $3 THEN COALESCE(up.can_update,rp.can_update,false) ELSE COALESCE(up.can_delete,rp.can_delete,false) END
     ),changed AS (
       UPDATE branches b SET active=$3,deleted_at=CASE WHEN $3 THEN NULL ELSE now() END,updated_at=now() FROM actor a
@@ -759,7 +759,7 @@ mutation SaveSupplier($id: UUID, $payload: Any!) @auth(level: USER) @transaction
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN app_pages pg ON pg.page_key='CAD_FORNECEDOR'
-      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
       WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND CASE WHEN $2::uuid IS NULL THEN COALESCE(up.can_create,rp.can_create,false) ELSE COALESCE(up.can_update,rp.can_update,false) END
     ),saved AS (
       INSERT INTO suppliers(id,tenant_id,legal_name,trade_name,internal_code,cpf,cnpj,postal_code,state_code,city,district,street,street_number,address_complement,
@@ -791,7 +791,7 @@ mutation SaveSupplier($id: UUID, $payload: Any!) @auth(level: USER) @transaction
 mutation SetSupplierStatus($id: UUID!, $active: Boolean!) @auth(level: USER) @transaction {
   _execute(sql: """
     WITH actor AS (SELECT u.id,u.tenant_id FROM users u JOIN app_pages pg ON pg.page_key='CAD_FORNECEDOR'
-      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
       WHERE u.id=$1 AND u.active AND CASE WHEN $3 THEN COALESCE(up.can_update,rp.can_update,false) ELSE COALESCE(up.can_delete,rp.can_delete,false) END),
     changed AS (UPDATE suppliers s SET active=$3,deleted_at=CASE WHEN $3 THEN NULL ELSE now() END,updated_at=now() FROM actor a
       WHERE s.id=$2 AND s.tenant_id=a.tenant_id AND ($3 OR NOT EXISTS(SELECT 1 FROM products p WHERE p.supplier_id=s.id AND p.active))
@@ -806,7 +806,7 @@ mutation SaveCustomer($id: UUID, $payload: Any!) @auth(level: USER) @transaction
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN app_pages pg ON pg.page_key='CAD_CLIENTE'
-      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
       WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND CASE WHEN $2::uuid IS NULL THEN COALESCE(up.can_create,rp.can_create,false) ELSE COALESCE(up.can_update,rp.can_update,false) END
     ),saved AS (
       INSERT INTO customers(id,tenant_id,name,birth_date,gender,cpf,cnpj,marketing_opt_in,email,phone_primary,phone_secondary,postal_code,state_code,city,district,street,
@@ -841,7 +841,7 @@ mutation SaveCustomer($id: UUID, $payload: Any!) @auth(level: USER) @transaction
 mutation SetCustomerStatus($id: UUID!, $active: Boolean!) @auth(level: USER) @transaction {
   _execute(sql: """
     WITH actor AS (SELECT u.id,u.tenant_id FROM users u JOIN app_pages pg ON pg.page_key='CAD_CLIENTE'
-      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
       WHERE u.id=$1 AND u.active AND CASE WHEN $3 THEN COALESCE(up.can_update,rp.can_update,false) ELSE COALESCE(up.can_delete,rp.can_delete,false) END),
     changed AS (UPDATE customers c SET active=$3,deleted_at=CASE WHEN $3 THEN NULL ELSE now() END,updated_at=now() FROM actor a
       WHERE c.id=$2 AND c.tenant_id=a.tenant_id RETURNING c.id,c.tenant_id,c.name)
@@ -856,7 +856,7 @@ mutation SaveProduct($id: UUID, $payload: Any!, $components: Any) @auth(level: U
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN app_pages pg ON pg.page_key='CAD_PRODUTO'
-      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
       WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND CASE WHEN $2::uuid IS NULL THEN COALESCE(up.can_create,rp.can_create,false) ELSE COALESCE(up.can_update,rp.can_update,false) END
     ),saved AS (
       INSERT INTO products(id,tenant_id,category_id,subcategory_id,supplier_id,name,internal_code,ean,brand,size_type,size,color,maximum_stock,minimum_stock,
@@ -931,7 +931,7 @@ mutation SaveProduct($id: UUID, $payload: Any!, $components: Any) @auth(level: U
 mutation SetProductStatus($id: UUID!, $active: Boolean!) @auth(level: USER) @transaction {
   _execute(sql: """
     WITH actor AS (SELECT u.id,u.tenant_id FROM users u JOIN app_pages pg ON pg.page_key='CAD_PRODUTO'
-      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
       WHERE u.id=$1 AND u.active AND CASE WHEN $3 THEN COALESCE(up.can_update,rp.can_update,false) ELSE COALESCE(up.can_delete,rp.can_delete,false) END),
     changed AS (UPDATE products p SET active=$3,deleted_at=CASE WHEN $3 THEN NULL ELSE now() END,updated_at=now() FROM actor a
       WHERE p.id=$2 AND p.tenant_id=a.tenant_id AND ($3 OR NOT EXISTS(
@@ -948,8 +948,8 @@ mutation SaveProductComponents($productId: UUID!, $components: Any!) @auth(level
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN app_pages pg ON pg.page_key='CAD_PRODUTO'
-      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id
-      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
       WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_update,rp.can_update,false)
     ),target AS (
       SELECT p.id,p.tenant_id FROM products p JOIN actor a ON a.tenant_id=p.tenant_id
@@ -987,7 +987,7 @@ mutation SavePromotion($id: UUID, $productId: UUID!, $promotionalPriceCents: Int
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN app_pages pg ON pg.page_key='CAD_PRODUTO'
-      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
       WHERE u.id=$1 AND u.active AND COALESCE(up.can_update,rp.can_update,false)
     ),saved AS (
       INSERT INTO promotions(id,tenant_id,product_id,promotional_price_cents,starts_at,ends_at,active,created_at,updated_at)
@@ -1006,8 +1006,8 @@ mutation SetPromotionStatus($id: UUID!, $active: Boolean!) @auth(level: USER) @t
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN app_pages pg ON pg.page_key='CAD_PRODUTO'
-      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id
-      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
       WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_update,rp.can_update,false)
     ),changed AS (
       UPDATE promotions p SET active=$3,deleted_at=CASE WHEN $3 THEN NULL ELSE now() END,updated_at=now()
