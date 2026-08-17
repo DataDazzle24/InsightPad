@@ -67,6 +67,12 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
  function fieldOptions(field:Field){if(pageKey!=='CAD_PRODUTO')return field.options??[];if(field.key==='categoryId')return options.categories.map(x=>({value:x.id,label:x.name}))
   if(field.key==='subcategoryId')return options.subcategories.filter(x=>!form.categoryId||x.categoryId===form.categoryId).map(x=>({value:x.id,label:x.name}))
   if(field.key==='supplierId')return options.suppliers.map(x=>({value:x.id,label:x.name}));return field.options??[]}
+ async function lookupCep(value:unknown){const cep=digits(String(value??''));if(cep.length!==8)return
+  try{setBusy(true);const response=await fetch(`https://viacep.com.br/ws/${cep}/json/`);const data=await response.json()
+    if(!data.erro)setForm(current=>({...current,postalCode:cep,stateCode:data.uf??'',city:data.localidade??'',district:data.bairro??'',street:data.logradouro??''}))
+    else setNotice('CEP não encontrado.')
+  }catch(error){console.error(error);setNotice('Não foi possível consultar o CEP. Preencha o endereço manualmente.')}finally{setBusy(false)}
+ }
  function validate(){if(cfg.fields.some(f=>f.required&&!String(form[f.key]??'').trim()))return 'Preencha todos os campos obrigatórios.'
   if((form.cpf&&digits(String(form.cpf)).length!==11)||(form.cnpj&&digits(String(form.cnpj)).length!==14))return 'CPF ou CNPJ inválido.'
   if(form.email&&!/^\S+@\S+\.\S+$/.test(String(form.email)))return 'E-mail inválido.'
@@ -98,7 +104,7 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
     <span>{field.label}{field.required?' *':''}</span>{field.type==='textarea'?<textarea value={String(form[field.key]??'')} onChange={e=>setForm({...form,[field.key]:e.target.value})}/>:
     field.type==='checkbox'?<input type="checkbox" checked={Boolean(form[field.key])} onChange={e=>setForm({...form,[field.key]:e.target.checked})}/>:
     field.type==='select'?<select value={String(form[field.key]??'')} onChange={e=>setForm({...form,[field.key]:e.target.value})}><option value="">Selecione</option>{fieldOptions(field).map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</select>:
-    <input type={field.type==='money'||field.type==='number'?'number':field.type??'text'} step={field.type==='money'?'0.01':undefined} value={String(form[field.key]??'')} onChange={e=>setForm({...form,[field.key]:e.target.value})}/>}</label>)}</div>
+    <input type={field.type==='money'||field.type==='number'?'number':field.type??'text'} step={field.type==='money'?'0.01':undefined} value={String(form[field.key]??'')} onChange={e=>setForm({...form,[field.key]:e.target.value})} onBlur={field.key==='postalCode'?e=>void lookupCep(e.target.value):undefined}/>}</label>)}</div>
     {pageKey==='CAD_PRODUTO'&&<div className="product-margin">Margem estimada: <strong>{Number(form.salePriceCents)>0?(((Number(form.salePriceCents)-Number(form.costPriceCents||0))/Number(form.salePriceCents))*100).toFixed(1):'0.0'}%</strong></div>}
     <footer><button type="button" onClick={()=>setModal(false)}>Cancelar</button><button className="catalog-primary">Continuar</button></footer></form></section></div>}
   {confirm&&<div className="catalog-backdrop"><section className="catalog-confirm"><span className="material-symbols-rounded">help</span><h2>Confirmar operação</h2><p>{confirm.text}</p><footer><button onClick={()=>setConfirm(null)}>Cancelar</button><button className="catalog-primary" onClick={()=>{const action=confirm.run;setConfirm(null);void action()}}>Confirmar</button></footer></section></div>}
