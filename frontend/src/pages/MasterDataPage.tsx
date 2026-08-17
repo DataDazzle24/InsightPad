@@ -7,6 +7,7 @@ import {
 } from '@insightpad/dataconnect'
 import { useAuth } from '../auth/useAuth'
 import { firebaseApp } from '../lib/firebase'
+import { ProductExtras } from './ProductExtras'
 
 const dc=getDataConnect(firebaseApp,connectorConfig),PAGE_SIZE=20
 type PageKey='CAD_FILIAL'|'CAD_FORNECEDOR'|'CAD_CLIENTE'|'CAD_PRODUTO'
@@ -54,7 +55,7 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
  const cfg=configs[pageKey],permission=useAuth().permissions[pageKey]
  const [rows,setRows]=useState<Row[]>([]),[search,setSearch]=useState(''),[page,setPage]=useState(0),[busy,setBusy]=useState(true),[modal,setModal]=useState(false)
  const [editing,setEditing]=useState<Row|null>(null),[form,setForm]=useState<Record<string,unknown>>({}),[notice,setNotice]=useState(''),[confirm,setConfirm]=useState<null|{text:string;run:()=>Promise<void>}>(null)
- const [selected,setSelected]=useState<string[]>([]),[options,setOptions]=useState<{categories:any[];subcategories:any[];suppliers:any[]}>({categories:[],subcategories:[],suppliers:[]})
+ const [selected,setSelected]=useState<string[]>([]),[extras,setExtras]=useState<Row|null>(null),[options,setOptions]=useState<{categories:any[];subcategories:any[];suppliers:any[]}>({categories:[],subcategories:[],suppliers:[]})
  const query=useMemo(()=>({search:search.trim(),limit:PAGE_SIZE,offset:page*PAGE_SIZE,requestKey:crypto.randomUUID()}),[page,search])
  const load=useCallback(async()=>{setBusy(true);try{let result
   if(pageKey==='CAD_FILIAL')result=await listBranches(dc,query);else if(pageKey==='CAD_FORNECEDOR')result=await listSuppliers(dc,query)
@@ -97,7 +98,7 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
    <div className="catalog-scroll"><div className="catalog-table"><table><thead><tr><th><input type="checkbox" checked={rows.length>0&&selected.length===rows.length} onChange={e=>setSelected(e.target.checked?rows.map(r=>r.id):[])}/></th>
     {cfg.columns.map(c=><th key={c.key}>{c.label}</th>)}<th>Status</th><th>Ações</th></tr></thead><tbody>{rows.map(row=><tr key={row.id} className={!row.active?'is-inactive':''}><td><input type="checkbox" checked={selected.includes(row.id)} onChange={e=>setSelected(v=>e.target.checked?[...v,row.id]:v.filter(id=>id!==row.id))}/></td>
     {cfg.columns.map(c=><td key={c.key}>{c.format?c.format(row[c.key],row):String(row[c.key]??'—')}</td>)}<td><span className={`catalog-status catalog-status--${row.active?'active':'inactive'}`}><i/>{row.active?'Ativo':'Inativo'}</span></td><td><div className="catalog-actions">
-     {row.active&&permission?.canUpdate&&<button onClick={()=>open(row)}>Editar</button>}<button className={row.active?'danger':'success'} onClick={()=>setConfirm({text:`${row.active?'Inativar':'Ativar'} “${String(row.name||row.legalName)}”?`,run:()=>status([row.id],!row.active)})}>{row.active?'Inativar':'Ativar'}</button></div></td></tr>)}</tbody></table></div></div>
+     {row.active&&permission?.canUpdate&&<button onClick={()=>open(row)}>Editar</button>}{pageKey==='CAD_PRODUTO'&&row.active&&permission?.canUpdate&&<button onClick={()=>setExtras(row)}>Kit e promoções</button>}<button className={row.active?'danger':'success'} onClick={()=>setConfirm({text:`${row.active?'Inativar':'Ativar'} “${String(row.name||row.legalName)}”?`,run:()=>status([row.id],!row.active)})}>{row.active?'Inativar':'Ativar'}</button></div></td></tr>)}</tbody></table></div></div>
    <footer className="catalog-pagination"><button disabled={page===0} onClick={()=>setPage(page-1)}>Anterior</button><span>Página {page+1}</span><button disabled={rows.length<PAGE_SIZE} onClick={()=>setPage(page+1)}>Próxima</button></footer></div>
   {modal&&<div className="catalog-backdrop"><section className="catalog-modal master-modal"><header><div><span className="eyebrow">Cadastro</span><h2>{editing?'Editar':'Novo'} {cfg.singular}</h2></div><button onClick={()=>setModal(false)}>×</button></header>
    <form onSubmit={(e:FormEvent)=>{e.preventDefault();setConfirm({text:'Confirma o salvamento das informações?',run:save})}}><div className="master-form-grid">{cfg.fields.map(field=><label className={field.wide?'wide':''} key={field.key}>
@@ -108,6 +109,7 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
     {pageKey==='CAD_PRODUTO'&&<div className="product-margin">Margem estimada: <strong>{Number(form.salePriceCents)>0?(((Number(form.salePriceCents)-Number(form.costPriceCents||0))/Number(form.salePriceCents))*100).toFixed(1):'0.0'}%</strong></div>}
     <footer><button type="button" onClick={()=>setModal(false)}>Cancelar</button><button className="catalog-primary">Continuar</button></footer></form></section></div>}
   {confirm&&<div className="catalog-backdrop"><section className="catalog-confirm"><span className="material-symbols-rounded">help</span><h2>Confirmar operação</h2><p>{confirm.text}</p><footer><button onClick={()=>setConfirm(null)}>Cancelar</button><button className="catalog-primary" onClick={()=>{const action=confirm.run;setConfirm(null);void action()}}>Confirmar</button></footer></section></div>}
+  {extras&&<ProductExtras product={{id:extras.id,name:extras.name,active:extras.active}} products={rows.map(r=>({id:r.id,name:r.name,active:r.active}))} onClose={()=>setExtras(null)}/>}
   {busy&&<div className="catalog-loader"><div className="catalog-loader__mark"><span/><img src="/brand/insight-pad-logo-dark.png" alt="Insight Pad"/></div><strong>Atualizando informações...</strong></div>}
  </section>
 }
