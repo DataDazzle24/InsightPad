@@ -1,19 +1,22 @@
+import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from './layout/AppLayout'
 import { AccessDeniedPage } from './pages/AccessDeniedPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
 import { ModuleMenuPage } from './pages/ModuleMenuPage'
-import { CatalogPages } from './pages/CatalogPages'
-import { MasterDataPage } from './pages/MasterDataPage'
 import { ModulePlaceholderPage } from './pages/ModulePlaceholderPage'
 import { appRoutes } from './config/pages'
 import { PermissionRoute } from './routes/PermissionRoute'
 import { ProtectedRoute } from './routes/ProtectedRoute'
 import './App.css'
 
+const CatalogPages = lazy(() => import('./pages/CatalogPages').then((module) => ({ default: module.CatalogPages })))
+const MasterDataPage = lazy(() => import('./pages/MasterDataPage').then((module) => ({ default: module.MasterDataPage })))
+
 export default function App() {
   return (
+    <Suspense fallback={<div className="session-loader"><div className="brand-mark"><span>Insight Pad</span></div><p>Carregando módulo...</p></div>}>
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/acesso-negado" element={<AccessDeniedPage />} />
@@ -32,5 +35,6 @@ export default function App() {
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </Suspense>
   )
 }
