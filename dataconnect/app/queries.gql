@@ -226,7 +226,9 @@ query RegistrationOptions @auth(level: USER) {
       'subcategories',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',s.id,'name',s.name,'categoryId',s.category_id) ORDER BY lower(s.name))
         FROM subcategories s WHERE s.tenant_id=u.tenant_id AND s.active AND s.deleted_at IS NULL),'[]'::jsonb),
       'suppliers',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',s.id,'name',COALESCE(s.trade_name,s.legal_name)) ORDER BY lower(COALESCE(s.trade_name,s.legal_name)))
-        FROM suppliers s WHERE s.tenant_id=u.tenant_id AND s.active AND s.deleted_at IS NULL),'[]'::jsonb)
+        FROM suppliers s WHERE s.tenant_id=u.tenant_id AND s.active AND s.deleted_at IS NULL),'[]'::jsonb),
+      'products',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',p.id,'name',p.name) ORDER BY lower(p.name))
+        FROM products p WHERE p.tenant_id=u.tenant_id AND p.active AND p.deleted_at IS NULL),'[]'::jsonb)
     ) AS data FROM users u WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
   """,params:[{_expr:"auth.uid"}])
 }
