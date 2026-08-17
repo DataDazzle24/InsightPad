@@ -780,7 +780,7 @@ mutation SetCustomerStatus($id: UUID!, $active: Boolean!) @auth(level: USER) @tr
 }
 
 
-mutation SaveProduct($id: UUID, $payload: Any!) @auth(level: USER) @transaction {
+mutation SaveProduct($id: UUID, $payload: Any!, $components: Any) @auth(level: USER) @transaction {
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN app_pages pg ON pg.page_key='CAD_PRODUTO'
@@ -811,10 +811,18 @@ mutation SaveProduct($id: UUID, $payload: Any!) @auth(level: USER) @transaction 
         maximum_stock=EXCLUDED.maximum_stock,minimum_stock=EXCLUDED.minimum_stock,sale_price_cents=EXCLUDED.sale_price_cents,cost_price_cents=EXCLUDED.cost_price_cents,
         weighted_product=EXCLUDED.weighted_product,bundle_product=EXCLUDED.bundle_product,allow_negative_stock=EXCLUDED.allow_negative_stock,
         notes=EXCLUDED.notes,updated_at=now() WHERE products.tenant_id=EXCLUDED.tenant_id RETURNING id,tenant_id,name
+    ),cleared AS (
+      DELETE FROM product_components pc USING saved s WHERE pc.parent_product_id=s.id AND pc.tenant_id=s.tenant_id RETURNING pc.parent_product_id
+    ),components_saved AS (
+      INSERT INTO product_components(tenant_id,parent_product_id,component_product_id,quantity,allocated_unit_price_cents,created_at,updated_at)
+      SELECT s.tenant_id,s.id,(item->>'productId')::uuid,(item->>'quantity')::numeric,NULLIF(item->>'allocatedUnitPriceCents','')::bigint,now(),now()
+      FROM saved s CROSS JOIN jsonb_array_elements(COALESCE($4::jsonb,'[]'::jsonb)) item
+      JOIN products component ON component.id=(item->>'productId')::uuid AND component.tenant_id=s.tenant_id AND component.active
+      WHERE component.id<>s.id AND (item->>'quantity')::numeric>0 RETURNING parent_product_id
     ) INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
       SELECT tenant_id,$1,'Cadastros','CAD_PRODUTO',CASE WHEN $2::uuid IS NULL THEN 'CREATE' ELSE 'UPDATE' END,'Product',id::text,'Produto salvo',true,
       'SQL_CONNECT',jsonb_build_object('id',id,'name',name),now() FROM saved
-  """,params:[{_expr:"auth.uid"},$id,$payload])
+  """,params:[{_expr:"auth.uid"},$id,$payload,$components])
 }
 
 mutation SetProductStatus($id: UUID!, $active: Boolean!) @auth(level: USER) @transaction {
