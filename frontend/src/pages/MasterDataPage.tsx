@@ -3,7 +3,8 @@ import { getDataConnect } from 'firebase/data-connect'
 import { Link } from 'react-router-dom'
 import {
   connectorConfig,listBranches,listSuppliers,listCustomers,listProducts,registrationOptions,
-  saveBranch,saveSupplier,saveCustomer,saveProduct,setBranchStatus,setSupplierStatus,setCustomerStatus,setProductStatus,productComponents,
+  saveBranch,saveSupplier,saveCustomer,saveProduct,setBranchStatus,setSupplierStatus,setCustomerStatus,setProductStatus,
+  setBranchesStatusBatch,setSuppliersStatusBatch,setCustomersStatusBatch,setProductsStatusBatch,productComponents,
 } from '@insightpad/dataconnect'
 import { useAuth } from '../auth/useAuth'
 import { firebaseApp } from '../lib/firebase'
@@ -152,11 +153,13 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
   else if(pageKey==='CAD_CLIENTE')result=await saveCustomer(dc,vars);else result=await saveProduct(dc,{...vars,components:form.bundleProduct?kitItems:[]})
   if(!result.data._execute)throw new Error();setModal(false);setNotice(`${cfg.singular} salvo com sucesso.`);await load()
  }catch(e){console.error(e);setNotice('Operação não aplicada. Verifique duplicidades, vínculos e dados informados.')}finally{setBusy(false)}}
- async function status(ids:string[],active:boolean){setBusy(true);try{for(const id of ids){let result
-  if(pageKey==='CAD_FILIAL')result=await setBranchStatus(dc,{id,active});else if(pageKey==='CAD_FORNECEDOR')result=await setSupplierStatus(dc,{id,active})
-  else if(pageKey==='CAD_CLIENTE')result=await setCustomerStatus(dc,{id,active});else result=await setProductStatus(dc,{id,active})
-  if(!result.data._execute)throw new Error('Nenhum registro foi alterado.')}setSelected([]);setNotice('Status atualizado.');await load()
- }catch(e){console.error(e);setNotice('Não foi possível alterar o status. Verifique permissões, duplicidades e vínculos ativos.');await load()}finally{setBusy(false)}}
+ async function status(ids:string[],active:boolean){setBusy(true);try{let result
+  if(ids.length===1){const id=ids[0];if(pageKey==='CAD_FILIAL')result=await setBranchStatus(dc,{id,active});else if(pageKey==='CAD_FORNECEDOR')result=await setSupplierStatus(dc,{id,active})
+   else if(pageKey==='CAD_CLIENTE')result=await setCustomerStatus(dc,{id,active});else result=await setProductStatus(dc,{id,active})}
+  else if(pageKey==='CAD_FILIAL')result=await setBranchesStatusBatch(dc,{ids,active});else if(pageKey==='CAD_FORNECEDOR')result=await setSuppliersStatusBatch(dc,{ids,active})
+  else if(pageKey==='CAD_CLIENTE')result=await setCustomersStatusBatch(dc,{ids,active});else result=await setProductsStatusBatch(dc,{ids,active})
+  if(Number(result.data._execute)!==ids.length)throw new Error('Nem todos os registros são elegíveis.');setSelected([]);setNotice('Status atualizado.');await load()
+ }catch(e){console.error(e);setNotice('Nenhum registro foi alterado. Verifique permissões, duplicidades e vínculos ativos.');await load()}finally{setBusy(false)}}
  function exportCsv(){const keys=Array.from(new Set(['id',...cfg.fields.map(field=>field.key),...Object.keys(filteredRows[0]??{}),'active','updatedAt']))
   const labels:Record<string,string>=Object.fromEntries(cfg.fields.map(field=>[field.key,field.label]));Object.assign(labels,{id:'ID',active:'Status',updatedAt:'Última atualização',categoryName:'Categoria',subcategoryName:'Subcategoria',supplierName:'Fornecedor'})
   const cell=(key:string,value:unknown)=>{if(key==='active')return value?'Ativo':'Inativo';const field=cfg.fields.find(item=>item.key===key);if(field?.type==='money')return money(value);if(typeof value==='boolean')return value?'Sim':'Não';if(value&&typeof value==='object')return JSON.stringify(value);return String(value??'')}
