@@ -577,6 +577,14 @@ export interface SetCustomersStatusBatchVariables {
   active: boolean;
 }
 
+export interface SetPlatformRolePermissionData {
+  _execute?: number | null;
+}
+
+export interface SetPlatformRolePermissionVariables {
+  payload: unknown;
+}
+
 export interface SetPlatformTenantStatusData {
   _execute?: number | null;
 }
@@ -1145,6 +1153,18 @@ export const setPlatformUserStatusRef: SetPlatformUserStatusRef;
 
 export function setPlatformUserStatus(vars: SetPlatformUserStatusVariables): MutationPromise<SetPlatformUserStatusData, SetPlatformUserStatusVariables>;
 export function setPlatformUserStatus(dc: DataConnect, vars: SetPlatformUserStatusVariables): MutationPromise<SetPlatformUserStatusData, SetPlatformUserStatusVariables>;
+
+interface SetPlatformRolePermissionRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SetPlatformRolePermissionVariables): MutationRef<SetPlatformRolePermissionData, SetPlatformRolePermissionVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SetPlatformRolePermissionVariables): MutationRef<SetPlatformRolePermissionData, SetPlatformRolePermissionVariables>;
+  operationName: string;
+}
+export const setPlatformRolePermissionRef: SetPlatformRolePermissionRef;
+
+export function setPlatformRolePermission(vars: SetPlatformRolePermissionVariables): MutationPromise<SetPlatformRolePermissionData, SetPlatformRolePermissionVariables>;
+export function setPlatformRolePermission(dc: DataConnect, vars: SetPlatformRolePermissionVariables): MutationPromise<SetPlatformRolePermissionData, SetPlatformRolePermissionVariables>;
 
 interface GetCurrentUserRef {
   /* Allow users to create refs without passing in DataConnect */
