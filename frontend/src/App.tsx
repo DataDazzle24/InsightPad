@@ -4,6 +4,7 @@ import { AccessDeniedPage } from './pages/AccessDeniedPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
 import { ModuleMenuPage } from './pages/ModuleMenuPage'
+import { CatalogPages } from './pages/CatalogPages'
 import { ModulePlaceholderPage } from './pages/ModulePlaceholderPage'
 import { appRoutes } from './config/pages'
 import { PermissionRoute } from './routes/PermissionRoute'
@@ -23,7 +24,7 @@ export default function App() {
           <Route path="/modulos/dashboards" element={<ModuleMenuPage moduleKey="dashboards" />} />
           {appRoutes.map(({ pageKey, route }) => (
             <Route element={<PermissionRoute pageKey={pageKey} />} key={pageKey}>
-              <Route path={route} element={<ModulePlaceholderPage pageKey={pageKey} />} />
+              <Route path={route} element={pageKey === 'CAD_CATEGORIA' || pageKey === 'CAD_SUBCATEGORIA' ? <CatalogPages pageKey={pageKey} /> : <ModulePlaceholderPage pageKey={pageKey} />} />
             </Route>
           ))}
         </Route>
