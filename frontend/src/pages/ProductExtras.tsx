@@ -31,6 +31,7 @@ export function ProductExtras({product,onClose}:{product:Product;onClose:()=>voi
  function edit(item:Promotion){setEditing(item);setPromotion({price:money(item.promotionalPriceCents),startsAt:toLocalInput(item.startsAt),endsAt:toLocalInput(item.endsAt)})}
  async function save(e:FormEvent){e.preventDefault();const starts=new Date(promotion.startsAt),ends=new Date(promotion.endsAt)
   if(priceCents<=0){setMessage('Informe um preço promocional maior que zero.');return}
+  if(priceCents>=Number(product.salePriceCents)){setMessage('O preço promocional deve ser menor que o preço normal do produto.');return}
   if(!promotion.startsAt||!promotion.endsAt||ends<=starts){setMessage('A data final deve ser posterior à data inicial.');return}
   setBusy(true);try{const result=await savePromotion(dc,{id:editing?.id??null,productId:product.id,promotionalPriceCents:String(priceCents),startsAt:starts.toISOString(),endsAt:ends.toISOString()})
    if(!result.data._execute)throw new Error('Operação não aplicada');setMessage(editing?'Promoção atualizada com sucesso.':'Promoção cadastrada com sucesso.');clear();await load()
