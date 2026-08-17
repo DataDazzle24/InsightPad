@@ -422,17 +422,17 @@ exports.listProducts = function listProducts(dcOrVars, varsOrOptions, options) {
 }
 ;
 
-const registrationOptionsRef = (dc) => {
-  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+const registrationOptionsRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
   dcInstance._useGeneratedSdk();
-  return queryRef(dcInstance, 'RegistrationOptions');
+  return queryRef(dcInstance, 'RegistrationOptions', inputVars);
 }
 registrationOptionsRef.operationName = 'RegistrationOptions';
 exports.registrationOptionsRef = registrationOptionsRef;
 
-exports.registrationOptions = function registrationOptions(dcOrOptions, options) {
+exports.registrationOptions = function registrationOptions(dcOrVars, varsOrOptions, options) {
   
-  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
   return executeQuery(registrationOptionsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;

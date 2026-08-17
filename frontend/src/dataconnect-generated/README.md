@@ -1142,22 +1142,22 @@ executeQuery(ref).then((response) => {
 ## RegistrationOptions
 You can execute the `RegistrationOptions` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
 ```typescript
-registrationOptions(options?: ExecuteQueryOptions): QueryPromise<RegistrationOptionsData, undefined>;
+registrationOptions(vars?: RegistrationOptionsVariables, options?: ExecuteQueryOptions): QueryPromise<RegistrationOptionsData, RegistrationOptionsVariables>;
 
 interface RegistrationOptionsRef {
   ...
   /* Allow users to create refs without passing in DataConnect */
-  (): QueryRef<RegistrationOptionsData, undefined>;
+  (vars?: RegistrationOptionsVariables): QueryRef<RegistrationOptionsData, RegistrationOptionsVariables>;
 }
 export const registrationOptionsRef: RegistrationOptionsRef;
 ```
 You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
 ```typescript
-registrationOptions(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<RegistrationOptionsData, undefined>;
+registrationOptions(dc: DataConnect, vars?: RegistrationOptionsVariables, options?: ExecuteQueryOptions): QueryPromise<RegistrationOptionsData, RegistrationOptionsVariables>;
 
 interface RegistrationOptionsRef {
   ...
-  (dc: DataConnect): QueryRef<RegistrationOptionsData, undefined>;
+  (dc: DataConnect, vars?: RegistrationOptionsVariables): QueryRef<RegistrationOptionsData, RegistrationOptionsVariables>;
 }
 export const registrationOptionsRef: RegistrationOptionsRef;
 ```
@@ -1169,7 +1169,13 @@ console.log(name);
 ```
 
 ### Variables
-The `RegistrationOptions` query has no variables.
+The `RegistrationOptions` query has an optional argument of type `RegistrationOptionsVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface RegistrationOptionsVariables {
+  requestKey?: string | null;
+}
+```
 ### Return Type
 Recall that executing the `RegistrationOptions` query returns a `QueryPromise` that resolves to an object with a `data` property.
 
@@ -1183,21 +1189,29 @@ export interface RegistrationOptionsData {
 
 ```typescript
 import { getDataConnect } from 'firebase/data-connect';
-import { connectorConfig, registrationOptions } from '@insightpad/dataconnect';
+import { connectorConfig, registrationOptions, RegistrationOptionsVariables } from '@insightpad/dataconnect';
 
+// The `RegistrationOptions` query has an optional argument of type `RegistrationOptionsVariables`:
+const registrationOptionsVars: RegistrationOptionsVariables = {
+  requestKey: ..., // optional
+};
 
 // Call the `registrationOptions()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await registrationOptions(registrationOptionsVars);
+// Variables can be defined inline as well.
+const { data } = await registrationOptions({ requestKey: ..., });
+// Since all variables are optional for this query, you can omit the `RegistrationOptionsVariables` argument.
 const { data } = await registrationOptions();
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
-const { data } = await registrationOptions(dataConnect);
+const { data } = await registrationOptions(dataConnect, registrationOptionsVars);
 
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
-registrationOptions().then((response) => {
+registrationOptions(registrationOptionsVars).then((response) => {
   const data = response.data;
   console.log(data._select);
 });
@@ -1207,15 +1221,23 @@ registrationOptions().then((response) => {
 
 ```typescript
 import { getDataConnect, executeQuery } from 'firebase/data-connect';
-import { connectorConfig, registrationOptionsRef } from '@insightpad/dataconnect';
+import { connectorConfig, registrationOptionsRef, RegistrationOptionsVariables } from '@insightpad/dataconnect';
 
+// The `RegistrationOptions` query has an optional argument of type `RegistrationOptionsVariables`:
+const registrationOptionsVars: RegistrationOptionsVariables = {
+  requestKey: ..., // optional
+};
 
 // Call the `registrationOptionsRef()` function to get a reference to the query.
+const ref = registrationOptionsRef(registrationOptionsVars);
+// Variables can be defined inline as well.
+const ref = registrationOptionsRef({ requestKey: ..., });
+// Since all variables are optional for this query, you can omit the `RegistrationOptionsVariables` argument.
 const ref = registrationOptionsRef();
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
-const ref = registrationOptionsRef(dataConnect);
+const ref = registrationOptionsRef(dataConnect, registrationOptionsVars);
 
 // Call `executeQuery()` on the reference to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.

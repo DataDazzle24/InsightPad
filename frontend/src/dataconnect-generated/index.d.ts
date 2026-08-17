@@ -333,6 +333,10 @@ export interface RegistrationOptionsData {
   _select?: unknown[] | null;
 }
 
+export interface RegistrationOptionsVariables {
+  requestKey?: string | null;
+}
+
 export interface RestoreCategoryData {
   _execute?: number | null;
 }
@@ -905,15 +909,15 @@ export function listProducts(dc: DataConnect, vars: ListProductsVariables, optio
 
 interface RegistrationOptionsRef {
   /* Allow users to create refs without passing in DataConnect */
-  (): QueryRef<RegistrationOptionsData, undefined>;
+  (vars?: RegistrationOptionsVariables): QueryRef<RegistrationOptionsData, RegistrationOptionsVariables>;
   /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect): QueryRef<RegistrationOptionsData, undefined>;
+  (dc: DataConnect, vars?: RegistrationOptionsVariables): QueryRef<RegistrationOptionsData, RegistrationOptionsVariables>;
   operationName: string;
 }
 export const registrationOptionsRef: RegistrationOptionsRef;
 
-export function registrationOptions(options?: ExecuteQueryOptions): QueryPromise<RegistrationOptionsData, undefined>;
-export function registrationOptions(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<RegistrationOptionsData, undefined>;
+export function registrationOptions(vars?: RegistrationOptionsVariables, options?: ExecuteQueryOptions): QueryPromise<RegistrationOptionsData, RegistrationOptionsVariables>;
+export function registrationOptions(dc: DataConnect, vars?: RegistrationOptionsVariables, options?: ExecuteQueryOptions): QueryPromise<RegistrationOptionsData, RegistrationOptionsVariables>;
 
 interface ProductComponentsRef {
   /* Allow users to create refs without passing in DataConnect */
