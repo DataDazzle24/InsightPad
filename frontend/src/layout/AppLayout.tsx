@@ -10,6 +10,7 @@ export function AppLayout() {
   const [leaving, setLeaving] = useState(false)
   const location = useLocation()
   const { theme, toggleTheme } = useTheme()
+  const isPlatformAdmin = profile?.role.systemRole === true && profile.role.name === 'Administrador da Plataforma'
 
   const modules = useMemo(
     () => navigationModules.filter((module) => module.pageKeys.some(canAccess)),
@@ -45,9 +46,6 @@ export function AppLayout() {
             <span className="header-nav-item__tooltip">Início</span>
           </NavLink>
         </nav>
-        <button className="theme-switch" type="button" onClick={toggleTheme} aria-label={`Ativar tema ${theme === 'dark' ? 'claro' : 'escuro'}`} aria-pressed={theme === 'light'}>
-          <span className="material-symbols-rounded">light_mode</span><i><b /></i><span className="material-symbols-rounded">dark_mode</span>
-        </button>
         <button className="legacy-header__user" type="button" onClick={() => setDrawerOpen(true)} aria-label="Abrir painel do usuário">
           <span className="material-symbols-rounded" aria-hidden="true">person</span>
           <span>{profile?.name?.split(' ')[0]}</span>
@@ -65,7 +63,9 @@ export function AppLayout() {
           <div><strong>{profile?.name}</strong><small>{profile?.role.name}</small></div>
         </div>
         <div className="user-drawer__company"><small>EMPRESA</small><strong>{profile?.tenant.tradeName ?? profile?.tenant.legalName}</strong></div>
+        <div className="user-drawer__theme"><div><span className="material-symbols-rounded">contrast</span><span><strong>Aparência</strong><small>{theme === 'dark' ? 'Tema escuro' : 'Tema claro'}</small></span></div><button className="theme-switch" type="button" onClick={toggleTheme} aria-label={`Ativar tema ${theme === 'dark' ? 'claro' : 'escuro'}`} aria-pressed={theme === 'light'}><span className="material-symbols-rounded">dark_mode</span><i><b /></i><span className="material-symbols-rounded">light_mode</span></button></div>
         <nav className="user-drawer__actions">
+          {isPlatformAdmin && <Link to="/plataforma/administracao" onClick={() => setDrawerOpen(false)}><span className="material-symbols-rounded">admin_panel_settings</span>Administrar plataforma</Link>}
           {canAccess('GESTAO_ACESSOS') && <Link to="/configuracoes/acessos" onClick={() => setDrawerOpen(false)}><span className="material-symbols-rounded">manage_accounts</span>Gerenciar acessos</Link>}
           <a href="https://wa.me/5521985795316" target="_blank" rel="noreferrer"><span className="material-symbols-rounded">support_agent</span>Suporte</a>
           <button type="button" onClick={() => void handleSignOut()} disabled={leaving}><span className="material-symbols-rounded">logout</span>{leaving ? 'Saindo...' : 'Sair do sistema'}</button>
