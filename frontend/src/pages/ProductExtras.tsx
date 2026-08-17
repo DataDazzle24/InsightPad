@@ -9,7 +9,7 @@ const promotionSchema=z.object({id:z.string().uuid(),promotionalPriceCents:z.str
 type Component=z.infer<typeof componentSchema>;type Promotion=z.infer<typeof promotionSchema>
 type Product={id:string;name:unknown;active:boolean}
 export function ProductExtras({product,products,onClose}:{product:Product;products:Product[];onClose:()=>void}){
- const [tab,setTab]=useState<'kit'|'promotion'>('kit'),[components,setComponents]=useState<Component[]>([]),[promotions,setPromotions]=useState<Promotion[]>([])
+ const [tab,setTab]=useState<'kit'|'promotion'>('promotion'),[components,setComponents]=useState<Component[]>([]),[promotions,setPromotions]=useState<Promotion[]>([])
  const [busy,setBusy]=useState(true),[message,setMessage]=useState(''),[promotion,setPromotion]=useState({price:'',startsAt:'',endsAt:''})
  const load=useCallback(async()=>{setBusy(true);try{const [a,b]=await Promise.all([productComponents(dc,{productId:product.id}),productPromotions(dc,{productId:product.id})])
   setComponents(z.array(componentSchema).parse(a.data._select??[]));setPromotions(z.array(promotionSchema).parse(b.data._select??[]))
