@@ -76,6 +76,71 @@ query GetCurrentUserAccess @auth(level: USER) {
   }
 }
 
+# Sales workstation bootstrap. Authorization and tenant scope are derived from auth.uid.
+query SalesWorkspace($branchId: UUID, $requestKey: String!) @auth(level: USER) {
+  _select(sql: """
+    WITH actor AS (
+      SELECT u.tenant_id
+      FROM users u
+      JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+      JOIN app_pages pg ON pg.page_key='CAIXA' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_access,rp.can_access,false)
+    )
+    SELECT jsonb_build_object(
+      'branches',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',b.id,'name',b.name,'internalCode',b.internal_code) ORDER BY lower(b.name)) FROM branches b,actor a WHERE b.tenant_id=a.tenant_id AND b.active AND b.deleted_at IS NULL),'[]'::jsonb),
+      'customers',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',c.id,'name',c.name,'cpf',c.cpf,'email',c.email,'phone',c.phone_primary) ORDER BY lower(c.name)) FROM customers c,actor a WHERE c.tenant_id=a.tenant_id AND c.active AND c.deleted_at IS NULL),'[]'::jsonb),
+      'paymentMethods',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',p.id,'code',p.code,'name',p.name,'requiresChange',p.requires_change) ORDER BY lower(p.name)) FROM payment_methods p,actor a WHERE p.tenant_id=a.tenant_id AND p.active),'[]'::jsonb),
+      'products',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',p.id,'name',p.name,'internalCode',p.internal_code,'ean',p.ean,'weightedProduct',p.weighted_product,'bundleProduct',p.bundle_product,'allowNegativeStock',p.allow_negative_stock,'listPriceCents',p.sale_price_cents,'effectivePriceCents',COALESCE(pr.promotional_price_cents,p.sale_price_cents),'costPriceCents',p.cost_price_cents,'stock',COALESCE(sb.quantity,0)) ORDER BY lower(p.name))
+        FROM products p CROSS JOIN actor a
+        LEFT JOIN LATERAL (SELECT x.promotional_price_cents FROM promotions x WHERE x.tenant_id=p.tenant_id AND x.product_id=p.id AND x.active AND x.deleted_at IS NULL AND now()>=x.starts_at AND now()<x.ends_at ORDER BY x.promotional_price_cents,x.id LIMIT 1) pr ON true
+        LEFT JOIN stock_balances sb ON sb.tenant_id=p.tenant_id AND sb.product_id=p.id AND sb.branch_id=$2
+        WHERE p.tenant_id=a.tenant_id AND p.active AND p.deleted_at IS NULL),'[]'::jsonb),
+      'openSession',COALESCE((SELECT jsonb_build_object('id',cs.id,'openedAt',cs.opened_at,'openingAmountCents',cs.opening_amount_cents) FROM cash_sessions cs,actor a WHERE cs.tenant_id=a.tenant_id AND cs.branch_id=$2 AND cs.status='OPEN' ORDER BY cs.opened_at DESC LIMIT 1),'null'::jsonb)
+    ) AS data
+    WHERE $3<>''
+  """,params:[{_expr:"auth.uid"},$branchId,$requestKey])
+}
+
+query ListSales($filters: Any!, $limit: Int!, $offset: Int!, $requestKey: String!) @auth(level: USER) {
+  _select(sql: """
+    WITH actor AS (
+      SELECT u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+      JOIN app_pages pg ON pg.page_key='GESTAO_VENDAS' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_access,rp.can_access,false)
+    ),f AS (SELECT COALESCE($2::jsonb,'{}'::jsonb) j)
+    SELECT s.id,s.client_operation_id AS "clientOperationId",s.status,s.subtotal_cents AS "subtotalCents",s.discount_cents AS "discountCents",s.surcharge_cents AS "surchargeCents",s.total_cents AS "totalCents",s.change_cents AS "changeCents",s.sold_at AS "soldAt",s.cancelled_at AS "cancelledAt",s.cancellation_reason AS "cancellationReason",s.created_by_uid AS "createdByUid",b.id AS "branchId",b.name AS "branchName",c.id AS "customerId",COALESCE(c.name,'CONSUMIDOR FINAL') AS "customerName",COUNT(si.id) FILTER(WHERE si.status='ACTIVE') AS "itemCount",COALESCE(string_agg(DISTINCT pm.name,', '),'') AS "paymentMethods"
+    FROM sales s JOIN actor a ON a.tenant_id=s.tenant_id JOIN branches b ON b.id=s.branch_id AND b.tenant_id=s.tenant_id
+    CROSS JOIN f LEFT JOIN customers c ON c.id=s.customer_id AND c.tenant_id=s.tenant_id
+    LEFT JOIN sale_items si ON si.sale_id=s.id AND si.tenant_id=s.tenant_id LEFT JOIN sale_payments sp ON sp.sale_id=s.id AND sp.tenant_id=s.tenant_id AND sp.status='CONFIRMED' LEFT JOIN payment_methods pm ON pm.id=sp.payment_method_id
+    WHERE ($5<>'' )
+      AND (COALESCE(f.j->>'search','')='' OR s.id::text ILIKE '%'||f.j->>'search'||'%' OR COALESCE(c.name,'') ILIKE '%'||f.j->>'search'||'%')
+      AND (NOT(f.j?'branchIds') OR s.branch_id IN(SELECT value::uuid FROM jsonb_array_elements_text(f.j->'branchIds')))
+      AND (NOT(f.j?'customerIds') OR s.customer_id IN(SELECT value::uuid FROM jsonb_array_elements_text(f.j->'customerIds')))
+      AND (NOT(f.j?'statuses') OR s.status IN(SELECT value FROM jsonb_array_elements_text(f.j->'statuses')))
+      AND (COALESCE(f.j->>'dateFrom','')='' OR s.sold_at >= (f.j->>'dateFrom')::date)
+      AND (COALESCE(f.j->>'dateTo','')='' OR s.sold_at < (f.j->>'dateTo')::date + interval '1 day')
+      AND (COALESCE(f.j->>'minCents','')='' OR s.total_cents >= (f.j->>'minCents')::bigint)
+      AND (COALESCE(f.j->>'maxCents','')='' OR s.total_cents <= (f.j->>'maxCents')::bigint)
+    GROUP BY s.id,b.id,c.id ORDER BY s.sold_at DESC,s.id DESC LIMIT $3 OFFSET $4
+  """,params:[{_expr:"auth.uid"},$filters,$limit,$offset,$requestKey])
+}
+
+query SaleDetails($saleId: UUID!, $requestKey: String!) @auth(level: USER) {
+  _select(sql: """
+    WITH actor AS (SELECT u.tenant_id FROM users u JOIN app_pages pg ON pg.page_key='GESTAO_VENDAS' AND pg.active LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_access,rp.can_access,false))
+    SELECT jsonb_build_object('sale',to_jsonb(s),'branch',to_jsonb(b),'customer',to_jsonb(c),
+      'items',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',i.id,'productId',i.product_id,'productName',p.name,'quantity',i.quantity,'unitListPriceCents',i.unit_list_price_cents,'unitSalePriceCents',i.unit_sale_price_cents,'unitCostCents',i.unit_cost_cents,'discountCents',i.discount_cents,'totalCents',i.total_cents) ORDER BY i.created_at) FROM sale_items i JOIN products p ON p.id=i.product_id AND p.tenant_id=i.tenant_id WHERE i.sale_id=s.id AND i.tenant_id=s.tenant_id AND i.status='ACTIVE'),'[]'::jsonb),
+      'payments',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',sp.id,'paymentMethodId',sp.payment_method_id,'paymentMethodName',pm.name,'amountCents',sp.amount_cents,'sequence',sp.sequence,'externalReference',sp.external_reference) ORDER BY sp.sequence) FROM sale_payments sp JOIN payment_methods pm ON pm.id=sp.payment_method_id WHERE sp.sale_id=s.id AND sp.tenant_id=s.tenant_id AND sp.status='CONFIRMED'),'[]'::jsonb)) AS data
+    FROM sales s JOIN actor a ON a.tenant_id=s.tenant_id JOIN branches b ON b.id=s.branch_id LEFT JOIN customers c ON c.id=s.customer_id WHERE s.id=$2 AND $3<>''
+  """,params:[{_expr:"auth.uid"},$saleId,$requestKey])
+}
+
 
 # Phase 1 operational catalogs.
 # Tenant scope is always derived through auth.uid; the client cannot select it.
