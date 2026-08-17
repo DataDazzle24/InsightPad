@@ -3,7 +3,7 @@ import { getDataConnect } from 'firebase/data-connect'
 import { Link } from 'react-router-dom'
 import {
   connectorConfig,listBranches,listSuppliers,listCustomers,listProducts,registrationOptions,
-  saveBranch,saveSupplier,saveCustomer,saveProduct,setBranchStatus,setSupplierStatus,setCustomerStatus,setProductStatus,
+  saveBranch,saveSupplier,saveCustomer,saveProduct,setBranchStatus,setSupplierStatus,setCustomerStatus,setProductStatus,productComponents,
 } from '@insightpad/dataconnect'
 import { useAuth } from '../auth/useAuth'
 import { firebaseApp } from '../lib/firebase'
@@ -14,8 +14,16 @@ type PageKey='CAD_FILIAL'|'CAD_FORNECEDOR'|'CAD_CLIENTE'|'CAD_PRODUTO'
 type Row={id:string;active:boolean;updatedAt:string;[key:string]:unknown}
 type Field={key:string;label:string;type?:'text'|'email'|'date'|'number'|'textarea'|'checkbox'|'select'|'money';required?:boolean;wide?:boolean;options?:{value:string;label:string}[]}
 type Config={title:string;singular:string;description:string;columns:{key:string;label:string;format?:(v:unknown,r:Row)=>string}[];fields:Field[]}
-type IdName={id:string;name:string};type SubcategoryOption=IdName&{categoryId:string};type RegistrationOptionSet={categories:IdName[];subcategories:SubcategoryOption[];suppliers:IdName[]}
+type IdName={id:string;name:string};type SubcategoryOption=IdName&{categoryId:string};type KitItem={productId:string;quantity:number;allocatedUnitPriceCents?:string};type RegistrationOptionSet={categories:IdName[];subcategories:SubcategoryOption[];suppliers:IdName[];products:IdName[]}
 const digits=(v:string)=>v.replace(/\D/g,'')
+const maskValue=(key:string,value:string)=>{const d=digits(value)
+ if(key==='cpf')return d.slice(0,11).replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2')
+ if(key==='cnpj')return d.slice(0,14).replace(/(\d{2})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1/$2').replace(/(\d{4})(\d{1,2})$/,'$1-$2')
+ if(key==='postalCode')return d.slice(0,8).replace(/(\d{5})(\d)/,'$1-$2')
+ if(key.toLowerCase().includes('phone'))return d.slice(0,11).replace(/(\d{2})(\d)/,'($1) $2').replace(/(\d{5})(\d{4})$/,'$1-$2')
+ if(key==='costPriceCents'||key==='salePriceCents')return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(d||0)/100)
+ return value}
+const moneyToNumber=(value:unknown)=>Number(digits(String(value??'')))/100
 const SIZE_OPTIONS:Record<string,string[]>={ML:['150','250','275','313','330','350','473','500','510','600','750','965','998'],L:['1','1,5','2','2,5','3'],KG:['1','3','5'],G:['76','140','150','500'],UN:['100']}
 const money=(v:unknown)=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(v??0)/100)
 const configs:Record<PageKey,Config>={
@@ -56,16 +64,16 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
  const cfg=configs[pageKey],permission=useAuth().permissions[pageKey]
  const [rows,setRows]=useState<Row[]>([]),[search,setSearch]=useState(''),[page,setPage]=useState(0),[busy,setBusy]=useState(true),[modal,setModal]=useState(false)
  const [editing,setEditing]=useState<Row|null>(null),[form,setForm]=useState<Record<string,unknown>>({}),[notice,setNotice]=useState(''),[confirm,setConfirm]=useState<null|{text:string;run:()=>Promise<void>}>(null)
- const [selected,setSelected]=useState<string[]>([]),[extras,setExtras]=useState<Row|null>(null),[options,setOptions]=useState<RegistrationOptionSet>({categories:[],subcategories:[],suppliers:[]})
+ const [selected,setSelected]=useState<string[]>([]),[extras,setExtras]=useState<Row|null>(null),[options,setOptions]=useState<RegistrationOptionSet>({categories:[],subcategories:[],suppliers:[],products:[]}),[kitItems,setKitItems]=useState<KitItem[]>([])
  const query=useMemo(()=>({search:search.trim(),limit:PAGE_SIZE,offset:page*PAGE_SIZE}),[page,search])
  const load=useCallback(async()=>{setBusy(true);try{let result;const freshQuery={...query,requestKey:crypto.randomUUID()}
   if(pageKey==='CAD_FILIAL')result=await listBranches(dc,freshQuery);else if(pageKey==='CAD_FORNECEDOR')result=await listSuppliers(dc,freshQuery)
   else if(pageKey==='CAD_CLIENTE')result=await listCustomers(dc,freshQuery);else result=await listProducts(dc,freshQuery)
-  setRows((result.data._select??[]) as Row[]);if(pageKey==='CAD_PRODUTO'){const opt=await registrationOptions(dc);const raw=(opt.data._select??[])[0] as {data?:Partial<RegistrationOptionSet>}|undefined;const box=raw?.data;setOptions({categories:box?.categories??[],subcategories:box?.subcategories??[],suppliers:box?.suppliers??[]})}
+  setRows((result.data._select??[]) as Row[]);if(pageKey==='CAD_PRODUTO'){const opt=await registrationOptions(dc);const raw=(opt.data._select??[])[0] as {data?:Partial<RegistrationOptionSet>}|undefined;const box=raw?.data;setOptions({categories:box?.categories??[],subcategories:box?.subcategories??[],suppliers:box?.suppliers??[],products:box?.products??[]})}
  }catch(e){console.error(e);setNotice('Não foi possível atualizar as informações.')}finally{setBusy(false)}},[pageKey,query])
  useEffect(()=>{const t=window.setTimeout(()=>void load(),180);return()=>clearTimeout(t)},[load])
- function open(row?:Row){setEditing(row??null);const next:Record<string,unknown>={};for(const field of cfg.fields)next[field.key]=row?.[field.key]??(field.type==='checkbox'?false:'')
-  if(pageKey==='CAD_PRODUTO'){next.costPriceCents=Number(row?.costPriceCents??0)/100;next.salePriceCents=Number(row?.salePriceCents??0)/100}setForm(next);setModal(true)}
+ async function open(row?:Row){setEditing(row??null);const next:Record<string,unknown>={};for(const field of cfg.fields)next[field.key]=row?.[field.key]??(field.type==='checkbox'?false:'')
+  if(pageKey==='CAD_PRODUTO'){next.costPriceCents=maskValue('costPriceCents',String(row?.costPriceCents??0));next.salePriceCents=maskValue('salePriceCents',String(row?.salePriceCents??0));if(row){try{const result=await productComponents(dc,{productId:row.id});setKitItems((result.data._select??[]) as KitItem[])}catch{setKitItems([])}}else setKitItems([])}setForm(next);setModal(true)}
  function fieldOptions(field:Field){if(pageKey!=='CAD_PRODUTO')return field.options??[];if(field.key==='categoryId')return options.categories.map(x=>({value:x.id,label:x.name}))
   if(field.key==='subcategoryId')return options.subcategories.filter(x=>!form.categoryId||x.categoryId===form.categoryId).map(x=>({value:x.id,label:x.name}))
   if(field.key==='supplierId')return options.suppliers.map(x=>({value:x.id,label:x.name}));if(field.key==='size')return (SIZE_OPTIONS[String(form.sizeType??'')]??[]).map(value=>({value,label:value}));return field.options??[]}
@@ -78,12 +86,12 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
  function validate(){if(cfg.fields.some(f=>f.required&&!String(form[f.key]??'').trim()))return 'Preencha todos os campos obrigatórios.'
   if((form.cpf&&digits(String(form.cpf)).length!==11)||(form.cnpj&&digits(String(form.cnpj)).length!==14))return 'CPF ou CNPJ inválido.'
   if(form.email&&!/^\S+@\S+\.\S+$/.test(String(form.email)))return 'E-mail inválido.'
-  if(pageKey==='CAD_PRODUTO'&&Number(form.maximumStock||0)<Number(form.minimumStock||0))return 'Estoque máximo deve ser maior ou igual ao mínimo.';return ''}
+  if(pageKey==='CAD_PRODUTO'&&Number(form.maximumStock||0)<Number(form.minimumStock||0))return 'Estoque máximo deve ser maior ou igual ao mínimo.';if(pageKey==='CAD_PRODUTO'&&form.bundleProduct&&kitItems.length===0)return 'Um kit precisa ter pelo menos um produto componente.';if(kitItems.some(x=>x.quantity<=0))return 'As quantidades dos componentes devem ser maiores que zero.';return ''}
  async function save(){const error=validate();if(error){setNotice(error);return}setBusy(true);try{const payload={...form}
-  if(pageKey==='CAD_PRODUTO'){payload.costPriceCents=Math.round(Number(form.costPriceCents||0)*100);payload.salePriceCents=Math.round(Number(form.salePriceCents||0)*100)}
+  if(pageKey==='CAD_PRODUTO'){payload.costPriceCents=Math.round(moneyToNumber(form.costPriceCents)*100);payload.salePriceCents=Math.round(moneyToNumber(form.salePriceCents)*100)}
   const vars={id:editing?.id??null,payload};let result
   if(pageKey==='CAD_FILIAL')result=await saveBranch(dc,vars);else if(pageKey==='CAD_FORNECEDOR')result=await saveSupplier(dc,vars)
-  else if(pageKey==='CAD_CLIENTE')result=await saveCustomer(dc,vars);else result=await saveProduct(dc,vars)
+  else if(pageKey==='CAD_CLIENTE')result=await saveCustomer(dc,vars);else result=await saveProduct(dc,{...vars,components:form.bundleProduct?kitItems:[]})
   if(!result.data._execute)throw new Error();setModal(false);setNotice(`${cfg.singular} salvo com sucesso.`);await load()
  }catch(e){console.error(e);setNotice('Operação não aplicada. Verifique duplicidades, vínculos e dados informados.')}finally{setBusy(false)}}
  async function status(ids:string[],active:boolean){setBusy(true);try{for(const id of ids){if(pageKey==='CAD_FILIAL')await setBranchStatus(dc,{id,active});else if(pageKey==='CAD_FORNECEDOR')await setSupplierStatus(dc,{id,active})
@@ -106,8 +114,11 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
     <span>{field.label}{field.required?' *':''}</span>{field.type==='textarea'?<textarea value={String(form[field.key]??'')} onChange={e=>setForm({...form,[field.key]:e.target.value})}/>:
     field.type==='checkbox'?<input type="checkbox" checked={Boolean(form[field.key])} onChange={e=>setForm({...form,[field.key]:e.target.checked})}/>:
     field.type==='select'?<select value={String(form[field.key]??'')} onChange={e=>setForm({...form,[field.key]:e.target.value,...(field.key==='sizeType'?{size:''}:{}),...(field.key==='categoryId'?{subcategoryId:''}:{})})}><option value="">Selecione</option>{fieldOptions(field).map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</select>:
-    <input type={field.type==='money'||field.type==='number'?'number':field.type??'text'} step={field.type==='money'?'0.01':undefined} value={String(form[field.key]??'')} onChange={e=>setForm({...form,[field.key]:e.target.value})} onBlur={field.key==='postalCode'?e=>void lookupCep(e.target.value):undefined}/>}</label>)}</div>
-    {pageKey==='CAD_PRODUTO'&&<div className="product-margin">Margem estimada: <strong>{Number(form.salePriceCents)>0?(((Number(form.salePriceCents)-Number(form.costPriceCents||0))/Number(form.salePriceCents))*100).toFixed(1):'0.0'}%</strong></div>}
+    <input type={field.type==='number'?'number':field.type==='money'?'text':field.type??'text'} value={String(form[field.key]??'')} onChange={e=>setForm({...form,[field.key]:maskValue(field.key,e.target.value)})} onBlur={field.key==='postalCode'?e=>void lookupCep(e.target.value):undefined}/>}</label>)}</div>
+    {pageKey==='CAD_PRODUTO'&&<><div className="product-margin">Margem estimada: <strong>{moneyToNumber(form.salePriceCents)>0?(((moneyToNumber(form.salePriceCents)-moneyToNumber(form.costPriceCents))/moneyToNumber(form.salePriceCents))*100).toFixed(1):'0.0'}%</strong></div>
+    {form.bundleProduct&&<section className="inline-kit"><header><div><strong>Produtos do kit</strong><small>Escolha os componentes e suas quantidades.</small></div><button type="button" className="catalog-primary" onClick={()=>{const available=options.products.find(p=>p.id!==editing?.id&&!kitItems.some(k=>k.productId===p.id));if(available)setKitItems(v=>[...v,{productId:available.id,quantity:1}]);else setNotice('Não existem outros produtos disponíveis para adicionar.')}}>+ Adicionar produto</button></header>
+      {kitItems.map((item,index)=><div className="component-row" key={index}><select value={item.productId} onChange={e=>setKitItems(v=>v.map((x,i)=>i===index?{...x,productId:e.target.value}:x))}>{options.products.filter(p=>p.id!==editing?.id).map(p=><option value={p.id} key={p.id}>{p.name}</option>)}</select><input type="number" min=".001" step=".001" value={item.quantity} onChange={e=>setKitItems(v=>v.map((x,i)=>i===index?{...x,quantity:Number(e.target.value)}:x))}/><button type="button" className="danger" onClick={()=>setKitItems(v=>v.filter((_,i)=>i!==index))}>Remover</button></div>)}
+     </section>}</>}
     <footer><button type="button" onClick={()=>setModal(false)}>Cancelar</button><button className="catalog-primary">Continuar</button></footer></form></section></div>}
   {confirm&&<div className="catalog-backdrop"><section className="catalog-confirm"><span className="material-symbols-rounded">help</span><h2>Confirmar operação</h2><p>{confirm.text}</p><footer><button onClick={()=>setConfirm(null)}>Cancelar</button><button className="catalog-primary" onClick={()=>{const action=confirm.run;setConfirm(null);void action()}}>Confirmar</button></footer></section></div>}
   {extras&&<ProductExtras product={{id:extras.id,name:extras.name,active:extras.active}} products={rows.map(r=>({id:r.id,name:r.name,active:r.active}))} onClose={()=>setExtras(null)}/>}
