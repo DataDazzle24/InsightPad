@@ -368,14 +368,16 @@ query ProductPromotions($productId: UUID!) @auth(level: USER) {
 query PlatformAdminWorkspace($requestKey: String!) @auth(level: USER) {
   _select(sql: """
     WITH actor AS (
-      SELECT u.id FROM users u JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      SELECT u.id,u.tenant_id,(r.name='Administrador da Plataforma') AS is_platform FROM users u JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
       WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
-        AND r.system_role AND r.name='Administrador da Plataforma'
+        AND r.system_role AND r.name IN ('Administrador da Plataforma','Administrador')
     )
     SELECT jsonb_build_object(
-      'tenants',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',t.id,'legalName',t.legal_name,'tradeName',t.trade_name,'document',t.document,'email',t.email,'phone',t.phone,'planCode',t.plan_code,'startsOn',t.starts_on,'expiresOn',t.expires_on,'active',t.active,'userCount',(SELECT count(*) FROM users u WHERE u.tenant_id=t.id AND u.deleted_at IS NULL),'branchCount',(SELECT count(*) FROM branches b WHERE b.tenant_id=t.id AND b.deleted_at IS NULL)) ORDER BY lower(COALESCE(t.trade_name,t.legal_name))) FROM tenants t WHERE t.deleted_at IS NULL),'[]'::jsonb),
-      'roles',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',r.id,'tenantId',r.tenant_id,'name',r.name,'active',r.active) ORDER BY lower(r.name)) FROM roles r WHERE r.deleted_at IS NULL),'[]'::jsonb),
-      'users',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',u.id,'tenantId',u.tenant_id,'tenantName',COALESCE(t.trade_name,t.legal_name),'roleId',u.role_id,'roleName',r.name,'name',u.name,'email',u.email,'active',u.active,'onboardingPending',u.onboarding_pending,'lastLoginAt',u.last_login_at) ORDER BY lower(u.name)) FROM users u JOIN tenants t ON t.id=u.tenant_id JOIN roles r ON r.id=u.role_id WHERE u.deleted_at IS NULL),'[]'::jsonb)
+      'tenants',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',t.id,'legalName',t.legal_name,'tradeName',t.trade_name,'document',t.document,'email',t.email,'phone',t.phone,'planCode',t.plan_code,'startsOn',t.starts_on,'expiresOn',t.expires_on,'active',t.active,'userCount',(SELECT count(*) FROM users u WHERE u.tenant_id=t.id AND u.deleted_at IS NULL),'branchCount',(SELECT count(*) FROM branches b WHERE b.tenant_id=t.id AND b.deleted_at IS NULL)) ORDER BY lower(COALESCE(t.trade_name,t.legal_name))) FROM tenants t,actor a WHERE t.deleted_at IS NULL AND (a.is_platform OR t.id=a.tenant_id)),'[]'::jsonb),
+      'roles',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',r.id,'tenantId',r.tenant_id,'name',r.name,'active',r.active) ORDER BY lower(r.name)) FROM roles r,actor a WHERE r.deleted_at IS NULL AND (a.is_platform OR r.tenant_id=a.tenant_id)),'[]'::jsonb),
+      'users',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',u.id,'tenantId',u.tenant_id,'tenantName',COALESCE(t.trade_name,t.legal_name),'roleId',u.role_id,'roleName',r.name,'name',u.name,'email',u.email,'active',u.active,'onboardingPending',u.onboarding_pending,'lastLoginAt',u.last_login_at) ORDER BY lower(u.name)) FROM users u JOIN tenants t ON t.id=u.tenant_id JOIN roles r ON r.id=u.role_id CROSS JOIN actor a WHERE u.deleted_at IS NULL AND (a.is_platform OR u.tenant_id=a.tenant_id)),'[]'::jsonb),
+      'pages',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',p.id,'pageKey',p.page_key,'displayName',p.display_name,'module',p.module) ORDER BY p.module,p.display_order) FROM app_pages p WHERE p.active),'[]'::jsonb),
+      'permissions',COALESCE((SELECT jsonb_agg(jsonb_build_object('roleId',rp.role_id,'pageId',rp.page_id,'canAccess',rp.can_access,'canCreate',rp.can_create,'canUpdate',rp.can_update,'canDelete',rp.can_delete,'canExport',rp.can_export,'canManage',rp.can_manage)) FROM role_page_permissions rp CROSS JOIN actor a WHERE a.is_platform OR rp.tenant_id=a.tenant_id),'[]'::jsonb)
     ) AS data FROM actor WHERE $2<>''
   """,params:[{_expr:"auth.uid"},$requestKey])
 }
