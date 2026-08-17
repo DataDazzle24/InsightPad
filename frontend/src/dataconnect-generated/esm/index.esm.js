@@ -425,6 +425,18 @@ export function setPlatformUserStatus(dcOrVars, vars) {
   return executeMutation(setPlatformUserStatusRef(dcInstance, inputVars));
 }
 
+export const setPlatformRolePermissionRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'SetPlatformRolePermission', inputVars);
+}
+setPlatformRolePermissionRef.operationName = 'SetPlatformRolePermission';
+
+export function setPlatformRolePermission(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(setPlatformRolePermissionRef(dcInstance, inputVars));
+}
+
 export const getCurrentUserRef = (dc) => {
   const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
   dcInstance._useGeneratedSdk();
