@@ -96,3 +96,7 @@
  .catalog-table tbody tr{contain-intrinsic-size:12rem}
  .catalog-actions{position:sticky;right:0;padding:.25rem;background:linear-gradient(90deg,transparent,#0a0e10 12%)}
 }
+
+
+.fatal-error{display:grid;min-height:100dvh;place-content:center;justify-items:center;gap:1rem;padding:2rem;color:var(--white);background:#070a0b;text-align:center}
+.fatal-error>.material-symbols-rounded{color:#ff7186;font-size:3rem}.fatal-error h1{font:800 clamp(1.5rem,4vw,2.5rem) var(--mono);text-transform:uppercase}.fatal-error p{max-width:35rem;color:var(--muted);line-height:1.6}.fatal-error button{min-height:2.8rem;padding:.7rem 1rem;border:1px solid var(--cyan);color:#021014;background:var(--cyan);font:700 .68rem var(--mono);text-transform:uppercase}
