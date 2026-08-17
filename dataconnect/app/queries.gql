@@ -119,7 +119,7 @@ query ListSales($filters: Any!, $limit: Int!, $offset: Int!, $requestKey: String
     CROSS JOIN f LEFT JOIN customers c ON c.id=s.customer_id AND c.tenant_id=s.tenant_id
     LEFT JOIN sale_items si ON si.sale_id=s.id AND si.tenant_id=s.tenant_id LEFT JOIN sale_payments sp ON sp.sale_id=s.id AND sp.tenant_id=s.tenant_id AND sp.status='CONFIRMED' LEFT JOIN payment_methods pm ON pm.id=sp.payment_method_id
     WHERE ($5<>'' )
-      AND (COALESCE(f.j->>'search','')='' OR s.id::text ILIKE '%'||f.j->>'search'||'%' OR COALESCE(c.name,'') ILIKE '%'||f.j->>'search'||'%')
+      AND (COALESCE(f.j->>'search','')='' OR s.id::text ILIKE '%'||(f.j->>'search')||'%' OR COALESCE(c.name,'') ILIKE '%'||(f.j->>'search')||'%')
       AND (NOT(f.j?'branchIds') OR s.branch_id IN(SELECT value::uuid FROM jsonb_array_elements_text(f.j->'branchIds')))
       AND (NOT(f.j?'customerIds') OR s.customer_id IN(SELECT value::uuid FROM jsonb_array_elements_text(f.j->'customerIds')))
       AND (NOT(f.j?'statuses') OR s.status IN(SELECT value FROM jsonb_array_elements_text(f.j->'statuses')))
