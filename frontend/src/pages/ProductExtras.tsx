@@ -2,6 +2,7 @@ import { useCallback,useEffect,useMemo,useState,type FormEvent } from 'react'
 import { getDataConnect } from 'firebase/data-connect'
 import { z } from 'zod'
 import { connectorConfig,productPromotions,savePromotion,setPromotionStatus } from '@insightpad/dataconnect'
+import { useDialogAccessibility } from '../hooks/useDialogAccessibility'
 import { firebaseApp } from '../lib/firebase'
 import { csvSafe } from '../utils/registration'
 
@@ -19,6 +20,7 @@ const toLocalInput=(value:string)=>{const date=new Date(value),offset=date.getTi
 const statusLabel:Record<Promotion['status'],string>={ACTIVE:'Ativa',SCHEDULED:'Agendada',ENDED:'Encerrada',INACTIVE:'Inativa'}
 
 export function ProductExtras({product,onClose}:{product:Product;onClose:()=>void}){
+ useDialogAccessibility(true,onClose)
  const [promotions,setPromotions]=useState<Promotion[]>([]),[busy,setBusy]=useState(true),[message,setMessage]=useState('')
  const [editing,setEditing]=useState<Promotion|null>(null),[promotion,setPromotion]=useState({price:'',startsAt:'',endsAt:''})
  const priceCents=Number(digits(promotion.price)),costCents=Number(product.costPriceCents??0)
