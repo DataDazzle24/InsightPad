@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { AppErrorBoundary } from './components/AppErrorBoundary'
 import { AppLayout } from './layout/AppLayout'
 import { AccessDeniedPage } from './pages/AccessDeniedPage'
 import { DashboardPage } from './pages/DashboardPage'
@@ -16,6 +17,7 @@ const MasterDataPage = lazy(() => import('./pages/MasterDataPage').then((module)
 
 export default function App() {
   return (
+   <AppErrorBoundary>
     <Suspense fallback={<div className="session-loader"><div className="brand-mark"><span>Insight Pad</span></div><p>Carregando módulo...</p></div>}>
     <Routes>
       <Route path="/login" element={<LoginPage />} />
@@ -36,5 +38,6 @@ export default function App() {
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
     </Suspense>
+   </AppErrorBoundary>
   )
 }
