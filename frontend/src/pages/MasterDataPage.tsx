@@ -125,7 +125,6 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
  }catch(e){if(requestId!==requestSequence.current)return;console.error(e);setNotice('Não foi possível atualizar as informações.')}finally{if(requestId===requestSequence.current)setBusy(false)}},[pageKey,query])
  useEffect(()=>{const t=window.setTimeout(()=>void load(),350);return()=>clearTimeout(t)},[load])
  useEffect(()=>{if(!notice)return;const t=window.setTimeout(()=>setNotice(''),7000);return()=>window.clearTimeout(t)},[notice])
- useEffect(()=>setVisibleCount(100),[search,filters,pageKey])
  async function open(row?:Row){setEditing(row??null);setSection(modalSections[pageKey][0].key);const next:Record<string,unknown>={};let loadedKit:KitItem[]=[]
   for(const field of cfg.fields)next[field.key]=row?.[field.key]??(field.type==='checkbox'?false:'')
   if(pageKey==='CAD_CLIENTE')next.preferences=row?.preferences??{}
