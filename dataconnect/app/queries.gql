@@ -218,7 +218,7 @@ query ListProducts($search: String!, $limit: Int!, $offset: Int!, $requestKey: S
   """,params:[{_expr:"auth.uid"},$search,$limit,$offset,$requestKey])
 }
 
-query RegistrationOptions @auth(level: USER) {
+query RegistrationOptions($requestKey: String) @auth(level: USER) {
   _select(sql: """
     SELECT jsonb_build_object(
       'categories',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',c.id,'name',c.name) ORDER BY lower(c.name))
@@ -227,10 +227,10 @@ query RegistrationOptions @auth(level: USER) {
         FROM subcategories s WHERE s.tenant_id=u.tenant_id AND s.active AND s.deleted_at IS NULL),'[]'::jsonb),
       'suppliers',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',s.id,'name',COALESCE(s.trade_name,s.legal_name)) ORDER BY lower(COALESCE(s.trade_name,s.legal_name)))
         FROM suppliers s WHERE s.tenant_id=u.tenant_id AND s.active AND s.deleted_at IS NULL),'[]'::jsonb),
-      'products',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',p.id,'name',p.name) ORDER BY lower(p.name))
+      'products',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',p.id,'name',p.name,'costPriceCents',p.cost_price_cents::text) ORDER BY lower(p.name))
         FROM products p WHERE p.tenant_id=u.tenant_id AND p.active AND p.deleted_at IS NULL),'[]'::jsonb)
-    ) AS data FROM users u WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
-  """,params:[{_expr:"auth.uid"}])
+    ) AS data FROM users u WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND ($2 IS NULL OR $2<>'')
+  """,params:[{_expr:"auth.uid"},$requestKey])
 }
 
 query ProductComponents($productId: UUID!) @auth(level: USER) {
