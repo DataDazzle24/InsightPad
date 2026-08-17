@@ -10,12 +10,14 @@ import { ModulePlaceholderPage } from './pages/ModulePlaceholderPage'
 import { appRoutes } from './config/pages'
 import { PermissionRoute } from './routes/PermissionRoute'
 import { ProtectedRoute } from './routes/ProtectedRoute'
+import { PlatformAdminRoute } from './routes/PlatformAdminRoute'
 import './App.css'
 
 const CatalogPages = lazy(() => import('./pages/CatalogPages').then((module) => ({ default: module.CatalogPages })))
 const MasterDataPage = lazy(() => import('./pages/MasterDataPage').then((module) => ({ default: module.MasterDataPage })))
 const PointOfSalePage = lazy(() => import('./pages/PointOfSalePage').then((module) => ({ default: module.PointOfSalePage })))
 const SalesManagementPage = lazy(() => import('./pages/SalesManagementPage').then((module) => ({ default: module.SalesManagementPage })))
+const PlatformAdminPage = lazy(() => import('./pages/PlatformAdminPage').then((module) => ({ default: module.PlatformAdminPage })))
 
 export default function App() {
   return (
@@ -26,6 +28,7 @@ export default function App() {
       <Route path="/acesso-negado" element={<AccessDeniedPage />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
+          <Route element={<PlatformAdminRoute />}><Route path="/plataforma/administracao" element={<PlatformAdminPage />} /></Route>
           <Route index element={<DashboardPage />} />
           <Route path="/modulos/vendas" element={<ModuleMenuPage moduleKey="vendas" />} />
           <Route path="/modulos/cadastros" element={<ModuleMenuPage moduleKey="cadastros" />} />
