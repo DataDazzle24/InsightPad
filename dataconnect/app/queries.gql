@@ -112,7 +112,7 @@ query ListCategories($search: String!, $limit: Int!, $offset: Int!, $requestKey:
   )
 }
 
-query ListSubcategories($search: String!, $categoryId: UUID, $limit: Int!, $offset: Int!, $requestKey: String!) @auth(level: USER) {
+query ListSubcategories($search: String!, $categoryId: UUID, $limit: Int!, $offset: Int!, $requestKey: String) @auth(level: USER) {
   _select(
     sql: """
       SELECT
