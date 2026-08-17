@@ -14,6 +14,7 @@ type Product={id:string;name:unknown;active:boolean;salePriceCents:string;costPr
 const digits=(value:string)=>value.replace(/\D/g,'')
 const money=(cents:unknown)=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(cents??0)/100)
 const maskMoney=(value:string)=>money(digits(value))
+const csvSafe=(value:string)=>/^[=+\-@]/.test(value)?`'${value}`:value
 const toLocalInput=(value:string)=>{const date=new Date(value),offset=date.getTimezoneOffset();return new Date(date.getTime()-offset*60000).toISOString().slice(0,16)}
 const statusLabel:Record<Promotion['status'],string>={ACTIVE:'Ativa',SCHEDULED:'Agendada',ENDED:'Encerrada',INACTIVE:'Inativa'}
 
@@ -40,7 +41,7 @@ export function ProductExtras({product,onClose}:{product:Product;onClose:()=>voi
   setMessage(item.active?'Promoção inativada.':'Promoção reativada.');await load()
  }catch(error){console.error(error);setMessage('Não foi possível alterar o status. Verifique sobreposições e o produto.')}finally{setBusy(false)}}
  function exportHistory(){const header=['ID','Produto','Preço promocional','Início','Fim','Status','Cadastro','Atualização']
-  const lines=promotions.map(item=>[item.id,String(product.name),money(item.promotionalPriceCents),new Date(item.startsAt).toLocaleString('pt-BR'),new Date(item.endsAt).toLocaleString('pt-BR'),statusLabel[item.status],new Date(item.createdAt).toLocaleString('pt-BR'),new Date(item.updatedAt).toLocaleString('pt-BR')].map(value=>`"${value.replaceAll('"','""')}"`).join(';'))
+  const lines=promotions.map(item=>[item.id,String(product.name),money(item.promotionalPriceCents),new Date(item.startsAt).toLocaleString('pt-BR'),new Date(item.endsAt).toLocaleString('pt-BR'),statusLabel[item.status],new Date(item.createdAt).toLocaleString('pt-BR'),new Date(item.updatedAt).toLocaleString('pt-BR')].map(value=>`"${csvSafe(value).replaceAll('"','""')}"`).join(';'))
   const link=document.createElement('a');link.href=URL.createObjectURL(new Blob([`\uFEFF${header.join(';')}\n${lines.join('\n')}`],{type:'text/csv'}));link.download=`historico-promocoes-${String(product.name).toLowerCase().replace(/[^a-z0-9]+/g,'-')}.csv`;link.click();URL.revokeObjectURL(link.href)}
  return <div className="catalog-backdrop"><section className="catalog-modal product-extras" role="dialog" aria-modal="true" aria-label="Promoções do produto"><header><div><span className="eyebrow">Promoções</span><h2>{String(product.name)}</h2></div><button aria-label="Fechar promoções" onClick={onClose}>×</button></header>
   {message&&<div className={`catalog-feedback ${/sucesso|atualizada|cadastrada|inativada|reativada/i.test(message)?'catalog-feedback--success':'catalog-feedback--error'}`}>{message}</div>}
