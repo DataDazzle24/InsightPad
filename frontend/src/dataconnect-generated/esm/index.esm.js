@@ -89,6 +89,30 @@ export function archiveSubcategory(dcOrVars, vars) {
   return executeMutation(archiveSubcategoryRef(dcInstance, inputVars));
 }
 
+export const restoreCategoryRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RestoreCategory', inputVars);
+}
+restoreCategoryRef.operationName = 'RestoreCategory';
+
+export function restoreCategory(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(restoreCategoryRef(dcInstance, inputVars));
+}
+
+export const restoreSubcategoryRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RestoreSubcategory', inputVars);
+}
+restoreSubcategoryRef.operationName = 'RestoreSubcategory';
+
+export function restoreSubcategory(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(restoreSubcategoryRef(dcInstance, inputVars));
+}
+
 export const getCurrentUserRef = (dc) => {
   const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
   dcInstance._useGeneratedSdk();

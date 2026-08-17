@@ -1,4 +1,4 @@
-import { BootstrapNavigationCatalogData, BootstrapNavigationCatalogVariables, CreateCategoryData, CreateCategoryVariables, UpdateCategoryData, UpdateCategoryVariables, ArchiveCategoryData, ArchiveCategoryVariables, CreateSubcategoryData, CreateSubcategoryVariables, UpdateSubcategoryData, UpdateSubcategoryVariables, ArchiveSubcategoryData, ArchiveSubcategoryVariables, GetCurrentUserData, GetCurrentUserAccessData, ListCategoriesData, ListCategoriesVariables, ListSubcategoriesData, ListSubcategoriesVariables, CategoryOptionsData } from '../';
+import { BootstrapNavigationCatalogData, BootstrapNavigationCatalogVariables, CreateCategoryData, CreateCategoryVariables, UpdateCategoryData, UpdateCategoryVariables, ArchiveCategoryData, ArchiveCategoryVariables, CreateSubcategoryData, CreateSubcategoryVariables, UpdateSubcategoryData, UpdateSubcategoryVariables, ArchiveSubcategoryData, ArchiveSubcategoryVariables, RestoreCategoryData, RestoreCategoryVariables, RestoreSubcategoryData, RestoreSubcategoryVariables, GetCurrentUserData, GetCurrentUserAccessData, ListCategoriesData, ListCategoriesVariables, ListSubcategoriesData, ListSubcategoriesVariables, CategoryOptionsData } from '../';
 import { UseDataConnectQueryResult, useDataConnectQueryOptions, UseDataConnectMutationResult, useDataConnectMutationOptions} from '@tanstack-query-firebase/react/data-connect';
 import { UseQueryResult, UseMutationResult} from '@tanstack/react-query';
 import { DataConnect } from 'firebase/data-connect';
@@ -25,6 +25,12 @@ export function useUpdateSubcategory(dc: DataConnect, options?: useDataConnectMu
 
 export function useArchiveSubcategory(options?: useDataConnectMutationOptions<ArchiveSubcategoryData, FirebaseError, ArchiveSubcategoryVariables>): UseDataConnectMutationResult<ArchiveSubcategoryData, ArchiveSubcategoryVariables>;
 export function useArchiveSubcategory(dc: DataConnect, options?: useDataConnectMutationOptions<ArchiveSubcategoryData, FirebaseError, ArchiveSubcategoryVariables>): UseDataConnectMutationResult<ArchiveSubcategoryData, ArchiveSubcategoryVariables>;
+
+export function useRestoreCategory(options?: useDataConnectMutationOptions<RestoreCategoryData, FirebaseError, RestoreCategoryVariables>): UseDataConnectMutationResult<RestoreCategoryData, RestoreCategoryVariables>;
+export function useRestoreCategory(dc: DataConnect, options?: useDataConnectMutationOptions<RestoreCategoryData, FirebaseError, RestoreCategoryVariables>): UseDataConnectMutationResult<RestoreCategoryData, RestoreCategoryVariables>;
+
+export function useRestoreSubcategory(options?: useDataConnectMutationOptions<RestoreSubcategoryData, FirebaseError, RestoreSubcategoryVariables>): UseDataConnectMutationResult<RestoreSubcategoryData, RestoreSubcategoryVariables>;
+export function useRestoreSubcategory(dc: DataConnect, options?: useDataConnectMutationOptions<RestoreSubcategoryData, FirebaseError, RestoreSubcategoryVariables>): UseDataConnectMutationResult<RestoreSubcategoryData, RestoreSubcategoryVariables>;
 
 export function useGetCurrentUser(options?: useDataConnectQueryOptions<GetCurrentUserData>): UseDataConnectQueryResult<GetCurrentUserData, undefined>;
 export function useGetCurrentUser(dc: DataConnect, options?: useDataConnectQueryOptions<GetCurrentUserData>): UseDataConnectQueryResult<GetCurrentUserData, undefined>;

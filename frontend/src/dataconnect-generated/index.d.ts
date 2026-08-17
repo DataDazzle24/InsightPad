@@ -228,6 +228,7 @@ export interface ListCategoriesVariables {
   search: string;
   limit: number;
   offset: number;
+  requestKey: string;
 }
 
 export interface ListSubcategoriesData {
@@ -239,6 +240,7 @@ export interface ListSubcategoriesVariables {
   categoryId?: UUIDString | null;
   limit: number;
   offset: number;
+  requestKey: string;
 }
 
 export interface OfflineOperation_Key {
@@ -265,6 +267,22 @@ export interface Product_Key {
 export interface Promotion_Key {
   id: UUIDString;
   __typename?: 'Promotion_Key';
+}
+
+export interface RestoreCategoryData {
+  _execute?: number | null;
+}
+
+export interface RestoreCategoryVariables {
+  id: UUIDString;
+}
+
+export interface RestoreSubcategoryData {
+  _execute?: number | null;
+}
+
+export interface RestoreSubcategoryVariables {
+  id: UUIDString;
 }
 
 export interface RolePagePermission_Key {
@@ -453,6 +471,30 @@ export const archiveSubcategoryRef: ArchiveSubcategoryRef;
 
 export function archiveSubcategory(vars: ArchiveSubcategoryVariables): MutationPromise<ArchiveSubcategoryData, ArchiveSubcategoryVariables>;
 export function archiveSubcategory(dc: DataConnect, vars: ArchiveSubcategoryVariables): MutationPromise<ArchiveSubcategoryData, ArchiveSubcategoryVariables>;
+
+interface RestoreCategoryRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: RestoreCategoryVariables): MutationRef<RestoreCategoryData, RestoreCategoryVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: RestoreCategoryVariables): MutationRef<RestoreCategoryData, RestoreCategoryVariables>;
+  operationName: string;
+}
+export const restoreCategoryRef: RestoreCategoryRef;
+
+export function restoreCategory(vars: RestoreCategoryVariables): MutationPromise<RestoreCategoryData, RestoreCategoryVariables>;
+export function restoreCategory(dc: DataConnect, vars: RestoreCategoryVariables): MutationPromise<RestoreCategoryData, RestoreCategoryVariables>;
+
+interface RestoreSubcategoryRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: RestoreSubcategoryVariables): MutationRef<RestoreSubcategoryData, RestoreSubcategoryVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: RestoreSubcategoryVariables): MutationRef<RestoreSubcategoryData, RestoreSubcategoryVariables>;
+  operationName: string;
+}
+export const restoreSubcategoryRef: RestoreSubcategoryRef;
+
+export function restoreSubcategory(vars: RestoreSubcategoryVariables): MutationPromise<RestoreSubcategoryData, RestoreSubcategoryVariables>;
+export function restoreSubcategory(dc: DataConnect, vars: RestoreSubcategoryVariables): MutationPromise<RestoreSubcategoryData, RestoreSubcategoryVariables>;
 
 interface GetCurrentUserRef {
   /* Allow users to create refs without passing in DataConnect */

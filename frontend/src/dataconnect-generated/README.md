@@ -23,6 +23,8 @@ This README will guide you through the process of using the generated JavaScript
   - [*CreateSubcategory*](#createsubcategory)
   - [*UpdateSubcategory*](#updatesubcategory)
   - [*ArchiveSubcategory*](#archivesubcategory)
+  - [*RestoreCategory*](#restorecategory)
+  - [*RestoreSubcategory*](#restoresubcategory)
 
 # Accessing the connector
 A connector is a collection of Queries and Mutations. One SDK is generated for each connector - this SDK is generated for the connector `app`. You can find more information about connectors in the [Data Connect documentation](https://firebase.google.com/docs/data-connect#how-does).
@@ -354,6 +356,7 @@ export interface ListCategoriesVariables {
   search: string;
   limit: number;
   offset: number;
+  requestKey: string;
 }
 ```
 ### Return Type
@@ -376,13 +379,14 @@ const listCategoriesVars: ListCategoriesVariables = {
   search: ..., 
   limit: ..., 
   offset: ..., 
+  requestKey: ..., 
 };
 
 // Call the `listCategories()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await listCategories(listCategoriesVars);
 // Variables can be defined inline as well.
-const { data } = await listCategories({ search: ..., limit: ..., offset: ..., });
+const { data } = await listCategories({ search: ..., limit: ..., offset: ..., requestKey: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -408,12 +412,13 @@ const listCategoriesVars: ListCategoriesVariables = {
   search: ..., 
   limit: ..., 
   offset: ..., 
+  requestKey: ..., 
 };
 
 // Call the `listCategoriesRef()` function to get a reference to the query.
 const ref = listCategoriesRef(listCategoriesVars);
 // Variables can be defined inline as well.
-const ref = listCategoriesRef({ search: ..., limit: ..., offset: ..., });
+const ref = listCategoriesRef({ search: ..., limit: ..., offset: ..., requestKey: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -470,6 +475,7 @@ export interface ListSubcategoriesVariables {
   categoryId?: UUIDString | null;
   limit: number;
   offset: number;
+  requestKey: string;
 }
 ```
 ### Return Type
@@ -493,13 +499,14 @@ const listSubcategoriesVars: ListSubcategoriesVariables = {
   categoryId: ..., // optional
   limit: ..., 
   offset: ..., 
+  requestKey: ..., 
 };
 
 // Call the `listSubcategories()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await listSubcategories(listSubcategoriesVars);
 // Variables can be defined inline as well.
-const { data } = await listSubcategories({ search: ..., categoryId: ..., limit: ..., offset: ..., });
+const { data } = await listSubcategories({ search: ..., categoryId: ..., limit: ..., offset: ..., requestKey: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -526,12 +533,13 @@ const listSubcategoriesVars: ListSubcategoriesVariables = {
   categoryId: ..., // optional
   limit: ..., 
   offset: ..., 
+  requestKey: ..., 
 };
 
 // Call the `listSubcategoriesRef()` function to get a reference to the query.
 const ref = listSubcategoriesRef(listSubcategoriesVars);
 // Variables can be defined inline as well.
-const ref = listSubcategoriesRef({ search: ..., categoryId: ..., limit: ..., offset: ..., });
+const ref = listSubcategoriesRef({ search: ..., categoryId: ..., limit: ..., offset: ..., requestKey: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -1545,6 +1553,224 @@ const ref = archiveSubcategoryRef({ id: ..., });
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
 const ref = archiveSubcategoryRef(dataConnect, archiveSubcategoryVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+## RestoreCategory
+You can execute the `RestoreCategory` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+restoreCategory(vars: RestoreCategoryVariables): MutationPromise<RestoreCategoryData, RestoreCategoryVariables>;
+
+interface RestoreCategoryRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: RestoreCategoryVariables): MutationRef<RestoreCategoryData, RestoreCategoryVariables>;
+}
+export const restoreCategoryRef: RestoreCategoryRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+restoreCategory(dc: DataConnect, vars: RestoreCategoryVariables): MutationPromise<RestoreCategoryData, RestoreCategoryVariables>;
+
+interface RestoreCategoryRef {
+  ...
+  (dc: DataConnect, vars: RestoreCategoryVariables): MutationRef<RestoreCategoryData, RestoreCategoryVariables>;
+}
+export const restoreCategoryRef: RestoreCategoryRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the restoreCategoryRef:
+```typescript
+const name = restoreCategoryRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `RestoreCategory` mutation requires an argument of type `RestoreCategoryVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface RestoreCategoryVariables {
+  id: UUIDString;
+}
+```
+### Return Type
+Recall that executing the `RestoreCategory` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `RestoreCategoryData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface RestoreCategoryData {
+  _execute?: number | null;
+}
+```
+### Using `RestoreCategory`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, restoreCategory, RestoreCategoryVariables } from '@insightpad/dataconnect';
+
+// The `RestoreCategory` mutation requires an argument of type `RestoreCategoryVariables`:
+const restoreCategoryVars: RestoreCategoryVariables = {
+  id: ..., 
+};
+
+// Call the `restoreCategory()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await restoreCategory(restoreCategoryVars);
+// Variables can be defined inline as well.
+const { data } = await restoreCategory({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await restoreCategory(dataConnect, restoreCategoryVars);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+restoreCategory(restoreCategoryVars).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+### Using `RestoreCategory`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, restoreCategoryRef, RestoreCategoryVariables } from '@insightpad/dataconnect';
+
+// The `RestoreCategory` mutation requires an argument of type `RestoreCategoryVariables`:
+const restoreCategoryVars: RestoreCategoryVariables = {
+  id: ..., 
+};
+
+// Call the `restoreCategoryRef()` function to get a reference to the mutation.
+const ref = restoreCategoryRef(restoreCategoryVars);
+// Variables can be defined inline as well.
+const ref = restoreCategoryRef({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = restoreCategoryRef(dataConnect, restoreCategoryVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+## RestoreSubcategory
+You can execute the `RestoreSubcategory` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+restoreSubcategory(vars: RestoreSubcategoryVariables): MutationPromise<RestoreSubcategoryData, RestoreSubcategoryVariables>;
+
+interface RestoreSubcategoryRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: RestoreSubcategoryVariables): MutationRef<RestoreSubcategoryData, RestoreSubcategoryVariables>;
+}
+export const restoreSubcategoryRef: RestoreSubcategoryRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+restoreSubcategory(dc: DataConnect, vars: RestoreSubcategoryVariables): MutationPromise<RestoreSubcategoryData, RestoreSubcategoryVariables>;
+
+interface RestoreSubcategoryRef {
+  ...
+  (dc: DataConnect, vars: RestoreSubcategoryVariables): MutationRef<RestoreSubcategoryData, RestoreSubcategoryVariables>;
+}
+export const restoreSubcategoryRef: RestoreSubcategoryRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the restoreSubcategoryRef:
+```typescript
+const name = restoreSubcategoryRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `RestoreSubcategory` mutation requires an argument of type `RestoreSubcategoryVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface RestoreSubcategoryVariables {
+  id: UUIDString;
+}
+```
+### Return Type
+Recall that executing the `RestoreSubcategory` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `RestoreSubcategoryData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface RestoreSubcategoryData {
+  _execute?: number | null;
+}
+```
+### Using `RestoreSubcategory`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, restoreSubcategory, RestoreSubcategoryVariables } from '@insightpad/dataconnect';
+
+// The `RestoreSubcategory` mutation requires an argument of type `RestoreSubcategoryVariables`:
+const restoreSubcategoryVars: RestoreSubcategoryVariables = {
+  id: ..., 
+};
+
+// Call the `restoreSubcategory()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await restoreSubcategory(restoreSubcategoryVars);
+// Variables can be defined inline as well.
+const { data } = await restoreSubcategory({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await restoreSubcategory(dataConnect, restoreSubcategoryVars);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+restoreSubcategory(restoreSubcategoryVars).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+### Using `RestoreSubcategory`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, restoreSubcategoryRef, RestoreSubcategoryVariables } from '@insightpad/dataconnect';
+
+// The `RestoreSubcategory` mutation requires an argument of type `RestoreSubcategoryVariables`:
+const restoreSubcategoryVars: RestoreSubcategoryVariables = {
+  id: ..., 
+};
+
+// Call the `restoreSubcategoryRef()` function to get a reference to the mutation.
+const ref = restoreSubcategoryRef(restoreSubcategoryVars);
+// Variables can be defined inline as well.
+const ref = restoreSubcategoryRef({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = restoreSubcategoryRef(dataConnect, restoreSubcategoryVars);
 
 // Call `executeMutation()` on the reference to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.

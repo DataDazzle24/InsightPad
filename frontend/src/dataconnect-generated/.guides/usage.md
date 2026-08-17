@@ -12,7 +12,7 @@ For each operation, there is a wrapper hook that can be used to call the operati
 
 Here are all of the hooks that get generated:
 ```ts
-import { useBootstrapNavigationCatalog, useCreateCategory, useUpdateCategory, useArchiveCategory, useCreateSubcategory, useUpdateSubcategory, useArchiveSubcategory, useGetCurrentUser, useGetCurrentUserAccess, useListCategories } from '@insightpad/dataconnect/react';
+import { useBootstrapNavigationCatalog, useCreateCategory, useUpdateCategory, useArchiveCategory, useCreateSubcategory, useUpdateSubcategory, useArchiveSubcategory, useRestoreCategory, useRestoreSubcategory, useGetCurrentUser } from '@insightpad/dataconnect/react';
 // The types of these hooks are available in react/index.d.ts
 
 const { data, isPending, isSuccess, isError, error } = useBootstrapNavigationCatalog(bootstrapNavigationCatalogVars);
@@ -29,11 +29,11 @@ const { data, isPending, isSuccess, isError, error } = useUpdateSubcategory(upda
 
 const { data, isPending, isSuccess, isError, error } = useArchiveSubcategory(archiveSubcategoryVars);
 
+const { data, isPending, isSuccess, isError, error } = useRestoreCategory(restoreCategoryVars);
+
+const { data, isPending, isSuccess, isError, error } = useRestoreSubcategory(restoreSubcategoryVars);
+
 const { data, isPending, isSuccess, isError, error } = useGetCurrentUser();
-
-const { data, isPending, isSuccess, isError, error } = useGetCurrentUserAccess();
-
-const { data, isPending, isSuccess, isError, error } = useListCategories(listCategoriesVars);
 
 ```
 
@@ -72,7 +72,7 @@ If a user is not using a supported framework, they can use the generated SDK dir
 Here's an example of how to use it with the first 5 operations:
 
 ```js
-import { bootstrapNavigationCatalog, createCategory, updateCategory, archiveCategory, createSubcategory, updateSubcategory, archiveSubcategory, getCurrentUser, getCurrentUserAccess, listCategories } from '@insightpad/dataconnect';
+import { bootstrapNavigationCatalog, createCategory, updateCategory, archiveCategory, createSubcategory, updateSubcategory, archiveSubcategory, restoreCategory, restoreSubcategory, getCurrentUser } from '@insightpad/dataconnect';
 
 
 // Operation BootstrapNavigationCatalog:  For variables, look at type BootstrapNavigationCatalogVars in ../index.d.ts
@@ -96,14 +96,14 @@ const { data } = await UpdateSubcategory(dataConnect, updateSubcategoryVars);
 // Operation ArchiveSubcategory:  For variables, look at type ArchiveSubcategoryVars in ../index.d.ts
 const { data } = await ArchiveSubcategory(dataConnect, archiveSubcategoryVars);
 
+// Operation RestoreCategory:  For variables, look at type RestoreCategoryVars in ../index.d.ts
+const { data } = await RestoreCategory(dataConnect, restoreCategoryVars);
+
+// Operation RestoreSubcategory:  For variables, look at type RestoreSubcategoryVars in ../index.d.ts
+const { data } = await RestoreSubcategory(dataConnect, restoreSubcategoryVars);
+
 // Operation GetCurrentUser: 
 const { data } = await GetCurrentUser(dataConnect);
-
-// Operation GetCurrentUserAccess: 
-const { data } = await GetCurrentUserAccess(dataConnect);
-
-// Operation ListCategories:  For variables, look at type ListCategoriesVars in ../index.d.ts
-const { data } = await ListCategories(dataConnect, listCategoriesVars);
 
 
 ```
