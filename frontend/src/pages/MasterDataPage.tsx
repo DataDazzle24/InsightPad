@@ -6,6 +6,7 @@ import {
   saveBranch,saveSupplier,saveCustomer,saveProduct,setBranchesStatusBatch,setSuppliersStatusBatch,setCustomersStatusBatch,setProductsStatusBatch,productComponents,
 } from '@insightpad/dataconnect'
 import { useAuth } from '../auth/useAuth'
+import { useDialogAccessibility } from '../hooks/useDialogAccessibility'
 import { firebaseApp } from '../lib/firebase'
 import { csvSafe,digits,isValidCnpj,isValidCpf,maskRegistrationValue,moneyFromCents } from '../utils/registration'
 import { ProductExtras } from './ProductExtras'
@@ -82,6 +83,9 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
  const [selected,setSelected]=useState<string[]>([]),[visibleCount,setVisibleCount]=useState(100),[extras,setExtras]=useState<Row|null>(null),[options,setOptions]=useState<RegistrationOptionSet>({categories:[],subcategories:[],suppliers:[],products:[]}),[kitItems,setKitItems]=useState<KitItem[]>([]),[section,setSection]=useState(modalSections[pageKey][0].key)
  const requestSequence=useRef(0)
  const [filterModal,setFilterModal]=useState(false),[filters,setFilters]=useState<Record<string,string[]>>({}),[filterSearch,setFilterSearch]=useState<Record<string,string>>({})
+ useDialogAccessibility(modal&&!confirm,closeForm)
+ useDialogAccessibility(filterModal&&!confirm,()=>setFilterModal(false))
+ useDialogAccessibility(Boolean(confirm),()=>setConfirm(null))
  const query=useMemo(()=>({search:search.trim(),limit:RESULT_LIMIT,offset:0}),[search])
  const comboCostCents=useMemo(()=>kitItems.reduce((total,item)=>{const product=options.products.find(p=>p.id===item.productId);return total+Number(product?.costPriceCents??0)*Number(item.quantity||0)},0),[kitItems,options.products])
  const sections=modalSections[pageKey],sectionIndex=Math.max(0,sections.findIndex(item=>item.key===section))
