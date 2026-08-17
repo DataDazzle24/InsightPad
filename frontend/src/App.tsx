@@ -28,12 +28,12 @@ export default function App() {
       <Route path="/acesso-negado" element={<AccessDeniedPage />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
-          <Route element={<PlatformAdminRoute />}><Route path="/plataforma/administracao" element={<PlatformAdminPage />} /></Route>
+          <Route element={<PlatformAdminRoute />}><Route path="/plataforma/administracao" element={<Navigate to="/configuracoes/acessos" replace />} /><Route path="/configuracoes/acessos" element={<PlatformAdminPage />} /></Route>
           <Route index element={<DashboardPage />} />
           <Route path="/modulos/vendas" element={<ModuleMenuPage moduleKey="vendas" />} />
           <Route path="/modulos/cadastros" element={<ModuleMenuPage moduleKey="cadastros" />} />
           <Route path="/modulos/dashboards" element={<ModuleMenuPage moduleKey="dashboards" />} />
-          {appRoutes.map(({ pageKey, route }) => (
+          {appRoutes.filter(({ pageKey }) => pageKey !== 'GESTAO_ACESSOS').map(({ pageKey, route }) => (
             <Route element={<PermissionRoute pageKey={pageKey} />} key={pageKey}>
               <Route path={route} element={pageKey === 'CAIXA' ? <PointOfSalePage /> : pageKey === 'GESTAO_VENDAS' ? <SalesManagementPage /> : pageKey === 'CAD_CATEGORIA' || pageKey === 'CAD_SUBCATEGORIA' ? <CatalogPages pageKey={pageKey} /> : pageKey === 'CAD_FILIAL' || pageKey === 'CAD_FORNECEDOR' || pageKey === 'CAD_CLIENTE' || pageKey === 'CAD_PRODUTO' ? <MasterDataPage pageKey={pageKey} /> : <ModulePlaceholderPage pageKey={pageKey} />} />
             </Route>
