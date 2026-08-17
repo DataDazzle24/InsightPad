@@ -106,7 +106,8 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
   CAD_PRODUTO:['name','internalCode','ean','brand','categoryId','subcategoryId','supplierId','sizeType','size','color','costPriceCents','salePriceCents','weightedProduct','bundleProduct'],
  }
  const advancedFields=[...cfg.fields.filter(field=>filterFieldKeys[pageKey].includes(field.key)),{key:'createdAt',label:'Data de cadastro'} as Field]
- const filteredRows=useMemo(()=>rows.filter(row=>Object.entries(filters).every(([key,values])=>values.length===0||values.includes(String(row[key]??'')))),[rows,filters])
+ const matchesFilters=useCallback((row:Row)=>Object.entries(filters).every(([key,values])=>values.length===0||values.includes(String(row[key]??''))),[filters])
+ const filteredRows=useMemo(()=>rows.filter(matchesFilters),[rows,matchesFilters])
  const primaryKeys=new Set(cfg.columns.map(column=>column.key))
  const detailFields=cfg.fields.filter(field=>!primaryKeys.has(field.key)&&!(pageKey==='CAD_PRODUTO'&&field.key==='categoryId'))
  const activeFilterCount=Object.values(filters).reduce((total,values)=>total+values.length,0)
@@ -183,17 +184,23 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
  }catch(e){console.error(e);setNotice('Nenhum registro foi alterado. Verifique permissões, duplicidades e vínculos ativos.');await load()}finally{setBusy(false)}}
  const formDirty=modal&&baseline!==JSON.stringify({form,kit:kitItems})
  function closeForm(){if(formDirty){setConfirm({text:'Existem alterações não salvas. Deseja descartar o preenchimento?',run:async()=>{setModal(false);setBaseline('')}});return}setModal(false);setBaseline('')}
- function exportCsv(){const keys=Array.from(new Set(['id',...cfg.fields.map(field=>field.key),...Object.keys(filteredRows[0]??{}),'active','updatedAt']))
+ async function exportCsv(){setBusy(true);try{const allRows:Row[]=[],pageSize=1000
+  for(let offset=0;;offset+=pageSize){const vars={search:search.trim(),limit:pageSize,offset,requestKey:crypto.randomUUID()};let result
+   if(pageKey==='CAD_FILIAL')result=await listBranches(dc,vars);else if(pageKey==='CAD_FORNECEDOR')result=await listSuppliers(dc,vars)
+   else if(pageKey==='CAD_CLIENTE')result=await listCustomers(dc,vars);else result=await listProducts(dc,vars)
+   const page=(result.data._select??[]) as Row[];allRows.push(...page);if(page.length<pageSize)break}
+  const exportRows=allRows.filter(matchesFilters),keys=Array.from(new Set(['id',...cfg.fields.map(field=>field.key),...Object.keys(exportRows[0]??{}),'active','updatedAt']))
   const labels:Record<string,string>=Object.fromEntries(cfg.fields.map(field=>[field.key,field.label]));Object.assign(labels,{id:'ID',active:'Status',updatedAt:'Última atualização',categoryName:'Categoria',subcategoryName:'Subcategoria',supplierName:'Fornecedor'})
   const cell=(key:string,value:unknown)=>{if(key==='active')return value?'Ativo':'Inativo';const field=cfg.fields.find(item=>item.key===key);if(field?.type==='money')return money(value);if(typeof value==='boolean')return value?'Sim':'Não';if(value&&typeof value==='object')return JSON.stringify(value);return String(value??'')}
-  const lines=filteredRows.map(row=>keys.map(key=>`"${csvSafe(cell(key,row[key])).replaceAll('"','""')}"`).join(';'));const a=document.createElement('a')
-  a.href=URL.createObjectURL(new Blob([`\uFEFF${keys.map(key=>labels[key]??key).join(';')}\n${lines.join('\n')}`],{type:'text/csv'}));a.download=`${pageKey.toLowerCase()}-completo.csv`;a.click();URL.revokeObjectURL(a.href)}
+  const lines=exportRows.map(row=>keys.map(key=>`"${csvSafe(cell(key,row[key])).replaceAll('"','""')}"`).join(';'));const a=document.createElement('a')
+  a.href=URL.createObjectURL(new Blob([`\uFEFF${keys.map(key=>labels[key]??key).join(';')}\n${lines.join('\n')}`],{type:'text/csv'}));a.download=`${pageKey.toLowerCase()}-completo.csv`;a.click();URL.revokeObjectURL(a.href)
+  setNotice(`CSV gerado com ${exportRows.length} registro(s).`)}catch(error){console.error(error);setNotice('Não foi possível gerar o CSV completo.')}finally{setBusy(false)}}
 
  return <section className="catalog-page"><header><div><span className="eyebrow">Cadastros</span><h1>{cfg.title}</h1></div><div className="catalog-header-actions">
   <Link className="catalog-back" to="/modulos/cadastros"><span className="material-symbols-rounded">arrow_back</span>Voltar</Link>{permission?.canCreate&&<button className="catalog-primary" onClick={()=>open()}>+ Novo cadastro</button>}</div></header>
   {notice&&<div aria-live="assertive" className={`master-toast ${/sucesso|salvo|atualizado/i.test(notice)?'master-toast--success':'master-toast--error'}`} role="alert"><span className="material-symbols-rounded">{/sucesso|salvo|atualizado/i.test(notice)?'check_circle':'error'}</span><strong>{notice}</strong><button aria-label="Fechar aviso" onClick={()=>setNotice('')}>×</button></div>}<div className="catalog-panel"><div className="catalog-toolbar"><label><span className="material-symbols-rounded">search</span>
    <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Pesquisar..."/></label>{selected.length>0&&<>{permission?.canDelete&&<button onClick={()=>setConfirm({text:`Inativar ${selected.length} registros?`,run:()=>status(selected,false)})}>Inativar selecionados</button>}
-   {permission?.canUpdate&&<button onClick={()=>setConfirm({text:`Ativar ${selected.length} registros?`,run:()=>status(selected,true)})}>Ativar selecionados</button>}</>}<button onClick={()=>setFilterModal(true)}><span className="material-symbols-rounded">tune</span>Pesquisa avançada{activeFilterCount>0&&<b>{activeFilterCount}</b>}</button>{permission?.canExport&&<button onClick={exportCsv}>Exportar CSV</button>}</div>
+   {permission?.canUpdate&&<button onClick={()=>setConfirm({text:`Ativar ${selected.length} registros?`,run:()=>status(selected,true)})}>Ativar selecionados</button>}</>}<button onClick={()=>setFilterModal(true)}><span className="material-symbols-rounded">tune</span>Pesquisa avançada{activeFilterCount>0&&<b>{activeFilterCount}</b>}</button>{permission?.canExport&&<button onClick={()=>void exportCsv()}>Exportar CSV</button>}</div>
    <div className="catalog-scroll"><div className="catalog-table"><table><thead><tr><th><input type="checkbox" checked={filteredRows.length>0&&filteredRows.every(row=>selected.includes(row.id))} onChange={e=>setSelected(e.target.checked?filteredRows.map(r=>r.id):[])}/></th>
     {cfg.columns.map(c=><th key={c.key}>{c.label}</th>)}<th>Status</th><th>Ações</th>{detailFields.map(field=><th key={field.key}>{field.label}</th>)}<th>Cadastro</th><th>Última atualização</th></tr></thead><tbody>{filteredRows.map(row=><tr key={row.id} className={!row.active?'is-inactive':''}><td><input type="checkbox" checked={selected.includes(row.id)} onChange={e=>setSelected(v=>e.target.checked?[...v,row.id]:v.filter(id=>id!==row.id))}/></td>
     {cfg.columns.map(c=><td key={c.key}>{c.key==='bundleProduct'?<span className={`product-type product-type--${row.bundleProduct?'combo':'simple'}`}><span className="material-symbols-rounded">{row.bundleProduct?'deployed_code':'inventory_2'}</span>{row.bundleProduct?'Combo':'Simples'}</span>:c.format?c.format(row[c.key],row):String(row[c.key]??'—')}</td>)}<td><span className={`catalog-status catalog-status--${row.active?'active':'inactive'}`}><i/>{row.active?'Ativo':'Inativo'}</span></td><td><div className="catalog-actions">
