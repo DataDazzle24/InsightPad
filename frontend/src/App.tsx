@@ -1,4 +1,6 @@
+import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { AppErrorBoundary } from './components/AppErrorBoundary'
 import { AppLayout } from './layout/AppLayout'
 import { AccessDeniedPage } from './pages/AccessDeniedPage'
 import { DashboardPage } from './pages/DashboardPage'
@@ -10,8 +12,13 @@ import { PermissionRoute } from './routes/PermissionRoute'
 import { ProtectedRoute } from './routes/ProtectedRoute'
 import './App.css'
 
+const CatalogPages = lazy(() => import('./pages/CatalogPages').then((module) => ({ default: module.CatalogPages })))
+const MasterDataPage = lazy(() => import('./pages/MasterDataPage').then((module) => ({ default: module.MasterDataPage })))
+
 export default function App() {
   return (
+   <AppErrorBoundary>
+    <Suspense fallback={<div className="session-loader"><div className="brand-mark"><span>Insight Pad</span></div><p>Carregando módulo...</p></div>}>
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/acesso-negado" element={<AccessDeniedPage />} />
@@ -23,12 +30,14 @@ export default function App() {
           <Route path="/modulos/dashboards" element={<ModuleMenuPage moduleKey="dashboards" />} />
           {appRoutes.map(({ pageKey, route }) => (
             <Route element={<PermissionRoute pageKey={pageKey} />} key={pageKey}>
-              <Route path={route} element={<ModulePlaceholderPage pageKey={pageKey} />} />
+              <Route path={route} element={pageKey === 'CAD_CATEGORIA' || pageKey === 'CAD_SUBCATEGORIA' ? <CatalogPages pageKey={pageKey} /> : pageKey === 'CAD_FILIAL' || pageKey === 'CAD_FORNECEDOR' || pageKey === 'CAD_CLIENTE' || pageKey === 'CAD_PRODUTO' ? <MasterDataPage pageKey={pageKey} /> : <ModulePlaceholderPage pageKey={pageKey} />} />
             </Route>
           ))}
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </Suspense>
+   </AppErrorBoundary>
   )
 }

@@ -294,3 +294,956 @@ mutation BootstrapNavigationCatalog(
     canManage: true
   })
 }
+
+
+# Phase 1 catalog mutations.
+# Authorization and tenant scope are resolved in the database from auth.uid.
+mutation CreateCategory($name: String!) @auth(level: USER) @transaction {
+  _execute(
+    sql: """
+      WITH actor AS (
+        SELECT u.id, u.tenant_id
+        FROM users u
+        JOIN tenants t ON t.id = u.tenant_id AND t.active AND t.deleted_at IS NULL
+        JOIN roles r ON r.id = u.role_id AND r.active AND r.deleted_at IS NULL
+        JOIN app_pages p ON p.page_key = 'CAD_CATEGORIA' AND p.active
+        LEFT JOIN user_page_permissions up ON up.user_id = u.id AND up.page_id = p.id
+        LEFT JOIN role_page_permissions rp ON rp.role_id = u.role_id AND rp.page_id = p.id
+        WHERE u.id = $1 AND u.active AND u.deleted_at IS NULL
+          AND COALESCE(up.can_create, rp.can_create, false)
+      ),
+      inserted AS (
+        INSERT INTO categories (tenant_id, name, active, created_at, updated_at)
+        SELECT a.tenant_id, btrim($2), true, now(), now()
+        FROM actor a
+        WHERE btrim($2) <> ''
+          AND NOT EXISTS (
+            SELECT 1 FROM categories c
+            WHERE c.tenant_id = a.tenant_id
+              AND c.active AND c.deleted_at IS NULL
+              AND lower(btrim(c.name)) = lower(btrim($2))
+          )
+        RETURNING id, tenant_id, name
+      )
+      INSERT INTO audit_logs
+        (tenant_id, user_id, module, page_key, action, entity_name, entity_id,
+         summary, success, origin, after_data, created_at)
+      SELECT i.tenant_id, $1, 'Cadastros', 'CAD_CATEGORIA', 'CREATE',
+             'Category', i.id::text, 'Categoria cadastrada', true, 'SQL_CONNECT',
+             jsonb_build_object('id', i.id, 'name', i.name), now()
+      FROM inserted i
+    """,
+    params: [{_expr: "auth.uid"}, $name]
+  )
+}
+
+mutation UpdateCategory($id: UUID!, $name: String!) @auth(level: USER) @transaction {
+  _execute(
+    sql: """
+      WITH actor AS (
+        SELECT u.id, u.tenant_id
+        FROM users u
+        JOIN tenants t ON t.id = u.tenant_id AND t.active AND t.deleted_at IS NULL
+        JOIN roles r ON r.id = u.role_id AND r.active AND r.deleted_at IS NULL
+        JOIN app_pages p ON p.page_key = 'CAD_CATEGORIA' AND p.active
+        LEFT JOIN user_page_permissions up ON up.user_id = u.id AND up.page_id = p.id
+        LEFT JOIN role_page_permissions rp ON rp.role_id = u.role_id AND rp.page_id = p.id
+        WHERE u.id = $1 AND u.active AND u.deleted_at IS NULL
+          AND COALESCE(up.can_update, rp.can_update, false)
+      ),
+      changed AS (
+        UPDATE categories c
+        SET name = btrim($3), updated_at = now()
+        FROM actor a
+        WHERE c.id = $2
+          AND c.tenant_id = a.tenant_id
+          AND c.active AND c.deleted_at IS NULL
+          AND btrim($3) <> ''
+          AND NOT EXISTS (
+            SELECT 1 FROM categories duplicate
+            WHERE duplicate.tenant_id = a.tenant_id
+              AND duplicate.id <> c.id
+              AND duplicate.active AND duplicate.deleted_at IS NULL
+              AND lower(btrim(duplicate.name)) = lower(btrim($3))
+          )
+        RETURNING c.id, c.tenant_id, c.name
+      )
+      INSERT INTO audit_logs
+        (tenant_id, user_id, module, page_key, action, entity_name, entity_id,
+         summary, success, origin, after_data, created_at)
+      SELECT c.tenant_id, $1, 'Cadastros', 'CAD_CATEGORIA', 'UPDATE',
+             'Category', c.id::text, 'Categoria atualizada', true, 'SQL_CONNECT',
+             jsonb_build_object('id', c.id, 'name', c.name), now()
+      FROM changed c
+    """,
+    params: [{_expr: "auth.uid"}, $id, $name]
+  )
+}
+
+mutation ArchiveCategory($id: UUID!) @auth(level: USER) @transaction {
+  _execute(
+    sql: """
+      WITH actor AS (
+        SELECT u.id, u.tenant_id
+        FROM users u
+        JOIN tenants t ON t.id = u.tenant_id AND t.active AND t.deleted_at IS NULL
+        JOIN roles r ON r.id = u.role_id AND r.active AND r.deleted_at IS NULL
+        JOIN app_pages p ON p.page_key = 'CAD_CATEGORIA' AND p.active
+        LEFT JOIN user_page_permissions up ON up.user_id = u.id AND up.page_id = p.id
+        LEFT JOIN role_page_permissions rp ON rp.role_id = u.role_id AND rp.page_id = p.id
+        WHERE u.id = $1 AND u.active AND u.deleted_at IS NULL
+          AND COALESCE(up.can_delete, rp.can_delete, false)
+      ),
+      archived AS (
+        UPDATE categories c
+        SET active = false, deleted_at = now(), updated_at = now()
+        FROM actor a
+        WHERE c.id = $2
+          AND c.tenant_id = a.tenant_id
+          AND c.active AND c.deleted_at IS NULL
+          AND NOT EXISTS (
+            SELECT 1 FROM subcategories s
+            WHERE s.category_id = c.id AND s.tenant_id = c.tenant_id
+              AND s.active AND s.deleted_at IS NULL
+          )
+          AND NOT EXISTS (
+            SELECT 1 FROM products p
+            WHERE p.category_id = c.id AND p.tenant_id = c.tenant_id
+              AND p.active AND p.deleted_at IS NULL
+          )
+        RETURNING c.id, c.tenant_id, c.name
+      )
+      INSERT INTO audit_logs
+        (tenant_id, user_id, module, page_key, action, entity_name, entity_id,
+         summary, success, origin, before_data, created_at)
+      SELECT c.tenant_id, $1, 'Cadastros', 'CAD_CATEGORIA', 'ARCHIVE',
+             'Category', c.id::text, 'Categoria inativada', true, 'SQL_CONNECT',
+             jsonb_build_object('id', c.id, 'name', c.name), now()
+      FROM archived c
+    """,
+    params: [{_expr: "auth.uid"}, $id]
+  )
+}
+
+mutation CreateSubcategory($categoryId: UUID!, $name: String!) @auth(level: USER) @transaction {
+  _execute(
+    sql: """
+      WITH actor AS (
+        SELECT u.id, u.tenant_id
+        FROM users u
+        JOIN tenants t ON t.id = u.tenant_id AND t.active AND t.deleted_at IS NULL
+        JOIN roles r ON r.id = u.role_id AND r.active AND r.deleted_at IS NULL
+        JOIN app_pages p ON p.page_key = 'CAD_SUBCATEGORIA' AND p.active
+        LEFT JOIN user_page_permissions up ON up.user_id = u.id AND up.page_id = p.id
+        LEFT JOIN role_page_permissions rp ON rp.role_id = u.role_id AND rp.page_id = p.id
+        WHERE u.id = $1 AND u.active AND u.deleted_at IS NULL
+          AND COALESCE(up.can_create, rp.can_create, false)
+      ),
+      inserted AS (
+        INSERT INTO subcategories
+          (tenant_id, category_id, name, active, created_at, updated_at)
+        SELECT a.tenant_id, c.id, btrim($3), true, now(), now()
+        FROM actor a
+        JOIN categories c
+          ON c.id = $2 AND c.tenant_id = a.tenant_id
+         AND c.active AND c.deleted_at IS NULL
+        WHERE btrim($3) <> ''
+          AND NOT EXISTS (
+            SELECT 1 FROM subcategories s
+            WHERE s.tenant_id = a.tenant_id
+              AND s.category_id = c.id
+              AND s.active AND s.deleted_at IS NULL
+              AND lower(btrim(s.name)) = lower(btrim($3))
+          )
+        RETURNING id, tenant_id, category_id, name
+      )
+      INSERT INTO audit_logs
+        (tenant_id, user_id, module, page_key, action, entity_name, entity_id,
+         summary, success, origin, after_data, created_at)
+      SELECT s.tenant_id, $1, 'Cadastros', 'CAD_SUBCATEGORIA', 'CREATE',
+             'Subcategory', s.id::text, 'Subcategoria cadastrada', true, 'SQL_CONNECT',
+             jsonb_build_object('id', s.id, 'categoryId', s.category_id, 'name', s.name), now()
+      FROM inserted s
+    """,
+    params: [{_expr: "auth.uid"}, $categoryId, $name]
+  )
+}
+
+mutation UpdateSubcategory($id: UUID!, $categoryId: UUID!, $name: String!) @auth(level: USER) @transaction {
+  _execute(
+    sql: """
+      WITH actor AS (
+        SELECT u.id, u.tenant_id
+        FROM users u
+        JOIN tenants t ON t.id = u.tenant_id AND t.active AND t.deleted_at IS NULL
+        JOIN roles r ON r.id = u.role_id AND r.active AND r.deleted_at IS NULL
+        JOIN app_pages p ON p.page_key = 'CAD_SUBCATEGORIA' AND p.active
+        LEFT JOIN user_page_permissions up ON up.user_id = u.id AND up.page_id = p.id
+        LEFT JOIN role_page_permissions rp ON rp.role_id = u.role_id AND rp.page_id = p.id
+        WHERE u.id = $1 AND u.active AND u.deleted_at IS NULL
+          AND COALESCE(up.can_update, rp.can_update, false)
+      ),
+      changed AS (
+        UPDATE subcategories s
+        SET category_id = c.id, name = btrim($4), updated_at = now()
+        FROM actor a
+        JOIN categories c
+          ON c.id = $3 AND c.tenant_id = a.tenant_id
+         AND c.active AND c.deleted_at IS NULL
+        WHERE s.id = $2
+          AND s.tenant_id = a.tenant_id
+          AND s.active AND s.deleted_at IS NULL
+          AND btrim($4) <> ''
+          AND NOT EXISTS (
+            SELECT 1 FROM subcategories duplicate
+            WHERE duplicate.tenant_id = a.tenant_id
+              AND duplicate.category_id = c.id
+              AND duplicate.id <> s.id
+              AND duplicate.active AND duplicate.deleted_at IS NULL
+              AND lower(btrim(duplicate.name)) = lower(btrim($4))
+          )
+        RETURNING s.id, s.tenant_id, s.category_id, s.name
+      )
+      INSERT INTO audit_logs
+        (tenant_id, user_id, module, page_key, action, entity_name, entity_id,
+         summary, success, origin, after_data, created_at)
+      SELECT s.tenant_id, $1, 'Cadastros', 'CAD_SUBCATEGORIA', 'UPDATE',
+             'Subcategory', s.id::text, 'Subcategoria atualizada', true, 'SQL_CONNECT',
+             jsonb_build_object('id', s.id, 'categoryId', s.category_id, 'name', s.name), now()
+      FROM changed s
+    """,
+    params: [{_expr: "auth.uid"}, $id, $categoryId, $name]
+  )
+}
+
+mutation ArchiveSubcategory($id: UUID!) @auth(level: USER) @transaction {
+  _execute(
+    sql: """
+      WITH actor AS (
+        SELECT u.id, u.tenant_id
+        FROM users u
+        JOIN tenants t ON t.id = u.tenant_id AND t.active AND t.deleted_at IS NULL
+        JOIN roles r ON r.id = u.role_id AND r.active AND r.deleted_at IS NULL
+        JOIN app_pages p ON p.page_key = 'CAD_SUBCATEGORIA' AND p.active
+        LEFT JOIN user_page_permissions up ON up.user_id = u.id AND up.page_id = p.id
+        LEFT JOIN role_page_permissions rp ON rp.role_id = u.role_id AND rp.page_id = p.id
+        WHERE u.id = $1 AND u.active AND u.deleted_at IS NULL
+          AND COALESCE(up.can_delete, rp.can_delete, false)
+      ),
+      archived AS (
+        UPDATE subcategories s
+        SET active = false, deleted_at = now(), updated_at = now()
+        FROM actor a
+        WHERE s.id = $2
+          AND s.tenant_id = a.tenant_id
+          AND s.active AND s.deleted_at IS NULL
+          AND NOT EXISTS (
+            SELECT 1 FROM products p
+            WHERE p.subcategory_id = s.id AND p.tenant_id = s.tenant_id
+              AND p.active AND p.deleted_at IS NULL
+          )
+        RETURNING s.id, s.tenant_id, s.category_id, s.name
+      )
+      INSERT INTO audit_logs
+        (tenant_id, user_id, module, page_key, action, entity_name, entity_id,
+         summary, success, origin, before_data, created_at)
+      SELECT s.tenant_id, $1, 'Cadastros', 'CAD_SUBCATEGORIA', 'ARCHIVE',
+             'Subcategory', s.id::text, 'Subcategoria inativada', true, 'SQL_CONNECT',
+             jsonb_build_object('id', s.id, 'categoryId', s.category_id, 'name', s.name), now()
+      FROM archived s
+    """,
+    params: [{_expr: "auth.uid"}, $id]
+  )
+}
+
+
+mutation RestoreCategory($id: UUID!) @auth(level: USER) @transaction {
+  _execute(
+    sql: """
+      WITH actor AS (
+        SELECT u.id, u.tenant_id
+        FROM users u
+        JOIN tenants t ON t.id = u.tenant_id AND t.active AND t.deleted_at IS NULL
+        JOIN roles r ON r.id = u.role_id AND r.active AND r.deleted_at IS NULL
+        JOIN app_pages p ON p.page_key = 'CAD_CATEGORIA' AND p.active
+        LEFT JOIN user_page_permissions up ON up.user_id = u.id AND up.page_id = p.id
+        LEFT JOIN role_page_permissions rp ON rp.role_id = u.role_id AND rp.page_id = p.id
+        WHERE u.id = $1 AND u.active AND u.deleted_at IS NULL
+          AND COALESCE(up.can_update, rp.can_update, false)
+      ),
+      restored AS (
+        UPDATE categories c
+        SET active = true, deleted_at = NULL, updated_at = now()
+        FROM actor a
+        WHERE c.id = $2 AND c.tenant_id = a.tenant_id AND NOT c.active
+          AND NOT EXISTS (
+            SELECT 1 FROM categories duplicate
+            WHERE duplicate.tenant_id = a.tenant_id AND duplicate.id <> c.id
+              AND duplicate.active AND duplicate.deleted_at IS NULL
+              AND lower(btrim(duplicate.name)) = lower(btrim(c.name))
+          )
+        RETURNING c.id, c.tenant_id, c.name
+      )
+      INSERT INTO audit_logs
+        (tenant_id, user_id, module, page_key, action, entity_name, entity_id,
+         summary, success, origin, after_data, created_at)
+      SELECT c.tenant_id, $1, 'Cadastros', 'CAD_CATEGORIA', 'RESTORE',
+             'Category', c.id::text, 'Categoria reativada', true, 'SQL_CONNECT',
+             jsonb_build_object('id', c.id, 'name', c.name), now()
+      FROM restored c
+    """,
+    params: [{_expr: "auth.uid"}, $id]
+  )
+}
+
+mutation RestoreSubcategory($id: UUID!) @auth(level: USER) @transaction {
+  _execute(
+    sql: """
+      WITH actor AS (
+        SELECT u.id, u.tenant_id
+        FROM users u
+        JOIN tenants t ON t.id = u.tenant_id AND t.active AND t.deleted_at IS NULL
+        JOIN roles r ON r.id = u.role_id AND r.active AND r.deleted_at IS NULL
+        JOIN app_pages p ON p.page_key = 'CAD_SUBCATEGORIA' AND p.active
+        LEFT JOIN user_page_permissions up ON up.user_id = u.id AND up.page_id = p.id
+        LEFT JOIN role_page_permissions rp ON rp.role_id = u.role_id AND rp.page_id = p.id
+        WHERE u.id = $1 AND u.active AND u.deleted_at IS NULL
+          AND COALESCE(up.can_update, rp.can_update, false)
+      ),
+      restored AS (
+        UPDATE subcategories s
+        SET active = true, deleted_at = NULL, updated_at = now()
+        FROM actor a
+        JOIN categories c ON c.id = s.category_id AND c.tenant_id = a.tenant_id
+          AND c.active AND c.deleted_at IS NULL
+        WHERE s.id = $2 AND s.tenant_id = a.tenant_id AND NOT s.active
+          AND NOT EXISTS (
+            SELECT 1 FROM subcategories duplicate
+            WHERE duplicate.tenant_id = a.tenant_id
+              AND duplicate.category_id = s.category_id AND duplicate.id <> s.id
+              AND duplicate.active AND duplicate.deleted_at IS NULL
+              AND lower(btrim(duplicate.name)) = lower(btrim(s.name))
+          )
+        RETURNING s.id, s.tenant_id, s.category_id, s.name
+      )
+      INSERT INTO audit_logs
+        (tenant_id, user_id, module, page_key, action, entity_name, entity_id,
+         summary, success, origin, after_data, created_at)
+      SELECT s.tenant_id, $1, 'Cadastros', 'CAD_SUBCATEGORIA', 'RESTORE',
+             'Subcategory', s.id::text, 'Subcategoria reativada', true, 'SQL_CONNECT',
+             jsonb_build_object('id', s.id, 'categoryId', s.category_id, 'name', s.name), now()
+      FROM restored s
+    """,
+    params: [{_expr: "auth.uid"}, $id]
+  )
+}
+
+
+
+mutation CreateCategoriesBatch($names: Any!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages pg ON pg.page_key='CAD_CATEGORIA' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_create,rp.can_create,false)
+    ),input AS (
+      SELECT upper(btrim(value)) name FROM jsonb_array_elements_text(COALESCE($2::jsonb,'[]'::jsonb))
+    ),validated AS (
+      SELECT name FROM input WHERE length(name)>=2 GROUP BY name
+    ),guard AS (
+      SELECT count(*) input_count,count(DISTINCT name) distinct_count FROM input
+    ),inserted AS (
+      INSERT INTO categories(tenant_id,name,active,created_at,updated_at)
+      SELECT a.tenant_id,v.name,true,now(),now() FROM actor a CROSS JOIN validated v CROSS JOIN guard g
+      WHERE g.input_count BETWEEN 1 AND 20 AND g.input_count=g.distinct_count
+        AND NOT EXISTS(SELECT 1 FROM categories c WHERE c.tenant_id=a.tenant_id AND c.active AND lower(btrim(c.name))=lower(v.name))
+        AND NOT EXISTS(SELECT 1 FROM validated candidate JOIN categories c ON c.tenant_id=a.tenant_id AND c.active
+          AND lower(btrim(c.name))=lower(candidate.name))
+      RETURNING id,tenant_id,name
+    )
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+    SELECT tenant_id,$1,'Cadastros','CAD_CATEGORIA','CREATE_BATCH','Category',id::text,'Categoria cadastrada em lote',true,
+      'SQL_CONNECT',jsonb_build_object('id',id,'name',name),now() FROM inserted
+  """,params:[{_expr:"auth.uid"},$names])
+}
+
+mutation CreateSubcategoriesBatch($items: Any!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages pg ON pg.page_key='CAD_SUBCATEGORIA' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_create,rp.can_create,false)
+    ),input AS (
+      SELECT (item->>'categoryId')::uuid category_id,upper(btrim(item->>'name')) name
+      FROM jsonb_array_elements(COALESCE($2::jsonb,'[]'::jsonb)) item
+    ),validated AS (
+      SELECT category_id,name FROM input WHERE length(name)>=2 GROUP BY category_id,name
+    ),guard AS (
+      SELECT count(*) input_count,count(DISTINCT category_id::text||'|'||name) distinct_count FROM input
+    ),inserted AS (
+      INSERT INTO subcategories(tenant_id,category_id,name,active,created_at,updated_at)
+      SELECT a.tenant_id,v.category_id,v.name,true,now(),now() FROM actor a CROSS JOIN validated v
+      JOIN categories c ON c.id=v.category_id AND c.tenant_id=a.tenant_id AND c.active AND c.deleted_at IS NULL
+      CROSS JOIN guard g
+      WHERE g.input_count BETWEEN 1 AND 20 AND g.input_count=g.distinct_count
+        AND NOT EXISTS(
+          SELECT 1 FROM validated invalid
+          LEFT JOIN categories valid_category
+            ON valid_category.id=invalid.category_id AND valid_category.tenant_id=a.tenant_id
+           AND valid_category.active AND valid_category.deleted_at IS NULL
+          WHERE valid_category.id IS NULL
+        )
+        AND NOT EXISTS(SELECT 1 FROM validated candidate JOIN subcategories existing
+          ON existing.tenant_id=a.tenant_id AND existing.category_id=candidate.category_id
+         AND existing.active AND existing.deleted_at IS NULL
+          AND lower(btrim(existing.name))=lower(candidate.name))
+      RETURNING id,tenant_id,category_id,name
+    )
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+    SELECT tenant_id,$1,'Cadastros','CAD_SUBCATEGORIA','CREATE_BATCH','Subcategory',id::text,'Subcategoria cadastrada em lote',true,
+      'SQL_CONNECT',jsonb_build_object('id',id,'categoryId',category_id,'name',name),now() FROM inserted
+  """,params:[{_expr:"auth.uid"},$items])
+}
+
+mutation SaveBranch($id: UUID, $payload: Any!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u JOIN roles r ON r.id=u.role_id AND r.active
+      JOIN app_pages pg ON pg.page_key='CAD_FILIAL' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
+        AND CASE WHEN $2::uuid IS NULL THEN COALESCE(up.can_create,rp.can_create,false) ELSE COALESCE(up.can_update,rp.can_update,false) END
+    ),saved AS (
+      INSERT INTO branches(id,tenant_id,name,internal_code,postal_code,state_code,city,district,street,street_number,address_complement,phone,active,created_at,updated_at)
+      SELECT COALESCE($2::uuid,gen_random_uuid()),a.tenant_id,btrim($3::jsonb->>'name'),nullif(btrim($3::jsonb->>'internalCode'),''),
+        nullif(regexp_replace($3::jsonb->>'postalCode','\D','','g'),''),nullif(upper($3::jsonb->>'stateCode'),''),
+        nullif(btrim($3::jsonb->>'city'),''),nullif(btrim($3::jsonb->>'district'),''),nullif(btrim($3::jsonb->>'street'),''),
+        nullif(btrim($3::jsonb->>'streetNumber'),''),nullif(btrim($3::jsonb->>'addressComplement'),''),
+        nullif(regexp_replace($3::jsonb->>'phone','\D','','g'),''),true,now(),now() FROM actor a
+      WHERE length(btrim($3::jsonb->>'name'))>=2 AND NOT EXISTS(SELECT 1 FROM branches x WHERE x.tenant_id=a.tenant_id
+        AND x.id<>COALESCE($2::uuid,'00000000-0000-0000-0000-000000000000') AND x.active
+        AND (lower(btrim(x.name))=lower(btrim($3::jsonb->>'name')) OR
+          (nullif(btrim($3::jsonb->>'internalCode'),'') IS NOT NULL AND x.internal_code=btrim($3::jsonb->>'internalCode'))))
+      ON CONFLICT(id) DO UPDATE SET name=EXCLUDED.name,internal_code=EXCLUDED.internal_code,postal_code=EXCLUDED.postal_code,
+        state_code=EXCLUDED.state_code,city=EXCLUDED.city,district=EXCLUDED.district,street=EXCLUDED.street,street_number=EXCLUDED.street_number,
+        address_complement=EXCLUDED.address_complement,phone=EXCLUDED.phone,updated_at=now()
+      WHERE branches.tenant_id=EXCLUDED.tenant_id RETURNING id,tenant_id,name
+    ) INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+      SELECT tenant_id,$1,'Cadastros','CAD_FILIAL',CASE WHEN $2::uuid IS NULL THEN 'CREATE' ELSE 'UPDATE' END,'Branch',id::text,
+      'Filial salva',true,'SQL_CONNECT',jsonb_build_object('id',id,'name',name),now() FROM saved
+  """,params:[{_expr:"auth.uid"},$id,$payload])
+}
+
+mutation SetBranchStatus($id: UUID!, $active: Boolean!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages pg ON pg.page_key='CAD_FILIAL' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND CASE WHEN $3 THEN COALESCE(up.can_update,rp.can_update,false) ELSE COALESCE(up.can_delete,rp.can_delete,false) END
+    ),changed AS (
+      UPDATE branches b SET active=$3,deleted_at=CASE WHEN $3 THEN NULL ELSE now() END,updated_at=now() FROM actor a
+      WHERE b.id=$2 AND b.tenant_id=a.tenant_id AND ($3 OR NOT EXISTS(SELECT 1 FROM cash_sessions cs WHERE cs.branch_id=b.id AND cs.status='OPEN'))
+      RETURNING b.id,b.tenant_id,b.name
+    ) INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+      SELECT tenant_id,$1,'Cadastros','CAD_FILIAL',CASE WHEN $3 THEN 'RESTORE' ELSE 'ARCHIVE' END,'Branch',id::text,
+      'Status da filial alterado',true,'SQL_CONNECT',jsonb_build_object('active',$3,'name',name),now() FROM changed
+  """,params:[{_expr:"auth.uid"},$id,$active])
+}
+
+
+mutation SaveSupplier($id: UUID, $payload: Any!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages pg ON pg.page_key='CAD_FORNECEDOR' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND CASE WHEN $2::uuid IS NULL THEN COALESCE(up.can_create,rp.can_create,false) ELSE COALESCE(up.can_update,rp.can_update,false) END
+    ),saved AS (
+      INSERT INTO suppliers(id,tenant_id,legal_name,trade_name,internal_code,cpf,cnpj,postal_code,state_code,city,district,street,street_number,address_complement,
+        contact_name,phone_primary,phone_secondary,email,segment,payment_terms,payment_term_days,average_delivery_days,notes,active,created_at,updated_at)
+      SELECT COALESCE($2::uuid,gen_random_uuid()),a.tenant_id,btrim($3::jsonb->>'legalName'),nullif(btrim($3::jsonb->>'tradeName'),''),
+        nullif(btrim($3::jsonb->>'internalCode'),''),nullif(regexp_replace($3::jsonb->>'cpf','\D','','g'),''),
+        nullif(regexp_replace($3::jsonb->>'cnpj','\D','','g'),''),nullif(regexp_replace($3::jsonb->>'postalCode','\D','','g'),''),
+        nullif(upper($3::jsonb->>'stateCode'),''),nullif(btrim($3::jsonb->>'city'),''),nullif(btrim($3::jsonb->>'district'),''),
+        nullif(btrim($3::jsonb->>'street'),''),nullif(btrim($3::jsonb->>'streetNumber'),''),nullif(btrim($3::jsonb->>'addressComplement'),''),
+        nullif(btrim($3::jsonb->>'contactName'),''),nullif(regexp_replace($3::jsonb->>'phonePrimary','\D','','g'),''),
+        nullif(regexp_replace($3::jsonb->>'phoneSecondary','\D','','g'),''),nullif(lower(btrim($3::jsonb->>'email')),''),
+        nullif(btrim($3::jsonb->>'segment'),''),nullif(btrim($3::jsonb->>'paymentTerms'),''),
+        NULLIF($3::jsonb->>'paymentTermDays','')::int,NULLIF($3::jsonb->>'averageDeliveryDays','')::int,nullif(btrim($3::jsonb->>'notes'),''),true,now(),now() FROM actor a
+      WHERE length(btrim($3::jsonb->>'legalName'))>=2
+        AND NOT (NULLIF(regexp_replace($3::jsonb->>'cpf','\D','','g'),'') IS NOT NULL AND NULLIF(regexp_replace($3::jsonb->>'cnpj','\D','','g'),'') IS NOT NULL)
+        AND (NULLIF($3::jsonb->>'cpf','') IS NULL OR length(regexp_replace($3::jsonb->>'cpf','\D','','g'))=11)
+        AND (NULLIF($3::jsonb->>'cnpj','') IS NULL OR length(regexp_replace($3::jsonb->>'cnpj','\D','','g'))=14)
+        AND COALESCE(NULLIF($3::jsonb->>'paymentTermDays','')::int,0)>=0
+        AND COALESCE(NULLIF($3::jsonb->>'averageDeliveryDays','')::int,0)>=0
+        AND NOT EXISTS(SELECT 1 FROM suppliers x WHERE x.tenant_id=a.tenant_id
+        AND x.id<>COALESCE($2::uuid,'00000000-0000-0000-0000-000000000000') AND x.active AND
+        ((nullif(regexp_replace($3::jsonb->>'cpf','\D','','g'),'') IS NOT NULL AND x.cpf=regexp_replace($3::jsonb->>'cpf','\D','','g')) OR
+         (nullif(regexp_replace($3::jsonb->>'cnpj','\D','','g'),'') IS NOT NULL AND x.cnpj=regexp_replace($3::jsonb->>'cnpj','\D','','g'))))
+      ON CONFLICT(id) DO UPDATE SET legal_name=EXCLUDED.legal_name,trade_name=EXCLUDED.trade_name,internal_code=EXCLUDED.internal_code,cpf=EXCLUDED.cpf,cnpj=EXCLUDED.cnpj,
+        postal_code=EXCLUDED.postal_code,state_code=EXCLUDED.state_code,city=EXCLUDED.city,district=EXCLUDED.district,street=EXCLUDED.street,street_number=EXCLUDED.street_number,
+        address_complement=EXCLUDED.address_complement,contact_name=EXCLUDED.contact_name,phone_primary=EXCLUDED.phone_primary,phone_secondary=EXCLUDED.phone_secondary,
+        email=EXCLUDED.email,segment=EXCLUDED.segment,payment_terms=EXCLUDED.payment_terms,payment_term_days=EXCLUDED.payment_term_days,
+        average_delivery_days=EXCLUDED.average_delivery_days,notes=EXCLUDED.notes,updated_at=now() WHERE suppliers.tenant_id=EXCLUDED.tenant_id RETURNING id,tenant_id,legal_name
+    ) INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+      SELECT tenant_id,$1,'Cadastros','CAD_FORNECEDOR',CASE WHEN $2::uuid IS NULL THEN 'CREATE' ELSE 'UPDATE' END,'Supplier',id::text,'Fornecedor salvo',true,
+      'SQL_CONNECT',jsonb_build_object('id',id,'name',legal_name),now() FROM saved
+  """,params:[{_expr:"auth.uid"},$id,$payload])
+}
+
+mutation SetSupplierStatus($id: UUID!, $active: Boolean!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages pg ON pg.page_key='CAD_FORNECEDOR' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND CASE WHEN $3 THEN COALESCE(up.can_update,rp.can_update,false) ELSE COALESCE(up.can_delete,rp.can_delete,false) END),
+    changed AS (UPDATE suppliers s SET active=$3,deleted_at=CASE WHEN $3 THEN NULL ELSE now() END,updated_at=now() FROM actor a
+      WHERE s.id=$2 AND s.tenant_id=a.tenant_id AND ($3 OR NOT EXISTS(SELECT 1 FROM products p WHERE p.supplier_id=s.id AND p.active))
+      RETURNING s.id,s.tenant_id,s.legal_name)
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+      SELECT tenant_id,$1,'Cadastros','CAD_FORNECEDOR',CASE WHEN $3 THEN 'RESTORE' ELSE 'ARCHIVE' END,'Supplier',id::text,'Status do fornecedor alterado',true,
+      'SQL_CONNECT',jsonb_build_object('active',$3,'name',legal_name),now() FROM changed
+  """,params:[{_expr:"auth.uid"},$id,$active])
+}
+
+mutation SaveCustomer($id: UUID, $payload: Any!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages pg ON pg.page_key='CAD_CLIENTE' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND CASE WHEN $2::uuid IS NULL THEN COALESCE(up.can_create,rp.can_create,false) ELSE COALESCE(up.can_update,rp.can_update,false) END
+    ),saved AS (
+      INSERT INTO customers(id,tenant_id,name,birth_date,gender,cpf,cnpj,marketing_opt_in,email,phone_primary,phone_secondary,postal_code,state_code,city,district,street,
+        street_number,address_complement,preferences,notes,active,created_at,updated_at)
+      SELECT COALESCE($2::uuid,gen_random_uuid()),a.tenant_id,btrim($3::jsonb->>'name'),NULLIF($3::jsonb->>'birthDate','')::date,nullif($3::jsonb->>'gender',''),
+        nullif(regexp_replace($3::jsonb->>'cpf','\D','','g'),''),nullif(regexp_replace($3::jsonb->>'cnpj','\D','','g'),''),
+        COALESCE(($3::jsonb->>'marketingOptIn')::boolean,false),nullif(lower(btrim($3::jsonb->>'email')),''),
+        nullif(regexp_replace($3::jsonb->>'phonePrimary','\D','','g'),''),nullif(regexp_replace($3::jsonb->>'phoneSecondary','\D','','g'),''),
+        nullif(regexp_replace($3::jsonb->>'postalCode','\D','','g'),''),nullif(upper($3::jsonb->>'stateCode'),''),
+        nullif(btrim($3::jsonb->>'city'),''),nullif(btrim($3::jsonb->>'district'),''),nullif(btrim($3::jsonb->>'street'),''),
+        nullif(btrim($3::jsonb->>'streetNumber'),''),nullif(btrim($3::jsonb->>'addressComplement'),''),
+        COALESCE($3::jsonb->'preferences','{}'::jsonb)||jsonb_strip_nulls(jsonb_build_object(
+          'lowerClothingType',NULLIF($3::jsonb->>'lowerClothingType',''),'lowerClothingSize',NULLIF($3::jsonb->>'lowerClothingSize',''),
+          'upperClothingType',NULLIF($3::jsonb->>'upperClothingType',''),'upperClothingSize',NULLIF($3::jsonb->>'upperClothingSize',''),
+          'shoeSize',NULLIF($3::jsonb->>'shoeSize',''))),
+        nullif(btrim($3::jsonb->>'notes'),''),true,now(),now() FROM actor a WHERE length(btrim($3::jsonb->>'name'))>=2
+        AND NOT (NULLIF(regexp_replace($3::jsonb->>'cpf','\D','','g'),'') IS NOT NULL AND NULLIF(regexp_replace($3::jsonb->>'cnpj','\D','','g'),'') IS NOT NULL)
+        AND (NULLIF($3::jsonb->>'cpf','') IS NULL OR length(regexp_replace($3::jsonb->>'cpf','\D','','g'))=11)
+        AND (NULLIF($3::jsonb->>'cnpj','') IS NULL OR length(regexp_replace($3::jsonb->>'cnpj','\D','','g'))=14)
+        AND (NULLIF($3::jsonb->>'birthDate','') IS NULL OR ($3::jsonb->>'birthDate')::date<=current_date)
+        AND NOT EXISTS(SELECT 1 FROM customers x WHERE x.tenant_id=a.tenant_id AND x.id<>COALESCE($2::uuid,'00000000-0000-0000-0000-000000000000') AND x.active AND
+          ((nullif(regexp_replace($3::jsonb->>'cpf','\D','','g'),'') IS NOT NULL AND x.cpf=regexp_replace($3::jsonb->>'cpf','\D','','g')) OR
+           (nullif(regexp_replace($3::jsonb->>'cnpj','\D','','g'),'') IS NOT NULL AND x.cnpj=regexp_replace($3::jsonb->>'cnpj','\D','','g'))))
+      ON CONFLICT(id) DO UPDATE SET name=EXCLUDED.name,birth_date=EXCLUDED.birth_date,gender=EXCLUDED.gender,cpf=EXCLUDED.cpf,cnpj=EXCLUDED.cnpj,
+        marketing_opt_in=EXCLUDED.marketing_opt_in,email=EXCLUDED.email,phone_primary=EXCLUDED.phone_primary,phone_secondary=EXCLUDED.phone_secondary,
+        postal_code=EXCLUDED.postal_code,state_code=EXCLUDED.state_code,city=EXCLUDED.city,district=EXCLUDED.district,street=EXCLUDED.street,
+        street_number=EXCLUDED.street_number,address_complement=EXCLUDED.address_complement,preferences=EXCLUDED.preferences,notes=EXCLUDED.notes,updated_at=now()
+      WHERE customers.tenant_id=EXCLUDED.tenant_id RETURNING id,tenant_id,name
+    ) INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+      SELECT tenant_id,$1,'Cadastros','CAD_CLIENTE',CASE WHEN $2::uuid IS NULL THEN 'CREATE' ELSE 'UPDATE' END,'Customer',id::text,'Cliente salvo',true,
+      'SQL_CONNECT',jsonb_build_object('id',id,'name',name),now() FROM saved
+  """,params:[{_expr:"auth.uid"},$id,$payload])
+}
+
+mutation SetCustomerStatus($id: UUID!, $active: Boolean!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages pg ON pg.page_key='CAD_CLIENTE' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND CASE WHEN $3 THEN COALESCE(up.can_update,rp.can_update,false) ELSE COALESCE(up.can_delete,rp.can_delete,false) END),
+    changed AS (UPDATE customers c SET active=$3,deleted_at=CASE WHEN $3 THEN NULL ELSE now() END,updated_at=now() FROM actor a
+      WHERE c.id=$2 AND c.tenant_id=a.tenant_id RETURNING c.id,c.tenant_id,c.name)
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+      SELECT tenant_id,$1,'Cadastros','CAD_CLIENTE',CASE WHEN $3 THEN 'RESTORE' ELSE 'ARCHIVE' END,'Customer',id::text,'Status do cliente alterado',true,
+      'SQL_CONNECT',jsonb_build_object('active',$3,'name',name),now() FROM changed
+  """,params:[{_expr:"auth.uid"},$id,$active])
+}
+
+
+mutation SaveProduct($id: UUID, $payload: Any!, $components: Any) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages pg ON pg.page_key='CAD_PRODUTO' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND CASE WHEN $2::uuid IS NULL THEN COALESCE(up.can_create,rp.can_create,false) ELSE COALESCE(up.can_update,rp.can_update,false) END
+    ),saved AS (
+      INSERT INTO products(id,tenant_id,category_id,subcategory_id,supplier_id,name,internal_code,ean,brand,size_type,size,color,maximum_stock,minimum_stock,
+        sale_price_cents,cost_price_cents,weighted_product,bundle_product,allow_negative_stock,notes,active,created_at,updated_at)
+      SELECT COALESCE($2::uuid,gen_random_uuid()),a.tenant_id,($3::jsonb->>'categoryId')::uuid,NULLIF($3::jsonb->>'subcategoryId','')::uuid,
+        NULLIF($3::jsonb->>'supplierId','')::uuid,btrim($3::jsonb->>'name'),nullif(btrim($3::jsonb->>'internalCode'),''),
+        nullif(regexp_replace($3::jsonb->>'ean','\s','','g'),''),nullif(btrim($3::jsonb->>'brand'),''),nullif($3::jsonb->>'sizeType',''),
+        nullif($3::jsonb->>'size',''),nullif($3::jsonb->>'color',''),NULLIF($3::jsonb->>'maximumStock','')::numeric,
+        NULLIF($3::jsonb->>'minimumStock','')::numeric,COALESCE(($3::jsonb->>'salePriceCents')::bigint,0),COALESCE(($3::jsonb->>'costPriceCents')::bigint,0),
+        COALESCE(($3::jsonb->>'weightedProduct')::boolean,false),COALESCE(($3::jsonb->>'bundleProduct')::boolean,false),
+        COALESCE(($3::jsonb->>'allowNegativeStock')::boolean,false),nullif(btrim($3::jsonb->>'notes'),''),true,now(),now() FROM actor a
+      JOIN categories c ON c.id=($3::jsonb->>'categoryId')::uuid AND c.tenant_id=a.tenant_id AND c.active
+      LEFT JOIN subcategories sc ON sc.id=NULLIF($3::jsonb->>'subcategoryId','')::uuid AND sc.tenant_id=a.tenant_id AND sc.category_id=c.id AND sc.active
+      LEFT JOIN suppliers sp ON sp.id=NULLIF($3::jsonb->>'supplierId','')::uuid AND sp.tenant_id=a.tenant_id AND sp.active
+      WHERE length(btrim($3::jsonb->>'name'))>=2 AND COALESCE(($3::jsonb->>'salePriceCents')::bigint,0)>=0 AND COALESCE(($3::jsonb->>'costPriceCents')::bigint,0)>=0
+        AND COALESCE(NULLIF($3::jsonb->>'minimumStock','')::numeric,0)>=0
+        AND COALESCE(NULLIF($3::jsonb->>'maximumStock','')::numeric,0)>=0
+        AND (NULLIF($3::jsonb->>'subcategoryId','') IS NULL OR sc.id IS NOT NULL) AND (NULLIF($3::jsonb->>'supplierId','') IS NULL OR sp.id IS NOT NULL)
+        AND (NULLIF($3::jsonb->>'maximumStock','') IS NULL OR NULLIF($3::jsonb->>'minimumStock','') IS NULL OR
+             ($3::jsonb->>'maximumStock')::numeric>=($3::jsonb->>'minimumStock')::numeric)
+        AND (NULLIF($3::jsonb->>'sizeType','') IS NULL OR
+          (($3::jsonb->>'sizeType')='ML' AND ($3::jsonb->>'size')=ANY(ARRAY['150','250','275','313','330','350','473','500','510','600','750','965','998'])) OR
+          (($3::jsonb->>'sizeType')='L' AND ($3::jsonb->>'size')=ANY(ARRAY['1','1,5','2','2,5','3'])) OR
+          (($3::jsonb->>'sizeType')='KG' AND ($3::jsonb->>'size')=ANY(ARRAY['1','3','5'])) OR
+          (($3::jsonb->>'sizeType')='G' AND ($3::jsonb->>'size')=ANY(ARRAY['76','140','150','500'])) OR
+          (($3::jsonb->>'sizeType')='UN' AND ($3::jsonb->>'size')='100'))
+        AND (
+          (NOT COALESCE(($3::jsonb->>'bundleProduct')::boolean,false) AND jsonb_array_length(COALESCE($4::jsonb,'[]'::jsonb))=0)
+          OR (
+            COALESCE(($3::jsonb->>'bundleProduct')::boolean,false)
+            AND jsonb_array_length(COALESCE($4::jsonb,'[]'::jsonb))>0
+            AND jsonb_array_length(COALESCE($4::jsonb,'[]'::jsonb))=(
+              SELECT count(DISTINCT item->>'productId') FROM jsonb_array_elements(COALESCE($4::jsonb,'[]'::jsonb)) item
+              JOIN products component ON component.id=(item->>'productId')::uuid AND component.tenant_id=a.tenant_id
+                AND component.active AND component.deleted_at IS NULL AND NOT component.bundle_product
+              WHERE component.id<>COALESCE($2::uuid,'00000000-0000-0000-0000-000000000000')
+                AND (item->>'quantity')::numeric>0
+            )
+            AND ($2::uuid IS NULL OR NOT EXISTS(
+              SELECT 1 FROM product_components membership
+              JOIN products parent ON parent.id=membership.parent_product_id AND parent.tenant_id=membership.tenant_id
+              WHERE membership.component_product_id=$2 AND parent.active AND parent.deleted_at IS NULL AND parent.bundle_product
+            ))
+          )
+        )
+        AND NOT EXISTS(SELECT 1 FROM products x WHERE x.tenant_id=a.tenant_id AND x.id<>COALESCE($2::uuid,'00000000-0000-0000-0000-000000000000') AND x.active AND
+          ((nullif($3::jsonb->>'internalCode','') IS NOT NULL AND x.internal_code=$3::jsonb->>'internalCode') OR
+           (nullif($3::jsonb->>'ean','') IS NOT NULL AND x.ean=$3::jsonb->>'ean')))
+      ON CONFLICT(id) DO UPDATE SET category_id=EXCLUDED.category_id,subcategory_id=EXCLUDED.subcategory_id,supplier_id=EXCLUDED.supplier_id,name=EXCLUDED.name,
+        internal_code=EXCLUDED.internal_code,ean=EXCLUDED.ean,brand=EXCLUDED.brand,size_type=EXCLUDED.size_type,size=EXCLUDED.size,color=EXCLUDED.color,
+        maximum_stock=EXCLUDED.maximum_stock,minimum_stock=EXCLUDED.minimum_stock,sale_price_cents=EXCLUDED.sale_price_cents,cost_price_cents=EXCLUDED.cost_price_cents,
+        weighted_product=EXCLUDED.weighted_product,bundle_product=EXCLUDED.bundle_product,allow_negative_stock=EXCLUDED.allow_negative_stock,
+        notes=EXCLUDED.notes,updated_at=now() WHERE products.tenant_id=EXCLUDED.tenant_id RETURNING id,tenant_id,name
+    ),cleared AS (
+      DELETE FROM product_components pc USING saved s WHERE pc.parent_product_id=s.id AND pc.tenant_id=s.tenant_id RETURNING pc.parent_product_id
+    ),components_saved AS (
+      INSERT INTO product_components(tenant_id,parent_product_id,component_product_id,quantity,allocated_unit_price_cents,created_at,updated_at)
+      SELECT s.tenant_id,s.id,(item->>'productId')::uuid,(item->>'quantity')::numeric,NULLIF(item->>'allocatedUnitPriceCents','')::bigint,now(),now()
+      FROM saved s CROSS JOIN jsonb_array_elements(COALESCE($4::jsonb,'[]'::jsonb)) item
+      JOIN products component ON component.id=(item->>'productId')::uuid AND component.tenant_id=s.tenant_id AND component.active AND component.deleted_at IS NULL AND NOT component.bundle_product
+      WHERE component.id<>s.id AND (item->>'quantity')::numeric>0 RETURNING parent_product_id
+    ),recalculated AS (
+      UPDATE products parent
+      SET cost_price_cents=calculation.total_cost,updated_at=now()
+      FROM saved s
+      CROSS JOIN LATERAL (
+        SELECT COALESCE(ROUND(SUM(component.cost_price_cents*(item->>'quantity')::numeric)),0)::bigint AS total_cost
+        FROM jsonb_array_elements(COALESCE($4::jsonb,'[]'::jsonb)) item
+        JOIN products component ON component.id=(item->>'productId')::uuid AND component.tenant_id=s.tenant_id
+          AND component.active AND component.deleted_at IS NULL
+        WHERE component.id<>s.id AND (item->>'quantity')::numeric>0
+      ) calculation
+      WHERE parent.id=s.id AND parent.tenant_id=s.tenant_id
+        AND COALESCE(($3::jsonb->>'bundleProduct')::boolean,false)
+        AND jsonb_array_length(COALESCE($4::jsonb,'[]'::jsonb))>0
+      RETURNING parent.id
+    ),parents_recalculated AS (
+      UPDATE products parent SET cost_price_cents=totals.total_cost,updated_at=now()
+      FROM (
+        SELECT pc.parent_product_id,COALESCE(ROUND(SUM(component.cost_price_cents*pc.quantity)),0)::bigint total_cost
+        FROM product_components pc JOIN saved changed ON changed.id=pc.component_product_id
+        JOIN products component ON component.id=pc.component_product_id AND component.tenant_id=pc.tenant_id
+        GROUP BY pc.parent_product_id
+      ) totals
+      WHERE parent.id=totals.parent_product_id AND parent.active AND parent.bundle_product
+      RETURNING parent.id
+    ) INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+      SELECT tenant_id,$1,'Cadastros','CAD_PRODUTO',CASE WHEN $2::uuid IS NULL THEN 'CREATE' ELSE 'UPDATE' END,'Product',id::text,'Produto salvo',true,
+      'SQL_CONNECT',jsonb_build_object('id',id,'name',name),now() FROM saved
+  """,params:[{_expr:"auth.uid"},$id,$payload,$components])
+}
+
+mutation SetProductStatus($id: UUID!, $active: Boolean!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages pg ON pg.page_key='CAD_PRODUTO' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND CASE WHEN $3 THEN COALESCE(up.can_update,rp.can_update,false) ELSE COALESCE(up.can_delete,rp.can_delete,false) END),
+    changed AS (UPDATE products p SET active=$3,deleted_at=CASE WHEN $3 THEN NULL ELSE now() END,updated_at=now() FROM actor a
+      WHERE p.id=$2 AND p.tenant_id=a.tenant_id AND ($3 OR NOT EXISTS(
+        SELECT 1 FROM product_components pc JOIN products parent ON parent.id=pc.parent_product_id AND parent.tenant_id=pc.tenant_id
+        WHERE pc.component_product_id=p.id AND parent.active AND parent.bundle_product))
+      RETURNING p.id,p.tenant_id,p.name)
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+      SELECT tenant_id,$1,'Cadastros','CAD_PRODUTO',CASE WHEN $3 THEN 'RESTORE' ELSE 'ARCHIVE' END,'Product',id::text,'Status do produto alterado',true,
+      'SQL_CONNECT',jsonb_build_object('active',$3,'name',name),now() FROM changed
+  """,params:[{_expr:"auth.uid"},$id,$active])
+}
+
+mutation SaveProductComponents($productId: UUID!, $components: Any!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages pg ON pg.page_key='CAD_PRODUTO' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_update,rp.can_update,false)
+    ),target AS (
+      SELECT p.id,p.tenant_id FROM products p JOIN actor a ON a.tenant_id=p.tenant_id
+      WHERE p.id=$2 AND p.active AND p.deleted_at IS NULL
+        AND jsonb_array_length(COALESCE($3::jsonb,'[]'::jsonb))=(
+          SELECT count(DISTINCT item->>'productId') FROM jsonb_array_elements(COALESCE($3::jsonb,'[]'::jsonb)) item
+          JOIN products component ON component.id=(item->>'productId')::uuid AND component.tenant_id=a.tenant_id
+            AND component.active AND component.deleted_at IS NULL AND NOT component.bundle_product
+          WHERE component.id<>p.id AND (item->>'quantity')::numeric>0
+        )
+        AND (jsonb_array_length(COALESCE($3::jsonb,'[]'::jsonb))=0 OR NOT EXISTS(
+          SELECT 1 FROM product_components membership
+          JOIN products parent ON parent.id=membership.parent_product_id AND parent.tenant_id=membership.tenant_id
+          WHERE membership.component_product_id=p.id AND parent.active AND parent.deleted_at IS NULL AND parent.bundle_product
+        ))
+    ),cleared AS (
+      DELETE FROM product_components pc USING target t
+      WHERE pc.parent_product_id=t.id AND pc.tenant_id=t.tenant_id RETURNING pc.parent_product_id
+    ),inserted AS (
+      INSERT INTO product_components(tenant_id,parent_product_id,component_product_id,quantity,allocated_unit_price_cents,created_at,updated_at)
+      SELECT t.tenant_id,t.id,(item->>'productId')::uuid,(item->>'quantity')::numeric,
+        NULLIF(item->>'allocatedUnitPriceCents','')::bigint,now(),now()
+      FROM target t CROSS JOIN jsonb_array_elements($3::jsonb) item
+      JOIN products p ON p.id=(item->>'productId')::uuid AND p.tenant_id=t.tenant_id
+        AND p.active AND p.deleted_at IS NULL AND NOT p.bundle_product
+      WHERE p.id<>t.id AND (item->>'quantity')::numeric>0
+      RETURNING parent_product_id
+    ),recalculated AS (
+      UPDATE products parent SET bundle_product=jsonb_array_length($3::jsonb)>0,
+        cost_price_cents=CASE WHEN jsonb_array_length($3::jsonb)>0 THEN totals.total_cost ELSE parent.cost_price_cents END,updated_at=now()
+      FROM target t CROSS JOIN LATERAL (
+        SELECT COALESCE(ROUND(SUM(component.cost_price_cents*(item->>'quantity')::numeric)),0)::bigint total_cost
+        FROM jsonb_array_elements($3::jsonb) item
+        JOIN products component ON component.id=(item->>'productId')::uuid AND component.tenant_id=t.tenant_id
+          AND component.active AND component.deleted_at IS NULL AND NOT component.bundle_product
+      ) totals
+      WHERE parent.id=t.id AND parent.tenant_id=t.tenant_id RETURNING parent.id,parent.tenant_id
+    )
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+    SELECT tenant_id,$1,'Cadastros','CAD_PRODUTO','UPDATE_COMPONENTS','Product',id::text,'Composição atualizada',true,
+      'SQL_CONNECT',jsonb_build_object('componentCount',jsonb_array_length($3::jsonb)),now() FROM recalculated
+  """,params:[{_expr:"auth.uid"},$productId,$components])
+}
+
+mutation SavePromotion($id: UUID, $productId: UUID!, $promotionalPriceCents: Int64!, $startsAt: Timestamp!, $endsAt: Timestamp!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages pg ON pg.page_key='CAD_PRODUTO' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND COALESCE(up.can_update,rp.can_update,false)
+    ),saved AS (
+      INSERT INTO promotions(id,tenant_id,product_id,promotional_price_cents,starts_at,ends_at,active,created_at,updated_at)
+      SELECT COALESCE($2::uuid,gen_random_uuid()),a.tenant_id,$3,$4,$5,$6,true,now(),now() FROM actor a JOIN products p ON p.id=$3 AND p.tenant_id=a.tenant_id AND p.active
+      WHERE $4>0 AND $4<p.sale_price_cents AND $5<$6 AND NOT EXISTS(SELECT 1 FROM promotions x WHERE x.tenant_id=a.tenant_id AND x.product_id=$3 AND x.active
+        AND x.id<>COALESCE($2::uuid,'00000000-0000-0000-0000-000000000000') AND tstzrange(x.starts_at,x.ends_at,'[)')&&tstzrange($5,$6,'[)'))
+      ON CONFLICT(id) DO UPDATE SET promotional_price_cents=EXCLUDED.promotional_price_cents,starts_at=EXCLUDED.starts_at,ends_at=EXCLUDED.ends_at,updated_at=now()
+      WHERE promotions.tenant_id=EXCLUDED.tenant_id RETURNING id,tenant_id,product_id
+    ) INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+      SELECT tenant_id,$1,'Cadastros','CAD_PRODUTO',CASE WHEN $2::uuid IS NULL THEN 'CREATE_PROMOTION' ELSE 'UPDATE_PROMOTION' END,'Promotion',id::text,
+      'Promoção salva',true,'SQL_CONNECT',jsonb_build_object('productId',product_id),now() FROM saved
+  """,params:[{_expr:"auth.uid"},$id,$productId,$promotionalPriceCents,$startsAt,$endsAt])
+}
+
+mutation SetPromotionStatus($id: UUID!, $active: Boolean!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages pg ON pg.page_key='CAD_PRODUTO' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_update,rp.can_update,false)
+    ),changed AS (
+      UPDATE promotions p SET active=$3,deleted_at=CASE WHEN $3 THEN NULL ELSE now() END,updated_at=now()
+      FROM actor a, products product
+      WHERE p.id=$2 AND p.tenant_id=a.tenant_id
+        AND product.id=p.product_id AND product.tenant_id=a.tenant_id
+        AND product.active AND product.deleted_at IS NULL
+        AND (NOT $3 OR NOT EXISTS(
+        SELECT 1 FROM promotions x WHERE x.tenant_id=p.tenant_id AND x.product_id=p.product_id AND x.active
+          AND x.deleted_at IS NULL AND x.id<>p.id AND tstzrange(x.starts_at,x.ends_at,'[)')&&tstzrange(p.starts_at,p.ends_at,'[)')))
+      RETURNING p.id,p.tenant_id,p.product_id,p.active
+    )
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+    SELECT tenant_id,$1,'Cadastros','CAD_PRODUTO',CASE WHEN active THEN 'RESTORE_PROMOTION' ELSE 'ARCHIVE_PROMOTION' END,
+      'Promotion',id::text,'Status da promoção alterado',true,'SQL_CONNECT',
+      jsonb_build_object('productId',product_id,'active',active),now() FROM changed
+  """,params:[{_expr:"auth.uid"},$id,$active])
+}
+
+
+# Atomic status changes. Every requested record must be eligible or the whole batch is rejected.
+mutation SetCategoriesStatusBatch($ids: Any!, $active: Boolean!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u
+      JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+      JOIN app_pages pg ON pg.page_key='CAD_CATEGORIA' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
+        AND CASE WHEN $3 THEN COALESCE(up.can_update,rp.can_update,false) ELSE COALESCE(up.can_delete,rp.can_delete,false) END
+    ),input AS (
+      SELECT DISTINCT value::uuid id FROM jsonb_array_elements_text(COALESCE($2::jsonb,'[]'::jsonb))
+    ),eligible AS (
+      SELECT c.id,c.tenant_id,c.name FROM categories c JOIN actor a ON a.tenant_id=c.tenant_id JOIN input i ON i.id=c.id
+      WHERE ($3 AND NOT EXISTS(SELECT 1 FROM categories x WHERE x.tenant_id=c.tenant_id AND x.id<>c.id AND x.active AND x.deleted_at IS NULL AND lower(btrim(x.name))=lower(btrim(c.name))))
+         OR (NOT $3 AND NOT EXISTS(SELECT 1 FROM subcategories s WHERE s.tenant_id=c.tenant_id AND s.category_id=c.id AND s.active AND s.deleted_at IS NULL)
+                    AND NOT EXISTS(SELECT 1 FROM products p WHERE p.tenant_id=c.tenant_id AND p.category_id=c.id AND p.active AND p.deleted_at IS NULL))
+    ),changed AS (
+      UPDATE categories c SET active=$3,deleted_at=CASE WHEN $3 THEN NULL ELSE now() END,updated_at=now()
+      FROM eligible e WHERE c.id=e.id
+        AND (SELECT count(*) FROM input)>0 AND (SELECT count(*) FROM eligible)=(SELECT count(*) FROM input)
+      RETURNING c.id,c.tenant_id,c.name
+    )
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+    SELECT tenant_id,$1,'Cadastros','CAD_CATEGORIA',CASE WHEN $3 THEN 'RESTORE' ELSE 'ARCHIVE' END,'Category',id::text,
+      'Status da categoria alterado em lote',true,'SQL_CONNECT',jsonb_build_object('active',$3,'name',name),now() FROM changed
+  """,params:[{_expr:"auth.uid"},$ids,$active])
+}
+
+mutation SetSubcategoriesStatusBatch($ids: Any!, $active: Boolean!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u
+      JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+      JOIN app_pages pg ON pg.page_key='CAD_SUBCATEGORIA' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
+        AND CASE WHEN $3 THEN COALESCE(up.can_update,rp.can_update,false) ELSE COALESCE(up.can_delete,rp.can_delete,false) END
+    ),input AS (SELECT DISTINCT value::uuid id FROM jsonb_array_elements_text(COALESCE($2::jsonb,'[]'::jsonb))),
+    eligible AS (
+      SELECT s.id,s.tenant_id,s.name FROM subcategories s JOIN actor a ON a.tenant_id=s.tenant_id JOIN input i ON i.id=s.id
+      JOIN categories c ON c.id=s.category_id AND c.tenant_id=s.tenant_id
+      WHERE ($3 AND c.active AND c.deleted_at IS NULL AND NOT EXISTS(
+              SELECT 1 FROM subcategories x WHERE x.tenant_id=s.tenant_id AND x.id<>s.id AND x.category_id=s.category_id
+                AND x.active AND x.deleted_at IS NULL AND lower(btrim(x.name))=lower(btrim(s.name))))
+         OR (NOT $3 AND NOT EXISTS(SELECT 1 FROM products p WHERE p.tenant_id=s.tenant_id AND p.subcategory_id=s.id AND p.active AND p.deleted_at IS NULL))
+    ),changed AS (
+      UPDATE subcategories s SET active=$3,deleted_at=CASE WHEN $3 THEN NULL ELSE now() END,updated_at=now()
+      FROM eligible e WHERE s.id=e.id AND (SELECT count(*) FROM input)>0
+        AND (SELECT count(*) FROM eligible)=(SELECT count(*) FROM input)
+      RETURNING s.id,s.tenant_id,s.name
+    )
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+    SELECT tenant_id,$1,'Cadastros','CAD_SUBCATEGORIA',CASE WHEN $3 THEN 'RESTORE' ELSE 'ARCHIVE' END,'Subcategory',id::text,
+      'Status da subcategoria alterado em lote',true,'SQL_CONNECT',jsonb_build_object('active',$3,'name',name),now() FROM changed
+  """,params:[{_expr:"auth.uid"},$ids,$active])
+}
+
+mutation SetBranchesStatusBatch($ids: Any!, $active: Boolean!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u
+      JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+      JOIN app_pages pg ON pg.page_key='CAD_FILIAL' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
+        AND CASE WHEN $3 THEN COALESCE(up.can_update,rp.can_update,false) ELSE COALESCE(up.can_delete,rp.can_delete,false) END
+    ),input AS (SELECT DISTINCT value::uuid id FROM jsonb_array_elements_text(COALESCE($2::jsonb,'[]'::jsonb))),
+    eligible AS (
+      SELECT b.id,b.tenant_id,b.name FROM branches b JOIN actor a ON a.tenant_id=b.tenant_id JOIN input i ON i.id=b.id
+      WHERE ($3 AND NOT EXISTS(SELECT 1 FROM branches x WHERE x.tenant_id=b.tenant_id AND x.id<>b.id AND x.active AND x.deleted_at IS NULL
+                 AND (lower(btrim(x.name))=lower(btrim(b.name)) OR (b.internal_code IS NOT NULL AND x.internal_code=b.internal_code))))
+         OR (NOT $3 AND NOT EXISTS(SELECT 1 FROM cash_sessions cs WHERE cs.tenant_id=b.tenant_id AND cs.branch_id=b.id AND cs.status='OPEN'))
+    ),changed AS (
+      UPDATE branches b SET active=$3,deleted_at=CASE WHEN $3 THEN NULL ELSE now() END,updated_at=now()
+      FROM eligible e WHERE b.id=e.id AND (SELECT count(*) FROM input)>0
+        AND (SELECT count(*) FROM eligible)=(SELECT count(*) FROM input)
+      RETURNING b.id,b.tenant_id,b.name
+    )
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+    SELECT tenant_id,$1,'Cadastros','CAD_FILIAL',CASE WHEN $3 THEN 'RESTORE' ELSE 'ARCHIVE' END,'Branch',id::text,
+      'Status da filial alterado em lote',true,'SQL_CONNECT',jsonb_build_object('active',$3,'name',name),now() FROM changed
+  """,params:[{_expr:"auth.uid"},$ids,$active])
+}
+
+mutation SetSuppliersStatusBatch($ids: Any!, $active: Boolean!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u
+      JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+      JOIN app_pages pg ON pg.page_key='CAD_FORNECEDOR' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
+        AND CASE WHEN $3 THEN COALESCE(up.can_update,rp.can_update,false) ELSE COALESCE(up.can_delete,rp.can_delete,false) END
+    ),input AS (SELECT DISTINCT value::uuid id FROM jsonb_array_elements_text(COALESCE($2::jsonb,'[]'::jsonb))),
+    eligible AS (
+      SELECT s.id,s.tenant_id,s.legal_name FROM suppliers s JOIN actor a ON a.tenant_id=s.tenant_id JOIN input i ON i.id=s.id
+      WHERE ($3 AND NOT EXISTS(SELECT 1 FROM suppliers x WHERE x.tenant_id=s.tenant_id AND x.id<>s.id AND x.active AND x.deleted_at IS NULL
+              AND ((s.cpf IS NOT NULL AND x.cpf=s.cpf) OR (s.cnpj IS NOT NULL AND x.cnpj=s.cnpj))))
+         OR (NOT $3 AND NOT EXISTS(SELECT 1 FROM products p WHERE p.tenant_id=s.tenant_id AND p.supplier_id=s.id AND p.active AND p.deleted_at IS NULL))
+    ),changed AS (
+      UPDATE suppliers s SET active=$3,deleted_at=CASE WHEN $3 THEN NULL ELSE now() END,updated_at=now()
+      FROM eligible e WHERE s.id=e.id AND (SELECT count(*) FROM input)>0
+        AND (SELECT count(*) FROM eligible)=(SELECT count(*) FROM input)
+      RETURNING s.id,s.tenant_id,s.legal_name
+    )
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+    SELECT tenant_id,$1,'Cadastros','CAD_FORNECEDOR',CASE WHEN $3 THEN 'RESTORE' ELSE 'ARCHIVE' END,'Supplier',id::text,
+      'Status do fornecedor alterado em lote',true,'SQL_CONNECT',jsonb_build_object('active',$3,'name',legal_name),now() FROM changed
+  """,params:[{_expr:"auth.uid"},$ids,$active])
+}
+
+mutation SetCustomersStatusBatch($ids: Any!, $active: Boolean!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u
+      JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+      JOIN app_pages pg ON pg.page_key='CAD_CLIENTE' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
+        AND CASE WHEN $3 THEN COALESCE(up.can_update,rp.can_update,false) ELSE COALESCE(up.can_delete,rp.can_delete,false) END
+    ),input AS (SELECT DISTINCT value::uuid id FROM jsonb_array_elements_text(COALESCE($2::jsonb,'[]'::jsonb))),
+    eligible AS (
+      SELECT c.id,c.tenant_id,c.name FROM customers c JOIN actor a ON a.tenant_id=c.tenant_id JOIN input i ON i.id=c.id
+      WHERE NOT $3 OR NOT EXISTS(SELECT 1 FROM customers x WHERE x.tenant_id=c.tenant_id AND x.id<>c.id AND x.active AND x.deleted_at IS NULL
+        AND ((c.cpf IS NOT NULL AND x.cpf=c.cpf) OR (c.cnpj IS NOT NULL AND x.cnpj=c.cnpj)))
+    ),changed AS (
+      UPDATE customers c SET active=$3,deleted_at=CASE WHEN $3 THEN NULL ELSE now() END,updated_at=now()
+      FROM eligible e WHERE c.id=e.id AND (SELECT count(*) FROM input)>0
+        AND (SELECT count(*) FROM eligible)=(SELECT count(*) FROM input)
+      RETURNING c.id,c.tenant_id,c.name
+    )
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+    SELECT tenant_id,$1,'Cadastros','CAD_CLIENTE',CASE WHEN $3 THEN 'RESTORE' ELSE 'ARCHIVE' END,'Customer',id::text,
+      'Status do cliente alterado em lote',true,'SQL_CONNECT',jsonb_build_object('active',$3,'name',name),now() FROM changed
+  """,params:[{_expr:"auth.uid"},$ids,$active])
+}
+
+mutation SetProductsStatusBatch($ids: Any!, $active: Boolean!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u
+      JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+      JOIN app_pages pg ON pg.page_key='CAD_PRODUTO' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
+        AND CASE WHEN $3 THEN COALESCE(up.can_update,rp.can_update,false) ELSE COALESCE(up.can_delete,rp.can_delete,false) END
+    ),input AS (SELECT DISTINCT value::uuid id FROM jsonb_array_elements_text(COALESCE($2::jsonb,'[]'::jsonb))),
+    eligible AS (
+      SELECT p.id,p.tenant_id,p.name FROM products p JOIN actor a ON a.tenant_id=p.tenant_id JOIN input i ON i.id=p.id
+      WHERE ($3 AND NOT EXISTS(SELECT 1 FROM products x WHERE x.tenant_id=p.tenant_id AND x.id<>p.id AND x.active AND x.deleted_at IS NULL
+               AND ((p.internal_code IS NOT NULL AND x.internal_code=p.internal_code) OR (p.ean IS NOT NULL AND x.ean=p.ean))))
+         OR (NOT $3 AND NOT EXISTS(SELECT 1 FROM product_components pc JOIN products parent
+               ON parent.id=pc.parent_product_id AND parent.tenant_id=pc.tenant_id
+               WHERE pc.component_product_id=p.id AND parent.active AND parent.deleted_at IS NULL AND parent.bundle_product))
+    ),changed AS (
+      UPDATE products p SET active=$3,deleted_at=CASE WHEN $3 THEN NULL ELSE now() END,updated_at=now()
+      FROM eligible e WHERE p.id=e.id AND (SELECT count(*) FROM input)>0
+        AND (SELECT count(*) FROM eligible)=(SELECT count(*) FROM input)
+      RETURNING p.id,p.tenant_id,p.name
+    )
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+    SELECT tenant_id,$1,'Cadastros','CAD_PRODUTO',CASE WHEN $3 THEN 'RESTORE' ELSE 'ARCHIVE' END,'Product',id::text,
+      'Status do produto alterado em lote',true,'SQL_CONNECT',jsonb_build_object('active',$3,'name',name),now() FROM changed
+  """,params:[{_expr:"auth.uid"},$ids,$active])
+}
