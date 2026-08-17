@@ -79,7 +79,7 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
  const [rows,setRows]=useState<Row[]>([]),[search,setSearch]=useState(''),[busy,setBusy]=useState(true),[modal,setModal]=useState(false)
  const [editing,setEditing]=useState<Row|null>(null),[form,setForm]=useState<Record<string,unknown>>({}),[notice,setNotice]=useState(''),[confirm,setConfirm]=useState<null|{text:string;run:()=>Promise<void>}>(null)
  const [selected,setSelected]=useState<string[]>([]),[extras,setExtras]=useState<Row|null>(null),[options,setOptions]=useState<RegistrationOptionSet>({categories:[],subcategories:[],suppliers:[],products:[]}),[kitItems,setKitItems]=useState<KitItem[]>([]),[section,setSection]=useState(modalSections[pageKey][0].key)
- const [filterModal,setFilterModal]=useState(false),[filters,setFilters]=useState<Record<string,string>>({})
+ const [filterModal,setFilterModal]=useState(false),[filters,setFilters]=useState<Record<string,string[]>>({}),[filterSearch,setFilterSearch]=useState<Record<string,string>>({})
  const query=useMemo(()=>({search:search.trim(),limit:RESULT_LIMIT,offset:0}),[search])
  const comboCostCents=useMemo(()=>kitItems.reduce((total,item)=>{const product=options.products.find(p=>p.id===item.productId);return total+Number(product?.costPriceCents??0)*Number(item.quantity||0)},0),[kitItems,options.products])
  const sections=modalSections[pageKey],sectionIndex=Math.max(0,sections.findIndex(item=>item.key===section))
@@ -90,10 +90,26 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
   CAD_PRODUTO:['name','internalCode','ean','brand','categoryId','subcategoryId','supplierId','sizeType','size','color','costPriceCents','salePriceCents','weightedProduct','bundleProduct'],
  }
  const advancedFields=cfg.fields.filter(field=>filterFieldKeys[pageKey].includes(field.key))
- const filteredRows=useMemo(()=>rows.filter(row=>Object.entries(filters).every(([key,value])=>{if(value==='')return true;if(key==='active')return String(row.active)===value;if(key==='bundleType')return String(Boolean(row.bundleProduct))===value;const raw=row[key],field=cfg.fields.find(item=>item.key===key);if(field?.type==='money')return String(raw??'').includes(digits(value));if(typeof raw==='boolean')return String(raw)===value;return String(raw??'').toLocaleLowerCase('pt-BR').includes(value.toLocaleLowerCase('pt-BR'))})),[rows,filters,cfg.fields])
+ const filteredRows=useMemo(()=>rows.filter(row=>Object.entries(filters).every(([key,values])=>values.length===0||values.includes(String(row[key]??'')))),[rows,filters])
  const primaryKeys=new Set(cfg.columns.map(column=>column.key))
  const detailFields=cfg.fields.filter(field=>!primaryKeys.has(field.key)&&!(pageKey==='CAD_PRODUTO'&&field.key==='categoryId'))
- const activeFilterCount=Object.values(filters).filter(Boolean).length
+ const activeFilterCount=Object.values(filters).reduce((total,values)=>total+values.length,0)
+ function facetOptions(field:Field){const existing=new Set(rows.map(row=>String(row[field.key]??'')).filter(Boolean));let known:{value:string;label:string}[]=[]
+  if(field.key==='categoryId')known=options.categories.map(item=>({value:item.id,label:item.name}))
+  else if(field.key==='subcategoryId')known=options.subcategories.map(item=>({value:item.id,label:item.name}))
+  else if(field.key==='supplierId')known=options.suppliers.map(item=>({value:item.id,label:item.name}))
+  else if(field.type==='checkbox')known=[{value:'true',label:'Sim'},{value:'false',label:'Não'}]
+  else known=field.options??[]
+  if(known.length)return known.filter(option=>existing.has(option.value))
+  return Array.from(existing).map(value=>({value,label:field.type==='money'?money(value):value})).sort((a,b)=>a.label.localeCompare(b.label,'pt-BR'))
+ }
+ function filterPicker(key:string,label:string,available:{value:string;label:string}[]){const values=filters[key]??[],term=filterSearch[key]??''
+  const visible=available.filter(option=>option.label.toLocaleLowerCase('pt-BR').includes(term.toLocaleLowerCase('pt-BR')))
+  return <div className="filter-field" key={key}><span>{label}</span><details className="filter-multiselect"><summary>{values.length===0?'Todos os valores':values.length===1?(available.find(option=>option.value===values[0])?.label??'1 selecionado'):`${values.length} selecionados`}</summary><div className="filter-dropdown">
+   <label className="filter-dropdown__search"><span className="material-symbols-rounded">search</span><input value={term} onChange={event=>setFilterSearch(current=>({...current,[key]:event.target.value}))} placeholder="Digite para filtrar..."/></label>
+   <div className="filter-dropdown__options">{visible.length===0?<small>Nenhum valor encontrado.</small>:visible.map(option=><label key={option.value}><input type="checkbox" checked={values.includes(option.value)} onChange={event=>setFilters(current=>{const selected=current[key]??[];return {...current,[key]:event.target.checked?[...selected,option.value]:selected.filter(value=>value!==option.value)}})}/><span>{option.label}</span></label>)}</div>
+  </div></details></div>
+ }
  const load=useCallback(async()=>{setBusy(true);try{let result;const freshQuery={...query,requestKey:crypto.randomUUID()}
   if(pageKey==='CAD_FILIAL')result=await listBranches(dc,freshQuery);else if(pageKey==='CAD_FORNECEDOR')result=await listSuppliers(dc,freshQuery)
   else if(pageKey==='CAD_CLIENTE')result=await listCustomers(dc,freshQuery);else result=await listProducts(dc,freshQuery)
@@ -103,7 +119,6 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
  useEffect(()=>{if(!notice)return;const t=window.setTimeout(()=>setNotice(''),7000);return()=>window.clearTimeout(t)},[notice])
  async function open(row?:Row){setEditing(row??null);setSection(modalSections[pageKey][0].key);const next:Record<string,unknown>={};for(const field of cfg.fields)next[field.key]=row?.[field.key]??(field.type==='checkbox'?false:'')
   if(pageKey==='CAD_PRODUTO'){next.costPriceCents=maskValue('costPriceCents',String(row?.costPriceCents??0));next.salePriceCents=maskValue('salePriceCents',String(row?.salePriceCents??0));if(row){try{const result=await productComponents(dc,{productId:row.id});setKitItems((result.data._select??[]) as KitItem[])}catch{setKitItems([])}}else setKitItems([])}setForm(next);setModal(true)}
- function filterOptions(field:Field){if(pageKey==='CAD_PRODUTO'){if(field.key==='categoryId')return options.categories.map(x=>({value:x.id,label:x.name}));if(field.key==='subcategoryId')return options.subcategories.map(x=>({value:x.id,label:x.name}));if(field.key==='supplierId')return options.suppliers.map(x=>({value:x.id,label:x.name}))}return field.options??[]}
  function fieldOptions(field:Field){if(pageKey!=='CAD_PRODUTO')return field.options??[];if(field.key==='categoryId')return options.categories.map(x=>({value:x.id,label:x.name}))
   if(field.key==='subcategoryId')return options.subcategories.filter(x=>!form.categoryId||x.categoryId===form.categoryId).map(x=>({value:x.id,label:x.name}))
   if(field.key==='supplierId')return options.suppliers.map(x=>({value:x.id,label:x.name}));if(field.key==='size')return (SIZE_OPTIONS[String(form.sizeType??'')]??[]).map(value=>({value,label:value}));return field.options??[]}
@@ -144,10 +159,10 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
      {row.active&&permission?.canUpdate&&<button onClick={()=>open(row)}>Editar</button>}{pageKey==='CAD_PRODUTO'&&row.active&&permission?.canUpdate&&<button onClick={()=>setExtras(row)}>Promoções</button>}<button className={row.active?'danger':'success'} onClick={()=>setConfirm({text:`${row.active?'Inativar':'Ativar'} “${String(row.name||row.legalName)}”?`,run:()=>status([row.id],!row.active)})}>{row.active?'Inativar':'Ativar'}</button></div></td>{detailFields.map(field=>{const displayValue=field.key==='subcategoryId'?row.subcategoryName:field.key==='supplierId'?row.supplierName:row[field.key];return <td key={field.key}>{field.type==='money'?money(displayValue):typeof displayValue==='boolean'?(displayValue?'Sim':'Não'):String(displayValue??'—')}</td>})}<td>{row.updatedAt?new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short'}).format(new Date(String(row.updatedAt))):'—'}</td></tr>)}</tbody></table></div></div>
    </div>
   {filterModal&&<div className="catalog-backdrop"><section className="catalog-modal master-modal advanced-search-modal"><header><div><span className="eyebrow">Pesquisa</span><h2>Filtros avançados</h2></div><button onClick={()=>setFilterModal(false)}>×</button></header>
-   <form onSubmit={e=>{e.preventDefault();setSelected([]);setFilterModal(false)}}><div className="master-section-title"><span className="material-symbols-rounded">manage_search</span><div><strong>Refine os resultados</strong><small>Combine quantos campos desejar. A exportação respeitará estes filtros.</small></div></div><div className="master-form-grid">
-    {advancedFields.map(field=><label key={field.key} className={field.wide?'wide':''}><span>{field.label}</span>{field.type==='checkbox'?<select value={filters[field.key]??''} onChange={e=>setFilters(current=>({...current,[field.key]:e.target.value}))}><option value="">Todos</option><option value="true">Sim</option><option value="false">Não</option></select>:field.type==='select'?<select value={filters[field.key]??''} onChange={e=>setFilters(current=>({...current,[field.key]:e.target.value}))}><option value="">Todos</option>{filterOptions(field).map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select>:<input type={field.type==='date'?'date':'text'} value={filters[field.key]??''} onChange={e=>setFilters(current=>({...current,[field.key]:field.type==='money'?maskValue(field.key,e.target.value):e.target.value}))}/>}</label>)}
-    <label><span>Status</span><select value={filters.active??''} onChange={e=>setFilters(current=>({...current,active:e.target.value}))}><option value="">Todos</option><option value="true">Ativos</option><option value="false">Inativos</option></select></label>
-   </div><footer><button type="button" onClick={()=>setFilters({})}>Limpar filtros</button><button type="button" onClick={()=>setFilterModal(false)}>Cancelar</button><button className="catalog-primary">Aplicar filtros</button></footer></form></section></div>}
+   <form onSubmit={e=>{e.preventDefault();setSelected([]);setFilterModal(false)}}><div className="master-section-title"><span className="material-symbols-rounded">manage_search</span><div><strong>Refine os resultados</strong><small>Selecione um ou mais valores existentes em cada campo. A exportação respeitará estes filtros.</small></div></div><div className="master-form-grid filter-grid">
+    {advancedFields.map(field=>filterPicker(field.key,field.label,facetOptions(field)))}
+    {filterPicker('active','Status',[{value:'true',label:'Ativo'},{value:'false',label:'Inativo'}])}
+   </div><footer><button type="button" onClick={()=>{setFilters({});setFilterSearch({})}}>Limpar filtros</button><button type="button" onClick={()=>setFilterModal(false)}>Cancelar</button><button className="catalog-primary">Aplicar filtros</button></footer></form></section></div>}
   {modal&&<div className="catalog-backdrop"><section className="catalog-modal master-modal"><header><div><span className="eyebrow">Cadastro</span><h2>{editing?'Editar':'Novo'} {cfg.singular}</h2></div><button onClick={()=>setModal(false)}>×</button></header>
    <form onSubmit={(e:FormEvent)=>{e.preventDefault();if(sectionIndex<sections.length-1){setSection(sections[sectionIndex+1].key);return}setConfirm({text:'Confirma o salvamento das informações?',run:save})}}>
     <nav className="master-modal-tabs" aria-label="Etapas do cadastro">{sections.map(item=><button type="button" key={item.key} className={section===item.key?'active':''} onClick={()=>setSection(item.key)}><span className="material-symbols-rounded">{item.icon}</span>{item.label}</button>)}</nav>
