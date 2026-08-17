@@ -72,7 +72,10 @@ function CategoryPage() {
     } finally { setLoading(false) }
   }, [page, search])
 
-  useEffect(() => { void load() }, [load])
+  useEffect(() => {
+    const request = window.setTimeout(() => { void load() }, 0)
+    return () => window.clearTimeout(request)
+  }, [load])
 
   function openCreate() { setEditing(null); setName(''); setFeedback(null); setModalOpen(true) }
   function openEdit(item: Category) { setEditing(item); setName(item.name); setFeedback(null); setModalOpen(true) }
@@ -165,7 +168,10 @@ function SubcategoryPage() {
     } finally { setLoading(false) }
   }, [filterCategory, page, search])
 
-  useEffect(() => { void load() }, [load])
+  useEffect(() => {
+    const request = window.setTimeout(() => { void load() }, 0)
+    return () => window.clearTimeout(request)
+  }, [load])
   const selectedCategory = useMemo(() => options.find((item) => item.id === categoryId), [categoryId, options])
 
   function openCreate() { setEditing(null); setName(''); setCategoryId(options[0]?.id ?? ''); setFeedback(null); setModalOpen(true) }
