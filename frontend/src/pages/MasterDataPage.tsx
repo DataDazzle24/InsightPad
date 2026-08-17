@@ -189,7 +189,7 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
      </section>}
     <footer><button type="button" onClick={()=>setModal(false)}>Cancelar</button>{sectionIndex>0&&<button type="button" onClick={()=>setSection(sections[sectionIndex-1].key)}>Anterior</button>}<button className="catalog-primary">{sectionIndex<sections.length-1?'Próxima':'Salvar'}</button></footer></form></section></div>}
   {confirm&&<div className="catalog-backdrop"><section className="catalog-confirm"><span className="material-symbols-rounded">help</span><h2>Confirmar operação</h2><p>{confirm.text}</p><footer><button onClick={()=>setConfirm(null)}>Cancelar</button><button className="catalog-primary" onClick={()=>{const action=confirm.run;setConfirm(null);void action()}}>Confirmar</button></footer></section></div>}
-  {extras&&<ProductExtras product={{id:extras.id,name:extras.name,active:extras.active,salePriceCents:String(extras.salePriceCents??0),costPriceCents:String(extras.costPriceCents??0)}} products={rows.map(r=>({id:r.id,name:r.name,active:r.active}))} onClose={()=>setExtras(null)}/>}
+  {extras&&<ProductExtras product={{id:extras.id,name:extras.name,active:extras.active,salePriceCents:String(extras.salePriceCents??0),costPriceCents:String(extras.costPriceCents??0)}} onClose={()=>setExtras(null)}/>}
   {busy&&<div className="catalog-loader"><div className="catalog-loader__mark"><span/><img src="/brand/insight-pad-logo-dark.png" alt="Insight Pad"/></div><strong>Atualizando informações...</strong></div>}
  </section>
 }
