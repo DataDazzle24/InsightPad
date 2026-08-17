@@ -819,6 +819,21 @@ mutation SaveProduct($id: UUID, $payload: Any!, $components: Any) @auth(level: U
       FROM saved s CROSS JOIN jsonb_array_elements(COALESCE($4::jsonb,'[]'::jsonb)) item
       JOIN products component ON component.id=(item->>'productId')::uuid AND component.tenant_id=s.tenant_id AND component.active
       WHERE component.id<>s.id AND (item->>'quantity')::numeric>0 RETURNING parent_product_id
+    ),recalculated AS (
+      UPDATE products parent
+      SET cost_price_cents=calculation.total_cost,updated_at=now()
+      FROM saved s
+      CROSS JOIN LATERAL (
+        SELECT COALESCE(ROUND(SUM(component.cost_price_cents*(item->>'quantity')::numeric)),0)::bigint AS total_cost
+        FROM jsonb_array_elements(COALESCE($4::jsonb,'[]'::jsonb)) item
+        JOIN products component ON component.id=(item->>'productId')::uuid AND component.tenant_id=s.tenant_id
+          AND component.active AND component.deleted_at IS NULL
+        WHERE component.id<>s.id AND (item->>'quantity')::numeric>0
+      ) calculation
+      WHERE parent.id=s.id AND parent.tenant_id=s.tenant_id
+        AND COALESCE(($3::jsonb->>'bundleProduct')::boolean,false)
+        AND jsonb_array_length(COALESCE($4::jsonb,'[]'::jsonb))>0
+      RETURNING parent.id
     ) INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
       SELECT tenant_id,$1,'Cadastros','CAD_PRODUTO',CASE WHEN $2::uuid IS NULL THEN 'CREATE' ELSE 'UPDATE' END,'Product',id::text,'Produto salvo',true,
       'SQL_CONNECT',jsonb_build_object('id',id,'name',name),now() FROM saved
