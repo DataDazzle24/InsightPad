@@ -133,6 +133,23 @@ type Branch @table(name: "branches", key: "id") {
   deletedAt: Timestamp @col(name: "deleted_at")
 }
 
+# Restricts each user to the branches they are allowed to see and operate.
+# Platform administrators may omit rows and receive unrestricted access through
+# connector authorization rules; every other operational role must be scoped by
+# this relation before sales, stock or financial mutations are enabled.
+type UserBranchAccess
+  @table(name: "user_branch_access", key: ["user", "branch"]) {
+  user: User!
+  branch: Branch!
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  canView: Boolean! @default(value: true) @col(name: "can_view")
+  canOperate: Boolean! @default(value: false) @col(name: "can_operate")
+  defaultBranch: Boolean! @default(value: false) @col(name: "default_branch")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+}
+
 type Category @table(name: "categories", key: "id") {
   id: UUID! @default(expr: "uuidV4()")
   tenant: Tenant! @ref(fields: "tenantId", references: "id")
