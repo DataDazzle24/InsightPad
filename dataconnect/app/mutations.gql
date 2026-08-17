@@ -555,3 +555,85 @@ mutation ArchiveSubcategory($id: UUID!) @auth(level: USER) @transaction {
     params: [{_expr: "auth.uid"}, $id]
   )
 }
+
+
+mutation RestoreCategory($id: UUID!) @auth(level: USER) @transaction {
+  _execute(
+    sql: """
+      WITH actor AS (
+        SELECT u.id, u.tenant_id
+        FROM users u
+        JOIN tenants t ON t.id = u.tenant_id AND t.active AND t.deleted_at IS NULL
+        JOIN roles r ON r.id = u.role_id AND r.active AND r.deleted_at IS NULL
+        JOIN app_pages p ON p.page_key = 'CAD_CATEGORIA' AND p.active
+        LEFT JOIN user_page_permissions up ON up.user_id = u.id AND up.page_id = p.id
+        LEFT JOIN role_page_permissions rp ON rp.role_id = u.role_id AND rp.page_id = p.id
+        WHERE u.id = $1 AND u.active AND u.deleted_at IS NULL
+          AND COALESCE(up.can_update, rp.can_update, false)
+      ),
+      restored AS (
+        UPDATE categories c
+        SET active = true, deleted_at = NULL, updated_at = now()
+        FROM actor a
+        WHERE c.id = $2 AND c.tenant_id = a.tenant_id AND NOT c.active
+          AND NOT EXISTS (
+            SELECT 1 FROM categories duplicate
+            WHERE duplicate.tenant_id = a.tenant_id AND duplicate.id <> c.id
+              AND duplicate.active AND duplicate.deleted_at IS NULL
+              AND lower(btrim(duplicate.name)) = lower(btrim(c.name))
+          )
+        RETURNING c.id, c.tenant_id, c.name
+      )
+      INSERT INTO audit_logs
+        (tenant_id, user_id, module, page_key, action, entity_name, entity_id,
+         summary, success, origin, after_data, created_at)
+      SELECT c.tenant_id, $1, 'Cadastros', 'CAD_CATEGORIA', 'RESTORE',
+             'Category', c.id::text, 'Categoria reativada', true, 'SQL_CONNECT',
+             jsonb_build_object('id', c.id, 'name', c.name), now()
+      FROM restored c
+    """,
+    params: [{_expr: "auth.uid"}, $id]
+  )
+}
+
+mutation RestoreSubcategory($id: UUID!) @auth(level: USER) @transaction {
+  _execute(
+    sql: """
+      WITH actor AS (
+        SELECT u.id, u.tenant_id
+        FROM users u
+        JOIN tenants t ON t.id = u.tenant_id AND t.active AND t.deleted_at IS NULL
+        JOIN roles r ON r.id = u.role_id AND r.active AND r.deleted_at IS NULL
+        JOIN app_pages p ON p.page_key = 'CAD_SUBCATEGORIA' AND p.active
+        LEFT JOIN user_page_permissions up ON up.user_id = u.id AND up.page_id = p.id
+        LEFT JOIN role_page_permissions rp ON rp.role_id = u.role_id AND rp.page_id = p.id
+        WHERE u.id = $1 AND u.active AND u.deleted_at IS NULL
+          AND COALESCE(up.can_update, rp.can_update, false)
+      ),
+      restored AS (
+        UPDATE subcategories s
+        SET active = true, deleted_at = NULL, updated_at = now()
+        FROM actor a
+        JOIN categories c ON c.id = s.category_id AND c.tenant_id = a.tenant_id
+          AND c.active AND c.deleted_at IS NULL
+        WHERE s.id = $2 AND s.tenant_id = a.tenant_id AND NOT s.active
+          AND NOT EXISTS (
+            SELECT 1 FROM subcategories duplicate
+            WHERE duplicate.tenant_id = a.tenant_id
+              AND duplicate.category_id = s.category_id AND duplicate.id <> s.id
+              AND duplicate.active AND duplicate.deleted_at IS NULL
+              AND lower(btrim(duplicate.name)) = lower(btrim(s.name))
+          )
+        RETURNING s.id, s.tenant_id, s.category_id, s.name
+      )
+      INSERT INTO audit_logs
+        (tenant_id, user_id, module, page_key, action, entity_name, entity_id,
+         summary, success, origin, after_data, created_at)
+      SELECT s.tenant_id, $1, 'Cadastros', 'CAD_SUBCATEGORIA', 'RESTORE',
+             'Subcategory', s.id::text, 'Subcategoria reativada', true, 'SQL_CONNECT',
+             jsonb_build_object('id', s.id, 'categoryId', s.category_id, 'name', s.name), now()
+      FROM restored s
+    """,
+    params: [{_expr: "auth.uid"}, $id]
+  )
+}
