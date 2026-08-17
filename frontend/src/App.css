@@ -86,3 +86,13 @@
 .promotion-summary{display:flex;flex-wrap:wrap;gap:.65rem}.promotion-summary span{display:flex;align-items:center;gap:.5rem;padding:.65rem .8rem;border:1px solid var(--line);color:var(--muted);font:.62rem var(--mono);text-transform:uppercase}.promotion-summary strong{color:var(--white)}.promotion-profit{display:grid;min-height:2.8rem;align-content:center;gap:.2rem;padding:.45rem .65rem;border:1px solid rgba(54,219,46,.35);color:var(--green);background:rgba(54,219,46,.06)}.promotion-profit span{font:.58rem var(--mono);text-transform:uppercase}.promotion-profit.negative{border-color:rgba(255,82,109,.45);color:#ff7186;background:rgba(255,82,109,.06)}.promotion-form{grid-template-columns:repeat(3,minmax(0,1fr)) minmax(8rem,.7fr) auto auto}.promotion-form>button:not(.catalog-primary),.extras-heading>button{padding:.65rem .8rem;border:1px solid #314047;color:var(--cyan);background:#080b0d;font:700 .6rem var(--mono);text-transform:uppercase}.promotion-actions{display:flex;gap:.4rem}.promotion-status{padding:.3rem .5rem;border:1px solid;font:700 .58rem var(--mono);text-transform:uppercase}.promotion-status--active{border-color:rgba(54,219,46,.4);color:var(--green)}.promotion-status--scheduled{border-color:rgba(66,220,250,.4);color:var(--cyan)}.promotion-status--ended,.promotion-status--inactive{border-color:#354146;color:#7c898e}
 @media(max-width:900px){.promotion-form{grid-template-columns:repeat(2,minmax(0,1fr))}.batch-row--subcategory{grid-template-columns:1fr 1fr}.batch-row--subcategory>button{grid-column:1/-1}}
 @media(max-width:720px){.batch-row,.batch-row--subcategory{grid-template-columns:1fr}.batch-row--subcategory>button{grid-column:auto}.promotion-summary{display:grid}.promotion-form{grid-template-columns:1fr}.promotion-list article{grid-template-columns:1fr}.promotion-actions{width:100%}.promotion-actions button{flex:1}}
+
+
+/* Validação acessível e desempenho das tabelas de cadastros */
+.master-field-error{color:#ff7186;font-size:.64rem;line-height:1.35}
+.master-form-grid input[aria-invalid=true],.master-form-grid select[aria-invalid=true],.master-form-grid textarea[aria-invalid=true]{border-color:#ff526d;box-shadow:0 0 0 1px rgba(255,82,109,.25)}
+.catalog-table tbody tr{content-visibility:auto;contain-intrinsic-size:3.8rem}
+@media(max-width:720px){
+ .catalog-table tbody tr{contain-intrinsic-size:12rem}
+ .catalog-actions{position:sticky;right:0;padding:.25rem;background:linear-gradient(90deg,transparent,#0a0e10 12%)}
+}
