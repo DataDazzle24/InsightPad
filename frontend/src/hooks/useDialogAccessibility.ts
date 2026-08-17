@@ -4,7 +4,7 @@ const selector='button:not([disabled]),a[href],input:not([disabled]),select:not(
 
 export function useDialogAccessibility(active:boolean,onClose:()=>void){
  const closeRef=useRef(onClose)
- closeRef.current=onClose
+ useEffect(()=>{closeRef.current=onClose},[onClose])
 
  useEffect(()=>{
   if(!active)return
