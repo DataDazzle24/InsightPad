@@ -1,4 +1,4 @@
-import { useCallback,useEffect,useMemo,useState,type FormEvent } from 'react'
+import { useCallback,useEffect,useMemo,useRef,useState,type FormEvent } from 'react'
 import { getDataConnect } from 'firebase/data-connect'
 import { Link } from 'react-router-dom'
 import {
@@ -94,6 +94,7 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
  const [rows,setRows]=useState<Row[]>([]),[search,setSearch]=useState(''),[busy,setBusy]=useState(true),[modal,setModal]=useState(false)
  const [editing,setEditing]=useState<Row|null>(null),[form,setForm]=useState<Record<string,unknown>>({}),[baseline,setBaseline]=useState(''),[notice,setNotice]=useState(''),[confirm,setConfirm]=useState<null|{text:string;run:()=>Promise<void>}>(null)
  const [selected,setSelected]=useState<string[]>([]),[extras,setExtras]=useState<Row|null>(null),[options,setOptions]=useState<RegistrationOptionSet>({categories:[],subcategories:[],suppliers:[],products:[]}),[kitItems,setKitItems]=useState<KitItem[]>([]),[section,setSection]=useState(modalSections[pageKey][0].key)
+ const requestSequence=useRef(0)
  const [filterModal,setFilterModal]=useState(false),[filters,setFilters]=useState<Record<string,string[]>>({}),[filterSearch,setFilterSearch]=useState<Record<string,string>>({})
  const query=useMemo(()=>({search:search.trim(),limit:RESULT_LIMIT,offset:0}),[search])
  const comboCostCents=useMemo(()=>kitItems.reduce((total,item)=>{const product=options.products.find(p=>p.id===item.productId);return total+Number(product?.costPriceCents??0)*Number(item.quantity||0)},0),[kitItems,options.products])
@@ -125,11 +126,11 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
    <div className="filter-dropdown__options">{visible.length===0?<small>Nenhum valor encontrado.</small>:visible.map(option=><label key={option.value}><input type="checkbox" checked={values.includes(option.value)} onChange={event=>setFilters(current=>{const selected=current[key]??[];return {...current,[key]:event.target.checked?[...selected,option.value]:selected.filter(value=>value!==option.value)}})}/><span>{option.label}</span></label>)}</div>
   </div></details></div>
  }
- const load=useCallback(async()=>{setBusy(true);try{let result;const freshQuery={...query,requestKey:crypto.randomUUID()}
+ const load=useCallback(async()=>{const requestId=++requestSequence.current;setBusy(true);try{let result;const freshQuery={...query,requestKey:crypto.randomUUID()}
   if(pageKey==='CAD_FILIAL')result=await listBranches(dc,freshQuery);else if(pageKey==='CAD_FORNECEDOR')result=await listSuppliers(dc,freshQuery)
   else if(pageKey==='CAD_CLIENTE')result=await listCustomers(dc,freshQuery);else result=await listProducts(dc,freshQuery)
-  setRows((result.data._select??[]) as Row[]);if(pageKey==='CAD_PRODUTO'){const opt=await registrationOptions(dc,{requestKey:crypto.randomUUID()});const raw=(opt.data._select??[])[0] as {data?:Partial<RegistrationOptionSet>}|undefined;const box=raw?.data;setOptions({categories:box?.categories??[],subcategories:box?.subcategories??[],suppliers:box?.suppliers??[],products:box?.products??[]})}
- }catch(e){console.error(e);setNotice('Não foi possível atualizar as informações.')}finally{setBusy(false)}},[pageKey,query])
+  if(requestId!==requestSequence.current)return;setRows((result.data._select??[]) as Row[]);if(pageKey==='CAD_PRODUTO'){const opt=await registrationOptions(dc,{requestKey:crypto.randomUUID()});const raw=(opt.data._select??[])[0] as {data?:Partial<RegistrationOptionSet>}|undefined;const box=raw?.data;setOptions({categories:box?.categories??[],subcategories:box?.subcategories??[],suppliers:box?.suppliers??[],products:box?.products??[]})}
+ }catch(e){if(requestId!==requestSequence.current)return;console.error(e);setNotice('Não foi possível atualizar as informações.')}finally{if(requestId===requestSequence.current)setBusy(false)}},[pageKey,query])
  useEffect(()=>{const t=window.setTimeout(()=>void load(),180);return()=>clearTimeout(t)},[load])
  useEffect(()=>{if(!notice)return;const t=window.setTimeout(()=>setNotice(''),7000);return()=>window.clearTimeout(t)},[notice])
  async function open(row?:Row){setEditing(row??null);setSection(modalSections[pageKey][0].key);const next:Record<string,unknown>={};let loadedKit:KitItem[]=[]
