@@ -973,6 +973,17 @@ mutation SaveProductComponents($productId: UUID!, $components: Any!) @auth(level
     ),target AS (
       SELECT p.id,p.tenant_id FROM products p JOIN actor a ON a.tenant_id=p.tenant_id
       WHERE p.id=$2 AND p.active AND p.deleted_at IS NULL
+        AND jsonb_array_length(COALESCE($3::jsonb,'[]'::jsonb))=(
+          SELECT count(DISTINCT item->>'productId') FROM jsonb_array_elements(COALESCE($3::jsonb,'[]'::jsonb)) item
+          JOIN products component ON component.id=(item->>'productId')::uuid AND component.tenant_id=a.tenant_id
+            AND component.active AND component.deleted_at IS NULL AND NOT component.bundle_product
+          WHERE component.id<>p.id AND (item->>'quantity')::numeric>0
+        )
+        AND (jsonb_array_length(COALESCE($3::jsonb,'[]'::jsonb))=0 OR NOT EXISTS(
+          SELECT 1 FROM product_components membership
+          JOIN products parent ON parent.id=membership.parent_product_id AND parent.tenant_id=membership.tenant_id
+          WHERE membership.component_product_id=p.id AND parent.active AND parent.deleted_at IS NULL AND parent.bundle_product
+        ))
     ),cleared AS (
       DELETE FROM product_components pc USING target t
       WHERE pc.parent_product_id=t.id AND pc.tenant_id=t.tenant_id RETURNING pc.parent_product_id
