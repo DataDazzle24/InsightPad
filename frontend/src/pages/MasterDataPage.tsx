@@ -26,6 +26,13 @@ const maskValue=(key:string,value:string)=>{const d=digits(value)
  if(key==='costPriceCents'||key==='salePriceCents')return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(d||0)/100)
  return value}
 const moneyToNumber=(value:unknown)=>Number(digits(String(value??'')))/100
+const validCpf=(value:unknown)=>{const cpf=digits(String(value??''));if(!/^\d{11}$/.test(cpf)||/^(\d)\1{10}$/.test(cpf))return false
+ const calc=(length:number)=>{let sum=0;for(let i=0;i<length;i++)sum+=Number(cpf[i])*(length+1-i);const rest=(sum*10)%11;return rest===10?0:rest}
+ return calc(9)===Number(cpf[9])&&calc(10)===Number(cpf[10])}
+const validCnpj=(value:unknown)=>{const cnpj=digits(String(value??''));if(!/^\d{14}$/.test(cnpj)||/^(\d)\1{13}$/.test(cnpj))return false
+ const digit=(base:string,weights:number[])=>{const rest=base.split('').reduce((sum,n,index)=>sum+Number(n)*weights[index],0)%11;return rest<2?0:11-rest}
+ return digit(cnpj.slice(0,12),[5,4,3,2,9,8,7,6,5,4,3,2])===Number(cnpj[12])&&digit(cnpj.slice(0,13),[6,5,4,3,2,9,8,7,6,5,4,3,2])===Number(cnpj[13])}
+const UF_OPTIONS='AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO'.split(' ').map(value=>({value,label:value}))
 const SIZE_OPTIONS:Record<string,string[]>={ML:['150','250','275','313','330','350','473','500','510','600','750','965','998'],L:['1','1,5','2','2,5','3'],KG:['1','3','5'],G:['76','140','150','500'],UN:['100']}
 const CLOTHING_TYPES=[{value:'NUMERICO',label:'Numérico'},{value:'LETRAS',label:'PP ao XGG'}]
 const CLOTHING_SIZES:Record<string,string[]>={NUMERICO:['34','36','38','40','42','44','46','48','50','52','54'],LETRAS:['PP','P','M','G','GG','XG','XGG']}
@@ -34,7 +41,7 @@ const money=(v:unknown)=>new Intl.NumberFormat('pt-BR',{style:'currency',currenc
 const configs:Record<PageKey,Config>={
  CAD_FILIAL:{title:'Filiais',singular:'filial',description:'Configure unidades e pontos de operação.',columns:[
   {key:'name',label:'Filial'},{key:'internalCode',label:'Código'},{key:'city',label:'Cidade / UF',format:(_,r)=>[r.city,r.stateCode].filter(Boolean).join(' / ')||'—'},{key:'phone',label:'Telefone'}],
-  fields:[{key:'name',label:'Nome da filial',required:true},{key:'internalCode',label:'Código interno'},{key:'postalCode',label:'CEP'},{key:'stateCode',label:'UF'},
+  fields:[{key:'name',label:'Nome da filial',required:true},{key:'internalCode',label:'Código interno'},{key:'postalCode',label:'CEP'},{key:'stateCode',label:'UF',type:'select',options:UF_OPTIONS},
    {key:'city',label:'Cidade'},{key:'district',label:'Bairro'},{key:'street',label:'Endereço',wide:true},{key:'streetNumber',label:'Número'},
    {key:'addressComplement',label:'Complemento'},{key:'phone',label:'Telefone'}]},
  CAD_FORNECEDOR:{title:'Fornecedores',singular:'fornecedor',description:'Organize parceiros comerciais, contatos e condições.',columns:[
@@ -43,7 +50,7 @@ const configs:Record<PageKey,Config>={
    {key:'cpf',label:'CPF'},{key:'cnpj',label:'CNPJ'},{key:'contactName',label:'Responsável'},{key:'phonePrimary',label:'Telefone principal'},
    {key:'phoneSecondary',label:'Telefone secundário'},{key:'email',label:'E-mail',type:'email'},{key:'segment',label:'Segmento'},
    {key:'paymentTerms',label:'Condição de pagamento'},{key:'paymentTermDays',label:'Prazo de pagamento',type:'number'},
-   {key:'averageDeliveryDays',label:'Prazo médio de entrega',type:'number'},{key:'postalCode',label:'CEP'},{key:'stateCode',label:'UF'},
+   {key:'averageDeliveryDays',label:'Prazo médio de entrega',type:'number'},{key:'postalCode',label:'CEP'},{key:'stateCode',label:'UF',type:'select',options:UF_OPTIONS},
    {key:'city',label:'Cidade'},{key:'district',label:'Bairro'},{key:'street',label:'Endereço',wide:true},{key:'streetNumber',label:'Número'},
    {key:'addressComplement',label:'Complemento'},{key:'lowerClothingType',label:'Tipo de roupa inferior',type:'select',options:CLOTHING_TYPES},
    {key:'lowerClothingSize',label:'Tamanho inferior',type:'select'},{key:'upperClothingType',label:'Tipo de roupa superior',type:'select',options:CLOTHING_TYPES},
@@ -54,7 +61,7 @@ const configs:Record<PageKey,Config>={
   fields:[{key:'name',label:'Nome / Razão social',required:true},{key:'cpf',label:'CPF'},{key:'cnpj',label:'CNPJ'},{key:'birthDate',label:'Nascimento',type:'date'},
    {key:'gender',label:'Gênero',type:'select',options:[{value:'',label:'Não informado'},{value:'FEMININO',label:'Feminino'},{value:'MASCULINO',label:'Masculino'},{value:'OUTRO',label:'Outro'}]},
    {key:'email',label:'E-mail',type:'email'},{key:'phonePrimary',label:'Telefone principal'},{key:'phoneSecondary',label:'Telefone secundário'},
-   {key:'marketingOptIn',label:'Autoriza comunicações de marketing',type:'checkbox',wide:true},{key:'postalCode',label:'CEP'},{key:'stateCode',label:'UF'},
+   {key:'marketingOptIn',label:'Autoriza comunicações de marketing',type:'checkbox',wide:true},{key:'postalCode',label:'CEP'},{key:'stateCode',label:'UF',type:'select',options:UF_OPTIONS},
    {key:'city',label:'Cidade'},{key:'district',label:'Bairro'},{key:'street',label:'Endereço',wide:true},{key:'streetNumber',label:'Número'},
    {key:'addressComplement',label:'Complemento'},{key:'notes',label:'Observações',type:'textarea',wide:true}]},
  CAD_PRODUTO:{title:'Produtos',singular:'produto',description:'Gerencie catálogo, preços, classificação e limites de estoque.',columns:[
@@ -142,10 +149,22 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
   }catch(error){console.error(error);setNotice('Não foi possível consultar o CEP. Preencha o endereço manualmente.')}finally{setBusy(false)}
  }
  function validate(){if(cfg.fields.some(f=>f.required&&!String(form[f.key]??'').trim()))return 'Preencha todos os campos obrigatórios.'
-  if((form.cpf&&digits(String(form.cpf)).length!==11)||(form.cnpj&&digits(String(form.cnpj)).length!==14))return 'CPF ou CNPJ inválido.'
+  if(form.cpf&&!validCpf(form.cpf))return 'Informe um CPF válido, incluindo os dígitos verificadores.'
+  if(form.cnpj&&!validCnpj(form.cnpj))return 'Informe um CNPJ válido, incluindo os dígitos verificadores.'
+  if(form.cpf&&form.cnpj)return 'Informe apenas CPF ou CNPJ para o mesmo cadastro.'
   if(form.email&&!/^\S+@\S+\.\S+$/.test(String(form.email)))return 'E-mail inválido.'
+  if(form.postalCode&&digits(String(form.postalCode)).length!==8)return 'O CEP deve possuir oito dígitos.'
+  for(const key of ['phone','phonePrimary','phoneSecondary']){const value=form[key];if(value&&!/^(\d{10}|\d{11})$/.test(digits(String(value))))return 'Informe telefones com DDD e 10 ou 11 dígitos.'}
+  if(pageKey==='CAD_FORNECEDOR'&&(Number(form.paymentTermDays||0)<0||Number(form.averageDeliveryDays||0)<0))return 'Prazos comerciais não podem ser negativos.'
+  if(pageKey==='CAD_CLIENTE'&&form.birthDate&&new Date(String(form.birthDate)+'T12:00:00')>new Date())return 'A data de nascimento não pode estar no futuro.'
   if(pageKey==='CAD_CLIENTE'&&((form.lowerClothingType&&!form.lowerClothingSize)||(form.upperClothingType&&!form.upperClothingSize)))return 'Selecione o tamanho correspondente ao tipo de roupa informado.'
-  if(pageKey==='CAD_PRODUTO'&&Number(form.maximumStock||0)<Number(form.minimumStock||0))return 'Estoque máximo deve ser maior ou igual ao mínimo.';if(pageKey==='CAD_PRODUTO'&&form.bundleProduct&&kitItems.length===0)return 'Um combo precisa ter pelo menos um produto componente.';if(kitItems.some(x=>x.quantity<=0))return 'As quantidades dos componentes devem ser maiores que zero.';if(new Set(kitItems.map(x=>x.productId)).size!==kitItems.length)return 'Cada produto só pode aparecer uma vez no combo.';if(pageKey==='CAD_PRODUTO'&&moneyToNumber(form.salePriceCents)<(form.bundleProduct?comboCostCents/100:moneyToNumber(form.costPriceCents)))return 'O preço de venda não pode ser menor que o preço de custo.';return ''}
+  if(pageKey==='CAD_PRODUTO'&&(Number(form.minimumStock||0)<0||Number(form.maximumStock||0)<0))return 'Os limites de estoque não podem ser negativos.'
+  if(pageKey==='CAD_PRODUTO'&&Number(form.maximumStock||0)<Number(form.minimumStock||0))return 'Estoque máximo deve ser maior ou igual ao mínimo.'
+  if(pageKey==='CAD_PRODUTO'&&form.bundleProduct&&kitItems.length===0)return 'Um combo precisa ter pelo menos um produto componente.'
+  if(kitItems.some(x=>x.quantity<=0))return 'As quantidades dos componentes devem ser maiores que zero.'
+  if(new Set(kitItems.map(x=>x.productId)).size!==kitItems.length)return 'Cada produto só pode aparecer uma vez no combo.'
+  if(pageKey==='CAD_PRODUTO'&&moneyToNumber(form.salePriceCents)<(form.bundleProduct?comboCostCents/100:moneyToNumber(form.costPriceCents)))return 'O preço de venda não pode ser menor que o preço de custo.'
+  return ''}
  async function save(){const error=validate();if(error){setNotice(error);return}setBusy(true);try{const payload={...form}
   if(pageKey==='CAD_PRODUTO'){payload.costPriceCents=form.bundleProduct?Math.round(comboCostCents):Math.round(moneyToNumber(form.costPriceCents)*100);payload.salePriceCents=Math.round(moneyToNumber(form.salePriceCents)*100)}
   const vars={id:editing?.id??null,payload};let result
@@ -188,7 +207,7 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
     <span>{field.label}{field.required?' *':''}</span>{field.type==='textarea'?<textarea value={String(form[field.key]??'')} onChange={e=>setForm({...form,[field.key]:e.target.value})}/>:
     field.type==='checkbox'?<input type="checkbox" checked={Boolean(form[field.key])} onChange={e=>{const checked=e.target.checked;setForm({...form,[field.key]:checked});if(field.key==='bundleProduct'&&!checked)setKitItems([])}}/>:
     field.type==='select'?<select value={String(form[field.key]??'')} onChange={e=>setForm({...form,[field.key]:e.target.value,...(field.key==='sizeType'?{size:''}:{}),...(field.key==='categoryId'?{subcategoryId:''}:{}),...(field.key==='lowerClothingType'?{lowerClothingSize:''}:{}),...(field.key==='upperClothingType'?{upperClothingSize:''}:{})})}><option value="">Selecione</option>{fieldOptions(field).map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</select>:
-    <input type={field.type==='number'?'number':field.type==='money'?'text':field.type??'text'} disabled={field.key==='costPriceCents'&&Boolean(form.bundleProduct)} value={String(field.key==='costPriceCents'&&form.bundleProduct?maskValue('costPriceCents',String(Math.round(comboCostCents))):form[field.key]??'')} onChange={e=>setForm({...form,[field.key]:maskValue(field.key,e.target.value)})} onBlur={field.key==='postalCode'?e=>void lookupCep(e.target.value):undefined}/>}</label>)}</div>
+    <input type={field.type==='number'?'number':field.type==='money'?'text':field.type??'text'} min={field.type==='number'?0:undefined} inputMode={field.type==='money'?'numeric':undefined} disabled={field.key==='costPriceCents'&&Boolean(form.bundleProduct)} value={String(field.key==='costPriceCents'&&form.bundleProduct?maskValue('costPriceCents',String(Math.round(comboCostCents))):form[field.key]??'')} onChange={e=>setForm({...form,[field.key]:maskValue(field.key,e.target.value)})} onBlur={field.key==='postalCode'?e=>void lookupCep(e.target.value):undefined}/>}</label>)}</div>
     {pageKey==='CAD_PRODUTO'&&section==='pricing'&&<div className="product-margin">Margem estimada: <strong>{moneyToNumber(form.salePriceCents)>0?(((moneyToNumber(form.salePriceCents)-(form.bundleProduct?comboCostCents/100:moneyToNumber(form.costPriceCents)))/moneyToNumber(form.salePriceCents))*100).toFixed(1):'0.0'}%</strong>{Boolean(form.bundleProduct)&&<small> Custo calculado automaticamente pelos componentes.</small>}</div>}
     {pageKey==='CAD_PRODUTO'&&section==='kit'&&Boolean(form.bundleProduct)&&<section className="inline-kit"><header><div><strong>Produtos do combo</strong><small>O custo é a soma do custo de cada produto multiplicado pela quantidade.</small></div><button type="button" className="catalog-primary" onClick={()=>{const available=options.products.find(p=>p.id!==editing?.id&&!kitItems.some(k=>k.productId===p.id));if(available)setKitItems(v=>[...v,{productId:available.id,quantity:1}]);else setNotice('Não existem outros produtos disponíveis para adicionar.')}}>+ Adicionar produto</button></header>
       {kitItems.map((item,index)=>{const component=options.products.find(p=>p.id===item.productId);return <div className="component-row component-row--detailed" key={index}><select value={item.productId} onChange={e=>{if(kitItems.some((x,i)=>i!==index&&x.productId===e.target.value)){setNotice('Este produto já faz parte do combo. Ajuste apenas a quantidade.');return}setKitItems(v=>v.map((x,i)=>i===index?{...x,productId:e.target.value}:x))}}>{options.products.filter(p=>p.id!==editing?.id&&(p.id===item.productId||!kitItems.some((x,i)=>i!==index&&x.productId===p.id))).map(p=><option value={p.id} key={p.id}>{p.name}</option>)}</select><label><span>Quantidade</span><input type="number" min=".001" step=".001" value={item.quantity} onChange={e=>setKitItems(v=>v.map((x,i)=>i===index?{...x,quantity:Number(e.target.value)}:x))}/></label><div className="component-cost"><span>Custo unitário</span><strong>{money(component?.costPriceCents)}</strong></div><div className="component-cost"><span>Subtotal</span><strong>{money(Number(component?.costPriceCents??0)*item.quantity)}</strong></div><button type="button" className="danger" onClick={()=>setKitItems(v=>v.filter((_,i)=>i!==index))}>Remover</button></div>})}
