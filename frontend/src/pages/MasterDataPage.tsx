@@ -14,9 +14,9 @@ type PageKey='CAD_FILIAL'|'CAD_FORNECEDOR'|'CAD_CLIENTE'|'CAD_PRODUTO'
 type Row={id:string;active:boolean;updatedAt:string;[key:string]:unknown}
 type Field={key:string;label:string;type?:'text'|'email'|'date'|'number'|'textarea'|'checkbox'|'select'|'money';required?:boolean;wide?:boolean;options?:{value:string;label:string}[]}
 type Config={title:string;singular:string;description:string;columns:{key:string;label:string;format?:(v:unknown,r:Row)=>string}[];fields:Field[]}
+type IdName={id:string;name:string};type SubcategoryOption=IdName&{categoryId:string};type RegistrationOptionSet={categories:IdName[];subcategories:SubcategoryOption[];suppliers:IdName[]}
 const digits=(v:string)=>v.replace(/\D/g,'')
 const money=(v:unknown)=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(v??0)/100)
-const date=(v:unknown)=>v?new Intl.DateTimeFormat('pt-BR').format(new Date(String(v))):'—'
 const configs:Record<PageKey,Config>={
  CAD_FILIAL:{title:'Filiais',singular:'filial',description:'Configure unidades e pontos de operação.',columns:[
   {key:'name',label:'Filial'},{key:'internalCode',label:'Código'},{key:'city',label:'Cidade / UF',format:(_,r)=>[r.city,r.stateCode].filter(Boolean).join(' / ')||'—'},{key:'phone',label:'Telefone'}],
@@ -55,12 +55,12 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
  const cfg=configs[pageKey],permission=useAuth().permissions[pageKey]
  const [rows,setRows]=useState<Row[]>([]),[search,setSearch]=useState(''),[page,setPage]=useState(0),[busy,setBusy]=useState(true),[modal,setModal]=useState(false)
  const [editing,setEditing]=useState<Row|null>(null),[form,setForm]=useState<Record<string,unknown>>({}),[notice,setNotice]=useState(''),[confirm,setConfirm]=useState<null|{text:string;run:()=>Promise<void>}>(null)
- const [selected,setSelected]=useState<string[]>([]),[extras,setExtras]=useState<Row|null>(null),[options,setOptions]=useState<{categories:any[];subcategories:any[];suppliers:any[]}>({categories:[],subcategories:[],suppliers:[]})
+ const [selected,setSelected]=useState<string[]>([]),[extras,setExtras]=useState<Row|null>(null),[options,setOptions]=useState<RegistrationOptionSet>({categories:[],subcategories:[],suppliers:[]})
  const query=useMemo(()=>({search:search.trim(),limit:PAGE_SIZE,offset:page*PAGE_SIZE,requestKey:crypto.randomUUID()}),[page,search])
  const load=useCallback(async()=>{setBusy(true);try{let result
   if(pageKey==='CAD_FILIAL')result=await listBranches(dc,query);else if(pageKey==='CAD_FORNECEDOR')result=await listSuppliers(dc,query)
   else if(pageKey==='CAD_CLIENTE')result=await listCustomers(dc,query);else result=await listProducts(dc,query)
-  setRows((result.data._select??[]) as Row[]);if(pageKey==='CAD_PRODUTO'){const opt=await registrationOptions(dc);const box=((opt.data._select??[])[0] as any)?.data??{};setOptions({categories:box.categories??[],subcategories:box.subcategories??[],suppliers:box.suppliers??[]})}
+  setRows((result.data._select??[]) as Row[]);if(pageKey==='CAD_PRODUTO'){const opt=await registrationOptions(dc);const raw=(opt.data._select??[])[0] as {data?:Partial<RegistrationOptionSet>}|undefined;const box=raw?.data;setOptions({categories:box?.categories??[],subcategories:box?.subcategories??[],suppliers:box?.suppliers??[]})}
  }catch(e){console.error(e);setNotice('Não foi possível atualizar as informações.')}finally{setBusy(false)}},[pageKey,query])
  useEffect(()=>{const t=window.setTimeout(()=>void load(),180);return()=>clearTimeout(t)},[load])
  function open(row?:Row){setEditing(row??null);const next:Record<string,unknown>={};for(const field of cfg.fields)next[field.key]=row?.[field.key]??(field.type==='checkbox'?false:'')
