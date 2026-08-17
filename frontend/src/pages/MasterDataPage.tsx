@@ -94,7 +94,7 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
  const primaryKeys=new Set(cfg.columns.map(column=>column.key))
  const detailFields=cfg.fields.filter(field=>!primaryKeys.has(field.key)&&!(pageKey==='CAD_PRODUTO'&&field.key==='categoryId'))
  const activeFilterCount=Object.values(filters).reduce((total,values)=>total+values.length,0)
- function facetOptions(field:Field){const existing=new Set(rows.map(row=>String(row[field.key]??'')).filter(Boolean));let known:{value:string;label:string}[]=[]
+ function facetOptions(field:Field){const existing=new Set(rows.map(row=>String(row[field.key]??'')).filter(Boolean));let known:{value:string;label:string}[]
   if(field.key==='categoryId')known=options.categories.map(item=>({value:item.id,label:item.name}))
   else if(field.key==='subcategoryId')known=options.subcategories.map(item=>({value:item.id,label:item.name}))
   else if(field.key==='supplierId')known=options.suppliers.map(item=>({value:item.id,label:item.name}))
