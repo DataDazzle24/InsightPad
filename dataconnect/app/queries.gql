@@ -146,7 +146,7 @@ query ListSubcategories($search: String!, $categoryId: UUID, $limit: Int!, $offs
   )
 }
 
-query CategoryOptions @auth(level: USER) {
+query CategoryOptions($requestKey: String) @auth(level: USER) {
   _select(
     sql: """
       SELECT c.id, c.name
@@ -158,9 +158,10 @@ query CategoryOptions @auth(level: USER) {
        AND u.deleted_at IS NULL
       WHERE c.active
         AND c.deleted_at IS NULL
+        AND ($2 IS NULL OR $2<>'')
       ORDER BY lower(c.name), c.id
     """,
-    params: [{_expr: "auth.uid"}]
+    params: [{_expr: "auth.uid"}, $requestKey]
   )
 }
 
@@ -169,7 +170,7 @@ query ListBranches($search: String!, $limit: Int!, $offset: Int!, $requestKey: S
   _select(sql: """
     SELECT b.id,b.name,b.internal_code AS "internalCode",b.postal_code AS "postalCode",b.state_code AS "stateCode",
       b.city,b.district,b.street,b.street_number AS "streetNumber",b.address_complement AS "addressComplement",
-      b.phone,b.active,b.updated_at AS "updatedAt"
+      b.phone,b.active,b.created_at AS "createdAt",b.updated_at AS "updatedAt"
     FROM branches b JOIN users u ON u.tenant_id=b.tenant_id AND u.id=$1 AND u.active AND u.deleted_at IS NULL
     WHERE ($2='' OR concat_ws(' ',b.name,b.internal_code,b.city) ILIKE '%'||$2||'%') AND ($5 IS NULL OR $5<>'')
     ORDER BY b.active DESC,lower(b.name),b.id LIMIT $3 OFFSET $4
@@ -182,7 +183,7 @@ query ListSuppliers($search: String!, $limit: Int!, $offset: Int!, $requestKey: 
       s.postal_code AS "postalCode",s.state_code AS "stateCode",s.city,s.district,s.street,s.street_number AS "streetNumber",
       s.address_complement AS "addressComplement",s.contact_name AS "contactName",s.phone_primary AS "phonePrimary",
       s.phone_secondary AS "phoneSecondary",s.email,s.segment,s.payment_terms AS "paymentTerms",
-      s.payment_term_days AS "paymentTermDays",s.average_delivery_days AS "averageDeliveryDays",s.notes,s.active,s.updated_at AS "updatedAt"
+      s.payment_term_days AS "paymentTermDays",s.average_delivery_days AS "averageDeliveryDays",s.notes,s.active,s.created_at AS "createdAt",s.updated_at AS "updatedAt"
     FROM suppliers s JOIN users u ON u.tenant_id=s.tenant_id AND u.id=$1 AND u.active AND u.deleted_at IS NULL
     WHERE ($2='' OR concat_ws(' ',s.legal_name,s.trade_name,s.internal_code,s.cpf,s.cnpj,s.segment) ILIKE '%'||$2||'%')
       AND ($5 IS NULL OR $5<>'') ORDER BY s.active DESC,lower(s.legal_name),s.id LIMIT $3 OFFSET $4
@@ -194,7 +195,10 @@ query ListCustomers($search: String!, $limit: Int!, $offset: Int!, $requestKey: 
     SELECT c.id,c.name,c.birth_date AS "birthDate",c.gender,c.cpf,c.cnpj,c.marketing_opt_in AS "marketingOptIn",
       c.email,c.phone_primary AS "phonePrimary",c.phone_secondary AS "phoneSecondary",c.postal_code AS "postalCode",
       c.state_code AS "stateCode",c.city,c.district,c.street,c.street_number AS "streetNumber",
-      c.address_complement AS "addressComplement",c.preferences,c.notes,c.active,c.updated_at AS "updatedAt"
+      c.address_complement AS "addressComplement",c.preferences,
+      c.preferences->>'lowerClothingType' AS "lowerClothingType",c.preferences->>'lowerClothingSize' AS "lowerClothingSize",
+      c.preferences->>'upperClothingType' AS "upperClothingType",c.preferences->>'upperClothingSize' AS "upperClothingSize",
+      c.preferences->>'shoeSize' AS "shoeSize",c.notes,c.active,c.created_at AS "createdAt",c.updated_at AS "updatedAt"
     FROM customers c JOIN users u ON u.tenant_id=c.tenant_id AND u.id=$1 AND u.active AND u.deleted_at IS NULL
     WHERE ($2='' OR concat_ws(' ',c.name,c.cpf,c.cnpj,c.email,c.phone_primary) ILIKE '%'||$2||'%')
       AND ($5 IS NULL OR $5<>'') ORDER BY c.active DESC,lower(c.name),c.id LIMIT $3 OFFSET $4
@@ -208,7 +212,12 @@ query ListProducts($search: String!, $limit: Int!, $offset: Int!, $requestKey: S
       p.cost_price_cents::text AS "costPriceCents",p.weighted_product AS "weightedProduct",p.bundle_product AS "bundleProduct",
       p.allow_negative_stock AS "allowNegativeStock",p.notes,p.active,p.category_id AS "categoryId",c.name AS "categoryName",
       p.subcategory_id AS "subcategoryId",sc.name AS "subcategoryName",p.supplier_id AS "supplierId",
-      COALESCE(s.trade_name,s.legal_name) AS "supplierName",p.updated_at AS "updatedAt"
+      COALESCE(s.trade_name,s.legal_name) AS "supplierName",p.created_at AS "createdAt",p.updated_at AS "updatedAt",
+      EXISTS(SELECT 1 FROM promotions pr WHERE pr.product_id=p.id AND pr.tenant_id=p.tenant_id AND pr.active
+        AND pr.deleted_at IS NULL AND now() BETWEEN pr.starts_at AND pr.ends_at) AS "onPromotion",
+      COALESCE((SELECT pr.promotional_price_cents::text FROM promotions pr WHERE pr.product_id=p.id AND pr.tenant_id=p.tenant_id
+        AND pr.active AND pr.deleted_at IS NULL AND now() BETWEEN pr.starts_at AND pr.ends_at ORDER BY pr.starts_at DESC LIMIT 1),
+        p.sale_price_cents::text) AS "effectivePriceCents"
     FROM products p JOIN users u ON u.tenant_id=p.tenant_id AND u.id=$1 AND u.active AND u.deleted_at IS NULL
     JOIN categories c ON c.id=p.category_id AND c.tenant_id=p.tenant_id
     LEFT JOIN subcategories sc ON sc.id=p.subcategory_id AND sc.tenant_id=p.tenant_id
@@ -228,7 +237,7 @@ query RegistrationOptions($requestKey: String) @auth(level: USER) {
       'suppliers',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',s.id,'name',COALESCE(s.trade_name,s.legal_name)) ORDER BY lower(COALESCE(s.trade_name,s.legal_name)))
         FROM suppliers s WHERE s.tenant_id=u.tenant_id AND s.active AND s.deleted_at IS NULL),'[]'::jsonb),
       'products',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',p.id,'name',p.name,'costPriceCents',p.cost_price_cents::text) ORDER BY lower(p.name))
-        FROM products p WHERE p.tenant_id=u.tenant_id AND p.active AND p.deleted_at IS NULL),'[]'::jsonb)
+        FROM products p WHERE p.tenant_id=u.tenant_id AND p.active AND p.deleted_at IS NULL AND NOT p.bundle_product),'[]'::jsonb)
     ) AS data FROM users u WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND ($2 IS NULL OR $2<>'')
   """,params:[{_expr:"auth.uid"},$requestKey])
 }
@@ -245,7 +254,9 @@ query ProductComponents($productId: UUID!) @auth(level: USER) {
 query ProductPromotions($productId: UUID!) @auth(level: USER) {
   _select(sql: """
     SELECT pr.id,pr.promotional_price_cents::text AS "promotionalPriceCents",pr.starts_at AS "startsAt",
-      pr.ends_at AS "endsAt",pr.active,pr.updated_at AS "updatedAt"
+      pr.ends_at AS "endsAt",pr.active,pr.created_at AS "createdAt",pr.updated_at AS "updatedAt",
+      CASE WHEN NOT pr.active THEN 'INACTIVE' WHEN now()<pr.starts_at THEN 'SCHEDULED'
+        WHEN now()>pr.ends_at THEN 'ENDED' ELSE 'ACTIVE' END AS status
     FROM promotions pr JOIN users u ON u.tenant_id=pr.tenant_id AND u.id=$1 AND u.active
     WHERE pr.product_id=$2 ORDER BY pr.starts_at DESC
   """,params:[{_expr:"auth.uid"},$productId])
