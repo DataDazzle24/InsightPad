@@ -93,7 +93,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
 
         setProfile(currentProfile)
-        setPermissions(resolvePermissions(accessUser))
+        setPermissions(resolvePermissions(accessUser!))
         setError(null)
         setStatus('authenticated')
       } catch (cause) {
