@@ -168,6 +168,17 @@ export interface Customer_Key {
   __typename?: 'Customer_Key';
 }
 
+export interface DailyProfitDashboardData {
+  _select?: unknown[] | null;
+}
+
+export interface DailyProfitDashboardVariables {
+  from: DateString;
+  to: DateString;
+  branchId?: UUIDString | null;
+  requestKey: string;
+}
+
 export interface EnsureSalesDefaultsData {
   _execute?: number | null;
 }
@@ -180,6 +191,17 @@ export interface FinancialAccount_Key {
 export interface FinancialCategory_Key {
   id: UUIDString;
   __typename?: 'FinancialCategory_Key';
+}
+
+export interface FinancialIndicatorsDashboardData {
+  _select?: unknown[] | null;
+}
+
+export interface FinancialIndicatorsDashboardVariables {
+  from: DateString;
+  to: DateString;
+  filters: unknown;
+  requestKey: string;
 }
 
 export interface FiscalDocument_Key {
@@ -374,6 +396,22 @@ export interface PostSaleVariables {
   payload: unknown;
 }
 
+export interface PostStockAdjustmentData {
+  _execute?: number | null;
+}
+
+export interface PostStockAdjustmentVariables {
+  payload: unknown;
+}
+
+export interface PostStockTransferData {
+  _execute?: number | null;
+}
+
+export interface PostStockTransferVariables {
+  payload: unknown;
+}
+
 export interface ProductComponent_Key {
   parentProductId: UUIDString;
   componentProductId: UUIDString;
@@ -428,6 +466,16 @@ export interface RestoreSubcategoryData {
 
 export interface RestoreSubcategoryVariables {
   id: UUIDString;
+}
+
+export interface ReverseStockOperationData {
+  _execute?: number | null;
+}
+
+export interface ReverseStockOperationVariables {
+  operationId: string;
+  movementIds: unknown;
+  reason: string;
 }
 
 export interface RolePagePermission_Key {
@@ -521,6 +569,14 @@ export interface SavePromotionVariables {
   promotionalPriceCents: Int64String;
   startsAt: TimestampString;
   endsAt: TimestampString;
+}
+
+export interface SaveStockBatchData {
+  _execute?: number | null;
+}
+
+export interface SaveStockBatchVariables {
+  payload: unknown;
 }
 
 export interface SaveSupplierData {
@@ -673,6 +729,15 @@ export interface StockMovement_Key {
   __typename?: 'StockMovement_Key';
 }
 
+export interface StockOperationDetailsData {
+  _select?: unknown[] | null;
+}
+
+export interface StockOperationDetailsVariables {
+  operationId: string;
+  requestKey: string;
+}
+
 export interface StockTransferItem_Key {
   id: UUIDString;
   __typename?: 'StockTransferItem_Key';
@@ -681,6 +746,14 @@ export interface StockTransferItem_Key {
 export interface StockTransfer_Key {
   id: UUIDString;
   __typename?: 'StockTransfer_Key';
+}
+
+export interface StockWorkspaceData {
+  _select?: unknown[] | null;
+}
+
+export interface StockWorkspaceVariables {
+  requestKey: string;
 }
 
 export interface Subcategory_Key {
@@ -1166,6 +1239,54 @@ export const setPlatformRolePermissionRef: SetPlatformRolePermissionRef;
 export function setPlatformRolePermission(vars: SetPlatformRolePermissionVariables): MutationPromise<SetPlatformRolePermissionData, SetPlatformRolePermissionVariables>;
 export function setPlatformRolePermission(dc: DataConnect, vars: SetPlatformRolePermissionVariables): MutationPromise<SetPlatformRolePermissionData, SetPlatformRolePermissionVariables>;
 
+interface PostStockAdjustmentRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: PostStockAdjustmentVariables): MutationRef<PostStockAdjustmentData, PostStockAdjustmentVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: PostStockAdjustmentVariables): MutationRef<PostStockAdjustmentData, PostStockAdjustmentVariables>;
+  operationName: string;
+}
+export const postStockAdjustmentRef: PostStockAdjustmentRef;
+
+export function postStockAdjustment(vars: PostStockAdjustmentVariables): MutationPromise<PostStockAdjustmentData, PostStockAdjustmentVariables>;
+export function postStockAdjustment(dc: DataConnect, vars: PostStockAdjustmentVariables): MutationPromise<PostStockAdjustmentData, PostStockAdjustmentVariables>;
+
+interface PostStockTransferRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: PostStockTransferVariables): MutationRef<PostStockTransferData, PostStockTransferVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: PostStockTransferVariables): MutationRef<PostStockTransferData, PostStockTransferVariables>;
+  operationName: string;
+}
+export const postStockTransferRef: PostStockTransferRef;
+
+export function postStockTransfer(vars: PostStockTransferVariables): MutationPromise<PostStockTransferData, PostStockTransferVariables>;
+export function postStockTransfer(dc: DataConnect, vars: PostStockTransferVariables): MutationPromise<PostStockTransferData, PostStockTransferVariables>;
+
+interface SaveStockBatchRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SaveStockBatchVariables): MutationRef<SaveStockBatchData, SaveStockBatchVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SaveStockBatchVariables): MutationRef<SaveStockBatchData, SaveStockBatchVariables>;
+  operationName: string;
+}
+export const saveStockBatchRef: SaveStockBatchRef;
+
+export function saveStockBatch(vars: SaveStockBatchVariables): MutationPromise<SaveStockBatchData, SaveStockBatchVariables>;
+export function saveStockBatch(dc: DataConnect, vars: SaveStockBatchVariables): MutationPromise<SaveStockBatchData, SaveStockBatchVariables>;
+
+interface ReverseStockOperationRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ReverseStockOperationVariables): MutationRef<ReverseStockOperationData, ReverseStockOperationVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ReverseStockOperationVariables): MutationRef<ReverseStockOperationData, ReverseStockOperationVariables>;
+  operationName: string;
+}
+export const reverseStockOperationRef: ReverseStockOperationRef;
+
+export function reverseStockOperation(vars: ReverseStockOperationVariables): MutationPromise<ReverseStockOperationData, ReverseStockOperationVariables>;
+export function reverseStockOperation(dc: DataConnect, vars: ReverseStockOperationVariables): MutationPromise<ReverseStockOperationData, ReverseStockOperationVariables>;
+
 interface GetCurrentUserRef {
   /* Allow users to create refs without passing in DataConnect */
   (): QueryRef<GetCurrentUserData, undefined>;
@@ -1357,4 +1478,52 @@ export const platformAdminWorkspaceRef: PlatformAdminWorkspaceRef;
 
 export function platformAdminWorkspace(vars: PlatformAdminWorkspaceVariables, options?: ExecuteQueryOptions): QueryPromise<PlatformAdminWorkspaceData, PlatformAdminWorkspaceVariables>;
 export function platformAdminWorkspace(dc: DataConnect, vars: PlatformAdminWorkspaceVariables, options?: ExecuteQueryOptions): QueryPromise<PlatformAdminWorkspaceData, PlatformAdminWorkspaceVariables>;
+
+interface StockWorkspaceRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: StockWorkspaceVariables): QueryRef<StockWorkspaceData, StockWorkspaceVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: StockWorkspaceVariables): QueryRef<StockWorkspaceData, StockWorkspaceVariables>;
+  operationName: string;
+}
+export const stockWorkspaceRef: StockWorkspaceRef;
+
+export function stockWorkspace(vars: StockWorkspaceVariables, options?: ExecuteQueryOptions): QueryPromise<StockWorkspaceData, StockWorkspaceVariables>;
+export function stockWorkspace(dc: DataConnect, vars: StockWorkspaceVariables, options?: ExecuteQueryOptions): QueryPromise<StockWorkspaceData, StockWorkspaceVariables>;
+
+interface DailyProfitDashboardRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: DailyProfitDashboardVariables): QueryRef<DailyProfitDashboardData, DailyProfitDashboardVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: DailyProfitDashboardVariables): QueryRef<DailyProfitDashboardData, DailyProfitDashboardVariables>;
+  operationName: string;
+}
+export const dailyProfitDashboardRef: DailyProfitDashboardRef;
+
+export function dailyProfitDashboard(vars: DailyProfitDashboardVariables, options?: ExecuteQueryOptions): QueryPromise<DailyProfitDashboardData, DailyProfitDashboardVariables>;
+export function dailyProfitDashboard(dc: DataConnect, vars: DailyProfitDashboardVariables, options?: ExecuteQueryOptions): QueryPromise<DailyProfitDashboardData, DailyProfitDashboardVariables>;
+
+interface StockOperationDetailsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: StockOperationDetailsVariables): QueryRef<StockOperationDetailsData, StockOperationDetailsVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: StockOperationDetailsVariables): QueryRef<StockOperationDetailsData, StockOperationDetailsVariables>;
+  operationName: string;
+}
+export const stockOperationDetailsRef: StockOperationDetailsRef;
+
+export function stockOperationDetails(vars: StockOperationDetailsVariables, options?: ExecuteQueryOptions): QueryPromise<StockOperationDetailsData, StockOperationDetailsVariables>;
+export function stockOperationDetails(dc: DataConnect, vars: StockOperationDetailsVariables, options?: ExecuteQueryOptions): QueryPromise<StockOperationDetailsData, StockOperationDetailsVariables>;
+
+interface FinancialIndicatorsDashboardRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: FinancialIndicatorsDashboardVariables): QueryRef<FinancialIndicatorsDashboardData, FinancialIndicatorsDashboardVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: FinancialIndicatorsDashboardVariables): QueryRef<FinancialIndicatorsDashboardData, FinancialIndicatorsDashboardVariables>;
+  operationName: string;
+}
+export const financialIndicatorsDashboardRef: FinancialIndicatorsDashboardRef;
+
+export function financialIndicatorsDashboard(vars: FinancialIndicatorsDashboardVariables, options?: ExecuteQueryOptions): QueryPromise<FinancialIndicatorsDashboardData, FinancialIndicatorsDashboardVariables>;
+export function financialIndicatorsDashboard(dc: DataConnect, vars: FinancialIndicatorsDashboardVariables, options?: ExecuteQueryOptions): QueryPromise<FinancialIndicatorsDashboardData, FinancialIndicatorsDashboardVariables>;
 

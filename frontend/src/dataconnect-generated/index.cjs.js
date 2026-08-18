@@ -511,6 +511,62 @@ exports.setPlatformRolePermission = function setPlatformRolePermission(dcOrVars,
 }
 ;
 
+const postStockAdjustmentRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'PostStockAdjustment', inputVars);
+}
+postStockAdjustmentRef.operationName = 'PostStockAdjustment';
+exports.postStockAdjustmentRef = postStockAdjustmentRef;
+
+exports.postStockAdjustment = function postStockAdjustment(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(postStockAdjustmentRef(dcInstance, inputVars));
+}
+;
+
+const postStockTransferRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'PostStockTransfer', inputVars);
+}
+postStockTransferRef.operationName = 'PostStockTransfer';
+exports.postStockTransferRef = postStockTransferRef;
+
+exports.postStockTransfer = function postStockTransfer(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(postStockTransferRef(dcInstance, inputVars));
+}
+;
+
+const saveStockBatchRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'SaveStockBatch', inputVars);
+}
+saveStockBatchRef.operationName = 'SaveStockBatch';
+exports.saveStockBatchRef = saveStockBatchRef;
+
+exports.saveStockBatch = function saveStockBatch(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(saveStockBatchRef(dcInstance, inputVars));
+}
+;
+
+const reverseStockOperationRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'ReverseStockOperation', inputVars);
+}
+reverseStockOperationRef.operationName = 'ReverseStockOperation';
+exports.reverseStockOperationRef = reverseStockOperationRef;
+
+exports.reverseStockOperation = function reverseStockOperation(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(reverseStockOperationRef(dcInstance, inputVars));
+}
+;
+
 const getCurrentUserRef = (dc) => {
   const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
   dcInstance._useGeneratedSdk();
@@ -748,5 +804,65 @@ exports.platformAdminWorkspace = function platformAdminWorkspace(dcOrVars, varsO
   
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(platformAdminWorkspaceRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const stockWorkspaceRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'StockWorkspace', inputVars);
+}
+stockWorkspaceRef.operationName = 'StockWorkspace';
+exports.stockWorkspaceRef = stockWorkspaceRef;
+
+exports.stockWorkspace = function stockWorkspace(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(stockWorkspaceRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const dailyProfitDashboardRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'DailyProfitDashboard', inputVars);
+}
+dailyProfitDashboardRef.operationName = 'DailyProfitDashboard';
+exports.dailyProfitDashboardRef = dailyProfitDashboardRef;
+
+exports.dailyProfitDashboard = function dailyProfitDashboard(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(dailyProfitDashboardRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const stockOperationDetailsRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'StockOperationDetails', inputVars);
+}
+stockOperationDetailsRef.operationName = 'StockOperationDetails';
+exports.stockOperationDetailsRef = stockOperationDetailsRef;
+
+exports.stockOperationDetails = function stockOperationDetails(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(stockOperationDetailsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const financialIndicatorsDashboardRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'FinancialIndicatorsDashboard', inputVars);
+}
+financialIndicatorsDashboardRef.operationName = 'FinancialIndicatorsDashboard';
+exports.financialIndicatorsDashboardRef = financialIndicatorsDashboardRef;
+
+exports.financialIndicatorsDashboard = function financialIndicatorsDashboard(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(financialIndicatorsDashboardRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;

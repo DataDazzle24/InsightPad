@@ -33,6 +33,6 @@ export const moduleMenus = {
     { pageKey: 'CAD_FILIAL', label: 'Filiais', description: 'Configure unidades e pontos de operação', icon: 'store' },
   ]},
   dashboards: { title: 'Dashboard', subtitle: 'Transforme dados em decisões', items: [
-    { pageKey: 'RELATORIOS_OPERACIONAIS', label: 'Relatórios Operacionais', description: 'Acompanhe os principais indicadores', icon: 'query_stats' },
+    { pageKey: 'RELATORIOS_OPERACIONAIS', label: 'Faturamento e Lucro', description: 'Acompanhe o resultado diário do negócio', icon: 'query_stats' },
   ]},
 } as const
