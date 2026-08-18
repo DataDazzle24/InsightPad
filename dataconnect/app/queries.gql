@@ -368,9 +368,9 @@ query ProductPromotions($productId: UUID!) @auth(level: USER) {
 query PlatformAdminWorkspace($requestKey: String!) @auth(level: USER) {
   _select(sql: """
     WITH actor AS (
-      SELECT u.id,u.tenant_id,(r.name='Administrador da Plataforma') AS is_platform FROM users u JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      SELECT u.id,u.tenant_id,true AS is_platform FROM users u JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
       WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
-        AND r.system_role AND r.name IN ('Administrador da Plataforma','Administrador')
+        AND r.system_role AND r.name='Administrador da Plataforma'
     )
     SELECT jsonb_build_object(
       'tenants',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',t.id,'legalName',t.legal_name,'tradeName',t.trade_name,'document',t.document,'email',t.email,'phone',t.phone,'planCode',t.plan_code,'startsOn',t.starts_on,'expiresOn',t.expires_on,'active',t.active,'userCount',(SELECT count(*) FROM users u WHERE u.tenant_id=t.id AND u.deleted_at IS NULL),'branchCount',(SELECT count(*) FROM branches b WHERE b.tenant_id=t.id AND b.deleted_at IS NULL)) ORDER BY lower(COALESCE(t.trade_name,t.legal_name))) FROM tenants t,actor a WHERE t.deleted_at IS NULL AND (a.is_platform OR t.id=a.tenant_id)),'[]'::jsonb),
