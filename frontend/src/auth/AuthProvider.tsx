@@ -79,6 +79,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const active =
           Boolean(currentProfile) &&
           Boolean(accessUser) &&
+          currentProfile?.id === user.uid &&
+          accessUser?.id === user.uid &&
           currentProfile?.active === true &&
           currentProfile?.tenant.active === true &&
           currentProfile?.role.active === true
