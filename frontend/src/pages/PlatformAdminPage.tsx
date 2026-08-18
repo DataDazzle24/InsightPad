@@ -82,7 +82,8 @@ export function PlatformAdminPage() {
     [tenantForm, setTenantForm] = useState<Record<string, string>>({
       planCode: "BRONZE",
     }),
-    [userForm, setUserForm] = useState<Record<string, string>>({});
+    [userForm, setUserForm] = useState<Record<string, string>>({}),
+    [editingUserId, setEditingUserId] = useState<string | null>(null);
   const load = useCallback(async () => {
     setBusy(true);
     try {
@@ -175,6 +176,7 @@ export function PlatformAdminPage() {
       if (!result.data._execute) throw new Error();
       setUserModal(false);
       setUserForm({});
+      setEditingUserId(null);
       setNotice({
         type: "success",
         text: "Usuário vinculado ao ambiente com sucesso.",
@@ -312,6 +314,7 @@ export function PlatformAdminPage() {
                 setUserForm({
                   tenantId: isPlatform ? "" : (data.tenants[0]?.id ?? ""),
                 });
+                setEditingUserId(null);
                 setUserModal(true);
               }
             }}
@@ -418,6 +421,7 @@ export function PlatformAdminPage() {
                               tenantId: item.tenantId,
                               roleId: item.roleId,
                             });
+                            setEditingUserId(item.id);
                             setUserModal(true);
                           }}
                         >
@@ -557,7 +561,7 @@ export function PlatformAdminPage() {
             <header>
               <div>
                 <span className="eyebrow">ACESSO</span>
-                <h2>Vincular usuário</h2>
+                <h2>{editingUserId ? "Editar usuário" : "Vincular usuário"}</h2>
               </div>
               <button onClick={() => setUserModal(false)}>×</button>
             </header>
@@ -577,7 +581,14 @@ export function PlatformAdminPage() {
                       setUserForm({ ...userForm, uid: e.target.value.trim() })
                     }
                     required
+                    readOnly={Boolean(editingUserId)}
                   />
+                  {editingUserId && (
+                    <small>
+                      O UID é a identidade imutável do Firebase. Para trocar a
+                      conta, inative este vínculo e crie um novo.
+                    </small>
+                  )}
                 </label>
                 <label>
                   Nome *
@@ -645,7 +656,9 @@ export function PlatformAdminPage() {
                 <button type="button" onClick={() => setUserModal(false)}>
                   Cancelar
                 </button>
-                <button className="catalog-primary">Vincular acesso</button>
+                <button className="catalog-primary">
+                  {editingUserId ? "Salvar alterações" : "Vincular acesso"}
+                </button>
               </footer>
             </form>
           </section>
