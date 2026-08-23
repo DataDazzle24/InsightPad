@@ -1500,6 +1500,28 @@ mutation RegisterCashMovement($sessionId: UUID!, $movementType: String!, $amount
   """,params:[{_expr:"auth.uid"},$sessionId,$movementType,$amountCents,$description])
 }
 
+mutation ClaimDeviceSession($sessionToken: String!, $deviceId: String!, $deviceName: String!) @auth(level: USER) {
+  _execute(sql: """
+    INSERT INTO user_device_sessions(user_id,tenant_id,session_token,device_id,device_name,claimed_at,last_seen_at)
+    SELECT u.id,u.tenant_id,left($2,128),left($3,128),left($4,180),now(),now()
+    FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+    WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND length($2)>=32 AND length($3)>=16
+    ON CONFLICT(user_id) DO UPDATE SET tenant_id=EXCLUDED.tenant_id,session_token=EXCLUDED.session_token,device_id=EXCLUDED.device_id,device_name=EXCLUDED.device_name,claimed_at=now(),last_seen_at=now()
+  """,params:[{_expr:"auth.uid"},$sessionToken,$deviceId,$deviceName])
+}
+
+mutation TouchDeviceSession($sessionToken: String!) @auth(level: USER) {
+  _execute(sql: """
+    UPDATE user_device_sessions SET last_seen_at=now() WHERE user_id=$1 AND session_token=$2
+  """,params:[{_expr:"auth.uid"},$sessionToken])
+}
+
+mutation ReleaseDeviceSession($sessionToken: String!) @auth(level: USER) {
+  _execute(sql: """
+    DELETE FROM user_device_sessions WHERE user_id=$1 AND session_token=$2
+  """,params:[{_expr:"auth.uid"},$sessionToken])
+}
+
 mutation CloseCashSession($sessionId: UUID!, $countedAmountCents: Int64!, $notes: String!) @auth(level: USER) @transaction {
   _execute(sql: """
     WITH actor AS (

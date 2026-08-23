@@ -80,6 +80,19 @@ type User @table(name: "users", key: "id") {
   deletedAt: Timestamp @col(name: "deleted_at")
 }
 
+# One active browser/device lease per user. A new claim atomically replaces the
+# previous token; clients with the displaced token are signed out on recheck.
+type UserDeviceSession @table(name: "user_device_sessions", key: "user") {
+  user: User!
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  sessionToken: String! @col(name: "session_token", dataType: "varchar(128)")
+  deviceId: String! @col(name: "device_id", dataType: "varchar(128)")
+  deviceName: String @col(name: "device_name", dataType: "varchar(180)")
+  claimedAt: Timestamp! @default(expr: "request.time") @col(name: "claimed_at")
+  lastSeenAt: Timestamp! @default(expr: "request.time") @col(name: "last_seen_at")
+}
+
 type RolePagePermission
   @table(name: "role_page_permissions", key: ["role", "page"]) {
   role: Role!

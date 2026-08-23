@@ -8,7 +8,7 @@ import {
   signOut as firebaseSignOut,
   type User,
 } from 'firebase/auth'
-import { getDataConnect } from 'firebase/data-connect'
+import { executeMutation, executeQuery, getDataConnect, mutationRef, queryRef } from 'firebase/data-connect'
 import {
   connectorConfig,
   getCurrentUser,
@@ -27,6 +27,26 @@ interface AuthProviderProps { children: ReactNode }
 
 const dataConnect = getDataConnect(firebaseApp, connectorConfig)
 const ACCESS_RECHECK_MS = 30_000
+let pendingSessionToken = ''
+const deviceId=()=>{const key='insightpad.device.id';let value=localStorage.getItem(key);if(!value){value=`${crypto.randomUUID()}${crypto.randomUUID()}`;localStorage.setItem(key,value)}return value}
+const sessionKey=(uid:string)=>`insightpad.device.session:${uid}`
+
+async function validateExclusiveSession(user:User){
+  const key=sessionKey(user.uid)
+  let token=pendingSessionToken||localStorage.getItem(key)||''
+  const mustClaim=Boolean(pendingSessionToken)||!token
+  if(!token)token=`${crypto.randomUUID()}${crypto.randomUUID()}`
+  if(mustClaim){
+    localStorage.setItem(key,token)
+    await executeMutation(mutationRef(dataConnect,'ClaimDeviceSession',{sessionToken:token,deviceId:deviceId(),deviceName:`${navigator.platform||'Dispositivo'} · ${navigator.userAgent.slice(0,120)}`}))
+    pendingSessionToken=''
+    return
+  }
+  const result=await executeQuery(queryRef(dataConnect,'ValidateDeviceSession',{sessionToken:token,requestKey:crypto.randomUUID()}))
+  const valid=Boolean(((result.data as{_select?:Array<{valid?:boolean}>})._select??[])[0]?.valid)
+  if(!valid)throw new Error('DEVICE_SESSION_REPLACED')
+  await executeMutation(mutationRef(dataConnect,'TouchDeviceSession',{sessionToken:token}))
+}
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null)
@@ -94,6 +114,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
           return
         }
 
+        await validateExclusiveSession(user)
+
         setProfile(currentProfile)
         setPermissions(resolvePermissions(accessUser!))
         setError(null)
@@ -105,11 +127,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
           auth.currentUser?.uid !== user.uid
         ) return
 
-        console.error('Falha ao validar perfil e permissões:', cause)
+        console.error('Falha ao validar perfil, permissões ou dispositivo:', cause)
         setProfile(null)
         setPermissions({})
         setStatus('unauthorized')
-        setError('Não foi possível validar o perfil do usuário.')
+        setError(cause instanceof Error&&cause.message==='DEVICE_SESSION_REPLACED'?'Esta conta foi acessada em outro dispositivo. Esta sessão foi encerrada.':'Não foi possível validar o perfil do usuário.')
+        await firebaseSignOut(auth)
       }
     }
 
@@ -148,9 +171,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setError(null)
     setStatus('loading')
     try {
+      pendingSessionToken=`${crypto.randomUUID()}${crypto.randomUUID()}`
       await setPersistence(auth, browserLocalPersistence)
       await signInWithEmailAndPassword(auth, email.trim(), password)
     } catch {
+      pendingSessionToken=''
       setStatus('unauthenticated')
       setError('E-mail ou senha inválidos.')
       throw new Error('E-mail ou senha inválidos.')
@@ -159,6 +184,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   async function signOut() {
     setStatus('loading')
+    const user=auth.currentUser,token=user?localStorage.getItem(sessionKey(user.uid)):null
+    if(user&&token){try{await executeMutation(mutationRef(dataConnect,'ReleaseDeviceSession',{sessionToken:token}))}catch(cause){console.warn('Não foi possível liberar a sessão do dispositivo.',cause)}localStorage.removeItem(sessionKey(user.uid))}
     await firebaseSignOut(auth)
   }
 
