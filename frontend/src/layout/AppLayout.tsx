@@ -47,6 +47,7 @@ export function AppLayout() {
         if (event.target instanceof HTMLInputElement)
           smartMaskInput(event.target);
       }}
+      onFocusCapture={(event)=>{if(event.target instanceof HTMLInputElement&&event.target.type==='number'&&Number(event.target.value)===0)event.target.select()}}
     >
       <header className="legacy-header">
         <Link
