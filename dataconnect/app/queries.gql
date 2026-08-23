@@ -91,7 +91,8 @@ query SalesWorkspace($branchId: UUID, $requestKey: String!) @auth(level: USER) {
       WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_access,rp.can_access,false)
     )
     SELECT jsonb_build_object(
-      'branches',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',b.id,'name',b.name,'internalCode',b.internal_code) ORDER BY lower(b.name)) FROM branches b,actor a WHERE b.tenant_id=a.tenant_id AND b.active AND b.deleted_at IS NULL),'[]'::jsonb),
+      'tenant',(SELECT jsonb_build_object('legalName',t.legal_name,'tradeName',t.trade_name,'document',t.document,'email',t.email,'phone',t.phone) FROM tenants t,actor a WHERE t.id=a.tenant_id LIMIT 1),
+      'branches',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',b.id,'name',b.name,'internalCode',b.internal_code,'postalCode',b.postal_code,'stateCode',b.state_code,'city',b.city,'district',b.district,'street',b.street,'streetNumber',b.street_number,'addressComplement',b.address_complement,'phone',b.phone) ORDER BY lower(b.name)) FROM branches b,actor a WHERE b.tenant_id=a.tenant_id AND b.active AND b.deleted_at IS NULL),'[]'::jsonb),
       'customers',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',c.id,'name',c.name,'cpf',c.cpf,'email',c.email,'phone',c.phone_primary) ORDER BY lower(c.name)) FROM customers c,actor a WHERE c.tenant_id=a.tenant_id AND c.active AND c.deleted_at IS NULL),'[]'::jsonb),
       'paymentMethods',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',p.id,'code',p.code,'name',p.name,'requiresChange',p.requires_change) ORDER BY lower(p.name)) FROM payment_methods p,actor a WHERE p.tenant_id=a.tenant_id AND p.active),'[]'::jsonb),
       'products',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',p.id,'name',p.name,'internalCode',p.internal_code,'ean',p.ean,'weightedProduct',p.weighted_product,'bundleProduct',p.bundle_product,'allowNegativeStock',p.allow_negative_stock,'listPriceCents',p.sale_price_cents,'effectivePriceCents',COALESCE(pr.promotional_price_cents,p.sale_price_cents),'costPriceCents',p.cost_price_cents,'stock',COALESCE(sb.quantity,0),'stockByBranches',COALESCE((SELECT jsonb_agg(jsonb_build_object('branchId',br.id,'branchName',br.name,'quantity',COALESCE(all_sb.quantity,0)) ORDER BY lower(br.name)) FROM branches br LEFT JOIN stock_balances all_sb ON all_sb.tenant_id=br.tenant_id AND all_sb.branch_id=br.id AND all_sb.product_id=p.id WHERE br.tenant_id=p.tenant_id AND br.active AND br.deleted_at IS NULL),'[]'::jsonb)) ORDER BY lower(p.name))
@@ -99,7 +100,7 @@ query SalesWorkspace($branchId: UUID, $requestKey: String!) @auth(level: USER) {
         LEFT JOIN LATERAL (SELECT x.promotional_price_cents FROM promotions x WHERE x.tenant_id=p.tenant_id AND x.product_id=p.id AND x.active AND x.deleted_at IS NULL AND now()>=x.starts_at AND now()<x.ends_at ORDER BY x.promotional_price_cents,x.id LIMIT 1) pr ON true
         LEFT JOIN stock_balances sb ON sb.tenant_id=p.tenant_id AND sb.product_id=p.id AND sb.branch_id=$2
         WHERE p.tenant_id=a.tenant_id AND p.active AND p.deleted_at IS NULL),'[]'::jsonb),
-      'openSession',COALESCE((SELECT jsonb_build_object('id',cs.id,'openedAt',cs.opened_at,'openingAmountCents',cs.opening_amount_cents) FROM cash_sessions cs,actor a WHERE cs.tenant_id=a.tenant_id AND cs.branch_id=$2 AND cs.status='OPEN' ORDER BY cs.opened_at DESC LIMIT 1),'null'::jsonb)
+      'openSession',COALESCE((SELECT jsonb_build_object('id',cs.id,'openedAt',cs.opened_at,'openingAmountCents',cs.opening_amount_cents,'expectedAmountCents',cs.opening_amount_cents+COALESCE((SELECT sum(cm.amount_cents) FROM cash_movements cm WHERE cm.session_id=cs.id AND cm.movement_type<>'OPENING'),0),'movementCount',(SELECT count(*) FROM cash_movements cm WHERE cm.session_id=cs.id AND cm.movement_type<>'OPENING')) FROM cash_sessions cs,actor a WHERE cs.tenant_id=a.tenant_id AND cs.branch_id=$2 AND cs.status='OPEN' ORDER BY cs.opened_at DESC LIMIT 1),'null'::jsonb)
     ) AS data
     WHERE $3<>''
   """,params:[{_expr:"auth.uid"},$branchId,$requestKey])
@@ -511,5 +512,86 @@ query FinancialIndicatorsDashboard($from: Date!, $to: Date!, $filters: Any!, $re
       'daily',COALESCE((SELECT jsonb_agg(jsonb_build_object('date',day,'volume',volume,'revenueCents',revenue::text,'profitCents',(revenue-cost)::text) ORDER BY day) FROM daily_values),'[]'::jsonb),
       'products',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',id,'name',name,'category',category,'subcategory',subcategory,'quantity',quantity,'revenueCents',revenue::text,'costCents',cost::text,'profitCents',(revenue-cost)::text,'marginPercent',CASE WHEN revenue=0 THEN 0 ELSE round((revenue-cost)*100.0/revenue,2) END,'lineCount',line_count) ORDER BY revenue DESC) FROM product_values),'[]'::jsonb)
     ) AS data FROM actor WHERE $5<>''
+  """,params:[{_expr:"auth.uid"},$from,$to,$filters,$requestKey])
+}
+
+query OperationalAnalyticsDashboard($from: Date!, $to: Date!, $filters: Any!, $requestKey: String!) @auth(level: USER) {
+  _select(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id,COALESCE(NULLIF(t.timezone,''),'America/Sao_Paulo') timezone
+      FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+      JOIN app_pages pg ON pg.page_key='RELATORIOS_OPERACIONAIS' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_access,rp.can_access,false)
+    ), f AS (SELECT COALESCE($4::jsonb,'{}') value), bounds AS (SELECT ($2::date-($3::date-$2::date+1))::date previous_from,($2::date-1)::date previous_to), sale_lines AS (
+      SELECT s.id sale_id,s.customer_id,s.branch_id,(s.sold_at AT TIME ZONE a.timezone)::date day,i.product_id,i.quantity,i.total_cents,round(i.quantity*i.unit_cost_cents)::bigint cost,p.category_id,p.subcategory_id,p.supplier_id
+      FROM sales s JOIN actor a ON a.tenant_id=s.tenant_id JOIN sale_items i ON i.sale_id=s.id AND i.tenant_id=s.tenant_id AND i.status='ACTIVE'
+      JOIN products p ON p.id=i.product_id AND p.tenant_id=i.tenant_id CROSS JOIN f
+      WHERE s.status='COMPLETED' AND (s.sold_at AT TIME ZONE a.timezone)::date BETWEEN $2::date AND $3::date
+        AND (COALESCE(jsonb_array_length(f.value->'branches'),0)=0 OR s.branch_id::text IN(SELECT jsonb_array_elements_text(f.value->'branches')))
+        AND (COALESCE(jsonb_array_length(f.value->'products'),0)=0 OR p.id::text IN(SELECT jsonb_array_elements_text(f.value->'products')))
+        AND (COALESCE(jsonb_array_length(f.value->'categories'),0)=0 OR p.category_id::text IN(SELECT jsonb_array_elements_text(f.value->'categories')))
+        AND (COALESCE(jsonb_array_length(f.value->'subcategories'),0)=0 OR p.subcategory_id::text IN(SELECT jsonb_array_elements_text(f.value->'subcategories')))
+        AND (COALESCE(jsonb_array_length(f.value->'suppliers'),0)=0 OR p.supplier_id::text IN(SELECT jsonb_array_elements_text(f.value->'suppliers')))
+    ), previous_lines AS (
+      SELECT p.category_id,p.subcategory_id,i.total_cents FROM sales s JOIN actor a ON a.tenant_id=s.tenant_id JOIN sale_items i ON i.sale_id=s.id AND i.status='ACTIVE' JOIN products p ON p.id=i.product_id CROSS JOIN bounds b CROSS JOIN f
+      WHERE s.status='COMPLETED' AND (s.sold_at AT TIME ZONE a.timezone)::date BETWEEN b.previous_from AND b.previous_to
+        AND (COALESCE(jsonb_array_length(f.value->'branches'),0)=0 OR s.branch_id::text IN(SELECT jsonb_array_elements_text(f.value->'branches')))
+        AND (COALESCE(jsonb_array_length(f.value->'products'),0)=0 OR p.id::text IN(SELECT jsonb_array_elements_text(f.value->'products')))
+        AND (COALESCE(jsonb_array_length(f.value->'categories'),0)=0 OR p.category_id::text IN(SELECT jsonb_array_elements_text(f.value->'categories')))
+        AND (COALESCE(jsonb_array_length(f.value->'subcategories'),0)=0 OR p.subcategory_id::text IN(SELECT jsonb_array_elements_text(f.value->'subcategories')))
+        AND (COALESCE(jsonb_array_length(f.value->'suppliers'),0)=0 OR p.supplier_id::text IN(SELECT jsonb_array_elements_text(f.value->'suppliers')))
+    ), previous_values AS (SELECT category_id id,'Categoria' level,sum(total_cents)::bigint revenue FROM previous_lines GROUP BY category_id UNION ALL SELECT subcategory_id,'Subcategoria',sum(total_cents)::bigint FROM previous_lines WHERE subcategory_id IS NOT NULL GROUP BY subcategory_id), sale_totals AS (SELECT sale_id,customer_id,branch_id,day,sum(total_cents)::bigint revenue,sum(cost)::bigint cost,sum(quantity) quantity FROM sale_lines GROUP BY sale_id,customer_id,branch_id,day), stock_lines AS (
+      SELECT m.id,m.product_id,m.branch_id,(m.occurred_at AT TIME ZONE a.timezone)::date day,m.quantity,m.unit_cost_cents,mt.code,mt.direction,m.fiscal_document_id
+      FROM stock_movements m JOIN actor a ON a.tenant_id=m.tenant_id JOIN stock_movement_types mt ON mt.id=m.movement_type_id
+      JOIN products p ON p.id=m.product_id AND p.tenant_id=m.tenant_id CROSS JOIN f
+      WHERE m.status='POSTED' AND (m.occurred_at AT TIME ZONE a.timezone)::date BETWEEN $2::date AND $3::date
+        AND (COALESCE(jsonb_array_length(f.value->'branches'),0)=0 OR m.branch_id::text IN(SELECT jsonb_array_elements_text(f.value->'branches')))
+        AND (COALESCE(jsonb_array_length(f.value->'products'),0)=0 OR p.id::text IN(SELECT jsonb_array_elements_text(f.value->'products')))
+        AND (COALESCE(jsonb_array_length(f.value->'categories'),0)=0 OR p.category_id::text IN(SELECT jsonb_array_elements_text(f.value->'categories')))
+        AND (COALESCE(jsonb_array_length(f.value->'subcategories'),0)=0 OR p.subcategory_id::text IN(SELECT jsonb_array_elements_text(f.value->'subcategories')))
+        AND (COALESCE(jsonb_array_length(f.value->'suppliers'),0)=0 OR p.supplier_id::text IN(SELECT jsonb_array_elements_text(f.value->'suppliers')))
+    ), stock_monthly AS (
+      SELECT date_trunc('month',day)::date month,
+        sum(quantity) FILTER(WHERE direction='IN') inbound_quantity,(sum(quantity*unit_cost_cents) FILTER(WHERE direction='IN'))::bigint inbound_value,
+        sum(quantity) FILTER(WHERE code='SALE') sale_quantity,(sum(quantity*unit_cost_cents) FILTER(WHERE code='SALE'))::bigint sale_cost,
+        sum(quantity) FILTER(WHERE direction='OUT' AND code<>'SALE') loss_quantity,(sum(quantity*unit_cost_cents) FILTER(WHERE direction='OUT' AND code<>'SALE'))::bigint loss_value
+      FROM stock_lines GROUP BY date_trunc('month',day)::date
+    ), customer_values AS (
+      SELECT c.id,c.name,c.city,c.state_code,c.birth_date,count(st.sale_id)::int purchases,COALESCE(sum(st.revenue),0)::bigint revenue,max(st.day) last_purchase
+      FROM customers c JOIN actor a ON a.tenant_id=c.tenant_id LEFT JOIN sale_totals st ON st.customer_id=c.id
+      WHERE c.active AND c.deleted_at IS NULL GROUP BY c.id
+    ), customer_rank AS (
+      SELECT cv.*,sum(revenue) OVER() total_revenue,sum(revenue) OVER(ORDER BY revenue DESC,id)/NULLIF(sum(revenue) OVER(),0)::numeric cumulative
+      FROM customer_values cv
+    ), category_values AS (
+      SELECT c.id,c.name,'Categoria' level,sum(sl.quantity) quantity,sum(sl.total_cents)::bigint revenue,sum(sl.cost)::bigint cost,COALESCE(pv.revenue,0)::bigint previous_revenue
+      FROM sale_lines sl JOIN categories c ON c.id=sl.category_id LEFT JOIN previous_values pv ON pv.id=c.id AND pv.level='Categoria' GROUP BY c.id,c.name,pv.revenue
+      UNION ALL
+      SELECT sc.id,sc.name,'Subcategoria',sum(sl.quantity),sum(sl.total_cents)::bigint,sum(sl.cost)::bigint,COALESCE(pv.revenue,0)::bigint
+      FROM sale_lines sl JOIN subcategories sc ON sc.id=sl.subcategory_id LEFT JOIN previous_values pv ON pv.id=sc.id AND pv.level='Subcategoria' GROUP BY sc.id,sc.name,pv.revenue
+    ), fiscal_docs AS (
+      SELECT DISTINCT fd.id,fd.freight_cents,fd.insurance_cents,fd.icms_cents,fd.icms_st_cents,fd.ipi_cents FROM stock_lines sl JOIN fiscal_documents fd ON fd.id=sl.fiscal_document_id
+    ), fiscal_totals AS (
+      SELECT COALESCE(sum(freight_cents),0)::bigint freight,COALESCE(sum(insurance_cents+icms_cents+icms_st_cents+ipi_cents),0)::bigint extras FROM fiscal_docs
+    )
+    SELECT jsonb_build_object(
+      'stock',jsonb_build_object(
+        'cards',jsonb_build_object(
+          'inboundQuantity',COALESCE((SELECT sum(quantity) FROM stock_lines WHERE direction='IN'),0),'inboundValueCents',COALESCE((SELECT sum(quantity*unit_cost_cents)::bigint FROM stock_lines WHERE direction='IN'),0)::text,
+          'freightCents',(SELECT freight::text FROM fiscal_totals),'extraCostsCents',(SELECT extras::text FROM fiscal_totals),
+          'saleQuantity',COALESCE((SELECT sum(quantity) FROM stock_lines WHERE code='SALE'),0),'saleCostCents',COALESCE((SELECT sum(quantity*unit_cost_cents)::bigint FROM stock_lines WHERE code='SALE'),0)::text,
+          'saleProfitCents',(COALESCE((SELECT sum(revenue-cost) FROM sale_totals),0))::text,'lossQuantity',COALESCE((SELECT sum(quantity) FROM stock_lines WHERE direction='OUT' AND code<>'SALE'),0),'lossValueCents',COALESCE((SELECT sum(quantity*unit_cost_cents)::bigint FROM stock_lines WHERE direction='OUT' AND code<>'SALE'),0)::text),
+        'monthly',COALESCE((SELECT jsonb_agg(jsonb_build_object('date',month,'inboundQuantity',COALESCE(inbound_quantity,0),'inboundValueCents',COALESCE(inbound_value,0)::text,'saleQuantity',COALESCE(sale_quantity,0),'saleCostCents',COALESCE(sale_cost,0)::text,'lossQuantity',COALESCE(loss_quantity,0),'lossValueCents',COALESCE(loss_value,0)::text) ORDER BY month) FROM stock_monthly),'[]'),
+        'products',COALESCE((SELECT jsonb_agg(x ORDER BY abs((x->>'netQuantity')::numeric) DESC) FROM(SELECT jsonb_build_object('id',p.id,'name',p.name,'inQuantity',COALESCE(sum(sl.quantity)FILTER(WHERE sl.direction='IN'),0),'outQuantity',COALESCE(sum(sl.quantity)FILTER(WHERE sl.direction='OUT'),0),'netQuantity',COALESCE(sum(CASE WHEN sl.direction='IN'THEN sl.quantity ELSE -sl.quantity END),0),'valueCents',COALESCE(sum(sl.quantity*sl.unit_cost_cents),0)::bigint::text)x FROM stock_lines sl JOIN products p ON p.id=sl.product_id GROUP BY p.id,p.name LIMIT 100)q),'[]')),
+      'customers',jsonb_build_object(
+        'cards',jsonb_build_object('active',COALESCE((SELECT count(*) FROM customer_values),0),'new',COALESCE((SELECT count(*) FROM customers c JOIN actor a ON a.tenant_id=c.tenant_id WHERE c.active AND c.created_at::date BETWEEN $2::date AND $3::date),0),'withoutPurchase',COALESCE((SELECT count(*) FROM customer_values WHERE purchases=0),0),'ticketCents',COALESCE((SELECT round(sum(revenue)::numeric/NULLIF(sum(purchases),0)) FROM customer_values),0)::bigint::text,'frequency',COALESCE((SELECT round(avg(purchases),2) FROM customer_values),0)),
+        'abc',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',id,'name',name,'purchases',purchases,'revenueCents',revenue::text,'lastPurchase',last_purchase,'class',CASE WHEN cumulative<=.8 THEN'A'WHEN cumulative<=.95 THEN'B'ELSE'C'END) ORDER BY revenue DESC) FROM customer_rank),'[]'),
+        'regions',COALESCE((SELECT jsonb_agg(jsonb_build_object('region',concat_ws(' / ',NULLIF(city,''),NULLIF(state_code,'')),'customers',count(*),'revenueCents',sum(revenue)::text) ORDER BY sum(revenue) DESC) FROM customer_values GROUP BY city,state_code),'[]'),
+        'birthdays',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',id,'name',name,'birthDate',birth_date) ORDER BY extract(month from birth_date),extract(day from birth_date)) FROM customer_values WHERE birth_date IS NOT NULL),'[]'),
+        'dormant',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',id,'name',name,'lastPurchase',last_purchase,'revenueCents',revenue::text) ORDER BY last_purchase NULLS FIRST) FROM customer_values WHERE last_purchase IS NULL OR last_purchase<$2::date),'[]')),
+      'categories',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',id,'name',name,'level',level,'quantity',quantity,'revenueCents',revenue::text,'costCents',cost::text,'profitCents',(revenue-cost)::text,'marginPercent',CASE WHEN revenue=0 THEN 0 ELSE round((revenue-cost)*100.0/revenue,2)END,'growthPercent',CASE WHEN previous_revenue=0 THEN 0 ELSE round((revenue-previous_revenue)*100.0/previous_revenue,2)END) ORDER BY level,revenue DESC) FROM category_values),'[]')
+    ) data FROM actor WHERE $5<>''
   """,params:[{_expr:"auth.uid"},$from,$to,$filters,$requestKey])
 }

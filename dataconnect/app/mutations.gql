@@ -1350,7 +1350,9 @@ mutation PostSale($payload: Any!) @auth(level: USER) @transaction {
       ON CONFLICT(branch_id,product_id) DO UPDATE SET quantity=stock_balances.quantity+EXCLUDED.quantity,version=stock_balances.version+1,updated_at=now() RETURNING product_id
     ),cash AS (
       INSERT INTO cash_movements(id,tenant_id,session_id,sale_id,movement_type,amount_cents,description,created_by_uid,created_at)
-      SELECT gen_random_uuid(),s.tenant_id,s.cash_session_id,s.id,'SALE',s.total_cents,'Venda '||s.id::text,s.created_by_uid,now() FROM sale s WHERE s.cash_session_id IS NOT NULL RETURNING id
+      SELECT gen_random_uuid(),s.tenant_id,s.cash_session_id,s.id,'SALE',cash_payment.amount,'Venda '||s.id::text,s.created_by_uid,now()
+      FROM sale s JOIN LATERAL(SELECT GREATEST(COALESCE(sum(sp.amount_cents),0)-s.change_cents,0)::bigint amount FROM sale_payments sp JOIN payment_methods pm ON pm.id=sp.payment_method_id AND pm.tenant_id=sp.tenant_id WHERE sp.sale_id=s.id AND sp.status='CONFIRMED' AND pm.requires_change)cash_payment ON cash_payment.amount>0
+      WHERE s.cash_session_id IS NOT NULL RETURNING id
     )
     INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
       SELECT s.tenant_id,s.created_by_uid,'Vendas','CAIXA','CREATE','Sale',s.id::text,'Venda concluída',true,'SQL_CONNECT',jsonb_build_object('totalCents',s.total_cents,'branchId',s.branch_id,'operationId',s.client_operation_id),now() FROM sale s
@@ -1369,7 +1371,7 @@ mutation CancelSale($saleId: UUID!, $reason: String!) @auth(level: USER) @transa
     payments AS (UPDATE sale_payments p SET status='CANCELLED' FROM cancelled s WHERE p.sale_id=s.id AND p.tenant_id=s.tenant_id AND p.status='CONFIRMED' RETURNING p.id),
     reversed AS (UPDATE stock_movements m SET status='REVERSED',reversed_at=now() FROM cancelled s WHERE m.sale_id=s.id AND m.tenant_id=s.tenant_id AND m.status='POSTED' RETURNING m.tenant_id,m.branch_id,m.product_id,m.quantity),
     balances AS (UPDATE stock_balances b SET quantity=b.quantity+r.quantity,version=b.version+1,updated_at=now() FROM reversed r WHERE b.tenant_id=r.tenant_id AND b.branch_id=r.branch_id AND b.product_id=r.product_id RETURNING b.product_id),
-    cash AS (INSERT INTO cash_movements(id,tenant_id,session_id,sale_id,movement_type,amount_cents,description,created_by_uid,created_at) SELECT gen_random_uuid(),s.tenant_id,s.cash_session_id,s.id,'SALE_REVERSAL',-s.total_cents,'Cancelamento: '||left(btrim($3),120),$1,now() FROM cancelled s WHERE s.cash_session_id IS NOT NULL RETURNING id)
+    cash AS (INSERT INTO cash_movements(id,tenant_id,session_id,sale_id,movement_type,amount_cents,description,created_by_uid,created_at) SELECT gen_random_uuid(),s.tenant_id,s.cash_session_id,s.id,'SALE_REVERSAL',-original.amount,'Cancelamento: '||left(btrim($3),120),$1,now() FROM cancelled s JOIN LATERAL(SELECT COALESCE(sum(cm.amount_cents),0)::bigint amount FROM cash_movements cm WHERE cm.sale_id=s.id AND cm.movement_type='SALE')original ON original.amount>0 WHERE s.cash_session_id IS NOT NULL RETURNING id)
     INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,before_data,after_data,created_at)
       SELECT tenant_id,$1,'Vendas','GESTAO_VENDAS','CANCEL','Sale',id::text,'Venda cancelada',true,'SQL_CONNECT',jsonb_build_object('status','COMPLETED','totalCents',total_cents),jsonb_build_object('status','CANCELLED','reason',cancellation_reason),now() FROM cancelled
   """,params:[{_expr:"auth.uid"},$saleId,$reason])
@@ -1446,4 +1448,74 @@ mutation ReverseStockOperation($operationId: String!, $movementIds: Any!, $reaso
     WITH actor AS (SELECT u.id,u.tenant_id FROM users u JOIN app_pages pg ON pg.page_key='ESTOQUE' AND pg.active LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_delete,rp.can_delete,false)),ids AS (SELECT value::uuid id FROM jsonb_array_elements_text(COALESCE($3::jsonb,'[]'))),reversed AS (UPDATE stock_movements m SET status='REVERSED',reversed_at=now() FROM actor a WHERE m.tenant_id=a.tenant_id AND m.client_operation_id=$2 AND m.status='POSTED' AND m.sale_id IS NULL AND (NOT EXISTS(SELECT 1 FROM ids) OR m.id IN(SELECT id FROM ids)) AND length(btrim($4))>=5 RETURNING m.*),balances AS (UPDATE stock_balances sb SET quantity=sb.quantity+x.delta,version=sb.version+1,updated_at=now() FROM (SELECT r.tenant_id,r.branch_id,r.product_id,sum(CASE WHEN mt.direction='OUT' THEN r.quantity ELSE -r.quantity END)delta FROM reversed r JOIN stock_movement_types mt ON mt.id=r.movement_type_id GROUP BY r.tenant_id,r.branch_id,r.product_id)x WHERE sb.tenant_id=x.tenant_id AND sb.branch_id=x.branch_id AND sb.product_id=x.product_id RETURNING sb.product_id),docs AS (UPDATE fiscal_documents f SET status='CANCELLED',updated_at=now() WHERE f.id IN(SELECT fiscal_document_id FROM reversed WHERE fiscal_document_id IS NOT NULL) AND NOT EXISTS(SELECT 1 FROM stock_movements active WHERE active.fiscal_document_id=f.id AND active.status='POSTED') RETURNING f.id),transfers AS (UPDATE stock_transfers t SET status='CANCELLED',updated_at=now() FROM actor a WHERE t.tenant_id=a.tenant_id AND t.client_operation_id=$2 AND NOT EXISTS(SELECT 1 FROM stock_movements m WHERE m.tenant_id=t.tenant_id AND m.client_operation_id=t.client_operation_id AND m.status='POSTED') RETURNING t.id)
     INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at) SELECT tenant_id,$1,'Estoque','ESTOQUE','REVERSE','StockOperation',$2,left(btrim($4),255),true,'SQL_CONNECT',jsonb_build_object('movementCount',count(*),'reason',left(btrim($4),255)),now() FROM reversed GROUP BY tenant_id
   """,params:[{_expr:"auth.uid"},$operationId,$movementIds,$reason])
+}
+
+mutation OpenCashSession($branchId: UUID!, $openingAmountCents: Int64!, $notes: String!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u
+      JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+      JOIN app_pages pg ON pg.page_key='CAIXA' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_create,rp.can_create,false)
+    ), branch AS (
+      SELECT b.*,a.id actor_id FROM branches b JOIN actor a ON a.tenant_id=b.tenant_id
+      WHERE b.id=$2 AND b.active AND b.deleted_at IS NULL
+        AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=a.id) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=a.id AND ub.branch_id=b.id AND ub.active))
+    ), locked AS (
+      SELECT b.*,pg_advisory_xact_lock(hashtext(b.id::text)) FROM branch b
+    ), opened AS (
+      INSERT INTO cash_sessions(id,tenant_id,branch_id,opened_by_uid,opened_at,opening_amount_cents,status,notes,created_at,updated_at)
+      SELECT gen_random_uuid(),tenant_id,id,$1,now(),GREATEST($3,0),'OPEN',NULLIF(left(btrim($4),500),''),now(),now() FROM locked l
+      WHERE NOT EXISTS(SELECT 1 FROM cash_sessions cs WHERE cs.tenant_id=l.tenant_id AND cs.branch_id=l.id AND cs.status='OPEN')
+      RETURNING *
+    ), movement AS (
+      INSERT INTO cash_movements(id,tenant_id,session_id,movement_type,amount_cents,description,created_by_uid,created_at)
+      SELECT gen_random_uuid(),tenant_id,id,'OPENING',opening_amount_cents,'Abertura de caixa',$1,now() FROM opened WHERE opening_amount_cents>0 RETURNING id
+    )
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+    SELECT tenant_id,$1,'Vendas','CAIXA','OPEN','CashSession',id::text,'Caixa aberto',true,'SQL_CONNECT',jsonb_build_object('branchId',branch_id,'openingAmountCents',opening_amount_cents),now() FROM opened
+  """,params:[{_expr:"auth.uid"},$branchId,$openingAmountCents,$notes])
+}
+
+mutation RegisterCashMovement($sessionId: UUID!, $movementType: String!, $amountCents: Int64!, $description: String!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u JOIN app_pages pg ON pg.page_key='CAIXA' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_manage,rp.can_manage,false)
+    ), input AS (
+      SELECT a.*,cs.id session_id,upper(btrim($3)) movement_type,abs($4)::bigint amount,btrim($5) description
+      FROM actor a JOIN cash_sessions cs ON cs.id=$2 AND cs.tenant_id=a.tenant_id AND cs.status='OPEN'
+    ), inserted AS (
+      INSERT INTO cash_movements(id,tenant_id,session_id,movement_type,amount_cents,description,created_by_uid,created_at)
+      SELECT gen_random_uuid(),tenant_id,session_id,movement_type,CASE WHEN movement_type='WITHDRAWAL' THEN -amount ELSE amount END,left(description,180),$1,now()
+      FROM input WHERE movement_type IN('SUPPLY','WITHDRAWAL') AND amount>0 AND length(description)>=3 RETURNING *
+    )
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+    SELECT tenant_id,$1,'Vendas','CAIXA',movement_type,'CashMovement',id::text,description,true,'SQL_CONNECT',jsonb_build_object('sessionId',session_id,'amountCents',amount_cents),now() FROM inserted
+  """,params:[{_expr:"auth.uid"},$sessionId,$movementType,$amountCents,$description])
+}
+
+mutation CloseCashSession($sessionId: UUID!, $countedAmountCents: Int64!, $notes: String!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u JOIN app_pages pg ON pg.page_key='CAIXA' AND pg.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_manage,rp.can_manage,false)
+    ), calculated AS (
+      SELECT cs.id,cs.tenant_id,cs.opening_amount_cents+COALESCE(sum(cm.amount_cents) FILTER(WHERE cm.movement_type<>'OPENING'),0) expected
+      FROM cash_sessions cs JOIN actor a ON a.tenant_id=cs.tenant_id LEFT JOIN cash_movements cm ON cm.session_id=cs.id
+      WHERE cs.id=$2 AND cs.status='OPEN' GROUP BY cs.id
+    ), closed AS (
+      UPDATE cash_sessions cs SET closed_by_uid=$1,closed_at=now(),expected_amount_cents=c.expected,counted_amount_cents=GREATEST($3,0),difference_cents=GREATEST($3,0)-c.expected,status='CLOSED',notes=concat_ws(E'\n',cs.notes,NULLIF(left(btrim($4),500),'')),updated_at=now()
+      FROM calculated c WHERE cs.id=c.id RETURNING cs.*
+    )
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+    SELECT tenant_id,$1,'Vendas','CAIXA','CLOSE','CashSession',id::text,'Caixa fechado',true,'SQL_CONNECT',jsonb_build_object('expectedAmountCents',expected_amount_cents,'countedAmountCents',counted_amount_cents,'differenceCents',difference_cents),now() FROM closed
+  """,params:[{_expr:"auth.uid"},$sessionId,$countedAmountCents,$notes])
 }

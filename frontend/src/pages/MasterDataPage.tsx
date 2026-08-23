@@ -11,7 +11,7 @@ import { firebaseApp } from '../lib/firebase'
 import { csvSafe,digits,isValidCnpj,isValidCpf,maskRegistrationValue,moneyFromCents } from '../utils/registration'
 import { ProductExtras } from './ProductExtras'
 
-const dc=getDataConnect(firebaseApp,connectorConfig),RESULT_LIMIT=5000
+const dc=getDataConnect(firebaseApp,connectorConfig),PAGE_SIZE=100
 type PageKey='CAD_FILIAL'|'CAD_FORNECEDOR'|'CAD_CLIENTE'|'CAD_PRODUTO'
 type Row={id:string;active:boolean;updatedAt:string;[key:string]:unknown}
 type Field={key:string;label:string;type?:'text'|'email'|'date'|'number'|'textarea'|'checkbox'|'select'|'money';required?:boolean;wide?:boolean;options?:{value:string;label:string}[]}
@@ -78,7 +78,7 @@ const sectionFields:Record<PageKey,Record<string,string[]>>={
 
 export function MasterDataPage({pageKey}:{pageKey:PageKey}){
  const cfg=configs[pageKey],permission=useAuth().permissions[pageKey]
- const [rows,setRows]=useState<Row[]>([]),[search,setSearch]=useState(''),[busy,setBusy]=useState(true),[modal,setModal]=useState(false)
+ const [rows,setRows]=useState<Row[]>([]),[search,setSearchState]=useState(''),[page,setPage]=useState(0),[busy,setBusy]=useState(true),[modal,setModal]=useState(false)
  const [editing,setEditing]=useState<Row|null>(null),[form,setForm]=useState<Record<string,unknown>>({}),[baseline,setBaseline]=useState(''),[showErrors,setShowErrors]=useState(false),[notice,setNotice]=useState(''),[confirm,setConfirm]=useState<null|{text:string;run:()=>Promise<void>}>(null)
  const [selected,setSelected]=useState<string[]>([]),[visibleCount,setVisibleCount]=useState(100),[extras,setExtras]=useState<Row|null>(null),[options,setOptions]=useState<RegistrationOptionSet>({categories:[],subcategories:[],suppliers:[],products:[]}),[kitItems,setKitItems]=useState<KitItem[]>([]),[section,setSection]=useState(modalSections[pageKey][0].key)
  const requestSequence=useRef(0)
@@ -86,7 +86,8 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
  useDialogAccessibility(modal&&!confirm,closeForm)
  useDialogAccessibility(filterModal&&!confirm,()=>setFilterModal(false))
  useDialogAccessibility(Boolean(confirm),()=>setConfirm(null))
- const query=useMemo(()=>({search:search.trim(),limit:RESULT_LIMIT,offset:0}),[search])
+ const setSearch=(value:string)=>{setSearchState(value);setPage(0);setSelected([])}
+ const query=useMemo(()=>({search:search.trim(),limit:PAGE_SIZE,offset:page*PAGE_SIZE}),[search,page])
  const comboCostCents=useMemo(()=>kitItems.reduce((total,item)=>{const product=options.products.find(p=>p.id===item.productId);return total+Number(product?.costPriceCents??0)*Number(item.quantity||0)},0),[kitItems,options.products])
  const sections=modalSections[pageKey],sectionIndex=Math.max(0,sections.findIndex(item=>item.key===section))
  const filterFieldKeys:Record<PageKey,string[]>={
@@ -196,7 +197,7 @@ export function MasterDataPage({pageKey}:{pageKey:PageKey}){
     {cfg.columns.map(c=><th key={c.key}>{c.label}</th>)}<th>Status</th><th>Ações</th>{detailFields.map(field=><th key={field.key}>{field.label}</th>)}<th>Cadastro</th><th>Última atualização</th></tr></thead><tbody>{visibleRows.map(row=><tr key={row.id} className={!row.active?'is-inactive':''}><td><input type="checkbox" checked={selected.includes(row.id)} onChange={e=>setSelected(v=>e.target.checked?[...v,row.id]:v.filter(id=>id!==row.id))}/></td>
     {cfg.columns.map(c=><td key={c.key}>{c.key==='bundleProduct'?<span className={`product-type product-type--${row.bundleProduct?'combo':'simple'}`}><span className="material-symbols-rounded">{row.bundleProduct?'deployed_code':'inventory_2'}</span>{row.bundleProduct?'Combo':'Simples'}</span>:c.format?c.format(row[c.key],row):String(row[c.key]??'—')}</td>)}<td><span className={`catalog-status catalog-status--${row.active?'active':'inactive'}`}><i/>{row.active?'Ativo':'Inativo'}</span></td><td><div className="catalog-actions">
      {row.active&&permission?.canUpdate&&<button onClick={()=>open(row)}>Editar</button>}{pageKey==='CAD_PRODUTO'&&row.active&&permission?.canUpdate&&<button onClick={()=>setExtras(row)}>Promoções</button>}{((row.active&&permission?.canDelete)||(!row.active&&permission?.canUpdate))&&<button className={row.active?'danger':'success'} onClick={()=>setConfirm({text:`${row.active?'Inativar':'Ativar'} “${String(row.name||row.legalName)}”?`,run:()=>status([row.id],!row.active)})}>{row.active?'Inativar':'Ativar'}</button>}</div></td>{detailFields.map(field=>{const displayValue=field.key==='subcategoryId'?row.subcategoryName:field.key==='supplierId'?row.supplierName:row[field.key];return <td key={field.key}>{field.type==='money'?money(displayValue):typeof displayValue==='boolean'?(displayValue?'Sim':'Não'):String(displayValue??'—')}</td>})}<td>{row.createdAt?new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short'}).format(new Date(String(row.createdAt))):'—'}</td><td>{row.updatedAt?new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short'}).format(new Date(String(row.updatedAt))):'—'}</td></tr>)}</tbody></table></div></div>
-   </div>
+   </div><div className="catalog-pagination"><button disabled={page===0||busy} onClick={()=>{setPage(value=>Math.max(0,value-1));setSelected([])}}>← Anterior</button><span>Página {page+1} · até {PAGE_SIZE} registros</span><button disabled={rows.length<PAGE_SIZE||busy} onClick={()=>{setPage(value=>value+1);setSelected([])}}>Próxima →</button></div>
   {filterModal&&<div className="catalog-backdrop"><section className="catalog-modal master-modal advanced-search-modal" role="dialog" aria-modal="true" aria-label="Pesquisa avançada"><header><div><span className="eyebrow">Pesquisa</span><h2>Filtros avançados</h2></div><button aria-label="Fechar pesquisa avançada" onClick={()=>setFilterModal(false)}>×</button></header>
    <form onSubmit={e=>{e.preventDefault();setSelected([]);setFilterModal(false)}}><div className="master-section-title"><span className="material-symbols-rounded">manage_search</span><div><strong>Refine os resultados</strong><small>Selecione um ou mais valores existentes em cada campo. A exportação respeitará estes filtros.</small></div></div><div className="master-form-grid filter-grid">
     {advancedFields.map(field=>filterPicker(field.key,field.label,facetOptions(field)))}

@@ -11,7 +11,7 @@ import { useDialogAccessibility } from '../hooks/useDialogAccessibility'
 import { firebaseApp } from '../lib/firebase'
 import { csvSafe } from '../utils/registration'
 
-const dc=getDataConnect(firebaseApp,connectorConfig),RESULT_LIMIT=5000
+const dc=getDataConnect(firebaseApp,connectorConfig),PAGE_SIZE=100
 const categorySchema=z.object({id:z.string().uuid(),name:z.string(),active:z.boolean(),createdAt:z.string(),updatedAt:z.string(),subcategoryCount:z.coerce.number()})
 const subcategorySchema=z.object({id:z.string().uuid(),name:z.string(),categoryId:z.string().uuid(),categoryName:z.string(),active:z.boolean(),createdAt:z.string(),updatedAt:z.string()})
 const optionSchema=z.object({id:z.string().uuid(),name:z.string()})
@@ -26,13 +26,14 @@ export function CatalogPages({pageKey}:{pageKey:'CAD_CATEGORIA'|'CAD_SUBCATEGORI
 
 function CategoryPage(){
  const permission=useAuth().permissions.CAD_CATEGORIA
- const [items,setItems]=useState<Category[]>([]),[search,setSearch]=useState(''),[busy,setBusy]=useState(true),[notice,setNotice]=useState<Notice|null>(null)
+ const [items,setItems]=useState<Category[]>([]),[search,setSearchState]=useState(''),[page,setPage]=useState(0),[busy,setBusy]=useState(true),[notice,setNotice]=useState<Notice|null>(null)
  const [modal,setModal]=useState(false),[editing,setEditing]=useState<Category|null>(null),[names,setNames]=useState([''])
  const [selected,setSelected]=useState<string[]>([]),[visibleCount,setVisibleCount]=useState(100),[filters,setFilters]=useState<Record<string,string[]>>({}),[filterSearch,setFilterSearch]=useState<Record<string,string>>({}),[filterModal,setFilterModal]=useState(false)
  const [confirmation,setConfirmation]=useState<Confirmation|null>(null)
  const requestSequence=useRef(0)
- const load=useCallback(async()=>{const requestId=++requestSequence.current;setBusy(true);try{const result=await listCategories(dc,{search:search.trim(),limit:RESULT_LIMIT,offset:0,requestKey:crypto.randomUUID()});if(requestId===requestSequence.current)setItems(z.array(categorySchema).parse(result.data._select??[]))}
-  catch(error){if(requestId!==requestSequence.current)return;console.error(error);setNotice({type:'error',text:'Não foi possível atualizar as categorias.'})}finally{if(requestId===requestSequence.current)setBusy(false)}},[search])
+ const setSearch=(value:string)=>{setSearchState(value);setPage(0);setSelected([])}
+ const load=useCallback(async()=>{const requestId=++requestSequence.current;setBusy(true);try{const result=await listCategories(dc,{search:search.trim(),limit:PAGE_SIZE,offset:page*PAGE_SIZE,requestKey:crypto.randomUUID()});if(requestId===requestSequence.current)setItems(z.array(categorySchema).parse(result.data._select??[]))}
+  catch(error){if(requestId!==requestSequence.current)return;console.error(error);setNotice({type:'error',text:'Não foi possível atualizar as categorias.'})}finally{if(requestId===requestSequence.current)setBusy(false)}},[search,page])
  useEffect(()=>{const timer=window.setTimeout(()=>void load(),350);return()=>window.clearTimeout(timer)},[load])
  useEffect(()=>{if(!notice)return;const timer=window.setTimeout(()=>setNotice(null),7000);return()=>window.clearTimeout(timer)},[notice])
  const filtered=useMemo(()=>items.filter(item=>Object.entries(filters).every(([key,values])=>values.length===0||values.includes(String(item[key as keyof Category]??'')))),[items,filters])
@@ -58,17 +59,19 @@ function CategoryPage(){
   {modal&&<BatchCategoryModal editing={!!editing} names={names} setNames={setNames} onClose={()=>setModal(false)} onSubmit={save}/>}
   {filterModal&&<FilterModal fields={[{key:'name',label:'Categoria',options:options.name},{key:'active',label:'Status',options:options.active}]} filters={filters} setFilters={setFilters} searches={filterSearch} setSearches={setFilterSearch} onClose={()=>setFilterModal(false)}/>}
   {confirmation&&<Confirm message={confirmation.message} onCancel={()=>setConfirmation(null)} onConfirm={()=>void confirm()}/>}
+  <Pagination page={page} hasNext={items.length===PAGE_SIZE} busy={busy} setPage={value=>{setPage(value);setSelected([])}}/>
  </CatalogShell>
 }
 
 function SubcategoryPage(){
  const permission=useAuth().permissions.CAD_SUBCATEGORIA
- const [items,setItems]=useState<Subcategory[]>([]),[categories,setCategories]=useState<Option[]>([]),[search,setSearch]=useState(''),[busy,setBusy]=useState(true),[notice,setNotice]=useState<Notice|null>(null)
+ const [items,setItems]=useState<Subcategory[]>([]),[categories,setCategories]=useState<Option[]>([]),[search,setSearchState]=useState(''),[page,setPage]=useState(0),[busy,setBusy]=useState(true),[notice,setNotice]=useState<Notice|null>(null)
  const [modal,setModal]=useState(false),[editing,setEditing]=useState<Subcategory|null>(null),[batch,setBatch]=useState<BatchSubcategory[]>([{categoryId:'',name:''}])
  const [selected,setSelected]=useState<string[]>([]),[visibleCount,setVisibleCount]=useState(100),[filters,setFilters]=useState<Record<string,string[]>>({}),[filterSearch,setFilterSearch]=useState<Record<string,string>>({}),[filterModal,setFilterModal]=useState(false),[confirmation,setConfirmation]=useState<Confirmation|null>(null)
  const requestSequence=useRef(0)
- const load=useCallback(async()=>{const requestId=++requestSequence.current;setBusy(true);try{const key=crypto.randomUUID(),[records,options]=await Promise.all([listSubcategories(dc,{search:search.trim(),categoryId:null,limit:RESULT_LIMIT,offset:0,requestKey:key}),categoryOptions(dc,{requestKey:key})]);if(requestId===requestSequence.current){setItems(z.array(subcategorySchema).parse(records.data._select??[]));setCategories(z.array(optionSchema).parse(options.data._select??[]))}}
-  catch(error){if(requestId!==requestSequence.current)return;console.error(error);setNotice({type:'error',text:'Não foi possível atualizar as subcategorias.'})}finally{if(requestId===requestSequence.current)setBusy(false)}},[search])
+ const setSearch=(value:string)=>{setSearchState(value);setPage(0);setSelected([])}
+ const load=useCallback(async()=>{const requestId=++requestSequence.current;setBusy(true);try{const key=crypto.randomUUID(),[records,options]=await Promise.all([listSubcategories(dc,{search:search.trim(),categoryId:null,limit:PAGE_SIZE,offset:page*PAGE_SIZE,requestKey:key}),categoryOptions(dc,{requestKey:key})]);if(requestId===requestSequence.current){setItems(z.array(subcategorySchema).parse(records.data._select??[]));setCategories(z.array(optionSchema).parse(options.data._select??[]))}}
+  catch(error){if(requestId!==requestSequence.current)return;console.error(error);setNotice({type:'error',text:'Não foi possível atualizar as subcategorias.'})}finally{if(requestId===requestSequence.current)setBusy(false)}},[search,page])
  useEffect(()=>{const timer=window.setTimeout(()=>void load(),350);return()=>window.clearTimeout(timer)},[load])
  useEffect(()=>{if(!notice)return;const timer=window.setTimeout(()=>setNotice(null),7000);return()=>window.clearTimeout(timer)},[notice])
  const filtered=useMemo(()=>items.filter(item=>Object.entries(filters).every(([key,values])=>values.length===0||values.includes(String(item[key as keyof Subcategory]??'')))),[items,filters])
@@ -95,8 +98,11 @@ function SubcategoryPage(){
   {modal&&<BatchSubcategoryModal editing={!!editing} items={batch} setItems={setBatch} categories={categories} onClose={()=>setModal(false)} onSubmit={save}/>}
   {filterModal&&<FilterModal fields={[{key:'name',label:'Subcategoria',options:names},{key:'categoryId',label:'Categoria',options:categoryValues},{key:'active',label:'Status',options:[{value:'true',label:'Ativo'},{value:'false',label:'Inativo'}]}]} filters={filters} setFilters={setFilters} searches={filterSearch} setSearches={setFilterSearch} onClose={()=>setFilterModal(false)}/>}
   {confirmation&&<Confirm message={confirmation.message} onCancel={()=>setConfirmation(null)} onConfirm={()=>void confirm()}/>}
+  <Pagination page={page} hasNext={items.length===PAGE_SIZE} busy={busy} setPage={value=>{setPage(value);setSelected([])}}/>
  </CatalogShell>
 }
+
+function Pagination({page,hasNext,busy,setPage}:{page:number;hasNext:boolean;busy:boolean;setPage:(value:number)=>void}){return <div className="catalog-pagination"><button disabled={page===0||busy} onClick={()=>setPage(Math.max(0,page-1))}>← Anterior</button><span>Página {page+1} · até {PAGE_SIZE} registros</span><button disabled={!hasNext||busy} onClick={()=>setPage(page+1)}>Próxima →</button></div>}
 
 function CatalogShell(p:{title:string;search:string;setSearch:(value:string)=>void;busy:boolean;notice:Notice|null;selected:string[];canCreate:boolean;onCreate:()=>void;onExport?:()=>void;onReachEnd?:()=>void;onFilters:()=>void;filterCount:number;onInactive?:()=>void;onActive?:()=>void;children:ReactNode}){
  return <section className="catalog-page"><header><div><span className="eyebrow">Cadastros</span><h1>{p.title}</h1></div><div className="catalog-header-actions"><Link className="catalog-back" to="/modulos/cadastros"><span className="material-symbols-rounded">arrow_back</span>Voltar</Link>{p.canCreate&&<button className="catalog-primary" onClick={p.onCreate}>+ Novo cadastro</button>}</div></header>

@@ -19,7 +19,7 @@ const PointOfSalePage = lazy(() => import('./pages/PointOfSalePage').then((modul
 const SalesManagementPage = lazy(() => import('./pages/SalesManagementPage').then((module) => ({ default: module.SalesManagementPage })))
 const PlatformAdminPage = lazy(() => import('./pages/PlatformAdminPage').then((module) => ({ default: module.PlatformAdminPage })))
 const StockPage = lazy(() => import('./pages/StockPage').then((module) => ({ default: module.StockPage })))
-const DailyProfitDashboardPage = lazy(() => import('./pages/DailyProfitDashboardPage').then((module) => ({ default: module.DailyProfitDashboardPage })))
+const DashboardHubPage = lazy(() => import('./pages/DashboardHubPage').then((module) => ({ default: module.DashboardHubPage })))
 
 export default function App() {
   return (
@@ -37,7 +37,7 @@ export default function App() {
           <Route path="/modulos/dashboards" element={<ModuleMenuPage moduleKey="dashboards" />} />
           {appRoutes.filter(({ pageKey }) => pageKey !== 'GESTAO_ACESSOS').map(({ pageKey, route }) => (
             <Route element={<PermissionRoute pageKey={pageKey} />} key={pageKey}>
-              <Route path={route} element={pageKey === 'CAIXA' ? <PointOfSalePage /> : pageKey === 'GESTAO_VENDAS' ? <SalesManagementPage /> : pageKey === 'ESTOQUE' ? <StockPage /> : pageKey === 'RELATORIOS_OPERACIONAIS' ? <DailyProfitDashboardPage /> : pageKey === 'CAD_CATEGORIA' || pageKey === 'CAD_SUBCATEGORIA' ? <CatalogPages pageKey={pageKey} /> : pageKey === 'CAD_FILIAL' || pageKey === 'CAD_FORNECEDOR' || pageKey === 'CAD_CLIENTE' || pageKey === 'CAD_PRODUTO' ? <MasterDataPage pageKey={pageKey} /> : <ModulePlaceholderPage pageKey={pageKey} />} />
+              <Route path={route} element={pageKey === 'CAIXA' ? <PointOfSalePage /> : pageKey === 'GESTAO_VENDAS' ? <SalesManagementPage /> : pageKey === 'ESTOQUE' ? <StockPage /> : pageKey === 'RELATORIOS_OPERACIONAIS' ? <DashboardHubPage /> : pageKey === 'CAD_CATEGORIA' || pageKey === 'CAD_SUBCATEGORIA' ? <CatalogPages pageKey={pageKey} /> : pageKey === 'CAD_FILIAL' || pageKey === 'CAD_FORNECEDOR' || pageKey === 'CAD_CLIENTE' || pageKey === 'CAD_PRODUTO' ? <MasterDataPage pageKey={pageKey} /> : <ModulePlaceholderPage pageKey={pageKey} />} />
             </Route>
           ))}
         </Route>
