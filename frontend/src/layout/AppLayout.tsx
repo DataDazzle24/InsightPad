@@ -58,7 +58,7 @@ export function AppLayout() {
           to="/"
           aria-label="Insight Pad — início"
         >
-          <img src="/brand/insight-pad-logo-dark.png" alt="Insight Pad" />
+          <img src="/brand/insight-pad-logo-compact.png" alt="Insight Pad" />
         </Link>
         <div className="legacy-header__title">
           <span>{pageTitle}</span>
