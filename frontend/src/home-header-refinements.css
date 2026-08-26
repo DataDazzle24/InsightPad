@@ -1,0 +1,106 @@
+/* Refinamentos visuais da Home e do cabeçalho.
+   Mantido separado do App.css para preservar personalizações locais. */
+
+:root {
+  --app-header-height: 10dvh;
+}
+
+.legacy-header {
+  height: var(--app-header-height);
+  min-height: var(--app-header-height);
+  grid-template-columns: clamp(4.5rem, 9vh, 6.5rem) minmax(12rem, 1fr) auto auto;
+}
+
+.legacy-header__brand {
+  height: 100%;
+}
+
+.legacy-header__brand img {
+  width: auto;
+  height: 70%;
+  max-width: 90%;
+  max-height: 70%;
+}
+
+.legacy-header__title {
+  padding: .35rem .55rem .35rem 4%;
+}
+
+.app-stage {
+  height: calc(100dvh - var(--app-header-height));
+}
+
+.home-menu {
+  min-height: 100%;
+}
+
+.home-menu__insight-logo {
+  width: 50%;
+  max-width: 50%;
+  height: auto;
+  max-height: none;
+  margin: auto;
+  object-fit: contain;
+  filter:
+    drop-shadow(0 0 1.6rem rgba(66, 220, 250, .24))
+    drop-shadow(0 0 3.2rem rgba(66, 220, 250, .12));
+}
+
+.home-menu__brand footer {
+  gap: clamp(.4rem, 1vw, .7rem);
+}
+
+.home-menu__brand footer img {
+  width: 5.35rem;
+  max-height: 2rem;
+}
+
+.home-menu__modules > .legacy-tile:nth-child(odd) .legacy-tile__bar {
+  background: var(--cyan);
+}
+
+.home-menu__modules > .legacy-tile:nth-child(odd) .legacy-tile__icon {
+  color: var(--cyan);
+}
+
+.home-menu__modules > .legacy-tile:nth-child(even) .legacy-tile__bar {
+  background: var(--green);
+}
+
+.home-menu__modules > .legacy-tile:nth-child(even) .legacy-tile__icon {
+  color: var(--green);
+}
+
+.home-menu__modules > .legacy-tile:nth-child(odd):hover .legacy-tile__icon,
+.home-menu__modules > .legacy-tile:nth-child(even):hover .legacy-tile__icon {
+  color: #020405;
+}
+
+@media (max-width: 1100px) {
+  .legacy-header {
+    grid-template-columns: clamp(4.5rem, 9vh, 6.5rem) minmax(0, 1fr) auto;
+  }
+
+  .app-stage {
+    height: calc(100dvh - var(--app-header-height));
+  }
+}
+
+@media (max-width: 700px) {
+  .legacy-header {
+    grid-template-columns: clamp(4rem, 8.5vh, 5.25rem) minmax(0, 1fr) auto;
+  }
+
+  .legacy-header__title {
+    padding-left: 4%;
+  }
+
+  .app-stage {
+    height: calc(100dvh - var(--app-header-height));
+  }
+
+  .home-menu__insight-logo {
+    width: 50%;
+    max-width: 50%;
+  }
+}
