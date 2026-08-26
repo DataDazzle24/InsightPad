@@ -1,23 +1,29 @@
-# Run once after deploying the connector. The operation resolves the current
-# platform-admin role from the database so DEV and production never depend on
-# copied UUIDs. Client-role access is granted through Gestão de Acessos.
-mutation BootstrapSalesChannelsNavigation @auth(level: NO_ACCESS) @transaction {
-  _execute(sql: """
-    WITH page AS (
-      INSERT INTO app_pages(id,page_key,display_name,module,route,icon,display_order,requires_login,active,created_at,updated_at)
-      VALUES ('10000000-0000-4000-8000-00000000000e','CANAIS_VENDA','Canais de Venda','Integrações','/integracoes/canais','hub',140,true,true,now(),now())
-      ON CONFLICT (id) DO UPDATE SET page_key=EXCLUDED.page_key,display_name=EXCLUDED.display_name,module=EXCLUDED.module,route=EXCLUDED.route,icon=EXCLUDED.icon,display_order=EXCLUDED.display_order,requires_login=true,active=true,updated_at=now()
-      RETURNING id
-    ), platform_admins AS (
-      SELECT r.id,r.tenant_id
-      FROM roles r
-      JOIN tenants t ON t.id=r.tenant_id AND t.active AND t.deleted_at IS NULL
-      WHERE r.system_role AND r.active AND r.deleted_at IS NULL
-        AND r.name='Administrador da Plataforma'
-    )
-    INSERT INTO role_page_permissions(role_id,page_id,tenant_id,can_access,can_create,can_update,can_delete,can_export,can_manage,created_at,updated_at)
-    SELECT a.id,p.id,a.tenant_id,true,true,true,true,true,true,now(),now()
-    FROM platform_admins a CROSS JOIN page p
-    ON CONFLICT (role_id,page_id) DO UPDATE SET tenant_id=EXCLUDED.tenant_id,can_access=true,can_create=true,can_update=true,can_delete=true,can_export=true,can_manage=true,updated_at=now()
-  """)
+# Compatibility operation kept for existing administrative callers.
+# Use bootstrap_sales_channels_v2.gql for new environment setup.
+mutation BootstrapSalesChannelsNavigation(
+  $tenantId: UUID!
+  $platformAdminRoleId: UUID!
+) @auth(level: NO_ACCESS) @transaction {
+  page: appPage_upsert(data: {
+    id: "10000000-0000-4000-8000-00000000000e"
+    pageKey: "CANAIS_VENDA"
+    displayName: "Canais de Venda"
+    module: "Integrações"
+    route: "/integracoes/canais"
+    icon: "hub"
+    displayOrder: 140
+    requiresLogin: true
+    active: true
+  })
+  permission: rolePagePermission_upsert(data: {
+    roleId: $platformAdminRoleId
+    pageId: "10000000-0000-4000-8000-00000000000e"
+    tenantId: $tenantId
+    canAccess: true
+    canCreate: true
+    canUpdate: true
+    canDelete: true
+    canExport: true
+    canManage: true
+  })
 }
