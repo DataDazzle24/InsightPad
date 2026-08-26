@@ -38,6 +38,14 @@ export interface ArchiveCategoryVariables {
   id: UUIDString;
 }
 
+export interface ArchiveSalesChannelConnectionData {
+  _execute?: number | null;
+}
+
+export interface ArchiveSalesChannelConnectionVariables {
+  id: UUIDString;
+}
+
 export interface ArchiveSubcategoryData {
   _execute?: number | null;
 }
@@ -65,6 +73,7 @@ export interface BootstrapNavigationCatalogData {
   pageFilial: AppPage_Key;
   pageRelatorios: AppPage_Key;
   pageGestaoAcessos: AppPage_Key;
+  pageCanaisVenda: AppPage_Key;
   permissionCaixa: RolePagePermission_Key;
   permissionGestaoVendas: RolePagePermission_Key;
   permissionEstoque: RolePagePermission_Key;
@@ -78,9 +87,20 @@ export interface BootstrapNavigationCatalogData {
   permissionFilial: RolePagePermission_Key;
   permissionRelatorios: RolePagePermission_Key;
   permissionGestaoAcessos: RolePagePermission_Key;
+  permissionCanaisVenda: RolePagePermission_Key;
 }
 
 export interface BootstrapNavigationCatalogVariables {
+  tenantId: UUIDString;
+  platformAdminRoleId: UUIDString;
+}
+
+export interface BootstrapSalesChannelsNavigationData {
+  page: AppPage_Key;
+  permission: RolePagePermission_Key;
+}
+
+export interface BootstrapSalesChannelsNavigationVariables {
   tenantId: UUIDString;
   platformAdminRoleId: UUIDString;
 }
@@ -122,6 +142,26 @@ export interface Category_Key {
   __typename?: 'Category_Key';
 }
 
+export interface ClaimDeviceSessionData {
+  _execute?: number | null;
+}
+
+export interface ClaimDeviceSessionVariables {
+  sessionToken: string;
+  deviceId: string;
+  deviceName: string;
+}
+
+export interface CloseCashSessionData {
+  _execute?: number | null;
+}
+
+export interface CloseCashSessionVariables {
+  sessionId: UUIDString;
+  countedAmountCents: Int64String;
+  notes: string;
+}
+
 export interface CreateCategoriesBatchData {
   _execute?: number | null;
 }
@@ -144,6 +184,17 @@ export interface CreatePlatformTenantData {
 
 export interface CreatePlatformTenantVariables {
   payload: unknown;
+}
+
+export interface CreateSalesChannelConnectionData {
+  _execute?: number | null;
+}
+
+export interface CreateSalesChannelConnectionVariables {
+  provider: string;
+  branchId: UUIDString;
+  displayName: string;
+  externalStoreId: string;
 }
 
 export interface CreateSubcategoriesBatchData {
@@ -375,6 +426,27 @@ export interface OfflineOperation_Key {
   __typename?: 'OfflineOperation_Key';
 }
 
+export interface OpenCashSessionData {
+  _execute?: number | null;
+}
+
+export interface OpenCashSessionVariables {
+  branchId: UUIDString;
+  openingAmountCents: Int64String;
+  notes: string;
+}
+
+export interface OperationalAnalyticsDashboardData {
+  _select?: unknown[] | null;
+}
+
+export interface OperationalAnalyticsDashboardVariables {
+  from: DateString;
+  to: DateString;
+  filters: unknown;
+  requestKey: string;
+}
+
 export interface PaymentMethod_Key {
   id: UUIDString;
   __typename?: 'PaymentMethod_Key';
@@ -444,12 +516,35 @@ export interface Promotion_Key {
   __typename?: 'Promotion_Key';
 }
 
+export interface RecoverPlatformAdministratorData {
+  _execute?: number | null;
+}
+
+export interface RegisterCashMovementData {
+  _execute?: number | null;
+}
+
+export interface RegisterCashMovementVariables {
+  sessionId: UUIDString;
+  movementType: string;
+  amountCents: Int64String;
+  description: string;
+}
+
 export interface RegistrationOptionsData {
   _select?: unknown[] | null;
 }
 
 export interface RegistrationOptionsVariables {
   requestKey?: string | null;
+}
+
+export interface ReleaseDeviceSessionData {
+  _execute?: number | null;
+}
+
+export interface ReleaseDeviceSessionVariables {
+  sessionToken: string;
 }
 
 export interface RestoreCategoryData {
@@ -511,6 +606,19 @@ export interface SalePayment_Key {
 export interface Sale_Key {
   id: UUIDString;
   __typename?: 'Sale_Key';
+}
+
+export interface SalesChannelConnection_Key {
+  id: UUIDString;
+  __typename?: 'SalesChannelConnection_Key';
+}
+
+export interface SalesChannelWorkspaceData {
+  _select?: unknown[] | null;
+}
+
+export interface SalesChannelWorkspaceVariables {
+  requestKey: string;
 }
 
 export interface SalesWorkspaceData {
@@ -771,6 +879,14 @@ export interface Tenant_Key {
   __typename?: 'Tenant_Key';
 }
 
+export interface TouchDeviceSessionData {
+  _execute?: number | null;
+}
+
+export interface TouchDeviceSessionVariables {
+  sessionToken: string;
+}
+
 export interface UpdateCategoryData {
   _execute?: number | null;
 }
@@ -778,6 +894,17 @@ export interface UpdateCategoryData {
 export interface UpdateCategoryVariables {
   id: UUIDString;
   name: string;
+}
+
+export interface UpdateSalesChannelConnectionData {
+  _execute?: number | null;
+}
+
+export interface UpdateSalesChannelConnectionVariables {
+  id: UUIDString;
+  displayName: string;
+  externalStoreId: string;
+  enabled: boolean;
 }
 
 export interface UpdateSubcategoryData {
@@ -796,6 +923,11 @@ export interface UserBranch_Key {
   __typename?: 'UserBranch_Key';
 }
 
+export interface UserDeviceSession_Key {
+  userId: string;
+  __typename?: 'UserDeviceSession_Key';
+}
+
 export interface UserPagePermission_Key {
   userId: string;
   pageId: UUIDString;
@@ -806,6 +938,27 @@ export interface User_Key {
   id: string;
   __typename?: 'User_Key';
 }
+
+export interface ValidateDeviceSessionData {
+  _select?: unknown[] | null;
+}
+
+export interface ValidateDeviceSessionVariables {
+  sessionToken: string;
+  requestKey: string;
+}
+
+interface BootstrapSalesChannelsNavigationRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: BootstrapSalesChannelsNavigationVariables): MutationRef<BootstrapSalesChannelsNavigationData, BootstrapSalesChannelsNavigationVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: BootstrapSalesChannelsNavigationVariables): MutationRef<BootstrapSalesChannelsNavigationData, BootstrapSalesChannelsNavigationVariables>;
+  operationName: string;
+}
+export const bootstrapSalesChannelsNavigationRef: BootstrapSalesChannelsNavigationRef;
+
+export function bootstrapSalesChannelsNavigation(vars: BootstrapSalesChannelsNavigationVariables): MutationPromise<BootstrapSalesChannelsNavigationData, BootstrapSalesChannelsNavigationVariables>;
+export function bootstrapSalesChannelsNavigation(dc: DataConnect, vars: BootstrapSalesChannelsNavigationVariables): MutationPromise<BootstrapSalesChannelsNavigationData, BootstrapSalesChannelsNavigationVariables>;
 
 interface BootstrapNavigationCatalogRef {
   /* Allow users to create refs without passing in DataConnect */
@@ -1287,6 +1440,114 @@ export const reverseStockOperationRef: ReverseStockOperationRef;
 export function reverseStockOperation(vars: ReverseStockOperationVariables): MutationPromise<ReverseStockOperationData, ReverseStockOperationVariables>;
 export function reverseStockOperation(dc: DataConnect, vars: ReverseStockOperationVariables): MutationPromise<ReverseStockOperationData, ReverseStockOperationVariables>;
 
+interface OpenCashSessionRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: OpenCashSessionVariables): MutationRef<OpenCashSessionData, OpenCashSessionVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: OpenCashSessionVariables): MutationRef<OpenCashSessionData, OpenCashSessionVariables>;
+  operationName: string;
+}
+export const openCashSessionRef: OpenCashSessionRef;
+
+export function openCashSession(vars: OpenCashSessionVariables): MutationPromise<OpenCashSessionData, OpenCashSessionVariables>;
+export function openCashSession(dc: DataConnect, vars: OpenCashSessionVariables): MutationPromise<OpenCashSessionData, OpenCashSessionVariables>;
+
+interface RegisterCashMovementRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: RegisterCashMovementVariables): MutationRef<RegisterCashMovementData, RegisterCashMovementVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: RegisterCashMovementVariables): MutationRef<RegisterCashMovementData, RegisterCashMovementVariables>;
+  operationName: string;
+}
+export const registerCashMovementRef: RegisterCashMovementRef;
+
+export function registerCashMovement(vars: RegisterCashMovementVariables): MutationPromise<RegisterCashMovementData, RegisterCashMovementVariables>;
+export function registerCashMovement(dc: DataConnect, vars: RegisterCashMovementVariables): MutationPromise<RegisterCashMovementData, RegisterCashMovementVariables>;
+
+interface ClaimDeviceSessionRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ClaimDeviceSessionVariables): MutationRef<ClaimDeviceSessionData, ClaimDeviceSessionVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ClaimDeviceSessionVariables): MutationRef<ClaimDeviceSessionData, ClaimDeviceSessionVariables>;
+  operationName: string;
+}
+export const claimDeviceSessionRef: ClaimDeviceSessionRef;
+
+export function claimDeviceSession(vars: ClaimDeviceSessionVariables): MutationPromise<ClaimDeviceSessionData, ClaimDeviceSessionVariables>;
+export function claimDeviceSession(dc: DataConnect, vars: ClaimDeviceSessionVariables): MutationPromise<ClaimDeviceSessionData, ClaimDeviceSessionVariables>;
+
+interface TouchDeviceSessionRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: TouchDeviceSessionVariables): MutationRef<TouchDeviceSessionData, TouchDeviceSessionVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: TouchDeviceSessionVariables): MutationRef<TouchDeviceSessionData, TouchDeviceSessionVariables>;
+  operationName: string;
+}
+export const touchDeviceSessionRef: TouchDeviceSessionRef;
+
+export function touchDeviceSession(vars: TouchDeviceSessionVariables): MutationPromise<TouchDeviceSessionData, TouchDeviceSessionVariables>;
+export function touchDeviceSession(dc: DataConnect, vars: TouchDeviceSessionVariables): MutationPromise<TouchDeviceSessionData, TouchDeviceSessionVariables>;
+
+interface ReleaseDeviceSessionRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ReleaseDeviceSessionVariables): MutationRef<ReleaseDeviceSessionData, ReleaseDeviceSessionVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ReleaseDeviceSessionVariables): MutationRef<ReleaseDeviceSessionData, ReleaseDeviceSessionVariables>;
+  operationName: string;
+}
+export const releaseDeviceSessionRef: ReleaseDeviceSessionRef;
+
+export function releaseDeviceSession(vars: ReleaseDeviceSessionVariables): MutationPromise<ReleaseDeviceSessionData, ReleaseDeviceSessionVariables>;
+export function releaseDeviceSession(dc: DataConnect, vars: ReleaseDeviceSessionVariables): MutationPromise<ReleaseDeviceSessionData, ReleaseDeviceSessionVariables>;
+
+interface CreateSalesChannelConnectionRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CreateSalesChannelConnectionVariables): MutationRef<CreateSalesChannelConnectionData, CreateSalesChannelConnectionVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: CreateSalesChannelConnectionVariables): MutationRef<CreateSalesChannelConnectionData, CreateSalesChannelConnectionVariables>;
+  operationName: string;
+}
+export const createSalesChannelConnectionRef: CreateSalesChannelConnectionRef;
+
+export function createSalesChannelConnection(vars: CreateSalesChannelConnectionVariables): MutationPromise<CreateSalesChannelConnectionData, CreateSalesChannelConnectionVariables>;
+export function createSalesChannelConnection(dc: DataConnect, vars: CreateSalesChannelConnectionVariables): MutationPromise<CreateSalesChannelConnectionData, CreateSalesChannelConnectionVariables>;
+
+interface UpdateSalesChannelConnectionRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: UpdateSalesChannelConnectionVariables): MutationRef<UpdateSalesChannelConnectionData, UpdateSalesChannelConnectionVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: UpdateSalesChannelConnectionVariables): MutationRef<UpdateSalesChannelConnectionData, UpdateSalesChannelConnectionVariables>;
+  operationName: string;
+}
+export const updateSalesChannelConnectionRef: UpdateSalesChannelConnectionRef;
+
+export function updateSalesChannelConnection(vars: UpdateSalesChannelConnectionVariables): MutationPromise<UpdateSalesChannelConnectionData, UpdateSalesChannelConnectionVariables>;
+export function updateSalesChannelConnection(dc: DataConnect, vars: UpdateSalesChannelConnectionVariables): MutationPromise<UpdateSalesChannelConnectionData, UpdateSalesChannelConnectionVariables>;
+
+interface ArchiveSalesChannelConnectionRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ArchiveSalesChannelConnectionVariables): MutationRef<ArchiveSalesChannelConnectionData, ArchiveSalesChannelConnectionVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ArchiveSalesChannelConnectionVariables): MutationRef<ArchiveSalesChannelConnectionData, ArchiveSalesChannelConnectionVariables>;
+  operationName: string;
+}
+export const archiveSalesChannelConnectionRef: ArchiveSalesChannelConnectionRef;
+
+export function archiveSalesChannelConnection(vars: ArchiveSalesChannelConnectionVariables): MutationPromise<ArchiveSalesChannelConnectionData, ArchiveSalesChannelConnectionVariables>;
+export function archiveSalesChannelConnection(dc: DataConnect, vars: ArchiveSalesChannelConnectionVariables): MutationPromise<ArchiveSalesChannelConnectionData, ArchiveSalesChannelConnectionVariables>;
+
+interface CloseCashSessionRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CloseCashSessionVariables): MutationRef<CloseCashSessionData, CloseCashSessionVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: CloseCashSessionVariables): MutationRef<CloseCashSessionData, CloseCashSessionVariables>;
+  operationName: string;
+}
+export const closeCashSessionRef: CloseCashSessionRef;
+
+export function closeCashSession(vars: CloseCashSessionVariables): MutationPromise<CloseCashSessionData, CloseCashSessionVariables>;
+export function closeCashSession(dc: DataConnect, vars: CloseCashSessionVariables): MutationPromise<CloseCashSessionData, CloseCashSessionVariables>;
+
 interface GetCurrentUserRef {
   /* Allow users to create refs without passing in DataConnect */
   (): QueryRef<GetCurrentUserData, undefined>;
@@ -1310,6 +1571,30 @@ export const getCurrentUserAccessRef: GetCurrentUserAccessRef;
 
 export function getCurrentUserAccess(options?: ExecuteQueryOptions): QueryPromise<GetCurrentUserAccessData, undefined>;
 export function getCurrentUserAccess(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetCurrentUserAccessData, undefined>;
+
+interface ValidateDeviceSessionRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ValidateDeviceSessionVariables): QueryRef<ValidateDeviceSessionData, ValidateDeviceSessionVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ValidateDeviceSessionVariables): QueryRef<ValidateDeviceSessionData, ValidateDeviceSessionVariables>;
+  operationName: string;
+}
+export const validateDeviceSessionRef: ValidateDeviceSessionRef;
+
+export function validateDeviceSession(vars: ValidateDeviceSessionVariables, options?: ExecuteQueryOptions): QueryPromise<ValidateDeviceSessionData, ValidateDeviceSessionVariables>;
+export function validateDeviceSession(dc: DataConnect, vars: ValidateDeviceSessionVariables, options?: ExecuteQueryOptions): QueryPromise<ValidateDeviceSessionData, ValidateDeviceSessionVariables>;
+
+interface SalesChannelWorkspaceRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SalesChannelWorkspaceVariables): QueryRef<SalesChannelWorkspaceData, SalesChannelWorkspaceVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SalesChannelWorkspaceVariables): QueryRef<SalesChannelWorkspaceData, SalesChannelWorkspaceVariables>;
+  operationName: string;
+}
+export const salesChannelWorkspaceRef: SalesChannelWorkspaceRef;
+
+export function salesChannelWorkspace(vars: SalesChannelWorkspaceVariables, options?: ExecuteQueryOptions): QueryPromise<SalesChannelWorkspaceData, SalesChannelWorkspaceVariables>;
+export function salesChannelWorkspace(dc: DataConnect, vars: SalesChannelWorkspaceVariables, options?: ExecuteQueryOptions): QueryPromise<SalesChannelWorkspaceData, SalesChannelWorkspaceVariables>;
 
 interface SalesWorkspaceRef {
   /* Allow users to create refs without passing in DataConnect */
@@ -1526,4 +1811,28 @@ export const financialIndicatorsDashboardRef: FinancialIndicatorsDashboardRef;
 
 export function financialIndicatorsDashboard(vars: FinancialIndicatorsDashboardVariables, options?: ExecuteQueryOptions): QueryPromise<FinancialIndicatorsDashboardData, FinancialIndicatorsDashboardVariables>;
 export function financialIndicatorsDashboard(dc: DataConnect, vars: FinancialIndicatorsDashboardVariables, options?: ExecuteQueryOptions): QueryPromise<FinancialIndicatorsDashboardData, FinancialIndicatorsDashboardVariables>;
+
+interface OperationalAnalyticsDashboardRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: OperationalAnalyticsDashboardVariables): QueryRef<OperationalAnalyticsDashboardData, OperationalAnalyticsDashboardVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: OperationalAnalyticsDashboardVariables): QueryRef<OperationalAnalyticsDashboardData, OperationalAnalyticsDashboardVariables>;
+  operationName: string;
+}
+export const operationalAnalyticsDashboardRef: OperationalAnalyticsDashboardRef;
+
+export function operationalAnalyticsDashboard(vars: OperationalAnalyticsDashboardVariables, options?: ExecuteQueryOptions): QueryPromise<OperationalAnalyticsDashboardData, OperationalAnalyticsDashboardVariables>;
+export function operationalAnalyticsDashboard(dc: DataConnect, vars: OperationalAnalyticsDashboardVariables, options?: ExecuteQueryOptions): QueryPromise<OperationalAnalyticsDashboardData, OperationalAnalyticsDashboardVariables>;
+
+interface RecoverPlatformAdministratorRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): MutationRef<RecoverPlatformAdministratorData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): MutationRef<RecoverPlatformAdministratorData, undefined>;
+  operationName: string;
+}
+export const recoverPlatformAdministratorRef: RecoverPlatformAdministratorRef;
+
+export function recoverPlatformAdministrator(): MutationPromise<RecoverPlatformAdministratorData, undefined>;
+export function recoverPlatformAdministrator(dc: DataConnect): MutationPromise<RecoverPlatformAdministratorData, undefined>;
 

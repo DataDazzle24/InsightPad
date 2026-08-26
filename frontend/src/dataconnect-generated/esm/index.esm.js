@@ -5,6 +5,18 @@ export const connectorConfig = {
   service: 'insightpad',
   location: 'southamerica-east1'
 };
+export const bootstrapSalesChannelsNavigationRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'BootstrapSalesChannelsNavigation', inputVars);
+}
+bootstrapSalesChannelsNavigationRef.operationName = 'BootstrapSalesChannelsNavigation';
+
+export function bootstrapSalesChannelsNavigation(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(bootstrapSalesChannelsNavigationRef(dcInstance, inputVars));
+}
+
 export const bootstrapNavigationCatalogRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
@@ -485,6 +497,114 @@ export function reverseStockOperation(dcOrVars, vars) {
   return executeMutation(reverseStockOperationRef(dcInstance, inputVars));
 }
 
+export const openCashSessionRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'OpenCashSession', inputVars);
+}
+openCashSessionRef.operationName = 'OpenCashSession';
+
+export function openCashSession(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(openCashSessionRef(dcInstance, inputVars));
+}
+
+export const registerCashMovementRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RegisterCashMovement', inputVars);
+}
+registerCashMovementRef.operationName = 'RegisterCashMovement';
+
+export function registerCashMovement(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(registerCashMovementRef(dcInstance, inputVars));
+}
+
+export const claimDeviceSessionRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'ClaimDeviceSession', inputVars);
+}
+claimDeviceSessionRef.operationName = 'ClaimDeviceSession';
+
+export function claimDeviceSession(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(claimDeviceSessionRef(dcInstance, inputVars));
+}
+
+export const touchDeviceSessionRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'TouchDeviceSession', inputVars);
+}
+touchDeviceSessionRef.operationName = 'TouchDeviceSession';
+
+export function touchDeviceSession(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(touchDeviceSessionRef(dcInstance, inputVars));
+}
+
+export const releaseDeviceSessionRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'ReleaseDeviceSession', inputVars);
+}
+releaseDeviceSessionRef.operationName = 'ReleaseDeviceSession';
+
+export function releaseDeviceSession(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(releaseDeviceSessionRef(dcInstance, inputVars));
+}
+
+export const createSalesChannelConnectionRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'CreateSalesChannelConnection', inputVars);
+}
+createSalesChannelConnectionRef.operationName = 'CreateSalesChannelConnection';
+
+export function createSalesChannelConnection(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(createSalesChannelConnectionRef(dcInstance, inputVars));
+}
+
+export const updateSalesChannelConnectionRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'UpdateSalesChannelConnection', inputVars);
+}
+updateSalesChannelConnectionRef.operationName = 'UpdateSalesChannelConnection';
+
+export function updateSalesChannelConnection(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(updateSalesChannelConnectionRef(dcInstance, inputVars));
+}
+
+export const archiveSalesChannelConnectionRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'ArchiveSalesChannelConnection', inputVars);
+}
+archiveSalesChannelConnectionRef.operationName = 'ArchiveSalesChannelConnection';
+
+export function archiveSalesChannelConnection(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(archiveSalesChannelConnectionRef(dcInstance, inputVars));
+}
+
+export const closeCashSessionRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'CloseCashSession', inputVars);
+}
+closeCashSessionRef.operationName = 'CloseCashSession';
+
+export function closeCashSession(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(closeCashSessionRef(dcInstance, inputVars));
+}
+
 export const getCurrentUserRef = (dc) => {
   const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
   dcInstance._useGeneratedSdk();
@@ -509,6 +629,32 @@ export function getCurrentUserAccess(dcOrOptions, options) {
   
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
   return executeQuery(getCurrentUserAccessRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const validateDeviceSessionRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'ValidateDeviceSession', inputVars);
+}
+validateDeviceSessionRef.operationName = 'ValidateDeviceSession';
+
+export function validateDeviceSession(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(validateDeviceSessionRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const salesChannelWorkspaceRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'SalesChannelWorkspace', inputVars);
+}
+salesChannelWorkspaceRef.operationName = 'SalesChannelWorkspace';
+
+export function salesChannelWorkspace(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(salesChannelWorkspaceRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 
 export const salesWorkspaceRef = (dcOrVars, vars) => {
@@ -743,5 +889,30 @@ export function financialIndicatorsDashboard(dcOrVars, varsOrOptions, options) {
   
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(financialIndicatorsDashboardRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const operationalAnalyticsDashboardRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'OperationalAnalyticsDashboard', inputVars);
+}
+operationalAnalyticsDashboardRef.operationName = 'OperationalAnalyticsDashboard';
+
+export function operationalAnalyticsDashboard(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(operationalAnalyticsDashboardRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const recoverPlatformAdministratorRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RecoverPlatformAdministrator');
+}
+recoverPlatformAdministratorRef.operationName = 'RecoverPlatformAdministrator';
+
+export function recoverPlatformAdministrator(dc) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dc, undefined);
+  return executeMutation(recoverPlatformAdministratorRef(dcInstance, inputVars));
 }
 

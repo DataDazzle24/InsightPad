@@ -12,8 +12,10 @@ For each operation, there is a wrapper hook that can be used to call the operati
 
 Here are all of the hooks that get generated:
 ```ts
-import { useBootstrapNavigationCatalog, useCreateCategory, useUpdateCategory, useArchiveCategory, useCreateSubcategory, useUpdateSubcategory, useArchiveSubcategory, useRestoreCategory, useRestoreSubcategory, useCreateCategoriesBatch } from '@insightpad/dataconnect/react';
+import { useBootstrapSalesChannelsNavigation, useBootstrapNavigationCatalog, useCreateCategory, useUpdateCategory, useArchiveCategory, useCreateSubcategory, useUpdateSubcategory, useArchiveSubcategory, useRestoreCategory, useRestoreSubcategory } from '@insightpad/dataconnect/react';
 // The types of these hooks are available in react/index.d.ts
+
+const { data, isPending, isSuccess, isError, error } = useBootstrapSalesChannelsNavigation(bootstrapSalesChannelsNavigationVars);
 
 const { data, isPending, isSuccess, isError, error } = useBootstrapNavigationCatalog(bootstrapNavigationCatalogVars);
 
@@ -32,8 +34,6 @@ const { data, isPending, isSuccess, isError, error } = useArchiveSubcategory(arc
 const { data, isPending, isSuccess, isError, error } = useRestoreCategory(restoreCategoryVars);
 
 const { data, isPending, isSuccess, isError, error } = useRestoreSubcategory(restoreSubcategoryVars);
-
-const { data, isPending, isSuccess, isError, error } = useCreateCategoriesBatch(createCategoriesBatchVars);
 
 ```
 
@@ -72,8 +72,11 @@ If a user is not using a supported framework, they can use the generated SDK dir
 Here's an example of how to use it with the first 5 operations:
 
 ```js
-import { bootstrapNavigationCatalog, createCategory, updateCategory, archiveCategory, createSubcategory, updateSubcategory, archiveSubcategory, restoreCategory, restoreSubcategory, createCategoriesBatch } from '@insightpad/dataconnect';
+import { bootstrapSalesChannelsNavigation, bootstrapNavigationCatalog, createCategory, updateCategory, archiveCategory, createSubcategory, updateSubcategory, archiveSubcategory, restoreCategory, restoreSubcategory } from '@insightpad/dataconnect';
 
+
+// Operation BootstrapSalesChannelsNavigation:  For variables, look at type BootstrapSalesChannelsNavigationVars in ../index.d.ts
+const { data } = await BootstrapSalesChannelsNavigation(dataConnect, bootstrapSalesChannelsNavigationVars);
 
 // Operation BootstrapNavigationCatalog:  For variables, look at type BootstrapNavigationCatalogVars in ../index.d.ts
 const { data } = await BootstrapNavigationCatalog(dataConnect, bootstrapNavigationCatalogVars);
@@ -101,9 +104,6 @@ const { data } = await RestoreCategory(dataConnect, restoreCategoryVars);
 
 // Operation RestoreSubcategory:  For variables, look at type RestoreSubcategoryVars in ../index.d.ts
 const { data } = await RestoreSubcategory(dataConnect, restoreSubcategoryVars);
-
-// Operation CreateCategoriesBatch:  For variables, look at type CreateCategoriesBatchVars in ../index.d.ts
-const { data } = await CreateCategoriesBatch(dataConnect, createCategoriesBatchVars);
 
 
 ```
