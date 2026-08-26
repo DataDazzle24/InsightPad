@@ -87,6 +87,28 @@ query ValidateDeviceSession($sessionToken: String!, $requestKey: String!) @auth(
   """,params:[{_expr:"auth.uid"},$sessionToken,$requestKey])
 }
 
+query SalesChannelWorkspace($requestKey: String!) @auth(level: USER) {
+  _select(sql: """
+    WITH actor AS (
+      SELECT u.id, u.tenant_id
+      FROM users u
+      JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.active AND r.deleted_at IS NULL
+      JOIN app_pages p ON p.page_key='CANAIS_VENDA' AND p.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=p.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=p.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
+        AND COALESCE(up.can_access,rp.can_access,false)
+    )
+    SELECT jsonb_build_object(
+      'branches',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',b.id,'name',b.name) ORDER BY lower(b.name)) FROM branches b JOIN actor a ON a.tenant_id=b.tenant_id WHERE b.active AND b.deleted_at IS NULL),'[]'::jsonb),
+      'connections',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',c.id,'provider',c.provider,'displayName',c.display_name,'externalStoreId',c.external_store_id,'branchId',c.branch_id,'branchName',b.name,'status',c.status,'enabled',c.enabled,'lastSyncedAt',c.last_synced_at,'lastError',c.last_error,'active',c.active,'createdAt',c.created_at,'updatedAt',c.updated_at) ORDER BY lower(c.provider),lower(c.display_name)) FROM sales_channel_connections c JOIN actor a ON a.tenant_id=c.tenant_id JOIN branches b ON b.id=c.branch_id AND b.tenant_id=c.tenant_id WHERE c.active AND c.deleted_at IS NULL),'[]'::jsonb)
+    ) AS data
+    FROM actor
+    WHERE $2<>''
+  """,params:[{_expr:"auth.uid"},$requestKey])
+}
+
 # Sales workstation bootstrap. Authorization and tenant scope are derived from auth.uid.
 query SalesWorkspace($branchId: UUID, $requestKey: String!) @auth(level: USER) {
   _select(sql: """
