@@ -93,6 +93,27 @@ type UserDeviceSession @table(name: "user_device_sessions", key: "user") {
   lastSeenAt: Timestamp! @default(expr: "request.time") @col(name: "last_seen_at")
 }
 
+# A tenant-owned sales channel configuration. OAuth tokens and partner secrets
+# are deliberately kept outside this database, in managed server-side secrets.
+type SalesChannelConnection @table(name: "sales_channel_connections", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  branch: Branch! @ref(fields: "branchId", references: "id")
+  branchId: UUID! @col(name: "branch_id")
+  provider: String! @col(dataType: "varchar(40)")
+  displayName: String! @col(name: "display_name", dataType: "varchar(160)")
+  externalStoreId: String @col(name: "external_store_id", dataType: "varchar(160)")
+  status: String! @default(value: "DRAFT") @col(dataType: "varchar(32)")
+  enabled: Boolean! @default(value: true)
+  lastSyncedAt: Timestamp @col(name: "last_synced_at")
+  lastError: String @col(name: "last_error", dataType: "varchar(1000)")
+  active: Boolean! @default(value: true)
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+  deletedAt: Timestamp @col(name: "deleted_at")
+}
+
 type RolePagePermission
   @table(name: "role_page_permissions", key: ["role", "page"]) {
   role: Role!
