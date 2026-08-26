@@ -11,6 +11,6 @@ export const appRoutes = [
   { pageKey: 'CAD_FORNECEDOR', route: '/cadastros/fornecedores' },
   { pageKey: 'CAD_FILIAL', route: '/cadastros/filiais' },
   { pageKey: 'RELATORIOS_OPERACIONAIS', route: '/dashboards/operacional' },
-  { pageKey: 'CANAIS_VENDA', route: '/integracoes/canais' },
+  { pageKey: 'CANAIS_VENDA', route: '/integracoes/canais/conexoes' },
   { pageKey: 'GESTAO_ACESSOS', route: '/configuracoes/acessos' },
 ] as const
