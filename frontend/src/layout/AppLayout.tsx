@@ -4,6 +4,7 @@ import { useAuth } from "../auth/useAuth";
 import { navigationModules } from "../config/navigation";
 import { useTheme } from "../theme/theme-context";
 import { smartMaskInput } from "../utils/inputMasks";
+import { ChannelOrderNotifier } from "../components/ChannelOrderNotifier";
 
 export function AppLayout() {
   const { profile, permissions, canAccess, signOut } = useAuth();
@@ -186,6 +187,7 @@ export function AppLayout() {
       <section className="app-stage">
         <Outlet />
       </section>
+      <ChannelOrderNotifier />
     </main>
   );
 }
