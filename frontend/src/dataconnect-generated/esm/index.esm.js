@@ -5,16 +5,17 @@ export const connectorConfig = {
   service: 'insightpad',
   location: 'southamerica-east1'
 };
-export const bootstrapSalesChannelOrderIndexesRef = (dc) => {
+export const verifySalesChannelOrderConstraintsRef = (dc) => {
   const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
   dcInstance._useGeneratedSdk();
-  return mutationRef(dcInstance, 'BootstrapSalesChannelOrderIndexes');
+  return queryRef(dcInstance, 'VerifySalesChannelOrderConstraints');
 }
-bootstrapSalesChannelOrderIndexesRef.operationName = 'BootstrapSalesChannelOrderIndexes';
+verifySalesChannelOrderConstraintsRef.operationName = 'VerifySalesChannelOrderConstraints';
 
-export function bootstrapSalesChannelOrderIndexes(dc) {
-  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dc, undefined);
-  return executeMutation(bootstrapSalesChannelOrderIndexesRef(dcInstance, inputVars));
+export function verifySalesChannelOrderConstraints(dcOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(verifySalesChannelOrderConstraintsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 
 export const bootstrapSalesChannelsNavigationRef = (dcOrVars, vars) => {

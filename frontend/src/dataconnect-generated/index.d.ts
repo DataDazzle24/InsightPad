@@ -103,15 +103,6 @@ export interface BootstrapNavigationCatalogVariables {
   platformAdminRoleId: UUIDString;
 }
 
-export interface BootstrapSalesChannelOrderIndexesData {
-  idempotency?: number | null;
-  timeline?: number | null;
-  statusQueue?: number | null;
-  itemLookup?: number | null;
-  productMapping?: number | null;
-  externalProductMapping?: number | null;
-}
-
 export interface BootstrapSalesChannelsNavigationData {
   page: AppPage_Key;
   permission: RolePagePermission_Key;
@@ -1043,17 +1034,21 @@ export interface ValidateDeviceSessionVariables {
   requestKey: string;
 }
 
-interface BootstrapSalesChannelOrderIndexesRef {
+export interface VerifySalesChannelOrderConstraintsData {
+  _select?: unknown[] | null;
+}
+
+interface VerifySalesChannelOrderConstraintsRef {
   /* Allow users to create refs without passing in DataConnect */
-  (): MutationRef<BootstrapSalesChannelOrderIndexesData, undefined>;
+  (): QueryRef<VerifySalesChannelOrderConstraintsData, undefined>;
   /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect): MutationRef<BootstrapSalesChannelOrderIndexesData, undefined>;
+  (dc: DataConnect): QueryRef<VerifySalesChannelOrderConstraintsData, undefined>;
   operationName: string;
 }
-export const bootstrapSalesChannelOrderIndexesRef: BootstrapSalesChannelOrderIndexesRef;
+export const verifySalesChannelOrderConstraintsRef: VerifySalesChannelOrderConstraintsRef;
 
-export function bootstrapSalesChannelOrderIndexes(): MutationPromise<BootstrapSalesChannelOrderIndexesData, undefined>;
-export function bootstrapSalesChannelOrderIndexes(dc: DataConnect): MutationPromise<BootstrapSalesChannelOrderIndexesData, undefined>;
+export function verifySalesChannelOrderConstraints(options?: ExecuteQueryOptions): QueryPromise<VerifySalesChannelOrderConstraintsData, undefined>;
+export function verifySalesChannelOrderConstraints(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<VerifySalesChannelOrderConstraintsData, undefined>;
 
 interface BootstrapSalesChannelsNavigationRef {
   /* Allow users to create refs without passing in DataConnect */

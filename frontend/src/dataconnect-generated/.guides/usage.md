@@ -12,10 +12,10 @@ For each operation, there is a wrapper hook that can be used to call the operati
 
 Here are all of the hooks that get generated:
 ```ts
-import { useBootstrapSalesChannelOrderIndexes, useBootstrapSalesChannelsNavigation, useBootstrapSalesChannelsNavigationV2, useBootstrapNavigationCatalog, useCreateCategory, useUpdateCategory, useArchiveCategory, useCreateSubcategory, useUpdateSubcategory, useArchiveSubcategory } from '@insightpad/dataconnect/react';
+import { useVerifySalesChannelOrderConstraints, useBootstrapSalesChannelsNavigation, useBootstrapSalesChannelsNavigationV2, useBootstrapNavigationCatalog, useCreateCategory, useUpdateCategory, useArchiveCategory, useCreateSubcategory, useUpdateSubcategory, useArchiveSubcategory } from '@insightpad/dataconnect/react';
 // The types of these hooks are available in react/index.d.ts
 
-const { data, isPending, isSuccess, isError, error } = useBootstrapSalesChannelOrderIndexes();
+const { data, isPending, isSuccess, isError, error } = useVerifySalesChannelOrderConstraints();
 
 const { data, isPending, isSuccess, isError, error } = useBootstrapSalesChannelsNavigation(bootstrapSalesChannelsNavigationVars);
 
@@ -72,11 +72,11 @@ If a user is not using a supported framework, they can use the generated SDK dir
 Here's an example of how to use it with the first 5 operations:
 
 ```js
-import { bootstrapSalesChannelOrderIndexes, bootstrapSalesChannelsNavigation, bootstrapSalesChannelsNavigationV2, bootstrapNavigationCatalog, createCategory, updateCategory, archiveCategory, createSubcategory, updateSubcategory, archiveSubcategory } from '@insightpad/dataconnect';
+import { verifySalesChannelOrderConstraints, bootstrapSalesChannelsNavigation, bootstrapSalesChannelsNavigationV2, bootstrapNavigationCatalog, createCategory, updateCategory, archiveCategory, createSubcategory, updateSubcategory, archiveSubcategory } from '@insightpad/dataconnect';
 
 
-// Operation BootstrapSalesChannelOrderIndexes: 
-const { data } = await BootstrapSalesChannelOrderIndexes(dataConnect);
+// Operation VerifySalesChannelOrderConstraints: 
+const { data } = await VerifySalesChannelOrderConstraints(dataConnect);
 
 // Operation BootstrapSalesChannelsNavigation:  For variables, look at type BootstrapSalesChannelsNavigationVars in ../index.d.ts
 const { data } = await BootstrapSalesChannelsNavigation(dataConnect, bootstrapSalesChannelsNavigationVars);

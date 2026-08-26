@@ -7,17 +7,18 @@ const connectorConfig = {
 };
 exports.connectorConfig = connectorConfig;
 
-const bootstrapSalesChannelOrderIndexesRef = (dc) => {
+const verifySalesChannelOrderConstraintsRef = (dc) => {
   const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
   dcInstance._useGeneratedSdk();
-  return mutationRef(dcInstance, 'BootstrapSalesChannelOrderIndexes');
+  return queryRef(dcInstance, 'VerifySalesChannelOrderConstraints');
 }
-bootstrapSalesChannelOrderIndexesRef.operationName = 'BootstrapSalesChannelOrderIndexes';
-exports.bootstrapSalesChannelOrderIndexesRef = bootstrapSalesChannelOrderIndexesRef;
+verifySalesChannelOrderConstraintsRef.operationName = 'VerifySalesChannelOrderConstraints';
+exports.verifySalesChannelOrderConstraintsRef = verifySalesChannelOrderConstraintsRef;
 
-exports.bootstrapSalesChannelOrderIndexes = function bootstrapSalesChannelOrderIndexes(dc) {
-  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dc, undefined);
-  return executeMutation(bootstrapSalesChannelOrderIndexesRef(dcInstance, inputVars));
+exports.verifySalesChannelOrderConstraints = function verifySalesChannelOrderConstraints(dcOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(verifySalesChannelOrderConstraintsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;
 
