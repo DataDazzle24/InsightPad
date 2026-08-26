@@ -1,0 +1,20 @@
+# Run once after deploying the sales-channel order schema in an environment.
+# The unique index is the database-level idempotency guard for partner webhooks.
+mutation BootstrapSalesChannelOrderIndexes @auth(level: NO_ACCESS) {
+  idempotency: _execute(sql: """
+    CREATE UNIQUE INDEX IF NOT EXISTS uq_sales_channel_orders_provider
+    ON sales_channel_orders(tenant_id,connection_id,provider_order_id)
+  """,params:[])
+  timeline: _execute(sql: """
+    CREATE INDEX IF NOT EXISTS ix_sales_channel_orders_timeline
+    ON sales_channel_orders(tenant_id,received_at DESC)
+  """,params:[])
+  statusQueue: _execute(sql: """
+    CREATE INDEX IF NOT EXISTS ix_sales_channel_orders_status_queue
+    ON sales_channel_orders(tenant_id,status,received_at DESC)
+  """,params:[])
+  itemLookup: _execute(sql: """
+    CREATE INDEX IF NOT EXISTS ix_sales_channel_order_items_order
+    ON sales_channel_order_items(tenant_id,order_id)
+  """,params:[])
+}
