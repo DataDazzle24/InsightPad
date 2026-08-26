@@ -22,6 +22,8 @@ export function AppLayout() {
   );
   const pageTitle = useMemo(() => {
     if (location.pathname === "/") return "Menu Principal";
+    if (location.pathname === "/integracoes/canais/pedidos") return "Pedidos";
+    if (location.pathname === "/integracoes/canais/conexoes") return "Gestão de conexões";
     const permission = Object.values(permissions).find(
       ({ page }) => page.route === location.pathname,
     );
