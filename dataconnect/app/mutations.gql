@@ -1591,6 +1591,35 @@ mutation ArchiveSalesChannelConnection($id: UUID!) @auth(level: USER) @transacti
   """,params:[{_expr:"auth.uid"},$id])
 }
 
+mutation TransitionSalesChannelOrder($id: UUID!, $action: String!, $reason: String!, $expectedVersion: Int!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u
+      JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.active AND r.deleted_at IS NULL
+      JOIN app_pages p ON p.page_key='CANAIS_VENDA' AND p.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=p.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=p.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_update,rp.can_update,false)
+    ), input AS (SELECT a.*,upper(btrim($3)) action,btrim($4) reason FROM actor a WHERE upper(btrim($3)) IN ('ACCEPT','REJECT','COMPLETE')),
+    changed AS (
+      UPDATE sales_channel_orders o SET
+        status=CASE WHEN i.action='ACCEPT' THEN 'ACCEPTED' WHEN i.action='REJECT' THEN 'REJECTED' ELSE 'COMPLETED' END,
+        accepted_at=CASE WHEN i.action='ACCEPT' THEN now() ELSE o.accepted_at END,
+        rejected_at=CASE WHEN i.action='REJECT' THEN now() ELSE o.rejected_at END,
+        completed_at=CASE WHEN i.action='COMPLETE' THEN now() ELSE o.completed_at END,
+        rejection_reason=CASE WHEN i.action='REJECT' THEN left(i.reason,500) ELSE o.rejection_reason END,
+        processed_by_uid=i.id,version=o.version+1,updated_at=now()
+      FROM input i WHERE o.id=$2 AND o.tenant_id=i.tenant_id AND o.version=$5
+        AND ((i.action IN ('ACCEPT','REJECT') AND o.status='PENDING') OR (i.action='COMPLETE' AND o.status='ACCEPTED'))
+        AND (i.action<>'REJECT' OR length(i.reason)>=5)
+      RETURNING o.id,o.tenant_id,o.display_code,o.status,o.version
+    )
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+    SELECT c.tenant_id,$1,'Integrações','CANAIS_VENDA',c.status,'SalesChannelOrder',c.id::text,'Status do pedido externo atualizado',true,'SQL_CONNECT',jsonb_build_object('displayCode',c.display_code,'status',c.status,'version',c.version),now() FROM changed c
+  """,params:[{_expr:"auth.uid"},$id,$action,$reason,$expectedVersion])
+}
+
 mutation CloseCashSession($sessionId: UUID!, $countedAmountCents: Int64!, $notes: String!) @auth(level: USER) @transaction {
   _execute(sql: """
     WITH actor AS (
