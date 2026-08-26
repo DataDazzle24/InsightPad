@@ -20,6 +20,7 @@ const SalesManagementPage = lazy(() => import('./pages/SalesManagementPage').the
 const PlatformAdminPage = lazy(() => import('./pages/PlatformAdminPage').then((module) => ({ default: module.PlatformAdminPage })))
 const StockPage = lazy(() => import('./pages/StockPage').then((module) => ({ default: module.StockPage })))
 const DashboardHubPage = lazy(() => import('./pages/DashboardHubPage').then((module) => ({ default: module.DashboardHubPage })))
+const SalesChannelsPage = lazy(() => import('./pages/SalesChannelsPage').then((module) => ({ default: module.SalesChannelsPage })))
 
 export default function App() {
   return (
@@ -33,11 +34,12 @@ export default function App() {
           <Route element={<PlatformAdminRoute />}><Route path="/plataforma/administracao" element={<Navigate to="/configuracoes/acessos" replace />} /><Route path="/configuracoes/acessos" element={<PlatformAdminPage />} /></Route>
           <Route index element={<DashboardPage />} />
           <Route path="/modulos/vendas" element={<ModuleMenuPage moduleKey="vendas" />} />
+          <Route path="/modulos/financeiro" element={<ModuleMenuPage moduleKey="financeiro" />} />
           <Route path="/modulos/cadastros" element={<ModuleMenuPage moduleKey="cadastros" />} />
           <Route path="/modulos/dashboards" element={<ModuleMenuPage moduleKey="dashboards" />} />
           {appRoutes.filter(({ pageKey }) => pageKey !== 'GESTAO_ACESSOS').map(({ pageKey, route }) => (
             <Route element={<PermissionRoute pageKey={pageKey} />} key={pageKey}>
-              <Route path={route} element={pageKey === 'CAIXA' ? <PointOfSalePage /> : pageKey === 'GESTAO_VENDAS' ? <SalesManagementPage /> : pageKey === 'ESTOQUE' ? <StockPage /> : pageKey === 'RELATORIOS_OPERACIONAIS' ? <DashboardHubPage /> : pageKey === 'CAD_CATEGORIA' || pageKey === 'CAD_SUBCATEGORIA' ? <CatalogPages pageKey={pageKey} /> : pageKey === 'CAD_FILIAL' || pageKey === 'CAD_FORNECEDOR' || pageKey === 'CAD_CLIENTE' || pageKey === 'CAD_PRODUTO' ? <MasterDataPage pageKey={pageKey} /> : <ModulePlaceholderPage pageKey={pageKey} />} />
+              <Route path={route} element={pageKey === 'CAIXA' ? <PointOfSalePage /> : pageKey === 'GESTAO_VENDAS' ? <SalesManagementPage /> : pageKey === 'ESTOQUE' ? <StockPage /> : pageKey === 'RELATORIOS_OPERACIONAIS' ? <DashboardHubPage /> : pageKey === 'CANAIS_VENDA' ? <SalesChannelsPage /> : pageKey === 'CAD_CATEGORIA' || pageKey === 'CAD_SUBCATEGORIA' ? <CatalogPages pageKey={pageKey} /> : pageKey === 'CAD_FILIAL' || pageKey === 'CAD_FORNECEDOR' || pageKey === 'CAD_CLIENTE' || pageKey === 'CAD_PRODUTO' ? <MasterDataPage pageKey={pageKey} /> : <ModulePlaceholderPage pageKey={pageKey} />} />
             </Route>
           ))}
         </Route>
