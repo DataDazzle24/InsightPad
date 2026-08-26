@@ -149,6 +149,17 @@ mutation BootstrapNavigationCatalog(
     requiresLogin: true
     active: true
   })
+  pageCanaisVenda: appPage_upsert(data: {
+    id: "10000000-0000-4000-8000-00000000000e"
+    pageKey: "CANAIS_VENDA"
+    displayName: "Canais de Venda"
+    module: "Integrações"
+    route: "/integracoes/canais"
+    icon: "hub"
+    displayOrder: 140
+    requiresLogin: true
+    active: true
+  })
 
   permissionCaixa: rolePagePermission_upsert(data: {
     roleId: $platformAdminRoleId
@@ -285,6 +296,17 @@ mutation BootstrapNavigationCatalog(
   permissionGestaoAcessos: rolePagePermission_upsert(data: {
     roleId: $platformAdminRoleId
     pageId: "10000000-0000-4000-8000-00000000000d"
+    tenantId: $tenantId
+    canAccess: true
+    canCreate: true
+    canUpdate: true
+    canDelete: true
+    canExport: true
+    canManage: true
+  })
+  permissionCanaisVenda: rolePagePermission_upsert(data: {
+    roleId: $platformAdminRoleId
+    pageId: "10000000-0000-4000-8000-00000000000e"
     tenantId: $tenantId
     canAccess: true
     canCreate: true
@@ -1520,6 +1542,53 @@ mutation ReleaseDeviceSession($sessionToken: String!) @auth(level: USER) {
   _execute(sql: """
     DELETE FROM user_device_sessions WHERE user_id=$1 AND session_token=$2
   """,params:[{_expr:"auth.uid"},$sessionToken])
+}
+
+mutation CreateSalesChannelConnection($provider: String!, $branchId: UUID!, $displayName: String!, $externalStoreId: String!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u
+      JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.active AND r.deleted_at IS NULL
+      JOIN app_pages p ON p.page_key='CANAIS_VENDA' AND p.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=p.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=p.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_create,rp.can_create,false)
+    ), inserted AS (
+      INSERT INTO sales_channel_connections(tenant_id,branch_id,provider,display_name,external_store_id,status,enabled,active,created_at,updated_at)
+      SELECT a.tenant_id,b.id,upper(btrim($2)),left(btrim($4),160),NULLIF(left(btrim($5),160),''),'DRAFT',true,true,now(),now()
+      FROM actor a JOIN branches b ON b.id=$3 AND b.tenant_id=a.tenant_id AND b.active AND b.deleted_at IS NULL
+      WHERE upper(btrim($2)) IN ('IFOOD','ZE_DELIVERY') AND length(btrim($4))>=2
+        AND NOT EXISTS(SELECT 1 FROM sales_channel_connections c WHERE c.tenant_id=a.tenant_id AND c.branch_id=b.id AND c.provider=upper(btrim($2)) AND c.active AND c.deleted_at IS NULL)
+      RETURNING id,tenant_id,provider,display_name,branch_id
+    )
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+    SELECT i.tenant_id,$1,'Integrações','CANAIS_VENDA','CREATE','SalesChannelConnection',i.id::text,'Canal de venda preparado',true,'SQL_CONNECT',jsonb_build_object('provider',i.provider,'displayName',i.display_name,'branchId',i.branch_id),now() FROM inserted i
+  """,params:[{_expr:"auth.uid"},$provider,$branchId,$displayName,$externalStoreId])
+}
+
+mutation UpdateSalesChannelConnection($id: UUID!, $displayName: String!, $externalStoreId: String!, $enabled: Boolean!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.active AND r.deleted_at IS NULL JOIN app_pages p ON p.page_key='CANAIS_VENDA' AND p.active LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=p.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=p.id AND rp.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_update,rp.can_update,false)
+    ), changed AS (
+      UPDATE sales_channel_connections c SET display_name=left(btrim($3),160),external_store_id=NULLIF(left(btrim($4),160),''),enabled=$5,updated_at=now() FROM actor a WHERE c.id=$2 AND c.tenant_id=a.tenant_id AND c.active AND c.deleted_at IS NULL AND length(btrim($3))>=2 RETURNING c.id,c.tenant_id,c.provider,c.display_name,c.enabled
+    )
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+    SELECT c.tenant_id,$1,'Integrações','CANAIS_VENDA','UPDATE','SalesChannelConnection',c.id::text,'Configuração do canal atualizada',true,'SQL_CONNECT',jsonb_build_object('provider',c.provider,'displayName',c.display_name,'enabled',c.enabled),now() FROM changed c
+  """,params:[{_expr:"auth.uid"},$id,$displayName,$externalStoreId,$enabled])
+}
+
+mutation ArchiveSalesChannelConnection($id: UUID!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.active AND r.deleted_at IS NULL JOIN app_pages p ON p.page_key='CANAIS_VENDA' AND p.active LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=p.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=p.id AND rp.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_delete,rp.can_delete,false)
+    ), archived AS (
+      UPDATE sales_channel_connections c SET active=false,enabled=false,deleted_at=now(),updated_at=now() FROM actor a WHERE c.id=$2 AND c.tenant_id=a.tenant_id AND c.active AND c.deleted_at IS NULL RETURNING c.id,c.tenant_id,c.provider,c.display_name
+    )
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,before_data,created_at)
+    SELECT c.tenant_id,$1,'Integrações','CANAIS_VENDA','ARCHIVE','SalesChannelConnection',c.id::text,'Canal de venda removido',true,'SQL_CONNECT',jsonb_build_object('provider',c.provider,'displayName',c.display_name),now() FROM archived c
+  """,params:[{_expr:"auth.uid"},$id])
 }
 
 mutation CloseCashSession($sessionId: UUID!, $countedAmountCents: Int64!, $notes: String!) @auth(level: USER) @transaction {
