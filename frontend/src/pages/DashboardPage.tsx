@@ -1,11 +1,9 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
 import { navigationModules } from '../config/navigation'
-import { useTheme } from '../theme/theme-context'
 
 export function DashboardPage() {
   const { profile, canAccess } = useAuth()
-  const { theme } = useTheme()
   const modules = navigationModules.filter((module) => module.pageKeys.some(canAccess))
 
   return (
@@ -13,15 +11,7 @@ export function DashboardPage() {
       <div className="home-menu__brand">
         <div className="home-menu__welcome"><span>Bem-vindo,</span><strong>{profile?.name?.split(' ')[0]}</strong></div>
         <img className="home-menu__insight-logo" src="/brand/insight-pad-logo-compact.png" alt="Insight Pad" />
-        <footer>
-          <span>Um produto</span>
-          <img
-            src={theme === 'light'
-              ? '/brand/data-dazzle-logo-light-compact.png'
-              : '/brand/data-dazzle-logo-dark-compact.png'}
-            alt="Data Dazzle"
-          />
-        </footer>
+        <footer className="home-menu__copyright">© 2026 Data Dazzle. Todos os direitos reservados.</footer>
       </div>
       <div className="home-menu__modules">
         {modules.map((module) => (
