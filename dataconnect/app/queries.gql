@@ -109,6 +109,39 @@ query SalesChannelWorkspace($requestKey: String!) @auth(level: USER) {
   """,params:[{_expr:"auth.uid"},$requestKey])
 }
 
+query SalesChannelOrders($term: String!, $status: String!, $provider: String!, $branchId: UUID, $limit: Int!, $offset: Int!, $requestKey: String!) @auth(level: USER) {
+  _select(sql: """
+    WITH actor AS (
+      SELECT u.tenant_id FROM users u
+      JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.active AND r.deleted_at IS NULL
+      JOIN app_pages p ON p.page_key='CANAIS_VENDA' AND p.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=p.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=p.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_access,rp.can_access,false)
+    ), eligible AS (
+      SELECT o.*,c.provider,b.name branch_name FROM sales_channel_orders o
+      JOIN actor a ON a.tenant_id=o.tenant_id
+      JOIN sales_channel_connections c ON c.id=o.connection_id AND c.tenant_id=o.tenant_id
+      JOIN branches b ON b.id=o.branch_id AND b.tenant_id=o.tenant_id
+      WHERE ($2='' OR o.display_code ILIKE '%'||$2||'%' OR COALESCE(o.customer_name,'') ILIKE '%'||$2||'%')
+        AND ($3='' OR o.status=$3) AND ($4='' OR c.provider=$4) AND ($5::uuid IS NULL OR o.branch_id=$5)
+    ), page AS (SELECT * FROM eligible ORDER BY received_at DESC,id DESC LIMIT LEAST(GREATEST($6,1),100) OFFSET GREATEST($7,0))
+    SELECT jsonb_build_object(
+      'rows',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',o.id,'providerOrderId',o.provider_order_id,'displayCode',o.display_code,'provider',o.provider,'branchId',o.branch_id,'branchName',o.branch_name,'customerName',o.customer_name,'orderType',o.order_type,'paymentMethod',o.payment_method,'deliveryAddress',o.delivery_address,'notes',o.notes,'subtotalCents',o.subtotal_cents::text,'deliveryFeeCents',o.delivery_fee_cents::text,'discountCents',o.discount_cents::text,'totalCents',o.total_cents::text,'status',o.status,'receivedAt',o.received_at,'acceptedAt',o.accepted_at,'rejectedAt',o.rejected_at,'completedAt',o.completed_at,'rejectionReason',o.rejection_reason,'version',o.version,'items',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',i.id,'name',i.name,'quantity',i.quantity,'unitPriceCents',i.unit_price_cents::text,'totalCents',i.total_cents::text,'observation',i.observation) ORDER BY i.created_at) FROM sales_channel_order_items i WHERE i.order_id=o.id AND i.tenant_id=o.tenant_id),'[]'::jsonb)) ORDER BY o.received_at DESC,o.id DESC) FROM page o),'[]'::jsonb),
+      'total',(SELECT count(*) FROM eligible),
+      'pending',(SELECT count(*) FROM eligible WHERE status='PENDING')
+    ) data FROM actor WHERE $8<>''
+  """,params:[{_expr:"auth.uid"},$term,$status,$provider,$branchId,$limit,$offset,$requestKey])
+}
+
+query LatestPendingSalesChannelOrder($requestKey: String!) @auth(level: USER) {
+  _select(sql: """
+    WITH actor AS (SELECT u.tenant_id FROM users u JOIN app_pages p ON p.page_key='CANAIS_VENDA' AND p.active LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=p.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=p.id AND rp.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_access,rp.can_access,false)), latest AS (SELECT o.*,c.provider,b.name branch_name FROM sales_channel_orders o JOIN actor a ON a.tenant_id=o.tenant_id JOIN sales_channel_connections c ON c.id=o.connection_id AND c.tenant_id=o.tenant_id JOIN branches b ON b.id=o.branch_id AND b.tenant_id=o.tenant_id WHERE o.status='PENDING' ORDER BY o.received_at DESC LIMIT 1)
+    SELECT jsonb_build_object('id',o.id,'displayCode',o.display_code,'provider',o.provider,'branchName',o.branch_name,'customerName',o.customer_name,'totalCents',o.total_cents::text,'receivedAt',o.received_at,'version',o.version,'items',COALESCE((SELECT jsonb_agg(jsonb_build_object('name',i.name,'quantity',i.quantity,'observation',i.observation) ORDER BY i.created_at) FROM sales_channel_order_items i WHERE i.order_id=o.id AND i.tenant_id=o.tenant_id),'[]'::jsonb)) data FROM latest o WHERE $2<>''
+  """,params:[{_expr:"auth.uid"},$requestKey])
+}
+
 # Sales workstation bootstrap. Authorization and tenant scope are derived from auth.uid.
 query SalesWorkspace($branchId: UUID, $requestKey: String!) @auth(level: USER) {
   _select(sql: """
