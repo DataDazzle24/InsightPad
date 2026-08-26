@@ -13,6 +13,7 @@ import { ProtectedRoute } from './routes/ProtectedRoute'
 import { PlatformAdminRoute } from './routes/PlatformAdminRoute'
 import './App.css'
 import './home-header-refinements.css'
+import './sidebar-refinements.css'
 
 const CatalogPages = lazy(() => import('./pages/CatalogPages').then((module) => ({ default: module.CatalogPages })))
 const MasterDataPage = lazy(() => import('./pages/MasterDataPage').then((module) => ({ default: module.MasterDataPage })))
