@@ -46,6 +46,14 @@ export interface ArchiveSalesChannelConnectionVariables {
   id: UUIDString;
 }
 
+export interface ArchiveSalesChannelProductMappingData {
+  _execute?: number | null;
+}
+
+export interface ArchiveSalesChannelProductMappingVariables {
+  id: UUIDString;
+}
+
 export interface ArchiveSubcategoryData {
   _execute?: number | null;
 }
@@ -93,6 +101,15 @@ export interface BootstrapNavigationCatalogData {
 export interface BootstrapNavigationCatalogVariables {
   tenantId: UUIDString;
   platformAdminRoleId: UUIDString;
+}
+
+export interface BootstrapSalesChannelOrderIndexesData {
+  idempotency?: number | null;
+  timeline?: number | null;
+  statusQueue?: number | null;
+  itemLookup?: number | null;
+  productMapping?: number | null;
+  externalProductMapping?: number | null;
 }
 
 export interface BootstrapSalesChannelsNavigationData {
@@ -199,6 +216,19 @@ export interface CreateSalesChannelConnectionVariables {
   branchId: UUIDString;
   displayName: string;
   externalStoreId: string;
+}
+
+export interface CreateSalesChannelProductMappingData {
+  _execute?: number | null;
+}
+
+export interface CreateSalesChannelProductMappingVariables {
+  connectionId: UUIDString;
+  productId: UUIDString;
+  externalProductId: string;
+  externalProductName: string;
+  syncPrice: boolean;
+  syncStock: boolean;
 }
 
 export interface CreateSubcategoriesBatchData {
@@ -337,6 +367,14 @@ export interface GetCurrentUserData {
       active: boolean;
     } & Role_Key;
   } & User_Key;
+}
+
+export interface LatestPendingSalesChannelOrderData {
+  _select?: unknown[] | null;
+}
+
+export interface LatestPendingSalesChannelOrderVariables {
+  requestKey: string;
 }
 
 export interface LinkPlatformUserData {
@@ -617,6 +655,35 @@ export interface SalesChannelConnection_Key {
   __typename?: 'SalesChannelConnection_Key';
 }
 
+export interface SalesChannelOrderItem_Key {
+  id: UUIDString;
+  __typename?: 'SalesChannelOrderItem_Key';
+}
+
+export interface SalesChannelOrder_Key {
+  id: UUIDString;
+  __typename?: 'SalesChannelOrder_Key';
+}
+
+export interface SalesChannelOrdersData {
+  _select?: unknown[] | null;
+}
+
+export interface SalesChannelOrdersVariables {
+  term: string;
+  status: string;
+  provider: string;
+  branchId?: UUIDString | null;
+  limit: number;
+  offset: number;
+  requestKey: string;
+}
+
+export interface SalesChannelProductMapping_Key {
+  id: UUIDString;
+  __typename?: 'SalesChannelProductMapping_Key';
+}
+
 export interface SalesChannelWorkspaceData {
   _select?: unknown[] | null;
 }
@@ -891,6 +958,17 @@ export interface TouchDeviceSessionVariables {
   sessionToken: string;
 }
 
+export interface TransitionSalesChannelOrderData {
+  _execute?: number | null;
+}
+
+export interface TransitionSalesChannelOrderVariables {
+  id: UUIDString;
+  action: string;
+  reason: string;
+  expectedVersion: number;
+}
+
 export interface UpdateCategoryData {
   _execute?: number | null;
 }
@@ -908,6 +986,19 @@ export interface UpdateSalesChannelConnectionVariables {
   id: UUIDString;
   displayName: string;
   externalStoreId: string;
+  enabled: boolean;
+}
+
+export interface UpdateSalesChannelProductMappingData {
+  _execute?: number | null;
+}
+
+export interface UpdateSalesChannelProductMappingVariables {
+  id: UUIDString;
+  externalProductId: string;
+  externalProductName: string;
+  syncPrice: boolean;
+  syncStock: boolean;
   enabled: boolean;
 }
 
@@ -951,6 +1042,18 @@ export interface ValidateDeviceSessionVariables {
   sessionToken: string;
   requestKey: string;
 }
+
+interface BootstrapSalesChannelOrderIndexesRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): MutationRef<BootstrapSalesChannelOrderIndexesData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): MutationRef<BootstrapSalesChannelOrderIndexesData, undefined>;
+  operationName: string;
+}
+export const bootstrapSalesChannelOrderIndexesRef: BootstrapSalesChannelOrderIndexesRef;
+
+export function bootstrapSalesChannelOrderIndexes(): MutationPromise<BootstrapSalesChannelOrderIndexesData, undefined>;
+export function bootstrapSalesChannelOrderIndexes(dc: DataConnect): MutationPromise<BootstrapSalesChannelOrderIndexesData, undefined>;
 
 interface BootstrapSalesChannelsNavigationRef {
   /* Allow users to create refs without passing in DataConnect */
@@ -1552,6 +1655,54 @@ export const archiveSalesChannelConnectionRef: ArchiveSalesChannelConnectionRef;
 export function archiveSalesChannelConnection(vars: ArchiveSalesChannelConnectionVariables): MutationPromise<ArchiveSalesChannelConnectionData, ArchiveSalesChannelConnectionVariables>;
 export function archiveSalesChannelConnection(dc: DataConnect, vars: ArchiveSalesChannelConnectionVariables): MutationPromise<ArchiveSalesChannelConnectionData, ArchiveSalesChannelConnectionVariables>;
 
+interface CreateSalesChannelProductMappingRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CreateSalesChannelProductMappingVariables): MutationRef<CreateSalesChannelProductMappingData, CreateSalesChannelProductMappingVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: CreateSalesChannelProductMappingVariables): MutationRef<CreateSalesChannelProductMappingData, CreateSalesChannelProductMappingVariables>;
+  operationName: string;
+}
+export const createSalesChannelProductMappingRef: CreateSalesChannelProductMappingRef;
+
+export function createSalesChannelProductMapping(vars: CreateSalesChannelProductMappingVariables): MutationPromise<CreateSalesChannelProductMappingData, CreateSalesChannelProductMappingVariables>;
+export function createSalesChannelProductMapping(dc: DataConnect, vars: CreateSalesChannelProductMappingVariables): MutationPromise<CreateSalesChannelProductMappingData, CreateSalesChannelProductMappingVariables>;
+
+interface UpdateSalesChannelProductMappingRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: UpdateSalesChannelProductMappingVariables): MutationRef<UpdateSalesChannelProductMappingData, UpdateSalesChannelProductMappingVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: UpdateSalesChannelProductMappingVariables): MutationRef<UpdateSalesChannelProductMappingData, UpdateSalesChannelProductMappingVariables>;
+  operationName: string;
+}
+export const updateSalesChannelProductMappingRef: UpdateSalesChannelProductMappingRef;
+
+export function updateSalesChannelProductMapping(vars: UpdateSalesChannelProductMappingVariables): MutationPromise<UpdateSalesChannelProductMappingData, UpdateSalesChannelProductMappingVariables>;
+export function updateSalesChannelProductMapping(dc: DataConnect, vars: UpdateSalesChannelProductMappingVariables): MutationPromise<UpdateSalesChannelProductMappingData, UpdateSalesChannelProductMappingVariables>;
+
+interface ArchiveSalesChannelProductMappingRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ArchiveSalesChannelProductMappingVariables): MutationRef<ArchiveSalesChannelProductMappingData, ArchiveSalesChannelProductMappingVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ArchiveSalesChannelProductMappingVariables): MutationRef<ArchiveSalesChannelProductMappingData, ArchiveSalesChannelProductMappingVariables>;
+  operationName: string;
+}
+export const archiveSalesChannelProductMappingRef: ArchiveSalesChannelProductMappingRef;
+
+export function archiveSalesChannelProductMapping(vars: ArchiveSalesChannelProductMappingVariables): MutationPromise<ArchiveSalesChannelProductMappingData, ArchiveSalesChannelProductMappingVariables>;
+export function archiveSalesChannelProductMapping(dc: DataConnect, vars: ArchiveSalesChannelProductMappingVariables): MutationPromise<ArchiveSalesChannelProductMappingData, ArchiveSalesChannelProductMappingVariables>;
+
+interface TransitionSalesChannelOrderRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: TransitionSalesChannelOrderVariables): MutationRef<TransitionSalesChannelOrderData, TransitionSalesChannelOrderVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: TransitionSalesChannelOrderVariables): MutationRef<TransitionSalesChannelOrderData, TransitionSalesChannelOrderVariables>;
+  operationName: string;
+}
+export const transitionSalesChannelOrderRef: TransitionSalesChannelOrderRef;
+
+export function transitionSalesChannelOrder(vars: TransitionSalesChannelOrderVariables): MutationPromise<TransitionSalesChannelOrderData, TransitionSalesChannelOrderVariables>;
+export function transitionSalesChannelOrder(dc: DataConnect, vars: TransitionSalesChannelOrderVariables): MutationPromise<TransitionSalesChannelOrderData, TransitionSalesChannelOrderVariables>;
+
 interface CloseCashSessionRef {
   /* Allow users to create refs without passing in DataConnect */
   (vars: CloseCashSessionVariables): MutationRef<CloseCashSessionData, CloseCashSessionVariables>;
@@ -1611,6 +1762,30 @@ export const salesChannelWorkspaceRef: SalesChannelWorkspaceRef;
 
 export function salesChannelWorkspace(vars: SalesChannelWorkspaceVariables, options?: ExecuteQueryOptions): QueryPromise<SalesChannelWorkspaceData, SalesChannelWorkspaceVariables>;
 export function salesChannelWorkspace(dc: DataConnect, vars: SalesChannelWorkspaceVariables, options?: ExecuteQueryOptions): QueryPromise<SalesChannelWorkspaceData, SalesChannelWorkspaceVariables>;
+
+interface SalesChannelOrdersRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SalesChannelOrdersVariables): QueryRef<SalesChannelOrdersData, SalesChannelOrdersVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SalesChannelOrdersVariables): QueryRef<SalesChannelOrdersData, SalesChannelOrdersVariables>;
+  operationName: string;
+}
+export const salesChannelOrdersRef: SalesChannelOrdersRef;
+
+export function salesChannelOrders(vars: SalesChannelOrdersVariables, options?: ExecuteQueryOptions): QueryPromise<SalesChannelOrdersData, SalesChannelOrdersVariables>;
+export function salesChannelOrders(dc: DataConnect, vars: SalesChannelOrdersVariables, options?: ExecuteQueryOptions): QueryPromise<SalesChannelOrdersData, SalesChannelOrdersVariables>;
+
+interface LatestPendingSalesChannelOrderRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: LatestPendingSalesChannelOrderVariables): QueryRef<LatestPendingSalesChannelOrderData, LatestPendingSalesChannelOrderVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: LatestPendingSalesChannelOrderVariables): QueryRef<LatestPendingSalesChannelOrderData, LatestPendingSalesChannelOrderVariables>;
+  operationName: string;
+}
+export const latestPendingSalesChannelOrderRef: LatestPendingSalesChannelOrderRef;
+
+export function latestPendingSalesChannelOrder(vars: LatestPendingSalesChannelOrderVariables, options?: ExecuteQueryOptions): QueryPromise<LatestPendingSalesChannelOrderData, LatestPendingSalesChannelOrderVariables>;
+export function latestPendingSalesChannelOrder(dc: DataConnect, vars: LatestPendingSalesChannelOrderVariables, options?: ExecuteQueryOptions): QueryPromise<LatestPendingSalesChannelOrderData, LatestPendingSalesChannelOrderVariables>;
 
 interface SalesWorkspaceRef {
   /* Allow users to create refs without passing in DataConnect */

@@ -21,6 +21,8 @@ You can also follow the instructions from the [Data Connect documentation](https
   - [*GetCurrentUserAccess*](#getcurrentuseraccess)
   - [*ValidateDeviceSession*](#validatedevicesession)
   - [*SalesChannelWorkspace*](#saleschannelworkspace)
+  - [*SalesChannelOrders*](#saleschannelorders)
+  - [*LatestPendingSalesChannelOrder*](#latestpendingsaleschannelorder)
   - [*SalesWorkspace*](#salesworkspace)
   - [*ListSales*](#listsales)
   - [*SaleDetails*](#saledetails)
@@ -41,6 +43,7 @@ You can also follow the instructions from the [Data Connect documentation](https
   - [*FinancialIndicatorsDashboard*](#financialindicatorsdashboard)
   - [*OperationalAnalyticsDashboard*](#operationalanalyticsdashboard)
 - [**Mutations**](#mutations)
+  - [*BootstrapSalesChannelOrderIndexes*](#bootstrapsaleschannelorderindexes)
   - [*BootstrapSalesChannelsNavigation*](#bootstrapsaleschannelsnavigation)
   - [*BootstrapSalesChannelsNavigationV2*](#bootstrapsaleschannelsnavigationv2)
   - [*BootstrapNavigationCatalog*](#bootstrapnavigationcatalog)
@@ -91,6 +94,10 @@ You can also follow the instructions from the [Data Connect documentation](https
   - [*CreateSalesChannelConnection*](#createsaleschannelconnection)
   - [*UpdateSalesChannelConnection*](#updatesaleschannelconnection)
   - [*ArchiveSalesChannelConnection*](#archivesaleschannelconnection)
+  - [*CreateSalesChannelProductMapping*](#createsaleschannelproductmapping)
+  - [*UpdateSalesChannelProductMapping*](#updatesaleschannelproductmapping)
+  - [*ArchiveSalesChannelProductMapping*](#archivesaleschannelproductmapping)
+  - [*TransitionSalesChannelOrder*](#transitionsaleschannelorder)
   - [*CloseCashSession*](#closecashsession)
   - [*RecoverPlatformAdministrator*](#recoverplatformadministrator)
 
@@ -537,6 +544,182 @@ export default function SalesChannelWorkspaceComponent() {
   const dataConnect = getDataConnect(connectorConfig);
   const options = { staleTime: 5 * 1000 };
   const query = useSalesChannelWorkspace(dataConnect, salesChannelWorkspaceVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Query.
+  if (query.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
+  }
+
+  // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
+  if (query.isSuccess) {
+    console.log(query.data._select);
+  }
+  return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## SalesChannelOrders
+You can execute the `SalesChannelOrders` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
+
+```javascript
+useSalesChannelOrders(dc: DataConnect, vars: SalesChannelOrdersVariables, options?: useDataConnectQueryOptions<SalesChannelOrdersData>): UseDataConnectQueryResult<SalesChannelOrdersData, SalesChannelOrdersVariables>;
+```
+You can also pass in a `DataConnect` instance to the Query hook function.
+```javascript
+useSalesChannelOrders(vars: SalesChannelOrdersVariables, options?: useDataConnectQueryOptions<SalesChannelOrdersData>): UseDataConnectQueryResult<SalesChannelOrdersData, SalesChannelOrdersVariables>;
+```
+
+### Variables
+The `SalesChannelOrders` Query requires an argument of type `SalesChannelOrdersVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface SalesChannelOrdersVariables {
+  term: string;
+  status: string;
+  provider: string;
+  branchId?: UUIDString | null;
+  limit: number;
+  offset: number;
+  requestKey: string;
+}
+```
+### Return Type
+Recall that calling the `SalesChannelOrders` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
+
+To check the status of a Query, use the `UseQueryResult.status` field. You can also check for pending / success / error status using the `UseQueryResult.isPending`, `UseQueryResult.isSuccess`, and `UseQueryResult.isError` fields.
+
+To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `SalesChannelOrders` Query is of type `SalesChannelOrdersData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface SalesChannelOrdersData {
+  _select?: unknown[] | null;
+}
+```
+
+To learn more about the `UseQueryResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery).
+
+### Using `SalesChannelOrders`'s Query hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, SalesChannelOrdersVariables } from '@insightpad/dataconnect';
+import { useSalesChannelOrders } from '@insightpad/dataconnect/react'
+
+export default function SalesChannelOrdersComponent() {
+  // The `useSalesChannelOrders` Query hook requires an argument of type `SalesChannelOrdersVariables`:
+  const salesChannelOrdersVars: SalesChannelOrdersVariables = {
+    term: ..., 
+    status: ..., 
+    provider: ..., 
+    branchId: ..., // optional
+    limit: ..., 
+    offset: ..., 
+    requestKey: ..., 
+  };
+
+  // You don't have to do anything to "execute" the Query.
+  // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
+  const query = useSalesChannelOrders(salesChannelOrdersVars);
+  // Variables can be defined inline as well.
+  const query = useSalesChannelOrders({ term: ..., status: ..., provider: ..., branchId: ..., limit: ..., offset: ..., requestKey: ..., });
+
+  // You can also pass in a `DataConnect` instance to the Query hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const query = useSalesChannelOrders(dataConnect, salesChannelOrdersVars);
+
+  // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
+  const options = { staleTime: 5 * 1000 };
+  const query = useSalesChannelOrders(salesChannelOrdersVars, options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = { staleTime: 5 * 1000 };
+  const query = useSalesChannelOrders(dataConnect, salesChannelOrdersVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Query.
+  if (query.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
+  }
+
+  // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
+  if (query.isSuccess) {
+    console.log(query.data._select);
+  }
+  return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## LatestPendingSalesChannelOrder
+You can execute the `LatestPendingSalesChannelOrder` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
+
+```javascript
+useLatestPendingSalesChannelOrder(dc: DataConnect, vars: LatestPendingSalesChannelOrderVariables, options?: useDataConnectQueryOptions<LatestPendingSalesChannelOrderData>): UseDataConnectQueryResult<LatestPendingSalesChannelOrderData, LatestPendingSalesChannelOrderVariables>;
+```
+You can also pass in a `DataConnect` instance to the Query hook function.
+```javascript
+useLatestPendingSalesChannelOrder(vars: LatestPendingSalesChannelOrderVariables, options?: useDataConnectQueryOptions<LatestPendingSalesChannelOrderData>): UseDataConnectQueryResult<LatestPendingSalesChannelOrderData, LatestPendingSalesChannelOrderVariables>;
+```
+
+### Variables
+The `LatestPendingSalesChannelOrder` Query requires an argument of type `LatestPendingSalesChannelOrderVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface LatestPendingSalesChannelOrderVariables {
+  requestKey: string;
+}
+```
+### Return Type
+Recall that calling the `LatestPendingSalesChannelOrder` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
+
+To check the status of a Query, use the `UseQueryResult.status` field. You can also check for pending / success / error status using the `UseQueryResult.isPending`, `UseQueryResult.isSuccess`, and `UseQueryResult.isError` fields.
+
+To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `LatestPendingSalesChannelOrder` Query is of type `LatestPendingSalesChannelOrderData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface LatestPendingSalesChannelOrderData {
+  _select?: unknown[] | null;
+}
+```
+
+To learn more about the `UseQueryResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery).
+
+### Using `LatestPendingSalesChannelOrder`'s Query hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, LatestPendingSalesChannelOrderVariables } from '@insightpad/dataconnect';
+import { useLatestPendingSalesChannelOrder } from '@insightpad/dataconnect/react'
+
+export default function LatestPendingSalesChannelOrderComponent() {
+  // The `useLatestPendingSalesChannelOrder` Query hook requires an argument of type `LatestPendingSalesChannelOrderVariables`:
+  const latestPendingSalesChannelOrderVars: LatestPendingSalesChannelOrderVariables = {
+    requestKey: ..., 
+  };
+
+  // You don't have to do anything to "execute" the Query.
+  // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
+  const query = useLatestPendingSalesChannelOrder(latestPendingSalesChannelOrderVars);
+  // Variables can be defined inline as well.
+  const query = useLatestPendingSalesChannelOrder({ requestKey: ..., });
+
+  // You can also pass in a `DataConnect` instance to the Query hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const query = useLatestPendingSalesChannelOrder(dataConnect, latestPendingSalesChannelOrderVars);
+
+  // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
+  const options = { staleTime: 5 * 1000 };
+  const query = useLatestPendingSalesChannelOrder(latestPendingSalesChannelOrderVars, options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = { staleTime: 5 * 1000 };
+  const query = useLatestPendingSalesChannelOrder(dataConnect, latestPendingSalesChannelOrderVars, options);
 
   // Then, you can render your component dynamically based on the status of the Query.
   if (query.isPending) {
@@ -2217,6 +2400,99 @@ Here's a general overview of how to use the generated Mutation hooks in your cod
   - ***Special case:*** If the Mutation has no arguments (or all optional arguments and you wish to provide none), and you want to pass `options` to `UseMutationResult.mutate()`, you must pass `undefined` where you would normally pass the Mutation's arguments, and then may provide the options argument.
 
 Below are examples of how to use the `app` connector's generated Mutation hook functions to execute each Mutation. You can also follow the examples from the [Data Connect documentation](https://firebase.google.com/docs/data-connect/web-sdk#operations-react-angular).
+
+## BootstrapSalesChannelOrderIndexes
+You can execute the `BootstrapSalesChannelOrderIndexes` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useBootstrapSalesChannelOrderIndexes(options?: useDataConnectMutationOptions<BootstrapSalesChannelOrderIndexesData, FirebaseError, void>): UseDataConnectMutationResult<BootstrapSalesChannelOrderIndexesData, undefined>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useBootstrapSalesChannelOrderIndexes(dc: DataConnect, options?: useDataConnectMutationOptions<BootstrapSalesChannelOrderIndexesData, FirebaseError, void>): UseDataConnectMutationResult<BootstrapSalesChannelOrderIndexesData, undefined>;
+```
+
+### Variables
+The `BootstrapSalesChannelOrderIndexes` Mutation has no variables.
+### Return Type
+Recall that calling the `BootstrapSalesChannelOrderIndexes` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `BootstrapSalesChannelOrderIndexes` Mutation is of type `BootstrapSalesChannelOrderIndexesData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface BootstrapSalesChannelOrderIndexesData {
+  idempotency?: number | null;
+  timeline?: number | null;
+  statusQueue?: number | null;
+  itemLookup?: number | null;
+  productMapping?: number | null;
+  externalProductMapping?: number | null;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `BootstrapSalesChannelOrderIndexes`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig } from '@insightpad/dataconnect';
+import { useBootstrapSalesChannelOrderIndexes } from '@insightpad/dataconnect/react'
+
+export default function BootstrapSalesChannelOrderIndexesComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useBootstrapSalesChannelOrderIndexes();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useBootstrapSalesChannelOrderIndexes(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useBootstrapSalesChannelOrderIndexes(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useBootstrapSalesChannelOrderIndexes(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  mutation.mutate();
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  // Since this Mutation accepts no variables, you must pass `undefined` where you would normally pass the variables.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(undefined, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.idempotency);
+    console.log(mutation.data.timeline);
+    console.log(mutation.data.statusQueue);
+    console.log(mutation.data.itemLookup);
+    console.log(mutation.data.productMapping);
+    console.log(mutation.data.externalProductMapping);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
 
 ## BootstrapSalesChannelsNavigation
 You can execute the `BootstrapSalesChannelsNavigation` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
@@ -7024,6 +7300,408 @@ export default function ArchiveSalesChannelConnectionComponent() {
     onSuccess: () => { console.log('Mutation succeeded!'); }
   };
   mutation.mutate(archiveSalesChannelConnectionVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data._execute);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## CreateSalesChannelProductMapping
+You can execute the `CreateSalesChannelProductMapping` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useCreateSalesChannelProductMapping(options?: useDataConnectMutationOptions<CreateSalesChannelProductMappingData, FirebaseError, CreateSalesChannelProductMappingVariables>): UseDataConnectMutationResult<CreateSalesChannelProductMappingData, CreateSalesChannelProductMappingVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useCreateSalesChannelProductMapping(dc: DataConnect, options?: useDataConnectMutationOptions<CreateSalesChannelProductMappingData, FirebaseError, CreateSalesChannelProductMappingVariables>): UseDataConnectMutationResult<CreateSalesChannelProductMappingData, CreateSalesChannelProductMappingVariables>;
+```
+
+### Variables
+The `CreateSalesChannelProductMapping` Mutation requires an argument of type `CreateSalesChannelProductMappingVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface CreateSalesChannelProductMappingVariables {
+  connectionId: UUIDString;
+  productId: UUIDString;
+  externalProductId: string;
+  externalProductName: string;
+  syncPrice: boolean;
+  syncStock: boolean;
+}
+```
+### Return Type
+Recall that calling the `CreateSalesChannelProductMapping` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `CreateSalesChannelProductMapping` Mutation is of type `CreateSalesChannelProductMappingData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface CreateSalesChannelProductMappingData {
+  _execute?: number | null;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `CreateSalesChannelProductMapping`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, CreateSalesChannelProductMappingVariables } from '@insightpad/dataconnect';
+import { useCreateSalesChannelProductMapping } from '@insightpad/dataconnect/react'
+
+export default function CreateSalesChannelProductMappingComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useCreateSalesChannelProductMapping();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useCreateSalesChannelProductMapping(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useCreateSalesChannelProductMapping(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useCreateSalesChannelProductMapping(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useCreateSalesChannelProductMapping` Mutation requires an argument of type `CreateSalesChannelProductMappingVariables`:
+  const createSalesChannelProductMappingVars: CreateSalesChannelProductMappingVariables = {
+    connectionId: ..., 
+    productId: ..., 
+    externalProductId: ..., 
+    externalProductName: ..., 
+    syncPrice: ..., 
+    syncStock: ..., 
+  };
+  mutation.mutate(createSalesChannelProductMappingVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ connectionId: ..., productId: ..., externalProductId: ..., externalProductName: ..., syncPrice: ..., syncStock: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(createSalesChannelProductMappingVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data._execute);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## UpdateSalesChannelProductMapping
+You can execute the `UpdateSalesChannelProductMapping` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useUpdateSalesChannelProductMapping(options?: useDataConnectMutationOptions<UpdateSalesChannelProductMappingData, FirebaseError, UpdateSalesChannelProductMappingVariables>): UseDataConnectMutationResult<UpdateSalesChannelProductMappingData, UpdateSalesChannelProductMappingVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useUpdateSalesChannelProductMapping(dc: DataConnect, options?: useDataConnectMutationOptions<UpdateSalesChannelProductMappingData, FirebaseError, UpdateSalesChannelProductMappingVariables>): UseDataConnectMutationResult<UpdateSalesChannelProductMappingData, UpdateSalesChannelProductMappingVariables>;
+```
+
+### Variables
+The `UpdateSalesChannelProductMapping` Mutation requires an argument of type `UpdateSalesChannelProductMappingVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface UpdateSalesChannelProductMappingVariables {
+  id: UUIDString;
+  externalProductId: string;
+  externalProductName: string;
+  syncPrice: boolean;
+  syncStock: boolean;
+  enabled: boolean;
+}
+```
+### Return Type
+Recall that calling the `UpdateSalesChannelProductMapping` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `UpdateSalesChannelProductMapping` Mutation is of type `UpdateSalesChannelProductMappingData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface UpdateSalesChannelProductMappingData {
+  _execute?: number | null;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `UpdateSalesChannelProductMapping`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, UpdateSalesChannelProductMappingVariables } from '@insightpad/dataconnect';
+import { useUpdateSalesChannelProductMapping } from '@insightpad/dataconnect/react'
+
+export default function UpdateSalesChannelProductMappingComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useUpdateSalesChannelProductMapping();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useUpdateSalesChannelProductMapping(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useUpdateSalesChannelProductMapping(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useUpdateSalesChannelProductMapping(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useUpdateSalesChannelProductMapping` Mutation requires an argument of type `UpdateSalesChannelProductMappingVariables`:
+  const updateSalesChannelProductMappingVars: UpdateSalesChannelProductMappingVariables = {
+    id: ..., 
+    externalProductId: ..., 
+    externalProductName: ..., 
+    syncPrice: ..., 
+    syncStock: ..., 
+    enabled: ..., 
+  };
+  mutation.mutate(updateSalesChannelProductMappingVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ id: ..., externalProductId: ..., externalProductName: ..., syncPrice: ..., syncStock: ..., enabled: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(updateSalesChannelProductMappingVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data._execute);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## ArchiveSalesChannelProductMapping
+You can execute the `ArchiveSalesChannelProductMapping` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useArchiveSalesChannelProductMapping(options?: useDataConnectMutationOptions<ArchiveSalesChannelProductMappingData, FirebaseError, ArchiveSalesChannelProductMappingVariables>): UseDataConnectMutationResult<ArchiveSalesChannelProductMappingData, ArchiveSalesChannelProductMappingVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useArchiveSalesChannelProductMapping(dc: DataConnect, options?: useDataConnectMutationOptions<ArchiveSalesChannelProductMappingData, FirebaseError, ArchiveSalesChannelProductMappingVariables>): UseDataConnectMutationResult<ArchiveSalesChannelProductMappingData, ArchiveSalesChannelProductMappingVariables>;
+```
+
+### Variables
+The `ArchiveSalesChannelProductMapping` Mutation requires an argument of type `ArchiveSalesChannelProductMappingVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface ArchiveSalesChannelProductMappingVariables {
+  id: UUIDString;
+}
+```
+### Return Type
+Recall that calling the `ArchiveSalesChannelProductMapping` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `ArchiveSalesChannelProductMapping` Mutation is of type `ArchiveSalesChannelProductMappingData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface ArchiveSalesChannelProductMappingData {
+  _execute?: number | null;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `ArchiveSalesChannelProductMapping`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, ArchiveSalesChannelProductMappingVariables } from '@insightpad/dataconnect';
+import { useArchiveSalesChannelProductMapping } from '@insightpad/dataconnect/react'
+
+export default function ArchiveSalesChannelProductMappingComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useArchiveSalesChannelProductMapping();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useArchiveSalesChannelProductMapping(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useArchiveSalesChannelProductMapping(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useArchiveSalesChannelProductMapping(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useArchiveSalesChannelProductMapping` Mutation requires an argument of type `ArchiveSalesChannelProductMappingVariables`:
+  const archiveSalesChannelProductMappingVars: ArchiveSalesChannelProductMappingVariables = {
+    id: ..., 
+  };
+  mutation.mutate(archiveSalesChannelProductMappingVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ id: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(archiveSalesChannelProductMappingVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data._execute);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## TransitionSalesChannelOrder
+You can execute the `TransitionSalesChannelOrder` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useTransitionSalesChannelOrder(options?: useDataConnectMutationOptions<TransitionSalesChannelOrderData, FirebaseError, TransitionSalesChannelOrderVariables>): UseDataConnectMutationResult<TransitionSalesChannelOrderData, TransitionSalesChannelOrderVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useTransitionSalesChannelOrder(dc: DataConnect, options?: useDataConnectMutationOptions<TransitionSalesChannelOrderData, FirebaseError, TransitionSalesChannelOrderVariables>): UseDataConnectMutationResult<TransitionSalesChannelOrderData, TransitionSalesChannelOrderVariables>;
+```
+
+### Variables
+The `TransitionSalesChannelOrder` Mutation requires an argument of type `TransitionSalesChannelOrderVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface TransitionSalesChannelOrderVariables {
+  id: UUIDString;
+  action: string;
+  reason: string;
+  expectedVersion: number;
+}
+```
+### Return Type
+Recall that calling the `TransitionSalesChannelOrder` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `TransitionSalesChannelOrder` Mutation is of type `TransitionSalesChannelOrderData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface TransitionSalesChannelOrderData {
+  _execute?: number | null;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `TransitionSalesChannelOrder`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, TransitionSalesChannelOrderVariables } from '@insightpad/dataconnect';
+import { useTransitionSalesChannelOrder } from '@insightpad/dataconnect/react'
+
+export default function TransitionSalesChannelOrderComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useTransitionSalesChannelOrder();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useTransitionSalesChannelOrder(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useTransitionSalesChannelOrder(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useTransitionSalesChannelOrder(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useTransitionSalesChannelOrder` Mutation requires an argument of type `TransitionSalesChannelOrderVariables`:
+  const transitionSalesChannelOrderVars: TransitionSalesChannelOrderVariables = {
+    id: ..., 
+    action: ..., 
+    reason: ..., 
+    expectedVersion: ..., 
+  };
+  mutation.mutate(transitionSalesChannelOrderVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ id: ..., action: ..., reason: ..., expectedVersion: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(transitionSalesChannelOrderVars, options);
 
   // Then, you can render your component dynamically based on the status of the Mutation.
   if (mutation.isPending) {

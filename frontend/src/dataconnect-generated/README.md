@@ -14,6 +14,8 @@ This README will guide you through the process of using the generated JavaScript
   - [*GetCurrentUserAccess*](#getcurrentuseraccess)
   - [*ValidateDeviceSession*](#validatedevicesession)
   - [*SalesChannelWorkspace*](#saleschannelworkspace)
+  - [*SalesChannelOrders*](#saleschannelorders)
+  - [*LatestPendingSalesChannelOrder*](#latestpendingsaleschannelorder)
   - [*SalesWorkspace*](#salesworkspace)
   - [*ListSales*](#listsales)
   - [*SaleDetails*](#saledetails)
@@ -34,6 +36,7 @@ This README will guide you through the process of using the generated JavaScript
   - [*FinancialIndicatorsDashboard*](#financialindicatorsdashboard)
   - [*OperationalAnalyticsDashboard*](#operationalanalyticsdashboard)
 - [**Mutations**](#mutations)
+  - [*BootstrapSalesChannelOrderIndexes*](#bootstrapsaleschannelorderindexes)
   - [*BootstrapSalesChannelsNavigation*](#bootstrapsaleschannelsnavigation)
   - [*BootstrapSalesChannelsNavigationV2*](#bootstrapsaleschannelsnavigationv2)
   - [*BootstrapNavigationCatalog*](#bootstrapnavigationcatalog)
@@ -84,6 +87,10 @@ This README will guide you through the process of using the generated JavaScript
   - [*CreateSalesChannelConnection*](#createsaleschannelconnection)
   - [*UpdateSalesChannelConnection*](#updatesaleschannelconnection)
   - [*ArchiveSalesChannelConnection*](#archivesaleschannelconnection)
+  - [*CreateSalesChannelProductMapping*](#createsaleschannelproductmapping)
+  - [*UpdateSalesChannelProductMapping*](#updatesaleschannelproductmapping)
+  - [*ArchiveSalesChannelProductMapping*](#archivesaleschannelproductmapping)
+  - [*TransitionSalesChannelOrder*](#transitionsaleschannelorder)
   - [*CloseCashSession*](#closecashsession)
   - [*RecoverPlatformAdministrator*](#recoverplatformadministrator)
 
@@ -588,6 +595,242 @@ const ref = salesChannelWorkspaceRef({ requestKey: ..., });
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
 const ref = salesChannelWorkspaceRef(dataConnect, salesChannelWorkspaceVars);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data._select);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data._select);
+});
+```
+
+## SalesChannelOrders
+You can execute the `SalesChannelOrders` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+salesChannelOrders(vars: SalesChannelOrdersVariables, options?: ExecuteQueryOptions): QueryPromise<SalesChannelOrdersData, SalesChannelOrdersVariables>;
+
+interface SalesChannelOrdersRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SalesChannelOrdersVariables): QueryRef<SalesChannelOrdersData, SalesChannelOrdersVariables>;
+}
+export const salesChannelOrdersRef: SalesChannelOrdersRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+salesChannelOrders(dc: DataConnect, vars: SalesChannelOrdersVariables, options?: ExecuteQueryOptions): QueryPromise<SalesChannelOrdersData, SalesChannelOrdersVariables>;
+
+interface SalesChannelOrdersRef {
+  ...
+  (dc: DataConnect, vars: SalesChannelOrdersVariables): QueryRef<SalesChannelOrdersData, SalesChannelOrdersVariables>;
+}
+export const salesChannelOrdersRef: SalesChannelOrdersRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the salesChannelOrdersRef:
+```typescript
+const name = salesChannelOrdersRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `SalesChannelOrders` query requires an argument of type `SalesChannelOrdersVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface SalesChannelOrdersVariables {
+  term: string;
+  status: string;
+  provider: string;
+  branchId?: UUIDString | null;
+  limit: number;
+  offset: number;
+  requestKey: string;
+}
+```
+### Return Type
+Recall that executing the `SalesChannelOrders` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `SalesChannelOrdersData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface SalesChannelOrdersData {
+  _select?: unknown[] | null;
+}
+```
+### Using `SalesChannelOrders`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, salesChannelOrders, SalesChannelOrdersVariables } from '@insightpad/dataconnect';
+
+// The `SalesChannelOrders` query requires an argument of type `SalesChannelOrdersVariables`:
+const salesChannelOrdersVars: SalesChannelOrdersVariables = {
+  term: ..., 
+  status: ..., 
+  provider: ..., 
+  branchId: ..., // optional
+  limit: ..., 
+  offset: ..., 
+  requestKey: ..., 
+};
+
+// Call the `salesChannelOrders()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await salesChannelOrders(salesChannelOrdersVars);
+// Variables can be defined inline as well.
+const { data } = await salesChannelOrders({ term: ..., status: ..., provider: ..., branchId: ..., limit: ..., offset: ..., requestKey: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await salesChannelOrders(dataConnect, salesChannelOrdersVars);
+
+console.log(data._select);
+
+// Or, you can use the `Promise` API.
+salesChannelOrders(salesChannelOrdersVars).then((response) => {
+  const data = response.data;
+  console.log(data._select);
+});
+```
+
+### Using `SalesChannelOrders`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, salesChannelOrdersRef, SalesChannelOrdersVariables } from '@insightpad/dataconnect';
+
+// The `SalesChannelOrders` query requires an argument of type `SalesChannelOrdersVariables`:
+const salesChannelOrdersVars: SalesChannelOrdersVariables = {
+  term: ..., 
+  status: ..., 
+  provider: ..., 
+  branchId: ..., // optional
+  limit: ..., 
+  offset: ..., 
+  requestKey: ..., 
+};
+
+// Call the `salesChannelOrdersRef()` function to get a reference to the query.
+const ref = salesChannelOrdersRef(salesChannelOrdersVars);
+// Variables can be defined inline as well.
+const ref = salesChannelOrdersRef({ term: ..., status: ..., provider: ..., branchId: ..., limit: ..., offset: ..., requestKey: ..., });
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = salesChannelOrdersRef(dataConnect, salesChannelOrdersVars);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data._select);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data._select);
+});
+```
+
+## LatestPendingSalesChannelOrder
+You can execute the `LatestPendingSalesChannelOrder` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+latestPendingSalesChannelOrder(vars: LatestPendingSalesChannelOrderVariables, options?: ExecuteQueryOptions): QueryPromise<LatestPendingSalesChannelOrderData, LatestPendingSalesChannelOrderVariables>;
+
+interface LatestPendingSalesChannelOrderRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: LatestPendingSalesChannelOrderVariables): QueryRef<LatestPendingSalesChannelOrderData, LatestPendingSalesChannelOrderVariables>;
+}
+export const latestPendingSalesChannelOrderRef: LatestPendingSalesChannelOrderRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+latestPendingSalesChannelOrder(dc: DataConnect, vars: LatestPendingSalesChannelOrderVariables, options?: ExecuteQueryOptions): QueryPromise<LatestPendingSalesChannelOrderData, LatestPendingSalesChannelOrderVariables>;
+
+interface LatestPendingSalesChannelOrderRef {
+  ...
+  (dc: DataConnect, vars: LatestPendingSalesChannelOrderVariables): QueryRef<LatestPendingSalesChannelOrderData, LatestPendingSalesChannelOrderVariables>;
+}
+export const latestPendingSalesChannelOrderRef: LatestPendingSalesChannelOrderRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the latestPendingSalesChannelOrderRef:
+```typescript
+const name = latestPendingSalesChannelOrderRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `LatestPendingSalesChannelOrder` query requires an argument of type `LatestPendingSalesChannelOrderVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface LatestPendingSalesChannelOrderVariables {
+  requestKey: string;
+}
+```
+### Return Type
+Recall that executing the `LatestPendingSalesChannelOrder` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `LatestPendingSalesChannelOrderData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface LatestPendingSalesChannelOrderData {
+  _select?: unknown[] | null;
+}
+```
+### Using `LatestPendingSalesChannelOrder`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, latestPendingSalesChannelOrder, LatestPendingSalesChannelOrderVariables } from '@insightpad/dataconnect';
+
+// The `LatestPendingSalesChannelOrder` query requires an argument of type `LatestPendingSalesChannelOrderVariables`:
+const latestPendingSalesChannelOrderVars: LatestPendingSalesChannelOrderVariables = {
+  requestKey: ..., 
+};
+
+// Call the `latestPendingSalesChannelOrder()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await latestPendingSalesChannelOrder(latestPendingSalesChannelOrderVars);
+// Variables can be defined inline as well.
+const { data } = await latestPendingSalesChannelOrder({ requestKey: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await latestPendingSalesChannelOrder(dataConnect, latestPendingSalesChannelOrderVars);
+
+console.log(data._select);
+
+// Or, you can use the `Promise` API.
+latestPendingSalesChannelOrder(latestPendingSalesChannelOrderVars).then((response) => {
+  const data = response.data;
+  console.log(data._select);
+});
+```
+
+### Using `LatestPendingSalesChannelOrder`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, latestPendingSalesChannelOrderRef, LatestPendingSalesChannelOrderVariables } from '@insightpad/dataconnect';
+
+// The `LatestPendingSalesChannelOrder` query requires an argument of type `LatestPendingSalesChannelOrderVariables`:
+const latestPendingSalesChannelOrderVars: LatestPendingSalesChannelOrderVariables = {
+  requestKey: ..., 
+};
+
+// Call the `latestPendingSalesChannelOrderRef()` function to get a reference to the query.
+const ref = latestPendingSalesChannelOrderRef(latestPendingSalesChannelOrderVars);
+// Variables can be defined inline as well.
+const ref = latestPendingSalesChannelOrderRef({ requestKey: ..., });
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = latestPendingSalesChannelOrderRef(dataConnect, latestPendingSalesChannelOrderVars);
 
 // Call `executeQuery()` on the reference to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
@@ -2797,6 +3040,122 @@ The following is true for both the action shortcut function and the `MutationRef
 - Both functions can be called with or without passing in a `DataConnect` instance as an argument. If no `DataConnect` argument is passed in, then the generated SDK will call `getDataConnect(connectorConfig)` behind the scenes for you.
 
 Below are examples of how to use the `app` connector's generated functions to execute each mutation. You can also follow the examples from the [Data Connect documentation](https://firebase.google.com/docs/data-connect/web-sdk#using-mutations).
+
+## BootstrapSalesChannelOrderIndexes
+You can execute the `BootstrapSalesChannelOrderIndexes` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+bootstrapSalesChannelOrderIndexes(): MutationPromise<BootstrapSalesChannelOrderIndexesData, undefined>;
+
+interface BootstrapSalesChannelOrderIndexesRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (): MutationRef<BootstrapSalesChannelOrderIndexesData, undefined>;
+}
+export const bootstrapSalesChannelOrderIndexesRef: BootstrapSalesChannelOrderIndexesRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+bootstrapSalesChannelOrderIndexes(dc: DataConnect): MutationPromise<BootstrapSalesChannelOrderIndexesData, undefined>;
+
+interface BootstrapSalesChannelOrderIndexesRef {
+  ...
+  (dc: DataConnect): MutationRef<BootstrapSalesChannelOrderIndexesData, undefined>;
+}
+export const bootstrapSalesChannelOrderIndexesRef: BootstrapSalesChannelOrderIndexesRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the bootstrapSalesChannelOrderIndexesRef:
+```typescript
+const name = bootstrapSalesChannelOrderIndexesRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `BootstrapSalesChannelOrderIndexes` mutation has no variables.
+### Return Type
+Recall that executing the `BootstrapSalesChannelOrderIndexes` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `BootstrapSalesChannelOrderIndexesData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface BootstrapSalesChannelOrderIndexesData {
+  idempotency?: number | null;
+  timeline?: number | null;
+  statusQueue?: number | null;
+  itemLookup?: number | null;
+  productMapping?: number | null;
+  externalProductMapping?: number | null;
+}
+```
+### Using `BootstrapSalesChannelOrderIndexes`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, bootstrapSalesChannelOrderIndexes } from '@insightpad/dataconnect';
+
+
+// Call the `bootstrapSalesChannelOrderIndexes()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await bootstrapSalesChannelOrderIndexes();
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await bootstrapSalesChannelOrderIndexes(dataConnect);
+
+console.log(data.idempotency);
+console.log(data.timeline);
+console.log(data.statusQueue);
+console.log(data.itemLookup);
+console.log(data.productMapping);
+console.log(data.externalProductMapping);
+
+// Or, you can use the `Promise` API.
+bootstrapSalesChannelOrderIndexes().then((response) => {
+  const data = response.data;
+  console.log(data.idempotency);
+  console.log(data.timeline);
+  console.log(data.statusQueue);
+  console.log(data.itemLookup);
+  console.log(data.productMapping);
+  console.log(data.externalProductMapping);
+});
+```
+
+### Using `BootstrapSalesChannelOrderIndexes`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, bootstrapSalesChannelOrderIndexesRef } from '@insightpad/dataconnect';
+
+
+// Call the `bootstrapSalesChannelOrderIndexesRef()` function to get a reference to the mutation.
+const ref = bootstrapSalesChannelOrderIndexesRef();
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = bootstrapSalesChannelOrderIndexesRef(dataConnect);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.idempotency);
+console.log(data.timeline);
+console.log(data.statusQueue);
+console.log(data.itemLookup);
+console.log(data.productMapping);
+console.log(data.externalProductMapping);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.idempotency);
+  console.log(data.timeline);
+  console.log(data.statusQueue);
+  console.log(data.itemLookup);
+  console.log(data.productMapping);
+  console.log(data.externalProductMapping);
+});
+```
 
 ## BootstrapSalesChannelsNavigation
 You can execute the `BootstrapSalesChannelsNavigation` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
@@ -8473,6 +8832,481 @@ const ref = archiveSalesChannelConnectionRef({ id: ..., });
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
 const ref = archiveSalesChannelConnectionRef(dataConnect, archiveSalesChannelConnectionVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+## CreateSalesChannelProductMapping
+You can execute the `CreateSalesChannelProductMapping` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+createSalesChannelProductMapping(vars: CreateSalesChannelProductMappingVariables): MutationPromise<CreateSalesChannelProductMappingData, CreateSalesChannelProductMappingVariables>;
+
+interface CreateSalesChannelProductMappingRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CreateSalesChannelProductMappingVariables): MutationRef<CreateSalesChannelProductMappingData, CreateSalesChannelProductMappingVariables>;
+}
+export const createSalesChannelProductMappingRef: CreateSalesChannelProductMappingRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+createSalesChannelProductMapping(dc: DataConnect, vars: CreateSalesChannelProductMappingVariables): MutationPromise<CreateSalesChannelProductMappingData, CreateSalesChannelProductMappingVariables>;
+
+interface CreateSalesChannelProductMappingRef {
+  ...
+  (dc: DataConnect, vars: CreateSalesChannelProductMappingVariables): MutationRef<CreateSalesChannelProductMappingData, CreateSalesChannelProductMappingVariables>;
+}
+export const createSalesChannelProductMappingRef: CreateSalesChannelProductMappingRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the createSalesChannelProductMappingRef:
+```typescript
+const name = createSalesChannelProductMappingRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `CreateSalesChannelProductMapping` mutation requires an argument of type `CreateSalesChannelProductMappingVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface CreateSalesChannelProductMappingVariables {
+  connectionId: UUIDString;
+  productId: UUIDString;
+  externalProductId: string;
+  externalProductName: string;
+  syncPrice: boolean;
+  syncStock: boolean;
+}
+```
+### Return Type
+Recall that executing the `CreateSalesChannelProductMapping` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `CreateSalesChannelProductMappingData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface CreateSalesChannelProductMappingData {
+  _execute?: number | null;
+}
+```
+### Using `CreateSalesChannelProductMapping`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, createSalesChannelProductMapping, CreateSalesChannelProductMappingVariables } from '@insightpad/dataconnect';
+
+// The `CreateSalesChannelProductMapping` mutation requires an argument of type `CreateSalesChannelProductMappingVariables`:
+const createSalesChannelProductMappingVars: CreateSalesChannelProductMappingVariables = {
+  connectionId: ..., 
+  productId: ..., 
+  externalProductId: ..., 
+  externalProductName: ..., 
+  syncPrice: ..., 
+  syncStock: ..., 
+};
+
+// Call the `createSalesChannelProductMapping()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await createSalesChannelProductMapping(createSalesChannelProductMappingVars);
+// Variables can be defined inline as well.
+const { data } = await createSalesChannelProductMapping({ connectionId: ..., productId: ..., externalProductId: ..., externalProductName: ..., syncPrice: ..., syncStock: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await createSalesChannelProductMapping(dataConnect, createSalesChannelProductMappingVars);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+createSalesChannelProductMapping(createSalesChannelProductMappingVars).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+### Using `CreateSalesChannelProductMapping`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, createSalesChannelProductMappingRef, CreateSalesChannelProductMappingVariables } from '@insightpad/dataconnect';
+
+// The `CreateSalesChannelProductMapping` mutation requires an argument of type `CreateSalesChannelProductMappingVariables`:
+const createSalesChannelProductMappingVars: CreateSalesChannelProductMappingVariables = {
+  connectionId: ..., 
+  productId: ..., 
+  externalProductId: ..., 
+  externalProductName: ..., 
+  syncPrice: ..., 
+  syncStock: ..., 
+};
+
+// Call the `createSalesChannelProductMappingRef()` function to get a reference to the mutation.
+const ref = createSalesChannelProductMappingRef(createSalesChannelProductMappingVars);
+// Variables can be defined inline as well.
+const ref = createSalesChannelProductMappingRef({ connectionId: ..., productId: ..., externalProductId: ..., externalProductName: ..., syncPrice: ..., syncStock: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = createSalesChannelProductMappingRef(dataConnect, createSalesChannelProductMappingVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+## UpdateSalesChannelProductMapping
+You can execute the `UpdateSalesChannelProductMapping` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+updateSalesChannelProductMapping(vars: UpdateSalesChannelProductMappingVariables): MutationPromise<UpdateSalesChannelProductMappingData, UpdateSalesChannelProductMappingVariables>;
+
+interface UpdateSalesChannelProductMappingRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: UpdateSalesChannelProductMappingVariables): MutationRef<UpdateSalesChannelProductMappingData, UpdateSalesChannelProductMappingVariables>;
+}
+export const updateSalesChannelProductMappingRef: UpdateSalesChannelProductMappingRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+updateSalesChannelProductMapping(dc: DataConnect, vars: UpdateSalesChannelProductMappingVariables): MutationPromise<UpdateSalesChannelProductMappingData, UpdateSalesChannelProductMappingVariables>;
+
+interface UpdateSalesChannelProductMappingRef {
+  ...
+  (dc: DataConnect, vars: UpdateSalesChannelProductMappingVariables): MutationRef<UpdateSalesChannelProductMappingData, UpdateSalesChannelProductMappingVariables>;
+}
+export const updateSalesChannelProductMappingRef: UpdateSalesChannelProductMappingRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the updateSalesChannelProductMappingRef:
+```typescript
+const name = updateSalesChannelProductMappingRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `UpdateSalesChannelProductMapping` mutation requires an argument of type `UpdateSalesChannelProductMappingVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface UpdateSalesChannelProductMappingVariables {
+  id: UUIDString;
+  externalProductId: string;
+  externalProductName: string;
+  syncPrice: boolean;
+  syncStock: boolean;
+  enabled: boolean;
+}
+```
+### Return Type
+Recall that executing the `UpdateSalesChannelProductMapping` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `UpdateSalesChannelProductMappingData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface UpdateSalesChannelProductMappingData {
+  _execute?: number | null;
+}
+```
+### Using `UpdateSalesChannelProductMapping`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, updateSalesChannelProductMapping, UpdateSalesChannelProductMappingVariables } from '@insightpad/dataconnect';
+
+// The `UpdateSalesChannelProductMapping` mutation requires an argument of type `UpdateSalesChannelProductMappingVariables`:
+const updateSalesChannelProductMappingVars: UpdateSalesChannelProductMappingVariables = {
+  id: ..., 
+  externalProductId: ..., 
+  externalProductName: ..., 
+  syncPrice: ..., 
+  syncStock: ..., 
+  enabled: ..., 
+};
+
+// Call the `updateSalesChannelProductMapping()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await updateSalesChannelProductMapping(updateSalesChannelProductMappingVars);
+// Variables can be defined inline as well.
+const { data } = await updateSalesChannelProductMapping({ id: ..., externalProductId: ..., externalProductName: ..., syncPrice: ..., syncStock: ..., enabled: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await updateSalesChannelProductMapping(dataConnect, updateSalesChannelProductMappingVars);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+updateSalesChannelProductMapping(updateSalesChannelProductMappingVars).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+### Using `UpdateSalesChannelProductMapping`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, updateSalesChannelProductMappingRef, UpdateSalesChannelProductMappingVariables } from '@insightpad/dataconnect';
+
+// The `UpdateSalesChannelProductMapping` mutation requires an argument of type `UpdateSalesChannelProductMappingVariables`:
+const updateSalesChannelProductMappingVars: UpdateSalesChannelProductMappingVariables = {
+  id: ..., 
+  externalProductId: ..., 
+  externalProductName: ..., 
+  syncPrice: ..., 
+  syncStock: ..., 
+  enabled: ..., 
+};
+
+// Call the `updateSalesChannelProductMappingRef()` function to get a reference to the mutation.
+const ref = updateSalesChannelProductMappingRef(updateSalesChannelProductMappingVars);
+// Variables can be defined inline as well.
+const ref = updateSalesChannelProductMappingRef({ id: ..., externalProductId: ..., externalProductName: ..., syncPrice: ..., syncStock: ..., enabled: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = updateSalesChannelProductMappingRef(dataConnect, updateSalesChannelProductMappingVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+## ArchiveSalesChannelProductMapping
+You can execute the `ArchiveSalesChannelProductMapping` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+archiveSalesChannelProductMapping(vars: ArchiveSalesChannelProductMappingVariables): MutationPromise<ArchiveSalesChannelProductMappingData, ArchiveSalesChannelProductMappingVariables>;
+
+interface ArchiveSalesChannelProductMappingRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ArchiveSalesChannelProductMappingVariables): MutationRef<ArchiveSalesChannelProductMappingData, ArchiveSalesChannelProductMappingVariables>;
+}
+export const archiveSalesChannelProductMappingRef: ArchiveSalesChannelProductMappingRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+archiveSalesChannelProductMapping(dc: DataConnect, vars: ArchiveSalesChannelProductMappingVariables): MutationPromise<ArchiveSalesChannelProductMappingData, ArchiveSalesChannelProductMappingVariables>;
+
+interface ArchiveSalesChannelProductMappingRef {
+  ...
+  (dc: DataConnect, vars: ArchiveSalesChannelProductMappingVariables): MutationRef<ArchiveSalesChannelProductMappingData, ArchiveSalesChannelProductMappingVariables>;
+}
+export const archiveSalesChannelProductMappingRef: ArchiveSalesChannelProductMappingRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the archiveSalesChannelProductMappingRef:
+```typescript
+const name = archiveSalesChannelProductMappingRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `ArchiveSalesChannelProductMapping` mutation requires an argument of type `ArchiveSalesChannelProductMappingVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface ArchiveSalesChannelProductMappingVariables {
+  id: UUIDString;
+}
+```
+### Return Type
+Recall that executing the `ArchiveSalesChannelProductMapping` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `ArchiveSalesChannelProductMappingData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface ArchiveSalesChannelProductMappingData {
+  _execute?: number | null;
+}
+```
+### Using `ArchiveSalesChannelProductMapping`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, archiveSalesChannelProductMapping, ArchiveSalesChannelProductMappingVariables } from '@insightpad/dataconnect';
+
+// The `ArchiveSalesChannelProductMapping` mutation requires an argument of type `ArchiveSalesChannelProductMappingVariables`:
+const archiveSalesChannelProductMappingVars: ArchiveSalesChannelProductMappingVariables = {
+  id: ..., 
+};
+
+// Call the `archiveSalesChannelProductMapping()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await archiveSalesChannelProductMapping(archiveSalesChannelProductMappingVars);
+// Variables can be defined inline as well.
+const { data } = await archiveSalesChannelProductMapping({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await archiveSalesChannelProductMapping(dataConnect, archiveSalesChannelProductMappingVars);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+archiveSalesChannelProductMapping(archiveSalesChannelProductMappingVars).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+### Using `ArchiveSalesChannelProductMapping`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, archiveSalesChannelProductMappingRef, ArchiveSalesChannelProductMappingVariables } from '@insightpad/dataconnect';
+
+// The `ArchiveSalesChannelProductMapping` mutation requires an argument of type `ArchiveSalesChannelProductMappingVariables`:
+const archiveSalesChannelProductMappingVars: ArchiveSalesChannelProductMappingVariables = {
+  id: ..., 
+};
+
+// Call the `archiveSalesChannelProductMappingRef()` function to get a reference to the mutation.
+const ref = archiveSalesChannelProductMappingRef(archiveSalesChannelProductMappingVars);
+// Variables can be defined inline as well.
+const ref = archiveSalesChannelProductMappingRef({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = archiveSalesChannelProductMappingRef(dataConnect, archiveSalesChannelProductMappingVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+## TransitionSalesChannelOrder
+You can execute the `TransitionSalesChannelOrder` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+transitionSalesChannelOrder(vars: TransitionSalesChannelOrderVariables): MutationPromise<TransitionSalesChannelOrderData, TransitionSalesChannelOrderVariables>;
+
+interface TransitionSalesChannelOrderRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: TransitionSalesChannelOrderVariables): MutationRef<TransitionSalesChannelOrderData, TransitionSalesChannelOrderVariables>;
+}
+export const transitionSalesChannelOrderRef: TransitionSalesChannelOrderRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+transitionSalesChannelOrder(dc: DataConnect, vars: TransitionSalesChannelOrderVariables): MutationPromise<TransitionSalesChannelOrderData, TransitionSalesChannelOrderVariables>;
+
+interface TransitionSalesChannelOrderRef {
+  ...
+  (dc: DataConnect, vars: TransitionSalesChannelOrderVariables): MutationRef<TransitionSalesChannelOrderData, TransitionSalesChannelOrderVariables>;
+}
+export const transitionSalesChannelOrderRef: TransitionSalesChannelOrderRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the transitionSalesChannelOrderRef:
+```typescript
+const name = transitionSalesChannelOrderRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `TransitionSalesChannelOrder` mutation requires an argument of type `TransitionSalesChannelOrderVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface TransitionSalesChannelOrderVariables {
+  id: UUIDString;
+  action: string;
+  reason: string;
+  expectedVersion: number;
+}
+```
+### Return Type
+Recall that executing the `TransitionSalesChannelOrder` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `TransitionSalesChannelOrderData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface TransitionSalesChannelOrderData {
+  _execute?: number | null;
+}
+```
+### Using `TransitionSalesChannelOrder`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, transitionSalesChannelOrder, TransitionSalesChannelOrderVariables } from '@insightpad/dataconnect';
+
+// The `TransitionSalesChannelOrder` mutation requires an argument of type `TransitionSalesChannelOrderVariables`:
+const transitionSalesChannelOrderVars: TransitionSalesChannelOrderVariables = {
+  id: ..., 
+  action: ..., 
+  reason: ..., 
+  expectedVersion: ..., 
+};
+
+// Call the `transitionSalesChannelOrder()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await transitionSalesChannelOrder(transitionSalesChannelOrderVars);
+// Variables can be defined inline as well.
+const { data } = await transitionSalesChannelOrder({ id: ..., action: ..., reason: ..., expectedVersion: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await transitionSalesChannelOrder(dataConnect, transitionSalesChannelOrderVars);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+transitionSalesChannelOrder(transitionSalesChannelOrderVars).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+### Using `TransitionSalesChannelOrder`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, transitionSalesChannelOrderRef, TransitionSalesChannelOrderVariables } from '@insightpad/dataconnect';
+
+// The `TransitionSalesChannelOrder` mutation requires an argument of type `TransitionSalesChannelOrderVariables`:
+const transitionSalesChannelOrderVars: TransitionSalesChannelOrderVariables = {
+  id: ..., 
+  action: ..., 
+  reason: ..., 
+  expectedVersion: ..., 
+};
+
+// Call the `transitionSalesChannelOrderRef()` function to get a reference to the mutation.
+const ref = transitionSalesChannelOrderRef(transitionSalesChannelOrderVars);
+// Variables can be defined inline as well.
+const ref = transitionSalesChannelOrderRef({ id: ..., action: ..., reason: ..., expectedVersion: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = transitionSalesChannelOrderRef(dataConnect, transitionSalesChannelOrderVars);
 
 // Call `executeMutation()` on the reference to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
