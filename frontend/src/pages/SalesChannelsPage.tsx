@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { executeMutation, executeQuery, getDataConnect, mutationRef, queryRef } from 'firebase/data-connect'
 import { connectorConfig } from '@insightpad/dataconnect'
 import { useAuth } from '../auth/useAuth'
@@ -125,8 +126,9 @@ export function SalesChannelsPage() {
 
   return <section className="catalog-page channels-page">
     <header>
-      <div><span className="eyebrow">Integrações</span><h1>Canais de venda</h1></div>
+      <div><span className="eyebrow">Canais de venda</span><h1>Gestão de conexões</h1></div>
       <div className="catalog-header-actions">
+        <Link className="catalog-back" to="/modulos/canais"><span className="material-symbols-rounded">arrow_back</span>Voltar</Link>
         {permission?.canCreate && <button className="catalog-primary" onClick={() => open()}><span className="material-symbols-rounded">add_link</span>Novo canal</button>}
       </div>
     </header>
