@@ -1,0 +1,30 @@
+# Run once in each environment after deploying the connector. It creates the
+# global page catalog entry and gives the Data Dazzle platform administrator
+# full access. Client roles are granted access through Gestão de Acessos.
+mutation BootstrapSalesChannelsNavigation(
+  $tenantId: UUID!
+  $platformAdminRoleId: UUID!
+) @auth(level: NO_ACCESS) @transaction {
+  page: appPage_upsert(data: {
+    id: "10000000-0000-4000-8000-00000000000e"
+    pageKey: "CANAIS_VENDA"
+    displayName: "Canais de Venda"
+    module: "Integrações"
+    route: "/integracoes/canais"
+    icon: "hub"
+    displayOrder: 140
+    requiresLogin: true
+    active: true
+  })
+  permission: rolePagePermission_upsert(data: {
+    roleId: $platformAdminRoleId
+    pageId: "10000000-0000-4000-8000-00000000000e"
+    tenantId: $tenantId
+    canAccess: true
+    canCreate: true
+    canUpdate: true
+    canDelete: true
+    canExport: true
+    canManage: true
+  })
+}
