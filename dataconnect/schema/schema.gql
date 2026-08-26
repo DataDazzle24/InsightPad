@@ -114,6 +114,26 @@ type SalesChannelConnection @table(name: "sales_channel_connections", key: "id")
   deletedAt: Timestamp @col(name: "deleted_at")
 }
 
+type SalesChannelProductMapping @table(name: "sales_channel_product_mappings", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  connection: SalesChannelConnection! @ref(fields: "connectionId", references: "id")
+  connectionId: UUID! @col(name: "connection_id")
+  product: Product! @ref(fields: "productId", references: "id")
+  productId: UUID! @col(name: "product_id")
+  externalProductId: String! @col(name: "external_product_id", dataType: "varchar(160)")
+  externalProductName: String @col(name: "external_product_name", dataType: "varchar(240)")
+  syncPrice: Boolean! @default(value: false) @col(name: "sync_price")
+  syncStock: Boolean! @default(value: false) @col(name: "sync_stock")
+  enabled: Boolean! @default(value: true)
+  status: String! @default(value: "MAPPED") @col(dataType: "varchar(32)")
+  active: Boolean! @default(value: true)
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+  deletedAt: Timestamp @col(name: "deleted_at")
+}
+
 # Inbound partner orders. Webhooks insert here server-side with a provider idempotency key.
 type SalesChannelOrder @table(name: "sales_channel_orders", key: "id") {
   id: UUID! @default(expr: "uuidV4()")
