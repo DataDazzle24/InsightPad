@@ -1,5 +1,15 @@
-# Compatibility verification only. Constraints are now managed by @unique in schema.gql.
-# No privileged DDL is executed through the application connector.
+# Retained only for connector compatibility. @retired removes it from newly
+# generated SDKs, and every field is now an intentional no-op.
+mutation BootstrapSalesChannelOrderIndexes @auth(level: NO_ACCESS) @retired {
+  idempotency: _execute(sql: "UPDATE sales_channel_orders SET updated_at=updated_at WHERE false",params:[])
+  timeline: _execute(sql: "UPDATE sales_channel_orders SET updated_at=updated_at WHERE false",params:[])
+  statusQueue: _execute(sql: "UPDATE sales_channel_orders SET updated_at=updated_at WHERE false",params:[])
+  itemLookup: _execute(sql: "UPDATE sales_channel_order_items SET created_at=created_at WHERE false",params:[])
+  productMapping: _execute(sql: "UPDATE sales_channel_product_mappings SET updated_at=updated_at WHERE false",params:[])
+  externalProductMapping: _execute(sql: "UPDATE sales_channel_product_mappings SET updated_at=updated_at WHERE false",params:[])
+}
+
+# Compatibility verification only. Constraints are managed by @unique in schema.gql.
 query VerifySalesChannelOrderConstraints @auth(level: NO_ACCESS) {
   _select(sql: """
     SELECT jsonb_build_object(
