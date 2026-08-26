@@ -16,7 +16,7 @@ export const navigationModules: NavigationModule[] = [
   { label: 'Financeiro', icon: 'account_balance_wallet', to: '/modulos/financeiro', pageKeys: ['CONTAS_PAGAR', 'CONTAS_RECEBER'], description: 'Pagamentos, recebimentos e acompanhamento financeiro', accent: 'cyan' },
   { label: 'Cadastros', icon: 'app_registration', to: '/modulos/cadastros', pageKeys: ['CAD_CATEGORIA', 'CAD_SUBCATEGORIA', 'CAD_PRODUTO', 'CAD_CLIENTE', 'CAD_FORNECEDOR', 'CAD_FILIAL'], description: 'Base cadastral do seu negócio', accent: 'cyan' },
   { label: 'Dashboard', icon: 'monitoring', to: '/modulos/dashboards', pageKeys: ['RELATORIOS_OPERACIONAIS'], description: 'Relatórios e inteligência operacional', accent: 'green' },
-  { label: 'Canais', icon: 'hub', to: '/integracoes/canais', pageKeys: ['CANAIS_VENDA'], description: 'iFood, Zé Delivery e novos canais de venda', accent: 'cyan' },
+  { label: 'Canais', icon: 'hub', to: '/modulos/canais', pageKeys: ['CANAIS_VENDA'], description: 'Pedidos e integrações com canais externos', accent: 'cyan' },
 ]
 
 export const moduleMenus = {
@@ -38,5 +38,9 @@ export const moduleMenus = {
   ]},
   dashboards: { title: 'Dashboard', subtitle: 'Transforme dados em decisões', items: [
     { pageKey: 'RELATORIOS_OPERACIONAIS', label: 'Faturamento e Lucro', description: 'Acompanhe o resultado diário do negócio', icon: 'query_stats' },
+  ]},
+  canais: { title: 'Canais de venda', subtitle: 'Centralize pedidos e gerencie suas integrações', items: [
+    { pageKey: 'CANAIS_VENDA', route: '/integracoes/canais/pedidos', label: 'Pedidos', description: 'Acompanhe e trate pedidos de todos os canais', icon: 'receipt_long' },
+    { pageKey: 'CANAIS_VENDA', route: '/integracoes/canais/conexoes', label: 'Gestão de conexões', description: 'Configure lojas, produtos e integrações', icon: 'hub' },
   ]},
 } as const
