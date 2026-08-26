@@ -96,7 +96,17 @@ export interface BootstrapNavigationCatalogVariables {
 }
 
 export interface BootstrapSalesChannelsNavigationData {
+  page: AppPage_Key;
+  permission: RolePagePermission_Key;
+}
+
+export interface BootstrapSalesChannelsNavigationV2Data {
   _execute?: number | null;
+}
+
+export interface BootstrapSalesChannelsNavigationVariables {
+  tenantId: UUIDString;
+  platformAdminRoleId: UUIDString;
 }
 
 export interface Branch_Key {
@@ -944,15 +954,27 @@ export interface ValidateDeviceSessionVariables {
 
 interface BootstrapSalesChannelsNavigationRef {
   /* Allow users to create refs without passing in DataConnect */
-  (): MutationRef<BootstrapSalesChannelsNavigationData, undefined>;
+  (vars: BootstrapSalesChannelsNavigationVariables): MutationRef<BootstrapSalesChannelsNavigationData, BootstrapSalesChannelsNavigationVariables>;
   /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect): MutationRef<BootstrapSalesChannelsNavigationData, undefined>;
+  (dc: DataConnect, vars: BootstrapSalesChannelsNavigationVariables): MutationRef<BootstrapSalesChannelsNavigationData, BootstrapSalesChannelsNavigationVariables>;
   operationName: string;
 }
 export const bootstrapSalesChannelsNavigationRef: BootstrapSalesChannelsNavigationRef;
 
-export function bootstrapSalesChannelsNavigation(): MutationPromise<BootstrapSalesChannelsNavigationData, undefined>;
-export function bootstrapSalesChannelsNavigation(dc: DataConnect): MutationPromise<BootstrapSalesChannelsNavigationData, undefined>;
+export function bootstrapSalesChannelsNavigation(vars: BootstrapSalesChannelsNavigationVariables): MutationPromise<BootstrapSalesChannelsNavigationData, BootstrapSalesChannelsNavigationVariables>;
+export function bootstrapSalesChannelsNavigation(dc: DataConnect, vars: BootstrapSalesChannelsNavigationVariables): MutationPromise<BootstrapSalesChannelsNavigationData, BootstrapSalesChannelsNavigationVariables>;
+
+interface BootstrapSalesChannelsNavigationV2Ref {
+  /* Allow users to create refs without passing in DataConnect */
+  (): MutationRef<BootstrapSalesChannelsNavigationV2Data, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): MutationRef<BootstrapSalesChannelsNavigationV2Data, undefined>;
+  operationName: string;
+}
+export const bootstrapSalesChannelsNavigationV2Ref: BootstrapSalesChannelsNavigationV2Ref;
+
+export function bootstrapSalesChannelsNavigationV2(): MutationPromise<BootstrapSalesChannelsNavigationV2Data, undefined>;
+export function bootstrapSalesChannelsNavigationV2(dc: DataConnect): MutationPromise<BootstrapSalesChannelsNavigationV2Data, undefined>;
 
 interface BootstrapNavigationCatalogRef {
   /* Allow users to create refs without passing in DataConnect */

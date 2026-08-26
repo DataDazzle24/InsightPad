@@ -5,16 +5,28 @@ export const connectorConfig = {
   service: 'insightpad',
   location: 'southamerica-east1'
 };
-export const bootstrapSalesChannelsNavigationRef = (dc) => {
-  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+export const bootstrapSalesChannelsNavigationRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
-  return mutationRef(dcInstance, 'BootstrapSalesChannelsNavigation');
+  return mutationRef(dcInstance, 'BootstrapSalesChannelsNavigation', inputVars);
 }
 bootstrapSalesChannelsNavigationRef.operationName = 'BootstrapSalesChannelsNavigation';
 
-export function bootstrapSalesChannelsNavigation(dc) {
-  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dc, undefined);
+export function bootstrapSalesChannelsNavigation(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
   return executeMutation(bootstrapSalesChannelsNavigationRef(dcInstance, inputVars));
+}
+
+export const bootstrapSalesChannelsNavigationV2Ref = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'BootstrapSalesChannelsNavigationV2');
+}
+bootstrapSalesChannelsNavigationV2Ref.operationName = 'BootstrapSalesChannelsNavigationV2';
+
+export function bootstrapSalesChannelsNavigationV2(dc) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dc, undefined);
+  return executeMutation(bootstrapSalesChannelsNavigationV2Ref(dcInstance, inputVars));
 }
 
 export const bootstrapNavigationCatalogRef = (dcOrVars, vars) => {

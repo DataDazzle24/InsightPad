@@ -35,6 +35,7 @@ This README will guide you through the process of using the generated JavaScript
   - [*OperationalAnalyticsDashboard*](#operationalanalyticsdashboard)
 - [**Mutations**](#mutations)
   - [*BootstrapSalesChannelsNavigation*](#bootstrapsaleschannelsnavigation)
+  - [*BootstrapSalesChannelsNavigationV2*](#bootstrapsaleschannelsnavigationv2)
   - [*BootstrapNavigationCatalog*](#bootstrapnavigationcatalog)
   - [*CreateCategory*](#createcategory)
   - [*UpdateCategory*](#updatecategory)
@@ -2800,22 +2801,22 @@ Below are examples of how to use the `app` connector's generated functions to ex
 ## BootstrapSalesChannelsNavigation
 You can execute the `BootstrapSalesChannelsNavigation` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
 ```typescript
-bootstrapSalesChannelsNavigation(): MutationPromise<BootstrapSalesChannelsNavigationData, undefined>;
+bootstrapSalesChannelsNavigation(vars: BootstrapSalesChannelsNavigationVariables): MutationPromise<BootstrapSalesChannelsNavigationData, BootstrapSalesChannelsNavigationVariables>;
 
 interface BootstrapSalesChannelsNavigationRef {
   ...
   /* Allow users to create refs without passing in DataConnect */
-  (): MutationRef<BootstrapSalesChannelsNavigationData, undefined>;
+  (vars: BootstrapSalesChannelsNavigationVariables): MutationRef<BootstrapSalesChannelsNavigationData, BootstrapSalesChannelsNavigationVariables>;
 }
 export const bootstrapSalesChannelsNavigationRef: BootstrapSalesChannelsNavigationRef;
 ```
 You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
 ```typescript
-bootstrapSalesChannelsNavigation(dc: DataConnect): MutationPromise<BootstrapSalesChannelsNavigationData, undefined>;
+bootstrapSalesChannelsNavigation(dc: DataConnect, vars: BootstrapSalesChannelsNavigationVariables): MutationPromise<BootstrapSalesChannelsNavigationData, BootstrapSalesChannelsNavigationVariables>;
 
 interface BootstrapSalesChannelsNavigationRef {
   ...
-  (dc: DataConnect): MutationRef<BootstrapSalesChannelsNavigationData, undefined>;
+  (dc: DataConnect, vars: BootstrapSalesChannelsNavigationVariables): MutationRef<BootstrapSalesChannelsNavigationData, BootstrapSalesChannelsNavigationVariables>;
 }
 export const bootstrapSalesChannelsNavigationRef: BootstrapSalesChannelsNavigationRef;
 ```
@@ -2827,37 +2828,54 @@ console.log(name);
 ```
 
 ### Variables
-The `BootstrapSalesChannelsNavigation` mutation has no variables.
+The `BootstrapSalesChannelsNavigation` mutation requires an argument of type `BootstrapSalesChannelsNavigationVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface BootstrapSalesChannelsNavigationVariables {
+  tenantId: UUIDString;
+  platformAdminRoleId: UUIDString;
+}
+```
 ### Return Type
 Recall that executing the `BootstrapSalesChannelsNavigation` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
 
 The `data` property is an object of type `BootstrapSalesChannelsNavigationData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface BootstrapSalesChannelsNavigationData {
-  _execute?: number | null;
+  page: AppPage_Key;
+  permission: RolePagePermission_Key;
 }
 ```
 ### Using `BootstrapSalesChannelsNavigation`'s action shortcut function
 
 ```typescript
 import { getDataConnect } from 'firebase/data-connect';
-import { connectorConfig, bootstrapSalesChannelsNavigation } from '@insightpad/dataconnect';
+import { connectorConfig, bootstrapSalesChannelsNavigation, BootstrapSalesChannelsNavigationVariables } from '@insightpad/dataconnect';
 
+// The `BootstrapSalesChannelsNavigation` mutation requires an argument of type `BootstrapSalesChannelsNavigationVariables`:
+const bootstrapSalesChannelsNavigationVars: BootstrapSalesChannelsNavigationVariables = {
+  tenantId: ..., 
+  platformAdminRoleId: ..., 
+};
 
 // Call the `bootstrapSalesChannelsNavigation()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
-const { data } = await bootstrapSalesChannelsNavigation();
+const { data } = await bootstrapSalesChannelsNavigation(bootstrapSalesChannelsNavigationVars);
+// Variables can be defined inline as well.
+const { data } = await bootstrapSalesChannelsNavigation({ tenantId: ..., platformAdminRoleId: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
-const { data } = await bootstrapSalesChannelsNavigation(dataConnect);
+const { data } = await bootstrapSalesChannelsNavigation(dataConnect, bootstrapSalesChannelsNavigationVars);
 
-console.log(data._execute);
+console.log(data.page);
+console.log(data.permission);
 
 // Or, you can use the `Promise` API.
-bootstrapSalesChannelsNavigation().then((response) => {
+bootstrapSalesChannelsNavigation(bootstrapSalesChannelsNavigationVars).then((response) => {
   const data = response.data;
-  console.log(data._execute);
+  console.log(data.page);
+  console.log(data.permission);
 });
 ```
 
@@ -2865,15 +2883,115 @@ bootstrapSalesChannelsNavigation().then((response) => {
 
 ```typescript
 import { getDataConnect, executeMutation } from 'firebase/data-connect';
-import { connectorConfig, bootstrapSalesChannelsNavigationRef } from '@insightpad/dataconnect';
+import { connectorConfig, bootstrapSalesChannelsNavigationRef, BootstrapSalesChannelsNavigationVariables } from '@insightpad/dataconnect';
 
+// The `BootstrapSalesChannelsNavigation` mutation requires an argument of type `BootstrapSalesChannelsNavigationVariables`:
+const bootstrapSalesChannelsNavigationVars: BootstrapSalesChannelsNavigationVariables = {
+  tenantId: ..., 
+  platformAdminRoleId: ..., 
+};
 
 // Call the `bootstrapSalesChannelsNavigationRef()` function to get a reference to the mutation.
-const ref = bootstrapSalesChannelsNavigationRef();
+const ref = bootstrapSalesChannelsNavigationRef(bootstrapSalesChannelsNavigationVars);
+// Variables can be defined inline as well.
+const ref = bootstrapSalesChannelsNavigationRef({ tenantId: ..., platformAdminRoleId: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
-const ref = bootstrapSalesChannelsNavigationRef(dataConnect);
+const ref = bootstrapSalesChannelsNavigationRef(dataConnect, bootstrapSalesChannelsNavigationVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.page);
+console.log(data.permission);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.page);
+  console.log(data.permission);
+});
+```
+
+## BootstrapSalesChannelsNavigationV2
+You can execute the `BootstrapSalesChannelsNavigationV2` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+bootstrapSalesChannelsNavigationV2(): MutationPromise<BootstrapSalesChannelsNavigationV2Data, undefined>;
+
+interface BootstrapSalesChannelsNavigationV2Ref {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (): MutationRef<BootstrapSalesChannelsNavigationV2Data, undefined>;
+}
+export const bootstrapSalesChannelsNavigationV2Ref: BootstrapSalesChannelsNavigationV2Ref;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+bootstrapSalesChannelsNavigationV2(dc: DataConnect): MutationPromise<BootstrapSalesChannelsNavigationV2Data, undefined>;
+
+interface BootstrapSalesChannelsNavigationV2Ref {
+  ...
+  (dc: DataConnect): MutationRef<BootstrapSalesChannelsNavigationV2Data, undefined>;
+}
+export const bootstrapSalesChannelsNavigationV2Ref: BootstrapSalesChannelsNavigationV2Ref;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the bootstrapSalesChannelsNavigationV2Ref:
+```typescript
+const name = bootstrapSalesChannelsNavigationV2Ref.operationName;
+console.log(name);
+```
+
+### Variables
+The `BootstrapSalesChannelsNavigationV2` mutation has no variables.
+### Return Type
+Recall that executing the `BootstrapSalesChannelsNavigationV2` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `BootstrapSalesChannelsNavigationV2Data`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface BootstrapSalesChannelsNavigationV2Data {
+  _execute?: number | null;
+}
+```
+### Using `BootstrapSalesChannelsNavigationV2`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, bootstrapSalesChannelsNavigationV2 } from '@insightpad/dataconnect';
+
+
+// Call the `bootstrapSalesChannelsNavigationV2()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await bootstrapSalesChannelsNavigationV2();
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await bootstrapSalesChannelsNavigationV2(dataConnect);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+bootstrapSalesChannelsNavigationV2().then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+### Using `BootstrapSalesChannelsNavigationV2`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, bootstrapSalesChannelsNavigationV2Ref } from '@insightpad/dataconnect';
+
+
+// Call the `bootstrapSalesChannelsNavigationV2Ref()` function to get a reference to the mutation.
+const ref = bootstrapSalesChannelsNavigationV2Ref();
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = bootstrapSalesChannelsNavigationV2Ref(dataConnect);
 
 // Call `executeMutation()` on the reference to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
