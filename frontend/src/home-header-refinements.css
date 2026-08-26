@@ -46,13 +46,24 @@
     drop-shadow(0 0 3.2rem rgba(66, 220, 250, .12));
 }
 
-.home-menu__brand footer {
-  gap: clamp(.4rem, 1vw, .7rem);
+.home-menu__brand footer.home-menu__copyright {
+  right: auto;
+  left: 50%;
+  width: calc(100% - 4rem);
+  justify-content: center;
+  gap: 0;
+  color: #717b7f;
+  font-size: .62rem;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0;
+  text-align: center;
+  text-transform: none;
+  transform: translateX(-50%);
 }
 
-.home-menu__brand footer img {
-  width: 5.35rem;
-  max-height: 2rem;
+html[data-theme='light'] .home-menu__brand footer.home-menu__copyright {
+  color: #717b7f;
 }
 
 .home-menu__modules > .legacy-tile:nth-child(odd) .legacy-tile__bar {
@@ -102,5 +113,10 @@
   .home-menu__insight-logo {
     width: 50%;
     max-width: 50%;
+  }
+
+  .home-menu__brand footer.home-menu__copyright {
+    width: calc(100% - 2rem);
+    font-size: .58rem;
   }
 }
