@@ -21,9 +21,11 @@ export function ModuleMenuPage({ moduleKey }: ModuleMenuPageProps) {
       </header>
       <div className="legacy-module__grid">
         {items.map((item) => {
-          const route = appRoutes.find((entry) => entry.pageKey === item.pageKey)?.route ?? '/'
+          const route = 'route' in item
+            ? item.route
+            : appRoutes.find((entry) => entry.pageKey === item.pageKey)?.route ?? '/'
           return (
-            <Link className="legacy-tile legacy-tile--submenu" key={item.pageKey} to={route}>
+            <Link className="legacy-tile legacy-tile--submenu" key={item.label} to={route}>
               <span className="legacy-tile__bar" />
               <span className="material-symbols-rounded legacy-tile__icon" aria-hidden="true">{item.icon}</span>
               <span><strong>{item.label}</strong><small>{item.description}</small></span>
