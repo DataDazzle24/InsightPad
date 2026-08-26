@@ -96,13 +96,7 @@ export interface BootstrapNavigationCatalogVariables {
 }
 
 export interface BootstrapSalesChannelsNavigationData {
-  page: AppPage_Key;
-  permission: RolePagePermission_Key;
-}
-
-export interface BootstrapSalesChannelsNavigationVariables {
-  tenantId: UUIDString;
-  platformAdminRoleId: UUIDString;
+  _execute?: number | null;
 }
 
 export interface Branch_Key {
@@ -950,15 +944,15 @@ export interface ValidateDeviceSessionVariables {
 
 interface BootstrapSalesChannelsNavigationRef {
   /* Allow users to create refs without passing in DataConnect */
-  (vars: BootstrapSalesChannelsNavigationVariables): MutationRef<BootstrapSalesChannelsNavigationData, BootstrapSalesChannelsNavigationVariables>;
+  (): MutationRef<BootstrapSalesChannelsNavigationData, undefined>;
   /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: BootstrapSalesChannelsNavigationVariables): MutationRef<BootstrapSalesChannelsNavigationData, BootstrapSalesChannelsNavigationVariables>;
+  (dc: DataConnect): MutationRef<BootstrapSalesChannelsNavigationData, undefined>;
   operationName: string;
 }
 export const bootstrapSalesChannelsNavigationRef: BootstrapSalesChannelsNavigationRef;
 
-export function bootstrapSalesChannelsNavigation(vars: BootstrapSalesChannelsNavigationVariables): MutationPromise<BootstrapSalesChannelsNavigationData, BootstrapSalesChannelsNavigationVariables>;
-export function bootstrapSalesChannelsNavigation(dc: DataConnect, vars: BootstrapSalesChannelsNavigationVariables): MutationPromise<BootstrapSalesChannelsNavigationData, BootstrapSalesChannelsNavigationVariables>;
+export function bootstrapSalesChannelsNavigation(): MutationPromise<BootstrapSalesChannelsNavigationData, undefined>;
+export function bootstrapSalesChannelsNavigation(dc: DataConnect): MutationPromise<BootstrapSalesChannelsNavigationData, undefined>;
 
 interface BootstrapNavigationCatalogRef {
   /* Allow users to create refs without passing in DataConnect */

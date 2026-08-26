@@ -15,7 +15,7 @@ Here are all of the hooks that get generated:
 import { useBootstrapSalesChannelsNavigation, useBootstrapNavigationCatalog, useCreateCategory, useUpdateCategory, useArchiveCategory, useCreateSubcategory, useUpdateSubcategory, useArchiveSubcategory, useRestoreCategory, useRestoreSubcategory } from '@insightpad/dataconnect/react';
 // The types of these hooks are available in react/index.d.ts
 
-const { data, isPending, isSuccess, isError, error } = useBootstrapSalesChannelsNavigation(bootstrapSalesChannelsNavigationVars);
+const { data, isPending, isSuccess, isError, error } = useBootstrapSalesChannelsNavigation();
 
 const { data, isPending, isSuccess, isError, error } = useBootstrapNavigationCatalog(bootstrapNavigationCatalogVars);
 
@@ -75,8 +75,8 @@ Here's an example of how to use it with the first 5 operations:
 import { bootstrapSalesChannelsNavigation, bootstrapNavigationCatalog, createCategory, updateCategory, archiveCategory, createSubcategory, updateSubcategory, archiveSubcategory, restoreCategory, restoreSubcategory } from '@insightpad/dataconnect';
 
 
-// Operation BootstrapSalesChannelsNavigation:  For variables, look at type BootstrapSalesChannelsNavigationVars in ../index.d.ts
-const { data } = await BootstrapSalesChannelsNavigation(dataConnect, bootstrapSalesChannelsNavigationVars);
+// Operation BootstrapSalesChannelsNavigation: 
+const { data } = await BootstrapSalesChannelsNavigation(dataConnect);
 
 // Operation BootstrapNavigationCatalog:  For variables, look at type BootstrapNavigationCatalogVars in ../index.d.ts
 const { data } = await BootstrapNavigationCatalog(dataConnect, bootstrapNavigationCatalogVars);

@@ -7,16 +7,16 @@ const connectorConfig = {
 };
 exports.connectorConfig = connectorConfig;
 
-const bootstrapSalesChannelsNavigationRef = (dcOrVars, vars) => {
-  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+const bootstrapSalesChannelsNavigationRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
   dcInstance._useGeneratedSdk();
-  return mutationRef(dcInstance, 'BootstrapSalesChannelsNavigation', inputVars);
+  return mutationRef(dcInstance, 'BootstrapSalesChannelsNavigation');
 }
 bootstrapSalesChannelsNavigationRef.operationName = 'BootstrapSalesChannelsNavigation';
 exports.bootstrapSalesChannelsNavigationRef = bootstrapSalesChannelsNavigationRef;
 
-exports.bootstrapSalesChannelsNavigation = function bootstrapSalesChannelsNavigation(dcOrVars, vars) {
-  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+exports.bootstrapSalesChannelsNavigation = function bootstrapSalesChannelsNavigation(dc) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dc, undefined);
   return executeMutation(bootstrapSalesChannelsNavigationRef(dcInstance, inputVars));
 }
 ;

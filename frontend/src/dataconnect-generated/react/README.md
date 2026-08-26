@@ -2220,22 +2220,15 @@ Below are examples of how to use the `app` connector's generated Mutation hook f
 ## BootstrapSalesChannelsNavigation
 You can execute the `BootstrapSalesChannelsNavigation` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
 ```javascript
-useBootstrapSalesChannelsNavigation(options?: useDataConnectMutationOptions<BootstrapSalesChannelsNavigationData, FirebaseError, BootstrapSalesChannelsNavigationVariables>): UseDataConnectMutationResult<BootstrapSalesChannelsNavigationData, BootstrapSalesChannelsNavigationVariables>;
+useBootstrapSalesChannelsNavigation(options?: useDataConnectMutationOptions<BootstrapSalesChannelsNavigationData, FirebaseError, void>): UseDataConnectMutationResult<BootstrapSalesChannelsNavigationData, undefined>;
 ```
 You can also pass in a `DataConnect` instance to the Mutation hook function.
 ```javascript
-useBootstrapSalesChannelsNavigation(dc: DataConnect, options?: useDataConnectMutationOptions<BootstrapSalesChannelsNavigationData, FirebaseError, BootstrapSalesChannelsNavigationVariables>): UseDataConnectMutationResult<BootstrapSalesChannelsNavigationData, BootstrapSalesChannelsNavigationVariables>;
+useBootstrapSalesChannelsNavigation(dc: DataConnect, options?: useDataConnectMutationOptions<BootstrapSalesChannelsNavigationData, FirebaseError, void>): UseDataConnectMutationResult<BootstrapSalesChannelsNavigationData, undefined>;
 ```
 
 ### Variables
-The `BootstrapSalesChannelsNavigation` Mutation requires an argument of type `BootstrapSalesChannelsNavigationVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
-
-```javascript
-export interface BootstrapSalesChannelsNavigationVariables {
-  tenantId: UUIDString;
-  platformAdminRoleId: UUIDString;
-}
-```
+The `BootstrapSalesChannelsNavigation` Mutation has no variables.
 ### Return Type
 Recall that calling the `BootstrapSalesChannelsNavigation` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
 
@@ -2246,8 +2239,7 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `BootstrapSalesChannelsNavigation` Mutation is of type `BootstrapSalesChannelsNavigationData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface BootstrapSalesChannelsNavigationData {
-  page: AppPage_Key;
-  permission: RolePagePermission_Key;
+  _execute?: number | null;
 }
 ```
 
@@ -2257,7 +2249,7 @@ To learn more about the `UseMutationResult` object, see the [TanStack React Quer
 
 ```javascript
 import { getDataConnect } from 'firebase/data-connect';
-import { connectorConfig, BootstrapSalesChannelsNavigationVariables } from '@insightpad/dataconnect';
+import { connectorConfig } from '@insightpad/dataconnect';
 import { useBootstrapSalesChannelsNavigation } from '@insightpad/dataconnect/react'
 
 export default function BootstrapSalesChannelsNavigationComponent() {
@@ -2282,20 +2274,14 @@ export default function BootstrapSalesChannelsNavigationComponent() {
   const mutation = useBootstrapSalesChannelsNavigation(dataConnect, options);
 
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
-  // The `useBootstrapSalesChannelsNavigation` Mutation requires an argument of type `BootstrapSalesChannelsNavigationVariables`:
-  const bootstrapSalesChannelsNavigationVars: BootstrapSalesChannelsNavigationVariables = {
-    tenantId: ..., 
-    platformAdminRoleId: ..., 
-  };
-  mutation.mutate(bootstrapSalesChannelsNavigationVars);
-  // Variables can be defined inline as well.
-  mutation.mutate({ tenantId: ..., platformAdminRoleId: ..., });
+  mutation.mutate();
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  // Since this Mutation accepts no variables, you must pass `undefined` where you would normally pass the variables.
   const options = {
     onSuccess: () => { console.log('Mutation succeeded!'); }
   };
-  mutation.mutate(bootstrapSalesChannelsNavigationVars, options);
+  mutation.mutate(undefined, options);
 
   // Then, you can render your component dynamically based on the status of the Mutation.
   if (mutation.isPending) {
@@ -2308,8 +2294,7 @@ export default function BootstrapSalesChannelsNavigationComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
-    console.log(mutation.data.page);
-    console.log(mutation.data.permission);
+    console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
 }

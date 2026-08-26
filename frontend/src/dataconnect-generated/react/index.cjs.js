@@ -4,8 +4,8 @@ const { useDataConnectQuery, useDataConnectMutation, validateReactArgs } = requi
 
 exports.useBootstrapSalesChannelsNavigation = function useBootstrapSalesChannelsNavigation(dcOrOptions, options) {
   const { dc: dcInstance, vars: inputOpts } = validateArgs(connectorConfig, dcOrOptions, options);
-  function refFactory(vars) {
-    return bootstrapSalesChannelsNavigationRef(dcInstance, vars);
+  function refFactory() {
+    return bootstrapSalesChannelsNavigationRef(dcInstance);
   }
   return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
 }
