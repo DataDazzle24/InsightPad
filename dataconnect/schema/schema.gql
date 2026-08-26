@@ -114,6 +114,53 @@ type SalesChannelConnection @table(name: "sales_channel_connections", key: "id")
   deletedAt: Timestamp @col(name: "deleted_at")
 }
 
+# Inbound partner orders. Webhooks insert here server-side with a provider idempotency key.
+type SalesChannelOrder @table(name: "sales_channel_orders", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  branch: Branch! @ref(fields: "branchId", references: "id")
+  branchId: UUID! @col(name: "branch_id")
+  connection: SalesChannelConnection! @ref(fields: "connectionId", references: "id")
+  connectionId: UUID! @col(name: "connection_id")
+  providerOrderId: String! @col(name: "provider_order_id", dataType: "varchar(160)")
+  displayCode: String! @col(name: "display_code", dataType: "varchar(80)")
+  status: String! @default(value: "PENDING") @col(dataType: "varchar(32)")
+  customerName: String @col(name: "customer_name", dataType: "varchar(160)")
+  orderType: String! @default(value: "DELIVERY") @col(name: "order_type", dataType: "varchar(32)")
+  paymentMethod: String @col(name: "payment_method", dataType: "varchar(80)")
+  deliveryAddress: String @col(name: "delivery_address", dataType: "text")
+  notes: String @col(dataType: "text")
+  subtotalCents: Int64! @default(value: 0) @col(name: "subtotal_cents")
+  deliveryFeeCents: Int64! @default(value: 0) @col(name: "delivery_fee_cents")
+  discountCents: Int64! @default(value: 0) @col(name: "discount_cents")
+  totalCents: Int64! @default(value: 0) @col(name: "total_cents")
+  receivedAt: Timestamp! @default(expr: "request.time") @col(name: "received_at")
+  acceptedAt: Timestamp @col(name: "accepted_at")
+  rejectedAt: Timestamp @col(name: "rejected_at")
+  completedAt: Timestamp @col(name: "completed_at")
+  rejectionReason: String @col(name: "rejection_reason", dataType: "varchar(500)")
+  processedByUid: String @col(name: "processed_by_uid", dataType: "varchar(128)")
+  version: Int! @default(value: 1)
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+}
+
+type SalesChannelOrderItem @table(name: "sales_channel_order_items", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  order: SalesChannelOrder! @ref(fields: "orderId", references: "id")
+  orderId: UUID! @col(name: "order_id")
+  externalItemId: String @col(name: "external_item_id", dataType: "varchar(160)")
+  name: String! @col(dataType: "varchar(240)")
+  quantity: Float!
+  unitPriceCents: Int64! @default(value: 0) @col(name: "unit_price_cents")
+  totalCents: Int64! @default(value: 0) @col(name: "total_cents")
+  observation: String @col(dataType: "varchar(500)")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+}
+
 type RolePagePermission
   @table(name: "role_page_permissions", key: ["role", "page"]) {
   role: Role!
