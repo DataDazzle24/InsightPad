@@ -13,10 +13,11 @@
 
 .catalog-page > header {
   align-items: center;
+  min-height: 3rem;
   margin: 0 0 .75rem;
 }
 
-.catalog-title-group {
+.catalog-page > header > .catalog-title-group {
   display: flex;
   min-width: 0;
   align-items: center;
@@ -24,7 +25,11 @@
 }
 
 .catalog-title-group > div {
+  display: flex;
   min-width: 0;
+  min-height: 3rem;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .catalog-page .catalog-title-group h1 {
@@ -32,10 +37,13 @@
 }
 
 .catalog-back {
+  display: inline-flex;
   width: 2.55rem;
   min-width: 2.55rem;
   height: 2.55rem;
   min-height: 2.55rem;
+  align-items: center;
+  align-self: center;
   justify-content: center;
   padding: 0;
   border: 0;
@@ -57,8 +65,19 @@
 }
 
 .catalog-header-actions {
+  display: flex;
+  align-items: center;
   flex-wrap: wrap;
   justify-content: flex-end;
+}
+
+.catalog-header-actions > .catalog-clear-tools,
+.catalog-header-actions > .catalog-primary {
+  width: 11.5rem;
+  min-width: 11.5rem;
+  height: 3rem;
+  min-height: 3rem;
+  padding: .7rem 1rem;
 }
 
 .catalog-clear-tools {
@@ -234,6 +253,30 @@
   transform: translateY(-1px);
 }
 
+.catalog-actions .catalog-action--edit:hover:not(:disabled) {
+  border-color: #e5bd35;
+  color: #211900;
+  background: #e7bd31;
+}
+
+.catalog-actions .catalog-action--danger:hover:not(:disabled) {
+  border-color: #ff667d;
+  color: #fff;
+  background: #b82f46;
+}
+
+.catalog-actions .catalog-action--success:hover:not(:disabled) {
+  border-color: #4fdf49;
+  color: #061106;
+  background: #38ca32;
+}
+
+.catalog-actions .catalog-action--info:hover:not(:disabled) {
+  border-color: #42dcfa;
+  color: #021013;
+  background: #42cfe9;
+}
+
 .catalog-pagination {
   position: relative;
   z-index: 3;
@@ -245,6 +288,46 @@
 .catalog-modal > header > button:focus-visible {
   color: #ff6b80;
   background: rgba(255, 82, 109, .1);
+}
+
+.catalog-modal form > footer,
+.catalog-confirm footer {
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.catalog-modal form > footer > .catalog-modal-cancel,
+.catalog-confirm footer > .catalog-modal-cancel {
+  min-width: 8.5rem;
+  margin-right: auto;
+  border-color: #3999e8;
+  color: #fff;
+  background: #1678c8;
+}
+
+.catalog-modal form > footer > .catalog-modal-submit,
+.catalog-confirm footer > .catalog-modal-submit {
+  min-width: 8.5rem;
+}
+
+.catalog-modal form > footer > .catalog-modal-submit--create {
+  border-color: #4fdf49;
+  color: #061106;
+  background: #38ca32;
+}
+
+.catalog-modal form > footer > .catalog-modal-submit--edit {
+  border-color: #e5bd35;
+  color: #211900;
+  background: #e7bd31;
+}
+
+.catalog-modal form > footer > .catalog-modal-cancel:hover:not(:disabled),
+.catalog-confirm footer > .catalog-modal-cancel:hover:not(:disabled),
+.catalog-modal form > footer > .catalog-modal-submit:hover:not(:disabled),
+.catalog-confirm footer > .catalog-modal-submit:hover:not(:disabled) {
+  filter: brightness(1.18);
+  transform: translateY(-1px);
 }
 
 .batch-add:hover:not(:disabled),
@@ -321,6 +404,18 @@ html[data-theme=light] .catalog-toolbar > .catalog-batch-action--success {
   .catalog-header-actions > * {
     min-width: 0;
     flex: 1 1 10rem;
+  }
+
+  .catalog-header-actions > .catalog-clear-tools,
+  .catalog-header-actions > .catalog-primary {
+    width: auto;
+    min-width: 0;
+  }
+
+  .catalog-modal form > footer > .catalog-modal-cancel,
+  .catalog-confirm footer > .catalog-modal-cancel {
+    min-width: 0;
+    margin-right: 0;
   }
 
   .catalog-toolbar > label {

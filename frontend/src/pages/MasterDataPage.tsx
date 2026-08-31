@@ -1443,10 +1443,10 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                 ])}
               </div>
               <footer>
-                <button type="button" onClick={() => setFilterModal(false)}>
+                <button className="catalog-modal-cancel" type="button" onClick={() => setFilterModal(false)}>
                   Cancelar
                 </button>
-                <button className="catalog-primary">Aplicar filtros</button>
+                <button className="catalog-primary catalog-modal-submit">Aplicar filtros</button>
               </footer>
             </form>
           </section>
@@ -1791,7 +1791,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                   </section>
                 )}
               <footer>
-                <button type="button" onClick={closeForm}>
+                <button className="catalog-modal-cancel" type="button" onClick={closeForm}>
                   Cancelar
                 </button>
                 {sectionIndex > 0 && (
@@ -1802,7 +1802,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                     Anterior
                   </button>
                 )}
-                <button className="catalog-primary">
+                <button className={`catalog-primary catalog-modal-submit ${editing ? "catalog-modal-submit--edit" : "catalog-modal-submit--create"}`}>
                   {sectionIndex < sections.length - 1 ? "Próxima" : "Salvar"}
                 </button>
               </footer>
@@ -1822,9 +1822,9 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
             <h2>Confirmar operação</h2>
             <p>{confirm.text}</p>
             <footer>
-              <button onClick={() => setConfirm(null)}>Cancelar</button>
+              <button className="catalog-modal-cancel" onClick={() => setConfirm(null)}>Cancelar</button>
               <button
-                className="catalog-primary"
+                className="catalog-primary catalog-modal-submit"
                 onClick={() => {
                   const action = confirm.run;
                   setConfirm(null);
