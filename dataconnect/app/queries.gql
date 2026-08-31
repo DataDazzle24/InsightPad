@@ -213,10 +213,10 @@ query SaleDetails($saleId: UUID!, $requestKey: String!) @auth(level: USER) {
 
 # Phase 1 operational catalogs.
 # Tenant scope is always derived through auth.uid; the client cannot select it.
-query ListCategories($search: String!, $limit: Int!, $offset: Int!, $requestKey: String) @auth(level: USER) {
+query ListCategories($search: String!, $sortField: String!, $sortDirection: String!, $limit: Int!, $offset: Int!, $requestKey: String) @auth(level: USER) {
   _select(
     sql: """
-      SELECT
+      WITH base AS (SELECT
         c.id,
         c.name,
         c.active,
@@ -241,19 +241,27 @@ query ListCategories($search: String!, $limit: Int!, $offset: Int!, $requestKey:
        AND s.tenant_id = c.tenant_id
       WHERE COALESCE(up.can_access,rp.can_access,false)
         AND ($2 = '' OR c.name ILIKE '%' || $2 || '%')
-        AND ($5 IS NULL OR $5 <> '')
+        AND ($7 IS NULL OR $7 <> '')
       GROUP BY c.id
-      ORDER BY lower(c.name), c.id
-      LIMIT $3 OFFSET $4
+      )
+      SELECT * FROM base
+      ORDER BY
+        CASE WHEN $4='asc' AND $3='subcategoryCount' THEN "subcategoryCount" END ASC NULLS LAST,
+        CASE WHEN $4='desc' AND $3='subcategoryCount' THEN "subcategoryCount" END DESC NULLS LAST,
+        CASE WHEN $4='asc' AND $3<>'subcategoryCount' THEN lower(to_jsonb(base)->>$3) END ASC NULLS LAST,
+        CASE WHEN $4='desc' AND $3<>'subcategoryCount' THEN lower(to_jsonb(base)->>$3) END DESC NULLS LAST,
+        CASE WHEN $3='' OR $4='' THEN "updatedAt" END DESC,
+        "updatedAt" DESC,id
+      LIMIT $5 OFFSET $6
     """,
-    params: [{_expr: "auth.uid"}, $search, $limit, $offset, $requestKey]
+    params: [{_expr: "auth.uid"}, $search, $sortField, $sortDirection, $limit, $offset, $requestKey]
   )
 }
 
-query ListSubcategories($search: String!, $categoryId: UUID, $limit: Int!, $offset: Int!, $requestKey: String) @auth(level: USER) {
+query ListSubcategories($search: String!, $categoryId: UUID, $sortField: String!, $sortDirection: String!, $limit: Int!, $offset: Int!, $requestKey: String) @auth(level: USER) {
   _select(
     sql: """
-      SELECT
+      WITH base AS (SELECT
         s.id,
         s.name,
         s.category_id AS "categoryId",
@@ -280,11 +288,17 @@ query ListSubcategories($search: String!, $categoryId: UUID, $limit: Int!, $offs
       WHERE COALESCE(up.can_access,rp.can_access,false)
         AND ($2 = '' OR s.name ILIKE '%' || $2 || '%' OR c.name ILIKE '%' || $2 || '%')
         AND ($3::uuid IS NULL OR s.category_id = $3)
-        AND ($6 IS NULL OR $6 <> '')
-      ORDER BY lower(c.name), lower(s.name), s.id
-      LIMIT $4 OFFSET $5
+        AND ($8 IS NULL OR $8 <> '')
+      )
+      SELECT * FROM base
+      ORDER BY
+        CASE WHEN $5='asc' THEN lower(to_jsonb(base)->>$4) END ASC NULLS LAST,
+        CASE WHEN $5='desc' THEN lower(to_jsonb(base)->>$4) END DESC NULLS LAST,
+        CASE WHEN $4='' OR $5='' THEN "updatedAt" END DESC,
+        "updatedAt" DESC,id
+      LIMIT $6 OFFSET $7
     """,
-    params: [{_expr: "auth.uid"}, $search, $categoryId, $limit, $offset, $requestKey]
+    params: [{_expr: "auth.uid"}, $search, $categoryId, $sortField, $sortDirection, $limit, $offset, $requestKey]
   )
 }
 
@@ -312,23 +326,27 @@ query CategoryOptions($requestKey: String) @auth(level: USER) {
 }
 
 
-query ListBranches($search: String!, $limit: Int!, $offset: Int!, $requestKey: String) @auth(level: USER) {
+query ListBranches($search: String!, $sortField: String!, $sortDirection: String!, $limit: Int!, $offset: Int!, $requestKey: String) @auth(level: USER) {
   _select(sql: """
-    SELECT b.id,b.name,b.internal_code AS "internalCode",b.postal_code AS "postalCode",b.state_code AS "stateCode",
+    WITH base AS (SELECT b.id,b.name,b.internal_code AS "internalCode",b.postal_code AS "postalCode",b.state_code AS "stateCode",
       b.city,b.district,b.street,b.street_number AS "streetNumber",b.address_complement AS "addressComplement",
       b.phone,b.active,b.created_at AS "createdAt",b.updated_at AS "updatedAt"
     FROM branches b JOIN users u ON u.tenant_id=b.tenant_id AND u.id=$1 AND u.active AND u.deleted_at IS NULL
     JOIN app_pages pg ON pg.page_key='CAD_FILIAL' AND pg.active
     LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
     LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
-    WHERE COALESCE(up.can_access,rp.can_access,false) AND ($2='' OR concat_ws(' ',b.name,b.internal_code,b.city) ILIKE '%'||$2||'%') AND ($5 IS NULL OR $5<>'')
-    ORDER BY b.active DESC,lower(b.name),b.id LIMIT $3 OFFSET $4
-  """,params:[{_expr:"auth.uid"},$search,$limit,$offset,$requestKey])
+    WHERE COALESCE(up.can_access,rp.can_access,false) AND ($2='' OR concat_ws(' ',b.name,b.internal_code,b.city) ILIKE '%'||$2||'%') AND ($7 IS NULL OR $7<>'')
+    ) SELECT * FROM base ORDER BY
+      CASE WHEN $4='asc' THEN lower(to_jsonb(base)->>$3) END ASC NULLS LAST,
+      CASE WHEN $4='desc' THEN lower(to_jsonb(base)->>$3) END DESC NULLS LAST,
+      CASE WHEN $3='' OR $4='' THEN "updatedAt" END DESC,"updatedAt" DESC,id
+    LIMIT $5 OFFSET $6
+  """,params:[{_expr:"auth.uid"},$search,$sortField,$sortDirection,$limit,$offset,$requestKey])
 }
 
-query ListSuppliers($search: String!, $limit: Int!, $offset: Int!, $requestKey: String) @auth(level: USER) {
+query ListSuppliers($search: String!, $sortField: String!, $sortDirection: String!, $limit: Int!, $offset: Int!, $requestKey: String) @auth(level: USER) {
   _select(sql: """
-    SELECT s.id,s.legal_name AS "legalName",s.trade_name AS "tradeName",s.internal_code AS "internalCode",s.cpf,s.cnpj,
+    WITH base AS (SELECT s.id,s.legal_name AS "legalName",s.trade_name AS "tradeName",s.internal_code AS "internalCode",s.cpf,s.cnpj,
       s.postal_code AS "postalCode",s.state_code AS "stateCode",s.city,s.district,s.street,s.street_number AS "streetNumber",
       s.address_complement AS "addressComplement",s.contact_name AS "contactName",s.phone_primary AS "phonePrimary",
       s.phone_secondary AS "phoneSecondary",s.email,s.segment,s.payment_terms AS "paymentTerms",
@@ -338,13 +356,20 @@ query ListSuppliers($search: String!, $limit: Int!, $offset: Int!, $requestKey: 
     LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
     LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
     WHERE COALESCE(up.can_access,rp.can_access,false) AND ($2='' OR concat_ws(' ',s.legal_name,s.trade_name,s.internal_code,s.cpf,s.cnpj,s.segment) ILIKE '%'||$2||'%')
-      AND ($5 IS NULL OR $5<>'') ORDER BY s.active DESC,lower(s.legal_name),s.id LIMIT $3 OFFSET $4
-  """,params:[{_expr:"auth.uid"},$search,$limit,$offset,$requestKey])
+      AND ($7 IS NULL OR $7<>'')
+    ) SELECT * FROM base ORDER BY
+      CASE WHEN $4='asc' AND $3 IN ('paymentTermDays','averageDeliveryDays') THEN (to_jsonb(base)->>$3)::numeric END ASC NULLS LAST,
+      CASE WHEN $4='desc' AND $3 IN ('paymentTermDays','averageDeliveryDays') THEN (to_jsonb(base)->>$3)::numeric END DESC NULLS LAST,
+      CASE WHEN $4='asc' AND $3 NOT IN ('paymentTermDays','averageDeliveryDays') THEN lower(to_jsonb(base)->>$3) END ASC NULLS LAST,
+      CASE WHEN $4='desc' AND $3 NOT IN ('paymentTermDays','averageDeliveryDays') THEN lower(to_jsonb(base)->>$3) END DESC NULLS LAST,
+      CASE WHEN $3='' OR $4='' THEN "updatedAt" END DESC,"updatedAt" DESC,id
+    LIMIT $5 OFFSET $6
+  """,params:[{_expr:"auth.uid"},$search,$sortField,$sortDirection,$limit,$offset,$requestKey])
 }
 
-query ListCustomers($search: String!, $limit: Int!, $offset: Int!, $requestKey: String) @auth(level: USER) {
+query ListCustomers($search: String!, $sortField: String!, $sortDirection: String!, $limit: Int!, $offset: Int!, $requestKey: String) @auth(level: USER) {
   _select(sql: """
-    SELECT c.id,c.name,c.birth_date AS "birthDate",c.gender,c.cpf,c.cnpj,c.marketing_opt_in AS "marketingOptIn",
+    WITH base AS (SELECT c.id,c.name,c.birth_date AS "birthDate",c.gender,c.cpf,c.cnpj,c.marketing_opt_in AS "marketingOptIn",
       c.email,c.phone_primary AS "phonePrimary",c.phone_secondary AS "phoneSecondary",c.postal_code AS "postalCode",
       c.state_code AS "stateCode",c.city,c.district,c.street,c.street_number AS "streetNumber",
       c.address_complement AS "addressComplement",c.preferences,
@@ -356,13 +381,18 @@ query ListCustomers($search: String!, $limit: Int!, $offset: Int!, $requestKey: 
     LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
     LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
     WHERE COALESCE(up.can_access,rp.can_access,false) AND ($2='' OR concat_ws(' ',c.name,c.cpf,c.cnpj,c.email,c.phone_primary) ILIKE '%'||$2||'%')
-      AND ($5 IS NULL OR $5<>'') ORDER BY c.active DESC,lower(c.name),c.id LIMIT $3 OFFSET $4
-  """,params:[{_expr:"auth.uid"},$search,$limit,$offset,$requestKey])
+      AND ($7 IS NULL OR $7<>'')
+    ) SELECT * FROM base ORDER BY
+      CASE WHEN $4='asc' THEN lower(to_jsonb(base)->>$3) END ASC NULLS LAST,
+      CASE WHEN $4='desc' THEN lower(to_jsonb(base)->>$3) END DESC NULLS LAST,
+      CASE WHEN $3='' OR $4='' THEN "updatedAt" END DESC,"updatedAt" DESC,id
+    LIMIT $5 OFFSET $6
+  """,params:[{_expr:"auth.uid"},$search,$sortField,$sortDirection,$limit,$offset,$requestKey])
 }
 
-query ListProducts($search: String!, $limit: Int!, $offset: Int!, $requestKey: String) @auth(level: USER) {
+query ListProducts($search: String!, $sortField: String!, $sortDirection: String!, $limit: Int!, $offset: Int!, $requestKey: String) @auth(level: USER) {
   _select(sql: """
-    SELECT p.id,p.name,p.internal_code AS "internalCode",p.ean,p.brand,p.size_type AS "sizeType",p.size,p.color,
+    WITH base AS (SELECT p.id,p.name,p.internal_code AS "internalCode",p.ean,p.brand,p.size_type AS "sizeType",p.size,p.color,
       p.maximum_stock AS "maximumStock",p.minimum_stock AS "minimumStock",p.sale_price_cents::text AS "salePriceCents",
       p.cost_price_cents::text AS "costPriceCents",p.weighted_product AS "weightedProduct",p.bundle_product AS "bundleProduct",
       p.allow_negative_stock AS "allowNegativeStock",p.notes,p.active,p.category_id AS "categoryId",c.name AS "categoryName",
@@ -382,8 +412,15 @@ query ListProducts($search: String!, $limit: Int!, $offset: Int!, $requestKey: S
     LEFT JOIN suppliers s ON s.id=p.supplier_id AND s.tenant_id=p.tenant_id
     WHERE COALESCE(up.can_access,rp.can_access,false)
       AND ($2='' OR concat_ws(' ',p.name,p.internal_code,p.ean,p.brand,c.name,sc.name) ILIKE '%'||$2||'%')
-      AND ($5 IS NULL OR $5<>'') ORDER BY p.active DESC,lower(p.name),p.id LIMIT $3 OFFSET $4
-  """,params:[{_expr:"auth.uid"},$search,$limit,$offset,$requestKey])
+      AND ($7 IS NULL OR $7<>'')
+    ) SELECT * FROM base ORDER BY
+      CASE WHEN $4='asc' AND $3 IN ('maximumStock','minimumStock','salePriceCents','costPriceCents','effectivePriceCents') THEN (to_jsonb(base)->>$3)::numeric END ASC NULLS LAST,
+      CASE WHEN $4='desc' AND $3 IN ('maximumStock','minimumStock','salePriceCents','costPriceCents','effectivePriceCents') THEN (to_jsonb(base)->>$3)::numeric END DESC NULLS LAST,
+      CASE WHEN $4='asc' AND $3 NOT IN ('maximumStock','minimumStock','salePriceCents','costPriceCents','effectivePriceCents') THEN lower(to_jsonb(base)->>$3) END ASC NULLS LAST,
+      CASE WHEN $4='desc' AND $3 NOT IN ('maximumStock','minimumStock','salePriceCents','costPriceCents','effectivePriceCents') THEN lower(to_jsonb(base)->>$3) END DESC NULLS LAST,
+      CASE WHEN $3='' OR $4='' THEN "updatedAt" END DESC,"updatedAt" DESC,id
+    LIMIT $5 OFFSET $6
+  """,params:[{_expr:"auth.uid"},$search,$sortField,$sortDirection,$limit,$offset,$requestKey])
 }
 
 query RegistrationOptions($requestKey: String) @auth(level: USER) {

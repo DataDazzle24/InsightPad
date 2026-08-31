@@ -26,7 +26,9 @@ import {
   productComponents,
 } from "@insightpad/dataconnect";
 import { useAuth } from "../auth/useAuth";
+import { SortableTableHeader } from "../components/SortableTableHeader";
 import { useDialogAccessibility } from "../hooks/useDialogAccessibility";
+import { useDismissibleDetails } from "../hooks/useDismissibleDetails";
 import { firebaseApp } from "../lib/firebase";
 import {
   csvSafe,
@@ -36,6 +38,7 @@ import {
   maskRegistrationValue,
   moneyFromCents,
 } from "../utils/registration";
+import { nextTableSort, sortTableRows, type TableSort } from "../utils/tableSorting";
 import { ProductExtras } from "./ProductExtras";
 import { BarcodeScanner } from "../components/SalesUi";
 
@@ -474,10 +477,12 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
   const [filterModal, setFilterModal] = useState(false),
     [filters, setFilters] = useState<Record<string, string[]>>({}),
     [filterSearch, setFilterSearch] = useState<Record<string, string>>({}),
+    [sort, setSort] = useState<TableSort | null>(null),
     [barcodeScanner,setBarcodeScanner]=useState(false);
   useDialogAccessibility(modal && !confirm, closeForm);
   useDialogAccessibility(filterModal && !confirm, () => setFilterModal(false));
   useDialogAccessibility(Boolean(confirm), () => setConfirm(null));
+  useDismissibleDetails(filterModal);
   const setSearch = (value: string) => {
     setSearchState(value);
     setPage(0);
@@ -486,10 +491,12 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
   const query = useMemo(
     () => ({
       search: search.trim(),
+      sortField: sort?.key ?? "",
+      sortDirection: sort?.direction ?? "",
       limit: PAGE_SIZE,
       offset: page * PAGE_SIZE,
     }),
-    [search, page],
+    [search, sort, page],
   );
   const comboCostCents = useMemo(
     () =>
@@ -580,9 +587,19 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
     () => rows.filter(matchesFilters),
     [rows, matchesFilters],
   );
+  const sortedRows = useMemo(
+    () =>
+      sortTableRows(filteredRows, sort, (row, key) => {
+        if (key === "subcategoryId") return row.subcategoryName;
+        if (key === "supplierId") return row.supplierName;
+        if (key === "categoryId") return row.categoryName;
+        return row[key];
+      }),
+    [filteredRows, sort],
+  );
   const visibleRows = useMemo(
-    () => filteredRows.slice(0, visibleCount),
-    [filteredRows, visibleCount],
+    () => sortedRows.slice(0, visibleCount),
+    [sortedRows, visibleCount],
   );
   const primaryKeys = new Set(cfg.columns.map((column) => column.key));
   const detailFields = cfg.fields.filter(
@@ -594,6 +611,20 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
     (total, values) => total + values.length,
     0,
   );
+  const changeSort = (key: string) => {
+    setSort((current) => nextTableSort(current, key));
+    setPage(0);
+    setSelected([]);
+    setVisibleCount(100);
+  };
+  const clearTableTools = () => {
+    setFilters({});
+    setFilterSearch({});
+    setSort(null);
+    setPage(0);
+    setSelected([]);
+    setVisibleCount(100);
+  };
   function facetOptions(field: Field) {
     const existing = new Set(
       rows.map((row) => String(row[field.key] ?? "")).filter(Boolean),
@@ -935,7 +966,8 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
       if (!result.data._execute) throw new Error();
       setModal(false);
       setNotice(`${cfg.singular} salvo com sucesso.`);
-      await load();
+      setPage(0);
+      if (page === 0) await load();
     } catch (e) {
       console.error(e);
       setNotice(
@@ -960,7 +992,8 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
         throw new Error("Nem todos os registros são elegíveis.");
       setSelected([]);
       setNotice("Status atualizado.");
-      await load();
+      setPage(0);
+      if (page === 0) await load();
     } catch (e) {
       console.error(e);
       setNotice(
@@ -995,6 +1028,8 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
       for (let offset = 0; ; offset += pageSize) {
         const vars = {
           search: search.trim(),
+          sortField: sort?.key ?? "",
+          sortDirection: sort?.direction ?? "",
           limit: pageSize,
           offset,
           requestKey: crypto.randomUUID(),
@@ -1070,14 +1105,27 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
   return (
     <section className="catalog-page">
       <header>
-        <div>
-          <span className="eyebrow">Cadastros</span>
-          <h1>{cfg.title}</h1>
+        <div className="catalog-title-group">
+          <Link
+            className="catalog-back"
+            to="/modulos/cadastros"
+            aria-label="Voltar ao submenu de cadastros"
+            title="Voltar"
+          >
+            <span className="material-symbols-rounded">arrow_back</span>
+          </Link>
+          <div>
+            <span className="eyebrow">Cadastros</span>
+            <h1>{cfg.title}</h1>
+          </div>
         </div>
         <div className="catalog-header-actions">
-          <Link className="catalog-back" to="/modulos/cadastros">
-            <span className="material-symbols-rounded">arrow_back</span>Voltar
-          </Link>
+          {(activeFilterCount > 0 || sort !== null) && (
+            <button className="catalog-clear-tools" onClick={clearTableTools}>
+              <span className="material-symbols-rounded">ink_eraser</span>
+              Limpar filtros
+            </button>
+          )}
           {permission?.canCreate && (
             <button className="catalog-primary" onClick={() => open()}>
               + Novo cadastro
@@ -1116,6 +1164,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
             <>
               {permission?.canDelete && (
                 <button
+                  className="catalog-batch-action catalog-batch-action--danger"
                   onClick={() =>
                     setConfirm({
                       text: `Inativar ${selected.length} registros?`,
@@ -1123,11 +1172,13 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                     })
                   }
                 >
+                  <span className="material-symbols-rounded">delete</span>
                   Inativar selecionados
                 </button>
               )}
               {permission?.canUpdate && (
                 <button
+                  className="catalog-batch-action catalog-batch-action--success"
                   onClick={() =>
                     setConfirm({
                       text: `Ativar ${selected.length} registros?`,
@@ -1135,6 +1186,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                     })
                   }
                 >
+                  <span className="material-symbols-rounded">check</span>
                   Ativar selecionados
                 </button>
               )}
@@ -1154,7 +1206,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
             const node = event.currentTarget;
             if (node.scrollTop + node.clientHeight >= node.scrollHeight - 180)
               setVisibleCount((value) =>
-                Math.min(value + 100, filteredRows.length),
+                Math.min(value + 100, sortedRows.length),
               );
           }}
         >
@@ -1166,26 +1218,38 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                     <input
                       type="checkbox"
                       checked={
-                        filteredRows.length > 0 &&
-                        filteredRows.every((row) => selected.includes(row.id))
+                        sortedRows.length > 0 &&
+                        sortedRows.every((row) => selected.includes(row.id))
                       }
                       onChange={(e) =>
                         setSelected(
-                          e.target.checked ? filteredRows.map((r) => r.id) : [],
+                          e.target.checked ? sortedRows.map((r) => r.id) : [],
                         )
                       }
                     />
                   </th>
                   {cfg.columns.map((c) => (
-                    <th key={c.key}>{c.label}</th>
+                    <SortableTableHeader
+                      key={c.key}
+                      label={c.label}
+                      sortKey={c.key}
+                      sort={sort}
+                      onChange={changeSort}
+                    />
                   ))}
-                  <th>Status</th>
+                  <SortableTableHeader label="Status" sortKey="active" sort={sort} onChange={changeSort} />
                   <th>Ações</th>
                   {detailFields.map((field) => (
-                    <th key={field.key}>{field.label}</th>
+                    <SortableTableHeader
+                      key={field.key}
+                      label={field.label}
+                      sortKey={field.key}
+                      sort={sort}
+                      onChange={changeSort}
+                    />
                   ))}
-                  <th>Cadastro</th>
-                  <th>Última atualização</th>
+                  <SortableTableHeader label="Cadastro" sortKey="createdAt" sort={sort} onChange={changeSort} />
+                  <SortableTableHeader label="Última atualização" sortKey="updatedAt" sort={sort} onChange={changeSort} />
                 </tr>
               </thead>
               <tbody>
@@ -1235,19 +1299,23 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                     <td>
                       <div className="catalog-actions">
                         {row.active && permission?.canUpdate && (
-                          <button onClick={() => open(row)}>Editar</button>
+                          <button className="catalog-action catalog-action--edit" onClick={() => open(row)}>
+                            <span className="material-symbols-rounded">edit</span>
+                            Editar
+                          </button>
                         )}
                         {pageKey === "CAD_PRODUTO" &&
                           row.active &&
                           permission?.canUpdate && (
-                            <button onClick={() => setExtras(row)}>
+                            <button className="catalog-action catalog-action--info" onClick={() => setExtras(row)}>
+                              <span className="material-symbols-rounded">sell</span>
                               Promoções
                             </button>
                           )}
                         {((row.active && permission?.canDelete) ||
                           (!row.active && permission?.canUpdate)) && (
                           <button
-                            className={row.active ? "danger" : "success"}
+                            className={`catalog-action ${row.active ? "catalog-action--danger" : "catalog-action--success"}`}
                             onClick={() =>
                               setConfirm({
                                 text: `${row.active ? "Inativar" : "Ativar"} “${String(row.name || row.legalName)}”?`,
@@ -1255,6 +1323,9 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                               })
                             }
                           >
+                            <span className="material-symbols-rounded">
+                              {row.active ? "delete" : "check"}
+                            </span>
                             {row.active ? "Inativar" : "Ativar"}
                           </button>
                         )}
@@ -1301,8 +1372,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
             </table>
           </div>
         </div>
-      </div>
-      <div className="catalog-pagination">
+        <div className="catalog-pagination">
         <button
           disabled={page === 0 || busy}
           onClick={() => {
@@ -1324,6 +1394,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
         >
           Próxima →
         </button>
+        </div>
       </div>
       {filterModal && (
         <div className="catalog-backdrop">
@@ -1372,15 +1443,6 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                 ])}
               </div>
               <footer>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFilters({});
-                    setFilterSearch({});
-                  }}
-                >
-                  Limpar filtros
-                </button>
                 <button type="button" onClick={() => setFilterModal(false)}>
                   Cancelar
                 </button>

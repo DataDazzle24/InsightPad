@@ -14,6 +14,7 @@ import { PlatformAdminRoute } from './routes/PlatformAdminRoute'
 import './App.css'
 import './home-header-refinements.css'
 import './sidebar-refinements.css'
+import './catalog-standardization.css'
 
 const CatalogPages = lazy(() => import('./pages/CatalogPages').then((module) => ({ default: module.CatalogPages })))
 const MasterDataPage = lazy(() => import('./pages/MasterDataPage').then((module) => ({ default: module.MasterDataPage })))

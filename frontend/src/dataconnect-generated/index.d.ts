@@ -382,6 +382,8 @@ export interface ListBranchesData {
 
 export interface ListBranchesVariables {
   search: string;
+  sortField: string;
+  sortDirection: string;
   limit: number;
   offset: number;
   requestKey?: string | null;
@@ -393,6 +395,8 @@ export interface ListCategoriesData {
 
 export interface ListCategoriesVariables {
   search: string;
+  sortField: string;
+  sortDirection: string;
   limit: number;
   offset: number;
   requestKey?: string | null;
@@ -404,6 +408,8 @@ export interface ListCustomersData {
 
 export interface ListCustomersVariables {
   search: string;
+  sortField: string;
+  sortDirection: string;
   limit: number;
   offset: number;
   requestKey?: string | null;
@@ -415,6 +421,8 @@ export interface ListProductsData {
 
 export interface ListProductsVariables {
   search: string;
+  sortField: string;
+  sortDirection: string;
   limit: number;
   offset: number;
   requestKey?: string | null;
@@ -438,6 +446,8 @@ export interface ListSubcategoriesData {
 export interface ListSubcategoriesVariables {
   search: string;
   categoryId?: UUIDString | null;
+  sortField: string;
+  sortDirection: string;
   limit: number;
   offset: number;
   requestKey?: string | null;
@@ -449,6 +459,8 @@ export interface ListSuppliersData {
 
 export interface ListSuppliersVariables {
   search: string;
+  sortField: string;
+  sortDirection: string;
   limit: number;
   offset: number;
   requestKey?: string | null;
@@ -2021,4 +2033,3 @@ export const recoverPlatformAdministratorRef: RecoverPlatformAdministratorRef;
 
 export function recoverPlatformAdministrator(): MutationPromise<RecoverPlatformAdministratorData, undefined>;
 export function recoverPlatformAdministrator(dc: DataConnect): MutationPromise<RecoverPlatformAdministratorData, undefined>;
-
