@@ -7,22 +7,6 @@ import { useTheme } from "../theme/theme-context";
 import { smartMaskInput } from "../utils/inputMasks";
 import { ChannelOrderNotifier } from "../components/ChannelOrderNotifier";
 
-const drawerPageIcons: Record<string, string> = {
-  CAIXA: "point_of_sale",
-  GESTAO_VENDAS: "receipt_long",
-  ESTOQUE: "inventory_2",
-  CONTAS_PAGAR: "payments",
-  CONTAS_RECEBER: "account_balance_wallet",
-  CAD_CATEGORIA: "category",
-  CAD_SUBCATEGORIA: "account_tree",
-  CAD_PRODUTO: "sell",
-  CAD_CLIENTE: "groups",
-  CAD_FORNECEDOR: "local_shipping",
-  CAD_FILIAL: "store",
-  RELATORIOS_OPERACIONAIS: "monitoring",
-  CANAIS_VENDA: "hub",
-};
-
 function WhatsAppIcon() {
   return (
     <svg className="whatsapp-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -46,7 +30,8 @@ export function AppLayout() {
   const drawerCloseRef = useRef<HTMLButtonElement>(null);
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
-  const isPlatformAdmin = profile?.role.systemRole === true;
+  const isAdministrator =
+    profile?.role.systemRole === true || profile?.role.hierarchyLevel === 10;
 
   const modules = useMemo(
     () => navigationModules.filter((module) => module.pageKeys.some(canAccess)),
@@ -54,18 +39,11 @@ export function AppLayout() {
   );
   const availablePages = useMemo(
     () =>
-      appRoutes.flatMap(({ pageKey, route }) => {
+      appRoutes.flatMap(({ pageKey }) => {
         const permission = permissions[pageKey];
         if (pageKey === "GESTAO_ACESSOS" || permission?.canAccess !== true)
           return [];
-        return [
-          {
-            pageKey,
-            route,
-            label: permission.page.displayName,
-            icon: drawerPageIcons[pageKey] ?? "description",
-          },
-        ];
+        return [permission.page.displayName];
       }),
     [permissions],
   );
@@ -176,21 +154,25 @@ export function AppLayout() {
         aria-hidden={!drawerOpen}
         aria-label="Painel do usuário"
       >
-        <button
-          ref={drawerCloseRef}
-          className="user-drawer__close"
-          type="button"
-          onClick={() => setDrawerOpen(false)}
-          aria-label="Fechar"
-        >
-          <span className="material-symbols-rounded">close</span>
-        </button>
         <div className="user-drawer__identity">
-          <span className="material-symbols-rounded">account_circle</span>
+          <span className="material-symbols-rounded" aria-hidden="true">
+            account_circle
+          </span>
           <div>
             <strong>{profile?.name}</strong>
             <small>{profile?.role.name}</small>
           </div>
+          <button
+            ref={drawerCloseRef}
+            className="user-drawer__close"
+            type="button"
+            onClick={() => setDrawerOpen(false)}
+            aria-label="Fechar painel do usuário"
+          >
+            <span className="material-symbols-rounded" aria-hidden="true">
+              close
+            </span>
+          </button>
         </div>
         <div className="user-drawer__company">
           <small>EMPRESA</small>
@@ -226,22 +208,13 @@ export function AppLayout() {
               <strong id="available-pages-title">Páginas disponíveis</strong>
               <small>{availablePages.length}</small>
             </header>
-            <nav aria-label="Páginas disponíveis para o usuário">
-              {availablePages.map((page) => (
-                <NavLink
-                  key={page.pageKey}
-                  to={page.route}
-                  onClick={() => setDrawerOpen(false)}
-                >
-                  <span className="material-symbols-rounded" aria-hidden="true">
-                    {page.icon}
-                  </span>
-                  {page.label}
-                </NavLink>
-              ))}
-            </nav>
+            <p>
+              {availablePages.length > 0
+                ? availablePages.join(", ")
+                : "Nenhuma página disponível."}
+            </p>
           </section>
-          {isPlatformAdmin && (
+          {profile?.role.systemRole === true && (
             <Link
               className="user-drawer__platform-link"
               to="/configuracoes/acessos"
@@ -255,7 +228,7 @@ export function AppLayout() {
           )}
         </div>
         <footer className="user-drawer__footer-actions">
-          {isPlatformAdmin && (
+          {isAdministrator && (
             <button
               className="drawer-client-area"
               type="button"
