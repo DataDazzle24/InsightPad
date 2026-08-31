@@ -213,7 +213,7 @@ query SaleDetails($saleId: UUID!, $requestKey: String!) @auth(level: USER) {
 
 # Phase 1 operational catalogs.
 # Tenant scope is always derived through auth.uid; the client cannot select it.
-query ListCategories($search: String!, $sortField: String!, $sortDirection: String!, $limit: Int!, $offset: Int!, $requestKey: String) @auth(level: USER) {
+query ListCategories($search: String!, $sortField: String, $sortDirection: String, $limit: Int!, $offset: Int!, $requestKey: String) @auth(level: USER) {
   _select(
     sql: """
       WITH base AS (SELECT
@@ -258,7 +258,7 @@ query ListCategories($search: String!, $sortField: String!, $sortDirection: Stri
   )
 }
 
-query ListSubcategories($search: String!, $categoryId: UUID, $sortField: String!, $sortDirection: String!, $limit: Int!, $offset: Int!, $requestKey: String) @auth(level: USER) {
+query ListSubcategories($search: String!, $categoryId: UUID, $sortField: String, $sortDirection: String, $limit: Int!, $offset: Int!, $requestKey: String) @auth(level: USER) {
   _select(
     sql: """
       WITH base AS (SELECT
@@ -326,7 +326,7 @@ query CategoryOptions($requestKey: String) @auth(level: USER) {
 }
 
 
-query ListBranches($search: String!, $sortField: String!, $sortDirection: String!, $limit: Int!, $offset: Int!, $requestKey: String) @auth(level: USER) {
+query ListBranches($search: String!, $sortField: String, $sortDirection: String, $limit: Int!, $offset: Int!, $requestKey: String) @auth(level: USER) {
   _select(sql: """
     WITH base AS (SELECT b.id,b.name,b.internal_code AS "internalCode",b.postal_code AS "postalCode",b.state_code AS "stateCode",
       b.city,b.district,b.street,b.street_number AS "streetNumber",b.address_complement AS "addressComplement",
@@ -344,7 +344,7 @@ query ListBranches($search: String!, $sortField: String!, $sortDirection: String
   """,params:[{_expr:"auth.uid"},$search,$sortField,$sortDirection,$limit,$offset,$requestKey])
 }
 
-query ListSuppliers($search: String!, $sortField: String!, $sortDirection: String!, $limit: Int!, $offset: Int!, $requestKey: String) @auth(level: USER) {
+query ListSuppliers($search: String!, $sortField: String, $sortDirection: String, $limit: Int!, $offset: Int!, $requestKey: String) @auth(level: USER) {
   _select(sql: """
     WITH base AS (SELECT s.id,s.legal_name AS "legalName",s.trade_name AS "tradeName",s.internal_code AS "internalCode",s.cpf,s.cnpj,
       s.postal_code AS "postalCode",s.state_code AS "stateCode",s.city,s.district,s.street,s.street_number AS "streetNumber",
@@ -367,7 +367,7 @@ query ListSuppliers($search: String!, $sortField: String!, $sortDirection: Strin
   """,params:[{_expr:"auth.uid"},$search,$sortField,$sortDirection,$limit,$offset,$requestKey])
 }
 
-query ListCustomers($search: String!, $sortField: String!, $sortDirection: String!, $limit: Int!, $offset: Int!, $requestKey: String) @auth(level: USER) {
+query ListCustomers($search: String!, $sortField: String, $sortDirection: String, $limit: Int!, $offset: Int!, $requestKey: String) @auth(level: USER) {
   _select(sql: """
     WITH base AS (SELECT c.id,c.name,c.birth_date AS "birthDate",c.gender,c.cpf,c.cnpj,c.marketing_opt_in AS "marketingOptIn",
       c.email,c.phone_primary AS "phonePrimary",c.phone_secondary AS "phoneSecondary",c.postal_code AS "postalCode",
@@ -390,7 +390,7 @@ query ListCustomers($search: String!, $sortField: String!, $sortDirection: Strin
   """,params:[{_expr:"auth.uid"},$search,$sortField,$sortDirection,$limit,$offset,$requestKey])
 }
 
-query ListProducts($search: String!, $sortField: String!, $sortDirection: String!, $limit: Int!, $offset: Int!, $requestKey: String) @auth(level: USER) {
+query ListProducts($search: String!, $sortField: String, $sortDirection: String, $limit: Int!, $offset: Int!, $requestKey: String) @auth(level: USER) {
   _select(sql: """
     WITH base AS (SELECT p.id,p.name,p.internal_code AS "internalCode",p.ean,p.brand,p.size_type AS "sizeType",p.size,p.color,
       p.maximum_stock AS "maximumStock",p.minimum_stock AS "minimumStock",p.sale_price_cents::text AS "salePriceCents",

@@ -382,8 +382,8 @@ export interface ListBranchesData {
 
 export interface ListBranchesVariables {
   search: string;
-  sortField: string;
-  sortDirection: string;
+  sortField?: string | null;
+  sortDirection?: string | null;
   limit: number;
   offset: number;
   requestKey?: string | null;
@@ -395,8 +395,8 @@ export interface ListCategoriesData {
 
 export interface ListCategoriesVariables {
   search: string;
-  sortField: string;
-  sortDirection: string;
+  sortField?: string | null;
+  sortDirection?: string | null;
   limit: number;
   offset: number;
   requestKey?: string | null;
@@ -408,8 +408,8 @@ export interface ListCustomersData {
 
 export interface ListCustomersVariables {
   search: string;
-  sortField: string;
-  sortDirection: string;
+  sortField?: string | null;
+  sortDirection?: string | null;
   limit: number;
   offset: number;
   requestKey?: string | null;
@@ -421,8 +421,8 @@ export interface ListProductsData {
 
 export interface ListProductsVariables {
   search: string;
-  sortField: string;
-  sortDirection: string;
+  sortField?: string | null;
+  sortDirection?: string | null;
   limit: number;
   offset: number;
   requestKey?: string | null;
@@ -446,8 +446,8 @@ export interface ListSubcategoriesData {
 export interface ListSubcategoriesVariables {
   search: string;
   categoryId?: UUIDString | null;
-  sortField: string;
-  sortDirection: string;
+  sortField?: string | null;
+  sortDirection?: string | null;
   limit: number;
   offset: number;
   requestKey?: string | null;
@@ -459,8 +459,8 @@ export interface ListSuppliersData {
 
 export interface ListSuppliersVariables {
   search: string;
-  sortField: string;
-  sortDirection: string;
+  sortField?: string | null;
+  sortDirection?: string | null;
   limit: number;
   offset: number;
   requestKey?: string | null;
