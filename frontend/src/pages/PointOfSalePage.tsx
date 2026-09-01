@@ -969,11 +969,7 @@ export function PointOfSalePage() {
                 </span>
               </div>
               <footer>
-                <button
-                  type="button"
-                  className="catalog-modal-cancel"
-                  onClick={() => setCheckout(false)}
-                >
+                <button type="button" onClick={() => setCheckout(false)}>
                   Cancelar
                 </button>
                 <button className="catalog-primary" disabled={busy}>
