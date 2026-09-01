@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useDialogAccessibility } from "../hooks/useDialogAccessibility";
 
 export type Notice = { text: string; type: "success" | "error" | "info" };
 export function AppToast({
@@ -140,14 +141,25 @@ export function DateRangePicker({
   from,
   to,
   onChange,
+  label = "Período da venda",
 }: {
   from: string;
   to: string;
   onChange: (from: string, to: string) => void;
+  label?: string;
 }) {
   const [open, setOpen] = useState(false),
     [cursor, setCursor] = useState(() => new Date()),
-    [draftFrom, setDraftFrom] = useState(from);
+    [draftFrom, setDraftFrom] = useState(from),
+    root = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const closeOutside = (event: PointerEvent) => {
+      if (!root.current?.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", closeOutside, true);
+    return () => document.removeEventListener("pointerdown", closeOutside, true);
+  }, [open]);
   const days = useMemo(() => {
     const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1),
       start = new Date(first);
@@ -170,8 +182,8 @@ export function DateRangePicker({
     } else onChange(draftFrom, value);
   }
   return (
-    <div className="filter-field date-range-field">
-      <span>Período da venda</span>
+    <div className="filter-field date-range-field" ref={root}>
+      <span>{label}</span>
       <button
         type="button"
         className="date-range-trigger"
@@ -271,6 +283,7 @@ export function BarcodeScanner({
   onRead: (value: string) => void;
   onClose: () => void;
 }) {
+  useDialogAccessibility(true, onClose);
   const video = useRef<HTMLVideoElement>(null),
     [error, setError] = useState("");
   useEffect(() => {
@@ -351,7 +364,7 @@ export function BarcodeScanner({
   return (
     <div className="catalog-backdrop">
       <section
-        className="barcode-modal"
+        className="catalog-modal barcode-modal"
         role="dialog"
         aria-modal="true"
         aria-label="Leitor de código de barras"
@@ -361,7 +374,7 @@ export function BarcodeScanner({
             <span className="eyebrow">Câmera</span>
             <h2>Escanear código</h2>
           </div>
-          <button onClick={onClose}>×</button>
+          <button aria-label="Fechar leitor de código de barras" onClick={onClose}>×</button>
         </header>
         <div className="scanner-view">
           <video ref={video} playsInline muted />
@@ -376,7 +389,7 @@ export function BarcodeScanner({
           </p>
         )}
         <footer>
-          <button onClick={onClose}>Cancelar</button>
+          <button className="catalog-modal-cancel" onClick={onClose}>Cancelar</button>
         </footer>
       </section>
     </div>

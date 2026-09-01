@@ -27,6 +27,7 @@ import {
 } from "@insightpad/dataconnect";
 import { useAuth } from "../auth/useAuth";
 import { SortableTableHeader } from "../components/SortableTableHeader";
+import { SearchableProductSelect } from "../components/SearchableProductSelect";
 import { useDialogAccessibility } from "../hooks/useDialogAccessibility";
 import { useDismissibleDetails } from "../hooks/useDismissibleDetails";
 import { firebaseApp } from "../lib/firebase";
@@ -40,7 +41,13 @@ import {
 } from "../utils/registration";
 import { nextTableSort, sortTableRows, type TableSort } from "../utils/tableSorting";
 import { ProductExtras } from "./ProductExtras";
-import { BarcodeScanner } from "../components/SalesUi";
+import { BarcodeScanner, DateRangePicker } from "../components/SalesUi";
+import {
+  PRODUCT_SIZE_OPTIONS,
+  PRODUCT_SIZE_TYPE_OPTIONS,
+  productColorSelectOptions,
+  productSizeLabel,
+} from "../config/productOptions";
 
 const dc = getDataConnect(firebaseApp, connectorConfig),
   PAGE_SIZE = 100;
@@ -93,33 +100,16 @@ type RegistrationOptionSet = {
   products: ProductOption[];
 };
 type ModalSection = { key: string; label: string; icon: string };
+type ProductKind = "simple" | "combo";
+type RangeValue = { min: string; max: string };
+type DateRangeValue = { from: string; to: string };
+type BarcodeTarget = { area: "form" | "filter"; key: string };
 const moneyToNumber = (value: unknown) =>
   Number(digits(String(value ?? ""))) / 100;
 const UF_OPTIONS =
   "AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO"
     .split(" ")
     .map((value) => ({ value, label: value }));
-const SIZE_OPTIONS: Record<string, string[]> = {
-  ML: [
-    "150",
-    "250",
-    "275",
-    "313",
-    "330",
-    "350",
-    "473",
-    "500",
-    "510",
-    "600",
-    "750",
-    "965",
-    "998",
-  ],
-  L: ["1", "1,5", "2", "2,5", "3"],
-  KG: ["1", "3", "5"],
-  G: ["76", "140", "150", "500"],
-  UN: ["100"],
-};
 const CLOTHING_TYPES = [
   { value: "NUMERICO", label: "Numérico" },
   { value: "LETRAS", label: "PP ao XGG" },
@@ -130,6 +120,41 @@ const CLOTHING_SIZES: Record<string, string[]> = {
 };
 const SHOE_SIZES = Array.from({ length: 18 }, (_, index) => String(index + 28));
 const money = moneyFromCents;
+
+function BarcodeInput({
+  value,
+  onChange,
+  onScan,
+  invalid = false,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  onScan: () => void;
+  invalid?: boolean;
+}) {
+  return (
+    <div className="barcode-input">
+      <input
+        value={value}
+        inputMode="numeric"
+        autoComplete="off"
+        aria-invalid={invalid}
+        onChange={(event) => onChange(event.target.value)}
+      />
+      <button
+        type="button"
+        aria-label="Ler código de barras com a câmera"
+        title="Ler código de barras"
+        onClick={onScan}
+      >
+        <span className="material-symbols-rounded" aria-hidden="true">
+          barcode_scanner
+        </span>
+      </button>
+    </div>
+  );
+}
+
 const configs: Record<PageKey, Config> = {
   CAD_FILIAL: {
     title: "Filiais",
@@ -303,13 +328,10 @@ const configs: Record<PageKey, Config> = {
         key: "sizeType",
         label: "Tipo de tamanho",
         type: "select",
-        options: Object.keys(SIZE_OPTIONS).map((value) => ({
-          value,
-          label: value,
-        })),
+        options: PRODUCT_SIZE_TYPE_OPTIONS,
       },
       { key: "size", label: "Tamanho", type: "select" },
-      { key: "color", label: "Cor" },
+      { key: "color", label: "Cor", type: "select", options: productColorSelectOptions },
       { key: "costPriceCents", label: "Preço de custo", type: "money" },
       {
         key: "salePriceCents",
@@ -360,10 +382,18 @@ const modalSections: Record<PageKey, ModalSection[]> = {
   ],
   CAD_PRODUTO: [
     { key: "identity", label: "Identificação", icon: "inventory_2" },
-    { key: "classification", label: "Classificação", icon: "category" },
     { key: "pricing", label: "Preços e estoque", icon: "payments" },
-    { key: "kit", label: "Combo", icon: "deployed_code" },
-    { key: "notes", label: "Observações", icon: "notes" },
+  ],
+};
+const productModalSections: Record<ProductKind, ModalSection[]> = {
+  simple: [
+    { key: "identity", label: "Identificação", icon: "inventory_2" },
+    { key: "pricing", label: "Preços e estoque", icon: "payments" },
+  ],
+  combo: [
+    { key: "components", label: "Composição", icon: "deployed_code" },
+    { key: "identity", label: "Identificação", icon: "inventory_2" },
+    { key: "pricing", label: "Preços e estoque", icon: "payments" },
   ],
 };
 const sectionFields: Record<PageKey, Record<string, string[]>> = {
@@ -423,14 +453,19 @@ const sectionFields: Record<PageKey, Record<string, string[]>> = {
     notes: ["marketingOptIn", "notes"],
   },
   CAD_PRODUTO: {
-    identity: ["name", "internalCode", "ean", "brand"],
-    classification: [
+    components: [],
+    identity: [
+      "name",
+      "internalCode",
+      "ean",
+      "brand",
       "categoryId",
       "subcategoryId",
       "supplierId",
       "sizeType",
       "size",
       "color",
+      "notes",
     ],
     pricing: [
       "costPriceCents",
@@ -440,8 +475,6 @@ const sectionFields: Record<PageKey, Record<string, string[]>> = {
       "weightedProduct",
       "allowNegativeStock",
     ],
-    kit: ["bundleProduct"],
-    notes: ["notes"],
   },
 };
 
@@ -452,7 +485,8 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
     [search, setSearchState] = useState(""),
     [page, setPage] = useState(0),
     [busy, setBusy] = useState(true),
-    [modal, setModal] = useState(false);
+    [modal, setModal] = useState(false),
+    [productTypeModal, setProductTypeModal] = useState(false);
   const [editing, setEditing] = useState<Row | null>(null),
     [form, setForm] = useState<Record<string, unknown>>({}),
     [baseline, setBaseline] = useState(""),
@@ -477,10 +511,13 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
   const [filterModal, setFilterModal] = useState(false),
     [filters, setFilters] = useState<Record<string, string[]>>({}),
     [filterSearch, setFilterSearch] = useState<Record<string, string>>({}),
+    [rangeFilters, setRangeFilters] = useState<Record<string, RangeValue>>({}),
+    [dateFilters, setDateFilters] = useState<Record<string, DateRangeValue>>({}),
     [sort, setSort] = useState<TableSort | null>(null),
-    [barcodeScanner,setBarcodeScanner]=useState(false);
-  useDialogAccessibility(modal && !confirm, closeForm);
-  useDialogAccessibility(filterModal && !confirm, () => setFilterModal(false));
+    [barcodeTarget, setBarcodeTarget] = useState<BarcodeTarget | null>(null);
+  useDialogAccessibility(productTypeModal, () => setProductTypeModal(false));
+  useDialogAccessibility(modal && !confirm && !barcodeTarget, closeForm);
+  useDialogAccessibility(filterModal && !confirm && !barcodeTarget, () => setFilterModal(false));
   useDialogAccessibility(Boolean(confirm), () => setConfirm(null));
   useDismissibleDetails(filterModal);
   const setSearch = (value: string) => {
@@ -509,7 +546,10 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
       }, 0),
     [kitItems, options.products],
   );
-  const sections = modalSections[pageKey],
+  const productKind: ProductKind = form.bundleProduct ? "combo" : "simple";
+  const sections = pageKey === "CAD_PRODUTO"
+      ? productModalSections[productKind]
+      : modalSections[pageKey],
     sectionIndex = Math.max(
       0,
       sections.findIndex((item) => item.key === section),
@@ -573,15 +613,37 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
     ...cfg.fields.filter((field) =>
       filterFieldKeys[pageKey].includes(field.key),
     ),
-    { key: "createdAt", label: "Data de cadastro" } as Field,
+    { key: "createdAt", label: "Data de cadastro", type: "date" } as Field,
+    { key: "updatedAt", label: "Última alteração", type: "date" } as Field,
   ];
   const matchesFilters = useCallback(
-    (row: Row) =>
-      Object.entries(filters).every(
+    (row: Row) => {
+      const matchesFacets = Object.entries(filters).every(
         ([key, values]) =>
           values.length === 0 || values.includes(String(row[key] ?? "")),
-      ),
-    [filters],
+      );
+      if (!matchesFacets) return false;
+      const matchesRanges = Object.entries(rangeFilters).every(([key, range]) => {
+        const value = Number(row[key] ?? 0) / 100,
+          minimum = range.min ? moneyToNumber(range.min) : Number.NEGATIVE_INFINITY,
+          maximum = range.max ? moneyToNumber(range.max) : Number.POSITIVE_INFINITY;
+        return value >= minimum && value <= maximum;
+      });
+      if (!matchesRanges) return false;
+      return Object.entries(dateFilters).every(([key, range]) => {
+        if (!range.from && !range.to) return true;
+        const value = new Date(String(row[key] ?? "")).getTime();
+        if (!Number.isFinite(value)) return false;
+        const minimum = range.from
+          ? new Date(`${range.from}T00:00:00`).getTime()
+          : Number.NEGATIVE_INFINITY;
+        const maximum = range.to
+          ? new Date(`${range.to}T23:59:59.999`).getTime()
+          : Number.POSITIVE_INFINITY;
+        return value >= minimum && value <= maximum;
+      });
+    },
+    [dateFilters, filters, rangeFilters],
   );
   const filteredRows = useMemo(
     () => rows.filter(matchesFilters),
@@ -607,10 +669,10 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
       !primaryKeys.has(field.key) &&
       !(pageKey === "CAD_PRODUTO" && field.key === "categoryId"),
   );
-  const activeFilterCount = Object.values(filters).reduce(
-    (total, values) => total + values.length,
-    0,
-  );
+  const activeFilterCount =
+    Object.values(filters).reduce((total, values) => total + values.length, 0) +
+    Object.values(rangeFilters).filter((range) => range.min || range.max).length +
+    Object.values(dateFilters).filter((range) => range.from || range.to).length;
   const changeSort = (key: string) => {
     setSort((current) => nextTableSort(current, key));
     setPage(0);
@@ -620,6 +682,8 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
   const clearTableTools = () => {
     setFilters({});
     setFilterSearch({});
+    setRangeFilters({});
+    setDateFilters({});
     setSort(null);
     setPage(0);
     setSelected([]);
@@ -645,6 +709,15 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
         value: item.id,
         label: item.name,
       }));
+    else if (pageKey === "CAD_PRODUTO" && field.key === "size") {
+      const selectedTypes = filters.sizeType ?? [];
+      known = selectedTypes.flatMap((type) =>
+        (PRODUCT_SIZE_OPTIONS[type] ?? []).map((value) => ({
+          value,
+          label: productSizeLabel(type, value),
+        })),
+      );
+    }
     else if (field.type === "checkbox")
       known = [
         { value: "true", label: "Sim" },
@@ -710,14 +783,24 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                       onChange={(event) =>
                         setFilters((current) => {
                           const selected = current[key] ?? [];
-                          return {
+                          const nextValues = event.target.checked
+                            ? [...selected, option.value]
+                            : selected.filter((value) => value !== option.value);
+                          const next = {
                             ...current,
-                            [key]: event.target.checked
-                              ? [...selected, option.value]
-                              : selected.filter(
-                                  (value) => value !== option.value,
-                                ),
+                            [key]: nextValues,
                           };
+                          if (pageKey === "CAD_PRODUTO" && key === "sizeType") {
+                            const allowedSizes = new Set(
+                              nextValues.flatMap(
+                                (type) => PRODUCT_SIZE_OPTIONS[type] ?? [],
+                              ),
+                            );
+                            next.size = (current.size ?? []).filter((size) =>
+                              allowedSizes.has(size),
+                            );
+                          }
+                          return next;
                         })
                       }
                     />
@@ -728,6 +811,55 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
             </div>
           </div>
         </details>
+      </div>
+    );
+  }
+  function moneyRangePicker(key: string, label: string) {
+    const range = rangeFilters[key] ?? { min: "", max: "" };
+    return (
+      <div className="filter-field filter-range-field" key={key}>
+        <span>{label}</span>
+        <div className="filter-range-inputs">
+          <label>
+            <span>De</span>
+            <input
+              inputMode="numeric"
+              placeholder="R$ 0,00"
+              value={range.min}
+              onChange={(event) =>
+                setRangeFilters((current) => ({
+                  ...current,
+                  [key]: {
+                    ...range,
+                    min: digits(event.target.value)
+                      ? maskRegistrationValue(key, event.target.value)
+                      : "",
+                  },
+                }))
+              }
+            />
+          </label>
+          <span aria-hidden="true">até</span>
+          <label>
+            <span>Até</span>
+            <input
+              inputMode="numeric"
+              placeholder="Sem limite"
+              value={range.max}
+              onChange={(event) =>
+                setRangeFilters((current) => ({
+                  ...current,
+                  [key]: {
+                    ...range,
+                    max: digits(event.target.value)
+                      ? maskRegistrationValue(key, event.target.value)
+                      : "",
+                  },
+                }))
+              }
+            />
+          </label>
+        </div>
       </div>
     );
   }
@@ -776,9 +908,8 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
     const t = window.setTimeout(() => setNotice(""), 7000);
     return () => window.clearTimeout(t);
   }, [notice]);
-  async function open(row?: Row) {
+  async function open(row?: Row, selectedProductKind?: ProductKind) {
     setEditing(row ?? null);
-    setSection(modalSections[pageKey][0].key);
     const next: Record<string, unknown> = {};
     let loadedKit: KitItem[] = [];
     for (const field of cfg.fields)
@@ -786,6 +917,9 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
         row?.[field.key] ?? (field.type === "checkbox" ? false : "");
     if (pageKey === "CAD_CLIENTE") next.preferences = row?.preferences ?? {};
     if (pageKey === "CAD_PRODUTO") {
+      next.bundleProduct = row
+        ? Boolean(row.bundleProduct)
+        : selectedProductKind === "combo";
       next.costPriceCents = maskRegistrationValue(
         "costPriceCents",
         String(row?.costPriceCents ?? 0),
@@ -794,15 +928,26 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
         "salePriceCents",
         String(row?.salePriceCents ?? 0),
       );
-      if (row) {
+      if (row?.bundleProduct) {
         try {
           const result = await productComponents(dc, { productId: row.id });
           loadedKit = (result.data._select ?? []) as KitItem[];
-        } catch {
+        } catch (error) {
+          console.error(error);
           loadedKit = [];
+          setNotice(
+            "Não foi possível carregar a composição do combo. Feche o cadastro e tente novamente.",
+          );
         }
+      } else if (!row && selectedProductKind === "combo") {
+        loadedKit = [{ productId: "", quantity: 1 }];
       }
     }
+    const initialSection =
+      pageKey === "CAD_PRODUTO" && next.bundleProduct
+        ? productModalSections.combo[0].key
+        : modalSections[pageKey][0].key;
+    setSection(initialSection);
     setKitItems(loadedKit);
     setForm(next);
     setBaseline(JSON.stringify({ form: next, kit: loadedKit }));
@@ -819,9 +964,9 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
     if (pageKey === "CAD_PRODUTO" && field.key === "supplierId")
       return options.suppliers.map((x) => ({ value: x.id, label: x.name }));
     if (pageKey === "CAD_PRODUTO" && field.key === "size")
-      return (SIZE_OPTIONS[String(form.sizeType ?? "")] ?? []).map((value) => ({
+      return (PRODUCT_SIZE_OPTIONS[String(form.sizeType ?? "")] ?? []).map((value) => ({
         value,
-        label: value,
+        label: productSizeLabel(String(form.sizeType ?? ""), value),
       }));
     if (pageKey === "CAD_CLIENTE" && field.key === "lowerClothingSize")
       return (CLOTHING_SIZES[String(form.lowerClothingType ?? "")] ?? []).map(
@@ -911,6 +1056,12 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
       kitItems.length === 0
     )
       return "Um combo precisa ter pelo menos um produto componente.";
+    if (
+      pageKey === "CAD_PRODUTO" &&
+      form.bundleProduct &&
+      kitItems.some((item) => !item.productId)
+    )
+      return "Selecione todos os produtos simples da composição.";
     if (kitItems.some((x) => x.quantity <= 0))
       return "As quantidades dos componentes devem ser maiores que zero.";
     if (new Set(kitItems.map((x) => x.productId)).size !== kitItems.length)
@@ -1127,7 +1278,14 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
             </button>
           )}
           {permission?.canCreate && (
-            <button className="catalog-primary" onClick={() => open()}>
+            <button
+              className="catalog-primary"
+              onClick={() =>
+                pageKey === "CAD_PRODUTO"
+                  ? setProductTypeModal(true)
+                  : void open()
+              }
+            >
               + Novo cadastro
             </button>
           )}
@@ -1396,6 +1554,89 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
         </button>
         </div>
       </div>
+      {productTypeModal && (
+        <div className="catalog-backdrop">
+          <section
+            className="catalog-modal product-kind-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="product-kind-title"
+          >
+            <header>
+              <div>
+                <span className="eyebrow">Novo produto</span>
+                <h2 id="product-kind-title">Qual é o tipo do produto?</h2>
+              </div>
+              <button
+                aria-label="Fechar seleção de tipo"
+                onClick={() => setProductTypeModal(false)}
+              >
+                ×
+              </button>
+            </header>
+            <div className="product-kind-body">
+              <p>
+                Escolha como o item será vendido. Essa definição organiza o
+                cadastro e mostra somente os campos necessários.
+              </p>
+              <div className="product-kind-options">
+                <button
+                  type="button"
+                  className="product-kind-option product-kind-option--simple"
+                  onClick={() => {
+                    setProductTypeModal(false);
+                    void open(undefined, "simple");
+                  }}
+                >
+                  <span className="material-symbols-rounded" aria-hidden="true">
+                    inventory_2
+                  </span>
+                  <strong>Simples</strong>
+                  <small>
+                    É vendido individualmente. Exemplo: uma unidade de
+                    Guaravita.
+                  </small>
+                </button>
+                <button
+                  type="button"
+                  className="product-kind-option product-kind-option--combo"
+                  onClick={() => {
+                    setProductTypeModal(false);
+                    void open(undefined, "combo");
+                  }}
+                >
+                  <span className="material-symbols-rounded" aria-hidden="true">
+                    deployed_code
+                  </span>
+                  <strong>Combo</strong>
+                  <small>
+                    Reúne produtos simples em uma composição. Exemplo: uma
+                    caixa de Guaravita formada por várias unidades.
+                  </small>
+                </button>
+              </div>
+              <div className="product-kind-warning">
+                <span className="material-symbols-rounded" aria-hidden="true">
+                  info
+                </span>
+                <p>
+                  Antes de cadastrar um combo, todos os produtos simples que o
+                  compõem precisam estar previamente cadastrados.
+                </p>
+              </div>
+            </div>
+            <footer>
+              <button
+                type="button"
+                className="catalog-modal-cancel"
+                onClick={() => setProductTypeModal(false)}
+              >
+                Cancelar
+              </button>
+            </footer>
+          </section>
+        </div>
+      )}
       {filterModal && (
         <div className="catalog-backdrop">
           <section
@@ -1423,24 +1664,69 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                 setFilterModal(false);
               }}
             >
-              <div className="master-section-title">
-                <span className="material-symbols-rounded">manage_search</span>
-                <div>
-                  <strong>Refine os resultados</strong>
-                  <small>
-                    Selecione um ou mais valores existentes em cada campo. A
-                    exportação respeitará estes filtros.
-                  </small>
+              <div className="catalog-filter-body">
+                <div className="master-section-title">
+                  <span className="material-symbols-rounded">manage_search</span>
+                  <div>
+                    <strong>Refine os resultados</strong>
+                    <small>
+                      Selecione os valores e intervalos desejados. A exportação
+                      respeitará estes filtros.
+                    </small>
+                  </div>
                 </div>
-              </div>
-              <div className="master-form-grid filter-grid">
-                {advancedFields.map((field) =>
-                  filterPicker(field.key, field.label, facetOptions(field)),
-                )}
-                {filterPicker("active", "Status", [
-                  { value: "true", label: "Ativo" },
-                  { value: "false", label: "Inativo" },
-                ])}
+                <div className="master-form-grid filter-grid">
+                  {advancedFields.map((field) => {
+                    if (pageKey === "CAD_PRODUTO" && field.key === "costPriceCents")
+                      return moneyRangePicker(field.key, "Faixa de preço de custo");
+                    if (field.type === "date") {
+                      const range = dateFilters[field.key] ?? { from: "", to: "" };
+                      return (
+                        <DateRangePicker
+                          key={field.key}
+                          label={field.label}
+                          from={range.from}
+                          to={range.to}
+                          onChange={(from, to) =>
+                            setDateFilters((current) => ({
+                              ...current,
+                              [field.key]: { from, to },
+                            }))
+                          }
+                        />
+                      );
+                    }
+                    if (pageKey === "CAD_PRODUTO" && field.key === "ean") {
+                      const value = filters.ean?.[0] ?? "";
+                      return (
+                        <div className="filter-field" key={field.key}>
+                          <span>{field.label}</span>
+                          <BarcodeInput
+                            value={value}
+                            onChange={(ean) =>
+                              setFilters((current) => ({
+                                ...current,
+                                ean: ean ? [ean] : [],
+                              }))
+                            }
+                            onScan={() =>
+                              setBarcodeTarget({ area: "filter", key: "ean" })
+                            }
+                          />
+                        </div>
+                      );
+                    }
+                    return filterPicker(
+                      field.key,
+                      field.label,
+                      facetOptions(field),
+                    );
+                  })}
+                  {filterPicker("active", "Status", [
+                    { value: "true", label: "Ativo" },
+                    { value: "false", label: "Inativo" },
+                  ])}
+                </div>
               </div>
               <footer>
                 <button className="catalog-modal-cancel" type="button" onClick={() => setFilterModal(false)}>
@@ -1476,6 +1762,19 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                 e.preventDefault();
                 if (sectionIndex < sections.length - 1) {
                   setShowErrors(true);
+                  if (
+                    pageKey === "CAD_PRODUTO" &&
+                    section === "components" &&
+                    (kitItems.length === 0 ||
+                      kitItems.some(
+                        (item) => !item.productId || item.quantity <= 0,
+                      ))
+                  ) {
+                    setNotice(
+                      "Selecione os produtos simples e informe quantidades válidas para continuar.",
+                    );
+                    return;
+                  }
                   const requiredHere = cfg.fields.some(
                     (field) =>
                       field.required &&
@@ -1526,7 +1825,22 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                         {field.label}
                         {field.required ? " *" : ""}
                       </span>
-                      {field.type === "textarea" ? (
+                      {field.key === "ean" ? (
+                        <BarcodeInput
+                          value={String(form[field.key] ?? "")}
+                          invalid={
+                            showErrors &&
+                            Boolean(field.required) &&
+                            !String(form[field.key] ?? "").trim()
+                          }
+                          onChange={(value) =>
+                            setForm({ ...form, [field.key]: value })
+                          }
+                          onScan={() =>
+                            setBarcodeTarget({ area: "form", key: field.key })
+                          }
+                        />
+                      ) : field.type === "textarea" ? (
                         <textarea
                           value={String(form[field.key] ?? "")}
                           onChange={(e) =>
@@ -1617,7 +1931,6 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                           }
                         />
                       )}
-                      {field.key === "ean" && <button type="button" className="field-scan-button" onClick={()=>setBarcodeScanner(true)}><span className="material-symbols-rounded">barcode_scanner</span>Ler com a câmera</button>}
                       {showErrors &&
                         field.required &&
                         !String(form[field.key] ?? "").trim() && (
@@ -1653,7 +1966,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                 </div>
               )}
               {pageKey === "CAD_PRODUTO" &&
-                section === "kit" &&
+                section === "components" &&
                 Boolean(form.bundleProduct) && (
                   <section className="inline-kit">
                     <header>
@@ -1661,31 +1974,38 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                         <strong>Produtos do combo</strong>
                         <small>
                           O custo é a soma do custo de cada produto multiplicado
-                          pela quantidade.
+                          pela quantidade. Pesquise e selecione somente produtos
+                          simples já cadastrados.
                         </small>
                       </div>
-                      <button
-                        type="button"
-                        className="catalog-primary"
-                        onClick={() => {
-                          const available = options.products.find(
-                            (p) =>
-                              p.id !== editing?.id &&
-                              !kitItems.some((k) => k.productId === p.id),
-                          );
-                          if (available)
-                            setKitItems((v) => [
-                              ...v,
-                              { productId: available.id, quantity: 1 },
-                            ]);
-                          else
-                            setNotice(
-                              "Não existem outros produtos disponíveis para adicionar.",
+                      {kitItems.every(
+                        (item) => item.productId && item.quantity > 0,
+                      ) && (
+                        <button
+                          type="button"
+                          className="catalog-primary"
+                          onClick={() => {
+                            const hasAvailable = options.products.some(
+                              (product) =>
+                                product.id !== editing?.id &&
+                                !kitItems.some(
+                                  (item) => item.productId === product.id,
+                                ),
                             );
-                        }}
-                      >
-                        + Adicionar produto
-                      </button>
+                            if (hasAvailable)
+                              setKitItems((current) => [
+                                ...current,
+                                { productId: "", quantity: 1 },
+                              ]);
+                            else
+                              setNotice(
+                                "Não existem outros produtos simples disponíveis para adicionar.",
+                              );
+                          }}
+                        >
+                          + Adicionar produto
+                        </button>
+                      )}
                     </header>
                     {kitItems.map((item, index) => {
                       const component = options.products.find(
@@ -1694,48 +2014,30 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                       return (
                         <div
                           className="component-row component-row--detailed"
-                          key={index}
+                          key={`${item.productId || "new"}-${index}`}
                         >
-                          <select
-                            value={item.productId}
-                            onChange={(e) => {
-                              if (
-                                kitItems.some(
-                                  (x, i) =>
-                                    i !== index &&
-                                    x.productId === e.target.value,
+                          <div className="combo-product-field">
+                            <span>Produto simples *</span>
+                            <SearchableProductSelect
+                              value={item.productId}
+                              options={options.products.filter(
+                                (product) => product.id !== editing?.id,
+                              )}
+                              disabledIds={kitItems
+                                .filter((_, itemIndex) => itemIndex !== index)
+                                .map((current) => current.productId)
+                                .filter(Boolean)}
+                              onChange={(productId) =>
+                                setKitItems((current) =>
+                                  current.map((currentItem, itemIndex) =>
+                                    itemIndex === index
+                                      ? { ...currentItem, productId }
+                                      : currentItem,
+                                  ),
                                 )
-                              ) {
-                                setNotice(
-                                  "Este produto já faz parte do combo. Ajuste apenas a quantidade.",
-                                );
-                                return;
                               }
-                              setKitItems((v) =>
-                                v.map((x, i) =>
-                                  i === index
-                                    ? { ...x, productId: e.target.value }
-                                    : x,
-                                ),
-                              );
-                            }}
-                          >
-                            {options.products
-                              .filter(
-                                (p) =>
-                                  p.id !== editing?.id &&
-                                  (p.id === item.productId ||
-                                    !kitItems.some(
-                                      (x, i) =>
-                                        i !== index && x.productId === p.id,
-                                    )),
-                              )
-                              .map((p) => (
-                                <option value={p.id} key={p.id}>
-                                  {p.name}
-                                </option>
-                              ))}
-                          </select>
+                            />
+                          </div>
                           <label>
                             <span>Quantidade</span>
                             <input
@@ -1849,7 +2151,24 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
           onClose={() => setExtras(null)}
         />
       )}
-      {barcodeScanner&&<BarcodeScanner onClose={()=>setBarcodeScanner(false)} onRead={(value)=>{setForm(current=>({...current,ean:value}));setBarcodeScanner(false)}}/>}
+      {barcodeTarget && (
+        <BarcodeScanner
+          onClose={() => setBarcodeTarget(null)}
+          onRead={(value) => {
+            if (barcodeTarget.area === "form")
+              setForm((current) => ({
+                ...current,
+                [barcodeTarget.key]: value,
+              }));
+            else
+              setFilters((current) => ({
+                ...current,
+                [barcodeTarget.key]: [value],
+              }));
+            setBarcodeTarget(null);
+          }}
+        />
+      )}
       {busy && (
         <div className="catalog-loader">
           <div className="catalog-loader__mark">
