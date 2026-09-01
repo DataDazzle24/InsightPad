@@ -546,7 +546,11 @@ export function PlatformAdminPage() {
                 </label>
               </div>
               <footer>
-                <button type="button" onClick={() => setTenantModal(false)}>
+                <button
+                  type="button"
+                  className="catalog-modal-cancel"
+                  onClick={() => setTenantModal(false)}
+                >
                   Cancelar
                 </button>
                 <button className="catalog-primary">Criar ambiente</button>
@@ -653,7 +657,11 @@ export function PlatformAdminPage() {
                 </label>
               </div>
               <footer>
-                <button type="button" onClick={() => setUserModal(false)}>
+                <button
+                  type="button"
+                  className="catalog-modal-cancel"
+                  onClick={() => setUserModal(false)}
+                >
                   Cancelar
                 </button>
                 <button className="catalog-primary">

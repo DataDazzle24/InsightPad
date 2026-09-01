@@ -343,12 +343,12 @@ const configs: Record<PageKey, Config> = {
       { key: "maximumStock", label: "Estoque máximo", type: "number" },
       {
         key: "weightedProduct",
-        label: "Produto vendido por peso",
+        label: "Produto vendido por peso?",
         type: "checkbox",
       },
       {
         key: "allowNegativeStock",
-        label: "Permitir estoque negativo",
+        label: "Permitir estoque negativo?",
         type: "checkbox",
       },
       {
@@ -920,6 +920,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
       next.bundleProduct = row
         ? Boolean(row.bundleProduct)
         : selectedProductKind === "combo";
+      if (!row) next.allowNegativeStock = true;
       next.costPriceCents = maskRegistrationValue(
         "costPriceCents",
         String(row?.costPriceCents ?? 0),
@@ -1814,7 +1815,8 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                   </button>
                 ))}
               </nav>
-              <div className="master-form-grid">
+              <div className="master-modal-content">
+                <div className="master-form-grid">
                 {cfg.fields
                   .filter((field) =>
                     sectionFields[pageKey][section]?.includes(field.key),
@@ -1940,7 +1942,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                         )}
                     </label>
                   ))}
-              </div>
+                </div>
               {pageKey === "CAD_PRODUTO" && section === "pricing" && (
                 <div className="product-margin">
                   Margem estimada:{" "}
@@ -2074,13 +2076,16 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                           </div>
                           <button
                             type="button"
-                            className="danger"
+                            className="combo-remove"
                             onClick={() =>
                               setKitItems((v) =>
                                 v.filter((_, i) => i !== index),
                               )
                             }
                           >
+                            <span className="material-symbols-rounded" aria-hidden="true">
+                              delete
+                            </span>
                             Remover
                           </button>
                         </div>
@@ -2092,6 +2097,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                     </footer>
                   </section>
                 )}
+              </div>
               <footer>
                 <button className="catalog-modal-cancel" type="button" onClick={closeForm}>
                   Cancelar

@@ -165,7 +165,12 @@ function Operational({ view }: { view: Exclude<View, "sales"> }) {
               />
             </div>
             <footer>
-              <button onClick={() => setFilter(false)}>Cancelar</button>
+              <button
+                className="catalog-modal-cancel"
+                onClick={() => setFilter(false)}
+              >
+                Cancelar
+              </button>
               <button
                 className="catalog-primary"
                 onClick={() => {

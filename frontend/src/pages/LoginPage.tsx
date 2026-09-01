@@ -227,7 +227,11 @@ export function LoginPage() {
                 </div>
               )}
               <footer>
-                <button type="button" onClick={() => setRecoveryOpen(false)}>
+                <button
+                  type="button"
+                  className="catalog-modal-cancel"
+                  onClick={() => setRecoveryOpen(false)}
+                >
                   Cancelar
                 </button>
                 <button

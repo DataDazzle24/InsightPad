@@ -964,7 +964,12 @@ export function StockPage() {
               >
                 Limpar
               </button>
-              <button onClick={() => setFilterOpen(false)}>Cancelar</button>
+              <button
+                className="catalog-modal-cancel"
+                onClick={() => setFilterOpen(false)}
+              >
+                Cancelar
+              </button>
               <button
                 className="catalog-primary"
                 onClick={() => {
@@ -1355,7 +1360,9 @@ function OperationModal({
           )}
         </div>
         <footer>
-          <button onClick={close}>Cancelar</button>
+          <button className="catalog-modal-cancel" onClick={close}>
+            Cancelar
+          </button>
           {step > 0 && (
             <button onClick={() => setStep(step - 1)}>Anterior</button>
           )}
@@ -1417,7 +1424,8 @@ function TransferModal({
           </div>
           <button onClick={close}>×</button>
         </header>
-        <div className="stock-form">
+        <div className="stock-wizard-body">
+          <div className="stock-form">
           <label>
             Origem
             <select
@@ -1450,34 +1458,39 @@ function TransferModal({
               ))}
             </select>
           </label>
-        </div>
-        <ItemEditor
-          items={value.items}
-          products={products}
-          direction="OUT"
-          costs={value.items.map((i) =>
-            Number(
-              products.find((p) => p.id === i.productId)?.costPriceCents ?? 0,
-            ),
-          )}
-          update={update}
-          add={add}
-          remove={(i) =>
-            setValue((v) => ({
-              ...v,
-              items: v.items.filter((_, n) => n !== i),
-            }))
-          }
-        />
-        <label className="transfer-notes">
-          Observação
-          <textarea
-            value={value.notes}
-            onChange={(e) => setValue((v) => ({ ...v, notes: e.target.value }))}
+          </div>
+          <ItemEditor
+            items={value.items}
+            products={products}
+            direction="OUT"
+            costs={value.items.map((i) =>
+              Number(
+                products.find((p) => p.id === i.productId)?.costPriceCents ?? 0,
+              ),
+            )}
+            update={update}
+            add={add}
+            remove={(i) =>
+              setValue((v) => ({
+                ...v,
+                items: v.items.filter((_, n) => n !== i),
+              }))
+            }
           />
-        </label>
+          <label className="transfer-notes">
+            Observação
+            <textarea
+              value={value.notes}
+              onChange={(e) =>
+                setValue((v) => ({ ...v, notes: e.target.value }))
+              }
+            />
+          </label>
+        </div>
         <footer>
-          <button onClick={close}>Cancelar</button>
+          <button className="catalog-modal-cancel" onClick={close}>
+            Cancelar
+          </button>
           <button className="catalog-primary" onClick={save}>
             Concluir transferência
           </button>
