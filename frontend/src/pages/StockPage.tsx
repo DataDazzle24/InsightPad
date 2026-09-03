@@ -646,6 +646,7 @@ export function StockPage() {
         </div>
         <div className="stock-heading__actions">
           <button
+            className="stock-heading-action stock-heading-action--transfer"
             onClick={() => {
               setTransfer({
                 sourceBranchId: data.branches[0]?.id || "",
@@ -658,10 +659,16 @@ export function StockPage() {
           >
             <span className="material-symbols-rounded">move_up</span>Transferir
           </button>
-          <button onClick={edit}>
+          <button
+            className="stock-heading-action stock-heading-action--edit"
+            onClick={edit}
+          >
             <span className="material-symbols-rounded">edit</span>Editar
           </button>
-          <button className="catalog-primary" onClick={openNew}>
+          <button
+            className="catalog-primary stock-heading-action stock-heading-action--create"
+            onClick={openNew}
+          >
             <span className="material-symbols-rounded">add_box</span>Nova
             movimentação
           </button>
@@ -727,6 +734,7 @@ export function StockPage() {
           )}
           {view === "movements" && (
             <button
+              className="stock-toolbar-action"
               onClick={() => {
                 setDraft(filters);
                 setFilterOpen(true);
@@ -736,11 +744,14 @@ export function StockPage() {
               avançada
             </button>
           )}
-          <button onClick={csv}>
+          <button className="stock-toolbar-action" onClick={csv}>
             <span className="material-symbols-rounded">download</span>CSV
           </button>
           {selected && (
-            <button className="danger" onClick={() => setReverseOpen(true)}>
+            <button
+              className="danger stock-action-danger"
+              onClick={() => setReverseOpen(true)}
+            >
               Estornar
             </button>
           )}
@@ -904,13 +915,23 @@ export function StockPage() {
       )}{" "}
       {filterOpen && (
         <div className="catalog-backdrop">
-          <section className="catalog-modal stock-filter-modal">
+          <section
+            className="catalog-modal stock-filter-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="stock-filter-title"
+          >
             <header>
               <div>
                 <span className="eyebrow">PESQUISA</span>
-                <h2>FILTROS DE MOVIMENTAÇÃO</h2>
+                <h2 id="stock-filter-title">FILTROS DE MOVIMENTAÇÃO</h2>
               </div>
-              <button onClick={() => setFilterOpen(false)}>×</button>
+              <button
+                aria-label="Fechar filtros de movimentação"
+                onClick={() => setFilterOpen(false)}
+              >
+                ×
+              </button>
             </header>
             <div className="finance-filter-grid">
               <SearchableMultiSelect
@@ -952,6 +973,7 @@ export function StockPage() {
             </div>
             <footer>
               <button
+                className="stock-filter-clear"
                 onClick={() =>
                   setDraft({
                     types: [],
@@ -971,7 +993,7 @@ export function StockPage() {
                 Cancelar
               </button>
               <button
-                className="catalog-primary"
+                className="catalog-primary stock-filter-apply"
                 onClick={() => {
                   setFilters(draft);
                   setFilterOpen(false);
@@ -985,9 +1007,14 @@ export function StockPage() {
       )}
       {reverseOpen && (
         <div className="catalog-backdrop">
-          <section className="catalog-confirm">
+          <section
+            className="catalog-confirm stock-reverse-confirm"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="stock-reverse-title"
+          >
             <span className="material-symbols-rounded">undo</span>
-            <h2>Estornar movimentação?</h2>
+            <h2 id="stock-reverse-title">Estornar movimentação?</h2>
             <p>
               O saldo será recalculado e a operação permanecerá na auditoria.
             </p>
@@ -997,8 +1024,13 @@ export function StockPage() {
               placeholder="Motivo obrigatório"
             />
             <footer>
-              <button onClick={() => setReverseOpen(false)}>Voltar</button>
-              <button className="danger" onClick={reverse}>
+              <button
+                className="catalog-modal-cancel"
+                onClick={() => setReverseOpen(false)}
+              >
+                Voltar
+              </button>
+              <button className="danger stock-action-danger" onClick={reverse}>
                 Estornar
               </button>
             </footer>
@@ -1033,7 +1065,7 @@ function ItemEditor({
           <strong>Produtos da movimentação</strong>
           <small>Inclua todos os itens antes de concluir.</small>
         </div>
-        <button className="catalog-primary" onClick={add}>
+        <button className="catalog-primary stock-item-add" onClick={add}>
           + Adicionar
         </button>
       </header>
@@ -1097,10 +1129,13 @@ function ItemEditor({
             </label>
           )}
           <button
-            className="danger"
+            className="danger stock-item-remove"
             onClick={() => remove(i)}
             disabled={items.length === 1}
           >
+            <span className="material-symbols-rounded" aria-hidden="true">
+              delete
+            </span>
             Remover
           </button>
         </div>
@@ -1140,15 +1175,26 @@ function OperationModal({
   const tabs = ["Identificação", "Produtos", "Nota fiscal", "Revisão"];
   return (
     <div className="catalog-backdrop">
-      <section className="catalog-modal stock-operation-modal">
+      <section
+        className={`catalog-modal stock-operation-modal ${
+          editing
+            ? "stock-operation-modal--edit"
+            : "stock-operation-modal--create"
+        }`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="stock-operation-title"
+      >
         <header>
           <div>
             <span className="eyebrow">ESTOQUE</span>
-            <h2>{editing ? "CORRIGIR MOVIMENTAÇÃO" : "NOVA MOVIMENTAÇÃO"}</h2>
+            <h2 id="stock-operation-title">
+              {editing ? "CORRIGIR MOVIMENTAÇÃO" : "NOVA MOVIMENTAÇÃO"}
+            </h2>
           </div>
-          <button onClick={close}>×</button>
+          <button aria-label="Fechar movimentação" onClick={close}>×</button>
         </header>
-        <nav className="stock-wizard">
+        <nav className="stock-wizard" aria-label="Etapas da movimentação">
           {tabs.map((t, i) => (
             <button
               className={step === i ? "active" : ""}
@@ -1364,17 +1410,33 @@ function OperationModal({
             Cancelar
           </button>
           {step > 0 && (
-            <button onClick={() => setStep(step - 1)}>Anterior</button>
+            <button
+              className="stock-modal-secondary"
+              onClick={() => setStep(step - 1)}
+            >
+              Anterior
+            </button>
           )}
           {step < 3 ? (
             <button
-              className="catalog-primary"
+              className={`catalog-primary catalog-modal-submit ${
+                editing
+                  ? "catalog-modal-submit--edit"
+                  : "catalog-modal-submit--create"
+              }`}
               onClick={() => setStep(step + 1)}
             >
               Próxima
             </button>
           ) : (
-            <button className="catalog-primary" onClick={save}>
+            <button
+              className={`catalog-primary catalog-modal-submit ${
+                editing
+                  ? "catalog-modal-submit--edit"
+                  : "catalog-modal-submit--create"
+              }`}
+              onClick={save}
+            >
               Concluir
             </button>
           )}
@@ -1416,13 +1478,18 @@ function TransferModal({
 }) {
   return (
     <div className="catalog-backdrop">
-      <section className="catalog-modal stock-operation-modal">
+      <section
+        className="catalog-modal stock-operation-modal stock-transfer-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="stock-transfer-title"
+      >
         <header>
           <div>
             <span className="eyebrow">ESTOQUE</span>
-            <h2>TRANSFERÊNCIA ENTRE FILIAIS</h2>
+            <h2 id="stock-transfer-title">TRANSFERÊNCIA ENTRE FILIAIS</h2>
           </div>
-          <button onClick={close}>×</button>
+          <button aria-label="Fechar transferência" onClick={close}>×</button>
         </header>
         <div className="stock-wizard-body">
           <div className="stock-form">
@@ -1491,7 +1558,10 @@ function TransferModal({
           <button className="catalog-modal-cancel" onClick={close}>
             Cancelar
           </button>
-          <button className="catalog-primary" onClick={save}>
+          <button
+            className="catalog-primary catalog-modal-submit catalog-modal-submit--create"
+            onClick={save}
+          >
             Concluir transferência
           </button>
         </footer>
