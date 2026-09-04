@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -40,6 +41,7 @@ import {
   moneyFromCents,
 } from "../utils/registration";
 import { nextTableSort, sortTableRows, type TableSort } from "../utils/tableSorting";
+import { getEmailSuggestions } from "../utils/emailSuggestions";
 import { ProductExtras } from "./ProductExtras";
 import { BarcodeScanner, DateRangePicker } from "../components/SalesUi";
 import {
@@ -110,16 +112,148 @@ const UF_OPTIONS =
   "AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO"
     .split(" ")
     .map((value) => ({ value, label: value }));
+const SUPPLIER_SEGMENT_OPTIONS = [
+  "Alimentos e Bebidas",
+  "Atacado e Distribuição",
+  "Automotivo",
+  "Beleza e Cosméticos",
+  "Calçados",
+  "Casa e Decoração",
+  "Construção Civil",
+  "E-commerce",
+  "Educação",
+  "Eletrônicos",
+  "Energia",
+  "Farmacêutico",
+  "Hotelaria",
+  "Indústria",
+  "Informática e Tecnologia",
+  "Logística e Transportes",
+  "Materiais de Construção",
+  "Móveis",
+  "Papelaria e Escritório",
+  "Pet Shop e Veterinária",
+  "Produtos de Limpeza",
+  "Restaurantes e Alimentação",
+  "Saúde",
+  "Segurança",
+  "Serviços Gerais",
+  "Supermercados e Mercearias",
+  "Telecomunicações",
+  "Têxtil e Confecção",
+  "Utilidades Domésticas",
+  "Vestuário e Moda",
+].map((value) => ({ value, label: value }));
 const CLOTHING_TYPES = [
-  { value: "NUMERICO", label: "Numérico" },
-  { value: "LETRAS", label: "PP ao XGG" },
+  { value: "NUMERICO", label: "Numeração brasileira (28 ao 64)" },
+  { value: "LETRAS", label: "Letras (XXPP ao 5G)" },
 ];
 const CLOTHING_SIZES: Record<string, string[]> = {
-  NUMERICO: ["34", "36", "38", "40", "42", "44", "46", "48", "50", "52", "54"],
-  LETRAS: ["PP", "P", "M", "G", "GG", "XG", "XGG"],
+  NUMERICO: Array.from({ length: 19 }, (_, index) => String(28 + index * 2)),
+  LETRAS: ["XXPP", "XPP", "PP", "P", "M", "G", "GG", "XG", "XGG", "3G", "4G", "5G"],
 };
-const SHOE_SIZES = Array.from({ length: 18 }, (_, index) => String(index + 28));
+const SHOE_SIZES = Array.from({ length: 31 }, (_, index) => String(index + 20));
 const money = moneyFromCents;
+
+function EmailSuggestionInput({
+  value,
+  onChange,
+  invalid = false,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  invalid?: boolean;
+}) {
+  const listboxId = useId();
+  const [expanded, setExpanded] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const suggestions = useMemo(() => getEmailSuggestions(value), [value]);
+  const isOpen = expanded && suggestions.length > 0;
+
+  const selectSuggestion = (suggestion: string) => {
+    onChange(suggestion);
+    setExpanded(false);
+    setActiveIndex(0);
+  };
+
+  return (
+    <div className="email-suggestion-field">
+      <input
+        type="email"
+        value={value}
+        inputMode="email"
+        autoComplete="off"
+        spellCheck={false}
+        aria-invalid={invalid}
+        aria-autocomplete="list"
+        aria-expanded={isOpen}
+        aria-controls={isOpen ? listboxId : undefined}
+        aria-activedescendant={
+          isOpen ? `${listboxId}-option-${activeIndex}` : undefined
+        }
+        onFocus={() => setExpanded(value.includes("@"))}
+        onBlur={() => setExpanded(false)}
+        onChange={(event) => {
+          onChange(event.target.value.replace(/\s/g, ""));
+          setExpanded(true);
+          setActiveIndex(0);
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            setExpanded(false);
+            return;
+          }
+          if (!suggestions.length) return;
+          if (event.key === "ArrowDown") {
+            event.preventDefault();
+            setExpanded(true);
+            setActiveIndex((current) => (current + 1) % suggestions.length);
+          } else if (event.key === "ArrowUp") {
+            event.preventDefault();
+            setExpanded(true);
+            setActiveIndex(
+              (current) =>
+                (current - 1 + suggestions.length) % suggestions.length,
+            );
+          } else if (event.key === "Enter" && isOpen) {
+            event.preventDefault();
+            selectSuggestion(suggestions[activeIndex] ?? suggestions[0]);
+          }
+        }}
+      />
+      {isOpen && (
+        <div
+          className="email-suggestion-list"
+          id={listboxId}
+          role="listbox"
+          aria-label="Sugestões de domínio de e-mail"
+        >
+          {suggestions.map((suggestion, index) => (
+            <div
+              className={`email-suggestion-option ${
+                index === activeIndex ? "active" : ""
+              }`}
+              id={`${listboxId}-option-${index}`}
+              key={suggestion}
+              role="option"
+              aria-selected={index === activeIndex}
+              onPointerDown={(event) => {
+                event.preventDefault();
+                selectSuggestion(suggestion);
+              }}
+              onPointerEnter={() => setActiveIndex(index)}
+            >
+              <span className="material-symbols-rounded" aria-hidden="true">
+                alternate_email
+              </span>
+              <strong>{suggestion}</strong>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function BarcodeInput({
   value,
@@ -208,7 +342,12 @@ const configs: Record<PageKey, Config> = {
       { key: "phonePrimary", label: "Telefone principal" },
       { key: "phoneSecondary", label: "Telefone secundário" },
       { key: "email", label: "E-mail", type: "email" },
-      { key: "segment", label: "Segmento" },
+      {
+        key: "segment",
+        label: "Segmento",
+        type: "select",
+        options: SUPPLIER_SEGMENT_OPTIONS,
+      },
       { key: "paymentTerms", label: "Condição de pagamento" },
       { key: "paymentTermDays", label: "Prazo de pagamento", type: "number" },
       {
@@ -223,26 +362,6 @@ const configs: Record<PageKey, Config> = {
       { key: "street", label: "Endereço", wide: true },
       { key: "streetNumber", label: "Número" },
       { key: "addressComplement", label: "Complemento" },
-      {
-        key: "lowerClothingType",
-        label: "Tipo de roupa inferior",
-        type: "select",
-        options: CLOTHING_TYPES,
-      },
-      { key: "lowerClothingSize", label: "Tamanho inferior", type: "select" },
-      {
-        key: "upperClothingType",
-        label: "Tipo de roupa superior",
-        type: "select",
-        options: CLOTHING_TYPES,
-      },
-      { key: "upperClothingSize", label: "Tamanho superior", type: "select" },
-      {
-        key: "shoeSize",
-        label: "Calçado",
-        type: "select",
-        options: SHOE_SIZES.map((value) => ({ value, label: value })),
-      },
       { key: "notes", label: "Observações", type: "textarea", wide: true },
     ],
   },
@@ -280,8 +399,36 @@ const configs: Record<PageKey, Config> = {
       { key: "phonePrimary", label: "Telefone principal" },
       { key: "phoneSecondary", label: "Telefone secundário" },
       {
+        key: "lowerClothingType",
+        label: "Tipo de tamanho — parte de baixo",
+        type: "select",
+        options: CLOTHING_TYPES,
+      },
+      {
+        key: "lowerClothingSize",
+        label: "Tamanho — parte de baixo",
+        type: "select",
+      },
+      {
+        key: "upperClothingType",
+        label: "Tipo de tamanho — parte de cima",
+        type: "select",
+        options: CLOTHING_TYPES,
+      },
+      {
+        key: "upperClothingSize",
+        label: "Tamanho — parte de cima",
+        type: "select",
+      },
+      {
+        key: "shoeSize",
+        label: "Tamanho do calçado",
+        type: "select",
+        options: SHOE_SIZES.map((value) => ({ value, label: value })),
+      },
+      {
         key: "marketingOptIn",
-        label: "Autoriza comunicações de marketing",
+        label: "Autoriza comunicações de marketing?",
         type: "checkbox",
         wide: true,
       },
@@ -371,14 +518,12 @@ const modalSections: Record<PageKey, ModalSection[]> = {
     { key: "contact", label: "Contato", icon: "contact_phone" },
     { key: "address", label: "Endereço", icon: "location_on" },
     { key: "commercial", label: "Comercial", icon: "payments" },
-    { key: "notes", label: "Observações", icon: "notes" },
   ],
   CAD_CLIENTE: [
     { key: "identity", label: "Identificação", icon: "badge" },
     { key: "contact", label: "Contato", icon: "contact_phone" },
     { key: "address", label: "Endereço", icon: "location_on" },
     { key: "preferences", label: "Tamanhos", icon: "straighten" },
-    { key: "notes", label: "Preferências", icon: "tune" },
   ],
   CAD_PRODUTO: [
     { key: "identity", label: "Identificação", icon: "inventory_2" },
@@ -417,6 +562,7 @@ const sectionFields: Record<PageKey, Record<string, string[]>> = {
       "cpf",
       "cnpj",
       "segment",
+      "notes",
     ],
     contact: ["contactName", "phonePrimary", "phoneSecondary", "email"],
     address: [
@@ -429,10 +575,17 @@ const sectionFields: Record<PageKey, Record<string, string[]>> = {
       "addressComplement",
     ],
     commercial: ["paymentTerms", "paymentTermDays", "averageDeliveryDays"],
-    notes: ["notes"],
   },
   CAD_CLIENTE: {
-    identity: ["name", "cpf", "cnpj", "birthDate", "gender"],
+    identity: [
+      "name",
+      "cpf",
+      "cnpj",
+      "birthDate",
+      "gender",
+      "marketingOptIn",
+      "notes",
+    ],
     contact: ["email", "phonePrimary", "phoneSecondary"],
     address: [
       "postalCode",
@@ -450,7 +603,6 @@ const sectionFields: Record<PageKey, Record<string, string[]>> = {
       "upperClothingSize",
       "shoeSize",
     ],
-    notes: ["marketingOptIn", "notes"],
   },
   CAD_PRODUTO: {
     components: [],
@@ -724,8 +876,14 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
         { value: "false", label: "Não" },
       ];
     else known = field.options ?? [];
-    if (known.length)
-      return known.filter((option) => existing.has(option.value));
+    if (known.length) {
+      const knownValues = new Set(known.map((option) => option.value));
+      const legacy = Array.from(existing)
+        .filter((value) => !knownValues.has(value))
+        .map((value) => ({ value, label: value }));
+      return [...known.filter((option) => existing.has(option.value)), ...legacy]
+        .sort((a, b) => a.label.localeCompare(b.label, "pt-BR"));
+    }
     return Array.from(existing)
       .map((value) => ({
         value,
@@ -969,6 +1127,13 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
         value,
         label: productSizeLabel(String(form.sizeType ?? ""), value),
       }));
+    if (pageKey === "CAD_FORNECEDOR" && field.key === "segment") {
+      const currentValue = String(form.segment ?? "").trim();
+      const known = field.options ?? [];
+      return currentValue && !known.some((option) => option.value === currentValue)
+        ? [{ value: currentValue, label: `${currentValue} (cadastrado)` }, ...known]
+        : known;
+    }
     if (pageKey === "CAD_CLIENTE" && field.key === "lowerClothingSize")
       return (CLOTHING_SIZES[String(form.lowerClothingType ?? "")] ?? []).map(
         (value) => ({ value, label: value }),
@@ -1840,6 +2005,18 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                           }
                           onScan={() =>
                             setBarcodeTarget({ area: "form", key: field.key })
+                          }
+                        />
+                      ) : field.type === "email" ? (
+                        <EmailSuggestionInput
+                          value={String(form[field.key] ?? "")}
+                          invalid={
+                            showErrors &&
+                            Boolean(field.required) &&
+                            !String(form[field.key] ?? "").trim()
+                          }
+                          onChange={(value) =>
+                            setForm({ ...form, [field.key]: value })
                           }
                         />
                       ) : field.type === "textarea" ? (
