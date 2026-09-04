@@ -1401,34 +1401,326 @@ mutation CancelSale($saleId: UUID!, $reason: String!) @auth(level: USER) @transa
 
 mutation CreatePlatformTenant($payload: Any!) @auth(level: USER) @transaction {
   _execute(sql: """
-    WITH actor AS (SELECT u.id FROM users u JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL AND r.system_role AND r.name='Administrador da Plataforma'),
-    input AS (SELECT COALESCE($2::jsonb,'{}'::jsonb) j FROM actor), created AS (
+    WITH actor AS (
+      SELECT u.id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND r.system_role AND r.name='Administrador da Plataforma'
+    ), input AS (
+      SELECT COALESCE($2::jsonb,'{}'::jsonb) j,a.id actor_id FROM actor a
+    ), valid AS (
+      SELECT * FROM input i WHERE
+        length(btrim(j->>'legalName')) BETWEEN 2 AND 160
+        AND upper(COALESCE(j->>'planCode','BRONZE')) IN ('BRONZE','PRATA','OURO')
+        AND length(btrim(j->>'responsibleName')) BETWEEN 2 AND 160
+        AND position('@' in j->>'responsibleEmail')>1
+        AND length(regexp_replace(COALESCE(j->>'responsiblePhone',''),'\D','','g')) BETWEEN 10 AND 15
+        AND position('@' in COALESCE(NULLIF(j->>'billingEmail',''),j->>'responsibleEmail'))>1
+        AND COALESCE((j->>'monthlyAmountCents')::bigint,0)>=0
+        AND COALESCE((j->>'billingDay')::int,10) BETWEEN 1 AND 31
+        AND COALESCE((j->>'graceDays')::int,3) BETWEEN 0 AND 90
+        AND COALESCE((j->>'suspendAfterDays')::int,7) BETWEEN 0 AND 365
+        AND upper(COALESCE(j->>'communicationChannel','EMAIL')) IN ('EMAIL','WHATSAPP','BOTH','NONE')
+        AND upper(COALESCE(j->>'preferredPaymentMethod','PIX')) IN ('PIX','BOLETO','TRANSFERENCIA','CARTAO','OUTRO')
+        AND (COALESCE(NULLIF(regexp_replace(j->>'document','\D','','g'),''),'')=''
+          OR NOT EXISTS(SELECT 1 FROM tenants duplicate WHERE duplicate.deleted_at IS NULL
+            AND duplicate.document=regexp_replace(j->>'document','\D','','g')))
+    ), created AS (
       INSERT INTO tenants(id,legal_name,trade_name,document,email,phone,plan_code,starts_on,expires_on,timezone,currency_code,active,created_at,updated_at)
-      SELECT gen_random_uuid(),left(btrim(j->>'legalName'),160),NULLIF(left(btrim(j->>'tradeName'),160),''),NULLIF(regexp_replace(j->>'document','\D','','g'),''),NULLIF(lower(left(btrim(j->>'email'),254)),''),NULLIF(left(btrim(j->>'phone'),24),''),COALESCE(NULLIF(left(btrim(j->>'planCode'),40),''),'BRONZE'),COALESCE((j->>'startsOn')::date,current_date),NULLIF(j->>'expiresOn','')::date,'America/Sao_Paulo','BRL',true,now(),now() FROM input WHERE length(btrim(j->>'legalName')) BETWEEN 2 AND 160 RETURNING id
-    ), role_row AS (INSERT INTO roles(id,tenant_id,name,description,hierarchy_level,system_role,active,created_at,updated_at) SELECT gen_random_uuid(),id,'Administrador','Administrador do ambiente',10,false,true,now(),now() FROM created RETURNING id,tenant_id), permissions AS (
+      SELECT gen_random_uuid(),left(btrim(j->>'legalName'),160),NULLIF(left(btrim(j->>'tradeName'),160),''),
+        NULLIF(regexp_replace(j->>'document','\D','','g'),''),NULLIF(lower(left(btrim(j->>'email'),254)),''),
+        NULLIF(regexp_replace(j->>'phone','\D','','g'),''),upper(COALESCE(NULLIF(left(btrim(j->>'planCode'),40),''),'BRONZE')),
+        COALESCE(NULLIF(j->>'startsOn','')::date,current_date),NULLIF(j->>'expiresOn','')::date,
+        'America/Sao_Paulo','BRL',true,now(),now() FROM valid RETURNING id
+    ), profile AS (
+      INSERT INTO tenant_billing_profiles(tenant_id,responsible_name,responsible_role,responsible_email,responsible_phone,
+        billing_email,billing_phone,communication_channel,allow_email_billing,allow_whatsapp_billing,
+        communication_consent_source,communication_consent_at,monthly_amount_cents,billing_day,grace_days,
+        suspend_after_days,preferred_payment_method,next_due_date,notes,created_at,updated_at)
+      SELECT c.id,left(btrim(v.j->>'responsibleName'),160),NULLIF(left(btrim(v.j->>'responsibleRole'),100),''),
+        lower(left(btrim(v.j->>'responsibleEmail'),254)),regexp_replace(v.j->>'responsiblePhone','\D','','g'),
+        lower(left(btrim(COALESCE(NULLIF(v.j->>'billingEmail',''),v.j->>'responsibleEmail')),254)),
+        NULLIF(regexp_replace(COALESCE(NULLIF(v.j->>'billingPhone',''),v.j->>'responsiblePhone'),'\D','','g'),''),
+        upper(COALESCE(NULLIF(v.j->>'communicationChannel',''),'EMAIL')),
+        COALESCE((v.j->>'allowEmailBilling')::boolean,true),COALESCE((v.j->>'allowWhatsappBilling')::boolean,false),
+        NULLIF(upper(left(btrim(v.j->>'communicationConsentSource'),40)),''),NULLIF(v.j->>'communicationConsentAt','')::timestamptz,
+        COALESCE((v.j->>'monthlyAmountCents')::bigint,0),COALESCE((v.j->>'billingDay')::int,10),
+        COALESCE((v.j->>'graceDays')::int,3),COALESCE((v.j->>'suspendAfterDays')::int,7),
+        upper(COALESCE(NULLIF(v.j->>'preferredPaymentMethod',''),'PIX')),NULLIF(v.j->>'nextDueDate','')::date,
+        NULLIF(left(btrim(v.j->>'billingNotes'),1000),''),now(),now() FROM created c CROSS JOIN valid v RETURNING tenant_id
+    ), role_row AS (
+      INSERT INTO roles(id,tenant_id,name,description,hierarchy_level,system_role,active,created_at,updated_at)
+      SELECT gen_random_uuid(),id,'Administrador','Administrador do ambiente',10,false,true,now(),now() FROM created RETURNING id,tenant_id
+    ), permissions AS (
       INSERT INTO role_page_permissions(role_id,page_id,tenant_id,can_access,can_create,can_update,can_delete,can_export,can_manage,created_at,updated_at)
       SELECT r.id,p.id,r.tenant_id,true,true,true,true,true,true,now(),now() FROM role_row r CROSS JOIN app_pages p WHERE p.active RETURNING role_id
-    ) SELECT id FROM role_row
+    )
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+    SELECT c.id,v.actor_id,'Plataforma','PLATFORM_ADMIN','CREATE','Tenant',c.id::text,'Ambiente e perfil financeiro criados',true,'SQL_CONNECT',
+      jsonb_build_object('legalName',v.j->>'legalName','planCode',upper(COALESCE(v.j->>'planCode','BRONZE')),
+        'monthlyAmountCents',COALESCE((v.j->>'monthlyAmountCents')::bigint,0)),now() FROM created c CROSS JOIN valid v
+  """,params:[{_expr:"auth.uid"},$payload])
+}
+
+mutation UpdatePlatformTenant($payload: Any!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id FROM users u JOIN tenants own_tenant ON own_tenant.id=u.tenant_id AND own_tenant.active AND own_tenant.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND r.system_role AND r.name='Administrador da Plataforma'
+    ), input AS (
+      SELECT COALESCE($2::jsonb,'{}'::jsonb) j,a.id actor_id,(COALESCE($2::jsonb,'{}'::jsonb)->>'tenantId')::uuid tenant_id FROM actor a
+    ), previous AS (
+      SELECT t.id,jsonb_build_object('legalName',t.legal_name,'tradeName',t.trade_name,'document',t.document,
+        'email',t.email,'phone',t.phone,'planCode',t.plan_code,'startsOn',t.starts_on,'expiresOn',t.expires_on) before_data
+      FROM tenants t JOIN input i ON i.tenant_id=t.id WHERE t.deleted_at IS NULL
+    ), valid AS (
+      SELECT i.* FROM input i JOIN previous p ON p.id=i.tenant_id WHERE
+        length(btrim(j->>'legalName')) BETWEEN 2 AND 160
+        AND upper(j->>'planCode') IN ('BRONZE','PRATA','OURO')
+        AND length(btrim(j->>'responsibleName')) BETWEEN 2 AND 160
+        AND position('@' in j->>'responsibleEmail')>1
+        AND length(regexp_replace(COALESCE(j->>'responsiblePhone',''),'\D','','g')) BETWEEN 10 AND 15
+        AND position('@' in COALESCE(NULLIF(j->>'billingEmail',''),j->>'responsibleEmail'))>1
+        AND COALESCE((j->>'monthlyAmountCents')::bigint,0)>=0
+        AND COALESCE((j->>'billingDay')::int,10) BETWEEN 1 AND 31
+        AND COALESCE((j->>'graceDays')::int,3) BETWEEN 0 AND 90
+        AND COALESCE((j->>'suspendAfterDays')::int,7) BETWEEN 0 AND 365
+        AND upper(COALESCE(j->>'communicationChannel','EMAIL')) IN ('EMAIL','WHATSAPP','BOTH','NONE')
+        AND upper(COALESCE(j->>'preferredPaymentMethod','PIX')) IN ('PIX','BOLETO','TRANSFERENCIA','CARTAO','OUTRO')
+        AND (COALESCE(NULLIF(regexp_replace(j->>'document','\D','','g'),''),'')=''
+          OR NOT EXISTS(SELECT 1 FROM tenants duplicate WHERE duplicate.id<>i.tenant_id AND duplicate.deleted_at IS NULL
+            AND duplicate.document=regexp_replace(j->>'document','\D','','g')))
+    ), changed AS (
+      UPDATE tenants t SET legal_name=left(btrim(v.j->>'legalName'),160),trade_name=NULLIF(left(btrim(v.j->>'tradeName'),160),''),
+        document=NULLIF(regexp_replace(v.j->>'document','\D','','g'),''),email=NULLIF(lower(left(btrim(v.j->>'email'),254)),''),
+        phone=NULLIF(regexp_replace(v.j->>'phone','\D','','g'),''),plan_code=upper(v.j->>'planCode'),
+        starts_on=COALESCE(NULLIF(v.j->>'startsOn','')::date,current_date),expires_on=NULLIF(v.j->>'expiresOn','')::date,updated_at=now()
+      FROM valid v WHERE t.id=v.tenant_id RETURNING t.id,t.legal_name,t.plan_code
+    ), profile AS (
+      INSERT INTO tenant_billing_profiles(tenant_id,responsible_name,responsible_role,responsible_email,responsible_phone,
+        billing_email,billing_phone,communication_channel,allow_email_billing,allow_whatsapp_billing,
+        communication_consent_source,communication_consent_at,monthly_amount_cents,billing_day,grace_days,
+        suspend_after_days,preferred_payment_method,next_due_date,notes,created_at,updated_at)
+      SELECT c.id,left(btrim(v.j->>'responsibleName'),160),NULLIF(left(btrim(v.j->>'responsibleRole'),100),''),
+        lower(left(btrim(v.j->>'responsibleEmail'),254)),regexp_replace(v.j->>'responsiblePhone','\D','','g'),
+        lower(left(btrim(COALESCE(NULLIF(v.j->>'billingEmail',''),v.j->>'responsibleEmail')),254)),
+        NULLIF(regexp_replace(COALESCE(NULLIF(v.j->>'billingPhone',''),v.j->>'responsiblePhone'),'\D','','g'),''),
+        upper(COALESCE(NULLIF(v.j->>'communicationChannel',''),'EMAIL')),
+        COALESCE((v.j->>'allowEmailBilling')::boolean,true),COALESCE((v.j->>'allowWhatsappBilling')::boolean,false),
+        NULLIF(upper(left(btrim(v.j->>'communicationConsentSource'),40)),''),NULLIF(v.j->>'communicationConsentAt','')::timestamptz,
+        COALESCE((v.j->>'monthlyAmountCents')::bigint,0),COALESCE((v.j->>'billingDay')::int,10),
+        COALESCE((v.j->>'graceDays')::int,3),COALESCE((v.j->>'suspendAfterDays')::int,7),
+        upper(COALESCE(NULLIF(v.j->>'preferredPaymentMethod',''),'PIX')),NULLIF(v.j->>'nextDueDate','')::date,
+        NULLIF(left(btrim(v.j->>'billingNotes'),1000),''),now(),now() FROM changed c CROSS JOIN valid v
+      ON CONFLICT(tenant_id) DO UPDATE SET responsible_name=EXCLUDED.responsible_name,responsible_role=EXCLUDED.responsible_role,
+        responsible_email=EXCLUDED.responsible_email,responsible_phone=EXCLUDED.responsible_phone,
+        billing_email=EXCLUDED.billing_email,billing_phone=EXCLUDED.billing_phone,
+        communication_channel=EXCLUDED.communication_channel,allow_email_billing=EXCLUDED.allow_email_billing,
+        allow_whatsapp_billing=EXCLUDED.allow_whatsapp_billing,communication_consent_source=EXCLUDED.communication_consent_source,
+        communication_consent_at=EXCLUDED.communication_consent_at,monthly_amount_cents=EXCLUDED.monthly_amount_cents,
+        billing_day=EXCLUDED.billing_day,grace_days=EXCLUDED.grace_days,suspend_after_days=EXCLUDED.suspend_after_days,
+        preferred_payment_method=EXCLUDED.preferred_payment_method,next_due_date=EXCLUDED.next_due_date,
+        notes=EXCLUDED.notes,updated_at=now() RETURNING tenant_id
+    )
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,before_data,after_data,created_at)
+    SELECT c.id,v.actor_id,'Plataforma','PLATFORM_ADMIN','UPDATE','Tenant',c.id::text,'Ambiente e perfil financeiro atualizados',true,'SQL_CONNECT',p.before_data,
+      jsonb_build_object('legalName',c.legal_name,'planCode',c.plan_code,'monthlyAmountCents',(v.j->>'monthlyAmountCents')::bigint,
+        'billingDay',(v.j->>'billingDay')::int,'nextDueDate',NULLIF(v.j->>'nextDueDate','')::date),now()
+    FROM changed c CROSS JOIN valid v JOIN previous p ON p.id=c.id
   """,params:[{_expr:"auth.uid"},$payload])
 }
 
 mutation SetPlatformTenantStatus($tenantId: UUID!, $active: Boolean!) @auth(level: USER) @transaction {
-  _execute(sql: """WITH actor AS (SELECT u.id,u.tenant_id FROM users u JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND r.active AND r.system_role AND r.name='Administrador da Plataforma') UPDATE tenants t SET active=$3,updated_at=now() FROM actor a WHERE t.id=$2 AND t.id<>a.tenant_id""",params:[{_expr:"auth.uid"},$tenantId,$active])
+  _execute(sql: """
+    WITH actor AS (SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
+      AND r.active AND r.deleted_at IS NULL AND r.system_role AND r.name='Administrador da Plataforma'),
+    changed AS (UPDATE tenants t SET active=$3,updated_at=now() FROM actor a WHERE t.id=$2 AND t.id<>a.tenant_id AND t.deleted_at IS NULL RETURNING t.id,t.active)
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+    SELECT c.id,a.id,'Plataforma','PLATFORM_ADMIN',CASE WHEN c.active THEN 'ACTIVATE' ELSE 'DEACTIVATE' END,'Tenant',c.id::text,
+      CASE WHEN c.active THEN 'Ambiente ativado' ELSE 'Ambiente inativado' END,true,'SQL_CONNECT',jsonb_build_object('active',c.active),now()
+    FROM changed c CROSS JOIN actor a
+  """,params:[{_expr:"auth.uid"},$tenantId,$active])
 }
 
 mutation LinkPlatformUser($payload: Any!) @auth(level: USER) @transaction {
   _execute(sql: """
-    WITH actor AS (SELECT u.id,u.tenant_id FROM users u JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND r.active AND r.system_role AND r.name='Administrador da Plataforma'),input AS (SELECT COALESCE($2::jsonb,'{}'::jsonb) j,a.* FROM actor a),valid AS (SELECT j,r.tenant_id,r.id role_id FROM input i JOIN roles r ON r.id=(j->>'roleId')::uuid AND r.tenant_id=(j->>'tenantId')::uuid AND r.active AND r.deleted_at IS NULL WHERE length(btrim(j->>'uid')) BETWEEN 6 AND 128 AND length(btrim(j->>'name')) BETWEEN 2 AND 160 AND position('@' in j->>'email')>1)
-    INSERT INTO users(id,tenant_id,role_id,name,email,onboarding_pending,failed_login_attempts,active,created_at,updated_at) SELECT btrim(j->>'uid'),tenant_id,role_id,left(btrim(j->>'name'),160),lower(left(btrim(j->>'email'),254)),true,0,true,now(),now() FROM valid ON CONFLICT(id) DO UPDATE SET tenant_id=EXCLUDED.tenant_id,role_id=EXCLUDED.role_id,name=EXCLUDED.name,email=EXCLUDED.email,active=true,deleted_at=NULL,updated_at=now()
+    WITH actor AS (SELECT u.id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
+      AND r.active AND r.deleted_at IS NULL AND r.system_role AND r.name='Administrador da Plataforma'),
+    input AS (SELECT COALESCE($2::jsonb,'{}'::jsonb) j,a.id actor_id FROM actor a),
+    valid AS (SELECT i.j,i.actor_id,r.tenant_id,r.id role_id FROM input i JOIN roles r ON r.id=(i.j->>'roleId')::uuid
+      AND r.tenant_id=(i.j->>'tenantId')::uuid AND r.active AND r.deleted_at IS NULL
+      WHERE length(btrim(i.j->>'uid')) BETWEEN 6 AND 128 AND btrim(i.j->>'uid')<>i.actor_id
+      AND length(btrim(i.j->>'name')) BETWEEN 2 AND 160 AND position('@' in i.j->>'email')>1),
+    changed AS (INSERT INTO users(id,tenant_id,role_id,name,email,onboarding_pending,failed_login_attempts,active,created_at,updated_at)
+      SELECT btrim(j->>'uid'),tenant_id,role_id,left(btrim(j->>'name'),160),lower(left(btrim(j->>'email'),254)),true,0,true,now(),now() FROM valid
+      ON CONFLICT(id) DO UPDATE SET tenant_id=EXCLUDED.tenant_id,role_id=EXCLUDED.role_id,name=EXCLUDED.name,email=EXCLUDED.email,
+        active=true,deleted_at=NULL,updated_at=now() RETURNING id,tenant_id,role_id,name,email)
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+    SELECT c.tenant_id,v.actor_id,'Plataforma','PLATFORM_ADMIN','UPSERT','User',c.id,'Vínculo de usuário atualizado',true,'SQL_CONNECT',
+      jsonb_build_object('tenantId',c.tenant_id,'roleId',c.role_id,'name',c.name,'email',c.email),now() FROM changed c CROSS JOIN valid v
   """,params:[{_expr:"auth.uid"},$payload])
 }
 
 mutation SetPlatformUserStatus($userId: String!, $active: Boolean!) @auth(level: USER) @transaction {
-  _execute(sql: """WITH actor AS (SELECT u.id FROM users u JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND r.active AND r.system_role AND r.name='Administrador da Plataforma') UPDATE users target SET active=$3,updated_at=now() FROM actor WHERE target.id=$2 AND target.id<>actor.id""",params:[{_expr:"auth.uid"},$userId,$active])
+  _execute(sql: """
+    WITH actor AS (SELECT u.id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
+      AND r.active AND r.deleted_at IS NULL AND r.system_role AND r.name='Administrador da Plataforma'),
+    changed AS (UPDATE users target SET active=$3,updated_at=now() FROM actor WHERE target.id=$2 AND target.id<>actor.id AND target.deleted_at IS NULL RETURNING target.id,target.tenant_id,target.active)
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+    SELECT c.tenant_id,a.id,'Plataforma','PLATFORM_ADMIN',CASE WHEN c.active THEN 'ACTIVATE' ELSE 'DEACTIVATE' END,'User',c.id,
+      CASE WHEN c.active THEN 'Usuário ativado' ELSE 'Usuário inativado' END,true,'SQL_CONNECT',jsonb_build_object('active',c.active),now()
+    FROM changed c CROSS JOIN actor a
+  """,params:[{_expr:"auth.uid"},$userId,$active])
 }
 
 mutation SetPlatformRolePermission($payload: Any!) @auth(level: USER) @transaction {
-  _execute(sql: """WITH actor AS (SELECT u.id FROM users u JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND r.active AND r.system_role AND r.name='Administrador da Plataforma'),i AS (SELECT COALESCE($2::jsonb,'{}'::jsonb) j),valid AS (SELECT r.id role_id,r.tenant_id,(i.j->>'pageId')::uuid page_id,i.j FROM roles r CROSS JOIN i CROSS JOIN actor a JOIN app_pages p ON p.id=(i.j->>'pageId')::uuid AND p.active WHERE r.id=(i.j->>'roleId')::uuid AND r.active AND r.deleted_at IS NULL) INSERT INTO role_page_permissions(role_id,page_id,tenant_id,can_access,can_create,can_update,can_delete,can_export,can_manage,created_at,updated_at) SELECT role_id,page_id,tenant_id,COALESCE((j->>'canAccess')::boolean,false),COALESCE((j->>'canCreate')::boolean,false),COALESCE((j->>'canUpdate')::boolean,false),COALESCE((j->>'canDelete')::boolean,false),COALESCE((j->>'canExport')::boolean,false),COALESCE((j->>'canManage')::boolean,false),now(),now() FROM valid ON CONFLICT(role_id,page_id) DO UPDATE SET can_access=EXCLUDED.can_access,can_create=EXCLUDED.can_create,can_update=EXCLUDED.can_update,can_delete=EXCLUDED.can_delete,can_export=EXCLUDED.can_export,can_manage=EXCLUDED.can_manage,updated_at=now()""",params:[{_expr:"auth.uid"},$payload])
+  _execute(sql: """
+    WITH actor AS (SELECT u.id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+      JOIN roles own_role ON own_role.id=u.role_id AND own_role.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
+      AND own_role.active AND own_role.deleted_at IS NULL AND own_role.system_role AND own_role.name='Administrador da Plataforma'),
+    i AS (SELECT COALESCE($2::jsonb,'{}'::jsonb) j,a.id actor_id FROM actor a),
+    valid AS (SELECT r.id role_id,r.tenant_id,(i.j->>'pageId')::uuid page_id,i.j,i.actor_id FROM roles r CROSS JOIN i
+      JOIN app_pages p ON p.id=(i.j->>'pageId')::uuid AND p.active WHERE r.id=(i.j->>'roleId')::uuid AND r.active AND r.deleted_at IS NULL),
+    changed AS (INSERT INTO role_page_permissions(role_id,page_id,tenant_id,can_access,can_create,can_update,can_delete,can_export,can_manage,created_at,updated_at)
+      SELECT role_id,page_id,tenant_id,COALESCE((j->>'canAccess')::boolean,false),COALESCE((j->>'canCreate')::boolean,false),
+        COALESCE((j->>'canUpdate')::boolean,false),COALESCE((j->>'canDelete')::boolean,false),COALESCE((j->>'canExport')::boolean,false),
+        COALESCE((j->>'canManage')::boolean,false),now(),now() FROM valid
+      ON CONFLICT(role_id,page_id) DO UPDATE SET can_access=EXCLUDED.can_access,can_create=EXCLUDED.can_create,
+        can_update=EXCLUDED.can_update,can_delete=EXCLUDED.can_delete,can_export=EXCLUDED.can_export,
+        can_manage=EXCLUDED.can_manage,updated_at=now() RETURNING role_id,page_id,tenant_id,can_access,can_create,can_update,can_delete,can_export,can_manage)
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+    SELECT c.tenant_id,v.actor_id,'Plataforma','PLATFORM_ADMIN','UPDATE_PERMISSION','Role',c.role_id::text,'Permissão do perfil atualizada',true,'SQL_CONNECT',
+      jsonb_build_object('pageId',c.page_id,'canAccess',c.can_access,'canCreate',c.can_create,'canUpdate',c.can_update,
+        'canDelete',c.can_delete,'canExport',c.can_export,'canManage',c.can_manage),now() FROM changed c JOIN valid v ON v.role_id=c.role_id AND v.page_id=c.page_id
+  """,params:[{_expr:"auth.uid"},$payload])
+}
+
+mutation CreatePlatformInvoice($payload: Any!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (SELECT u.id FROM users u JOIN tenants own_tenant ON own_tenant.id=u.tenant_id AND own_tenant.active AND own_tenant.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
+      AND r.active AND r.deleted_at IS NULL AND r.system_role AND r.name='Administrador da Plataforma'),
+    input AS (SELECT COALESCE($2::jsonb,'{}'::jsonb) j,a.id actor_id FROM actor a),
+    parsed AS (SELECT i.*,(j->>'tenantId')::uuid tenant_id,NULLIF(j->>'referenceMonth','')::date reference_month,
+      COALESCE(NULLIF(j->>'issuedOn','')::date,current_date) issued_on,NULLIF(j->>'dueDate','')::date due_date,
+      COALESCE((j->>'originalAmountCents')::bigint,0) original_amount,COALESCE((j->>'discountCents')::bigint,0) discount,
+      COALESCE((j->>'additionCents')::bigint,0) addition,btrim(j->>'clientOperationId') operation_id FROM input i),
+    valid AS (SELECT p.* FROM parsed p JOIN tenants t ON t.id=p.tenant_id AND t.deleted_at IS NULL WHERE p.reference_month IS NOT NULL
+      AND p.due_date IS NOT NULL AND p.due_date>=p.issued_on AND length(btrim(p.j->>'description')) BETWEEN 2 AND 180
+      AND p.original_amount>0 AND p.discount>=0 AND p.addition>=0 AND p.original_amount-p.discount+p.addition>0
+      AND length(p.operation_id) BETWEEN 8 AND 100
+      AND NOT EXISTS(SELECT 1 FROM tenant_invoices old WHERE old.billing_key=p.tenant_id::text||':'||p.operation_id)),
+    inserted AS (INSERT INTO tenant_invoices(id,tenant_id,billing_key,reference_month,description,issued_on,due_date,
+      original_amount_cents,discount_cents,addition_cents,total_cents,paid_cents,status,provider,notes,version,created_by_uid,created_at,updated_at)
+      SELECT gen_random_uuid(),tenant_id,tenant_id::text||':'||operation_id,date_trunc('month',reference_month)::date,
+        left(btrim(j->>'description'),180),issued_on,due_date,original_amount,discount,addition,original_amount-discount+addition,
+        0,'OPEN','MANUAL',NULLIF(left(btrim(j->>'notes'),1000),''),1,actor_id,now(),now() FROM valid
+      RETURNING id,tenant_id,description,due_date,total_cents)
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+    SELECT i.tenant_id,v.actor_id,'Plataforma','PLATFORM_BILLING','CREATE','TenantInvoice',i.id::text,'Cobrança criada',true,'SQL_CONNECT',
+      jsonb_build_object('description',i.description,'dueDate',i.due_date,'totalCents',i.total_cents),now() FROM inserted i CROSS JOIN valid v
+  """,params:[{_expr:"auth.uid"},$payload])
+}
+
+mutation UpdatePlatformInvoice($payload: Any!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (SELECT u.id FROM users u JOIN tenants own_tenant ON own_tenant.id=u.tenant_id AND own_tenant.active AND own_tenant.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
+      AND r.active AND r.deleted_at IS NULL AND r.system_role AND r.name='Administrador da Plataforma'),
+    input AS (SELECT COALESCE($2::jsonb,'{}'::jsonb) j,a.id actor_id FROM actor a),
+    locked AS (SELECT inv.* FROM tenant_invoices inv CROSS JOIN input i WHERE inv.id=(i.j->>'invoiceId')::uuid AND inv.deleted_at IS NULL FOR UPDATE OF inv),
+    valid AS (SELECT l.*,i.j,i.actor_id,NULLIF(i.j->>'referenceMonth','')::date new_reference_month,
+      COALESCE(NULLIF(i.j->>'issuedOn','')::date,current_date) new_issued_on,NULLIF(i.j->>'dueDate','')::date new_due_date,
+      COALESCE((i.j->>'originalAmountCents')::bigint,0) original_amount,COALESCE((i.j->>'discountCents')::bigint,0) discount,
+      COALESCE((i.j->>'additionCents')::bigint,0) addition FROM locked l CROSS JOIN input i
+      WHERE l.status='OPEN' AND l.paid_cents=0 AND l.version=COALESCE((i.j->>'expectedVersion')::bigint,-1)
+        AND NULLIF(i.j->>'referenceMonth','') IS NOT NULL AND NULLIF(i.j->>'dueDate','') IS NOT NULL
+        AND length(btrim(i.j->>'description')) BETWEEN 2 AND 180
+        AND COALESCE((i.j->>'originalAmountCents')::bigint,0)>0 AND COALESCE((i.j->>'discountCents')::bigint,0)>=0
+        AND COALESCE((i.j->>'additionCents')::bigint,0)>=0
+        AND COALESCE((i.j->>'originalAmountCents')::bigint,0)-COALESCE((i.j->>'discountCents')::bigint,0)+COALESCE((i.j->>'additionCents')::bigint,0)>0),
+    changed AS (UPDATE tenant_invoices inv SET reference_month=date_trunc('month',v.new_reference_month)::date,
+      description=left(btrim(v.j->>'description'),180),issued_on=v.new_issued_on,due_date=v.new_due_date,
+      original_amount_cents=v.original_amount,discount_cents=v.discount,addition_cents=v.addition,
+      total_cents=v.original_amount-v.discount+v.addition,notes=NULLIF(left(btrim(v.j->>'notes'),1000),''),version=inv.version+1,updated_at=now()
+      FROM valid v WHERE inv.id=v.id AND v.new_due_date>=v.new_issued_on RETURNING inv.*)
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,before_data,after_data,created_at)
+    SELECT c.tenant_id,v.actor_id,'Plataforma','PLATFORM_BILLING','UPDATE','TenantInvoice',c.id::text,'Cobrança atualizada',true,'SQL_CONNECT',
+      jsonb_build_object('dueDate',v.due_date,'totalCents',v.total_cents,'version',v.version),
+      jsonb_build_object('dueDate',c.due_date,'totalCents',c.total_cents,'version',c.version),now() FROM changed c JOIN valid v ON v.id=c.id
+  """,params:[{_expr:"auth.uid"},$payload])
+}
+
+mutation VoidPlatformInvoice($invoiceId: UUID!, $reason: String!, $expectedVersion: Int64!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (SELECT u.id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
+      AND r.active AND r.deleted_at IS NULL AND r.system_role AND r.name='Administrador da Plataforma'),
+    changed AS (UPDATE tenant_invoices inv SET status='VOID',notes=concat_ws(E'\n',inv.notes,'Cancelamento: '||left(btrim($3),500)),
+      version=inv.version+1,updated_at=now() FROM actor a WHERE inv.id=$2 AND inv.deleted_at IS NULL AND inv.status<>'VOID'
+      AND inv.paid_cents=0 AND inv.version=$4 AND length(btrim($3))>=5 RETURNING inv.id,inv.tenant_id,inv.total_cents,inv.version)
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,before_data,created_at)
+    SELECT c.tenant_id,a.id,'Plataforma','PLATFORM_BILLING','VOID','TenantInvoice',c.id::text,left(btrim($3),500),true,'SQL_CONNECT',
+      jsonb_build_object('totalCents',c.total_cents,'version',c.version-1),now() FROM changed c CROSS JOIN actor a
+  """,params:[{_expr:"auth.uid"},$invoiceId,$reason,$expectedVersion])
+}
+
+mutation SettlePlatformInvoice($payload: Any!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (SELECT u.id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
+      AND r.active AND r.deleted_at IS NULL AND r.system_role AND r.name='Administrador da Plataforma'),
+    input AS (SELECT COALESCE($2::jsonb,'{}'::jsonb) j,a.id actor_id FROM actor a),
+    locked AS (SELECT inv.* FROM tenant_invoices inv CROSS JOIN input i WHERE inv.id=(i.j->>'invoiceId')::uuid AND inv.deleted_at IS NULL FOR UPDATE OF inv),
+    valid AS (SELECT l.*,i.j,i.actor_id,COALESCE((i.j->>'amountCents')::bigint,0) payment_amount,
+      NULLIF(i.j->>'paidAt','')::timestamptz payment_date,upper(btrim(i.j->>'method')) payment_method,
+      btrim(i.j->>'idempotencyKey') operation_id FROM locked l CROSS JOIN input i
+      WHERE l.status<>'VOID' AND l.paid_cents<l.total_cents
+        AND COALESCE((i.j->>'amountCents')::bigint,0)>0
+        AND COALESCE((i.j->>'amountCents')::bigint,0)<=l.total_cents-l.paid_cents
+        AND NULLIF(i.j->>'paidAt','')::timestamptz<=now()+interval '5 minutes'
+        AND upper(btrim(i.j->>'method')) IN ('PIX','BOLETO','TRANSFERENCIA','CARTAO','DINHEIRO','OUTRO')
+        AND length(btrim(i.j->>'idempotencyKey')) BETWEEN 8 AND 100
+        AND NOT EXISTS(SELECT 1 FROM tenant_payments old WHERE old.idempotency_key=l.tenant_id::text||':'||btrim(i.j->>'idempotencyKey'))),
+    inserted AS (INSERT INTO tenant_payments(id,tenant_id,invoice_id,idempotency_key,amount_cents,paid_at,method,provider,
+      transaction_reference,notes,status,created_by_uid,created_at)
+      SELECT gen_random_uuid(),tenant_id,id,tenant_id::text||':'||operation_id,payment_amount,payment_date,payment_method,'MANUAL',
+        NULLIF(left(btrim(j->>'transactionReference'),180),''),NULLIF(left(btrim(j->>'notes'),1000),''),'CONFIRMED',actor_id,now()
+      FROM valid RETURNING id,tenant_id,invoice_id,amount_cents,paid_at,method),
+    changed AS (UPDATE tenant_invoices inv SET paid_cents=inv.paid_cents+p.amount_cents,
+      status=CASE WHEN inv.paid_cents+p.amount_cents>=inv.total_cents THEN 'PAID' ELSE 'PARTIALLY_PAID' END,
+      version=inv.version+1,updated_at=now() FROM inserted p WHERE inv.id=p.invoice_id RETURNING inv.id,inv.total_cents,inv.paid_cents,inv.version)
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+    SELECT p.tenant_id,v.actor_id,'Plataforma','PLATFORM_BILLING','SETTLE','TenantPayment',p.id::text,'Baixa financeira registrada',true,'SQL_CONNECT',
+      jsonb_build_object('invoiceId',p.invoice_id,'amountCents',p.amount_cents,'paidAt',p.paid_at,'method',p.method,
+        'invoicePaidCents',c.paid_cents,'invoiceTotalCents',c.total_cents),now()
+    FROM inserted p JOIN changed c ON c.id=p.invoice_id JOIN valid v ON v.id=p.invoice_id
+  """,params:[{_expr:"auth.uid"},$payload])
+}
+
+mutation ReversePlatformPayment($paymentId: UUID!, $reason: String!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (SELECT u.id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
+      AND r.active AND r.deleted_at IS NULL AND r.system_role AND r.name='Administrador da Plataforma'),
+    locked AS (SELECT pay.* FROM tenant_payments pay JOIN tenant_invoices inv ON inv.id=pay.invoice_id CROSS JOIN actor a
+      WHERE pay.id=$2 AND pay.status='CONFIRMED' AND inv.deleted_at IS NULL FOR UPDATE OF pay,inv),
+    reversed AS (UPDATE tenant_payments pay SET status='REVERSED',reversed_at=now(),reversed_by_uid=a.id,reversal_reason=left(btrim($3),500)
+      FROM locked l CROSS JOIN actor a WHERE pay.id=l.id AND length(btrim($3))>=5 RETURNING pay.*),
+    changed AS (UPDATE tenant_invoices inv SET paid_cents=GREATEST(inv.paid_cents-r.amount_cents,0),
+      status=CASE WHEN GREATEST(inv.paid_cents-r.amount_cents,0)=0 THEN 'OPEN' ELSE 'PARTIALLY_PAID' END,
+      version=inv.version+1,updated_at=now() FROM reversed r WHERE inv.id=r.invoice_id RETURNING inv.id,inv.total_cents,inv.paid_cents,inv.version)
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,before_data,after_data,created_at)
+    SELECT r.tenant_id,a.id,'Plataforma','PLATFORM_BILLING','REVERSE','TenantPayment',r.id::text,left(btrim($3),500),true,'SQL_CONNECT',
+      jsonb_build_object('invoiceId',r.invoice_id,'amountCents',r.amount_cents),
+      jsonb_build_object('invoicePaidCents',c.paid_cents,'invoiceVersion',c.version),now()
+    FROM reversed r JOIN changed c ON c.id=r.invoice_id CROSS JOIN actor a
+  """,params:[{_expr:"auth.uid"},$paymentId,$reason])
 }
 
 mutation PostStockAdjustment($payload: Any!) @auth(level: USER) @transaction {
