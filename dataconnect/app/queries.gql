@@ -469,22 +469,149 @@ query ProductPromotions($productId: UUID!) @auth(level: USER) {
   """,params:[{_expr:"auth.uid"},$productId])
 }
 
-# Data Dazzle control plane. Access is restricted server-side to the platform system role.
+# Data Dazzle control plane. Every dataset requires the active platform system role.
 query PlatformAdminWorkspace($requestKey: String!) @auth(level: USER) {
   _select(sql: """
     WITH actor AS (
-      SELECT u.id,u.tenant_id,true AS is_platform FROM users u JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
-      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
-        AND r.system_role AND r.name='Administrador da Plataforma'
+      SELECT u.id,u.tenant_id FROM users u
+      JOIN tenants own_tenant ON own_tenant.id=u.tenant_id AND own_tenant.active AND own_tenant.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
+        AND r.active AND r.deleted_at IS NULL AND r.system_role
+        AND r.name='Administrador da Plataforma'
     )
     SELECT jsonb_build_object(
-      'tenants',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',t.id,'legalName',t.legal_name,'tradeName',t.trade_name,'document',t.document,'email',t.email,'phone',t.phone,'planCode',t.plan_code,'startsOn',t.starts_on,'expiresOn',t.expires_on,'active',t.active,'userCount',(SELECT count(*) FROM users u WHERE u.tenant_id=t.id AND u.deleted_at IS NULL),'branchCount',(SELECT count(*) FROM branches b WHERE b.tenant_id=t.id AND b.deleted_at IS NULL)) ORDER BY lower(COALESCE(t.trade_name,t.legal_name))) FROM tenants t,actor a WHERE t.deleted_at IS NULL AND (a.is_platform OR t.id=a.tenant_id)),'[]'::jsonb),
-      'roles',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',r.id,'tenantId',r.tenant_id,'name',r.name,'active',r.active) ORDER BY lower(r.name)) FROM roles r,actor a WHERE r.deleted_at IS NULL AND (a.is_platform OR r.tenant_id=a.tenant_id)),'[]'::jsonb),
-      'users',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',u.id,'tenantId',u.tenant_id,'tenantName',COALESCE(t.trade_name,t.legal_name),'roleId',u.role_id,'roleName',r.name,'name',u.name,'email',u.email,'active',u.active,'onboardingPending',u.onboarding_pending,'lastLoginAt',u.last_login_at) ORDER BY lower(u.name)) FROM users u JOIN tenants t ON t.id=u.tenant_id JOIN roles r ON r.id=u.role_id CROSS JOIN actor a WHERE u.deleted_at IS NULL AND (a.is_platform OR u.tenant_id=a.tenant_id)),'[]'::jsonb),
-      'pages',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',p.id,'pageKey',p.page_key,'displayName',p.display_name,'module',p.module) ORDER BY p.module,p.display_order) FROM app_pages p WHERE p.active),'[]'::jsonb),
-      'permissions',COALESCE((SELECT jsonb_agg(jsonb_build_object('roleId',rp.role_id,'pageId',rp.page_id,'canAccess',rp.can_access,'canCreate',rp.can_create,'canUpdate',rp.can_update,'canDelete',rp.can_delete,'canExport',rp.can_export,'canManage',rp.can_manage)) FROM role_page_permissions rp CROSS JOIN actor a WHERE a.is_platform OR rp.tenant_id=a.tenant_id),'[]'::jsonb)
+      'tenants',COALESCE((
+        SELECT jsonb_agg(jsonb_build_object(
+          'id',t.id,'legalName',t.legal_name,'tradeName',t.trade_name,
+          'document',t.document,'email',t.email,'phone',t.phone,
+          'planCode',t.plan_code,'startsOn',t.starts_on,'expiresOn',t.expires_on,
+          'active',t.active,
+          'userCount',(SELECT count(*) FROM users u WHERE u.tenant_id=t.id AND u.deleted_at IS NULL),
+          'branchCount',(SELECT count(*) FROM branches b WHERE b.tenant_id=t.id AND b.deleted_at IS NULL),
+          'billingProfileConfigured',(bp.tenant_id IS NOT NULL),
+          'responsibleName',bp.responsible_name,'responsibleRole',bp.responsible_role,
+          'responsibleEmail',bp.responsible_email,'responsiblePhone',bp.responsible_phone,
+          'billingEmail',bp.billing_email,'billingPhone',bp.billing_phone,
+          'communicationChannel',bp.communication_channel,
+          'allowEmailBilling',COALESCE(bp.allow_email_billing,true),
+          'allowWhatsappBilling',COALESCE(bp.allow_whatsapp_billing,false),
+          'communicationConsentSource',bp.communication_consent_source,
+          'communicationConsentAt',bp.communication_consent_at,
+          'monthlyAmountCents',COALESCE(bp.monthly_amount_cents,0)::text,
+          'billingDay',COALESCE(bp.billing_day,10),
+          'graceDays',COALESCE(bp.grace_days,3),
+          'suspendAfterDays',COALESCE(bp.suspend_after_days,7),
+          'preferredPaymentMethod',COALESCE(bp.preferred_payment_method,'PIX'),
+          'nextDueDate',bp.next_due_date,'billingNotes',bp.notes,
+          'openBalanceCents',COALESCE((SELECT sum(GREATEST(i.total_cents-i.paid_cents,0)) FROM tenant_invoices i WHERE i.tenant_id=t.id AND i.deleted_at IS NULL AND i.status<>'VOID'),0)::text,
+          'overdueCount',(SELECT count(*) FROM tenant_invoices i WHERE i.tenant_id=t.id AND i.deleted_at IS NULL AND i.status<>'VOID' AND i.paid_cents<i.total_cents AND i.due_date<current_date)
+        ) ORDER BY lower(COALESCE(t.trade_name,t.legal_name)))
+        FROM tenants t
+        LEFT JOIN tenant_billing_profiles bp ON bp.tenant_id=t.id
+        CROSS JOIN actor a
+        WHERE t.deleted_at IS NULL
+      ),'[]'::jsonb),
+      'roles',COALESCE((
+        SELECT jsonb_agg(jsonb_build_object('id',r.id,'tenantId',r.tenant_id,
+          'tenantName',COALESCE(t.trade_name,t.legal_name),'name',r.name,'active',r.active)
+          ORDER BY lower(COALESCE(t.trade_name,t.legal_name)),lower(r.name))
+        FROM roles r JOIN tenants t ON t.id=r.tenant_id CROSS JOIN actor a
+        WHERE r.deleted_at IS NULL
+      ),'[]'::jsonb),
+      'users',COALESCE((
+        SELECT jsonb_agg(jsonb_build_object('id',u.id,'tenantId',u.tenant_id,
+          'tenantName',COALESCE(t.trade_name,t.legal_name),'roleId',u.role_id,
+          'roleName',r.name,'name',u.name,'email',u.email,'active',u.active,
+          'onboardingPending',u.onboarding_pending,'lastLoginAt',u.last_login_at)
+          ORDER BY lower(u.name))
+        FROM users u JOIN tenants t ON t.id=u.tenant_id JOIN roles r ON r.id=u.role_id
+        CROSS JOIN actor a WHERE u.deleted_at IS NULL
+      ),'[]'::jsonb),
+      'pages',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',p.id,'pageKey',p.page_key,
+        'displayName',p.display_name,'module',p.module) ORDER BY p.module,p.display_order)
+        FROM app_pages p WHERE p.active),'[]'::jsonb),
+      'permissions',COALESCE((SELECT jsonb_agg(jsonb_build_object('roleId',rp.role_id,
+        'pageId',rp.page_id,'canAccess',rp.can_access,'canCreate',rp.can_create,
+        'canUpdate',rp.can_update,'canDelete',rp.can_delete,'canExport',rp.can_export,
+        'canManage',rp.can_manage)) FROM role_page_permissions rp CROSS JOIN actor a),'[]'::jsonb)
     ) AS data FROM actor WHERE $2<>''
   """,params:[{_expr:"auth.uid"},$requestKey])
+}
+
+# Paginated platform receivables and settlements. Filters execute in PostgreSQL.
+query PlatformBillingWorkspace(
+  $term: String!
+  $status: String!
+  $tenantId: UUID
+  $dueFrom: Date
+  $dueTo: Date
+  $limit: Int!
+  $offset: Int!
+  $requestKey: String!
+) @auth(level: USER) {
+  _select(sql: """
+    WITH actor AS (
+      SELECT u.id FROM users u
+      JOIN tenants own_tenant ON own_tenant.id=u.tenant_id AND own_tenant.active AND own_tenant.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
+        AND r.active AND r.deleted_at IS NULL AND r.system_role
+        AND r.name='Administrador da Plataforma'
+    ), base AS (
+      SELECT i.*,COALESCE(t.trade_name,t.legal_name) tenant_name,
+        CASE WHEN i.status='VOID' THEN 'VOID'
+             WHEN i.paid_cents>=i.total_cents THEN 'PAID'
+             WHEN i.due_date<current_date THEN 'OVERDUE'
+             WHEN i.paid_cents>0 THEN 'PARTIALLY_PAID'
+             ELSE 'OPEN' END effective_status
+      FROM tenant_invoices i JOIN tenants t ON t.id=i.tenant_id
+      CROSS JOIN actor a WHERE i.deleted_at IS NULL
+    ), filtered AS (
+      SELECT * FROM base b WHERE
+        ($2='' OR lower(concat_ws(' ',b.tenant_name,b.description,b.billing_key,b.external_charge_id)) LIKE '%'||lower($2)||'%')
+        AND ($3='' OR b.effective_status=$3)
+        AND ($4 IS NULL OR b.tenant_id=$4)
+        AND ($5 IS NULL OR b.due_date>=$5)
+        AND ($6 IS NULL OR b.due_date<=$6)
+    ), paged AS (
+      SELECT * FROM filtered ORDER BY due_date DESC,created_at DESC LIMIT LEAST(GREATEST($7,1),100) OFFSET GREATEST($8,0)
+    ), summary AS (
+      SELECT
+        COALESCE(sum(GREATEST(total_cents-paid_cents,0)) FILTER(WHERE status<>'VOID'),0)::bigint receivable,
+        COALESCE(sum(GREATEST(total_cents-paid_cents,0)) FILTER(WHERE status<>'VOID' AND paid_cents<total_cents AND due_date<current_date),0)::bigint overdue,
+        (count(DISTINCT tenant_id) FILTER(WHERE status<>'VOID' AND paid_cents<total_cents AND due_date<current_date))::int overdue_tenants
+      FROM base
+    ), received AS (
+      SELECT COALESCE(sum(p.amount_cents),0)::bigint amount FROM tenant_payments p CROSS JOIN actor a
+      WHERE p.status='CONFIRMED' AND p.paid_at>=date_trunc('month',current_timestamp)
+    )
+    SELECT jsonb_build_object(
+      'summary',(SELECT jsonb_build_object('receivableCents',receivable::text,
+        'overdueCents',overdue::text,'overdueTenants',overdue_tenants,
+        'receivedMonthCents',(SELECT amount::text FROM received)) FROM summary),
+      'total',(SELECT count(*) FROM filtered),
+      'invoices',COALESCE((SELECT jsonb_agg(jsonb_build_object(
+        'id',p.id,'tenantId',p.tenant_id,'tenantName',p.tenant_name,
+        'billingKey',p.billing_key,'referenceMonth',p.reference_month,
+        'description',p.description,'issuedOn',p.issued_on,'dueDate',p.due_date,
+        'originalAmountCents',p.original_amount_cents::text,
+        'discountCents',p.discount_cents::text,'additionCents',p.addition_cents::text,
+        'totalCents',p.total_cents::text,'paidCents',p.paid_cents::text,
+        'remainingCents',GREATEST(p.total_cents-p.paid_cents,0)::text,
+        'status',p.effective_status,'storedStatus',p.status,'provider',p.provider,
+        'externalChargeId',p.external_charge_id,'paymentUrl',p.payment_url,
+        'notes',p.notes,'version',p.version::text,'createdAt',p.created_at,
+        'payments',COALESCE((SELECT jsonb_agg(jsonb_build_object(
+          'id',pay.id,'amountCents',pay.amount_cents::text,'paidAt',pay.paid_at,
+          'method',pay.method,'provider',pay.provider,
+          'transactionReference',pay.transaction_reference,'notes',pay.notes,
+          'status',pay.status,'reversedAt',pay.reversed_at,
+          'reversalReason',pay.reversal_reason,'createdByUid',pay.created_by_uid)
+          ORDER BY pay.paid_at DESC) FROM tenant_payments pay WHERE pay.invoice_id=p.id),'[]'::jsonb)
+      ) ORDER BY p.due_date DESC,p.created_at DESC) FROM paged p),'[]'::jsonb)
+    ) AS data FROM actor WHERE $9<>''
+  """,params:[{_expr:"auth.uid"},$term,$status,$tenantId,$dueFrom,$dueTo,$limit,$offset,$requestKey])
 }
 
 # Complete stock workspace. Tenant scope and page access are enforced in SQL.
