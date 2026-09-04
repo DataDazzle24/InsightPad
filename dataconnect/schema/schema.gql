@@ -30,6 +30,84 @@ type Tenant @table(name: "tenants", key: "id") {
   deletedAt: Timestamp @col(name: "deleted_at")
 }
 
+# Data Dazzle billing profile for each customer environment. It intentionally
+# stores only operational contact and commercial data needed by this back-office.
+type TenantBillingProfile @table(name: "tenant_billing_profiles", key: "tenant") {
+  tenant: Tenant!
+  responsibleName: String @col(name: "responsible_name", dataType: "varchar(160)")
+  responsibleRole: String @col(name: "responsible_role", dataType: "varchar(100)")
+  responsibleEmail: String @col(name: "responsible_email", dataType: "varchar(254)")
+  responsiblePhone: String @col(name: "responsible_phone", dataType: "varchar(24)")
+  billingEmail: String @col(name: "billing_email", dataType: "varchar(254)")
+  billingPhone: String @col(name: "billing_phone", dataType: "varchar(24)")
+  communicationChannel: String! @default(value: "EMAIL") @col(name: "communication_channel", dataType: "varchar(24)")
+  allowEmailBilling: Boolean! @default(value: true) @col(name: "allow_email_billing")
+  allowWhatsappBilling: Boolean! @default(value: false) @col(name: "allow_whatsapp_billing")
+  communicationConsentSource: String @col(name: "communication_consent_source", dataType: "varchar(40)")
+  communicationConsentAt: Timestamp @col(name: "communication_consent_at")
+  monthlyAmountCents: Int64! @default(value: 0) @col(name: "monthly_amount_cents")
+  billingDay: Int! @default(value: 10) @col(name: "billing_day")
+  graceDays: Int! @default(value: 3) @col(name: "grace_days")
+  suspendAfterDays: Int! @default(value: 7) @col(name: "suspend_after_days")
+  preferredPaymentMethod: String! @default(value: "PIX") @col(name: "preferred_payment_method", dataType: "varchar(32)")
+  nextDueDate: Date @col(name: "next_due_date")
+  notes: String @col(dataType: "varchar(1000)")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+}
+
+# A receivable issued by Data Dazzle to a tenant. Values are exact cents and the
+# paid balance is changed only by transactional payment/reversal operations.
+type TenantInvoice @table(name: "tenant_invoices", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  billingKey: String! @unique @col(name: "billing_key", dataType: "varchar(180)")
+  referenceMonth: Date! @col(name: "reference_month")
+  description: String! @col(dataType: "varchar(180)")
+  issuedOn: Date! @col(name: "issued_on")
+  dueDate: Date! @col(name: "due_date")
+  originalAmountCents: Int64! @col(name: "original_amount_cents")
+  discountCents: Int64! @default(value: 0) @col(name: "discount_cents")
+  additionCents: Int64! @default(value: 0) @col(name: "addition_cents")
+  totalCents: Int64! @col(name: "total_cents")
+  paidCents: Int64! @default(value: 0) @col(name: "paid_cents")
+  status: String! @default(value: "OPEN") @col(dataType: "varchar(32)")
+  provider: String! @default(value: "MANUAL") @col(dataType: "varchar(32)")
+  externalChargeId: String @col(name: "external_charge_id", dataType: "varchar(160)")
+  paymentUrl: String @col(name: "payment_url", dataType: "varchar(1000)")
+  notes: String @col(dataType: "varchar(1000)")
+  version: Int64! @default(value: 1)
+  createdByUid: String! @col(name: "created_by_uid", dataType: "varchar(128)")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+  deletedAt: Timestamp @col(name: "deleted_at")
+}
+
+# Immutable settlement entries. A correction reverses a prior entry instead of
+# deleting it, preserving the complete financial trail.
+type TenantPayment @table(name: "tenant_payments", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  invoice: TenantInvoice! @ref(fields: "invoiceId", references: "id")
+  invoiceId: UUID! @col(name: "invoice_id")
+  idempotencyKey: String! @unique @col(name: "idempotency_key", dataType: "varchar(180)")
+  amountCents: Int64! @col(name: "amount_cents")
+  paidAt: Timestamp! @col(name: "paid_at")
+  method: String! @col(dataType: "varchar(32)")
+  provider: String! @default(value: "MANUAL") @col(dataType: "varchar(32)")
+  externalPaymentId: String @col(name: "external_payment_id", dataType: "varchar(160)")
+  transactionReference: String @col(name: "transaction_reference", dataType: "varchar(180)")
+  notes: String @col(dataType: "varchar(1000)")
+  status: String! @default(value: "CONFIRMED") @col(dataType: "varchar(24)")
+  reversedAt: Timestamp @col(name: "reversed_at")
+  reversedByUid: String @col(name: "reversed_by_uid", dataType: "varchar(128)")
+  reversalReason: String @col(name: "reversal_reason", dataType: "varchar(500)")
+  createdByUid: String! @col(name: "created_by_uid", dataType: "varchar(128)")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+}
+
 type Role @table(name: "roles", key: "id") {
   id: UUID! @default(expr: "uuidV4()")
   tenant: Tenant! @ref(fields: "tenantId", references: "id")
