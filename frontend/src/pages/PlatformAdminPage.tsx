@@ -1,11 +1,5 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  type FormEvent,
-} from "react";
-import { getDataConnect } from "firebase/data-connect";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { executeMutation, getDataConnect, mutationRef } from "firebase/data-connect";
 import {
   createPlatformTenant,
   linkPlatformUser,
@@ -16,8 +10,11 @@ import {
 } from "@insightpad/dataconnect";
 import { firebaseApp } from "../lib/firebase";
 import { AppLoading, AppToast, type Notice } from "../components/SalesUi";
-import { useAuth } from "../auth/useAuth";
+import { PlatformBillingPanel } from "../components/PlatformBillingPanel";
 import { PlatformPermissions } from "../components/PlatformPermissions";
+import { useDialogAccessibility } from "../hooks/useDialogAccessibility";
+import { useAuth } from "../auth/useAuth";
+import { datePtBr, formatMoneyFromCents, parseMoneyToCents } from "../utils/platformBilling";
 
 type Tenant = {
   id: string;
@@ -32,8 +29,29 @@ type Tenant = {
   active: boolean;
   userCount: number;
   branchCount: number;
+  billingProfileConfigured: boolean;
+  responsibleName?: string;
+  responsibleRole?: string;
+  responsibleEmail?: string;
+  responsiblePhone?: string;
+  billingEmail?: string;
+  billingPhone?: string;
+  communicationChannel?: string;
+  allowEmailBilling: boolean;
+  allowWhatsappBilling: boolean;
+  communicationConsentSource?: string;
+  communicationConsentAt?: string;
+  monthlyAmountCents: string;
+  billingDay: number;
+  graceDays: number;
+  suspendAfterDays: number;
+  preferredPaymentMethod?: string;
+  nextDueDate?: string;
+  billingNotes?: string;
+  openBalanceCents: string;
+  overdueCount: number;
 };
-type Role = { id: string; tenantId: string; name: string; active: boolean };
+type Role = { id: string; tenantId: string; tenantName: string; name: string; active: boolean };
 type PlatformUser = {
   id: string;
   tenantId: string;
@@ -50,56 +68,106 @@ type Workspace = {
   tenants: Tenant[];
   roles: Role[];
   users: PlatformUser[];
-  pages: Array<{
-    id: string;
-    pageKey: string;
-    displayName: string;
-    module: string;
-  }>;
+  pages: Array<{ id: string; pageKey: string; displayName: string; module: string }>;
   permissions: Array<Record<string, unknown>>;
 };
-const empty: Workspace = {
-    tenants: [],
-    roles: [],
-    users: [],
-    pages: [],
-    permissions: [],
-  },
-  dc = getDataConnect(firebaseApp, connectorConfig);
+type Tab = "tenants" | "billing" | "users" | "permissions";
+type TenantStep = "identity" | "responsible" | "billing";
+type TenantForm = {
+  tenantId?: string;
+  legalName: string;
+  tradeName: string;
+  document: string;
+  email: string;
+  phone: string;
+  planCode: string;
+  startsOn: string;
+  expiresOn: string;
+  responsibleName: string;
+  responsibleRole: string;
+  responsibleEmail: string;
+  responsiblePhone: string;
+  billingEmail: string;
+  billingPhone: string;
+  allowEmailBilling: boolean;
+  allowWhatsappBilling: boolean;
+  communicationConsentSource: string;
+  communicationConsentAt: string;
+  monthlyAmount: string;
+  billingDay: string;
+  graceDays: string;
+  suspendAfterDays: string;
+  preferredPaymentMethod: string;
+  nextDueDate: string;
+  billingNotes: string;
+};
+type StatusConfirmation = { kind: "tenant"; item: Tenant } | { kind: "user"; item: PlatformUser };
+
+const empty: Workspace = { tenants: [], roles: [], users: [], pages: [], permissions: [] };
+const dc = getDataConnect(firebaseApp, connectorConfig);
+const PAGE_SIZE = 20;
+const today = () => new Date().toISOString().slice(0, 10);
+const tenantName = (item: Tenant) => item.tradeName || item.legalName;
+const emptyTenantForm = (): TenantForm => ({
+  legalName: "",
+  tradeName: "",
+  document: "",
+  email: "",
+  phone: "",
+  planCode: "BRONZE",
+  startsOn: today(),
+  expiresOn: "",
+  responsibleName: "",
+  responsibleRole: "",
+  responsibleEmail: "",
+  responsiblePhone: "",
+  billingEmail: "",
+  billingPhone: "",
+  allowEmailBilling: true,
+  allowWhatsappBilling: false,
+  communicationConsentSource: "",
+  communicationConsentAt: "",
+  monthlyAmount: "",
+  billingDay: "10",
+  graceDays: "3",
+  suspendAfterDays: "7",
+  preferredPaymentMethod: "PIX",
+  nextDueDate: "",
+  billingNotes: "",
+});
+const toLocalDateTime = (value?: string) => {
+  if (!value) return "";
+  const date = new Date(value);
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+};
+const operationApplied = (result: unknown) => Boolean((result as { data?: { _execute?: unknown } })?.data?._execute);
 
 export function PlatformAdminPage() {
-  const profile = useAuth().profile,
-    isPlatform = profile?.role.name === "Administrador da Plataforma";
-  const [data, setData] = useState<Workspace>(empty),
-    [tab, setTab] = useState<"tenants" | "users" | "permissions">(
-      isPlatform ? "tenants" : "users",
-    ),
-    [search, setSearch] = useState(""),
-    [busy, setBusy] = useState(true),
-    [notice, setNotice] = useState<Notice | null>(null),
-    [tenantModal, setTenantModal] = useState(false),
-    [userModal, setUserModal] = useState(false),
-    [tenantForm, setTenantForm] = useState<Record<string, string>>({
-      planCode: "BRONZE",
-    }),
-    [userForm, setUserForm] = useState<Record<string, string>>({}),
-    [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const profile = useAuth().profile;
+  const isPlatform = profile?.role.name === "Administrador da Plataforma";
+  const [data, setData] = useState<Workspace>(empty);
+  const [tab, setTab] = useState<Tab>(isPlatform ? "tenants" : "users");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(0);
+  const [busy, setBusy] = useState(true);
+  const [notice, setNotice] = useState<Notice | null>(null);
+  const [tenantModal, setTenantModal] = useState<"new" | Tenant | null>(null);
+  const [tenantStep, setTenantStep] = useState<TenantStep>("identity");
+  const [tenantForm, setTenantForm] = useState<TenantForm>(emptyTenantForm);
+  const [userModal, setUserModal] = useState(false);
+  const [userForm, setUserForm] = useState<Record<string, string>>({});
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [statusConfirmation, setStatusConfirmation] = useState<StatusConfirmation | null>(null);
+
   const load = useCallback(async () => {
     setBusy(true);
     try {
-      const result = await platformAdminWorkspace(dc, {
-          requestKey: crypto.randomUUID(),
-        }),
-        box =
-          ((result.data._select ?? [])[0] as { data?: Workspace } | undefined)
-            ?.data ?? empty;
+      const result = await platformAdminWorkspace(dc, { requestKey: crypto.randomUUID() });
+      const box = ((result.data._select ?? [])[0] as { data?: Workspace } | undefined)?.data ?? empty;
       setData(box);
     } catch (error) {
       console.error(error);
-      setNotice({
-        type: "error",
-        text: "Não foi possível carregar a administração da plataforma.",
-      });
+      setNotice({ type: "error", text: "Não foi possível carregar a administração da plataforma." });
     } finally {
       setBusy(false);
     }
@@ -108,55 +176,127 @@ export function PlatformAdminPage() {
     const timer = setTimeout(() => void load(), 0);
     return () => clearTimeout(timer);
   }, [load]);
-  const q = search.trim().toLocaleLowerCase("pt-BR"),
-    tenants = useMemo(
-      () =>
-        data.tenants.filter(
-          (item) =>
-            !q ||
-            [item.legalName, item.tradeName, item.document, item.planCode].some(
-              (value) => value?.toLocaleLowerCase("pt-BR").includes(q),
-            ),
-        ),
-      [data.tenants, q],
-    ),
-    users = useMemo(
-      () =>
-        data.users.filter(
-          (item) =>
-            !q ||
-            [
-              item.name,
-              item.email,
-              item.tenantName,
-              item.roleName,
-              item.id,
-            ].some((value) => value?.toLocaleLowerCase("pt-BR").includes(q)),
-        ),
-      [data.users, q],
-    ),
-    availableRoles = data.roles.filter(
-      (role) => role.tenantId === userForm.tenantId && role.active,
-    );
-  async function createTenant(event: FormEvent) {
+  useDialogAccessibility(Boolean(tenantModal), closeTenantModal);
+  useDialogAccessibility(userModal, closeUserModal);
+  useDialogAccessibility(Boolean(statusConfirmation), () => setStatusConfirmation(null));
+
+  const q = search.trim().toLocaleLowerCase("pt-BR");
+  const tenants = useMemo(() => data.tenants.filter((item) => !q || [item.legalName, item.tradeName, item.document, item.planCode, item.responsibleName, item.responsibleEmail].some((value) => value?.toLocaleLowerCase("pt-BR").includes(q))), [data.tenants, q]);
+  const users = useMemo(() => data.users.filter((item) => !q || [item.name, item.email, item.tenantName, item.roleName, item.id].some((value) => value?.toLocaleLowerCase("pt-BR").includes(q))), [data.users, q]);
+  const records = tab === "tenants" ? tenants : users;
+  const totalPages = Math.max(1, Math.ceil(records.length / PAGE_SIZE));
+  const pagedTenants = tenants.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const pagedUsers = users.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const availableRoles = data.roles.filter((role) => role.tenantId === userForm.tenantId && role.active);
+  const activeTenants = data.tenants.filter((item) => item.active).length;
+  const configuredTenants = data.tenants.filter((item) => item.billingProfileConfigured).length;
+  const overdueTenants = data.tenants.filter((item) => item.overdueCount > 0).length;
+
+  function changeTab(next: Tab) {
+    setTab(next);
+    setSearch("");
+    setPage(0);
+  }
+  function patchTenant<K extends keyof TenantForm>(key: K, value: TenantForm[K]) {
+    setTenantForm((current) => ({ ...current, [key]: value }));
+  }
+  function openTenant(item?: Tenant) {
+    if (!item) {
+      setTenantForm(emptyTenantForm());
+      setTenantModal("new");
+    } else {
+      setTenantForm({
+        tenantId: item.id,
+        legalName: item.legalName,
+        tradeName: item.tradeName ?? "",
+        document: item.document ?? "",
+        email: item.email ?? "",
+        phone: item.phone ?? "",
+        planCode: item.planCode ?? "BRONZE",
+        startsOn: item.startsOn?.slice(0, 10) ?? today(),
+        expiresOn: item.expiresOn?.slice(0, 10) ?? "",
+        responsibleName: item.responsibleName ?? "",
+        responsibleRole: item.responsibleRole ?? "",
+        responsibleEmail: item.responsibleEmail ?? "",
+        responsiblePhone: item.responsiblePhone ?? "",
+        billingEmail: item.billingEmail ?? "",
+        billingPhone: item.billingPhone ?? "",
+        allowEmailBilling: item.allowEmailBilling,
+        allowWhatsappBilling: item.allowWhatsappBilling,
+        communicationConsentSource: item.communicationConsentSource ?? "",
+        communicationConsentAt: toLocalDateTime(item.communicationConsentAt),
+        monthlyAmount: item.monthlyAmountCents ? (Number(item.monthlyAmountCents) / 100).toFixed(2).replace(".", ",") : "",
+        billingDay: String(item.billingDay ?? 10),
+        graceDays: String(item.graceDays ?? 3),
+        suspendAfterDays: String(item.suspendAfterDays ?? 7),
+        preferredPaymentMethod: item.preferredPaymentMethod ?? "PIX",
+        nextDueDate: item.nextDueDate?.slice(0, 10) ?? "",
+        billingNotes: item.billingNotes ?? "",
+      });
+      setTenantModal(item);
+    }
+    setTenantStep("identity");
+  }
+  function closeTenantModal() {
+    setTenantModal(null);
+    setTenantStep("identity");
+  }
+  function closeUserModal() {
+    setUserModal(false);
+    setUserForm({});
+    setEditingUserId(null);
+  }
+  function validateTenantStep(step: TenantStep) {
+    if (step === "identity" && tenantForm.legalName.trim().length < 2) {
+      setNotice({ type: "error", text: "Informe a razão social do ambiente." });
+      return false;
+    }
+    if (step === "responsible" && (tenantForm.responsibleName.trim().length < 2 || !tenantForm.responsibleEmail.includes("@") || tenantForm.responsiblePhone.replace(/\D/g, "").length < 10)) {
+      setNotice({ type: "error", text: "Informe nome, e-mail e telefone válidos do responsável." });
+      return false;
+    }
+    if (step === "billing") {
+      const billingDay = Number(tenantForm.billingDay);
+      if (parseMoneyToCents(tenantForm.monthlyAmount) < 0 || billingDay < 1 || billingDay > 31) {
+        setNotice({ type: "error", text: "Confira o valor mensal e informe um dia de vencimento entre 1 e 31." });
+        return false;
+      }
+      if (tenantForm.allowWhatsappBilling && (!tenantForm.communicationConsentSource || !tenantForm.communicationConsentAt)) {
+        setNotice({ type: "error", text: "Para comunicações financeiras por WhatsApp, registre a origem e a data da autorização." });
+        return false;
+      }
+    }
+    return true;
+  }
+  function nextTenantStep() {
+    if (!validateTenantStep(tenantStep)) return;
+    setTenantStep(tenantStep === "identity" ? "responsible" : "billing");
+  }
+  async function saveTenant(event: FormEvent) {
     event.preventDefault();
+    if (!validateTenantStep("identity") || !validateTenantStep("responsible") || !validateTenantStep("billing")) return;
     setBusy(true);
     try {
-      const result = await createPlatformTenant(dc, { payload: tenantForm });
-      if (!result.data._execute) throw new Error();
-      setTenantModal(false);
-      setTenantForm({ planCode: "BRONZE" });
-      setNotice({
-        type: "success",
-        text: "Empresa e ambiente criados com sucesso.",
-      });
+      const payload = {
+        ...tenantForm,
+        monthlyAmountCents: parseMoneyToCents(tenantForm.monthlyAmount),
+        billingDay: Number(tenantForm.billingDay),
+        graceDays: Number(tenantForm.graceDays),
+        suspendAfterDays: Number(tenantForm.suspendAfterDays),
+        communicationChannel: tenantForm.allowEmailBilling && tenantForm.allowWhatsappBilling ? "BOTH" : tenantForm.allowWhatsappBilling ? "WHATSAPP" : tenantForm.allowEmailBilling ? "EMAIL" : "NONE",
+        communicationConsentAt: tenantForm.communicationConsentAt ? new Date(tenantForm.communicationConsentAt).toISOString() : "",
+      };
+      const result = tenantModal === "new"
+        ? await createPlatformTenant(dc, { payload })
+        : await executeMutation(mutationRef(dc, "UpdatePlatformTenant", { payload }));
+      if (!operationApplied(result)) throw new Error("Operação não aplicada");
+      const created = tenantModal === "new";
+      closeTenantModal();
+      setNotice({ type: "success", text: created ? "Ambiente, perfil administrador e configuração financeira criados." : "Ambiente e configuração financeira atualizados." });
       await load();
     } catch (error) {
       console.error(error);
-      setNotice({
-        type: "error",
-        text: "Não foi possível criar o ambiente. Confira os dados e duplicidades.",
-      });
+      setNotice({ type: "error", text: "Não foi possível salvar o ambiente. Confira campos, documento duplicado e dados financeiros." });
     } finally {
       setBusy(false);
     }
@@ -164,514 +304,109 @@ export function PlatformAdminPage() {
   async function linkUser(event: FormEvent) {
     event.preventDefault();
     if (!userForm.uid || !userForm.tenantId || !userForm.roleId) {
-      setNotice({
-        type: "error",
-        text: "Informe UID do Firebase, empresa e perfil.",
-      });
+      setNotice({ type: "error", text: "Informe UID do Firebase, empresa e perfil." });
       return;
     }
     setBusy(true);
     try {
       const result = await linkPlatformUser(dc, { payload: userForm });
-      if (!result.data._execute) throw new Error();
-      setUserModal(false);
-      setUserForm({});
-      setEditingUserId(null);
-      setNotice({
-        type: "success",
-        text: "Usuário vinculado ao ambiente com sucesso.",
-      });
+      if (!operationApplied(result)) throw new Error("Operação não aplicada");
+      closeUserModal();
+      setNotice({ type: "success", text: "Usuário vinculado ao ambiente com sucesso." });
       await load();
     } catch (error) {
       console.error(error);
-      setNotice({
-        type: "error",
-        text: "Não foi possível vincular o usuário. Confira UID, empresa e perfil.",
-      });
+      setNotice({ type: "error", text: "Não foi possível vincular o usuário. Confira UID, empresa e perfil; sua própria conta não pode ser alterada aqui." });
     } finally {
       setBusy(false);
     }
   }
-  async function tenantStatus(item: Tenant) {
+  async function applyStatus() {
+    if (!statusConfirmation) return;
     setBusy(true);
     try {
-      await setPlatformTenantStatus(dc, {
-        tenantId: item.id,
-        active: !item.active,
-      });
-      setNotice({
-        type: "success",
-        text: `Empresa ${item.active ? "inativada" : "ativada"} com sucesso.`,
-      });
+      if (statusConfirmation.kind === "tenant") {
+        const item = statusConfirmation.item;
+        const result = await setPlatformTenantStatus(dc, { tenantId: item.id, active: !item.active });
+        if (!operationApplied(result)) throw new Error("Operação não aplicada");
+        setNotice({ type: "success", text: `Ambiente ${item.active ? "inativado" : "ativado"} com sucesso.` });
+      } else {
+        const item = statusConfirmation.item;
+        const result = await setPlatformUserStatus(dc, { userId: item.id, active: !item.active });
+        if (!operationApplied(result)) throw new Error("Operação não aplicada");
+        setNotice({ type: "success", text: `Usuário ${item.active ? "inativado" : "ativado"} com sucesso.` });
+      }
+      setStatusConfirmation(null);
       await load();
-    } catch {
-      setNotice({
-        type: "error",
-        text: "Não foi possível alterar o status da empresa.",
-      });
+    } catch (error) {
+      console.error(error);
+      setNotice({ type: "error", text: "Não foi possível alterar o status. A conta atual e o ambiente da Data Dazzle são protegidos." });
     } finally {
       setBusy(false);
     }
   }
-  async function userStatus(item: PlatformUser) {
-    setBusy(true);
-    try {
-      await setPlatformUserStatus(dc, {
-        userId: item.id,
-        active: !item.active,
-      });
-      setNotice({
-        type: "success",
-        text: `Usuário ${item.active ? "inativado" : "ativado"} com sucesso.`,
-      });
-      await load();
-    } catch {
-      setNotice({
-        type: "error",
-        text: "Não foi possível alterar o status do usuário.",
-      });
-    } finally {
-      setBusy(false);
-    }
-  }
+
   return (
-    <section className="platform-admin">
-      <header>
-        <div>
-          <span className="eyebrow">DATA DAZZLE · CONTROL PLANE</span>
-          <h1>
-            {isPlatform ? "Administração da plataforma" : "Gestão de acessos"}
-          </h1>
-          <p>
-            {isPlatform
-              ? "Empresas, ambientes, assinaturas e vínculos de acesso do Insight Pad."
-              : "Usuários, perfis e acessos do seu ambiente."}
-          </p>
+    <section className="catalog-page platform-admin">
+      <header className="catalog-page-header platform-page-header">
+        <div className="catalog-heading">
+          <button type="button" className="catalog-back-button" aria-label="Voltar" onClick={() => window.history.back()}><span className="material-symbols-rounded">arrow_back</span></button>
+          <div><span className="eyebrow">DATA DAZZLE · CONTROL PLANE</span><h1>ADMINISTRAÇÃO DA PLATAFORMA</h1><p>Ambientes, cobranças, acessos e permissões globais do Insight Pad.</p></div>
         </div>
-        <div className="platform-kpis">
-          <span>
-            <b>{data.tenants.length}</b> empresas
-          </span>
-          <span>
-            <b>{data.users.length}</b> usuários
-          </span>
-        </div>
+        <div className="platform-header-kpis"><span><b>{activeTenants}</b> ambientes ativos</span><span><b>{configuredTenants}</b> perfis financeiros</span><span className={overdueTenants ? "attention" : ""}><b>{overdueTenants}</b> em atraso</span></div>
       </header>
       <AppToast notice={notice} onClose={() => setNotice(null)} />
-      <nav className="platform-tabs">
-        {isPlatform && (
-          <button
-            className={tab === "tenants" ? "active" : ""}
-            onClick={() => setTab("tenants")}
-          >
-            <span className="material-symbols-rounded">domain</span>Empresas e
-            ambientes
-          </button>
-        )}
-        <button
-          className={tab === "users" ? "active" : ""}
-          onClick={() => setTab("users")}
-        >
-          <span className="material-symbols-rounded">manage_accounts</span>
-          Usuários
-        </button>
-        <button
-          className={tab === "permissions" ? "active" : ""}
-          onClick={() => setTab("permissions")}
-        >
-          <span className="material-symbols-rounded">lock_person</span>
-          Perfis e permissões
-        </button>
+      <nav className="platform-tabs" aria-label="Áreas da administração">
+        <button className={tab === "tenants" ? "active" : ""} aria-current={tab === "tenants" ? "page" : undefined} onClick={() => changeTab("tenants")}><span className="material-symbols-rounded">domain</span>Empresas e ambientes</button>
+        <button className={tab === "billing" ? "active" : ""} aria-current={tab === "billing" ? "page" : undefined} onClick={() => changeTab("billing")}><span className="material-symbols-rounded">request_quote</span>Cobranças e baixas</button>
+        <button className={tab === "users" ? "active" : ""} aria-current={tab === "users" ? "page" : undefined} onClick={() => changeTab("users")}><span className="material-symbols-rounded">manage_accounts</span>Usuários</button>
+        <button className={tab === "permissions" ? "active" : ""} aria-current={tab === "permissions" ? "page" : undefined} onClick={() => changeTab("permissions")}><span className="material-symbols-rounded">lock_person</span>Perfis e permissões</button>
       </nav>
-      {tab === "permissions" ? (
-        <PlatformPermissions
-          roles={data.roles}
-          pages={data.pages}
-          permissions={data.permissions}
-          onNotice={setNotice}
-          onSaved={load}
-        />
-      ) : (
-      <div className="platform-panel">
+
+      {tab === "billing" ? <PlatformBillingPanel tenants={data.tenants} onNotice={setNotice} /> : tab === "permissions" ? <PlatformPermissions roles={data.roles} pages={data.pages} permissions={data.permissions} onNotice={setNotice} onSaved={load} /> : <div className="platform-panel">
         <div className="platform-toolbar">
-          <label>
-            <span className="material-symbols-rounded">search</span>
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={
-                tab === "tenants"
-                  ? "Pesquisar empresa, documento ou plano"
-                  : "Pesquisar usuário, e-mail, UID ou empresa"
-              }
-            />
-          </label>
-          <button
-            className="catalog-primary"
-            onClick={() => {
-              if (tab === "tenants") setTenantModal(true);
-              else {
-                setUserForm({
-                  tenantId: isPlatform ? "" : (data.tenants[0]?.id ?? ""),
-                });
-                setEditingUserId(null);
-                setUserModal(true);
-              }
-            }}
-          >
-            <span className="material-symbols-rounded">add</span>
-            {tab === "tenants" ? "Nova empresa" : "Vincular usuário"}
-          </button>
+          <label className="platform-search"><span className="material-symbols-rounded">search</span><span className="sr-only">Pesquisar</span><input value={search} onChange={(event) => { setSearch(event.target.value); setPage(0); }} placeholder={tab === "tenants" ? "Pesquisar empresa, responsável, documento ou plano" : "Pesquisar usuário, e-mail, UID, perfil ou empresa"} /></label>
+          {search && <button className="catalog-clear-filters" onClick={() => { setSearch(""); setPage(0); }}><span className="material-symbols-rounded">filter_alt_off</span>Limpar filtros</button>}
+          <button className="catalog-primary" onClick={() => tab === "tenants" ? openTenant() : (setUserForm({ tenantId: "" }), setEditingUserId(null), setUserModal(true))}><span className="material-symbols-rounded">add</span>{tab === "tenants" ? "Novo ambiente" : "Vincular usuário"}</button>
         </div>
         <div className="platform-table">
           <table>
-            <thead>
-              {tab === "tenants" ? (
-                <tr>
-                  <th>Empresa</th>
-                  <th>Documento</th>
-                  <th>Plano</th>
-                  <th>Usuários</th>
-                  <th>Filiais</th>
-                  <th>Vigência</th>
-                  <th>Status</th>
-                  <th>Ações</th>
-                </tr>
-              ) : (
-                <tr>
-                  <th>Usuário</th>
-                  <th>Empresa</th>
-                  <th>Perfil</th>
-                  <th>UID Firebase</th>
-                  <th>Último acesso</th>
-                  <th>Status</th>
-                  <th>Ações</th>
-                </tr>
-              )}
-            </thead>
+            <thead>{tab === "tenants" ? <tr><th>Empresa / ambiente</th><th>Responsável</th><th>Plano e mensalidade</th><th>Próximo vencimento</th><th>Uso</th><th>Status</th><th>Ações</th></tr> : <tr><th>Usuário</th><th>Empresa</th><th>Perfil</th><th>UID Firebase</th><th>Último acesso</th><th>Status</th><th>Ações</th></tr>}</thead>
             <tbody>
-              {tab === "tenants"
-                ? tenants.map((item) => (
-                    <tr key={item.id}>
-                      <td>
-                        <strong>{item.tradeName || item.legalName}</strong>
-                        <small>{item.email || "—"}</small>
-                      </td>
-                      <td>{item.document || "—"}</td>
-                      <td>
-                        <span className="plan-badge">
-                          {item.planCode || "—"}
-                        </span>
-                      </td>
-                      <td>{item.userCount}</td>
-                      <td>{item.branchCount}</td>
-                      <td>
-                        {item.startsOn || "—"} →{" "}
-                        {item.expiresOn || "Sem expiração"}
-                      </td>
-                      <td>
-                        <span
-                          className={`catalog-status catalog-status--${item.active ? "active" : "inactive"}`}
-                        >
-                          <i />
-                          {item.active ? "Ativa" : "Inativa"}
-                        </span>
-                      </td>
-                      <td>
-                        <button
-                          className={item.active ? "danger" : "success"}
-                          onClick={() => void tenantStatus(item)}
-                        >
-                          {item.active ? "Inativar" : "Ativar"}
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                : users.map((item) => (
-                    <tr key={item.id}>
-                      <td>
-                        <strong>{item.name}</strong>
-                        <small>{item.email}</small>
-                      </td>
-                      <td>{item.tenantName}</td>
-                      <td>{item.roleName}</td>
-                      <td>
-                        <code>{item.id}</code>
-                      </td>
-                      <td>
-                        {item.lastLoginAt
-                          ? new Date(item.lastLoginAt).toLocaleString("pt-BR")
-                          : "Nunca"}
-                      </td>
-                      <td>
-                        <span
-                          className={`catalog-status catalog-status--${item.active ? "active" : "inactive"}`}
-                        >
-                          <i />
-                          {item.active ? "Ativo" : "Inativo"}
-                        </span>
-                      </td>
-                      <td>
-                        <button
-                          onClick={() => {
-                            setUserForm({
-                              uid: item.id,
-                              name: item.name,
-                              email: item.email,
-                              tenantId: item.tenantId,
-                              roleId: item.roleId,
-                            });
-                            setEditingUserId(item.id);
-                            setUserModal(true);
-                          }}
-                        >
-                          Editar
-                        </button>
-                        <button
-                          className={item.active ? "danger" : "success"}
-                          onClick={() => void userStatus(item)}
-                        >
-                          {item.active ? "Inativar" : "Ativar"}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+              {tab === "tenants" ? pagedTenants.map((item) => <tr key={item.id} className={!item.active ? "inactive-row" : ""}>
+                <td><strong>{tenantName(item)}</strong><small>{item.document || item.legalName}</small></td>
+                <td><strong>{item.responsibleName || "Não configurado"}</strong><small>{item.responsibleEmail || item.email || "—"}</small></td>
+                <td><span className={`plan-badge plan-badge--${(item.planCode || "bronze").toLowerCase()}`}>{item.planCode || "—"}</span><small>{formatMoneyFromCents(item.monthlyAmountCents || 0)} / mês</small></td>
+                <td><strong>{datePtBr(item.nextDueDate)}</strong><small className={item.overdueCount ? "danger-text" : ""}>{item.overdueCount ? `${item.overdueCount} cobrança(s) em atraso` : item.openBalanceCents !== "0" ? `${formatMoneyFromCents(item.openBalanceCents)} em aberto` : "Sem pendências"}</small></td>
+                <td><strong>{item.userCount} usuários</strong><small>{item.branchCount} filiais</small></td>
+                <td><span className={`catalog-status catalog-status--${item.active ? "active" : "inactive"}`}><i />{item.active ? "Ativa" : "Inativa"}</span></td>
+                <td className="platform-row-actions"><button className="catalog-row-edit" onClick={() => openTenant(item)}><span className="material-symbols-rounded">edit</span>Editar</button><button className={item.active ? "danger" : "success"} onClick={() => setStatusConfirmation({ kind: "tenant", item })}><span className="material-symbols-rounded">{item.active ? "block" : "check_circle"}</span>{item.active ? "Inativar" : "Ativar"}</button></td>
+              </tr>) : pagedUsers.map((item) => <tr key={item.id} className={!item.active ? "inactive-row" : ""}>
+                <td><strong>{item.name}</strong><small>{item.email}</small></td><td>{item.tenantName}</td><td>{item.roleName}</td><td><code>{item.id}</code></td><td>{item.lastLoginAt ? new Date(item.lastLoginAt).toLocaleString("pt-BR") : "Nunca"}</td><td><span className={`catalog-status catalog-status--${item.active ? "active" : "inactive"}`}><i />{item.active ? "Ativo" : "Inativo"}</span></td>
+                <td className="platform-row-actions"><button className="catalog-row-edit" onClick={() => { setUserForm({ uid: item.id, name: item.name, email: item.email, tenantId: item.tenantId, roleId: item.roleId }); setEditingUserId(item.id); setUserModal(true); }}><span className="material-symbols-rounded">edit</span>Editar</button><button className={item.active ? "danger" : "success"} onClick={() => setStatusConfirmation({ kind: "user", item })}><span className="material-symbols-rounded">{item.active ? "person_off" : "person_check"}</span>{item.active ? "Inativar" : "Ativar"}</button></td>
+              </tr>)}
+              {!records.length && <tr><td colSpan={7}><div className="platform-empty"><span className="material-symbols-rounded">search_off</span><strong>Nenhum registro encontrado</strong><small>Revise a pesquisa ou cadastre um novo registro.</small></div></td></tr>}
             </tbody>
           </table>
         </div>
-      </div>
-      )}
-      {isPlatform && tenantModal && (
-        <div className="catalog-backdrop">
-          <section className="catalog-modal platform-modal">
-            <header>
-              <div>
-                <span className="eyebrow">NOVO AMBIENTE</span>
-                <h2>Cadastrar empresa</h2>
-              </div>
-              <button onClick={() => setTenantModal(false)}>×</button>
-            </header>
-            <form onSubmit={createTenant}>
-              <div className="platform-form">
-                <label>
-                  Razão social *
-                  <input
-                    value={tenantForm.legalName ?? ""}
-                    onChange={(e) =>
-                      setTenantForm({
-                        ...tenantForm,
-                        legalName: e.target.value,
-                      })
-                    }
-                    required
-                  />
-                </label>
-                <label>
-                  Nome fantasia
-                  <input
-                    value={tenantForm.tradeName ?? ""}
-                    onChange={(e) =>
-                      setTenantForm({
-                        ...tenantForm,
-                        tradeName: e.target.value,
-                      })
-                    }
-                  />
-                </label>
-                <label>
-                  CNPJ/CPF
-                  <input
-                    value={tenantForm.document ?? ""}
-                    onChange={(e) =>
-                      setTenantForm({ ...tenantForm, document: e.target.value })
-                    }
-                    inputMode="numeric"
-                  />
-                </label>
-                <label>
-                  E-mail
-                  <input
-                    type="email"
-                    value={tenantForm.email ?? ""}
-                    onChange={(e) =>
-                      setTenantForm({ ...tenantForm, email: e.target.value })
-                    }
-                  />
-                </label>
-                <label>
-                  Telefone
-                  <input
-                    value={tenantForm.phone ?? ""}
-                    onChange={(e) =>
-                      setTenantForm({ ...tenantForm, phone: e.target.value })
-                    }
-                    inputMode="tel"
-                  />
-                </label>
-                <label>
-                  Plano
-                  <select
-                    value={tenantForm.planCode}
-                    onChange={(e) =>
-                      setTenantForm({ ...tenantForm, planCode: e.target.value })
-                    }
-                  >
-                    <option>BRONZE</option>
-                    <option>PRATA</option>
-                    <option>OURO</option>
-                  </select>
-                </label>
-                <label>
-                  Início
-                  <input
-                    type="date"
-                    value={tenantForm.startsOn ?? ""}
-                    onChange={(e) =>
-                      setTenantForm({ ...tenantForm, startsOn: e.target.value })
-                    }
-                  />
-                </label>
-                <label>
-                  Expiração
-                  <input
-                    type="date"
-                    value={tenantForm.expiresOn ?? ""}
-                    onChange={(e) =>
-                      setTenantForm({
-                        ...tenantForm,
-                        expiresOn: e.target.value,
-                      })
-                    }
-                  />
-                </label>
-              </div>
-              <footer>
-                <button
-                  type="button"
-                  className="catalog-modal-cancel"
-                  onClick={() => setTenantModal(false)}
-                >
-                  Cancelar
-                </button>
-                <button className="catalog-primary">Criar ambiente</button>
-              </footer>
-            </form>
-          </section>
-        </div>
-      )}
-      {userModal && (
-        <div className="catalog-backdrop">
-          <section className="catalog-modal platform-modal">
-            <header>
-              <div>
-                <span className="eyebrow">ACESSO</span>
-                <h2>{editingUserId ? "Editar usuário" : "Vincular usuário"}</h2>
-              </div>
-              <button onClick={() => setUserModal(false)}>×</button>
-            </header>
-            <form onSubmit={linkUser}>
-              <div className="platform-form">
-                <div className="platform-alert">
-                  <span className="material-symbols-rounded">security</span>Crie
-                  primeiro a identidade no Firebase Authentication e informe o
-                  UID abaixo. Isso impede criação de credenciais administrativas
-                  no navegador.
-                </div>
-                <label>
-                  UID do Firebase *
-                  <input
-                    value={userForm.uid ?? ""}
-                    onChange={(e) =>
-                      setUserForm({ ...userForm, uid: e.target.value.trim() })
-                    }
-                    required
-                    readOnly={Boolean(editingUserId)}
-                  />
-                  {editingUserId && (
-                    <small>
-                      O UID é a identidade imutável do Firebase. Para trocar a
-                      conta, inative este vínculo e crie um novo.
-                    </small>
-                  )}
-                </label>
-                <label>
-                  Nome *
-                  <input
-                    value={userForm.name ?? ""}
-                    onChange={(e) =>
-                      setUserForm({ ...userForm, name: e.target.value })
-                    }
-                    required
-                  />
-                </label>
-                <label>
-                  E-mail *
-                  <input
-                    type="email"
-                    value={userForm.email ?? ""}
-                    onChange={(e) =>
-                      setUserForm({ ...userForm, email: e.target.value })
-                    }
-                    required
-                  />
-                </label>
-                <label>
-                  Empresa *
-                  <select
-                    value={userForm.tenantId ?? ""}
-                    onChange={(e) =>
-                      setUserForm({
-                        ...userForm,
-                        tenantId: e.target.value,
-                        roleId: "",
-                      })
-                    }
-                    required
-                  >
-                    <option value="">Selecione</option>
-                    {data.tenants
-                      .filter((item) => item.active)
-                      .map((item) => (
-                        <option value={item.id} key={item.id}>
-                          {item.tradeName || item.legalName}
-                        </option>
-                      ))}
-                  </select>
-                </label>
-                <label>
-                  Perfil *
-                  <select
-                    value={userForm.roleId ?? ""}
-                    onChange={(e) =>
-                      setUserForm({ ...userForm, roleId: e.target.value })
-                    }
-                    required
-                  >
-                    <option value="">Selecione</option>
-                    {availableRoles.map((role) => (
-                      <option value={role.id} key={role.id}>
-                        {role.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-              <footer>
-                <button
-                  type="button"
-                  className="catalog-modal-cancel"
-                  onClick={() => setUserModal(false)}
-                >
-                  Cancelar
-                </button>
-                <button className="catalog-primary">
-                  {editingUserId ? "Salvar alterações" : "Vincular acesso"}
-                </button>
-              </footer>
-            </form>
-          </section>
-        </div>
-      )}
+        <footer className="catalog-pagination platform-pagination"><span>{records.length} registro{records.length === 1 ? "" : "s"}</span><div><button disabled={page === 0} onClick={() => setPage((value) => Math.max(0, value - 1))}><span className="material-symbols-rounded">chevron_left</span>Anterior</button><strong>Página {page + 1} de {totalPages}</strong><button disabled={page + 1 >= totalPages} onClick={() => setPage((value) => value + 1)}>Próxima<span className="material-symbols-rounded">chevron_right</span></button></div></footer>
+      </div>}
+
+      {tenantModal && <div className="catalog-backdrop"><section className="catalog-modal master-modal platform-modal platform-tenant-modal" role="dialog" aria-modal="true" aria-labelledby="platform-tenant-title"><header><div><span className="eyebrow">{tenantModal === "new" ? "NOVO AMBIENTE" : "GESTÃO DO AMBIENTE"}</span><h2 id="platform-tenant-title">{tenantModal === "new" ? "Cadastrar empresa" : tenantName(tenantModal)}</h2></div><button type="button" aria-label="Fechar" onClick={closeTenantModal}>×</button></header><nav className="master-modal-tabs" aria-label="Etapas do ambiente"><button type="button" className={tenantStep === "identity" ? "active" : ""} onClick={() => setTenantStep("identity")}><span>1</span>Identificação</button><button type="button" className={tenantStep === "responsible" ? "active" : ""} onClick={() => validateTenantStep("identity") && setTenantStep("responsible")}><span>2</span>Responsável</button><button type="button" className={tenantStep === "billing" ? "active" : ""} onClick={() => validateTenantStep("identity") && validateTenantStep("responsible") && setTenantStep("billing")}><span>3</span>Cobrança</button></nav><form onSubmit={saveTenant}><div className="master-modal-content">
+        {tenantStep === "identity" && <><div className="master-section-title"><span className="material-symbols-rounded">domain</span><div><strong>Identificação do ambiente</strong><small>Dados contratuais e período de vigência do Insight Pad.</small></div></div><div className="master-form-grid">
+          <label className="field-wide"><span>Razão social *</span><input autoFocus value={tenantForm.legalName} maxLength={160} onChange={(event) => patchTenant("legalName", event.target.value)} required /></label><label><span>Nome fantasia</span><input value={tenantForm.tradeName} maxLength={160} onChange={(event) => patchTenant("tradeName", event.target.value)} /></label><label><span>CNPJ/CPF da empresa</span><input inputMode="numeric" value={tenantForm.document} maxLength={20} onChange={(event) => patchTenant("document", event.target.value)} /></label><label><span>E-mail institucional</span><input type="email" value={tenantForm.email} maxLength={254} onChange={(event) => patchTenant("email", event.target.value)} /></label><label><span>Telefone institucional</span><input inputMode="tel" value={tenantForm.phone} maxLength={24} onChange={(event) => patchTenant("phone", event.target.value)} /></label><label><span>Plano *</span><select value={tenantForm.planCode} onChange={(event) => patchTenant("planCode", event.target.value)}><option value="BRONZE">Bronze</option><option value="PRATA">Prata</option><option value="OURO">Ouro</option></select></label><label><span>Início da vigência *</span><input type="date" value={tenantForm.startsOn} onChange={(event) => patchTenant("startsOn", event.target.value)} required /></label><label><span>Fim da vigência</span><input type="date" min={tenantForm.startsOn} value={tenantForm.expiresOn} onChange={(event) => patchTenant("expiresOn", event.target.value)} /></label>
+        </div></>}
+        {tenantStep === "responsible" && <><div className="master-section-title"><span className="material-symbols-rounded">contact_page</span><div><strong>Responsável pelo ambiente</strong><small>Contato operacional e financeiro autorizado pelo cliente.</small></div></div><div className="master-form-grid">
+          <label className="field-wide"><span>Nome completo *</span><input autoFocus value={tenantForm.responsibleName} maxLength={160} onChange={(event) => patchTenant("responsibleName", event.target.value)} required /></label><label><span>Cargo ou função</span><input value={tenantForm.responsibleRole} maxLength={100} onChange={(event) => patchTenant("responsibleRole", event.target.value)} /></label><label><span>E-mail do responsável *</span><input type="email" value={tenantForm.responsibleEmail} maxLength={254} onChange={(event) => patchTenant("responsibleEmail", event.target.value)} required /></label><label><span>Telefone / WhatsApp *</span><input inputMode="tel" value={tenantForm.responsiblePhone} maxLength={24} onChange={(event) => patchTenant("responsiblePhone", event.target.value)} required /></label><label><span>E-mail exclusivo de cobrança</span><input type="email" value={tenantForm.billingEmail} maxLength={254} onChange={(event) => patchTenant("billingEmail", event.target.value)} placeholder="Se vazio, usa o e-mail do responsável" /></label><label><span>Telefone exclusivo de cobrança</span><input inputMode="tel" value={tenantForm.billingPhone} maxLength={24} onChange={(event) => patchTenant("billingPhone", event.target.value)} placeholder="Se vazio, usa o telefone do responsável" /></label>
+        </div><div className="platform-communication-options"><label><input type="checkbox" checked={tenantForm.allowEmailBilling} onChange={(event) => patchTenant("allowEmailBilling", event.target.checked)} /><span>Autoriza comunicações financeiras por e-mail?</span></label><label><input type="checkbox" checked={tenantForm.allowWhatsappBilling} onChange={(event) => patchTenant("allowWhatsappBilling", event.target.checked)} /><span>Autoriza comunicações financeiras por WhatsApp?</span></label></div>{tenantForm.allowWhatsappBilling && <div className="master-form-grid platform-consent-fields"><label><span>Origem da autorização *</span><select value={tenantForm.communicationConsentSource} onChange={(event) => patchTenant("communicationConsentSource", event.target.value)} required><option value="">Selecione</option><option value="CONTRATO">Contrato</option><option value="FORMULARIO">Formulário</option><option value="WHATSAPP">Conversa no WhatsApp</option><option value="OUTRO">Outro documento</option></select></label><label><span>Data da autorização *</span><input type="datetime-local" value={tenantForm.communicationConsentAt} onChange={(event) => patchTenant("communicationConsentAt", event.target.value)} required /></label><div className="platform-alert field-full"><span className="material-symbols-rounded">verified_user</span>Registre apenas autorizações realmente documentadas. Este campo prepara o envio futuro; nenhuma mensagem é disparada nesta versão.</div></div>}</>}
+        {tenantStep === "billing" && <><div className="master-section-title"><span className="material-symbols-rounded">payments</span><div><strong>Condições de cobrança</strong><small>Parâmetros administrativos; bloqueios e disparos ainda não são automáticos.</small></div></div><div className="master-form-grid">
+          <label><span>Mensalidade</span><input autoFocus inputMode="decimal" value={tenantForm.monthlyAmount} onChange={(event) => patchTenant("monthlyAmount", event.target.value)} placeholder="R$ 0,00" /></label><label><span>Dia padrão de vencimento *</span><input type="number" min={1} max={31} value={tenantForm.billingDay} onChange={(event) => patchTenant("billingDay", event.target.value)} required /></label><label><span>Dias de tolerância</span><input type="number" min={0} max={90} value={tenantForm.graceDays} onChange={(event) => patchTenant("graceDays", event.target.value)} /></label><label><span>Referência de suspensão após</span><div className="input-with-suffix"><input type="number" min={0} max={365} value={tenantForm.suspendAfterDays} onChange={(event) => patchTenant("suspendAfterDays", event.target.value)} /><span>dias</span></div></label><label><span>Método preferido</span><select value={tenantForm.preferredPaymentMethod} onChange={(event) => patchTenant("preferredPaymentMethod", event.target.value)}><option value="PIX">Pix</option><option value="BOLETO">Boleto</option><option value="TRANSFERENCIA">Transferência</option><option value="CARTAO">Cartão</option><option value="OUTRO">Outro</option></select></label><label><span>Próximo vencimento</span><input type="date" value={tenantForm.nextDueDate} onChange={(event) => patchTenant("nextDueDate", event.target.value)} /></label><label className="field-full"><span>Observações financeiras</span><textarea value={tenantForm.billingNotes} maxLength={1000} onChange={(event) => patchTenant("billingNotes", event.target.value)} /></label><div className="platform-alert field-full"><span className="material-symbols-rounded">info</span>O valor e as datas alimentam a gestão da Data Dazzle. Suspensão automática, pagamentos online e alertas serão ativados somente em etapas futuras e após regras comerciais aprovadas.</div>
+        </div></>}
+      </div><footer>{tenantStep !== "identity" && <button type="button" onClick={() => setTenantStep(tenantStep === "billing" ? "responsible" : "identity")}><span className="material-symbols-rounded">arrow_back</span>Anterior</button>}<span className="platform-footer-spacer" /><button type="button" className="catalog-modal-cancel" onClick={closeTenantModal}>Cancelar</button>{tenantStep !== "billing" ? <button type="button" className={tenantModal === "new" ? "catalog-modal-submit catalog-modal-submit--create" : "catalog-modal-submit catalog-modal-submit--edit"} onClick={nextTenantStep}>Próxima<span className="material-symbols-rounded">arrow_forward</span></button> : <button className={tenantModal === "new" ? "catalog-modal-submit catalog-modal-submit--create" : "catalog-modal-submit catalog-modal-submit--edit"} disabled={busy}>{tenantModal === "new" ? "Criar ambiente" : "Salvar alterações"}</button>}</footer></form></section></div>}
+
+      {userModal && <div className="catalog-backdrop"><section className="catalog-modal master-modal platform-modal platform-user-modal" role="dialog" aria-modal="true" aria-labelledby="platform-user-title"><header><div><span className="eyebrow">GESTÃO DE ACESSO</span><h2 id="platform-user-title">{editingUserId ? "Editar usuário" : "Vincular usuário"}</h2></div><button type="button" aria-label="Fechar" onClick={closeUserModal}>×</button></header><form onSubmit={linkUser}><div className="master-modal-content"><div className="platform-alert"><span className="material-symbols-rounded">security</span>Crie primeiro a identidade no Firebase Authentication e informe o UID. Credenciais administrativas nunca são criadas no navegador.</div><div className="master-form-grid"><label className="field-full"><span>UID do Firebase *</span><input autoFocus value={userForm.uid ?? ""} onChange={(event) => setUserForm({ ...userForm, uid: event.target.value.trim() })} required readOnly={Boolean(editingUserId)} />{editingUserId && <small>O UID é imutável. Para trocar a identidade, inative este vínculo e crie outro.</small>}</label><label><span>Nome *</span><input value={userForm.name ?? ""} onChange={(event) => setUserForm({ ...userForm, name: event.target.value })} required /></label><label><span>E-mail *</span><input type="email" value={userForm.email ?? ""} onChange={(event) => setUserForm({ ...userForm, email: event.target.value })} required /></label><label><span>Empresa *</span><select value={userForm.tenantId ?? ""} onChange={(event) => setUserForm({ ...userForm, tenantId: event.target.value, roleId: "" })} required><option value="">Selecione</option>{data.tenants.filter((item) => item.active).map((item) => <option value={item.id} key={item.id}>{tenantName(item)}</option>)}</select></label><label><span>Perfil *</span><select value={userForm.roleId ?? ""} onChange={(event) => setUserForm({ ...userForm, roleId: event.target.value })} required><option value="">Selecione</option>{availableRoles.map((role) => <option value={role.id} key={role.id}>{role.name}</option>)}</select></label></div></div><footer><button type="button" className="catalog-modal-cancel" onClick={closeUserModal}>Cancelar</button><button className={`catalog-modal-submit catalog-modal-submit--${editingUserId ? "edit" : "create"}`} disabled={busy}>{editingUserId ? "Salvar alterações" : "Vincular acesso"}</button></footer></form></section></div>}
+
+      {statusConfirmation && <div className="catalog-backdrop catalog-confirm-backdrop"><section className="catalog-modal catalog-confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="platform-status-title"><header><div><span className="eyebrow">CONFIRMAÇÃO</span><h2 id="platform-status-title">{statusConfirmation.item.active ? "Confirmar inativação?" : "Confirmar ativação?"}</h2></div><button type="button" aria-label="Fechar" onClick={() => setStatusConfirmation(null)}>×</button></header><div className="master-modal-content"><p>{statusConfirmation.kind === "tenant" ? `O ambiente ${tenantName(statusConfirmation.item)} ${statusConfirmation.item.active ? "deixará de aceitar acessos" : "voltará a aceitar acessos"}. Cobranças e histórico financeiro serão preservados.` : `O acesso de ${statusConfirmation.item.name} será ${statusConfirmation.item.active ? "interrompido" : "restabelecido"}.`}</p></div><footer><button className="catalog-modal-cancel" onClick={() => setStatusConfirmation(null)}>Voltar</button><button className={statusConfirmation.item.active ? "danger" : "success"} onClick={() => void applyStatus()} disabled={busy}>{statusConfirmation.item.active ? "Inativar" : "Ativar"}</button></footer></section></div>}
       {busy && <AppLoading text="Atualizando administração..." />}
     </section>
   );
