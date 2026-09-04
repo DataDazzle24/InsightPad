@@ -2471,3 +2471,84 @@ html[data-theme=light] .platform-modal form > footer {
     min-width: 0;
   }
 }
+
+
+/* Accessible domain completion for customer and supplier email fields. */
+.email-suggestion-field {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.master-form-grid .email-suggestion-field > input {
+  width: 100%;
+}
+
+.email-suggestion-list {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + .3rem);
+  right: 0;
+  left: 0;
+  max-height: min(15rem, 35dvh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid rgba(66, 220, 250, .48);
+  background: #0d1214;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, .5);
+}
+
+.email-suggestion-option {
+  display: flex;
+  min-height: 2.65rem;
+  align-items: center;
+  gap: .55rem;
+  padding: .65rem .75rem;
+  border-bottom: 1px solid var(--line);
+  color: #b8c2c6;
+  cursor: pointer;
+  font: 600 .72rem var(--mono);
+  text-transform: none;
+}
+
+.email-suggestion-option:last-child {
+  border-bottom: 0;
+}
+
+.email-suggestion-option .material-symbols-rounded {
+  color: var(--cyan);
+  font-size: 1rem;
+}
+
+.email-suggestion-option strong {
+  overflow: hidden;
+  color: inherit;
+  font: inherit;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.email-suggestion-option:hover,
+.email-suggestion-option.active,
+.email-suggestion-option[aria-selected="true"] {
+  color: var(--white);
+  background: rgba(66, 220, 250, .12);
+}
+
+html[data-theme=light] .email-suggestion-list {
+  border-color: #70cddd;
+  background: #fff;
+  box-shadow: 0 14px 36px rgba(30, 68, 80, .18);
+}
+
+html[data-theme=light] .email-suggestion-option {
+  border-color: #d5e3e7;
+  color: #445b63;
+}
+
+html[data-theme=light] .email-suggestion-option:hover,
+html[data-theme=light] .email-suggestion-option.active,
+html[data-theme=light] .email-suggestion-option[aria-selected="true"] {
+  color: #132329;
+  background: #e4f7fa;
+}
