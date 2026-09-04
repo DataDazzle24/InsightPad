@@ -185,6 +185,8 @@ function EmailSuggestionInput({
         autoComplete="off"
         spellCheck={false}
         aria-invalid={invalid}
+        role="combobox"
+        aria-haspopup="listbox"
         aria-autocomplete="list"
         aria-expanded={isOpen}
         aria-controls={isOpen ? listboxId : undefined}
