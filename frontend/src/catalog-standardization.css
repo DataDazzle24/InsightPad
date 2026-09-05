@@ -2554,6 +2554,14 @@ html[data-theme=light] .email-suggestion-option[aria-selected="true"] {
 }
 
 /* Data Dazzle control plane — aligned with the current catalog language. */
+.platform-module-menu .legacy-module__grid {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.platform-module-menu .legacy-tile--submenu {
+  min-height: 10rem;
+}
+
 .platform-admin.catalog-page {
   display: flex;
   height: 100%;
@@ -2568,21 +2576,21 @@ html[data-theme=light] .email-suggestion-option[aria-selected="true"] {
 .platform-page-header {
   display: flex;
   flex: 0 0 auto;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
   margin: 0;
 }
 
-.platform-page-header .catalog-heading {
+.platform-page-header .catalog-title-group {
   display: flex;
   min-width: 0;
-  align-items: flex-start;
+  align-items: center;
   gap: .75rem;
 }
 
 .platform-page-header h1 {
-  margin: .22rem 0 .12rem;
+  margin: .2rem 0 0;
   color: var(--white);
   font: 750 clamp(1.25rem, 2.2vw, 1.8rem) var(--mono);
   letter-spacing: -.025em;
@@ -2599,12 +2607,13 @@ html[data-theme=light] .email-suggestion-option[aria-selected="true"] {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
+  align-items: center;
   gap: .45rem;
 }
 
 .platform-header-kpis span {
   display: flex;
-  min-height: 2.6rem;
+  min-height: 3rem;
   align-items: center;
   gap: .4rem;
   padding: .45rem .75rem;
@@ -2613,6 +2622,15 @@ html[data-theme=light] .email-suggestion-option[aria-selected="true"] {
   background: #0d1214;
   font: 650 .58rem var(--mono);
   text-transform: uppercase;
+}
+
+.platform-header-kpis--billing span {
+  min-width: 9.5rem;
+  justify-content: center;
+}
+
+.platform-header-kpis--billing b {
+  font-size: .72rem;
 }
 
 .platform-header-kpis b {
@@ -2638,7 +2656,8 @@ html[data-theme=light] .email-suggestion-option[aria-selected="true"] {
   scrollbar-width: thin;
 }
 
-.platform-tabs button {
+.platform-tabs button,
+.platform-tabs a {
   display: inline-flex;
   min-width: max-content;
   min-height: 2.75rem;
@@ -2653,15 +2672,19 @@ html[data-theme=light] .email-suggestion-option[aria-selected="true"] {
   background: transparent;
   font: 700 .61rem var(--mono);
   text-transform: uppercase;
+  text-decoration: none;
 }
 
 .platform-tabs button:hover,
-.platform-tabs button:focus-visible {
+.platform-tabs button:focus-visible,
+.platform-tabs a:hover,
+.platform-tabs a:focus-visible {
   color: var(--white);
   background: rgba(66, 220, 250, .06);
 }
 
-.platform-tabs button.active {
+.platform-tabs button.active,
+.platform-tabs a.active {
   border-bottom-color: var(--cyan);
   color: var(--cyan);
   background: rgba(66, 220, 250, .1);
@@ -2669,6 +2692,14 @@ html[data-theme=light] .email-suggestion-option[aria-selected="true"] {
 
 .platform-tabs .material-symbols-rounded {
   font-size: 1.05rem;
+}
+
+.platform-user-tabs {
+  width: min(34rem, 100%);
+}
+
+.platform-user-tabs a {
+  flex: 1;
 }
 
 .platform-panel {
@@ -2756,6 +2787,37 @@ html[data-theme=light] .email-suggestion-option[aria-selected="true"] {
   min-width: min(23rem, 100%);
 }
 
+.platform-toolbar > .catalog-clear-tools {
+  min-height: 2.65rem;
+  padding: .58rem .8rem;
+}
+
+.platform-filter-modal {
+  width: min(48rem, calc(100vw - 2rem));
+}
+
+.platform-filter-modal .master-form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.platform-filter-modal .date-range-field {
+  grid-column: 1 / -1;
+}
+
+.platform-filter-modal form > footer > .catalog-clear-tools {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+  padding: .65rem 1rem;
+  border: 1px solid #ff6b80;
+  color: #fff;
+  background: #b72f46;
+  font: 700 .65rem var(--mono);
+  text-transform: uppercase;
+}
+
 .platform-financial-kpis {
   display: grid;
   flex: 0 0 auto;
@@ -2836,6 +2898,15 @@ html[data-theme=light] .email-suggestion-option[aria-selected="true"] {
   text-align: left;
   text-transform: uppercase;
   white-space: nowrap;
+}
+
+.platform-table th:has(.catalog-sort) {
+  padding: 0;
+}
+
+.platform-table .catalog-sort {
+  min-height: 2.65rem;
+  padding: .68rem .78rem;
 }
 
 .platform-table td {
@@ -3428,12 +3499,14 @@ html[data-theme=light] .catalog-confirm-modal form > footer {
   background: #fff;
 }
 
-html[data-theme=light] .platform-tabs button {
+html[data-theme=light] .platform-tabs button,
+html[data-theme=light] .platform-tabs a {
   border-color: #d3e0e4;
   color: #586d75;
 }
 
-html[data-theme=light] .platform-tabs button.active {
+html[data-theme=light] .platform-tabs button.active,
+html[data-theme=light] .platform-tabs a.active {
   color: #087f95;
   background: #e2f6fa;
 }
@@ -3502,9 +3575,15 @@ html[data-theme=light] .platform-pagination button {
   background: #fff;
 }
 
+html[data-theme=light] .platform-filter-modal form > footer > .catalog-clear-tools {
+  border-color: #d8435b;
+  color: #fff;
+  background: #bd344b;
+}
+
 @media (max-width: 1180px) {
-  .platform-header-kpis span:nth-child(2) {
-    display: none;
+  .platform-header-kpis--billing {
+    max-width: 46rem;
   }
 
   .platform-financial-kpis {
@@ -3522,6 +3601,10 @@ html[data-theme=light] .platform-pagination button {
   .platform-modal .master-form-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .platform-filter-modal .master-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 820px) {
@@ -3536,6 +3619,11 @@ html[data-theme=light] .platform-pagination button {
     gap: .65rem;
   }
 
+  .platform-admin.catalog-page > .platform-page-header > .catalog-title-group {
+    align-items: center;
+    flex-direction: row;
+  }
+
   .platform-header-kpis {
     justify-content: stretch;
   }
@@ -3545,7 +3633,8 @@ html[data-theme=light] .platform-pagination button {
     flex: 1;
   }
 
-  .platform-tabs button {
+  .platform-tabs button,
+  .platform-tabs a {
     flex: 0 0 auto;
   }
 
@@ -3593,21 +3682,31 @@ html[data-theme=light] .platform-pagination button {
 }
 
 @media (max-width: 620px) {
-  .platform-page-header p,
-  .platform-header-kpis span:nth-child(2) {
-    display: none;
+  .platform-header-kpis {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .platform-header-kpis span {
+    justify-content: center;
+  }
+
+  .platform-header-kpis--billing span {
+    min-width: 0;
   }
 
   .platform-page-header h1 {
     font-size: 1.05rem;
   }
 
-  .platform-tabs button {
+  .platform-tabs button,
+  .platform-tabs a {
     padding: .55rem .68rem;
     font-size: .55rem;
   }
 
-  .platform-tabs button .material-symbols-rounded {
+  .platform-tabs button .material-symbols-rounded,
+  .platform-tabs a .material-symbols-rounded {
     font-size: .9rem;
   }
 
@@ -3640,6 +3739,7 @@ html[data-theme=light] .platform-pagination button {
   }
 
   .platform-modal .master-form-grid,
+  .platform-filter-modal .master-form-grid,
   .platform-communication-options,
   .platform-payment-summary,
   .permissions-toolbar {
@@ -3648,6 +3748,7 @@ html[data-theme=light] .platform-pagination button {
 
   .platform-modal .field-wide,
   .platform-modal .field-full,
+  .platform-filter-modal .date-range-field,
   .permissions-toolbar .platform-alert {
     grid-column: auto;
   }

@@ -5,6 +5,13 @@ export type BillingStatus =
   | "OVERDUE"
   | "VOID";
 
+export type PlatformTenantStep = "identity" | "responsible" | "billing";
+
+export function nextPlatformTenantStep(step: PlatformTenantStep): PlatformTenantStep {
+  if (step === "identity") return "responsible";
+  return "billing";
+}
+
 export function parseMoneyToCents(value: string): number {
   const raw = value.replace(/[^\d,.-]/g, "").trim();
   if (!raw) return 0;
@@ -21,6 +28,20 @@ export function formatMoneyFromCents(value: number | string): string {
     style: "currency",
     currency: "BRL",
   }).format(Number.isFinite(cents) ? cents / 100 : 0);
+}
+
+export function moneyInputFromCents(value: number | string): string {
+  const cents = Number(value);
+  if (!Number.isFinite(cents)) return "";
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(cents / 100);
+}
+
+export function maskMoneyInput(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 15);
+  return digits ? moneyInputFromCents(Number(digits)) : "";
 }
 
 export function invoiceRemainingCents(invoice: {

@@ -1191,6 +1191,21 @@ exports.platformBillingWorkspace = function platformBillingWorkspace(dcOrVars, v
 }
 ;
 
+const platformBillingWorkspaceV2Ref = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'PlatformBillingWorkspaceV2', inputVars);
+}
+platformBillingWorkspaceV2Ref.operationName = 'PlatformBillingWorkspaceV2';
+exports.platformBillingWorkspaceV2Ref = platformBillingWorkspaceV2Ref;
+
+exports.platformBillingWorkspaceV2 = function platformBillingWorkspaceV2(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(platformBillingWorkspaceV2Ref(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
 const stockWorkspaceRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();

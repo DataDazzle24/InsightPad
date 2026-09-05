@@ -62,6 +62,10 @@ export function AppLayout() {
   }, [drawerOpen]);
   const pageTitle = useMemo(() => {
     if (location.pathname === "/") return "Menu Principal";
+    if (location.pathname === "/modulos/plataforma") return "Gestão da plataforma";
+    if (location.pathname === "/plataforma/empresas-ambientes") return "Empresas e ambientes";
+    if (location.pathname === "/plataforma/cobrancas-baixas") return "Cobranças e baixas";
+    if (location.pathname.startsWith("/plataforma/gestao-usuarios")) return "Gestão de usuários";
     if (location.pathname === "/integracoes/canais/pedidos") return "Pedidos";
     if (location.pathname === "/integracoes/canais/conexoes") return "Gestão de conexões";
     const permission = Object.values(permissions).find(
@@ -217,13 +221,13 @@ export function AppLayout() {
           {profile?.role.systemRole === true && (
             <Link
               className="user-drawer__platform-link"
-              to="/configuracoes/acessos"
+              to="/modulos/plataforma"
               onClick={() => setDrawerOpen(false)}
             >
               <span className="material-symbols-rounded">
                 admin_panel_settings
               </span>
-              Gestão de acessos e plataforma
+              Gestão da plataforma
             </Link>
           )}
         </div>

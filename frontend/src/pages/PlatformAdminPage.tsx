@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { Link, NavLink } from "react-router-dom";
 import { executeMutation, getDataConnect, mutationRef } from "firebase/data-connect";
 import {
   createPlatformTenant,
@@ -10,11 +11,12 @@ import {
 } from "@insightpad/dataconnect";
 import { firebaseApp } from "../lib/firebase";
 import { AppLoading, AppToast, type Notice } from "../components/SalesUi";
-import { PlatformBillingPanel } from "../components/PlatformBillingPanel";
+import { PlatformBillingPanel, type PlatformBillingSummary } from "../components/PlatformBillingPanel";
 import { PlatformPermissions } from "../components/PlatformPermissions";
+import { SortableTableHeader } from "../components/SortableTableHeader";
 import { useDialogAccessibility } from "../hooks/useDialogAccessibility";
-import { useAuth } from "../auth/useAuth";
-import { datePtBr, formatMoneyFromCents, parseMoneyToCents } from "../utils/platformBilling";
+import { datePtBr, formatMoneyFromCents, maskMoneyInput, moneyInputFromCents, nextPlatformTenantStep, parseMoneyToCents, type PlatformTenantStep } from "../utils/platformBilling";
+import { nextTableSort, sortTableRows, type TableSort } from "../utils/tableSorting";
 
 type Tenant = {
   id: string;
@@ -71,8 +73,7 @@ type Workspace = {
   pages: Array<{ id: string; pageKey: string; displayName: string; module: string }>;
   permissions: Array<Record<string, unknown>>;
 };
-type Tab = "tenants" | "billing" | "users" | "permissions";
-type TenantStep = "identity" | "responsible" | "billing";
+export type PlatformAdminView = "tenants" | "billing" | "users" | "permissions";
 type TenantForm = {
   tenantId?: string;
   legalName: string;
@@ -142,22 +143,21 @@ const toLocalDateTime = (value?: string) => {
 };
 const operationApplied = (result: unknown) => Boolean((result as { data?: { _execute?: unknown } })?.data?._execute);
 
-export function PlatformAdminPage() {
-  const profile = useAuth().profile;
-  const isPlatform = profile?.role.name === "Administrador da Plataforma";
+export function PlatformAdminPage({ view }: { view: PlatformAdminView }) {
   const [data, setData] = useState<Workspace>(empty);
-  const [tab, setTab] = useState<Tab>(isPlatform ? "tenants" : "users");
   const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<TableSort | null>(null);
   const [page, setPage] = useState(0);
   const [busy, setBusy] = useState(true);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [tenantModal, setTenantModal] = useState<"new" | Tenant | null>(null);
-  const [tenantStep, setTenantStep] = useState<TenantStep>("identity");
+  const [tenantStep, setTenantStep] = useState<PlatformTenantStep>("identity");
   const [tenantForm, setTenantForm] = useState<TenantForm>(emptyTenantForm);
   const [userModal, setUserModal] = useState(false);
   const [userForm, setUserForm] = useState<Record<string, string>>({});
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [statusConfirmation, setStatusConfirmation] = useState<StatusConfirmation | null>(null);
+  const [billingSummary, setBillingSummary] = useState<PlatformBillingSummary>({ receivableCents: "0", overdueCents: "0", overdueTenants: 0, receivedMonthCents: "0" });
 
   const load = useCallback(async () => {
     setBusy(true);
@@ -183,18 +183,23 @@ export function PlatformAdminPage() {
   const q = search.trim().toLocaleLowerCase("pt-BR");
   const tenants = useMemo(() => data.tenants.filter((item) => !q || [item.legalName, item.tradeName, item.document, item.planCode, item.responsibleName, item.responsibleEmail].some((value) => value?.toLocaleLowerCase("pt-BR").includes(q))), [data.tenants, q]);
   const users = useMemo(() => data.users.filter((item) => !q || [item.name, item.email, item.tenantName, item.roleName, item.id].some((value) => value?.toLocaleLowerCase("pt-BR").includes(q))), [data.users, q]);
-  const records = tab === "tenants" ? tenants : users;
+  const sortedTenants = useMemo(() => sortTableRows(tenants, sort, (item, key) => key === "tenantName" ? tenantName(item) : item[key as keyof Tenant]), [sort, tenants]);
+  const sortedUsers = useMemo(() => sortTableRows(users, sort), [sort, users]);
+  const records = view === "tenants" ? sortedTenants : sortedUsers;
   const totalPages = Math.max(1, Math.ceil(records.length / PAGE_SIZE));
-  const pagedTenants = tenants.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-  const pagedUsers = users.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const pagedTenants = sortedTenants.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const pagedUsers = sortedUsers.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const availableRoles = data.roles.filter((role) => role.tenantId === userForm.tenantId && role.active);
   const activeTenants = data.tenants.filter((item) => item.active).length;
   const configuredTenants = data.tenants.filter((item) => item.billingProfileConfigured).length;
   const overdueTenants = data.tenants.filter((item) => item.overdueCount > 0).length;
+  const activeUsers = data.users.filter((item) => item.active).length;
+  const onboardingPending = data.users.filter((item) => item.onboardingPending).length;
+  const activeRoles = data.roles.filter((item) => item.active).length;
+  const title = view === "tenants" ? "Empresas e ambientes" : view === "billing" ? "Cobranças e baixas" : "Gestão de usuários";
 
-  function changeTab(next: Tab) {
-    setTab(next);
-    setSearch("");
+  function changeSort(key: string) {
+    setSort((current) => nextTableSort(current, key));
     setPage(0);
   }
   function patchTenant<K extends keyof TenantForm>(key: K, value: TenantForm[K]) {
@@ -225,7 +230,7 @@ export function PlatformAdminPage() {
         allowWhatsappBilling: item.allowWhatsappBilling,
         communicationConsentSource: item.communicationConsentSource ?? "",
         communicationConsentAt: toLocalDateTime(item.communicationConsentAt),
-        monthlyAmount: item.monthlyAmountCents ? (Number(item.monthlyAmountCents) / 100).toFixed(2).replace(".", ",") : "",
+        monthlyAmount: item.monthlyAmountCents ? moneyInputFromCents(item.monthlyAmountCents) : "",
         billingDay: String(item.billingDay ?? 10),
         graceDays: String(item.graceDays ?? 3),
         suspendAfterDays: String(item.suspendAfterDays ?? 7),
@@ -246,7 +251,7 @@ export function PlatformAdminPage() {
     setUserForm({});
     setEditingUserId(null);
   }
-  function validateTenantStep(step: TenantStep) {
+  function validateTenantStep(step: PlatformTenantStep) {
     if (step === "identity" && tenantForm.legalName.trim().length < 2) {
       setNotice({ type: "error", text: "Informe a razão social do ambiente." });
       return false;
@@ -270,10 +275,14 @@ export function PlatformAdminPage() {
   }
   function nextTenantStep() {
     if (!validateTenantStep(tenantStep)) return;
-    setTenantStep(tenantStep === "identity" ? "responsible" : "billing");
+    setTenantStep(nextPlatformTenantStep);
   }
   async function saveTenant(event: FormEvent) {
     event.preventDefault();
+    if (tenantStep !== "billing") {
+      nextTenantStep();
+      return;
+    }
     if (!validateTenantStep("identity") || !validateTenantStep("responsible") || !validateTenantStep("billing")) return;
     setBusy(true);
     try {
@@ -349,31 +358,26 @@ export function PlatformAdminPage() {
   return (
     <section className="catalog-page platform-admin">
       <header className="catalog-page-header platform-page-header">
-        <div className="catalog-heading">
-          <button type="button" className="catalog-back-button" aria-label="Voltar" onClick={() => window.history.back()}><span className="material-symbols-rounded">arrow_back</span></button>
-          <div><span className="eyebrow">DATA DAZZLE · CONTROL PLANE</span><h1>ADMINISTRAÇÃO DA PLATAFORMA</h1><p>Ambientes, cobranças, acessos e permissões globais do Insight Pad.</p></div>
+        <div className="catalog-title-group">
+          <Link className="catalog-back" to="/modulos/plataforma" aria-label="Voltar ao submenu da gestão da plataforma" title="Voltar"><span className="material-symbols-rounded">arrow_back</span></Link>
+          <div><span className="eyebrow">Gestão da plataforma</span><h1>{title}</h1></div>
         </div>
-        <div className="platform-header-kpis"><span><b>{activeTenants}</b> ambientes ativos</span><span><b>{configuredTenants}</b> perfis financeiros</span><span className={overdueTenants ? "attention" : ""}><b>{overdueTenants}</b> em atraso</span></div>
+        {view === "tenants" ? <div className="platform-header-kpis"><span><b>{activeTenants}</b> ambientes ativos</span><span><b>{configuredTenants}</b> perfis financeiros</span><span className={overdueTenants ? "attention" : ""}><b>{overdueTenants}</b> em atraso</span></div> : view === "billing" ? <div className="platform-header-kpis platform-header-kpis--billing" aria-label="Resumo financeiro"><span className={overdueTenants ? "attention" : ""}><b>{overdueTenants}</b> em atraso</span><span><b>{formatMoneyFromCents(billingSummary.receivableCents)}</b> a receber</span><span className={Number(billingSummary.overdueCents) ? "attention" : ""}><b>{formatMoneyFromCents(billingSummary.overdueCents)}</b> em atraso</span><span className={billingSummary.overdueTenants ? "attention" : ""}><b>{billingSummary.overdueTenants}</b> clientes em atraso</span><span><b>{formatMoneyFromCents(billingSummary.receivedMonthCents)}</b> recebido no mês</span></div> : <div className="platform-header-kpis"><span><b>{activeUsers}</b> usuários ativos</span><span><b>{activeRoles}</b> perfis ativos</span><span className={onboardingPending ? "attention" : ""}><b>{onboardingPending}</b> acessos pendentes</span></div>}
       </header>
       <AppToast notice={notice} onClose={() => setNotice(null)} />
-      <nav className="platform-tabs" aria-label="Áreas da administração">
-        <button className={tab === "tenants" ? "active" : ""} aria-current={tab === "tenants" ? "page" : undefined} onClick={() => changeTab("tenants")}><span className="material-symbols-rounded">domain</span>Empresas e ambientes</button>
-        <button className={tab === "billing" ? "active" : ""} aria-current={tab === "billing" ? "page" : undefined} onClick={() => changeTab("billing")}><span className="material-symbols-rounded">request_quote</span>Cobranças e baixas</button>
-        <button className={tab === "users" ? "active" : ""} aria-current={tab === "users" ? "page" : undefined} onClick={() => changeTab("users")}><span className="material-symbols-rounded">manage_accounts</span>Usuários</button>
-        <button className={tab === "permissions" ? "active" : ""} aria-current={tab === "permissions" ? "page" : undefined} onClick={() => changeTab("permissions")}><span className="material-symbols-rounded">lock_person</span>Perfis e permissões</button>
-      </nav>
+      {(view === "users" || view === "permissions") && <nav className="platform-tabs platform-user-tabs" aria-label="Áreas da gestão de usuários"><NavLink to="/plataforma/gestao-usuarios/usuarios"><span className="material-symbols-rounded">manage_accounts</span>Usuários</NavLink><NavLink to="/plataforma/gestao-usuarios/perfis-permissoes"><span className="material-symbols-rounded">lock_person</span>Perfis e permissões</NavLink></nav>}
 
-      {tab === "billing" ? <PlatformBillingPanel tenants={data.tenants} onNotice={setNotice} /> : tab === "permissions" ? <PlatformPermissions roles={data.roles} pages={data.pages} permissions={data.permissions} onNotice={setNotice} onSaved={load} /> : <div className="platform-panel">
+      {view === "billing" ? <PlatformBillingPanel tenants={data.tenants} onNotice={setNotice} onSummaryChange={setBillingSummary} /> : view === "permissions" ? <PlatformPermissions roles={data.roles} pages={data.pages} permissions={data.permissions} onNotice={setNotice} onSaved={load} /> : <div className="platform-panel">
         <div className="platform-toolbar">
-          <label className="platform-search"><span className="material-symbols-rounded">search</span><span className="sr-only">Pesquisar</span><input value={search} onChange={(event) => { setSearch(event.target.value); setPage(0); }} placeholder={tab === "tenants" ? "Pesquisar empresa, responsável, documento ou plano" : "Pesquisar usuário, e-mail, UID, perfil ou empresa"} /></label>
-          {search && <button className="catalog-clear-filters" onClick={() => { setSearch(""); setPage(0); }}><span className="material-symbols-rounded">filter_alt_off</span>Limpar filtros</button>}
-          <button className="catalog-primary" onClick={() => tab === "tenants" ? openTenant() : (setUserForm({ tenantId: "" }), setEditingUserId(null), setUserModal(true))}><span className="material-symbols-rounded">add</span>{tab === "tenants" ? "Novo ambiente" : "Vincular usuário"}</button>
+          <label className="platform-search"><span className="material-symbols-rounded">search</span><span className="sr-only">Pesquisar</span><input value={search} onChange={(event) => { setSearch(event.target.value); setPage(0); }} placeholder={view === "tenants" ? "Pesquisar empresa, responsável, documento ou plano" : "Pesquisar usuário, e-mail, UID, perfil ou empresa"} /></label>
+          {search && <button className="catalog-clear-tools" onClick={() => { setSearch(""); setPage(0); }}><span className="material-symbols-rounded">filter_alt_off</span>Limpar filtros</button>}
+          <button className="catalog-primary" onClick={() => view === "tenants" ? openTenant() : (setUserForm({ tenantId: "" }), setEditingUserId(null), setUserModal(true))}><span className="material-symbols-rounded">add</span>{view === "tenants" ? "Novo ambiente" : "Vincular usuário"}</button>
         </div>
         <div className="platform-table">
           <table>
-            <thead>{tab === "tenants" ? <tr><th>Empresa / ambiente</th><th>Responsável</th><th>Plano e mensalidade</th><th>Próximo vencimento</th><th>Uso</th><th>Status</th><th>Ações</th></tr> : <tr><th>Usuário</th><th>Empresa</th><th>Perfil</th><th>UID Firebase</th><th>Último acesso</th><th>Status</th><th>Ações</th></tr>}</thead>
+            <thead>{view === "tenants" ? <tr><SortableTableHeader label="Empresa / ambiente" sortKey="tenantName" sort={sort} onChange={changeSort} /><SortableTableHeader label="Responsável" sortKey="responsibleName" sort={sort} onChange={changeSort} /><SortableTableHeader label="Plano e mensalidade" sortKey="planCode" sort={sort} onChange={changeSort} /><SortableTableHeader label="Próximo vencimento" sortKey="nextDueDate" sort={sort} onChange={changeSort} /><SortableTableHeader label="Uso" sortKey="userCount" sort={sort} onChange={changeSort} /><SortableTableHeader label="Status" sortKey="active" sort={sort} onChange={changeSort} /><th>Ações</th></tr> : <tr><SortableTableHeader label="Usuário" sortKey="name" sort={sort} onChange={changeSort} /><SortableTableHeader label="Empresa" sortKey="tenantName" sort={sort} onChange={changeSort} /><SortableTableHeader label="Perfil" sortKey="roleName" sort={sort} onChange={changeSort} /><SortableTableHeader label="UID Firebase" sortKey="id" sort={sort} onChange={changeSort} /><SortableTableHeader label="Último acesso" sortKey="lastLoginAt" sort={sort} onChange={changeSort} /><SortableTableHeader label="Status" sortKey="active" sort={sort} onChange={changeSort} /><th>Ações</th></tr>}</thead>
             <tbody>
-              {tab === "tenants" ? pagedTenants.map((item) => <tr key={item.id} className={!item.active ? "inactive-row" : ""}>
+              {view === "tenants" ? pagedTenants.map((item) => <tr key={item.id} className={!item.active ? "inactive-row" : ""}>
                 <td><strong>{tenantName(item)}</strong><small>{item.document || item.legalName}</small></td>
                 <td><strong>{item.responsibleName || "Não configurado"}</strong><small>{item.responsibleEmail || item.email || "—"}</small></td>
                 <td><span className={`plan-badge plan-badge--${(item.planCode || "bronze").toLowerCase()}`}>{item.planCode || "—"}</span><small>{formatMoneyFromCents(item.monthlyAmountCents || 0)} / mês</small></td>
@@ -400,9 +404,9 @@ export function PlatformAdminPage() {
           <label className="field-wide"><span>Nome completo *</span><input autoFocus value={tenantForm.responsibleName} maxLength={160} onChange={(event) => patchTenant("responsibleName", event.target.value)} required /></label><label><span>Cargo ou função</span><input value={tenantForm.responsibleRole} maxLength={100} onChange={(event) => patchTenant("responsibleRole", event.target.value)} /></label><label><span>E-mail do responsável *</span><input type="email" value={tenantForm.responsibleEmail} maxLength={254} onChange={(event) => patchTenant("responsibleEmail", event.target.value)} required /></label><label><span>Telefone / WhatsApp *</span><input inputMode="tel" value={tenantForm.responsiblePhone} maxLength={24} onChange={(event) => patchTenant("responsiblePhone", event.target.value)} required /></label><label><span>E-mail exclusivo de cobrança</span><input type="email" value={tenantForm.billingEmail} maxLength={254} onChange={(event) => patchTenant("billingEmail", event.target.value)} placeholder="Se vazio, usa o e-mail do responsável" /></label><label><span>Telefone exclusivo de cobrança</span><input inputMode="tel" value={tenantForm.billingPhone} maxLength={24} onChange={(event) => patchTenant("billingPhone", event.target.value)} placeholder="Se vazio, usa o telefone do responsável" /></label>
         </div><div className="platform-communication-options"><label><input type="checkbox" checked={tenantForm.allowEmailBilling} onChange={(event) => patchTenant("allowEmailBilling", event.target.checked)} /><span>Autoriza comunicações financeiras por e-mail?</span></label><label><input type="checkbox" checked={tenantForm.allowWhatsappBilling} onChange={(event) => patchTenant("allowWhatsappBilling", event.target.checked)} /><span>Autoriza comunicações financeiras por WhatsApp?</span></label></div>{tenantForm.allowWhatsappBilling && <div className="master-form-grid platform-consent-fields"><label><span>Origem da autorização *</span><select value={tenantForm.communicationConsentSource} onChange={(event) => patchTenant("communicationConsentSource", event.target.value)} required><option value="">Selecione</option><option value="CONTRATO">Contrato</option><option value="FORMULARIO">Formulário</option><option value="WHATSAPP">Conversa no WhatsApp</option><option value="OUTRO">Outro documento</option></select></label><label><span>Data da autorização *</span><input type="datetime-local" value={tenantForm.communicationConsentAt} onChange={(event) => patchTenant("communicationConsentAt", event.target.value)} required /></label><div className="platform-alert field-full"><span className="material-symbols-rounded">verified_user</span>Registre apenas autorizações realmente documentadas. Este campo prepara o envio futuro; nenhuma mensagem é disparada nesta versão.</div></div>}</>}
         {tenantStep === "billing" && <><div className="master-section-title"><span className="material-symbols-rounded">payments</span><div><strong>Condições de cobrança</strong><small>Parâmetros administrativos; bloqueios e disparos ainda não são automáticos.</small></div></div><div className="master-form-grid">
-          <label><span>Mensalidade</span><input autoFocus inputMode="decimal" value={tenantForm.monthlyAmount} onChange={(event) => patchTenant("monthlyAmount", event.target.value)} placeholder="R$ 0,00" /></label><label><span>Dia padrão de vencimento *</span><input type="number" min={1} max={31} value={tenantForm.billingDay} onChange={(event) => patchTenant("billingDay", event.target.value)} required /></label><label><span>Dias de tolerância</span><input type="number" min={0} max={90} value={tenantForm.graceDays} onChange={(event) => patchTenant("graceDays", event.target.value)} /></label><label><span>Referência de suspensão após</span><div className="input-with-suffix"><input type="number" min={0} max={365} value={tenantForm.suspendAfterDays} onChange={(event) => patchTenant("suspendAfterDays", event.target.value)} /><span>dias</span></div></label><label><span>Método preferido</span><select value={tenantForm.preferredPaymentMethod} onChange={(event) => patchTenant("preferredPaymentMethod", event.target.value)}><option value="PIX">Pix</option><option value="BOLETO">Boleto</option><option value="TRANSFERENCIA">Transferência</option><option value="CARTAO">Cartão</option><option value="OUTRO">Outro</option></select></label><label><span>Próximo vencimento</span><input type="date" value={tenantForm.nextDueDate} onChange={(event) => patchTenant("nextDueDate", event.target.value)} /></label><label className="field-full"><span>Observações financeiras</span><textarea value={tenantForm.billingNotes} maxLength={1000} onChange={(event) => patchTenant("billingNotes", event.target.value)} /></label><div className="platform-alert field-full"><span className="material-symbols-rounded">info</span>O valor e as datas alimentam a gestão da Data Dazzle. Suspensão automática, pagamentos online e alertas serão ativados somente em etapas futuras e após regras comerciais aprovadas.</div>
+          <label><span>Mensalidade</span><input autoFocus inputMode="numeric" value={tenantForm.monthlyAmount} onChange={(event) => patchTenant("monthlyAmount", maskMoneyInput(event.target.value))} placeholder="R$ 0,00" /></label><label><span>Dia padrão de vencimento *</span><input type="number" min={1} max={31} value={tenantForm.billingDay} onChange={(event) => patchTenant("billingDay", event.target.value)} required /></label><label><span>Dias de tolerância</span><input type="number" min={0} max={90} value={tenantForm.graceDays} onChange={(event) => patchTenant("graceDays", event.target.value)} /></label><label><span>Referência de suspensão após</span><div className="input-with-suffix"><input type="number" min={0} max={365} value={tenantForm.suspendAfterDays} onChange={(event) => patchTenant("suspendAfterDays", event.target.value)} /><span>dias</span></div></label><label><span>Método preferido</span><select value={tenantForm.preferredPaymentMethod} onChange={(event) => patchTenant("preferredPaymentMethod", event.target.value)}><option value="PIX">Pix</option><option value="BOLETO">Boleto</option><option value="TRANSFERENCIA">Transferência</option><option value="CARTAO">Cartão</option><option value="OUTRO">Outro</option></select></label><label><span>Próximo vencimento</span><input type="date" value={tenantForm.nextDueDate} onChange={(event) => patchTenant("nextDueDate", event.target.value)} /></label><label className="field-full"><span>Observações financeiras</span><textarea value={tenantForm.billingNotes} maxLength={1000} onChange={(event) => patchTenant("billingNotes", event.target.value)} /></label><div className="platform-alert field-full"><span className="material-symbols-rounded">info</span>O valor e as datas alimentam a gestão da Data Dazzle. Suspensão automática, pagamentos online e alertas serão ativados somente em etapas futuras e após regras comerciais aprovadas.</div>
         </div></>}
-      </div><footer>{tenantStep !== "identity" && <button type="button" onClick={() => setTenantStep(tenantStep === "billing" ? "responsible" : "identity")}><span className="material-symbols-rounded">arrow_back</span>Anterior</button>}<span className="platform-footer-spacer" /><button type="button" className="catalog-modal-cancel" onClick={closeTenantModal}>Cancelar</button>{tenantStep !== "billing" ? <button type="button" className={tenantModal === "new" ? "catalog-modal-submit catalog-modal-submit--create" : "catalog-modal-submit catalog-modal-submit--edit"} onClick={nextTenantStep}>Próxima<span className="material-symbols-rounded">arrow_forward</span></button> : <button className={tenantModal === "new" ? "catalog-modal-submit catalog-modal-submit--create" : "catalog-modal-submit catalog-modal-submit--edit"} disabled={busy}>{tenantModal === "new" ? "Criar ambiente" : "Salvar alterações"}</button>}</footer></form></section></div>}
+      </div><footer>{tenantStep !== "identity" && <button type="button" onClick={() => setTenantStep(tenantStep === "billing" ? "responsible" : "identity")}><span className="material-symbols-rounded">arrow_back</span>Anterior</button>}<span className="platform-footer-spacer" /><button type="button" className="catalog-modal-cancel" onClick={closeTenantModal}>Cancelar</button>{tenantStep !== "billing" ? <button key="tenant-next" type="button" className={tenantModal === "new" ? "catalog-modal-submit catalog-modal-submit--create" : "catalog-modal-submit catalog-modal-submit--edit"} onClick={nextTenantStep}>Próxima<span className="material-symbols-rounded">arrow_forward</span></button> : <button key="tenant-save" type="submit" className={tenantModal === "new" ? "catalog-modal-submit catalog-modal-submit--create" : "catalog-modal-submit catalog-modal-submit--edit"} disabled={busy}>{tenantModal === "new" ? "Criar ambiente" : "Salvar alterações"}</button>}</footer></form></section></div>}
 
       {userModal && <div className="catalog-backdrop"><section className="catalog-modal master-modal platform-modal platform-user-modal" role="dialog" aria-modal="true" aria-labelledby="platform-user-title"><header><div><span className="eyebrow">GESTÃO DE ACESSO</span><h2 id="platform-user-title">{editingUserId ? "Editar usuário" : "Vincular usuário"}</h2></div><button type="button" aria-label="Fechar" onClick={closeUserModal}>×</button></header><form onSubmit={linkUser}><div className="master-modal-content"><div className="platform-alert"><span className="material-symbols-rounded">security</span>Crie primeiro a identidade no Firebase Authentication e informe o UID. Credenciais administrativas nunca são criadas no navegador.</div><div className="master-form-grid"><label className="field-full"><span>UID do Firebase *</span><input autoFocus value={userForm.uid ?? ""} onChange={(event) => setUserForm({ ...userForm, uid: event.target.value.trim() })} required readOnly={Boolean(editingUserId)} />{editingUserId && <small>O UID é imutável. Para trocar a identidade, inative este vínculo e crie outro.</small>}</label><label><span>Nome *</span><input value={userForm.name ?? ""} onChange={(event) => setUserForm({ ...userForm, name: event.target.value })} required /></label><label><span>E-mail *</span><input type="email" value={userForm.email ?? ""} onChange={(event) => setUserForm({ ...userForm, email: event.target.value })} required /></label><label><span>Empresa *</span><select value={userForm.tenantId ?? ""} onChange={(event) => setUserForm({ ...userForm, tenantId: event.target.value, roleId: "" })} required><option value="">Selecione</option>{data.tenants.filter((item) => item.active).map((item) => <option value={item.id} key={item.id}>{tenantName(item)}</option>)}</select></label><label><span>Perfil *</span><select value={userForm.roleId ?? ""} onChange={(event) => setUserForm({ ...userForm, roleId: event.target.value })} required><option value="">Selecione</option>{availableRoles.map((role) => <option value={role.id} key={role.id}>{role.name}</option>)}</select></label></div></div><footer><button type="button" className="catalog-modal-cancel" onClick={closeUserModal}>Cancelar</button><button className={`catalog-modal-submit catalog-modal-submit--${editingUserId ? "edit" : "create"}`} disabled={busy}>{editingUserId ? "Salvar alterações" : "Vincular acesso"}</button></footer></form></section></div>}
 

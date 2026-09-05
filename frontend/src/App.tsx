@@ -21,6 +21,7 @@ const MasterDataPage = lazy(() => import('./pages/MasterDataPage').then((module)
 const PointOfSalePage = lazy(() => import('./pages/PointOfSalePage').then((module) => ({ default: module.PointOfSalePage })))
 const SalesManagementPage = lazy(() => import('./pages/SalesManagementPage').then((module) => ({ default: module.SalesManagementPage })))
 const PlatformAdminPage = lazy(() => import('./pages/PlatformAdminPage').then((module) => ({ default: module.PlatformAdminPage })))
+const PlatformAdminMenuPage = lazy(() => import('./pages/PlatformAdminMenuPage').then((module) => ({ default: module.PlatformAdminMenuPage })))
 const StockPage = lazy(() => import('./pages/StockPage').then((module) => ({ default: module.StockPage })))
 const DashboardHubPage = lazy(() => import('./pages/DashboardHubPage').then((module) => ({ default: module.DashboardHubPage })))
 const SalesChannelsPage = lazy(() => import('./pages/SalesChannelsPage').then((module) => ({ default: module.SalesChannelsPage })))
@@ -35,7 +36,16 @@ export default function App() {
       <Route path="/acesso-negado" element={<AccessDeniedPage />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
-          <Route element={<PlatformAdminRoute />}><Route path="/plataforma/administracao" element={<Navigate to="/configuracoes/acessos" replace />} /><Route path="/configuracoes/acessos" element={<PlatformAdminPage />} /></Route>
+          <Route element={<PlatformAdminRoute />}>
+            <Route path="/plataforma/administracao" element={<Navigate to="/modulos/plataforma" replace />} />
+            <Route path="/configuracoes/acessos" element={<Navigate to="/modulos/plataforma" replace />} />
+            <Route path="/modulos/plataforma" element={<PlatformAdminMenuPage />} />
+            <Route path="/plataforma/empresas-ambientes" element={<PlatformAdminPage key="tenants" view="tenants" />} />
+            <Route path="/plataforma/cobrancas-baixas" element={<PlatformAdminPage key="billing" view="billing" />} />
+            <Route path="/plataforma/gestao-usuarios" element={<Navigate to="/plataforma/gestao-usuarios/usuarios" replace />} />
+            <Route path="/plataforma/gestao-usuarios/usuarios" element={<PlatformAdminPage key="users" view="users" />} />
+            <Route path="/plataforma/gestao-usuarios/perfis-permissoes" element={<PlatformAdminPage key="permissions" view="permissions" />} />
+          </Route>
           <Route index element={<DashboardPage />} />
           <Route path="/modulos/vendas" element={<ModuleMenuPage moduleKey="vendas" />} />
           <Route path="/modulos/financeiro" element={<ModuleMenuPage moduleKey="financeiro" />} />

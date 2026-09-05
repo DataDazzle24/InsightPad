@@ -539,7 +539,7 @@ query PlatformAdminWorkspace($requestKey: String!) @auth(level: USER) {
   """,params:[{_expr:"auth.uid"},$requestKey])
 }
 
-# Paginated platform receivables and settlements. Filters execute in PostgreSQL.
+# Compatibility operation for clients published before server-side sorting.
 query PlatformBillingWorkspace(
   $term: String!
   $status: String!
@@ -612,6 +612,103 @@ query PlatformBillingWorkspace(
       ) ORDER BY p.due_date DESC,p.created_at DESC) FROM paged p),'[]'::jsonb)
     ) AS data FROM actor WHERE $9<>''
   """,params:[{_expr:"auth.uid"},$term,$status,$tenantId,$dueFrom,$dueTo,$limit,$offset,$requestKey])
+}
+
+# Paginated platform receivables with safe, server-side sorting.
+query PlatformBillingWorkspaceV2(
+  $term: String!
+  $status: String!
+  $tenantId: UUID
+  $dueFrom: Date
+  $dueTo: Date
+  $sortKey: String!
+  $sortDirection: String!
+  $limit: Int!
+  $offset: Int!
+  $requestKey: String!
+) @auth(level: USER) {
+  _select(sql: """
+    WITH actor AS (
+      SELECT u.id FROM users u
+      JOIN tenants own_tenant ON own_tenant.id=u.tenant_id AND own_tenant.active AND own_tenant.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
+        AND r.active AND r.deleted_at IS NULL AND r.system_role
+        AND r.name='Administrador da Plataforma'
+    ), base AS (
+      SELECT i.*,COALESCE(t.trade_name,t.legal_name) tenant_name,
+        CASE WHEN i.status='VOID' THEN 'VOID'
+             WHEN i.paid_cents>=i.total_cents THEN 'PAID'
+             WHEN i.due_date<current_date THEN 'OVERDUE'
+             WHEN i.paid_cents>0 THEN 'PARTIALLY_PAID'
+             ELSE 'OPEN' END effective_status
+      FROM tenant_invoices i JOIN tenants t ON t.id=i.tenant_id
+      CROSS JOIN actor a WHERE i.deleted_at IS NULL
+    ), filtered AS (
+      SELECT * FROM base b WHERE
+        ($2='' OR lower(concat_ws(' ',b.tenant_name,b.description,b.billing_key,b.external_charge_id)) LIKE '%'||lower($2)||'%')
+        AND ($3='' OR b.effective_status=$3)
+        AND ($4 IS NULL OR b.tenant_id=$4)
+        AND ($5 IS NULL OR b.due_date>=$5)
+        AND ($6 IS NULL OR b.due_date<=$6)
+    ), ranked AS (
+      SELECT filtered.*,row_number() OVER(ORDER BY
+        CASE WHEN $7='tenantName' AND $8='asc' THEN lower(tenant_name) END ASC,
+        CASE WHEN $7='tenantName' AND $8='desc' THEN lower(tenant_name) END DESC,
+        CASE WHEN $7='referenceMonth' AND $8='asc' THEN reference_month END ASC,
+        CASE WHEN $7='referenceMonth' AND $8='desc' THEN reference_month END DESC,
+        CASE WHEN $7='dueDate' AND $8='asc' THEN due_date END ASC,
+        CASE WHEN $7='dueDate' AND $8='desc' THEN due_date END DESC,
+        CASE WHEN $7='totalCents' AND $8='asc' THEN total_cents END ASC,
+        CASE WHEN $7='totalCents' AND $8='desc' THEN total_cents END DESC,
+        CASE WHEN $7='paidCents' AND $8='asc' THEN paid_cents END ASC,
+        CASE WHEN $7='paidCents' AND $8='desc' THEN paid_cents END DESC,
+        CASE WHEN $7='remainingCents' AND $8='asc' THEN GREATEST(total_cents-paid_cents,0) END ASC,
+        CASE WHEN $7='remainingCents' AND $8='desc' THEN GREATEST(total_cents-paid_cents,0) END DESC,
+        CASE WHEN $7='status' AND $8='asc' THEN effective_status END ASC,
+        CASE WHEN $7='status' AND $8='desc' THEN effective_status END DESC,
+        due_date DESC,created_at DESC,id
+      ) sort_position FROM filtered
+    ), paged AS (
+      SELECT * FROM ranked
+      WHERE sort_position>GREATEST($10,0)
+        AND sort_position<=GREATEST($10,0)+LEAST(GREATEST($9,1),100)
+    ), summary AS (
+      SELECT
+        COALESCE(sum(GREATEST(total_cents-paid_cents,0)) FILTER(WHERE status<>'VOID'),0)::bigint receivable,
+        COALESCE(sum(GREATEST(total_cents-paid_cents,0)) FILTER(WHERE status<>'VOID' AND paid_cents<total_cents AND due_date<current_date),0)::bigint overdue,
+        (count(DISTINCT tenant_id) FILTER(WHERE status<>'VOID' AND paid_cents<total_cents AND due_date<current_date))::int overdue_tenants
+      FROM base
+    ), received AS (
+      SELECT COALESCE(sum(p.amount_cents),0)::bigint amount FROM tenant_payments p CROSS JOIN actor a
+      WHERE p.status='CONFIRMED' AND p.paid_at>=date_trunc('month',current_timestamp)
+    )
+    SELECT jsonb_build_object(
+      'summary',(SELECT jsonb_build_object('receivableCents',receivable::text,
+        'overdueCents',overdue::text,'overdueTenants',overdue_tenants,
+        'receivedMonthCents',(SELECT amount::text FROM received)) FROM summary),
+      'total',(SELECT count(*) FROM filtered),
+      'invoices',COALESCE((SELECT jsonb_agg(jsonb_build_object(
+        'id',p.id,'tenantId',p.tenant_id,'tenantName',p.tenant_name,
+        'billingKey',p.billing_key,'referenceMonth',p.reference_month,
+        'description',p.description,'issuedOn',p.issued_on,'dueDate',p.due_date,
+        'originalAmountCents',p.original_amount_cents::text,
+        'discountCents',p.discount_cents::text,'additionCents',p.addition_cents::text,
+        'totalCents',p.total_cents::text,'paidCents',p.paid_cents::text,
+        'remainingCents',GREATEST(p.total_cents-p.paid_cents,0)::text,
+        'status',p.effective_status,'storedStatus',p.status,'provider',p.provider,
+        'externalChargeId',p.external_charge_id,'paymentUrl',p.payment_url,
+        'notes',p.notes,'version',p.version::text,'createdAt',p.created_at,
+        'payments',COALESCE((SELECT jsonb_agg(jsonb_build_object(
+          'id',pay.id,'amountCents',pay.amount_cents::text,'paidAt',pay.paid_at,
+          'method',pay.method,'provider',pay.provider,
+          'transactionReference',pay.transaction_reference,'notes',pay.notes,
+          'status',pay.status,'reversedAt',pay.reversed_at,
+          'reversalReason',pay.reversal_reason,'createdByUid',pay.created_by_uid)
+          ORDER BY pay.paid_at DESC) FROM tenant_payments pay WHERE pay.invoice_id=p.id),'[]'::jsonb)
+      ) ORDER BY p.sort_position) FROM paged p),'[]'::jsonb)
+    ) AS data FROM actor WHERE $11<>''
+  """,params:[{_expr:"auth.uid"},$term,$status,$tenantId,$dueFrom,$dueTo,$sortKey,$sortDirection,$limit,$offset,$requestKey])
 }
 
 # Complete stock workspace. Tenant scope and page access are enforced in SQL.

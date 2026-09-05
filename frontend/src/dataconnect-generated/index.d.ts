@@ -517,6 +517,23 @@ export interface PlatformBillingWorkspaceData {
   _select?: unknown[] | null;
 }
 
+export interface PlatformBillingWorkspaceV2Data {
+  _select?: unknown[] | null;
+}
+
+export interface PlatformBillingWorkspaceV2Variables {
+  term: string;
+  status: string;
+  tenantId?: UUIDString | null;
+  dueFrom?: DateString | null;
+  dueTo?: DateString | null;
+  sortKey: string;
+  sortDirection: string;
+  limit: number;
+  offset: number;
+  requestKey: string;
+}
+
 export interface PlatformBillingWorkspaceVariables {
   term: string;
   status: string;
@@ -2122,6 +2139,18 @@ export const platformBillingWorkspaceRef: PlatformBillingWorkspaceRef;
 
 export function platformBillingWorkspace(vars: PlatformBillingWorkspaceVariables, options?: ExecuteQueryOptions): QueryPromise<PlatformBillingWorkspaceData, PlatformBillingWorkspaceVariables>;
 export function platformBillingWorkspace(dc: DataConnect, vars: PlatformBillingWorkspaceVariables, options?: ExecuteQueryOptions): QueryPromise<PlatformBillingWorkspaceData, PlatformBillingWorkspaceVariables>;
+
+interface PlatformBillingWorkspaceV2Ref {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: PlatformBillingWorkspaceV2Variables): QueryRef<PlatformBillingWorkspaceV2Data, PlatformBillingWorkspaceV2Variables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: PlatformBillingWorkspaceV2Variables): QueryRef<PlatformBillingWorkspaceV2Data, PlatformBillingWorkspaceV2Variables>;
+  operationName: string;
+}
+export const platformBillingWorkspaceV2Ref: PlatformBillingWorkspaceV2Ref;
+
+export function platformBillingWorkspaceV2(vars: PlatformBillingWorkspaceV2Variables, options?: ExecuteQueryOptions): QueryPromise<PlatformBillingWorkspaceV2Data, PlatformBillingWorkspaceV2Variables>;
+export function platformBillingWorkspaceV2(dc: DataConnect, vars: PlatformBillingWorkspaceV2Variables, options?: ExecuteQueryOptions): QueryPromise<PlatformBillingWorkspaceV2Data, PlatformBillingWorkspaceV2Variables>;
 
 interface StockWorkspaceRef {
   /* Allow users to create refs without passing in DataConnect */
