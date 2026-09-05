@@ -1,0 +1,8 @@
+# Retained only for connector compatibility with previously generated clients.
+# The recovery action is intentionally disabled and omitted from new SDKs.
+mutation RecoverPlatformAdministrator @auth(level: NO_ACCESS) @retired {
+  _execute(
+    sql: "UPDATE users SET updated_at = updated_at WHERE false"
+    params: []
+  )
+}
