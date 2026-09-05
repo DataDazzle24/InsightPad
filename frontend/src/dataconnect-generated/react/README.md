@@ -39,6 +39,7 @@ You can also follow the instructions from the [Data Connect documentation](https
   - [*ProductPromotions*](#productpromotions)
   - [*PlatformAdminWorkspace*](#platformadminworkspace)
   - [*PlatformBillingWorkspace*](#platformbillingworkspace)
+  - [*PlatformBillingWorkspaceV2*](#platformbillingworkspacev2)
   - [*StockWorkspace*](#stockworkspace)
   - [*DailyProfitDashboard*](#dailyprofitdashboard)
   - [*StockOperationDetails*](#stockoperationdetails)
@@ -2123,6 +2124,106 @@ export default function PlatformBillingWorkspaceComponent() {
   const dataConnect = getDataConnect(connectorConfig);
   const options = { staleTime: 5 * 1000 };
   const query = usePlatformBillingWorkspace(dataConnect, platformBillingWorkspaceVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Query.
+  if (query.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
+  }
+
+  // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
+  if (query.isSuccess) {
+    console.log(query.data._select);
+  }
+  return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## PlatformBillingWorkspaceV2
+You can execute the `PlatformBillingWorkspaceV2` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
+
+```javascript
+usePlatformBillingWorkspaceV2(dc: DataConnect, vars: PlatformBillingWorkspaceV2Variables, options?: useDataConnectQueryOptions<PlatformBillingWorkspaceV2Data>): UseDataConnectQueryResult<PlatformBillingWorkspaceV2Data, PlatformBillingWorkspaceV2Variables>;
+```
+You can also pass in a `DataConnect` instance to the Query hook function.
+```javascript
+usePlatformBillingWorkspaceV2(vars: PlatformBillingWorkspaceV2Variables, options?: useDataConnectQueryOptions<PlatformBillingWorkspaceV2Data>): UseDataConnectQueryResult<PlatformBillingWorkspaceV2Data, PlatformBillingWorkspaceV2Variables>;
+```
+
+### Variables
+The `PlatformBillingWorkspaceV2` Query requires an argument of type `PlatformBillingWorkspaceV2Variables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface PlatformBillingWorkspaceV2Variables {
+  term: string;
+  status: string;
+  tenantId?: UUIDString | null;
+  dueFrom?: DateString | null;
+  dueTo?: DateString | null;
+  sortKey: string;
+  sortDirection: string;
+  limit: number;
+  offset: number;
+  requestKey: string;
+}
+```
+### Return Type
+Recall that calling the `PlatformBillingWorkspaceV2` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
+
+To check the status of a Query, use the `UseQueryResult.status` field. You can also check for pending / success / error status using the `UseQueryResult.isPending`, `UseQueryResult.isSuccess`, and `UseQueryResult.isError` fields.
+
+To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `PlatformBillingWorkspaceV2` Query is of type `PlatformBillingWorkspaceV2Data`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface PlatformBillingWorkspaceV2Data {
+  _select?: unknown[] | null;
+}
+```
+
+To learn more about the `UseQueryResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery).
+
+### Using `PlatformBillingWorkspaceV2`'s Query hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, PlatformBillingWorkspaceV2Variables } from '@insightpad/dataconnect';
+import { usePlatformBillingWorkspaceV2 } from '@insightpad/dataconnect/react'
+
+export default function PlatformBillingWorkspaceV2Component() {
+  // The `usePlatformBillingWorkspaceV2` Query hook requires an argument of type `PlatformBillingWorkspaceV2Variables`:
+  const platformBillingWorkspaceV2Vars: PlatformBillingWorkspaceV2Variables = {
+    term: ..., 
+    status: ..., 
+    tenantId: ..., // optional
+    dueFrom: ..., // optional
+    dueTo: ..., // optional
+    sortKey: ..., 
+    sortDirection: ..., 
+    limit: ..., 
+    offset: ..., 
+    requestKey: ..., 
+  };
+
+  // You don't have to do anything to "execute" the Query.
+  // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
+  const query = usePlatformBillingWorkspaceV2(platformBillingWorkspaceV2Vars);
+  // Variables can be defined inline as well.
+  const query = usePlatformBillingWorkspaceV2({ term: ..., status: ..., tenantId: ..., dueFrom: ..., dueTo: ..., sortKey: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+
+  // You can also pass in a `DataConnect` instance to the Query hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const query = usePlatformBillingWorkspaceV2(dataConnect, platformBillingWorkspaceV2Vars);
+
+  // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
+  const options = { staleTime: 5 * 1000 };
+  const query = usePlatformBillingWorkspaceV2(platformBillingWorkspaceV2Vars, options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = { staleTime: 5 * 1000 };
+  const query = usePlatformBillingWorkspaceV2(dataConnect, platformBillingWorkspaceV2Vars, options);
 
   // Then, you can render your component dynamically based on the status of the Query.
   if (query.isPending) {

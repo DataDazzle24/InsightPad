@@ -32,6 +32,7 @@ This README will guide you through the process of using the generated JavaScript
   - [*ProductPromotions*](#productpromotions)
   - [*PlatformAdminWorkspace*](#platformadminworkspace)
   - [*PlatformBillingWorkspace*](#platformbillingworkspace)
+  - [*PlatformBillingWorkspaceV2*](#platformbillingworkspacev2)
   - [*StockWorkspace*](#stockworkspace)
   - [*DailyProfitDashboard*](#dailyprofitdashboard)
   - [*StockOperationDetails*](#stockoperationdetails)
@@ -2700,6 +2701,142 @@ const ref = platformBillingWorkspaceRef({ term: ..., status: ..., tenantId: ...,
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
 const ref = platformBillingWorkspaceRef(dataConnect, platformBillingWorkspaceVars);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data._select);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data._select);
+});
+```
+
+## PlatformBillingWorkspaceV2
+You can execute the `PlatformBillingWorkspaceV2` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+platformBillingWorkspaceV2(vars: PlatformBillingWorkspaceV2Variables, options?: ExecuteQueryOptions): QueryPromise<PlatformBillingWorkspaceV2Data, PlatformBillingWorkspaceV2Variables>;
+
+interface PlatformBillingWorkspaceV2Ref {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: PlatformBillingWorkspaceV2Variables): QueryRef<PlatformBillingWorkspaceV2Data, PlatformBillingWorkspaceV2Variables>;
+}
+export const platformBillingWorkspaceV2Ref: PlatformBillingWorkspaceV2Ref;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+platformBillingWorkspaceV2(dc: DataConnect, vars: PlatformBillingWorkspaceV2Variables, options?: ExecuteQueryOptions): QueryPromise<PlatformBillingWorkspaceV2Data, PlatformBillingWorkspaceV2Variables>;
+
+interface PlatformBillingWorkspaceV2Ref {
+  ...
+  (dc: DataConnect, vars: PlatformBillingWorkspaceV2Variables): QueryRef<PlatformBillingWorkspaceV2Data, PlatformBillingWorkspaceV2Variables>;
+}
+export const platformBillingWorkspaceV2Ref: PlatformBillingWorkspaceV2Ref;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the platformBillingWorkspaceV2Ref:
+```typescript
+const name = platformBillingWorkspaceV2Ref.operationName;
+console.log(name);
+```
+
+### Variables
+The `PlatformBillingWorkspaceV2` query requires an argument of type `PlatformBillingWorkspaceV2Variables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface PlatformBillingWorkspaceV2Variables {
+  term: string;
+  status: string;
+  tenantId?: UUIDString | null;
+  dueFrom?: DateString | null;
+  dueTo?: DateString | null;
+  sortKey: string;
+  sortDirection: string;
+  limit: number;
+  offset: number;
+  requestKey: string;
+}
+```
+### Return Type
+Recall that executing the `PlatformBillingWorkspaceV2` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `PlatformBillingWorkspaceV2Data`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface PlatformBillingWorkspaceV2Data {
+  _select?: unknown[] | null;
+}
+```
+### Using `PlatformBillingWorkspaceV2`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, platformBillingWorkspaceV2, PlatformBillingWorkspaceV2Variables } from '@insightpad/dataconnect';
+
+// The `PlatformBillingWorkspaceV2` query requires an argument of type `PlatformBillingWorkspaceV2Variables`:
+const platformBillingWorkspaceV2Vars: PlatformBillingWorkspaceV2Variables = {
+  term: ..., 
+  status: ..., 
+  tenantId: ..., // optional
+  dueFrom: ..., // optional
+  dueTo: ..., // optional
+  sortKey: ..., 
+  sortDirection: ..., 
+  limit: ..., 
+  offset: ..., 
+  requestKey: ..., 
+};
+
+// Call the `platformBillingWorkspaceV2()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await platformBillingWorkspaceV2(platformBillingWorkspaceV2Vars);
+// Variables can be defined inline as well.
+const { data } = await platformBillingWorkspaceV2({ term: ..., status: ..., tenantId: ..., dueFrom: ..., dueTo: ..., sortKey: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await platformBillingWorkspaceV2(dataConnect, platformBillingWorkspaceV2Vars);
+
+console.log(data._select);
+
+// Or, you can use the `Promise` API.
+platformBillingWorkspaceV2(platformBillingWorkspaceV2Vars).then((response) => {
+  const data = response.data;
+  console.log(data._select);
+});
+```
+
+### Using `PlatformBillingWorkspaceV2`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, platformBillingWorkspaceV2Ref, PlatformBillingWorkspaceV2Variables } from '@insightpad/dataconnect';
+
+// The `PlatformBillingWorkspaceV2` query requires an argument of type `PlatformBillingWorkspaceV2Variables`:
+const platformBillingWorkspaceV2Vars: PlatformBillingWorkspaceV2Variables = {
+  term: ..., 
+  status: ..., 
+  tenantId: ..., // optional
+  dueFrom: ..., // optional
+  dueTo: ..., // optional
+  sortKey: ..., 
+  sortDirection: ..., 
+  limit: ..., 
+  offset: ..., 
+  requestKey: ..., 
+};
+
+// Call the `platformBillingWorkspaceV2Ref()` function to get a reference to the query.
+const ref = platformBillingWorkspaceV2Ref(platformBillingWorkspaceV2Vars);
+// Variables can be defined inline as well.
+const ref = platformBillingWorkspaceV2Ref({ term: ..., status: ..., tenantId: ..., dueFrom: ..., dueTo: ..., sortKey: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = platformBillingWorkspaceV2Ref(dataConnect, platformBillingWorkspaceV2Vars);
 
 // Call `executeQuery()` on the reference to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
