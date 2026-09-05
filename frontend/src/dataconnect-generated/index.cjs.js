@@ -498,6 +498,20 @@ exports.createPlatformTenant = function createPlatformTenant(dcOrVars, vars) {
 }
 ;
 
+const updatePlatformTenantRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'UpdatePlatformTenant', inputVars);
+}
+updatePlatformTenantRef.operationName = 'UpdatePlatformTenant';
+exports.updatePlatformTenantRef = updatePlatformTenantRef;
+
+exports.updatePlatformTenant = function updatePlatformTenant(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(updatePlatformTenantRef(dcInstance, inputVars));
+}
+;
+
 const setPlatformTenantStatusRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
@@ -551,6 +565,76 @@ exports.setPlatformRolePermissionRef = setPlatformRolePermissionRef;
 exports.setPlatformRolePermission = function setPlatformRolePermission(dcOrVars, vars) {
   const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
   return executeMutation(setPlatformRolePermissionRef(dcInstance, inputVars));
+}
+;
+
+const createPlatformInvoiceRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'CreatePlatformInvoice', inputVars);
+}
+createPlatformInvoiceRef.operationName = 'CreatePlatformInvoice';
+exports.createPlatformInvoiceRef = createPlatformInvoiceRef;
+
+exports.createPlatformInvoice = function createPlatformInvoice(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(createPlatformInvoiceRef(dcInstance, inputVars));
+}
+;
+
+const updatePlatformInvoiceRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'UpdatePlatformInvoice', inputVars);
+}
+updatePlatformInvoiceRef.operationName = 'UpdatePlatformInvoice';
+exports.updatePlatformInvoiceRef = updatePlatformInvoiceRef;
+
+exports.updatePlatformInvoice = function updatePlatformInvoice(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(updatePlatformInvoiceRef(dcInstance, inputVars));
+}
+;
+
+const voidPlatformInvoiceRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'VoidPlatformInvoice', inputVars);
+}
+voidPlatformInvoiceRef.operationName = 'VoidPlatformInvoice';
+exports.voidPlatformInvoiceRef = voidPlatformInvoiceRef;
+
+exports.voidPlatformInvoice = function voidPlatformInvoice(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(voidPlatformInvoiceRef(dcInstance, inputVars));
+}
+;
+
+const settlePlatformInvoiceRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'SettlePlatformInvoice', inputVars);
+}
+settlePlatformInvoiceRef.operationName = 'SettlePlatformInvoice';
+exports.settlePlatformInvoiceRef = settlePlatformInvoiceRef;
+
+exports.settlePlatformInvoice = function settlePlatformInvoice(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(settlePlatformInvoiceRef(dcInstance, inputVars));
+}
+;
+
+const reversePlatformPaymentRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'ReversePlatformPayment', inputVars);
+}
+reversePlatformPaymentRef.operationName = 'ReversePlatformPayment';
+exports.reversePlatformPaymentRef = reversePlatformPaymentRef;
+
+exports.reversePlatformPayment = function reversePlatformPayment(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(reversePlatformPaymentRef(dcInstance, inputVars));
 }
 ;
 
@@ -1092,6 +1176,21 @@ exports.platformAdminWorkspace = function platformAdminWorkspace(dcOrVars, varsO
 }
 ;
 
+const platformBillingWorkspaceRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'PlatformBillingWorkspace', inputVars);
+}
+platformBillingWorkspaceRef.operationName = 'PlatformBillingWorkspace';
+exports.platformBillingWorkspaceRef = platformBillingWorkspaceRef;
+
+exports.platformBillingWorkspace = function platformBillingWorkspace(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(platformBillingWorkspaceRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
 const stockWorkspaceRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
@@ -1164,19 +1263,5 @@ exports.operationalAnalyticsDashboard = function operationalAnalyticsDashboard(d
   
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(operationalAnalyticsDashboardRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
-}
-;
-
-const recoverPlatformAdministratorRef = (dc) => {
-  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
-  dcInstance._useGeneratedSdk();
-  return mutationRef(dcInstance, 'RecoverPlatformAdministrator');
-}
-recoverPlatformAdministratorRef.operationName = 'RecoverPlatformAdministrator';
-exports.recoverPlatformAdministratorRef = recoverPlatformAdministratorRef;
-
-exports.recoverPlatformAdministrator = function recoverPlatformAdministrator(dc) {
-  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dc, undefined);
-  return executeMutation(recoverPlatformAdministratorRef(dcInstance, inputVars));
 }
 ;

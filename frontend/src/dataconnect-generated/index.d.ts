@@ -190,6 +190,14 @@ export interface CreateCategoryVariables {
   name: string;
 }
 
+export interface CreatePlatformInvoiceData {
+  _execute?: number | null;
+}
+
+export interface CreatePlatformInvoiceVariables {
+  payload: unknown;
+}
+
 export interface CreatePlatformTenantData {
   _execute?: number | null;
 }
@@ -505,6 +513,21 @@ export interface PlatformAdminWorkspaceVariables {
   requestKey: string;
 }
 
+export interface PlatformBillingWorkspaceData {
+  _select?: unknown[] | null;
+}
+
+export interface PlatformBillingWorkspaceVariables {
+  term: string;
+  status: string;
+  tenantId?: UUIDString | null;
+  dueFrom?: DateString | null;
+  dueTo?: DateString | null;
+  limit: number;
+  offset: number;
+  requestKey: string;
+}
+
 export interface PostSaleData {
   _execute?: number | null;
 }
@@ -561,10 +584,6 @@ export interface Promotion_Key {
   __typename?: 'Promotion_Key';
 }
 
-export interface RecoverPlatformAdministratorData {
-  _execute?: number | null;
-}
-
 export interface RegisterCashMovementData {
   _execute?: number | null;
 }
@@ -606,6 +625,15 @@ export interface RestoreSubcategoryData {
 
 export interface RestoreSubcategoryVariables {
   id: UUIDString;
+}
+
+export interface ReversePlatformPaymentData {
+  _execute?: number | null;
+}
+
+export interface ReversePlatformPaymentVariables {
+  paymentId: UUIDString;
+  reason: string;
 }
 
 export interface ReverseStockOperationData {
@@ -895,6 +923,14 @@ export interface SetSuppliersStatusBatchVariables {
   active: boolean;
 }
 
+export interface SettlePlatformInvoiceData {
+  _execute?: number | null;
+}
+
+export interface SettlePlatformInvoiceVariables {
+  payload: unknown;
+}
+
 export interface StockBalance_Key {
   branchId: UUIDString;
   productId: UUIDString;
@@ -948,6 +984,21 @@ export interface Supplier_Key {
   __typename?: 'Supplier_Key';
 }
 
+export interface TenantBillingProfile_Key {
+  tenantId: UUIDString;
+  __typename?: 'TenantBillingProfile_Key';
+}
+
+export interface TenantInvoice_Key {
+  id: UUIDString;
+  __typename?: 'TenantInvoice_Key';
+}
+
+export interface TenantPayment_Key {
+  id: UUIDString;
+  __typename?: 'TenantPayment_Key';
+}
+
 export interface Tenant_Key {
   id: UUIDString;
   __typename?: 'Tenant_Key';
@@ -979,6 +1030,22 @@ export interface UpdateCategoryData {
 export interface UpdateCategoryVariables {
   id: UUIDString;
   name: string;
+}
+
+export interface UpdatePlatformInvoiceData {
+  _execute?: number | null;
+}
+
+export interface UpdatePlatformInvoiceVariables {
+  payload: unknown;
+}
+
+export interface UpdatePlatformTenantData {
+  _execute?: number | null;
+}
+
+export interface UpdatePlatformTenantVariables {
+  payload: unknown;
 }
 
 export interface UpdateSalesChannelConnectionData {
@@ -1048,6 +1115,16 @@ export interface ValidateDeviceSessionVariables {
 
 export interface VerifySalesChannelOrderConstraintsData {
   _select?: unknown[] | null;
+}
+
+export interface VoidPlatformInvoiceData {
+  _execute?: number | null;
+}
+
+export interface VoidPlatformInvoiceVariables {
+  invoiceId: UUIDString;
+  reason: string;
+  expectedVersion: Int64String;
 }
 
 interface VerifySalesChannelOrderConstraintsRef {
@@ -1470,6 +1547,18 @@ export const createPlatformTenantRef: CreatePlatformTenantRef;
 export function createPlatformTenant(vars: CreatePlatformTenantVariables): MutationPromise<CreatePlatformTenantData, CreatePlatformTenantVariables>;
 export function createPlatformTenant(dc: DataConnect, vars: CreatePlatformTenantVariables): MutationPromise<CreatePlatformTenantData, CreatePlatformTenantVariables>;
 
+interface UpdatePlatformTenantRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: UpdatePlatformTenantVariables): MutationRef<UpdatePlatformTenantData, UpdatePlatformTenantVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: UpdatePlatformTenantVariables): MutationRef<UpdatePlatformTenantData, UpdatePlatformTenantVariables>;
+  operationName: string;
+}
+export const updatePlatformTenantRef: UpdatePlatformTenantRef;
+
+export function updatePlatformTenant(vars: UpdatePlatformTenantVariables): MutationPromise<UpdatePlatformTenantData, UpdatePlatformTenantVariables>;
+export function updatePlatformTenant(dc: DataConnect, vars: UpdatePlatformTenantVariables): MutationPromise<UpdatePlatformTenantData, UpdatePlatformTenantVariables>;
+
 interface SetPlatformTenantStatusRef {
   /* Allow users to create refs without passing in DataConnect */
   (vars: SetPlatformTenantStatusVariables): MutationRef<SetPlatformTenantStatusData, SetPlatformTenantStatusVariables>;
@@ -1517,6 +1606,66 @@ export const setPlatformRolePermissionRef: SetPlatformRolePermissionRef;
 
 export function setPlatformRolePermission(vars: SetPlatformRolePermissionVariables): MutationPromise<SetPlatformRolePermissionData, SetPlatformRolePermissionVariables>;
 export function setPlatformRolePermission(dc: DataConnect, vars: SetPlatformRolePermissionVariables): MutationPromise<SetPlatformRolePermissionData, SetPlatformRolePermissionVariables>;
+
+interface CreatePlatformInvoiceRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CreatePlatformInvoiceVariables): MutationRef<CreatePlatformInvoiceData, CreatePlatformInvoiceVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: CreatePlatformInvoiceVariables): MutationRef<CreatePlatformInvoiceData, CreatePlatformInvoiceVariables>;
+  operationName: string;
+}
+export const createPlatformInvoiceRef: CreatePlatformInvoiceRef;
+
+export function createPlatformInvoice(vars: CreatePlatformInvoiceVariables): MutationPromise<CreatePlatformInvoiceData, CreatePlatformInvoiceVariables>;
+export function createPlatformInvoice(dc: DataConnect, vars: CreatePlatformInvoiceVariables): MutationPromise<CreatePlatformInvoiceData, CreatePlatformInvoiceVariables>;
+
+interface UpdatePlatformInvoiceRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: UpdatePlatformInvoiceVariables): MutationRef<UpdatePlatformInvoiceData, UpdatePlatformInvoiceVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: UpdatePlatformInvoiceVariables): MutationRef<UpdatePlatformInvoiceData, UpdatePlatformInvoiceVariables>;
+  operationName: string;
+}
+export const updatePlatformInvoiceRef: UpdatePlatformInvoiceRef;
+
+export function updatePlatformInvoice(vars: UpdatePlatformInvoiceVariables): MutationPromise<UpdatePlatformInvoiceData, UpdatePlatformInvoiceVariables>;
+export function updatePlatformInvoice(dc: DataConnect, vars: UpdatePlatformInvoiceVariables): MutationPromise<UpdatePlatformInvoiceData, UpdatePlatformInvoiceVariables>;
+
+interface VoidPlatformInvoiceRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: VoidPlatformInvoiceVariables): MutationRef<VoidPlatformInvoiceData, VoidPlatformInvoiceVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: VoidPlatformInvoiceVariables): MutationRef<VoidPlatformInvoiceData, VoidPlatformInvoiceVariables>;
+  operationName: string;
+}
+export const voidPlatformInvoiceRef: VoidPlatformInvoiceRef;
+
+export function voidPlatformInvoice(vars: VoidPlatformInvoiceVariables): MutationPromise<VoidPlatformInvoiceData, VoidPlatformInvoiceVariables>;
+export function voidPlatformInvoice(dc: DataConnect, vars: VoidPlatformInvoiceVariables): MutationPromise<VoidPlatformInvoiceData, VoidPlatformInvoiceVariables>;
+
+interface SettlePlatformInvoiceRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SettlePlatformInvoiceVariables): MutationRef<SettlePlatformInvoiceData, SettlePlatformInvoiceVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SettlePlatformInvoiceVariables): MutationRef<SettlePlatformInvoiceData, SettlePlatformInvoiceVariables>;
+  operationName: string;
+}
+export const settlePlatformInvoiceRef: SettlePlatformInvoiceRef;
+
+export function settlePlatformInvoice(vars: SettlePlatformInvoiceVariables): MutationPromise<SettlePlatformInvoiceData, SettlePlatformInvoiceVariables>;
+export function settlePlatformInvoice(dc: DataConnect, vars: SettlePlatformInvoiceVariables): MutationPromise<SettlePlatformInvoiceData, SettlePlatformInvoiceVariables>;
+
+interface ReversePlatformPaymentRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ReversePlatformPaymentVariables): MutationRef<ReversePlatformPaymentData, ReversePlatformPaymentVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ReversePlatformPaymentVariables): MutationRef<ReversePlatformPaymentData, ReversePlatformPaymentVariables>;
+  operationName: string;
+}
+export const reversePlatformPaymentRef: ReversePlatformPaymentRef;
+
+export function reversePlatformPayment(vars: ReversePlatformPaymentVariables): MutationPromise<ReversePlatformPaymentData, ReversePlatformPaymentVariables>;
+export function reversePlatformPayment(dc: DataConnect, vars: ReversePlatformPaymentVariables): MutationPromise<ReversePlatformPaymentData, ReversePlatformPaymentVariables>;
 
 interface PostStockAdjustmentRef {
   /* Allow users to create refs without passing in DataConnect */
@@ -1962,6 +2111,18 @@ export const platformAdminWorkspaceRef: PlatformAdminWorkspaceRef;
 export function platformAdminWorkspace(vars: PlatformAdminWorkspaceVariables, options?: ExecuteQueryOptions): QueryPromise<PlatformAdminWorkspaceData, PlatformAdminWorkspaceVariables>;
 export function platformAdminWorkspace(dc: DataConnect, vars: PlatformAdminWorkspaceVariables, options?: ExecuteQueryOptions): QueryPromise<PlatformAdminWorkspaceData, PlatformAdminWorkspaceVariables>;
 
+interface PlatformBillingWorkspaceRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: PlatformBillingWorkspaceVariables): QueryRef<PlatformBillingWorkspaceData, PlatformBillingWorkspaceVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: PlatformBillingWorkspaceVariables): QueryRef<PlatformBillingWorkspaceData, PlatformBillingWorkspaceVariables>;
+  operationName: string;
+}
+export const platformBillingWorkspaceRef: PlatformBillingWorkspaceRef;
+
+export function platformBillingWorkspace(vars: PlatformBillingWorkspaceVariables, options?: ExecuteQueryOptions): QueryPromise<PlatformBillingWorkspaceData, PlatformBillingWorkspaceVariables>;
+export function platformBillingWorkspace(dc: DataConnect, vars: PlatformBillingWorkspaceVariables, options?: ExecuteQueryOptions): QueryPromise<PlatformBillingWorkspaceData, PlatformBillingWorkspaceVariables>;
+
 interface StockWorkspaceRef {
   /* Allow users to create refs without passing in DataConnect */
   (vars: StockWorkspaceVariables): QueryRef<StockWorkspaceData, StockWorkspaceVariables>;
@@ -2022,14 +2183,3 @@ export const operationalAnalyticsDashboardRef: OperationalAnalyticsDashboardRef;
 export function operationalAnalyticsDashboard(vars: OperationalAnalyticsDashboardVariables, options?: ExecuteQueryOptions): QueryPromise<OperationalAnalyticsDashboardData, OperationalAnalyticsDashboardVariables>;
 export function operationalAnalyticsDashboard(dc: DataConnect, vars: OperationalAnalyticsDashboardVariables, options?: ExecuteQueryOptions): QueryPromise<OperationalAnalyticsDashboardData, OperationalAnalyticsDashboardVariables>;
 
-interface RecoverPlatformAdministratorRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (): MutationRef<RecoverPlatformAdministratorData, undefined>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect): MutationRef<RecoverPlatformAdministratorData, undefined>;
-  operationName: string;
-}
-export const recoverPlatformAdministratorRef: RecoverPlatformAdministratorRef;
-
-export function recoverPlatformAdministrator(): MutationPromise<RecoverPlatformAdministratorData, undefined>;
-export function recoverPlatformAdministrator(dc: DataConnect): MutationPromise<RecoverPlatformAdministratorData, undefined>;

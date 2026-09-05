@@ -31,6 +31,7 @@ This README will guide you through the process of using the generated JavaScript
   - [*ProductComponents*](#productcomponents)
   - [*ProductPromotions*](#productpromotions)
   - [*PlatformAdminWorkspace*](#platformadminworkspace)
+  - [*PlatformBillingWorkspace*](#platformbillingworkspace)
   - [*StockWorkspace*](#stockworkspace)
   - [*DailyProfitDashboard*](#dailyprofitdashboard)
   - [*StockOperationDetails*](#stockoperationdetails)
@@ -71,10 +72,16 @@ This README will guide you through the process of using the generated JavaScript
   - [*PostSale*](#postsale)
   - [*CancelSale*](#cancelsale)
   - [*CreatePlatformTenant*](#createplatformtenant)
+  - [*UpdatePlatformTenant*](#updateplatformtenant)
   - [*SetPlatformTenantStatus*](#setplatformtenantstatus)
   - [*LinkPlatformUser*](#linkplatformuser)
   - [*SetPlatformUserStatus*](#setplatformuserstatus)
   - [*SetPlatformRolePermission*](#setplatformrolepermission)
+  - [*CreatePlatformInvoice*](#createplatforminvoice)
+  - [*UpdatePlatformInvoice*](#updateplatforminvoice)
+  - [*VoidPlatformInvoice*](#voidplatforminvoice)
+  - [*SettlePlatformInvoice*](#settleplatforminvoice)
+  - [*ReversePlatformPayment*](#reverseplatformpayment)
   - [*PostStockAdjustment*](#poststockadjustment)
   - [*PostStockTransfer*](#poststocktransfer)
   - [*SaveStockBatch*](#savestockbatch)
@@ -92,7 +99,6 @@ This README will guide you through the process of using the generated JavaScript
   - [*ArchiveSalesChannelProductMapping*](#archivesaleschannelproductmapping)
   - [*TransitionSalesChannelOrder*](#transitionsaleschannelorder)
   - [*CloseCashSession*](#closecashsession)
-  - [*RecoverPlatformAdministrator*](#recoverplatformadministrator)
 
 # Accessing the connector
 A connector is a collection of Queries and Mutations. One SDK is generated for each connector - this SDK is generated for the connector `app`. You can find more information about connectors in the [Data Connect documentation](https://firebase.google.com/docs/data-connect#how-does).
@@ -1313,6 +1319,8 @@ The `ListCategories` query requires an argument of type `ListCategoriesVariables
 ```typescript
 export interface ListCategoriesVariables {
   search: string;
+  sortField?: string | null;
+  sortDirection?: string | null;
   limit: number;
   offset: number;
   requestKey?: string | null;
@@ -1336,6 +1344,8 @@ import { connectorConfig, listCategories, ListCategoriesVariables } from '@insig
 // The `ListCategories` query requires an argument of type `ListCategoriesVariables`:
 const listCategoriesVars: ListCategoriesVariables = {
   search: ..., 
+  sortField: ..., // optional
+  sortDirection: ..., // optional
   limit: ..., 
   offset: ..., 
   requestKey: ..., // optional
@@ -1345,7 +1355,7 @@ const listCategoriesVars: ListCategoriesVariables = {
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await listCategories(listCategoriesVars);
 // Variables can be defined inline as well.
-const { data } = await listCategories({ search: ..., limit: ..., offset: ..., requestKey: ..., });
+const { data } = await listCategories({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -1369,6 +1379,8 @@ import { connectorConfig, listCategoriesRef, ListCategoriesVariables } from '@in
 // The `ListCategories` query requires an argument of type `ListCategoriesVariables`:
 const listCategoriesVars: ListCategoriesVariables = {
   search: ..., 
+  sortField: ..., // optional
+  sortDirection: ..., // optional
   limit: ..., 
   offset: ..., 
   requestKey: ..., // optional
@@ -1377,7 +1389,7 @@ const listCategoriesVars: ListCategoriesVariables = {
 // Call the `listCategoriesRef()` function to get a reference to the query.
 const ref = listCategoriesRef(listCategoriesVars);
 // Variables can be defined inline as well.
-const ref = listCategoriesRef({ search: ..., limit: ..., offset: ..., requestKey: ..., });
+const ref = listCategoriesRef({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -1432,6 +1444,8 @@ The `ListSubcategories` query requires an argument of type `ListSubcategoriesVar
 export interface ListSubcategoriesVariables {
   search: string;
   categoryId?: UUIDString | null;
+  sortField?: string | null;
+  sortDirection?: string | null;
   limit: number;
   offset: number;
   requestKey?: string | null;
@@ -1456,6 +1470,8 @@ import { connectorConfig, listSubcategories, ListSubcategoriesVariables } from '
 const listSubcategoriesVars: ListSubcategoriesVariables = {
   search: ..., 
   categoryId: ..., // optional
+  sortField: ..., // optional
+  sortDirection: ..., // optional
   limit: ..., 
   offset: ..., 
   requestKey: ..., // optional
@@ -1465,7 +1481,7 @@ const listSubcategoriesVars: ListSubcategoriesVariables = {
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await listSubcategories(listSubcategoriesVars);
 // Variables can be defined inline as well.
-const { data } = await listSubcategories({ search: ..., categoryId: ..., limit: ..., offset: ..., requestKey: ..., });
+const { data } = await listSubcategories({ search: ..., categoryId: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -1490,6 +1506,8 @@ import { connectorConfig, listSubcategoriesRef, ListSubcategoriesVariables } fro
 const listSubcategoriesVars: ListSubcategoriesVariables = {
   search: ..., 
   categoryId: ..., // optional
+  sortField: ..., // optional
+  sortDirection: ..., // optional
   limit: ..., 
   offset: ..., 
   requestKey: ..., // optional
@@ -1498,7 +1516,7 @@ const listSubcategoriesVars: ListSubcategoriesVariables = {
 // Call the `listSubcategoriesRef()` function to get a reference to the query.
 const ref = listSubcategoriesRef(listSubcategoriesVars);
 // Variables can be defined inline as well.
-const ref = listSubcategoriesRef({ search: ..., categoryId: ..., limit: ..., offset: ..., requestKey: ..., });
+const ref = listSubcategoriesRef({ search: ..., categoryId: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -1665,6 +1683,8 @@ The `ListBranches` query requires an argument of type `ListBranchesVariables`, w
 ```typescript
 export interface ListBranchesVariables {
   search: string;
+  sortField?: string | null;
+  sortDirection?: string | null;
   limit: number;
   offset: number;
   requestKey?: string | null;
@@ -1688,6 +1708,8 @@ import { connectorConfig, listBranches, ListBranchesVariables } from '@insightpa
 // The `ListBranches` query requires an argument of type `ListBranchesVariables`:
 const listBranchesVars: ListBranchesVariables = {
   search: ..., 
+  sortField: ..., // optional
+  sortDirection: ..., // optional
   limit: ..., 
   offset: ..., 
   requestKey: ..., // optional
@@ -1697,7 +1719,7 @@ const listBranchesVars: ListBranchesVariables = {
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await listBranches(listBranchesVars);
 // Variables can be defined inline as well.
-const { data } = await listBranches({ search: ..., limit: ..., offset: ..., requestKey: ..., });
+const { data } = await listBranches({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -1721,6 +1743,8 @@ import { connectorConfig, listBranchesRef, ListBranchesVariables } from '@insigh
 // The `ListBranches` query requires an argument of type `ListBranchesVariables`:
 const listBranchesVars: ListBranchesVariables = {
   search: ..., 
+  sortField: ..., // optional
+  sortDirection: ..., // optional
   limit: ..., 
   offset: ..., 
   requestKey: ..., // optional
@@ -1729,7 +1753,7 @@ const listBranchesVars: ListBranchesVariables = {
 // Call the `listBranchesRef()` function to get a reference to the query.
 const ref = listBranchesRef(listBranchesVars);
 // Variables can be defined inline as well.
-const ref = listBranchesRef({ search: ..., limit: ..., offset: ..., requestKey: ..., });
+const ref = listBranchesRef({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -1783,6 +1807,8 @@ The `ListSuppliers` query requires an argument of type `ListSuppliersVariables`,
 ```typescript
 export interface ListSuppliersVariables {
   search: string;
+  sortField?: string | null;
+  sortDirection?: string | null;
   limit: number;
   offset: number;
   requestKey?: string | null;
@@ -1806,6 +1832,8 @@ import { connectorConfig, listSuppliers, ListSuppliersVariables } from '@insight
 // The `ListSuppliers` query requires an argument of type `ListSuppliersVariables`:
 const listSuppliersVars: ListSuppliersVariables = {
   search: ..., 
+  sortField: ..., // optional
+  sortDirection: ..., // optional
   limit: ..., 
   offset: ..., 
   requestKey: ..., // optional
@@ -1815,7 +1843,7 @@ const listSuppliersVars: ListSuppliersVariables = {
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await listSuppliers(listSuppliersVars);
 // Variables can be defined inline as well.
-const { data } = await listSuppliers({ search: ..., limit: ..., offset: ..., requestKey: ..., });
+const { data } = await listSuppliers({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -1839,6 +1867,8 @@ import { connectorConfig, listSuppliersRef, ListSuppliersVariables } from '@insi
 // The `ListSuppliers` query requires an argument of type `ListSuppliersVariables`:
 const listSuppliersVars: ListSuppliersVariables = {
   search: ..., 
+  sortField: ..., // optional
+  sortDirection: ..., // optional
   limit: ..., 
   offset: ..., 
   requestKey: ..., // optional
@@ -1847,7 +1877,7 @@ const listSuppliersVars: ListSuppliersVariables = {
 // Call the `listSuppliersRef()` function to get a reference to the query.
 const ref = listSuppliersRef(listSuppliersVars);
 // Variables can be defined inline as well.
-const ref = listSuppliersRef({ search: ..., limit: ..., offset: ..., requestKey: ..., });
+const ref = listSuppliersRef({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -1901,6 +1931,8 @@ The `ListCustomers` query requires an argument of type `ListCustomersVariables`,
 ```typescript
 export interface ListCustomersVariables {
   search: string;
+  sortField?: string | null;
+  sortDirection?: string | null;
   limit: number;
   offset: number;
   requestKey?: string | null;
@@ -1924,6 +1956,8 @@ import { connectorConfig, listCustomers, ListCustomersVariables } from '@insight
 // The `ListCustomers` query requires an argument of type `ListCustomersVariables`:
 const listCustomersVars: ListCustomersVariables = {
   search: ..., 
+  sortField: ..., // optional
+  sortDirection: ..., // optional
   limit: ..., 
   offset: ..., 
   requestKey: ..., // optional
@@ -1933,7 +1967,7 @@ const listCustomersVars: ListCustomersVariables = {
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await listCustomers(listCustomersVars);
 // Variables can be defined inline as well.
-const { data } = await listCustomers({ search: ..., limit: ..., offset: ..., requestKey: ..., });
+const { data } = await listCustomers({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -1957,6 +1991,8 @@ import { connectorConfig, listCustomersRef, ListCustomersVariables } from '@insi
 // The `ListCustomers` query requires an argument of type `ListCustomersVariables`:
 const listCustomersVars: ListCustomersVariables = {
   search: ..., 
+  sortField: ..., // optional
+  sortDirection: ..., // optional
   limit: ..., 
   offset: ..., 
   requestKey: ..., // optional
@@ -1965,7 +2001,7 @@ const listCustomersVars: ListCustomersVariables = {
 // Call the `listCustomersRef()` function to get a reference to the query.
 const ref = listCustomersRef(listCustomersVars);
 // Variables can be defined inline as well.
-const ref = listCustomersRef({ search: ..., limit: ..., offset: ..., requestKey: ..., });
+const ref = listCustomersRef({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -2019,6 +2055,8 @@ The `ListProducts` query requires an argument of type `ListProductsVariables`, w
 ```typescript
 export interface ListProductsVariables {
   search: string;
+  sortField?: string | null;
+  sortDirection?: string | null;
   limit: number;
   offset: number;
   requestKey?: string | null;
@@ -2042,6 +2080,8 @@ import { connectorConfig, listProducts, ListProductsVariables } from '@insightpa
 // The `ListProducts` query requires an argument of type `ListProductsVariables`:
 const listProductsVars: ListProductsVariables = {
   search: ..., 
+  sortField: ..., // optional
+  sortDirection: ..., // optional
   limit: ..., 
   offset: ..., 
   requestKey: ..., // optional
@@ -2051,7 +2091,7 @@ const listProductsVars: ListProductsVariables = {
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await listProducts(listProductsVars);
 // Variables can be defined inline as well.
-const { data } = await listProducts({ search: ..., limit: ..., offset: ..., requestKey: ..., });
+const { data } = await listProducts({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -2075,6 +2115,8 @@ import { connectorConfig, listProductsRef, ListProductsVariables } from '@insigh
 // The `ListProducts` query requires an argument of type `ListProductsVariables`:
 const listProductsVars: ListProductsVariables = {
   search: ..., 
+  sortField: ..., // optional
+  sortDirection: ..., // optional
   limit: ..., 
   offset: ..., 
   requestKey: ..., // optional
@@ -2083,7 +2125,7 @@ const listProductsVars: ListProductsVariables = {
 // Call the `listProductsRef()` function to get a reference to the query.
 const ref = listProductsRef(listProductsVars);
 // Variables can be defined inline as well.
-const ref = listProductsRef({ search: ..., limit: ..., offset: ..., requestKey: ..., });
+const ref = listProductsRef({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -2528,6 +2570,136 @@ const ref = platformAdminWorkspaceRef({ requestKey: ..., });
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
 const ref = platformAdminWorkspaceRef(dataConnect, platformAdminWorkspaceVars);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data._select);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data._select);
+});
+```
+
+## PlatformBillingWorkspace
+You can execute the `PlatformBillingWorkspace` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+platformBillingWorkspace(vars: PlatformBillingWorkspaceVariables, options?: ExecuteQueryOptions): QueryPromise<PlatformBillingWorkspaceData, PlatformBillingWorkspaceVariables>;
+
+interface PlatformBillingWorkspaceRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: PlatformBillingWorkspaceVariables): QueryRef<PlatformBillingWorkspaceData, PlatformBillingWorkspaceVariables>;
+}
+export const platformBillingWorkspaceRef: PlatformBillingWorkspaceRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+platformBillingWorkspace(dc: DataConnect, vars: PlatformBillingWorkspaceVariables, options?: ExecuteQueryOptions): QueryPromise<PlatformBillingWorkspaceData, PlatformBillingWorkspaceVariables>;
+
+interface PlatformBillingWorkspaceRef {
+  ...
+  (dc: DataConnect, vars: PlatformBillingWorkspaceVariables): QueryRef<PlatformBillingWorkspaceData, PlatformBillingWorkspaceVariables>;
+}
+export const platformBillingWorkspaceRef: PlatformBillingWorkspaceRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the platformBillingWorkspaceRef:
+```typescript
+const name = platformBillingWorkspaceRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `PlatformBillingWorkspace` query requires an argument of type `PlatformBillingWorkspaceVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface PlatformBillingWorkspaceVariables {
+  term: string;
+  status: string;
+  tenantId?: UUIDString | null;
+  dueFrom?: DateString | null;
+  dueTo?: DateString | null;
+  limit: number;
+  offset: number;
+  requestKey: string;
+}
+```
+### Return Type
+Recall that executing the `PlatformBillingWorkspace` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `PlatformBillingWorkspaceData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface PlatformBillingWorkspaceData {
+  _select?: unknown[] | null;
+}
+```
+### Using `PlatformBillingWorkspace`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, platformBillingWorkspace, PlatformBillingWorkspaceVariables } from '@insightpad/dataconnect';
+
+// The `PlatformBillingWorkspace` query requires an argument of type `PlatformBillingWorkspaceVariables`:
+const platformBillingWorkspaceVars: PlatformBillingWorkspaceVariables = {
+  term: ..., 
+  status: ..., 
+  tenantId: ..., // optional
+  dueFrom: ..., // optional
+  dueTo: ..., // optional
+  limit: ..., 
+  offset: ..., 
+  requestKey: ..., 
+};
+
+// Call the `platformBillingWorkspace()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await platformBillingWorkspace(platformBillingWorkspaceVars);
+// Variables can be defined inline as well.
+const { data } = await platformBillingWorkspace({ term: ..., status: ..., tenantId: ..., dueFrom: ..., dueTo: ..., limit: ..., offset: ..., requestKey: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await platformBillingWorkspace(dataConnect, platformBillingWorkspaceVars);
+
+console.log(data._select);
+
+// Or, you can use the `Promise` API.
+platformBillingWorkspace(platformBillingWorkspaceVars).then((response) => {
+  const data = response.data;
+  console.log(data._select);
+});
+```
+
+### Using `PlatformBillingWorkspace`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, platformBillingWorkspaceRef, PlatformBillingWorkspaceVariables } from '@insightpad/dataconnect';
+
+// The `PlatformBillingWorkspace` query requires an argument of type `PlatformBillingWorkspaceVariables`:
+const platformBillingWorkspaceVars: PlatformBillingWorkspaceVariables = {
+  term: ..., 
+  status: ..., 
+  tenantId: ..., // optional
+  dueFrom: ..., // optional
+  dueTo: ..., // optional
+  limit: ..., 
+  offset: ..., 
+  requestKey: ..., 
+};
+
+// Call the `platformBillingWorkspaceRef()` function to get a reference to the query.
+const ref = platformBillingWorkspaceRef(platformBillingWorkspaceVars);
+// Variables can be defined inline as well.
+const ref = platformBillingWorkspaceRef({ term: ..., status: ..., tenantId: ..., dueFrom: ..., dueTo: ..., limit: ..., offset: ..., requestKey: ..., });
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = platformBillingWorkspaceRef(dataConnect, platformBillingWorkspaceVars);
 
 // Call `executeQuery()` on the reference to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
@@ -7026,6 +7198,115 @@ executeMutation(ref).then((response) => {
 });
 ```
 
+## UpdatePlatformTenant
+You can execute the `UpdatePlatformTenant` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+updatePlatformTenant(vars: UpdatePlatformTenantVariables): MutationPromise<UpdatePlatformTenantData, UpdatePlatformTenantVariables>;
+
+interface UpdatePlatformTenantRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: UpdatePlatformTenantVariables): MutationRef<UpdatePlatformTenantData, UpdatePlatformTenantVariables>;
+}
+export const updatePlatformTenantRef: UpdatePlatformTenantRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+updatePlatformTenant(dc: DataConnect, vars: UpdatePlatformTenantVariables): MutationPromise<UpdatePlatformTenantData, UpdatePlatformTenantVariables>;
+
+interface UpdatePlatformTenantRef {
+  ...
+  (dc: DataConnect, vars: UpdatePlatformTenantVariables): MutationRef<UpdatePlatformTenantData, UpdatePlatformTenantVariables>;
+}
+export const updatePlatformTenantRef: UpdatePlatformTenantRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the updatePlatformTenantRef:
+```typescript
+const name = updatePlatformTenantRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `UpdatePlatformTenant` mutation requires an argument of type `UpdatePlatformTenantVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface UpdatePlatformTenantVariables {
+  payload: unknown;
+}
+```
+### Return Type
+Recall that executing the `UpdatePlatformTenant` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `UpdatePlatformTenantData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface UpdatePlatformTenantData {
+  _execute?: number | null;
+}
+```
+### Using `UpdatePlatformTenant`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, updatePlatformTenant, UpdatePlatformTenantVariables } from '@insightpad/dataconnect';
+
+// The `UpdatePlatformTenant` mutation requires an argument of type `UpdatePlatformTenantVariables`:
+const updatePlatformTenantVars: UpdatePlatformTenantVariables = {
+  payload: ..., 
+};
+
+// Call the `updatePlatformTenant()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await updatePlatformTenant(updatePlatformTenantVars);
+// Variables can be defined inline as well.
+const { data } = await updatePlatformTenant({ payload: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await updatePlatformTenant(dataConnect, updatePlatformTenantVars);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+updatePlatformTenant(updatePlatformTenantVars).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+### Using `UpdatePlatformTenant`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, updatePlatformTenantRef, UpdatePlatformTenantVariables } from '@insightpad/dataconnect';
+
+// The `UpdatePlatformTenant` mutation requires an argument of type `UpdatePlatformTenantVariables`:
+const updatePlatformTenantVars: UpdatePlatformTenantVariables = {
+  payload: ..., 
+};
+
+// Call the `updatePlatformTenantRef()` function to get a reference to the mutation.
+const ref = updatePlatformTenantRef(updatePlatformTenantVars);
+// Variables can be defined inline as well.
+const ref = updatePlatformTenantRef({ payload: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = updatePlatformTenantRef(dataConnect, updatePlatformTenantVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
 ## SetPlatformTenantStatus
 You can execute the `SetPlatformTenantStatus` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
 ```typescript
@@ -7454,6 +7735,560 @@ const ref = setPlatformRolePermissionRef({ payload: ..., });
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
 const ref = setPlatformRolePermissionRef(dataConnect, setPlatformRolePermissionVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+## CreatePlatformInvoice
+You can execute the `CreatePlatformInvoice` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+createPlatformInvoice(vars: CreatePlatformInvoiceVariables): MutationPromise<CreatePlatformInvoiceData, CreatePlatformInvoiceVariables>;
+
+interface CreatePlatformInvoiceRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CreatePlatformInvoiceVariables): MutationRef<CreatePlatformInvoiceData, CreatePlatformInvoiceVariables>;
+}
+export const createPlatformInvoiceRef: CreatePlatformInvoiceRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+createPlatformInvoice(dc: DataConnect, vars: CreatePlatformInvoiceVariables): MutationPromise<CreatePlatformInvoiceData, CreatePlatformInvoiceVariables>;
+
+interface CreatePlatformInvoiceRef {
+  ...
+  (dc: DataConnect, vars: CreatePlatformInvoiceVariables): MutationRef<CreatePlatformInvoiceData, CreatePlatformInvoiceVariables>;
+}
+export const createPlatformInvoiceRef: CreatePlatformInvoiceRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the createPlatformInvoiceRef:
+```typescript
+const name = createPlatformInvoiceRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `CreatePlatformInvoice` mutation requires an argument of type `CreatePlatformInvoiceVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface CreatePlatformInvoiceVariables {
+  payload: unknown;
+}
+```
+### Return Type
+Recall that executing the `CreatePlatformInvoice` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `CreatePlatformInvoiceData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface CreatePlatformInvoiceData {
+  _execute?: number | null;
+}
+```
+### Using `CreatePlatformInvoice`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, createPlatformInvoice, CreatePlatformInvoiceVariables } from '@insightpad/dataconnect';
+
+// The `CreatePlatformInvoice` mutation requires an argument of type `CreatePlatformInvoiceVariables`:
+const createPlatformInvoiceVars: CreatePlatformInvoiceVariables = {
+  payload: ..., 
+};
+
+// Call the `createPlatformInvoice()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await createPlatformInvoice(createPlatformInvoiceVars);
+// Variables can be defined inline as well.
+const { data } = await createPlatformInvoice({ payload: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await createPlatformInvoice(dataConnect, createPlatformInvoiceVars);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+createPlatformInvoice(createPlatformInvoiceVars).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+### Using `CreatePlatformInvoice`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, createPlatformInvoiceRef, CreatePlatformInvoiceVariables } from '@insightpad/dataconnect';
+
+// The `CreatePlatformInvoice` mutation requires an argument of type `CreatePlatformInvoiceVariables`:
+const createPlatformInvoiceVars: CreatePlatformInvoiceVariables = {
+  payload: ..., 
+};
+
+// Call the `createPlatformInvoiceRef()` function to get a reference to the mutation.
+const ref = createPlatformInvoiceRef(createPlatformInvoiceVars);
+// Variables can be defined inline as well.
+const ref = createPlatformInvoiceRef({ payload: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = createPlatformInvoiceRef(dataConnect, createPlatformInvoiceVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+## UpdatePlatformInvoice
+You can execute the `UpdatePlatformInvoice` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+updatePlatformInvoice(vars: UpdatePlatformInvoiceVariables): MutationPromise<UpdatePlatformInvoiceData, UpdatePlatformInvoiceVariables>;
+
+interface UpdatePlatformInvoiceRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: UpdatePlatformInvoiceVariables): MutationRef<UpdatePlatformInvoiceData, UpdatePlatformInvoiceVariables>;
+}
+export const updatePlatformInvoiceRef: UpdatePlatformInvoiceRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+updatePlatformInvoice(dc: DataConnect, vars: UpdatePlatformInvoiceVariables): MutationPromise<UpdatePlatformInvoiceData, UpdatePlatformInvoiceVariables>;
+
+interface UpdatePlatformInvoiceRef {
+  ...
+  (dc: DataConnect, vars: UpdatePlatformInvoiceVariables): MutationRef<UpdatePlatformInvoiceData, UpdatePlatformInvoiceVariables>;
+}
+export const updatePlatformInvoiceRef: UpdatePlatformInvoiceRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the updatePlatformInvoiceRef:
+```typescript
+const name = updatePlatformInvoiceRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `UpdatePlatformInvoice` mutation requires an argument of type `UpdatePlatformInvoiceVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface UpdatePlatformInvoiceVariables {
+  payload: unknown;
+}
+```
+### Return Type
+Recall that executing the `UpdatePlatformInvoice` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `UpdatePlatformInvoiceData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface UpdatePlatformInvoiceData {
+  _execute?: number | null;
+}
+```
+### Using `UpdatePlatformInvoice`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, updatePlatformInvoice, UpdatePlatformInvoiceVariables } from '@insightpad/dataconnect';
+
+// The `UpdatePlatformInvoice` mutation requires an argument of type `UpdatePlatformInvoiceVariables`:
+const updatePlatformInvoiceVars: UpdatePlatformInvoiceVariables = {
+  payload: ..., 
+};
+
+// Call the `updatePlatformInvoice()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await updatePlatformInvoice(updatePlatformInvoiceVars);
+// Variables can be defined inline as well.
+const { data } = await updatePlatformInvoice({ payload: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await updatePlatformInvoice(dataConnect, updatePlatformInvoiceVars);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+updatePlatformInvoice(updatePlatformInvoiceVars).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+### Using `UpdatePlatformInvoice`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, updatePlatformInvoiceRef, UpdatePlatformInvoiceVariables } from '@insightpad/dataconnect';
+
+// The `UpdatePlatformInvoice` mutation requires an argument of type `UpdatePlatformInvoiceVariables`:
+const updatePlatformInvoiceVars: UpdatePlatformInvoiceVariables = {
+  payload: ..., 
+};
+
+// Call the `updatePlatformInvoiceRef()` function to get a reference to the mutation.
+const ref = updatePlatformInvoiceRef(updatePlatformInvoiceVars);
+// Variables can be defined inline as well.
+const ref = updatePlatformInvoiceRef({ payload: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = updatePlatformInvoiceRef(dataConnect, updatePlatformInvoiceVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+## VoidPlatformInvoice
+You can execute the `VoidPlatformInvoice` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+voidPlatformInvoice(vars: VoidPlatformInvoiceVariables): MutationPromise<VoidPlatformInvoiceData, VoidPlatformInvoiceVariables>;
+
+interface VoidPlatformInvoiceRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: VoidPlatformInvoiceVariables): MutationRef<VoidPlatformInvoiceData, VoidPlatformInvoiceVariables>;
+}
+export const voidPlatformInvoiceRef: VoidPlatformInvoiceRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+voidPlatformInvoice(dc: DataConnect, vars: VoidPlatformInvoiceVariables): MutationPromise<VoidPlatformInvoiceData, VoidPlatformInvoiceVariables>;
+
+interface VoidPlatformInvoiceRef {
+  ...
+  (dc: DataConnect, vars: VoidPlatformInvoiceVariables): MutationRef<VoidPlatformInvoiceData, VoidPlatformInvoiceVariables>;
+}
+export const voidPlatformInvoiceRef: VoidPlatformInvoiceRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the voidPlatformInvoiceRef:
+```typescript
+const name = voidPlatformInvoiceRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `VoidPlatformInvoice` mutation requires an argument of type `VoidPlatformInvoiceVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface VoidPlatformInvoiceVariables {
+  invoiceId: UUIDString;
+  reason: string;
+  expectedVersion: Int64String;
+}
+```
+### Return Type
+Recall that executing the `VoidPlatformInvoice` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `VoidPlatformInvoiceData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface VoidPlatformInvoiceData {
+  _execute?: number | null;
+}
+```
+### Using `VoidPlatformInvoice`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, voidPlatformInvoice, VoidPlatformInvoiceVariables } from '@insightpad/dataconnect';
+
+// The `VoidPlatformInvoice` mutation requires an argument of type `VoidPlatformInvoiceVariables`:
+const voidPlatformInvoiceVars: VoidPlatformInvoiceVariables = {
+  invoiceId: ..., 
+  reason: ..., 
+  expectedVersion: ..., 
+};
+
+// Call the `voidPlatformInvoice()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await voidPlatformInvoice(voidPlatformInvoiceVars);
+// Variables can be defined inline as well.
+const { data } = await voidPlatformInvoice({ invoiceId: ..., reason: ..., expectedVersion: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await voidPlatformInvoice(dataConnect, voidPlatformInvoiceVars);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+voidPlatformInvoice(voidPlatformInvoiceVars).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+### Using `VoidPlatformInvoice`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, voidPlatformInvoiceRef, VoidPlatformInvoiceVariables } from '@insightpad/dataconnect';
+
+// The `VoidPlatformInvoice` mutation requires an argument of type `VoidPlatformInvoiceVariables`:
+const voidPlatformInvoiceVars: VoidPlatformInvoiceVariables = {
+  invoiceId: ..., 
+  reason: ..., 
+  expectedVersion: ..., 
+};
+
+// Call the `voidPlatformInvoiceRef()` function to get a reference to the mutation.
+const ref = voidPlatformInvoiceRef(voidPlatformInvoiceVars);
+// Variables can be defined inline as well.
+const ref = voidPlatformInvoiceRef({ invoiceId: ..., reason: ..., expectedVersion: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = voidPlatformInvoiceRef(dataConnect, voidPlatformInvoiceVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+## SettlePlatformInvoice
+You can execute the `SettlePlatformInvoice` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+settlePlatformInvoice(vars: SettlePlatformInvoiceVariables): MutationPromise<SettlePlatformInvoiceData, SettlePlatformInvoiceVariables>;
+
+interface SettlePlatformInvoiceRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SettlePlatformInvoiceVariables): MutationRef<SettlePlatformInvoiceData, SettlePlatformInvoiceVariables>;
+}
+export const settlePlatformInvoiceRef: SettlePlatformInvoiceRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+settlePlatformInvoice(dc: DataConnect, vars: SettlePlatformInvoiceVariables): MutationPromise<SettlePlatformInvoiceData, SettlePlatformInvoiceVariables>;
+
+interface SettlePlatformInvoiceRef {
+  ...
+  (dc: DataConnect, vars: SettlePlatformInvoiceVariables): MutationRef<SettlePlatformInvoiceData, SettlePlatformInvoiceVariables>;
+}
+export const settlePlatformInvoiceRef: SettlePlatformInvoiceRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the settlePlatformInvoiceRef:
+```typescript
+const name = settlePlatformInvoiceRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `SettlePlatformInvoice` mutation requires an argument of type `SettlePlatformInvoiceVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface SettlePlatformInvoiceVariables {
+  payload: unknown;
+}
+```
+### Return Type
+Recall that executing the `SettlePlatformInvoice` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `SettlePlatformInvoiceData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface SettlePlatformInvoiceData {
+  _execute?: number | null;
+}
+```
+### Using `SettlePlatformInvoice`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, settlePlatformInvoice, SettlePlatformInvoiceVariables } from '@insightpad/dataconnect';
+
+// The `SettlePlatformInvoice` mutation requires an argument of type `SettlePlatformInvoiceVariables`:
+const settlePlatformInvoiceVars: SettlePlatformInvoiceVariables = {
+  payload: ..., 
+};
+
+// Call the `settlePlatformInvoice()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await settlePlatformInvoice(settlePlatformInvoiceVars);
+// Variables can be defined inline as well.
+const { data } = await settlePlatformInvoice({ payload: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await settlePlatformInvoice(dataConnect, settlePlatformInvoiceVars);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+settlePlatformInvoice(settlePlatformInvoiceVars).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+### Using `SettlePlatformInvoice`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, settlePlatformInvoiceRef, SettlePlatformInvoiceVariables } from '@insightpad/dataconnect';
+
+// The `SettlePlatformInvoice` mutation requires an argument of type `SettlePlatformInvoiceVariables`:
+const settlePlatformInvoiceVars: SettlePlatformInvoiceVariables = {
+  payload: ..., 
+};
+
+// Call the `settlePlatformInvoiceRef()` function to get a reference to the mutation.
+const ref = settlePlatformInvoiceRef(settlePlatformInvoiceVars);
+// Variables can be defined inline as well.
+const ref = settlePlatformInvoiceRef({ payload: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = settlePlatformInvoiceRef(dataConnect, settlePlatformInvoiceVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+## ReversePlatformPayment
+You can execute the `ReversePlatformPayment` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+reversePlatformPayment(vars: ReversePlatformPaymentVariables): MutationPromise<ReversePlatformPaymentData, ReversePlatformPaymentVariables>;
+
+interface ReversePlatformPaymentRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ReversePlatformPaymentVariables): MutationRef<ReversePlatformPaymentData, ReversePlatformPaymentVariables>;
+}
+export const reversePlatformPaymentRef: ReversePlatformPaymentRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+reversePlatformPayment(dc: DataConnect, vars: ReversePlatformPaymentVariables): MutationPromise<ReversePlatformPaymentData, ReversePlatformPaymentVariables>;
+
+interface ReversePlatformPaymentRef {
+  ...
+  (dc: DataConnect, vars: ReversePlatformPaymentVariables): MutationRef<ReversePlatformPaymentData, ReversePlatformPaymentVariables>;
+}
+export const reversePlatformPaymentRef: ReversePlatformPaymentRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the reversePlatformPaymentRef:
+```typescript
+const name = reversePlatformPaymentRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `ReversePlatformPayment` mutation requires an argument of type `ReversePlatformPaymentVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface ReversePlatformPaymentVariables {
+  paymentId: UUIDString;
+  reason: string;
+}
+```
+### Return Type
+Recall that executing the `ReversePlatformPayment` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `ReversePlatformPaymentData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface ReversePlatformPaymentData {
+  _execute?: number | null;
+}
+```
+### Using `ReversePlatformPayment`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, reversePlatformPayment, ReversePlatformPaymentVariables } from '@insightpad/dataconnect';
+
+// The `ReversePlatformPayment` mutation requires an argument of type `ReversePlatformPaymentVariables`:
+const reversePlatformPaymentVars: ReversePlatformPaymentVariables = {
+  paymentId: ..., 
+  reason: ..., 
+};
+
+// Call the `reversePlatformPayment()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await reversePlatformPayment(reversePlatformPaymentVars);
+// Variables can be defined inline as well.
+const { data } = await reversePlatformPayment({ paymentId: ..., reason: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await reversePlatformPayment(dataConnect, reversePlatformPaymentVars);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+reversePlatformPayment(reversePlatformPaymentVars).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+### Using `ReversePlatformPayment`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, reversePlatformPaymentRef, ReversePlatformPaymentVariables } from '@insightpad/dataconnect';
+
+// The `ReversePlatformPayment` mutation requires an argument of type `ReversePlatformPaymentVariables`:
+const reversePlatformPaymentVars: ReversePlatformPaymentVariables = {
+  paymentId: ..., 
+  reason: ..., 
+};
+
+// Call the `reversePlatformPaymentRef()` function to get a reference to the mutation.
+const ref = reversePlatformPaymentRef(reversePlatformPaymentVars);
+// Variables can be defined inline as well.
+const ref = reversePlatformPaymentRef({ paymentId: ..., reason: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = reversePlatformPaymentRef(dataConnect, reversePlatformPaymentVars);
 
 // Call `executeMutation()` on the reference to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
@@ -9397,97 +10232,6 @@ const ref = closeCashSessionRef({ sessionId: ..., countedAmountCents: ..., notes
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
 const ref = closeCashSessionRef(dataConnect, closeCashSessionVars);
-
-// Call `executeMutation()` on the reference to execute the mutation.
-// You can use the `await` keyword to wait for the promise to resolve.
-const { data } = await executeMutation(ref);
-
-console.log(data._execute);
-
-// Or, you can use the `Promise` API.
-executeMutation(ref).then((response) => {
-  const data = response.data;
-  console.log(data._execute);
-});
-```
-
-## RecoverPlatformAdministrator
-You can execute the `RecoverPlatformAdministrator` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
-```typescript
-recoverPlatformAdministrator(): MutationPromise<RecoverPlatformAdministratorData, undefined>;
-
-interface RecoverPlatformAdministratorRef {
-  ...
-  /* Allow users to create refs without passing in DataConnect */
-  (): MutationRef<RecoverPlatformAdministratorData, undefined>;
-}
-export const recoverPlatformAdministratorRef: RecoverPlatformAdministratorRef;
-```
-You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
-```typescript
-recoverPlatformAdministrator(dc: DataConnect): MutationPromise<RecoverPlatformAdministratorData, undefined>;
-
-interface RecoverPlatformAdministratorRef {
-  ...
-  (dc: DataConnect): MutationRef<RecoverPlatformAdministratorData, undefined>;
-}
-export const recoverPlatformAdministratorRef: RecoverPlatformAdministratorRef;
-```
-
-If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the recoverPlatformAdministratorRef:
-```typescript
-const name = recoverPlatformAdministratorRef.operationName;
-console.log(name);
-```
-
-### Variables
-The `RecoverPlatformAdministrator` mutation has no variables.
-### Return Type
-Recall that executing the `RecoverPlatformAdministrator` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
-
-The `data` property is an object of type `RecoverPlatformAdministratorData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
-```typescript
-export interface RecoverPlatformAdministratorData {
-  _execute?: number | null;
-}
-```
-### Using `RecoverPlatformAdministrator`'s action shortcut function
-
-```typescript
-import { getDataConnect } from 'firebase/data-connect';
-import { connectorConfig, recoverPlatformAdministrator } from '@insightpad/dataconnect';
-
-
-// Call the `recoverPlatformAdministrator()` function to execute the mutation.
-// You can use the `await` keyword to wait for the promise to resolve.
-const { data } = await recoverPlatformAdministrator();
-
-// You can also pass in a `DataConnect` instance to the action shortcut function.
-const dataConnect = getDataConnect(connectorConfig);
-const { data } = await recoverPlatformAdministrator(dataConnect);
-
-console.log(data._execute);
-
-// Or, you can use the `Promise` API.
-recoverPlatformAdministrator().then((response) => {
-  const data = response.data;
-  console.log(data._execute);
-});
-```
-
-### Using `RecoverPlatformAdministrator`'s `MutationRef` function
-
-```typescript
-import { getDataConnect, executeMutation } from 'firebase/data-connect';
-import { connectorConfig, recoverPlatformAdministratorRef } from '@insightpad/dataconnect';
-
-
-// Call the `recoverPlatformAdministratorRef()` function to get a reference to the mutation.
-const ref = recoverPlatformAdministratorRef();
-
-// You can also pass in a `DataConnect` instance to the `MutationRef` function.
-const dataConnect = getDataConnect(connectorConfig);
-const ref = recoverPlatformAdministratorRef(dataConnect);
 
 // Call `executeMutation()` on the reference to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
