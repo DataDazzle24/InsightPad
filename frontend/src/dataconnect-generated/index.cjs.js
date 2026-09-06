@@ -848,17 +848,157 @@ exports.archiveSalesChannelProductMapping = function archiveSalesChannelProductM
 }
 ;
 
-const transitionSalesChannelOrderRef = (dcOrVars, vars) => {
+const queueSalesChannelOrderActionRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
-  return mutationRef(dcInstance, 'TransitionSalesChannelOrder', inputVars);
+  return mutationRef(dcInstance, 'QueueSalesChannelOrderAction', inputVars);
 }
-transitionSalesChannelOrderRef.operationName = 'TransitionSalesChannelOrder';
-exports.transitionSalesChannelOrderRef = transitionSalesChannelOrderRef;
+queueSalesChannelOrderActionRef.operationName = 'QueueSalesChannelOrderAction';
+exports.queueSalesChannelOrderActionRef = queueSalesChannelOrderActionRef;
 
-exports.transitionSalesChannelOrder = function transitionSalesChannelOrder(dcOrVars, vars) {
+exports.queueSalesChannelOrderAction = function queueSalesChannelOrderAction(dcOrVars, vars) {
   const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
-  return executeMutation(transitionSalesChannelOrderRef(dcInstance, inputVars));
+  return executeMutation(queueSalesChannelOrderActionRef(dcInstance, inputVars));
+}
+;
+
+const retrySalesChannelCommandRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RetrySalesChannelCommand', inputVars);
+}
+retrySalesChannelCommandRef.operationName = 'RetrySalesChannelCommand';
+exports.retrySalesChannelCommandRef = retrySalesChannelCommandRef;
+
+exports.retrySalesChannelCommand = function retrySalesChannelCommand(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(retrySalesChannelCommandRef(dcInstance, inputVars));
+}
+;
+
+const requestSalesChannelSyncRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RequestSalesChannelSync', inputVars);
+}
+requestSalesChannelSyncRef.operationName = 'RequestSalesChannelSync';
+exports.requestSalesChannelSyncRef = requestSalesChannelSyncRef;
+
+exports.requestSalesChannelSync = function requestSalesChannelSync(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(requestSalesChannelSyncRef(dcInstance, inputVars));
+}
+;
+
+const systemClaimSalesChannelWorkRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'SystemClaimSalesChannelWork', inputVars);
+}
+systemClaimSalesChannelWorkRef.operationName = 'SystemClaimSalesChannelWork';
+exports.systemClaimSalesChannelWorkRef = systemClaimSalesChannelWorkRef;
+
+exports.systemClaimSalesChannelWork = function systemClaimSalesChannelWork(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(systemClaimSalesChannelWorkRef(dcInstance, inputVars));
+}
+;
+
+const systemUpdateSalesChannelConnectionRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'SystemUpdateSalesChannelConnection', inputVars);
+}
+systemUpdateSalesChannelConnectionRef.operationName = 'SystemUpdateSalesChannelConnection';
+exports.systemUpdateSalesChannelConnectionRef = systemUpdateSalesChannelConnectionRef;
+
+exports.systemUpdateSalesChannelConnection = function systemUpdateSalesChannelConnection(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(systemUpdateSalesChannelConnectionRef(dcInstance, inputVars));
+}
+;
+
+const systemRegisterSalesChannelEventRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'SystemRegisterSalesChannelEvent', inputVars);
+}
+systemRegisterSalesChannelEventRef.operationName = 'SystemRegisterSalesChannelEvent';
+exports.systemRegisterSalesChannelEventRef = systemRegisterSalesChannelEventRef;
+
+exports.systemRegisterSalesChannelEvent = function systemRegisterSalesChannelEvent(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(systemRegisterSalesChannelEventRef(dcInstance, inputVars));
+}
+;
+
+const systemRecordSalesChannelEventResultRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'SystemRecordSalesChannelEventResult', inputVars);
+}
+systemRecordSalesChannelEventResultRef.operationName = 'SystemRecordSalesChannelEventResult';
+exports.systemRecordSalesChannelEventResultRef = systemRecordSalesChannelEventResultRef;
+
+exports.systemRecordSalesChannelEventResult = function systemRecordSalesChannelEventResult(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(systemRecordSalesChannelEventResultRef(dcInstance, inputVars));
+}
+;
+
+const systemIngestSalesChannelOrderRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'SystemIngestSalesChannelOrder', inputVars);
+}
+systemIngestSalesChannelOrderRef.operationName = 'SystemIngestSalesChannelOrder';
+exports.systemIngestSalesChannelOrderRef = systemIngestSalesChannelOrderRef;
+
+exports.systemIngestSalesChannelOrder = function systemIngestSalesChannelOrder(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(systemIngestSalesChannelOrderRef(dcInstance, inputVars));
+}
+;
+
+const systemRecordSalesChannelCommandResultRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'SystemRecordSalesChannelCommandResult', inputVars);
+}
+systemRecordSalesChannelCommandResultRef.operationName = 'SystemRecordSalesChannelCommandResult';
+exports.systemRecordSalesChannelCommandResultRef = systemRecordSalesChannelCommandResultRef;
+
+exports.systemRecordSalesChannelCommandResult = function systemRecordSalesChannelCommandResult(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(systemRecordSalesChannelCommandResultRef(dcInstance, inputVars));
+}
+;
+
+const systemRecordSalesChannelSyncResultRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'SystemRecordSalesChannelSyncResult', inputVars);
+}
+systemRecordSalesChannelSyncResultRef.operationName = 'SystemRecordSalesChannelSyncResult';
+exports.systemRecordSalesChannelSyncResultRef = systemRecordSalesChannelSyncResultRef;
+
+exports.systemRecordSalesChannelSyncResult = function systemRecordSalesChannelSyncResult(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(systemRecordSalesChannelSyncResultRef(dcInstance, inputVars));
+}
+;
+
+const systemRecordSalesChannelMappingResultRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'SystemRecordSalesChannelMappingResult', inputVars);
+}
+systemRecordSalesChannelMappingResultRef.operationName = 'SystemRecordSalesChannelMappingResult';
+exports.systemRecordSalesChannelMappingResultRef = systemRecordSalesChannelMappingResultRef;
+
+exports.systemRecordSalesChannelMappingResult = function systemRecordSalesChannelMappingResult(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(systemRecordSalesChannelMappingResultRef(dcInstance, inputVars));
 }
 ;
 
@@ -918,6 +1058,111 @@ exports.validateDeviceSession = function validateDeviceSession(dcOrVars, varsOrO
   
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(validateDeviceSessionRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const salesChannelOptionsRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'SalesChannelOptions', inputVars);
+}
+salesChannelOptionsRef.operationName = 'SalesChannelOptions';
+exports.salesChannelOptionsRef = salesChannelOptionsRef;
+
+exports.salesChannelOptions = function salesChannelOptions(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(salesChannelOptionsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const salesChannelConnectionsV2Ref = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'SalesChannelConnectionsV2', inputVars);
+}
+salesChannelConnectionsV2Ref.operationName = 'SalesChannelConnectionsV2';
+exports.salesChannelConnectionsV2Ref = salesChannelConnectionsV2Ref;
+
+exports.salesChannelConnectionsV2 = function salesChannelConnectionsV2(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(salesChannelConnectionsV2Ref(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const salesChannelProductMappingsV2Ref = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'SalesChannelProductMappingsV2', inputVars);
+}
+salesChannelProductMappingsV2Ref.operationName = 'SalesChannelProductMappingsV2';
+exports.salesChannelProductMappingsV2Ref = salesChannelProductMappingsV2Ref;
+
+exports.salesChannelProductMappingsV2 = function salesChannelProductMappingsV2(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(salesChannelProductMappingsV2Ref(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const salesChannelProductOptionsRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'SalesChannelProductOptions', inputVars);
+}
+salesChannelProductOptionsRef.operationName = 'SalesChannelProductOptions';
+exports.salesChannelProductOptionsRef = salesChannelProductOptionsRef;
+
+exports.salesChannelProductOptions = function salesChannelProductOptions(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(salesChannelProductOptionsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const salesChannelOperationsRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'SalesChannelOperations', inputVars);
+}
+salesChannelOperationsRef.operationName = 'SalesChannelOperations';
+exports.salesChannelOperationsRef = salesChannelOperationsRef;
+
+exports.salesChannelOperations = function salesChannelOperations(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(salesChannelOperationsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const systemSalesChannelWorkQueueRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'SystemSalesChannelWorkQueue', inputVars);
+}
+systemSalesChannelWorkQueueRef.operationName = 'SystemSalesChannelWorkQueue';
+exports.systemSalesChannelWorkQueueRef = systemSalesChannelWorkQueueRef;
+
+exports.systemSalesChannelWorkQueue = function systemSalesChannelWorkQueue(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(systemSalesChannelWorkQueueRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const salesChannelOrdersV2Ref = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'SalesChannelOrdersV2', inputVars);
+}
+salesChannelOrdersV2Ref.operationName = 'SalesChannelOrdersV2';
+exports.salesChannelOrdersV2Ref = salesChannelOrdersV2Ref;
+
+exports.salesChannelOrdersV2 = function salesChannelOrdersV2(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(salesChannelOrdersV2Ref(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;
 
