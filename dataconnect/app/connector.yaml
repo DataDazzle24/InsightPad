@@ -6,3 +6,7 @@ generate:
     package: "@insightpad/dataconnect"
     packageJsonDir: ../../frontend
     react: true
+  adminNodeSdk:
+    outputDir: ../../functions/src/dataconnect-admin-generated
+    package: "@insightpad/dataconnect-admin"
+    packageJsonDir: ../../functions

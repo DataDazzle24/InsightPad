@@ -7,6 +7,13 @@
   "dataconnect": {
     "source": "dataconnect"
   },
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs22",
+    "predeploy": [
+      "npm --prefix \"$RESOURCE_DIR\" run build"
+    ]
+  },
   "hosting": {
     "site": "insightpad-dd-dev",
     "public": "frontend/dist",
@@ -18,6 +25,14 @@
     "cleanUrls": true,
     "trailingSlash": false,
     "rewrites": [
+      {
+        "source": "/api/ifood/webhook",
+        "function": {
+          "functionId": "ifoodWebhook",
+          "region": "southamerica-east1",
+          "pinTag": true
+        }
+      },
       {
         "source": "**",
         "destination": "/index.html"

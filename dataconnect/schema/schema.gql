@@ -181,6 +181,9 @@ type SalesChannelConnection @table(name: "sales_channel_connections", key: "id")
   branchId: UUID! @col(name: "branch_id")
   connectionKey: String @unique @col(name: "connection_key", dataType: "varchar(320)")
   externalStoreKey: String @unique @col(name: "external_store_key", dataType: "varchar(520)")
+  # Global ownership guard. A partner merchant can belong to only one active
+  # Insight Pad environment, preventing the same webhook from crossing tenants.
+  providerStoreKey: String @unique @col(name: "provider_store_key", dataType: "varchar(240)")
   provider: String! @col(dataType: "varchar(40)")
   displayName: String! @col(name: "display_name", dataType: "varchar(160)")
   externalStoreId: String @col(name: "external_store_id", dataType: "varchar(160)")

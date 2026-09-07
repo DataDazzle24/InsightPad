@@ -253,11 +253,54 @@ query SalesChannelOperations($connectionId: UUID, $requestKey: String!) @auth(le
 query SystemSalesChannelWorkQueue($workerId: String!, $requestKey: String!) @auth(level: NO_ACCESS) {
   _select(sql: """
     SELECT jsonb_build_object(
-      'commands',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',q.id,'tenantId',q.tenant_id,'connectionId',q.connection_id,'orderId',q.order_id,'provider',q.provider,'action',q.action,'payload',q.payload,'attempts',q.attempts,'leaseUntil',q.lease_until,'secretReference',c.secret_reference,'externalStoreId',c.external_store_id) ORDER BY q.scheduled_at,q.id) FROM sales_channel_commands q JOIN sales_channel_connections c ON c.id=q.connection_id AND c.tenant_id=q.tenant_id WHERE q.status='PROCESSING' AND q.locked_by=left(btrim($1),180) AND q.lease_until>now()),'[]'::jsonb),
+      'commands',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',q.id,'tenantId',q.tenant_id,'connectionId',q.connection_id,'orderId',q.order_id,'providerOrderId',o.provider_order_id,'orderType',o.order_type,'partnerStatus',o.partner_status,'provider',q.provider,'action',q.action,'payload',q.payload,'attempts',q.attempts,'leaseUntil',q.lease_until,'secretReference',c.secret_reference,'externalStoreId',c.external_store_id) ORDER BY q.scheduled_at,q.id) FROM sales_channel_commands q JOIN sales_channel_connections c ON c.id=q.connection_id AND c.tenant_id=q.tenant_id LEFT JOIN sales_channel_orders o ON o.id=q.order_id AND o.tenant_id=q.tenant_id WHERE q.status='PROCESSING' AND q.locked_by=left(btrim($1),180) AND q.lease_until>now()),'[]'::jsonb),
       'events',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',e.id,'tenantId',e.tenant_id,'connectionId',e.connection_id,'provider',e.provider,'providerEventId',e.provider_event_id,'eventType',e.event_type,'requestId',e.request_id,'payloadHash',e.payload_hash,'payload',e.payload,'attempts',e.attempts,'leaseUntil',e.lease_until,'secretReference',c.secret_reference,'externalStoreId',c.external_store_id) ORDER BY e.received_at,e.id) FROM sales_channel_event_inbox e JOIN sales_channel_connections c ON c.id=e.connection_id AND c.tenant_id=e.tenant_id WHERE e.status='PROCESSING' AND e.locked_by=left(btrim($1),180) AND e.lease_until>now()),'[]'::jsonb),
       'jobs',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',j.id,'tenantId',j.tenant_id,'connectionId',j.connection_id,'provider',j.provider,'jobType',j.job_type,'attempts',j.attempts,'leaseUntil',j.lease_until,'secretReference',c.secret_reference,'externalStoreId',c.external_store_id) ORDER BY j.scheduled_at,j.id) FROM sales_channel_sync_jobs j JOIN sales_channel_connections c ON c.id=j.connection_id AND c.tenant_id=j.tenant_id WHERE j.status='PROCESSING' AND j.locked_by=left(btrim($1),180) AND j.lease_until>now()),'[]'::jsonb)
     ) data WHERE length(btrim($1)) BETWEEN 8 AND 180 AND $2<>''
   """,params:[$workerId,$requestKey])
+}
+
+# Read-only adapter lookups. These operations are unavailable to browser
+# clients and return no credential values.
+query SystemIfoodConnectionsForPolling($requestKey: String!) @auth(level: NO_ACCESS) {
+  _select(sql: """
+    SELECT c.id AS "connectionId",c.tenant_id AS "tenantId",c.external_store_id AS "externalStoreId",c.integration_mode AS "integrationMode",c.webhook_status AS "webhookStatus"
+    FROM sales_channel_connections c
+    WHERE c.provider='IFOOD' AND c.active AND c.deleted_at IS NULL AND c.enabled AND c.status='ACTIVE' AND c.authorization_status='AUTHORIZED'
+      AND c.external_store_id IS NOT NULL AND length(btrim($1)) BETWEEN 8 AND 150
+    ORDER BY c.id
+  """,params:[$requestKey])
+}
+
+query SystemIfoodConnectionByMerchant($merchantId: String!, $requestKey: String!) @auth(level: NO_ACCESS) {
+  _select(sql: """
+    SELECT c.id AS "connectionId",c.tenant_id AS "tenantId",c.external_store_id AS "externalStoreId",c.integration_mode AS "integrationMode",c.webhook_status AS "webhookStatus"
+    FROM sales_channel_connections c
+    WHERE c.provider='IFOOD' AND c.provider_store_key=concat('IFOOD:',left(btrim($1),160))
+      AND c.active AND c.deleted_at IS NULL AND c.enabled AND c.status='ACTIVE' AND c.authorization_status='AUTHORIZED'
+      AND length(btrim($1)) BETWEEN 1 AND 160 AND length(btrim($2)) BETWEEN 8 AND 150
+    LIMIT 2
+  """,params:[$merchantId,$requestKey])
+}
+
+query SystemSalesChannelMappingsForSync($jobId: UUID!, $requestKey: String!) @auth(level: NO_ACCESS) {
+  _select(sql: """
+    SELECT m.id AS "mappingId",m.external_product_id AS "externalProductId",m.sync_price AS "syncPrice",m.sync_stock AS "syncStock",
+      COALESCE(pr.promotional_price_cents,p.sale_price_cents)::text AS "priceCents",GREATEST(COALESCE(sb.quantity,0),0)::text AS "stockQuantity"
+    FROM sales_channel_sync_jobs j
+    JOIN sales_channel_connections c ON c.id=j.connection_id AND c.tenant_id=j.tenant_id
+    JOIN sales_channel_product_mappings m ON m.connection_id=c.id AND m.tenant_id=c.tenant_id AND m.active AND m.deleted_at IS NULL AND m.enabled
+    JOIN products p ON p.id=m.product_id AND p.tenant_id=m.tenant_id AND p.active AND p.deleted_at IS NULL
+    LEFT JOIN stock_balances sb ON sb.tenant_id=m.tenant_id AND sb.branch_id=c.branch_id AND sb.product_id=m.product_id
+    LEFT JOIN LATERAL (
+      SELECT x.promotional_price_cents FROM promotions x WHERE x.tenant_id=p.tenant_id AND x.product_id=p.id AND x.active AND x.deleted_at IS NULL
+        AND now()>=x.starts_at AND now()<x.ends_at ORDER BY x.promotional_price_cents,x.id LIMIT 1
+    ) pr ON true
+    WHERE j.id=$1 AND j.status='PROCESSING' AND j.provider='IFOOD' AND j.job_type IN ('CATALOG','PRICE','STOCK','FULL')
+      AND length(btrim($2)) BETWEEN 8 AND 150
+      AND ((j.job_type IN ('PRICE','FULL','CATALOG') AND m.sync_price) OR (j.job_type IN ('STOCK','FULL','CATALOG') AND m.sync_stock))
+    ORDER BY m.id
+  """,params:[$jobId,$requestKey])
 }
 
 query SalesChannelOrdersV2($filters: Any!, $sortField: String!, $sortDirection: String!, $limit: Int!, $offset: Int!, $requestKey: String!) @auth(level: USER) {

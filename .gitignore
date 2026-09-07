@@ -9,6 +9,7 @@ credentials*.json
 
 # Dependências
 node_modules/
+functions/lib/
 
 # Firebase e emuladores locais
 .firebase/
