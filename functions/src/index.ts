@@ -4,7 +4,7 @@ import { defineSecret, defineString } from "firebase-functions/params";
 import { onRequest } from "firebase-functions/v2/https";
 import { setGlobalOptions } from "firebase-functions/v2/options";
 import { onSchedule } from "firebase-functions/v2/scheduler";
-import { heartbeatMerchantIds, isIfoodKeepalive, parseIfoodEvents, verifyIfoodSignature } from "./domain.js";
+import { heartbeatMerchantIds, isIfoodKeepalive, parseIfoodEvents, sha256, verifyIfoodSignature } from "./domain.js";
 import { IfoodClient } from "./ifood.js";
 import {
   connectedHeartbeatMerchants,
@@ -107,8 +107,42 @@ export const ifoodWebhook = onRequest({
     return;
   }
   const signature = request.get("x-ifood-signature") ?? "";
-  if (!verifyIfoodSignature(rawBody, signature, clientSecret.value())) {
-    logger.warn("Webhook iFood recusado por assinatura inválida.");
+  const webhookSecret = clientSecret.value();
+
+  if (!verifyIfoodSignature(rawBody, signature, webhookSecret)) {
+    const normalizedSignature = signature.trim();
+    const signatureWithoutPrefix = normalizedSignature.replace(/^sha256=/i, "");
+    const signatureFormat = !normalizedSignature
+      ? "MISSING"
+      : /^[a-f0-9]{64}$/i.test(signatureWithoutPrefix)
+        ? /^sha256=/i.test(normalizedSignature)
+          ? "SHA256_PREFIXED_HEX_64"
+          : "HEX_64"
+        : /^[a-z0-9+/]{43}=$/i.test(normalizedSignature)
+          ? "BASE64_44"
+          : "UNEXPECTED";
+
+    let canonicalJsonMatch = false;
+    try {
+      const parsedBody = JSON.parse(rawBody.toString("utf8"));
+      const canonicalBody = Buffer.from(JSON.stringify(parsedBody), "utf8");
+      canonicalJsonMatch = verifyIfoodSignature(
+        canonicalBody,
+        signature,
+        webhookSecret,
+      );
+    } catch {
+      canonicalJsonMatch = false;
+    }
+
+    logger.warn("Webhook iFood recusado por assinatura inválida.", {
+      signatureFormat,
+      signatureLength: normalizedSignature.length,
+      bodyLength: rawBody.length,
+      bodyFingerprint: sha256(rawBody).slice(0, 16),
+      canonicalJsonMatch,
+      secretHasSurroundingWhitespace: webhookSecret !== webhookSecret.trim(),
+    });
     response.status(401).send("Unauthorized");
     return;
   }
