@@ -26,10 +26,14 @@ import {
   eventStatus,
   eventType,
   firstString,
+  heartbeatMerchantIds,
+  ifoodCompletionAction,
+  isIfoodKeepalive,
   normalizeIfoodOrder,
   parseIfoodEvents,
   retryDelaySeconds,
   sha256,
+  shouldRetryIfoodOrderDetails,
   type IfoodEvent,
   type JsonRecord,
 } from "./domain.js";
@@ -140,12 +144,29 @@ async function mapConcurrent<T>(items: T[], concurrency: number, handler: (item:
   await Promise.all(workers);
 }
 
+function chunks<T>(items: T[], size: number): T[][] {
+  const groups: T[][] = [];
+  for (let offset = 0; offset < items.length; offset += size) {
+    groups.push(items.slice(offset, offset + size));
+  }
+  return groups;
+}
+
 export async function connectionForMerchant(merchant: string): Promise<ConnectionLookup | undefined> {
   if (!merchant.trim()) return undefined;
   const result = await systemIfoodConnectionByMerchant(dc, { merchantId: merchant, requestKey: randomUUID() });
   const matches = rows(result) as ConnectionLookup[];
   if (matches.length > 1) throw new Error("A loja iFood está associada a mais de um ambiente.");
   return matches[0];
+}
+
+export async function connectedHeartbeatMerchants(events: IfoodEvent[]): Promise<string[]> {
+  const requested = [...new Set(events.flatMap(heartbeatMerchantIds))];
+  const connected = new Set<string>();
+  await mapConcurrent(requested, 5, async (merchant) => {
+    if (await connectionForMerchant(merchant)) connected.add(merchant);
+  });
+  return requested.filter((merchant) => connected.has(merchant));
 }
 
 export async function registerEvent(connectionId: string, event: IfoodEvent, requestId = ""): Promise<void> {
@@ -171,36 +192,53 @@ export async function markWebhookActive(connectionId: string, requestId = ""): P
 }
 
 export async function registerWebhookEvents(events: IfoodEvent[], requestId = ""): Promise<number> {
+  const businessEvents = events.filter((event) => !isIfoodKeepalive(event));
   const activatedConnections = new Set<string>();
-  await mapConcurrent(events, 5, async (event) => {
+  await mapConcurrent(businessEvents, 5, async (event) => {
     const connection = await connectionForMerchant(eventMerchantId(event));
     if (!connection) throw new Error("Evento recebido para loja iFood ainda não vinculada.");
     await registerEvent(connection.connectionId, event, requestId);
     activatedConnections.add(connection.connectionId);
   });
   await Promise.all([...activatedConnections].map((connectionId) => markWebhookActive(connectionId, requestId)));
-  return events.length;
+  return businessEvents.length;
 }
 
 export async function pollIfoodEvents(client: IfoodClient): Promise<{ received: number; acknowledged: number; unmapped: number }> {
   const connections = rows(await systemIfoodConnectionsForPolling(dc, { requestKey: randomUUID() })) as ConnectionLookup[];
-  if (!connections.length) return { received: 0, acknowledged: 0, unmapped: 0 };
+  const merchantIds = [...new Set(connections.map((connection) => connection.externalStoreId.trim()).filter(Boolean))];
+  if (!merchantIds.length) return { received: 0, acknowledged: 0, unmapped: 0 };
 
-  const response = await client.pollEvents();
-  const events = parseIfoodEvents(response.data);
-  const acknowledged: string[] = [];
+  let received = 0;
+  let acknowledgedCount = 0;
   let unmapped = 0;
-  await mapConcurrent(events, 5, async (event) => {
-    const connection = await connectionForMerchant(eventMerchantId(event));
-    if (!connection) {
-      unmapped += 1;
-      return;
-    }
-    await registerEvent(connection.connectionId, event, response.requestId);
-    acknowledged.push(event.id);
-  });
-  if (acknowledged.length) await client.acknowledgeEvents(acknowledged);
-  return { received: events.length, acknowledged: acknowledged.length, unmapped };
+
+  for (const merchantBatch of chunks(merchantIds, 100)) {
+    const response = await client.pollEvents(merchantBatch);
+    const events = parseIfoodEvents(response.data);
+    const acknowledged: string[] = [];
+    received += events.length;
+
+    await mapConcurrent(events, 5, async (event) => {
+      if (isIfoodKeepalive(event)) {
+        acknowledged.push(event.id);
+        return;
+      }
+      const connection = await connectionForMerchant(eventMerchantId(event));
+      if (!connection) {
+        unmapped += 1;
+        return;
+      }
+      await registerEvent(connection.connectionId, event, response.requestId);
+      acknowledged.push(event.id);
+    });
+
+    const uniqueAcknowledged = [...new Set(acknowledged)];
+    if (uniqueAcknowledged.length) await client.acknowledgeEvents(uniqueAcknowledged);
+    acknowledgedCount += uniqueAcknowledged.length;
+  }
+
+  return { received, acknowledged: acknowledgedCount, unmapped };
 }
 
 async function processEvent(client: IfoodClient, workerId: string, eventWork: EventWork): Promise<void> {
@@ -214,7 +252,19 @@ async function processEvent(client: IfoodClient, workerId: string, eventWork: Ev
         const order = normalizeIfoodOrder(orderResponse.data, eventWork.id, event);
         await systemIngestSalesChannelOrder(dc, { connectionId: eventWork.connectionId, payload: order });
       } catch (error) {
-        if (!(error instanceof IfoodHttpError && error.status === 404 && eventStatus(event) !== "PENDING")) throw error;
+        if (!(error instanceof IfoodHttpError && error.status === 404)) throw error;
+        if (eventStatus(event) === "PENDING") {
+          if (shouldRetryIfoodOrderDetails(event)) {
+            throw new IfoodHttpError(
+              "O pedido ainda não está disponível no iFood; uma nova tentativa será feita.",
+              404,
+              error.requestId,
+              true,
+              retryDelaySeconds(eventWork.attempts + 1),
+            );
+          }
+          throw error;
+        }
       }
       await systemApplySalesChannelOrderEvent(dc, {
         connectionId: eventWork.connectionId,
@@ -264,7 +314,8 @@ async function processCommand(client: IfoodClient, workerId: string, command: Co
         response = await client.startPreparation(command.providerOrderId);
         partnerStatus = "PREPARATION_STARTED";
       } else if (command.action === "COMPLETE") {
-        if ((command.orderType ?? "DELIVERY").toUpperCase() === "DELIVERY") {
+        const completionAction = ifoodCompletionAction(command.orderType ?? "", current.data);
+        if (completionAction === "DISPATCH") {
           response = await client.dispatchOrder(command.providerOrderId);
           partnerStatus = "DISPATCHED";
         } else {

@@ -11,8 +11,10 @@ nas tabelas operacionais.
 ## Componentes
 
 - `IFOOD_CLIENT_ID` e `IFOOD_CLIENT_SECRET`: versões no Secret Manager.
-- `ifoodWebhook`: entrada pública autenticada por HMAC SHA-256.
-- `reconcileIfood`: polling de contingência e drenagem das filas a cada minuto.
+- `ifoodWebhook`: entrada pública autenticada por HMAC SHA-256, resposta
+  `202 Accepted` e tratamento separado do evento de presença `KEEPALIVE`.
+- `reconcileIfood`: polling de contingência filtrado pelas lojas autorizadas,
+  confirmação em lote dos eventos persistidos e drenagem das filas a cada minuto.
 - Triggers Data Connect: acordam o worker quando autorização, sincronização,
   comando ou evento é criado.
 - Data Connect Admin SDK: acesso do servidor com identidade IAM dedicada.
@@ -61,8 +63,11 @@ venda > Operações** que os eventos chegam como `ACKNOWLEDGED`.
 4. Pedido e itens visíveis na fila de canais.
 5. Aceite confirmado no iFood e no histórico interno.
 6. Cancelamento usa um motivo elegível consultado no próprio pedido.
-7. Preço e disponibilidade de um produto de teste sincronizados.
-8. Nenhum token, segredo ou payload bruto aparece no navegador.
+7. Pedido com entrega própria usa `dispatch`; entrega iFood e retirada usam
+   `readyToPickup`.
+8. `KEEPALIVE` válido recebe `202` sem criar pedido ou evento operacional.
+9. Preço e disponibilidade de um produto de teste sincronizados.
+10. Nenhum token, segredo ou payload bruto aparece no navegador.
 
 ## Resposta a incidentes
 

@@ -27,6 +27,13 @@ type FetchLike = typeof fetch;
 const BASE_URL = "https://merchant-api.ifood.com.br";
 const REQUEST_TIMEOUT_MS = 12_000;
 
+function uniqueIdentifiers(values: string[], limit: number, label: string): string[] {
+  const identifiers = [...new Set(values.map((value) => value.trim()).filter(Boolean))];
+  if (!identifiers.length) throw new Error(`A requisição ao iFood exige ao menos um identificador de ${label}.`);
+  if (identifiers.length > limit) throw new Error(`A requisição ao iFood excede o limite de ${limit} identificadores de ${label}.`);
+  return identifiers;
+}
+
 export class IfoodClient {
   private token: Token | undefined;
   private tokenPromise: Promise<Token> | undefined;
@@ -54,16 +61,20 @@ export class IfoodClient {
     return this.request(`/merchant/v1.0/merchants/${encodeURIComponent(merchantId)}`);
   }
 
-  async pollEvents(): Promise<RequestResult<unknown[]>> {
-    const result = await this.request<unknown>("/events/v1.0/events:polling");
+  async pollEvents(merchantIds: string[]): Promise<RequestResult<unknown[]>> {
+    const ids = uniqueIdentifiers(merchantIds, 100, "lojas");
+    const result = await this.request<unknown>("/events/v1.0/events:polling", {
+      headers: { "x-polling-merchants": ids.join(",") },
+    });
     const root = asRecord(result.data);
     return { ...result, data: Array.isArray(result.data) ? result.data : asArray(root.events) };
   }
 
-  acknowledgeEvents(ids: string[]): Promise<RequestResult<unknown>> {
+  acknowledgeEvents(eventIds: string[]): Promise<RequestResult<unknown>> {
+    const ids = uniqueIdentifiers(eventIds, 100, "eventos");
     return this.request("/events/v1.0/events/acknowledgment", {
       method: "POST",
-      body: { acknowledgments: ids.map((id) => ({ id })) },
+      body: ids.map((id) => ({ id })),
     });
   }
 
@@ -116,11 +127,16 @@ export class IfoodClient {
     });
   }
 
-  async request<T>(path: string, options: { method?: string; body?: unknown } = {}, repeatAfterAuth = true): Promise<RequestResult<T>> {
+  async request<T>(
+    path: string,
+    options: { method?: string; body?: unknown; headers?: Record<string, string> } = {},
+    repeatAfterAuth = true,
+  ): Promise<RequestResult<T>> {
     const token = await this.getToken();
     const request: RequestInit = {
       method: options.method ?? "GET",
       headers: {
+        ...options.headers,
         accept: "application/json",
         authorization: `Bearer ${token.value}`,
         ...(options.body === undefined ? {} : { "content-type": "application/json" }),

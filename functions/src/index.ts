@@ -4,9 +4,16 @@ import { defineSecret, defineString } from "firebase-functions/params";
 import { onRequest } from "firebase-functions/v2/https";
 import { setGlobalOptions } from "firebase-functions/v2/options";
 import { onSchedule } from "firebase-functions/v2/scheduler";
-import { parseIfoodEvents, verifyIfoodSignature } from "./domain.js";
+import { heartbeatMerchantIds, isIfoodKeepalive, parseIfoodEvents, verifyIfoodSignature } from "./domain.js";
 import { IfoodClient } from "./ifood.js";
-import { drainIfoodWork, pollIfoodEvents, purgeExpiredPayloads, queueDueIfoodSynchronizations, registerWebhookEvents } from "./worker.js";
+import {
+  connectedHeartbeatMerchants,
+  drainIfoodWork,
+  pollIfoodEvents,
+  purgeExpiredPayloads,
+  queueDueIfoodSynchronizations,
+  registerWebhookEvents,
+} from "./worker.js";
 
 const clientId = defineSecret("IFOOD_CLIENT_ID");
 const clientSecret = defineSecret("IFOOD_CLIENT_SECRET");
@@ -108,8 +115,18 @@ export const ifoodWebhook = onRequest({
   try {
     const events = parseIfoodEvents(JSON.parse(rawBody.toString("utf8")));
     if (!events.length || events.length > 100) throw new Error("Quantidade de eventos inválida.");
-    await registerWebhookEvents(events, request.get("x-request-id") ?? "");
-    response.status(204).send();
+
+    const keepaliveEvents = events.filter(isIfoodKeepalive);
+    const businessEvents = events.filter((event) => !isIfoodKeepalive(event));
+    await registerWebhookEvents(businessEvents, request.get("x-request-id") ?? "");
+
+    const requestedMerchantIds = [...new Set(keepaliveEvents.flatMap(heartbeatMerchantIds))];
+    if (requestedMerchantIds.length) {
+      const merchantIds = await connectedHeartbeatMerchants(keepaliveEvents);
+      response.status(202).json({ merchantIds });
+      return;
+    }
+    response.status(202).send();
   } catch (error) {
     logger.error("Webhook iFood válido não pôde ser persistido.", { errorType: error instanceof Error ? error.name : "UnknownError" });
     response.status(503).send("Service Unavailable");

@@ -93,6 +93,45 @@ export function eventStatus(event: IfoodEvent): "PENDING" | "ACCEPTED" | "REJECT
   return "PENDING";
 }
 
+export type IfoodDeliveryProvider = "IFOOD" | "MERCHANT" | "UNKNOWN";
+export type IfoodCompletionAction = "DISPATCH" | "READY_TO_PICKUP";
+
+export function isIfoodKeepalive(event: IfoodEvent): boolean {
+  return eventType(event).toUpperCase() === "KEEPALIVE";
+}
+
+export function heartbeatMerchantIds(event: IfoodEvent): string[] {
+  const root = asRecord(event);
+  const merchantIds = [
+    eventMerchantId(event),
+    ...asArray(root.merchantIds)
+      .filter((item): item is string => typeof item === "string")
+      .map((item) => item.trim()),
+  ].filter((item) => item.length > 0);
+  return [...new Set(merchantIds)].slice(0, 100);
+}
+
+export function shouldRetryIfoodOrderDetails(event: IfoodEvent, nowMs = Date.now()): boolean {
+  if (eventStatus(event) !== "PENDING") return false;
+  const occurredAt = Date.parse(event.createdAt ?? "");
+  return Number.isNaN(occurredAt) || nowMs - occurredAt <= 10 * 60_000;
+}
+
+export function ifoodDeliveryProvider(order: unknown): IfoodDeliveryProvider {
+  const deliveredBy = firstString(order, "delivery.deliveredBy").toUpperCase();
+  if (deliveredBy === "IFOOD") return "IFOOD";
+  if (deliveredBy === "MERCHANT") return "MERCHANT";
+  return "UNKNOWN";
+}
+
+export function ifoodCompletionAction(orderType: string, order: unknown): IfoodCompletionAction {
+  if (orderType.toUpperCase() !== "DELIVERY") return "READY_TO_PICKUP";
+  const provider = ifoodDeliveryProvider(order);
+  if (provider === "MERCHANT") return "DISPATCH";
+  if (provider === "IFOOD") return "READY_TO_PICKUP";
+  throw new Error("O pedido não informa quem realiza a entrega.");
+}
+
 function decimalToCents(value: unknown): number {
   if (typeof value === "number" && Number.isFinite(value)) return Math.max(0, Math.round(value * 100));
   if (typeof value !== "string") return 0;

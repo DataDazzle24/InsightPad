@@ -16,6 +16,23 @@ describe("cliente iFood", () => {
     expect(JSON.stringify(firstBusinessRequest)).not.toContain("client-secret");
   });
 
+  it("filtra o polling por loja e envia o acknowledgment como lista direta", async () => {
+    const fetcher = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ accessToken: "token-seguro-com-tamanho-valido", expiresIn: 21600 }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify([{ id: "evt-1", merchantId: "merchant-1" }]), { status: 200 }))
+      .mockResolvedValueOnce(new Response("", { status: 202 }));
+    const client = new IfoodClient("client-id", "client-secret", fetcher);
+
+    await client.pollEvents(["merchant-1", " merchant-1 "]);
+    await client.acknowledgeEvents(["evt-1"]);
+
+    const pollingRequest = fetcher.mock.calls[1]!;
+    expect((pollingRequest[1]?.headers as Record<string, string>)["x-polling-merchants"]).toBe("merchant-1");
+
+    const acknowledgmentRequest = fetcher.mock.calls[2]!;
+    expect(JSON.parse(String(acknowledgmentRequest[1]?.body))).toEqual([{ id: "evt-1" }]);
+  });
+
   it("invalida o cache e obtém novo token depois de HTTP 401", async () => {
     const fetcher = vi.fn<typeof fetch>()
       .mockResolvedValueOnce(new Response(JSON.stringify({ accessToken: "token-antigo-com-tamanho-valido", expiresIn: 21600 }), { status: 200 }))

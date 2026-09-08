@@ -1,6 +1,16 @@
 import { createHmac } from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
-import { eventStatus, normalizeIfoodOrder, parseIfoodEvents, retryDelaySeconds, verifyIfoodSignature } from "./domain.js";
+import {
+  eventStatus,
+  heartbeatMerchantIds,
+  ifoodCompletionAction,
+  isIfoodKeepalive,
+  normalizeIfoodOrder,
+  parseIfoodEvents,
+  retryDelaySeconds,
+  shouldRetryIfoodOrderDetails,
+  verifyIfoodSignature,
+} from "./domain.js";
 
 describe("domínio iFood", () => {
   it("valida a assinatura HMAC sem comparar textos de tamanho variável", () => {
@@ -30,6 +40,31 @@ describe("domínio iFood", () => {
     expect(normalized.subtotalCents).toBe(2550);
     expect(normalized.totalCents).toBe(2750);
     expect(normalized.items[0]).toMatchObject({ quantity: 2, unit_price_cents: 1275, total_cents: 2550 });
+  });
+
+  it("separa keepalive de eventos de negócio e normaliza as lojas consultadas", () => {
+    const event = parseIfoodEvents({
+      id: "evt-heartbeat",
+      fullCode: "KEEPALIVE",
+      merchantId: "merchant-1",
+      merchantIds: ["merchant-1", " merchant-2 ", ""],
+    })[0]!;
+    expect(isIfoodKeepalive(event)).toBe(true);
+    expect(heartbeatMerchantIds(event)).toEqual(["merchant-1", "merchant-2"]);
+  });
+
+  it("escolhe a conclusão conforme o responsável pela entrega", () => {
+    expect(ifoodCompletionAction("TAKEOUT", {})).toBe("READY_TO_PICKUP");
+    expect(ifoodCompletionAction("DELIVERY", { delivery: { deliveredBy: "IFOOD" } })).toBe("READY_TO_PICKUP");
+    expect(ifoodCompletionAction("DELIVERY", { delivery: { deliveredBy: "MERCHANT" } })).toBe("DISPATCH");
+    expect(() => ifoodCompletionAction("DELIVERY", {})).toThrow("não informa quem realiza a entrega");
+  });
+
+  it("limita a repetição do detalhe do pedido a dez minutos", () => {
+    const now = Date.parse("2026-09-08T10:10:00Z");
+    expect(shouldRetryIfoodOrderDetails({ id: "evt-1", fullCode: "PLACED", createdAt: "2026-09-08T10:00:01Z" }, now)).toBe(true);
+    expect(shouldRetryIfoodOrderDetails({ id: "evt-2", fullCode: "PLACED", createdAt: "2026-09-08T09:59:59Z" }, now)).toBe(false);
+    expect(shouldRetryIfoodOrderDetails({ id: "evt-3", fullCode: "CANCELLED", createdAt: "2026-09-08T10:09:59Z" }, now)).toBe(false);
   });
 
   it("aplica espera exponencial limitada e respeita Retry-After", () => {
