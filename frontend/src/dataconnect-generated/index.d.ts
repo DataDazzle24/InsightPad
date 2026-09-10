@@ -612,6 +612,9 @@ export interface QueueSalesChannelOrderActionVariables {
   reason: string;
   expectedVersion: number;
   cancellationCode?: string | null;
+  itemId?: UUIDString | null;
+  ean?: string | null;
+  quantity?: number | null;
 }
 
 export interface RegisterCashMovementData {
@@ -1231,6 +1234,15 @@ export interface SystemRecordSalesChannelSyncResultData {
 export interface SystemRecordSalesChannelSyncResultVariables {
   jobId: UUIDString;
   workerId: string;
+  payload: unknown;
+}
+
+export interface SystemRefreshSalesChannelOrderAfterPickingData {
+  _execute?: number | null;
+}
+
+export interface SystemRefreshSalesChannelOrderAfterPickingVariables {
+  commandId: UUIDString;
   payload: unknown;
 }
 
@@ -2288,6 +2300,18 @@ export const systemRecordSalesChannelCommandResultRef: SystemRecordSalesChannelC
 
 export function systemRecordSalesChannelCommandResult(vars: SystemRecordSalesChannelCommandResultVariables): MutationPromise<SystemRecordSalesChannelCommandResultData, SystemRecordSalesChannelCommandResultVariables>;
 export function systemRecordSalesChannelCommandResult(dc: DataConnect, vars: SystemRecordSalesChannelCommandResultVariables): MutationPromise<SystemRecordSalesChannelCommandResultData, SystemRecordSalesChannelCommandResultVariables>;
+
+interface SystemRefreshSalesChannelOrderAfterPickingRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SystemRefreshSalesChannelOrderAfterPickingVariables): MutationRef<SystemRefreshSalesChannelOrderAfterPickingData, SystemRefreshSalesChannelOrderAfterPickingVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SystemRefreshSalesChannelOrderAfterPickingVariables): MutationRef<SystemRefreshSalesChannelOrderAfterPickingData, SystemRefreshSalesChannelOrderAfterPickingVariables>;
+  operationName: string;
+}
+export const systemRefreshSalesChannelOrderAfterPickingRef: SystemRefreshSalesChannelOrderAfterPickingRef;
+
+export function systemRefreshSalesChannelOrderAfterPicking(vars: SystemRefreshSalesChannelOrderAfterPickingVariables): MutationPromise<SystemRefreshSalesChannelOrderAfterPickingData, SystemRefreshSalesChannelOrderAfterPickingVariables>;
+export function systemRefreshSalesChannelOrderAfterPicking(dc: DataConnect, vars: SystemRefreshSalesChannelOrderAfterPickingVariables): MutationPromise<SystemRefreshSalesChannelOrderAfterPickingData, SystemRefreshSalesChannelOrderAfterPickingVariables>;
 
 interface SystemRecordSalesChannelSyncResultRef {
   /* Allow users to create refs without passing in DataConnect */

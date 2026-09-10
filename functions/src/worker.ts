@@ -15,6 +15,7 @@ import {
   systemRecordSalesChannelEventResult,
   systemRecordSalesChannelMappingResult,
   systemRecordSalesChannelSyncResult,
+  systemRefreshSalesChannelOrderAfterPicking,
   systemRegisterSalesChannelEvent,
   systemSalesChannelMappingsForSync,
   systemSalesChannelWorkQueue,
@@ -40,7 +41,7 @@ import {
   type IfoodEvent,
   type JsonRecord,
 } from "./domain.js";
-import { cancellationCode, IfoodClient, IfoodHttpError, merchantId } from "./ifood.js";
+import { cancellationCode, groceryProductFromSource, IfoodClient, IfoodHttpError, merchantId } from "./ifood.js";
 
 const app = getApps()[0] ?? initializeApp();
 const dc = getDataConnect(connectorConfig, app);
@@ -93,10 +94,23 @@ type WorkQueue = { commands: CommandWork[]; events: EventWork[]; jobs: JobWork[]
 type MappingWork = {
   mappingId: string;
   externalProductId: string;
+  externalProductName?: string;
+  productName: string;
+  internalCode?: string;
+  imageUrl?: string;
+  brand?: string;
+  size?: string;
+  sizeType?: string;
+  description?: string;
+  categoryName?: string;
+  subcategoryName?: string;
   syncPrice: boolean;
   syncStock: boolean;
   priceCents: string;
+  basePriceCents: string;
+  promotionPriceCents?: string;
   stockQuantity: string;
+  lastSyncedAt?: string;
   version: number;
   snapshotAt: string;
   remaining: string;
@@ -144,7 +158,7 @@ function safeError(error: unknown, attempt: number): SafeError {
     return { message: "Falha de rede ao comunicar com o iFood.", retryable: true, retryAfterSeconds: retryDelaySeconds(attempt) };
   }
   const original = error instanceof Error ? error.message : "";
-  const safePrefixes = ["O pedido", "Evento iFood", "Comando sem", "Ação de pedido", "O iFood não retornou", "Informe o ID", "A loja informada", "A conexão não possui", "A loja iFood está", "O produto", "A sincronização", "A operação"];
+  const safePrefixes = ["O pedido", "O item do pedido", "Evento iFood", "Comando sem", "Ação de pedido", "O iFood não retornou", "Informe o ID", "A loja informada", "A conexão não possui", "A loja iFood está", "O produto", "A sincronização", "A operação"];
   const message = safePrefixes.some((prefix) => original.startsWith(prefix)) ? original : "Falha interna no processamento seguro da integração.";
   return { message: message.slice(0, 900), retryable: false, retryAfterSeconds: retryDelaySeconds(attempt) };
 }
@@ -324,17 +338,65 @@ async function processEvent(client: IfoodClient, workerId: string, eventWork: Ev
 
 async function processCommand(client: IfoodClient, workerId: string, command: CommandWork): Promise<void> {
   try {
-    if (!command.providerOrderId) throw new Error("Comando sem pedido externo associado.");
-    if (command.catalogProfile === "GROCERY" && ["ACCEPT", "COMPLETE"].includes(command.action)) {
-      throw new Error("A operação de pedido Mercado depende do módulo de separação oficial do iFood.");
+    if (command.action === "DEACTIVATE_PRODUCT") {
+      if (command.catalogProfile !== "GROCERY" || !command.externalStoreId) throw new Error("A operação de catálogo não corresponde a uma loja Mercado autorizada.");
+      const payload = asRecord(command.payload);
+      const barcode = firstString(payload, "barcode");
+      const name = firstString(payload, "name");
+      const response = await client.ingestGroceryProducts(command.externalStoreId, [{ barcode, name, active: false }], "PATCH");
+      await systemRecordSalesChannelCommandResult(dc, {
+        commandId: command.id,
+        workerId,
+        payload: { success: true, requestId: response.requestId, responseCode: response.status, awaitingPartner: false },
+      });
+      return;
     }
+    if (!command.providerOrderId) throw new Error("Comando sem pedido externo associado.");
     const current = await client.getOrder(command.providerOrderId);
     assertOrderIdentity(current.data, command.providerOrderId, command.externalStoreId ?? "");
     const currentStatus = firstString(current.data, "orderStatus", "status") || command.partnerStatus || "";
+    const payload = asRecord(command.payload);
+    const grocery = command.catalogProfile === "GROCERY";
     let response: { status: number; requestId: string } = current;
-    let partnerStatus = currentStatus;
-    if (!orderAlreadyApplied(command.action, currentStatus)) {
-      if (command.action === "ACCEPT") {
+    let partnerStatus: string | undefined;
+    let awaitingPartner = true;
+    let pickingSnapshot: ReturnType<typeof normalizeIfoodOrder> | undefined;
+    if (["ADD_ITEM", "REPLACE_ITEM", "UPDATE_ITEM", "REMOVE_ITEM"].includes(command.action)) {
+      if (!grocery) throw new Error("A operação de separação de itens só é válida para pedidos Mercado.");
+      const uniqueId = firstString(payload, "externalItemId");
+      const ean = firstString(payload, "ean");
+      const quantity = Number(payload.quantity);
+      if (command.action === "ADD_ITEM") response = await client.addPickingItem(command.providerOrderId, ean, quantity);
+      else if (command.action === "REPLACE_ITEM") response = await client.replacePickingItem(command.providerOrderId, uniqueId, ean, quantity);
+      else if (command.action === "UPDATE_ITEM") response = await client.updatePickingItem(command.providerOrderId, uniqueId, quantity);
+      else response = await client.removePickingItem(command.providerOrderId, uniqueId);
+      awaitingPartner = false;
+      try {
+        const refreshed = await client.getOrderVirtualBag(command.providerOrderId);
+        assertOrderIdentity(refreshed.data, command.providerOrderId, command.externalStoreId ?? "");
+        pickingSnapshot = normalizeIfoodOrder(refreshed.data, command.id);
+      } catch {
+        try {
+          const refreshed = await client.getOrder(command.providerOrderId);
+          assertOrderIdentity(refreshed.data, command.providerOrderId, command.externalStoreId ?? "");
+          pickingSnapshot = normalizeIfoodOrder(refreshed.data, command.id);
+        } catch {
+          // The Picking action is already confirmed by HTTP 204. A temporary
+          // read failure must not replay a mutation that may not be idempotent.
+        }
+      }
+    } else if (!orderAlreadyApplied(command.action, currentStatus)) {
+      partnerStatus = currentStatus;
+      if (command.action === "ACCEPT" && grocery) {
+        if (!currentStatus.toUpperCase().includes("CONFIRMED")) await client.confirmOrder(command.providerOrderId);
+        response = await client.startSeparation(command.providerOrderId);
+        partnerStatus = "SEPARATION_STARTED";
+        awaitingPartner = false;
+      } else if (command.action === "COMPLETE" && grocery) {
+        response = await client.endSeparation(command.providerOrderId);
+        partnerStatus = "SEPARATION_ENDED";
+        awaitingPartner = false;
+      } else if (command.action === "ACCEPT") {
         if (!currentStatus.toUpperCase().includes("CONFIRMED")) await client.confirmOrder(command.providerOrderId);
         response = await client.startPreparation(command.providerOrderId);
         partnerStatus = "PREPARATION_STARTED";
@@ -348,7 +410,6 @@ async function processCommand(client: IfoodClient, workerId: string, command: Co
           partnerStatus = "READY_TO_PICKUP";
         }
       } else if (command.action === "REJECT" || command.action === "CANCEL") {
-        const payload = asRecord(command.payload);
         const requestedReason = firstString(payload, "reason");
         const requestedCode = firstString(payload, "cancellationCode");
         const reasons = await client.cancellationReasons(command.providerOrderId);
@@ -362,12 +423,24 @@ async function processCommand(client: IfoodClient, workerId: string, command: Co
       } else {
         throw new Error("Ação de pedido não suportada pelo adaptador iFood.");
       }
-    }
+    } else partnerStatus = currentStatus;
     await systemRecordSalesChannelCommandResult(dc, {
       commandId: command.id,
       workerId,
-      payload: { success: true, requestId: response.requestId, responseCode: response.status, partnerStatus, awaitingPartner: true },
+      payload: { success: true, requestId: response.requestId, responseCode: response.status, ...(partnerStatus ? { partnerStatus } : {}), awaitingPartner },
     });
+    if (pickingSnapshot) {
+      try {
+        await systemRefreshSalesChannelOrderAfterPicking(dc, {
+          commandId: command.id,
+          payload: { ...pickingSnapshot, merchantId: command.externalStoreId },
+        });
+      } catch {
+        // A later partner event will reconcile the order. The confirmed
+        // Picking mutation is never retried solely because this read model
+        // refresh failed.
+      }
+    }
   } catch (error) {
     const failure = safeError(error, command.attempts + 1);
     await systemRecordSalesChannelCommandResult(dc, {
@@ -399,6 +472,7 @@ async function authorizeConnection(client: IfoodClient, workerId: string, job: J
   const verified = await client.merchant(externalStoreId);
   const token = await client.tokenMetadata();
   const restaurantCatalog = job.catalogProfile === "RESTAURANT";
+  const groceryCatalog = job.catalogProfile === "GROCERY";
   await systemUpdateSalesChannelConnection(dc, {
     connectionId: job.connectionId,
     payload: {
@@ -419,12 +493,12 @@ async function authorizeConnection(client: IfoodClient, workerId: string, job: J
         order: true,
         catalog: {
           profile: job.catalogProfile ?? "UNVERIFIED",
-          initialPublication: false,
-          price: restaurantCatalog,
-          availability: restaurantCatalog,
-          inventoryQuantity: false,
+          initialPublication: groceryCatalog,
+          price: restaurantCatalog || groceryCatalog,
+          availability: restaurantCatalog || groceryCatalog,
+          inventoryQuantity: groceryCatalog,
         },
-        grocerySeparation: false,
+        grocerySeparation: groceryCatalog,
       },
     },
   });
@@ -437,11 +511,7 @@ async function authorizeConnection(client: IfoodClient, workerId: string, job: J
 
 async function synchronizeMappings(client: IfoodClient, workerId: string, job: JobWork): Promise<void> {
   if (!job.externalStoreId) throw new Error("A conexão não possui ID oficial da loja iFood.");
-  if (job.catalogProfile !== "RESTAURANT") {
-    throw new Error(job.catalogProfile === "GROCERY"
-      ? "A sincronização de Mercado depende da Item API do iFood. Este envio não usa o catálogo de restaurantes."
-      : "A conexão precisa ter o tipo de catálogo confirmado em Configurar antes de enviar produtos.");
-  }
+  if (!['RESTAURANT', 'GROCERY'].includes(job.catalogProfile ?? "")) throw new Error("A conexão precisa ter o tipo de catálogo confirmado em Configurar antes de enviar produtos.");
   const result = await systemSalesChannelMappingsForSync(dc, { jobId: job.id, workerId, requestKey: randomUUID() });
   const fetched = rows(result) as MappingWork[];
   const mappings = fetched.slice(0, 6);
@@ -451,8 +521,34 @@ async function synchronizeMappings(client: IfoodClient, workerId: string, job: J
   let retryableFailure: SafeError | undefined;
   await mapConcurrent(mappings, 3, async (mapping) => {
     try {
-      if (mapping.syncPrice && job.jobType !== "STOCK") await client.updateItemPrice(job.externalStoreId!, mapping.externalProductId, Number(mapping.priceCents));
-      if (mapping.syncStock && job.jobType !== "PRICE") await client.updateItemStatus(job.externalStoreId!, mapping.externalProductId, Number(mapping.stockQuantity) > 0);
+      if (job.catalogProfile === "RESTAURANT") {
+        await client.updateCatalogItem(job.externalStoreId!, mapping.externalProductId, {
+          ...(mapping.syncPrice && job.jobType !== "STOCK" ? { priceCents: Number(mapping.priceCents) } : {}),
+          ...(mapping.syncStock && job.jobType !== "PRICE" ? { available: Number(mapping.stockQuantity) > 0 } : {}),
+        });
+      } else {
+        const initialPublication = !mapping.lastSyncedAt || job.jobType === "CATALOG";
+        const product = groceryProductFromSource({
+          barcode: mapping.externalProductId,
+          name: mapping.externalProductName || mapping.productName,
+          internalCode: mapping.internalCode,
+          imageUrl: mapping.imageUrl,
+          brand: mapping.brand,
+          size: mapping.size,
+          sizeType: mapping.sizeType,
+          description: mapping.description,
+          categoryName: mapping.categoryName,
+          subcategoryName: mapping.subcategoryName,
+          basePriceCents: mapping.basePriceCents,
+          promotionPriceCents: mapping.promotionPriceCents,
+          stockQuantity: mapping.stockQuantity,
+          includeDetails: initialPublication || job.jobType === "FULL",
+          sendPrice: initialPublication || (mapping.syncPrice && job.jobType !== "STOCK"),
+          sendStock: initialPublication || (mapping.syncStock && job.jobType !== "PRICE"),
+          activate: initialPublication,
+        });
+        await client.ingestGroceryProducts(job.externalStoreId!, [product], initialPublication ? "FULL" : "PATCH");
+      }
       processed += 1;
       await systemRecordSalesChannelMappingResult(dc, { mappingId: mapping.mappingId, payload: { success: true, jobId: job.id, workerId, expectedVersion: mapping.version, snapshotAt: mapping.snapshotAt } });
     } catch (error) {

@@ -610,6 +610,9 @@ export interface QueueSalesChannelOrderActionVariables {
   reason: string;
   expectedVersion: number;
   cancellationCode?: string | null;
+  itemId?: UUIDString | null;
+  ean?: string | null;
+  quantity?: number | null;
 }
 
 export interface RegisterCashMovementData {
@@ -1232,6 +1235,15 @@ export interface SystemRecordSalesChannelSyncResultVariables {
   payload: unknown;
 }
 
+export interface SystemRefreshSalesChannelOrderAfterPickingData {
+  _execute?: number | null;
+}
+
+export interface SystemRefreshSalesChannelOrderAfterPickingVariables {
+  commandId: UUIDString;
+  payload: unknown;
+}
+
 export interface SystemRegisterSalesChannelEventData {
   _execute?: number | null;
 }
@@ -1775,6 +1787,11 @@ export function systemPurgeExpiredSalesChannelPayloads(vars: SystemPurgeExpiredS
 export function systemRecordSalesChannelCommandResult(dc: DataConnect, vars: SystemRecordSalesChannelCommandResultVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<SystemRecordSalesChannelCommandResultData>>;
 /** Generated Node Admin SDK operation action function for the 'SystemRecordSalesChannelCommandResult' Mutation. Allow users to pass in custom DataConnect instances. */
 export function systemRecordSalesChannelCommandResult(vars: SystemRecordSalesChannelCommandResultVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<SystemRecordSalesChannelCommandResultData>>;
+
+/** Generated Node Admin SDK operation action function for the 'SystemRefreshSalesChannelOrderAfterPicking' Mutation. Allow users to execute without passing in DataConnect. */
+export function systemRefreshSalesChannelOrderAfterPicking(dc: DataConnect, vars: SystemRefreshSalesChannelOrderAfterPickingVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<SystemRefreshSalesChannelOrderAfterPickingData>>;
+/** Generated Node Admin SDK operation action function for the 'SystemRefreshSalesChannelOrderAfterPicking' Mutation. Allow users to pass in custom DataConnect instances. */
+export function systemRefreshSalesChannelOrderAfterPicking(vars: SystemRefreshSalesChannelOrderAfterPickingVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<SystemRefreshSalesChannelOrderAfterPickingData>>;
 
 /** Generated Node Admin SDK operation action function for the 'SystemRecordSalesChannelSyncResult' Mutation. Allow users to execute without passing in DataConnect. */
 export function systemRecordSalesChannelSyncResult(dc: DataConnect, vars: SystemRecordSalesChannelSyncResultVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<SystemRecordSalesChannelSyncResultData>>;

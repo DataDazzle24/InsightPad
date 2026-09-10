@@ -518,6 +518,13 @@ function systemRecordSalesChannelCommandResult(dcOrVarsOrOptions, varsOrOptions,
 }
 exports.systemRecordSalesChannelCommandResult = systemRecordSalesChannelCommandResult;
 
+function systemRefreshSalesChannelOrderAfterPicking(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeMutation('SystemRefreshSalesChannelOrderAfterPicking', inputVars, inputOpts);
+}
+exports.systemRefreshSalesChannelOrderAfterPicking = systemRefreshSalesChannelOrderAfterPicking;
+
 function systemRecordSalesChannelSyncResult(dcOrVarsOrOptions, varsOrOptions, options) {
   const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
   dcInstance.useGen(true);

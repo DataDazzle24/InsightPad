@@ -129,6 +129,7 @@ You can also follow the instructions from the [Data Connect documentation](https
   - [*SystemQueueDueSalesChannelSyncJobs*](#systemqueueduesaleschannelsyncjobs)
   - [*SystemPurgeExpiredSalesChannelPayloads*](#systempurgeexpiredsaleschannelpayloads)
   - [*SystemRecordSalesChannelCommandResult*](#systemrecordsaleschannelcommandresult)
+  - [*SystemRefreshSalesChannelOrderAfterPicking*](#systemrefreshsaleschannelorderafterpicking)
   - [*SystemRecordSalesChannelSyncResult*](#systemrecordsaleschannelsyncresult)
   - [*SystemRecordSalesChannelMappingResult*](#systemrecordsaleschannelmappingresult)
   - [*CloseCashSession*](#closecashsession)
@@ -9402,6 +9403,9 @@ export interface QueueSalesChannelOrderActionVariables {
   reason: string;
   expectedVersion: number;
   cancellationCode?: string | null;
+  itemId?: UUIDString | null;
+  ean?: string | null;
+  quantity?: number | null;
 }
 ```
 ### Return Type
@@ -9456,10 +9460,13 @@ export default function QueueSalesChannelOrderActionComponent() {
     reason: ..., 
     expectedVersion: ..., 
     cancellationCode: ..., // optional
+    itemId: ..., // optional
+    ean: ..., // optional
+    quantity: ..., // optional
   };
   mutation.mutate(queueSalesChannelOrderActionVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ id: ..., action: ..., reason: ..., expectedVersion: ..., cancellationCode: ..., });
+  mutation.mutate({ id: ..., action: ..., reason: ..., expectedVersion: ..., cancellationCode: ..., itemId: ..., ean: ..., quantity: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -10622,6 +10629,102 @@ export default function SystemRecordSalesChannelCommandResultComponent() {
     onSuccess: () => { console.log('Mutation succeeded!'); }
   };
   mutation.mutate(systemRecordSalesChannelCommandResultVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data._execute);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## SystemRefreshSalesChannelOrderAfterPicking
+You can execute the `SystemRefreshSalesChannelOrderAfterPicking` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useSystemRefreshSalesChannelOrderAfterPicking(options?: useDataConnectMutationOptions<SystemRefreshSalesChannelOrderAfterPickingData, FirebaseError, SystemRefreshSalesChannelOrderAfterPickingVariables>): UseDataConnectMutationResult<SystemRefreshSalesChannelOrderAfterPickingData, SystemRefreshSalesChannelOrderAfterPickingVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useSystemRefreshSalesChannelOrderAfterPicking(dc: DataConnect, options?: useDataConnectMutationOptions<SystemRefreshSalesChannelOrderAfterPickingData, FirebaseError, SystemRefreshSalesChannelOrderAfterPickingVariables>): UseDataConnectMutationResult<SystemRefreshSalesChannelOrderAfterPickingData, SystemRefreshSalesChannelOrderAfterPickingVariables>;
+```
+
+### Variables
+The `SystemRefreshSalesChannelOrderAfterPicking` Mutation requires an argument of type `SystemRefreshSalesChannelOrderAfterPickingVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface SystemRefreshSalesChannelOrderAfterPickingVariables {
+  commandId: UUIDString;
+  payload: unknown;
+}
+```
+### Return Type
+Recall that calling the `SystemRefreshSalesChannelOrderAfterPicking` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `SystemRefreshSalesChannelOrderAfterPicking` Mutation is of type `SystemRefreshSalesChannelOrderAfterPickingData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface SystemRefreshSalesChannelOrderAfterPickingData {
+  _execute?: number | null;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `SystemRefreshSalesChannelOrderAfterPicking`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, SystemRefreshSalesChannelOrderAfterPickingVariables } from '@insightpad/dataconnect';
+import { useSystemRefreshSalesChannelOrderAfterPicking } from '@insightpad/dataconnect/react'
+
+export default function SystemRefreshSalesChannelOrderAfterPickingComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useSystemRefreshSalesChannelOrderAfterPicking();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useSystemRefreshSalesChannelOrderAfterPicking(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useSystemRefreshSalesChannelOrderAfterPicking(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useSystemRefreshSalesChannelOrderAfterPicking(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useSystemRefreshSalesChannelOrderAfterPicking` Mutation requires an argument of type `SystemRefreshSalesChannelOrderAfterPickingVariables`:
+  const systemRefreshSalesChannelOrderAfterPickingVars: SystemRefreshSalesChannelOrderAfterPickingVariables = {
+    commandId: ..., 
+    payload: ..., 
+  };
+  mutation.mutate(systemRefreshSalesChannelOrderAfterPickingVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ commandId: ..., payload: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(systemRefreshSalesChannelOrderAfterPickingVars, options);
 
   // Then, you can render your component dynamically based on the status of the Mutation.
   if (mutation.isPending) {

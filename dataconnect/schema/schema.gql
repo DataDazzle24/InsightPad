@@ -549,6 +549,8 @@ type Product @table(name: "products", key: "id") {
   name: String! @col(dataType: "varchar(180)")
   internalCode: String @col(name: "internal_code", dataType: "varchar(60)")
   ean: String @col(dataType: "varchar(32)")
+  scaleCode: String @col(name: "scale_code", dataType: "varchar(32)")
+  imageUrl: String @col(name: "image_url", dataType: "varchar(1000)")
   brand: String @col(dataType: "varchar(100)")
   sizeType: String @col(name: "size_type", dataType: "varchar(40)")
   size: String @col(dataType: "varchar(40)")

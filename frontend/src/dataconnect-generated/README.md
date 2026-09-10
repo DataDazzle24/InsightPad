@@ -122,6 +122,7 @@ This README will guide you through the process of using the generated JavaScript
   - [*SystemQueueDueSalesChannelSyncJobs*](#systemqueueduesaleschannelsyncjobs)
   - [*SystemPurgeExpiredSalesChannelPayloads*](#systempurgeexpiredsaleschannelpayloads)
   - [*SystemRecordSalesChannelCommandResult*](#systemrecordsaleschannelcommandresult)
+  - [*SystemRefreshSalesChannelOrderAfterPicking*](#systemrefreshsaleschannelorderafterpicking)
   - [*SystemRecordSalesChannelSyncResult*](#systemrecordsaleschannelsyncresult)
   - [*SystemRecordSalesChannelMappingResult*](#systemrecordsaleschannelmappingresult)
   - [*CloseCashSession*](#closecashsession)
@@ -11506,6 +11507,9 @@ export interface QueueSalesChannelOrderActionVariables {
   reason: string;
   expectedVersion: number;
   cancellationCode?: string | null;
+  itemId?: UUIDString | null;
+  ean?: string | null;
+  quantity?: number | null;
 }
 ```
 ### Return Type
@@ -11530,13 +11534,16 @@ const queueSalesChannelOrderActionVars: QueueSalesChannelOrderActionVariables = 
   reason: ..., 
   expectedVersion: ..., 
   cancellationCode: ..., // optional
+  itemId: ..., // optional
+  ean: ..., // optional
+  quantity: ..., // optional
 };
 
 // Call the `queueSalesChannelOrderAction()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await queueSalesChannelOrderAction(queueSalesChannelOrderActionVars);
 // Variables can be defined inline as well.
-const { data } = await queueSalesChannelOrderAction({ id: ..., action: ..., reason: ..., expectedVersion: ..., cancellationCode: ..., });
+const { data } = await queueSalesChannelOrderAction({ id: ..., action: ..., reason: ..., expectedVersion: ..., cancellationCode: ..., itemId: ..., ean: ..., quantity: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -11564,12 +11571,15 @@ const queueSalesChannelOrderActionVars: QueueSalesChannelOrderActionVariables = 
   reason: ..., 
   expectedVersion: ..., 
   cancellationCode: ..., // optional
+  itemId: ..., // optional
+  ean: ..., // optional
+  quantity: ..., // optional
 };
 
 // Call the `queueSalesChannelOrderActionRef()` function to get a reference to the mutation.
 const ref = queueSalesChannelOrderActionRef(queueSalesChannelOrderActionVars);
 // Variables can be defined inline as well.
-const ref = queueSalesChannelOrderActionRef({ id: ..., action: ..., reason: ..., expectedVersion: ..., cancellationCode: ..., });
+const ref = queueSalesChannelOrderActionRef({ id: ..., action: ..., reason: ..., expectedVersion: ..., cancellationCode: ..., itemId: ..., ean: ..., quantity: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -12924,6 +12934,118 @@ const ref = systemRecordSalesChannelCommandResultRef({ commandId: ..., workerId:
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
 const ref = systemRecordSalesChannelCommandResultRef(dataConnect, systemRecordSalesChannelCommandResultVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+## SystemRefreshSalesChannelOrderAfterPicking
+You can execute the `SystemRefreshSalesChannelOrderAfterPicking` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+systemRefreshSalesChannelOrderAfterPicking(vars: SystemRefreshSalesChannelOrderAfterPickingVariables): MutationPromise<SystemRefreshSalesChannelOrderAfterPickingData, SystemRefreshSalesChannelOrderAfterPickingVariables>;
+
+interface SystemRefreshSalesChannelOrderAfterPickingRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SystemRefreshSalesChannelOrderAfterPickingVariables): MutationRef<SystemRefreshSalesChannelOrderAfterPickingData, SystemRefreshSalesChannelOrderAfterPickingVariables>;
+}
+export const systemRefreshSalesChannelOrderAfterPickingRef: SystemRefreshSalesChannelOrderAfterPickingRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+systemRefreshSalesChannelOrderAfterPicking(dc: DataConnect, vars: SystemRefreshSalesChannelOrderAfterPickingVariables): MutationPromise<SystemRefreshSalesChannelOrderAfterPickingData, SystemRefreshSalesChannelOrderAfterPickingVariables>;
+
+interface SystemRefreshSalesChannelOrderAfterPickingRef {
+  ...
+  (dc: DataConnect, vars: SystemRefreshSalesChannelOrderAfterPickingVariables): MutationRef<SystemRefreshSalesChannelOrderAfterPickingData, SystemRefreshSalesChannelOrderAfterPickingVariables>;
+}
+export const systemRefreshSalesChannelOrderAfterPickingRef: SystemRefreshSalesChannelOrderAfterPickingRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the systemRefreshSalesChannelOrderAfterPickingRef:
+```typescript
+const name = systemRefreshSalesChannelOrderAfterPickingRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `SystemRefreshSalesChannelOrderAfterPicking` mutation requires an argument of type `SystemRefreshSalesChannelOrderAfterPickingVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface SystemRefreshSalesChannelOrderAfterPickingVariables {
+  commandId: UUIDString;
+  payload: unknown;
+}
+```
+### Return Type
+Recall that executing the `SystemRefreshSalesChannelOrderAfterPicking` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `SystemRefreshSalesChannelOrderAfterPickingData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface SystemRefreshSalesChannelOrderAfterPickingData {
+  _execute?: number | null;
+}
+```
+### Using `SystemRefreshSalesChannelOrderAfterPicking`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, systemRefreshSalesChannelOrderAfterPicking, SystemRefreshSalesChannelOrderAfterPickingVariables } from '@insightpad/dataconnect';
+
+// The `SystemRefreshSalesChannelOrderAfterPicking` mutation requires an argument of type `SystemRefreshSalesChannelOrderAfterPickingVariables`:
+const systemRefreshSalesChannelOrderAfterPickingVars: SystemRefreshSalesChannelOrderAfterPickingVariables = {
+  commandId: ..., 
+  payload: ..., 
+};
+
+// Call the `systemRefreshSalesChannelOrderAfterPicking()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await systemRefreshSalesChannelOrderAfterPicking(systemRefreshSalesChannelOrderAfterPickingVars);
+// Variables can be defined inline as well.
+const { data } = await systemRefreshSalesChannelOrderAfterPicking({ commandId: ..., payload: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await systemRefreshSalesChannelOrderAfterPicking(dataConnect, systemRefreshSalesChannelOrderAfterPickingVars);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+systemRefreshSalesChannelOrderAfterPicking(systemRefreshSalesChannelOrderAfterPickingVars).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+### Using `SystemRefreshSalesChannelOrderAfterPicking`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, systemRefreshSalesChannelOrderAfterPickingRef, SystemRefreshSalesChannelOrderAfterPickingVariables } from '@insightpad/dataconnect';
+
+// The `SystemRefreshSalesChannelOrderAfterPicking` mutation requires an argument of type `SystemRefreshSalesChannelOrderAfterPickingVariables`:
+const systemRefreshSalesChannelOrderAfterPickingVars: SystemRefreshSalesChannelOrderAfterPickingVariables = {
+  commandId: ..., 
+  payload: ..., 
+};
+
+// Call the `systemRefreshSalesChannelOrderAfterPickingRef()` function to get a reference to the mutation.
+const ref = systemRefreshSalesChannelOrderAfterPickingRef(systemRefreshSalesChannelOrderAfterPickingVars);
+// Variables can be defined inline as well.
+const ref = systemRefreshSalesChannelOrderAfterPickingRef({ commandId: ..., payload: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = systemRefreshSalesChannelOrderAfterPickingRef(dataConnect, systemRefreshSalesChannelOrderAfterPickingVars);
 
 // Call `executeMutation()` on the reference to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.

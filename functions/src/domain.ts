@@ -212,7 +212,10 @@ function flattenItems(items: unknown[]): NormalizedOrder["items"] {
       complements.length ? `Complementos: ${complements.join(", ")}` : "",
     ].filter(Boolean).join(" · ");
     return quantity > 0 ? [{
-      external_item_id: firstString(item, "externalCode", "id", "uniqueId"),
+      // Picking identifies a concrete bag item by uniqueId. Keep it ahead of
+      // catalog identifiers so Grocery item modifiers cannot target a SKU by
+      // mistake when the same product appears more than once in the order.
+      external_item_id: firstString(item, "uniqueId", "id", "externalCode"),
       name: name.slice(0, 240),
       quantity,
       unit_price_cents: unitCents,

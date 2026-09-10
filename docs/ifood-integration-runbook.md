@@ -32,14 +32,16 @@ nas tabelas operacionais.
 | Aceite e preparo de restaurante | Implementado | Estado interno só muda após evento oficial |
 | Recusa e cancelamento | Implementado | Motivo elegível é consultado no iFood e escolhido pelo usuário |
 | Pronto para retirada e despacho | Implementado | Ação depende do responsável pela entrega |
-| Vínculo de item já existente, preço e disponibilidade de restaurante | Implementado | Processamento paginado, concorrência limitada e checkpoint |
-| Publicação inicial de item Grocery | Bloqueado | Requer o contrato oficial completo da Item API |
-| Separação Grocery (iniciar, editar e finalizar) | Bloqueado | Requer o contrato oficial completo do módulo de separação |
-| Quantidade de estoque Grocery, promoções e conciliação | Não implementado | Fora do contrato atualmente validado |
+| Vínculo de item já existente, preço e disponibilidade de restaurante | Implementado | Usa `PATCH /catalog/v2.0/merchants/{merchantId}/items/{itemId}`; rotas depreciadas não são usadas |
+| Publicação inicial e atualização de produto Grocery | Implementado | Item API v1 com `reset=false`; POST no primeiro envio e PATCH nos seguintes |
+| Preço, promoção, estoque, categoria e imagem Grocery | Implementado | Derivados do cadastro interno e enviados somente por HTTPS autenticado |
+| Separação Grocery | Implementado | Confirmar/iniciar, finalizar, adicionar, substituir, alterar quantidade e remover item |
+| Desativação de produto Grocery | Implementado | Remover o vínculo enfileira `active=false` antes de encerrar o acompanhamento |
 
-Os caminhos bloqueados são recusados antes de chamar endpoints de restaurante.
-Isso evita enviar uma operação válida para o módulo errado e mantém o estado
-interno coerente com o estado oficial do parceiro.
+Restaurante e Mercado permanecem em fluxos separados. Um produto Grocery é
+identificado por EAN ou código de balança; um item Restaurant é identificado
+pelo UUID do item no Catálogo v2. Nenhum caminho Grocery usa endpoints de
+restaurante e o reset global de catálogo permanece permanentemente desativado.
 
 ## Configuração no portal iFood
 
@@ -61,11 +63,30 @@ venda > Operações** que os eventos chegam como `ACKNOWLEDGED`.
    e a prova de acesso à loja ocorrem no servidor.
 4. Acompanhe **Diagnóstico** e **Operações** até a conexão ficar `AUTHORIZED` e
    `ACTIVE`.
-5. Vincule produtos usando o identificador oficial do item no catálogo iFood e
-   habilite preço e/ou disponibilidade conforme a estratégia da loja. Esta etapa
-   atende, por enquanto, apenas o catálogo de restaurante.
-6. Execute **Sincronizar** e confira o resultado por produto antes de abrir a
-   loja para pedidos reais.
+5. Em uma loja **Restaurant**, vincule o produto usando o UUID oficial de um
+   item já existente no catálogo iFood.
+6. Em uma loja **Grocery**, cadastre nome, preço, categoria e um EAN ou código
+   de balança. A imagem é opcional, mas, quando informada, precisa ser uma URL
+   pública HTTPS. Ao preparar o vínculo, o identificador é derivado do cadastro
+   e não pode ser digitado livremente no modal de canais.
+7. Execute **Publicar**. O primeiro envio usa POST da Item API com
+   `reset=false`; os próximos usam PATCH e somente os campos acompanhados.
+8. Confira o resultado em **Operações**. HTTP `202` significa que a ingestão foi
+   aceita pelo iFood; a interface mostra esse estado como **Aceito pelo iFood**.
+
+## Operação de pedidos Grocery
+
+1. Em **Pedidos integrados**, use **Iniciar separação**. O adaptador confirma o
+   pedido e aciona `startSeparation` pela Picking API.
+2. Nos detalhes do pedido, altere a quantidade, substitua ou remova um item. O
+   botão **Adicionar item à separação** exige EAN/código de balança e quantidade.
+3. Cada alteração é validada contra o item do próprio pedido, gravada na outbox
+   e enviada pelo worker. A resposta síncrona `204` libera a próxima ação.
+4. Use **Finalizar separação** somente após concluir as conferências. O pedido
+   permanece em acompanhamento até os eventos posteriores do iFood concluírem
+   o ciclo logístico.
+5. Pedidos antigos sem `uniqueId` ficam somente para consulta; isso evita usar
+   um SKU no lugar do identificador único da instância na sacola.
 
 ## Segurança
 
@@ -88,17 +109,29 @@ venda > Operações** que os eventos chegam como `ACKNOWLEDGED`.
 7. Pedido com entrega própria usa `dispatch`; entrega iFood e retirada usam
    `readyToPickup`.
 8. `KEEPALIVE` válido recebe `202` sem criar pedido ou evento operacional.
-9. Preço e disponibilidade de um produto de teste sincronizados.
-10. Nenhum token, segredo ou payload bruto aparece no navegador.
+9. Produto Grocery de teste aceito pela Item API com `reset=false`, preço,
+   estoque, categoria e imagem opcional corretos.
+10. Alteração de quantidade, substituição, remoção e adição de item confirmadas
+    pela Picking API antes de finalizar a separação.
+11. Remover um vínculo Grocery cria o comando de desativação do produto.
+12. Nenhum token, segredo ou payload bruto aparece no navegador.
+
+O EAN/código de balança não pode ser trocado enquanto houver vínculo Grocery
+ativo. Remova primeiro o vínculo, aguarde a confirmação de `active=false`,
+altere o identificador no cadastro e crie uma nova publicação. Esse fluxo evita
+deixar o item antigo vendável no parceiro.
 
 ## Alteração de banco desta versão
 
 Antes do deploy do Data Connect em DEV, `dataconnect:sql:diff` deve listar
-somente alterações aditivas:
+somente alterações aditivas já aprovadas (o diff pode conter apenas as que ainda
+não existem no ambiente):
 
 - `sales_channel_connections.catalog_profile varchar(32) NOT NULL DEFAULT 'UNVERIFIED'`;
 - `sales_channel_orders.partner_event_at timestamptz NULL`;
-- `sales_channel_sync_jobs.cursor uuid NULL`.
+- `sales_channel_sync_jobs.cursor uuid NULL`;
+- `products.image_url varchar(1000) NULL`;
+- `products.scale_code varchar(32) NULL`.
 
 Não execute uma migração `exact` se o diff trouxer remoção ou alteração
 destrutiva. Depois da migração compatível, gere novamente os dois SDKs do Data
@@ -108,8 +141,9 @@ publicados juntos para o endpoint apontar para a revisão nova.
 
 O procedimento completo e protegido está versionado em
 `scripts/deploy-ifood-dev.sh`. Ele aceita somente branch `agent/*`, projeto
-`insightpad-dd-dev`, árvore Git limpa, Node 22, conta de serviço dedicada e as
-três alterações SQL acima. A migração exige a confirmação literal `MIGRAR`.
+`insightpad-dd-dev`, árvore Git limpa, Node 22, conta de serviço dedicada e
+somente o subconjunto das cinco alterações SQL acima. A migração exige a
+confirmação literal `MIGRAR`.
 
 ## Resposta a incidentes
 

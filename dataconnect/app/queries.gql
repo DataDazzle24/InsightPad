@@ -219,7 +219,7 @@ query SalesChannelProductOptions($term: String!, $limit: Int!, $requestKey: Stri
       LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
       WHERE u.id=$1 AND (u.blocked_until IS NULL OR u.blocked_until<=now()) AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_access,rp.can_access,false)
     )
-    SELECT p.id,p.name,p.internal_code AS "internalCode",p.ean FROM products p JOIN actor a ON a.tenant_id=p.tenant_id
+    SELECT p.id,p.name,p.internal_code AS "internalCode",p.ean,p.scale_code AS "scaleCode" FROM products p JOIN actor a ON a.tenant_id=p.tenant_id
     WHERE p.active AND p.deleted_at IS NULL AND $4<>'' AND ($2='' OR p.name ILIKE '%'||$2||'%' OR p.internal_code ILIKE '%'||$2||'%' OR COALESCE(p.ean,'') ILIKE '%'||$2||'%')
     ORDER BY lower(p.name),p.id LIMIT LEAST(GREATEST($3,1),50)
   """,params:[{_expr:"auth.uid"},$term,$limit,$requestKey])
@@ -285,12 +285,15 @@ query SystemIfoodConnectionByMerchant($merchantId: String!, $requestKey: String!
 
 query SystemSalesChannelMappingsForSync($jobId: UUID!, $workerId: String!, $requestKey: String!) @auth(level: NO_ACCESS) {
   _select(sql: """
-    SELECT m.id AS "mappingId",count(*) OVER()::text AS remaining,m.version,now() AS "snapshotAt",m.external_product_id AS "externalProductId",m.sync_price AS "syncPrice",m.sync_stock AS "syncStock",
-      COALESCE(pr.promotional_price_cents,p.sale_price_cents)::text AS "priceCents",GREATEST(COALESCE(sb.quantity,0),0)::text AS "stockQuantity"
+    SELECT m.id AS "mappingId",count(*) OVER()::text AS remaining,m.version,now() AS "snapshotAt",m.external_product_id AS "externalProductId",m.external_product_name AS "externalProductName",m.sync_price AS "syncPrice",m.sync_stock AS "syncStock",m.last_synced_at AS "lastSyncedAt",
+      p.name AS "productName",p.internal_code AS "internalCode",p.image_url AS "imageUrl",p.brand,p.size,p.size_type AS "sizeType",left(p.notes,1000) AS description,category.name AS "categoryName",subcategory.name AS "subcategoryName",
+      COALESCE(pr.promotional_price_cents,p.sale_price_cents)::text AS "priceCents",p.sale_price_cents::text AS "basePriceCents",pr.promotional_price_cents::text AS "promotionPriceCents",GREATEST(COALESCE(sb.quantity,0),0)::text AS "stockQuantity"
     FROM sales_channel_sync_jobs j
     JOIN sales_channel_connections c ON c.id=j.connection_id AND c.tenant_id=j.tenant_id
     JOIN sales_channel_product_mappings m ON m.connection_id=c.id AND m.tenant_id=c.tenant_id AND m.active AND m.deleted_at IS NULL AND m.enabled
     JOIN products p ON p.id=m.product_id AND p.tenant_id=m.tenant_id AND p.active AND p.deleted_at IS NULL
+    JOIN categories category ON category.id=p.category_id AND category.tenant_id=p.tenant_id AND category.active AND category.deleted_at IS NULL
+    LEFT JOIN subcategories subcategory ON subcategory.id=p.subcategory_id AND subcategory.tenant_id=p.tenant_id AND subcategory.active AND subcategory.deleted_at IS NULL
     LEFT JOIN stock_balances sb ON sb.tenant_id=m.tenant_id AND sb.branch_id=c.branch_id AND sb.product_id=m.product_id
     LEFT JOIN LATERAL (
       SELECT x.promotional_price_cents FROM promotions x WHERE x.tenant_id=p.tenant_id AND x.product_id=p.id AND x.active AND x.deleted_at IS NULL
@@ -299,7 +302,7 @@ query SystemSalesChannelMappingsForSync($jobId: UUID!, $workerId: String!, $requ
     WHERE j.id=$1 AND j.status='PROCESSING' AND j.provider='IFOOD' AND j.job_type IN ('CATALOG','PRICE','STOCK','FULL')
       AND j.locked_by=$2 AND j.lease_until>now() AND c.active AND c.enabled AND c.deleted_at IS NULL AND c.status='ACTIVE' AND c.authorization_status='AUTHORIZED'
       AND (j.cursor IS NULL OR m.id>j.cursor) AND length(btrim($3)) BETWEEN 8 AND 150
-      AND ((j.job_type IN ('PRICE','FULL','CATALOG') AND m.sync_price) OR (j.job_type IN ('STOCK','FULL','CATALOG') AND m.sync_stock))
+      AND ((c.catalog_profile='GROCERY' AND j.job_type IN ('CATALOG','FULL')) OR (j.job_type IN ('PRICE','FULL','CATALOG') AND m.sync_price) OR (j.job_type IN ('STOCK','FULL','CATALOG') AND m.sync_stock))
     ORDER BY m.id LIMIT 7
   """,params:[$jobId,$workerId,$requestKey])
 }
@@ -343,7 +346,7 @@ query SalesChannelOrdersV2($filters: Any!, $sortField: String!, $sortDirection: 
       LIMIT LEAST(GREATEST($5,1),100) OFFSET GREATEST($6,0)
     )
     SELECT jsonb_build_object(
-      'rows',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',o.id,'providerOrderId',o.provider_order_id,'displayCode',o.display_code,'provider',o.provider,'catalogProfile',o.catalog_profile,'connectionName',o.connection_name,'authorizationStatus',o.authorization_status,'branchId',o.branch_id,'branchName',o.branch_name,'customerName',o.customer_name,'orderType',o.order_type,'paymentMethod',o.payment_method,'deliveryAddress',o.delivery_address,'notes',o.notes,'subtotalCents',o.subtotal_cents::text,'deliveryFeeCents',o.delivery_fee_cents::text,'discountCents',o.discount_cents::text,'totalCents',o.total_cents::text,'status',o.status,'partnerStatus',o.partner_status,'pendingAction',o.pending_action,'commandStatus',o.command_status,'lastPartnerRequestId',o.last_partner_request_id,'receivedAt',o.received_at,'acceptedAt',o.accepted_at,'rejectedAt',o.rejected_at,'completedAt',o.completed_at,'statusUpdatedAt',o.status_updated_at,'rejectionReason',o.rejection_reason,'version',o.version,'items',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',i.id,'name',i.name,'quantity',i.quantity,'unitPriceCents',i.unit_price_cents::text,'totalCents',i.total_cents::text,'observation',i.observation) ORDER BY i.created_at) FROM sales_channel_order_items i WHERE i.order_id=o.id AND i.tenant_id=o.tenant_id),'[]'::jsonb),'history',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',h.id,'fromStatus',h.from_status,'toStatus',h.to_status,'providerStatus',h.provider_status,'origin',h.origin,'reason',h.reason,'createdAt',h.created_at) ORDER BY h.created_at DESC) FROM sales_channel_status_history h WHERE h.order_id=o.id AND h.tenant_id=o.tenant_id),'[]'::jsonb)) ORDER BY array_position(ARRAY(SELECT id FROM page),o.id)) FROM page o),'[]'::jsonb),
+      'rows',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',o.id,'providerOrderId',o.provider_order_id,'displayCode',o.display_code,'provider',o.provider,'catalogProfile',o.catalog_profile,'connectionName',o.connection_name,'authorizationStatus',o.authorization_status,'branchId',o.branch_id,'branchName',o.branch_name,'customerName',o.customer_name,'orderType',o.order_type,'paymentMethod',o.payment_method,'deliveryAddress',o.delivery_address,'notes',o.notes,'subtotalCents',o.subtotal_cents::text,'deliveryFeeCents',o.delivery_fee_cents::text,'discountCents',o.discount_cents::text,'totalCents',o.total_cents::text,'status',o.status,'partnerStatus',o.partner_status,'pendingAction',o.pending_action,'commandStatus',o.command_status,'grocerySeparationStarted',EXISTS(SELECT 1 FROM sales_channel_commands started WHERE started.order_id=o.id AND started.tenant_id=o.tenant_id AND started.action='ACCEPT' AND started.status='CONFIRMED'),'lastPartnerRequestId',o.last_partner_request_id,'receivedAt',o.received_at,'acceptedAt',o.accepted_at,'rejectedAt',o.rejected_at,'completedAt',o.completed_at,'statusUpdatedAt',o.status_updated_at,'rejectionReason',o.rejection_reason,'version',o.version,'items',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',i.id,'externalItemId',i.external_item_id,'name',i.name,'quantity',i.quantity,'unitPriceCents',i.unit_price_cents::text,'totalCents',i.total_cents::text,'observation',i.observation) ORDER BY i.created_at) FROM sales_channel_order_items i WHERE i.order_id=o.id AND i.tenant_id=o.tenant_id),'[]'::jsonb),'history',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',h.id,'fromStatus',h.from_status,'toStatus',h.to_status,'providerStatus',h.provider_status,'origin',h.origin,'reason',h.reason,'createdAt',h.created_at) ORDER BY h.created_at DESC) FROM sales_channel_status_history h WHERE h.order_id=o.id AND h.tenant_id=o.tenant_id),'[]'::jsonb)) ORDER BY array_position(ARRAY(SELECT id FROM page),o.id)) FROM page o),'[]'::jsonb),
       'total',(SELECT count(*) FROM eligible),
       'summary',jsonb_build_object('pending',(SELECT count(*) FROM base WHERE status='PENDING'),'accepted',(SELECT count(*) FROM base WHERE status='ACCEPTED'),'completed',(SELECT count(*) FROM base WHERE status='COMPLETED'),'attention',(SELECT count(*) FROM base WHERE command_status='ERROR' OR status IN ('REJECTED','CANCELLED')))
     ) data FROM actor WHERE $7<>''
@@ -655,7 +658,7 @@ query ListCustomers($search: String!, $sortField: String, $sortDirection: String
 
 query ListProducts($search: String!, $sortField: String, $sortDirection: String, $limit: Int!, $offset: Int!, $requestKey: String) @auth(level: USER) {
   _select(sql: """
-    WITH base AS (SELECT p.id,p.name,p.internal_code AS "internalCode",p.ean,p.brand,p.size_type AS "sizeType",p.size,p.color,
+    WITH base AS (SELECT p.id,p.name,p.internal_code AS "internalCode",p.ean,p.scale_code AS "scaleCode",p.image_url AS "imageUrl",p.brand,p.size_type AS "sizeType",p.size,p.color,
       p.maximum_stock AS "maximumStock",p.minimum_stock AS "minimumStock",p.sale_price_cents::text AS "salePriceCents",
       p.cost_price_cents::text AS "costPriceCents",p.weighted_product AS "weightedProduct",p.bundle_product AS "bundleProduct",
       p.allow_negative_stock AS "allowNegativeStock",p.notes,p.active,p.category_id AS "categoryId",c.name AS "categoryName",
@@ -674,7 +677,7 @@ query ListProducts($search: String!, $sortField: String, $sortDirection: String,
     LEFT JOIN subcategories sc ON sc.id=p.subcategory_id AND sc.tenant_id=p.tenant_id
     LEFT JOIN suppliers s ON s.id=p.supplier_id AND s.tenant_id=p.tenant_id
     WHERE COALESCE(up.can_access,rp.can_access,false)
-      AND ($2='' OR concat_ws(' ',p.name,p.internal_code,p.ean,p.brand,c.name,sc.name) ILIKE '%'||$2||'%')
+      AND ($2='' OR concat_ws(' ',p.name,p.internal_code,p.ean,p.scale_code,p.brand,c.name,sc.name) ILIKE '%'||$2||'%')
       AND ($7 IS NULL OR $7<>'')
     ) SELECT * FROM base ORDER BY
       CASE WHEN $4='asc' AND $3 IN ('maximumStock','minimumStock','salePriceCents','costPriceCents','effectivePriceCents') THEN (to_jsonb(base)->>$3)::numeric END ASC NULLS LAST,

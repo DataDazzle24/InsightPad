@@ -48,6 +48,8 @@ activate_node_22() {
 
 assert_expected_migration() {
   local diff_file="$1"
+  local add_count
+  local known_count
 
   if grep -Eq 'matches SQL Connect Schema exactly|is compatible with SQL Connect Schema' "${diff_file}"; then
     return 1
@@ -57,13 +59,31 @@ assert_expected_migration() {
     fail "o diff SQL contém uma operação destrutiva ou inesperada. Nada foi migrado."
   fi
 
-  [[ "$(grep -Ec 'ADD COLUMN' "${diff_file}" || true)" == "3" ]] || fail "o diff SQL não contém exatamente as três colunas esperadas."
-  grep -Eq 'ADD COLUMN "catalog_profile" character varying\(32\).*NOT NULL.*DEFAULT.*UNVERIFIED|ADD COLUMN "catalog_profile" character varying\(32\).*DEFAULT.*UNVERIFIED.*NOT NULL' "${diff_file}" \
-    || fail "catalog_profile não apareceu com varchar(32), NOT NULL e DEFAULT UNVERIFIED."
-  grep -Eq 'ADD COLUMN "partner_event_at" (timestamptz|timestamp with time zone) NULL' "${diff_file}" \
-    || fail "partner_event_at timestamptz NULL não apareceu como esperado."
-  grep -Eq 'ADD COLUMN "cursor" uuid NULL' "${diff_file}" \
-    || fail "cursor uuid NULL não apareceu como esperado."
+  add_count="$(grep -Ec 'ADD COLUMN' "${diff_file}" || true)"
+  [[ "${add_count}" -ge 1 && "${add_count}" -le 5 ]] || fail "o diff SQL não contém somente o conjunto aditivo esperado."
+  known_count="$(grep -Ec 'ADD COLUMN "(catalog_profile|partner_event_at|cursor|image_url|scale_code)"' "${diff_file}" || true)"
+  [[ "${known_count}" == "${add_count}" ]] || fail "o diff SQL contém coluna não aprovada. Nada foi migrado."
+
+  if grep -q 'ADD COLUMN "catalog_profile"' "${diff_file}"; then
+    grep -Eq 'ADD COLUMN "catalog_profile" character varying\(32\).*NOT NULL.*DEFAULT.*UNVERIFIED|ADD COLUMN "catalog_profile" character varying\(32\).*DEFAULT.*UNVERIFIED.*NOT NULL' "${diff_file}" \
+      || fail "catalog_profile não apareceu com varchar(32), NOT NULL e DEFAULT UNVERIFIED."
+  fi
+  if grep -q 'ADD COLUMN "partner_event_at"' "${diff_file}"; then
+    grep -Eq 'ADD COLUMN "partner_event_at" (timestamptz|timestamp with time zone) NULL' "${diff_file}" \
+      || fail "partner_event_at timestamptz NULL não apareceu como esperado."
+  fi
+  if grep -q 'ADD COLUMN "cursor"' "${diff_file}"; then
+    grep -Eq 'ADD COLUMN "cursor" uuid NULL' "${diff_file}" \
+      || fail "cursor uuid NULL não apareceu como esperado."
+  fi
+  if grep -q 'ADD COLUMN "image_url"' "${diff_file}"; then
+    grep -Eq 'ADD COLUMN "image_url" character varying\(1000\) NULL' "${diff_file}" \
+      || fail "image_url não apareceu com varchar(1000) NULL como esperado."
+  fi
+  if grep -q 'ADD COLUMN "scale_code"' "${diff_file}"; then
+    grep -Eq 'ADD COLUMN "scale_code" character varying\(32\) NULL' "${diff_file}" \
+      || fail "scale_code não apareceu com varchar(32) NULL como esperado."
+  fi
 
   return 0
 }
@@ -108,7 +128,7 @@ MIGRATION_LOG="$(mktemp)"
 "${FIREBASE[@]}" dataconnect:sql:diff --project="${FIREBASE_PROJECT}" 2>&1 | tee "${MIGRATION_LOG}"
 
 if assert_expected_migration "${MIGRATION_LOG}"; then
-  printf 'Foram encontradas somente as três colunas aditivas esperadas. Digite MIGRAR para aplicar no DEV: '
+  printf 'Foram encontradas somente colunas aditivas aprovadas. Digite MIGRAR para aplicar no DEV: '
   read -r confirmation </dev/tty
   [[ "${confirmation}" == "MIGRAR" ]] || fail "migração cancelada pelo operador."
 

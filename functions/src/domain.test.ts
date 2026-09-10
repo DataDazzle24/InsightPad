@@ -58,11 +58,11 @@ describe("domínio iFood", () => {
       createdAt: "2026-09-07T10:00:00Z",
       customer: { name: "Cliente" },
       total: { subTotal: 25.5, deliveryFee: 4, benefits: 2, orderAmount: 27.5 },
-      items: [{ id: "item-1", name: "Produto", quantity: 2, unitPrice: 12.75, totalPrice: 25.5 }],
+      items: [{ id: "item-1", uniqueId: "bag-item-1", externalCode: "sku-1", name: "Produto", quantity: 2, unitPrice: 12.75, totalPrice: 25.5 }],
     }, "00000000-0000-4000-8000-000000000001");
     expect(normalized.subtotalCents).toBe(2550);
     expect(normalized.totalCents).toBe(2750);
-    expect(normalized.items[0]).toMatchObject({ quantity: 2, unit_price_cents: 1275, total_cents: 2550 });
+    expect(normalized.items[0]).toMatchObject({ external_item_id: "bag-item-1", quantity: 2, unit_price_cents: 1275, total_cents: 2550 });
   });
 
   it("converte decimais sem erros de ponto flutuante ou formato local", () => {

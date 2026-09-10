@@ -1030,6 +1030,20 @@ exports.systemRecordSalesChannelCommandResult = function systemRecordSalesChanne
 }
 ;
 
+const systemRefreshSalesChannelOrderAfterPickingRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'SystemRefreshSalesChannelOrderAfterPicking', inputVars);
+}
+systemRefreshSalesChannelOrderAfterPickingRef.operationName = 'SystemRefreshSalesChannelOrderAfterPicking';
+exports.systemRefreshSalesChannelOrderAfterPickingRef = systemRefreshSalesChannelOrderAfterPickingRef;
+
+exports.systemRefreshSalesChannelOrderAfterPicking = function systemRefreshSalesChannelOrderAfterPicking(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(systemRefreshSalesChannelOrderAfterPickingRef(dcInstance, inputVars));
+}
+;
+
 const systemRecordSalesChannelSyncResultRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
