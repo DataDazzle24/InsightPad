@@ -797,3 +797,11 @@ function operationalAnalyticsDashboard(dcOrVarsOrOptions, varsOrOptions, options
   return dcInstance.executeQuery('OperationalAnalyticsDashboard', inputVars, inputOpts);
 }
 exports.operationalAnalyticsDashboard = operationalAnalyticsDashboard;
+
+function systemSalesChannelOrderForActor(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeQuery('SystemSalesChannelOrderForActor', inputVars, inputOpts);
+}
+exports.systemSalesChannelOrderForActor = systemSalesChannelOrderForActor;
+

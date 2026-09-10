@@ -1,11 +1,14 @@
 import { createHmac } from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
 import {
+  assertOrderIdentity,
+  decimalToCents,
   eventStatus,
   heartbeatMerchantIds,
   ifoodCompletionAction,
   isIfoodKeepalive,
   normalizeIfoodOrder,
+  orderAlreadyApplied,
   parseIfoodEvents,
   retryDelaySeconds,
   shouldRetryIfoodOrderDetails,
@@ -27,6 +30,26 @@ describe("domínio iFood", () => {
     expect(eventStatus({ id: "evt-2", fullCode: "CANCELLED" })).toBe("CANCELLED");
   });
 
+  it("ignora eventos parecidos que não representam mudança de estado", () => {
+    expect(eventStatus({ id: "evt-1", fullCode: "CANCELLATION_REQUESTED" })).toBeUndefined();
+    expect(eventStatus({ id: "evt-2", fullCode: "PICKING_COMPLETED" })).toBeUndefined();
+    expect(eventStatus({ id: "evt-3", fullCode: "UNKNOWN_NEW_EVENT" })).toBeUndefined();
+  });
+
+  it("confirma a identidade exata do pedido e da loja", () => {
+    const order = { id: "order-1", merchant: { id: "merchant-1" } };
+    expect(() => assertOrderIdentity(order, "order-1", "merchant-1")).not.toThrow();
+    expect(() => assertOrderIdentity(order, "order-2", "merchant-1")).toThrow("não corresponde");
+    expect(() => assertOrderIdentity(order, "order-1", "merchant-2")).toThrow("não corresponde");
+  });
+
+  it("continua a preparação quando apenas a confirmação já foi aplicada", () => {
+    expect(orderAlreadyApplied("ACCEPT", "CONFIRMED")).toBe(false);
+    expect(orderAlreadyApplied("ACCEPT", "PREPARATION_STARTED")).toBe(true);
+    expect(orderAlreadyApplied("COMPLETE", "READY_TO_PICKUP")).toBe(true);
+    expect(orderAlreadyApplied("CANCEL", "CANCELLATION_REQUESTED")).toBe(true);
+  });
+
   it("transforma valores do iFood em centavos e preserva itens", () => {
     const normalized = normalizeIfoodOrder({
       id: "order-1",
@@ -40,6 +63,13 @@ describe("domínio iFood", () => {
     expect(normalized.subtotalCents).toBe(2550);
     expect(normalized.totalCents).toBe(2750);
     expect(normalized.items[0]).toMatchObject({ quantity: 2, unit_price_cents: 1275, total_cents: 2550 });
+  });
+
+  it("converte decimais sem erros de ponto flutuante ou formato local", () => {
+    expect(decimalToCents("1.005")).toBe(101);
+    expect(decimalToCents(25.5)).toBe(2550);
+    expect(() => decimalToCents("1.234,56")).toThrow("valor monetário inválido");
+    expect(() => decimalToCents(-1)).toThrow("valor monetário inválido");
   });
 
   it("separa keepalive de eventos de negócio e normaliza as lojas consultadas", () => {

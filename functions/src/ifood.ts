@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { asArray, asRecord, firstString, type JsonRecord } from "./domain.js";
+import { asRecord, firstString, type JsonRecord } from "./domain.js";
 
 const tokenSchema = z.object({
   accessToken: z.string().min(20),
@@ -54,7 +54,11 @@ export class IfoodClient {
   async merchants(): Promise<JsonRecord[]> {
     const response = await this.request<unknown>("/merchant/v1.0/merchants");
     const root = asRecord(response.data);
-    return (Array.isArray(response.data) ? response.data : asArray(root.merchants)).map(asRecord);
+    const merchants = Array.isArray(response.data) ? response.data : root.merchants;
+    if (!Array.isArray(merchants)) {
+      throw new IfoodHttpError("O iFood retornou lojas em formato inválido.", 502, response.requestId, true);
+    }
+    return merchants.map(asRecord);
   }
 
   async merchant(merchantId: string): Promise<RequestResult<JsonRecord>> {
@@ -67,7 +71,10 @@ export class IfoodClient {
       headers: { "x-polling-merchants": ids.join(",") },
     });
     const root = asRecord(result.data);
-    return { ...result, data: Array.isArray(result.data) ? result.data : asArray(root.events) };
+    if (result.status === 204) return { ...result, data: [] };
+    const data = Array.isArray(result.data) ? result.data : root.events;
+    if (!Array.isArray(data)) throw new IfoodHttpError("O iFood retornou eventos em formato inválido.", 502, result.requestId, true);
+    return { ...result, data };
   }
 
   acknowledgeEvents(eventIds: string[]): Promise<RequestResult<unknown>> {
@@ -100,9 +107,13 @@ export class IfoodClient {
 
   cancellationReasons(orderId: string): Promise<JsonRecord[]> {
     return this.request<unknown>(`/order/v1.0/orders/${encodeURIComponent(orderId)}/cancellationReasons`)
-      .then(({ data }) => {
+      .then(({ data, requestId }) => {
         const root = asRecord(data);
-        return (Array.isArray(data) ? data : asArray(root.reasons)).map(asRecord);
+        const reasons = Array.isArray(data) ? data : root.reasons;
+        if (!Array.isArray(reasons)) {
+          throw new IfoodHttpError("O iFood retornou motivos de cancelamento em formato inválido.", 502, requestId, true);
+        }
+        return reasons.map(asRecord);
       });
   }
 
@@ -114,9 +125,10 @@ export class IfoodClient {
   }
 
   updateItemPrice(merchantId: string, externalProductId: string, priceCents: number): Promise<RequestResult<unknown>> {
+    if (!Number.isSafeInteger(priceCents) || priceCents <= 0) throw new Error("O produto precisa de um preço positivo e válido para sincronizar.");
     return this.request(`/catalog/v2.0/merchants/${encodeURIComponent(merchantId)}/items/price`, {
       method: "PATCH",
-      body: { itemId: externalProductId, price: { value: Math.max(0, priceCents) / 100 } },
+      body: { itemId: externalProductId, price: { value: priceCents / 100 } },
     });
   }
 
@@ -132,6 +144,10 @@ export class IfoodClient {
     options: { method?: string; body?: unknown; headers?: Record<string, string> } = {},
     repeatAfterAuth = true,
   ): Promise<RequestResult<T>> {
+    // Keep tokens on the official origin; callers cannot supply arbitrary URLs.
+    if (!/^\/[a-z]+\/v\d+\.\d+\//.test(path) || path.includes("\\") || path.split("/").some((segment) => [".", ".."].includes(decodeURIComponent(segment)))) {
+      throw new Error("Caminho inválido para a API iFood.");
+    }
     const token = await this.getToken();
     const request: RequestInit = {
       method: options.method ?? "GET",
@@ -142,17 +158,22 @@ export class IfoodClient {
         ...(options.body === undefined ? {} : { "content-type": "application/json" }),
       },
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      redirect: "error",
     };
     if (options.body !== undefined) request.body = JSON.stringify(options.body);
     const response = await this.fetcher(`${BASE_URL}${path}`, request);
     const requestId = response.headers.get("x-request-id") ?? response.headers.get("traceid") ?? "";
     if (response.status === 401 && repeatAfterAuth) {
-      this.token = undefined;
+      if (this.token?.value === token.value) this.token = undefined;
       return this.request<T>(path, options, false);
     }
     if (!response.ok) throw httpError(response, requestId);
     const text = await response.text();
-    return { data: (text ? JSON.parse(text) : {}) as T, status: response.status, requestId };
+    try {
+      return { data: (text ? JSON.parse(text) : {}) as T, status: response.status, requestId };
+    } catch {
+      throw new IfoodHttpError("O iFood retornou uma resposta inválida.", 502, requestId, true);
+    }
   }
 
   private async getToken(): Promise<Token> {
@@ -173,17 +194,21 @@ export class IfoodClient {
       headers: { accept: "application/json", "content-type": "application/x-www-form-urlencoded" },
       body: form,
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      redirect: "error",
     });
     const requestId = response.headers.get("x-request-id") ?? response.headers.get("traceid") ?? "";
     if (!response.ok) throw httpError(response, requestId);
-    const payload = tokenSchema.parse(await response.json());
+    const raw: unknown = await response.json().catch(() => null);
+    const parsed = tokenSchema.safeParse(raw);
+    if (!parsed.success) throw new IfoodHttpError("O iFood retornou uma autenticação inválida.", 502, requestId, true);
+    const payload = parsed.data;
     return { value: payload.accessToken, expiresAt: Date.now() + payload.expiresIn * 1000 };
   }
 }
 
 function httpError(response: Response, requestId: string): IfoodHttpError {
   const retryAfter = response.headers.get("retry-after");
-  const retryAfterSeconds = retryAfter && /^\d+$/.test(retryAfter) ? Number(retryAfter) : undefined;
+  const retryAfterSeconds = retryAfter ? (/^\d+$/.test(retryAfter) ? Number(retryAfter) : Math.max(0, Math.ceil((Date.parse(retryAfter) - Date.now()) / 1000))) : undefined;
   const retryable = response.status === 408 || response.status === 425 || response.status === 429 || response.status >= 500;
   return new IfoodHttpError(`O iFood respondeu com HTTP ${response.status}.`, response.status, requestId, retryable, retryAfterSeconds);
 }

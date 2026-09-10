@@ -19,6 +19,27 @@ nas tabelas operacionais.
   comando ou evento é criado.
 - Data Connect Admin SDK: acesso do servidor com identidade IAM dedicada.
 - Inbox/outbox PostgreSQL: idempotência, leases, tentativas e auditoria.
+- `ifoodCancellationReasons`: função autenticada que consulta no servidor os
+  motivos elegíveis do pedido; somente código e descrição voltam à interface.
+
+## Cobertura funcional
+
+| Fluxo | Estado | Observação |
+| --- | --- | --- |
+| OAuth, validação do `merchantId` e vínculo por filial | Implementado | Credencial centralizada no Secret Manager |
+| Webhook assinado, `KEEPALIVE`, polling e acknowledgment | Implementado | Só confirma eventos persistidos ou duplicatas idênticas |
+| Recebimento e consulta de pedidos | Implementado | Identidade do pedido e da loja é conferida no servidor |
+| Aceite e preparo de restaurante | Implementado | Estado interno só muda após evento oficial |
+| Recusa e cancelamento | Implementado | Motivo elegível é consultado no iFood e escolhido pelo usuário |
+| Pronto para retirada e despacho | Implementado | Ação depende do responsável pela entrega |
+| Vínculo de item já existente, preço e disponibilidade de restaurante | Implementado | Processamento paginado, concorrência limitada e checkpoint |
+| Publicação inicial de item Grocery | Bloqueado | Requer o contrato oficial completo da Item API |
+| Separação Grocery (iniciar, editar e finalizar) | Bloqueado | Requer o contrato oficial completo do módulo de separação |
+| Quantidade de estoque Grocery, promoções e conciliação | Não implementado | Fora do contrato atualmente validado |
+
+Os caminhos bloqueados são recusados antes de chamar endpoints de restaurante.
+Isso evita enviar uma operação válida para o módulo errado e mantém o estado
+interno coerente com o estado oficial do parceiro.
 
 ## Configuração no portal iFood
 
@@ -41,7 +62,8 @@ venda > Operações** que os eventos chegam como `ACKNOWLEDGED`.
 4. Acompanhe **Diagnóstico** e **Operações** até a conexão ficar `AUTHORIZED` e
    `ACTIVE`.
 5. Vincule produtos usando o identificador oficial do item no catálogo iFood e
-   habilite preço e/ou estoque conforme a estratégia da loja.
+   habilite preço e/ou disponibilidade conforme a estratégia da loja. Esta etapa
+   atende, por enquanto, apenas o catálogo de restaurante.
 6. Execute **Sincronizar** e confira o resultado por produto antes de abrir a
    loja para pedidos reais.
 
@@ -68,6 +90,26 @@ venda > Operações** que os eventos chegam como `ACKNOWLEDGED`.
 8. `KEEPALIVE` válido recebe `202` sem criar pedido ou evento operacional.
 9. Preço e disponibilidade de um produto de teste sincronizados.
 10. Nenhum token, segredo ou payload bruto aparece no navegador.
+
+## Alteração de banco desta versão
+
+Antes do deploy do Data Connect em DEV, `dataconnect:sql:diff` deve listar
+somente alterações aditivas:
+
+- `sales_channel_connections.catalog_profile varchar(32) NOT NULL DEFAULT 'UNVERIFIED'`;
+- `sales_channel_orders.partner_event_at timestamptz NULL`;
+- `sales_channel_sync_jobs.cursor uuid NULL`.
+
+Não execute uma migração `exact` se o diff trouxer remoção ou alteração
+destrutiva. Depois da migração compatível, gere novamente os dois SDKs do Data
+Connect e publique Data Connect, Functions e Hosting na mesma janela. O Hosting
+possui `pinTag` no webhook; por isso, Functions e Hosting precisam ser
+publicados juntos para o endpoint apontar para a revisão nova.
+
+O procedimento completo e protegido está versionado em
+`scripts/deploy-ifood-dev.sh`. Ele aceita somente branch `agent/*`, projeto
+`insightpad-dd-dev`, árvore Git limpa, Node 22, conta de serviço dedicada e as
+três alterações SQL acima. A migração exige a confirmação literal `MIGRAR`.
 
 ## Resposta a incidentes
 

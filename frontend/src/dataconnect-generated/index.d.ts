@@ -215,6 +215,7 @@ export interface CreateSalesChannelConnectionVariables {
   branchId: UUIDString;
   displayName: string;
   externalStoreId: string;
+  catalogProfile?: string | null;
 }
 
 export interface CreateSalesChannelProductMappingData {
@@ -610,6 +611,7 @@ export interface QueueSalesChannelOrderActionVariables {
   action: string;
   reason: string;
   expectedVersion: number;
+  cancellationCode?: string | null;
 }
 
 export interface RegisterCashMovementData {
@@ -1247,7 +1249,17 @@ export interface SystemSalesChannelMappingsForSyncData {
 
 export interface SystemSalesChannelMappingsForSyncVariables {
   jobId: UUIDString;
+  workerId: string;
   requestKey: string;
+}
+
+export interface SystemSalesChannelOrderForActorData {
+  _select?: unknown[] | null;
+}
+
+export interface SystemSalesChannelOrderForActorVariables {
+  userId: string;
+  orderId: UUIDString;
 }
 
 export interface SystemSalesChannelWorkQueueData {
@@ -1330,6 +1342,7 @@ export interface UpdateSalesChannelConnectionVariables {
   displayName: string;
   externalStoreId: string;
   enabled: boolean;
+  catalogProfile?: string | null;
 }
 
 export interface UpdateSalesChannelProductMappingData {
@@ -2755,4 +2768,16 @@ export const operationalAnalyticsDashboardRef: OperationalAnalyticsDashboardRef;
 
 export function operationalAnalyticsDashboard(vars: OperationalAnalyticsDashboardVariables, options?: ExecuteQueryOptions): QueryPromise<OperationalAnalyticsDashboardData, OperationalAnalyticsDashboardVariables>;
 export function operationalAnalyticsDashboard(dc: DataConnect, vars: OperationalAnalyticsDashboardVariables, options?: ExecuteQueryOptions): QueryPromise<OperationalAnalyticsDashboardData, OperationalAnalyticsDashboardVariables>;
+
+interface SystemSalesChannelOrderForActorRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SystemSalesChannelOrderForActorVariables): QueryRef<SystemSalesChannelOrderForActorData, SystemSalesChannelOrderForActorVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SystemSalesChannelOrderForActorVariables): QueryRef<SystemSalesChannelOrderForActorData, SystemSalesChannelOrderForActorVariables>;
+  operationName: string;
+}
+export const systemSalesChannelOrderForActorRef: SystemSalesChannelOrderForActorRef;
+
+export function systemSalesChannelOrderForActor(vars: SystemSalesChannelOrderForActorVariables, options?: ExecuteQueryOptions): QueryPromise<SystemSalesChannelOrderForActorData, SystemSalesChannelOrderForActorVariables>;
+export function systemSalesChannelOrderForActor(dc: DataConnect, vars: SystemSalesChannelOrderForActorVariables, options?: ExecuteQueryOptions): QueryPromise<SystemSalesChannelOrderForActorData, SystemSalesChannelOrderForActorVariables>;
 

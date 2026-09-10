@@ -683,3 +683,10 @@ export function operationalAnalyticsDashboard(dcOrVarsOrOptions, varsOrOptions, 
   dcInstance.useGen(true);
   return dcInstance.executeQuery('OperationalAnalyticsDashboard', inputVars, inputOpts);
 }
+
+export function systemSalesChannelOrderForActor(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeQuery('SystemSalesChannelOrderForActor', inputVars, inputOpts);
+}
+

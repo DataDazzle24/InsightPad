@@ -197,8 +197,11 @@ export function PointOfSalePage() {
   }, [branchId, branchStorageKey]);
   useEffect(() => {
     if (!busy && branchId && !workspace.openSession && cashPromptedBranch !== branchId) {
-      setCashPromptedBranch(branchId);
-      setCashControl(true);
+      const timer = window.setTimeout(() => {
+        setCashPromptedBranch(branchId);
+        setCashControl(true);
+      }, 0);
+      return () => window.clearTimeout(timer);
     }
   }, [branchId, busy, cashPromptedBranch, workspace.openSession]);
   useEffect(() => {
