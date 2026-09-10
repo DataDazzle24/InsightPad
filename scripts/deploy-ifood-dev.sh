@@ -92,6 +92,8 @@ echo "Node: $(node --version)"
 echo "===== INSTALAÇÃO E VALIDAÇÃO ====="
 npm --prefix functions ci
 npm --prefix frontend ci
+(cd functions && node -e "require.resolve('@rolldown/binding-linux-x64-gnu')") \
+  || fail "o binding nativo do Rolldown não foi instalado."
 "${FIREBASE[@]}" dataconnect:sdk:generate --project="${FIREBASE_PROJECT}"
 git diff --quiet || fail "a geração do SDK alterou arquivos; versione os SDKs antes do deploy."
 npm --prefix functions run lint
