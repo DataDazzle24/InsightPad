@@ -140,13 +140,14 @@ export const ifoodWebhook = onRequest({
     return;
   }
   try {
+    const requestId = request.get("x-request-id") ?? "";
     const keepaliveEvents = events.filter(isIfoodKeepalive);
     const businessEvents = events.filter((event) => !isIfoodKeepalive(event));
-    await registerWebhookEvents(businessEvents, request.get("x-request-id") ?? "");
+    await registerWebhookEvents(businessEvents, requestId);
 
     const requestedMerchantIds = [...new Set(keepaliveEvents.flatMap(heartbeatMerchantIds))];
     if (requestedMerchantIds.length) {
-      const merchantIds = await connectedHeartbeatMerchants(keepaliveEvents);
+      const merchantIds = await connectedHeartbeatMerchants(keepaliveEvents, requestId);
       response.status(202).json({ merchantIds });
       return;
     }

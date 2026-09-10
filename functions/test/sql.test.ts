@@ -100,6 +100,19 @@ describe("PostgreSQL: lifecycle and scope", () => {
     await operation(db,"RequestSalesChannelSync",["actor",ids.connection,"FULL","request-restaurant-ok"]);
     expect(Number((await db.query("SELECT count(*) count FROM sales_channel_sync_jobs")).rows[0]?.count)).toBe(2);
   });
+
+  it("counts only the latest synchronization outcome as an active failure", async () => {
+    await db.exec("UPDATE sales_channel_sync_jobs SET status='ERROR',created_at=now()-interval '1 minute'");
+    const failed = await operation(db,"SalesChannelOperations",["actor",ids.connection,"request-failed"]);
+    expect(Number((failed.rows[0] as {data:{summary:{syncFailures:unknown}}}).data.summary.syncFailures)).toBe(1);
+
+    await db.query(
+      "INSERT INTO sales_channel_sync_jobs(id,tenant_id,connection_id,job_key,provider,job_type,status,created_at) VALUES ($1,$2,$3,'authorization-recovered','IFOOD','FULL','COMPLETED',now())",
+      ["00000000-0000-4000-8000-000000000014",ids.tenant,ids.connection],
+    );
+    const recovered = await operation(db,"SalesChannelOperations",["actor",ids.connection,"request-recovered"]);
+    expect(Number((recovered.rows[0] as {data:{summary:{syncFailures:unknown}}}).data.summary.syncFailures)).toBe(0);
+  });
 });
 
 describe("PostgreSQL: catalog checkpoints", () => {

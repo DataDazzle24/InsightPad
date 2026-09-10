@@ -176,11 +176,17 @@ export async function connectionForMerchant(merchant: string): Promise<Connectio
   return matches[0];
 }
 
-export async function connectedHeartbeatMerchants(events: IfoodEvent[]): Promise<string[]> {
+export async function connectedHeartbeatMerchants(events: IfoodEvent[], requestId = ""): Promise<string[]> {
   const requested = [...new Set(events.flatMap(heartbeatMerchantIds))];
   const connected = new Set<string>();
   await mapConcurrent(requested, 5, async (merchant) => {
-    if (await connectionForMerchant(merchant)) connected.add(merchant);
+    const connection = await connectionForMerchant(merchant);
+    if (!connection) return;
+    // A signed KEEPALIVE that names an authorized merchant is positive proof
+    // that the partner can reach this exact connection through the webhook.
+    // Persist the health transition before acknowledging the merchant.
+    await markWebhookActive(connection.connectionId, requestId);
+    connected.add(merchant);
   });
   return requested.filter((merchant) => connected.has(merchant));
 }
