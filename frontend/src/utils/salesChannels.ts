@@ -61,7 +61,9 @@ export function countActiveFilters(values: Record<string, unknown>) {
 }
 
 function csvCell(value: unknown) {
-  const text = String(value ?? "").replaceAll('"', '""');
+  const raw = String(value ?? "");
+  const safe = /^[\s]*[=+@-]/.test(raw) ? `'${raw}` : raw;
+  const text = safe.replaceAll('"', '""');
   return `"${text}"`;
 }
 

@@ -84,13 +84,39 @@ export function eventType(event: IfoodEvent): string {
   return firstString(event, "fullCode", "code") || "UNKNOWN";
 }
 
-export function eventStatus(event: IfoodEvent): "PENDING" | "ACCEPTED" | "REJECTED" | "COMPLETED" | "CANCELLED" {
-  const code = eventType(event).toUpperCase();
-  if (code.includes("CANCEL")) return "CANCELLED";
-  if (code.includes("REJECT")) return "REJECTED";
-  if (code.includes("CONCLUDED") || code.includes("COMPLETED")) return "COMPLETED";
-  if (code.includes("CONFIRMED") || code.includes("PREPARATION") || code.includes("READY") || code.includes("DISPATCH")) return "ACCEPTED";
-  return "PENDING";
+export type OrderStatus = "PENDING" | "ACCEPTED" | "REJECTED" | "COMPLETED" | "CANCELLED";
+
+// Only explicit lifecycle events change an order. Cancellation requests,
+// rejected requests and picking-completed events are NOT terminal order states.
+const ORDER_EVENTS: Record<string, OrderStatus> = {
+  PLC: "PENDING", PLACED: "PENDING",
+  CFM: "ACCEPTED", CONFIRMED: "ACCEPTED",
+  PRS: "ACCEPTED", PREPARATION_STARTED: "ACCEPTED",
+  RTP: "ACCEPTED", READY_TO_PICKUP: "ACCEPTED",
+  DSP: "ACCEPTED", DISPATCHED: "ACCEPTED",
+  CON: "COMPLETED", CONCLUDED: "COMPLETED",
+  CAN: "CANCELLED", CANCELLED: "CANCELLED",
+};
+
+export function eventStatus(event: IfoodEvent): OrderStatus | undefined {
+  return ORDER_EVENTS[eventType(event).toUpperCase()];
+}
+
+export function assertOrderIdentity(order: unknown, orderId: string, merchantId: string): void {
+  if (firstString(order, "id", "orderId") !== orderId ||
+      !merchantId || firstString(order, "merchant.id", "merchantId") !== merchantId) {
+    throw new Error("O pedido não corresponde à loja e ao identificador da conexão.");
+  }
+}
+
+export function orderAlreadyApplied(action: string, status: string): boolean {
+  const state = status.toUpperCase();
+  // ACCEPT is a two-step command (confirm + start preparation). A confirmed
+  // order still has to execute the second step after a retry or cold start.
+  if (action === "ACCEPT") return ["PRS", "PREPARATION_STARTED", "RTP", "READY_TO_PICKUP", "DSP", "DISPATCHED", "CON", "CONCLUDED"].includes(state);
+  if (action === "COMPLETE") return ["RTP", "READY_TO_PICKUP", "DSP", "DISPATCHED", "CON", "CONCLUDED"].includes(state);
+  if (action === "REJECT" || action === "CANCEL") return ["CAN", "CANCELLED", "CANCELLATION_REQUESTED"].includes(state);
+  return false;
 }
 
 export type IfoodDeliveryProvider = "IFOOD" | "MERCHANT" | "UNKNOWN";
@@ -132,12 +158,14 @@ export function ifoodCompletionAction(orderType: string, order: unknown): IfoodC
   throw new Error("O pedido não informa quem realiza a entrega.");
 }
 
-function decimalToCents(value: unknown): number {
-  if (typeof value === "number" && Number.isFinite(value)) return Math.max(0, Math.round(value * 100));
-  if (typeof value !== "string") return 0;
-  const normalized = value.trim().replace(/\s/g, "").replace(/\.(?=\d{3}(?:\D|$))/g, "").replace(",", ".");
-  const parsed = Number(normalized);
-  return Number.isFinite(parsed) ? Math.max(0, Math.round(parsed * 100)) : 0;
+export function decimalToCents(value: unknown): number {
+  // API amounts use a decimal point, never locale thousands separators.
+  const text = String(value).trim();
+  if (!/^\d+(?:\.\d+)?$/.test(text)) throw new Error("O pedido possui valor monetário inválido.");
+  const [whole = "0", fraction = ""] = text.split(".");
+  const cents = BigInt(whole) * 100n + BigInt((fraction + "00").slice(0, 2)) + (Number(fraction[2] ?? "0") >= 5 ? 1n : 0n);
+  if (cents > BigInt(Number.MAX_SAFE_INTEGER)) throw new Error("O pedido possui valor monetário fora do limite.");
+  return Number(cents);
 }
 
 function numeric(value: unknown, fallback = 0): number {
@@ -176,14 +204,18 @@ function flattenItems(items: unknown[]): NormalizedOrder["items"] {
     const quantity = Math.max(0, numeric(item.quantity, 1));
     const name = firstString(item, "name", "productName") || `Item ${index + 1}`;
     const unitCents = amount(item, "unitPrice", "unitValue", "price.value", "price");
-    const totalCents = amount(item, "totalPrice", "total", "totalValue") || Math.round(unitCents * quantity);
+    const hasTotal = ["totalPrice", "total", "totalValue"].some((key) => item[key] !== undefined && item[key] !== null);
+    const totalCents = hasTotal ? amount(item, "totalPrice", "total", "totalValue") : Math.round(unitCents * quantity);
     const complements = optionDescriptions(asArray(item.options));
     const observation = [
       firstString(item, "observations", "observation"),
       complements.length ? `Complementos: ${complements.join(", ")}` : "",
     ].filter(Boolean).join(" · ");
     return quantity > 0 ? [{
-      external_item_id: firstString(item, "externalCode", "id", "uniqueId"),
+      // Picking identifies a concrete bag item by uniqueId. Keep it ahead of
+      // catalog identifiers so Grocery item modifiers cannot target a SKU by
+      // mistake when the same product appears more than once in the order.
+      external_item_id: firstString(item, "uniqueId", "id", "externalCode"),
       name: name.slice(0, 240),
       quantity,
       unit_price_cents: unitCents,

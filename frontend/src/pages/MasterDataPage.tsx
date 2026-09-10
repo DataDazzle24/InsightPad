@@ -469,6 +469,8 @@ const configs: Record<PageKey, Config> = {
       { key: "name", label: "Nome do produto", required: true },
       { key: "internalCode", label: "Código interno" },
       { key: "ean", label: "Código de barras" },
+      { key: "scaleCode", label: "Código de balança" },
+      { key: "imageUrl", label: "URL pública da imagem (HTTPS)", wide: true },
       { key: "categoryId", label: "Categoria", type: "select", required: true },
       { key: "subcategoryId", label: "Subcategoria", type: "select" },
       { key: "supplierId", label: "Fornecedor", type: "select" },
@@ -612,6 +614,8 @@ const sectionFields: Record<PageKey, Record<string, string[]>> = {
       "name",
       "internalCode",
       "ean",
+      "scaleCode",
+      "imageUrl",
       "brand",
       "categoryId",
       "subcategoryId",
@@ -1290,7 +1294,9 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
     } catch (e) {
       console.error(e);
       setNotice(
-        "Operação não aplicada. Verifique duplicidades, vínculos e dados informados.",
+        pageKey === "CAD_PRODUTO"
+          ? "Operação não aplicada. Verifique os dados e códigos duplicados. Para trocar o EAN ou código de balança de um produto publicado, remova primeiro o vínculo do canal para desativar o identificador antigo."
+          : "Operação não aplicada. Verifique duplicidades, vínculos e dados informados.",
       );
     } finally {
       setBusy(false);

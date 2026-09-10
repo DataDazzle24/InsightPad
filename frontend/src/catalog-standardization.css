@@ -507,7 +507,10 @@
 .channel-reject-body label { display: grid; gap: .4rem; }
 .channel-reject-body label > span { font: 800 .58rem var(--mono); text-transform: uppercase; }
 .channel-reject-body textarea,
-.channel-order-notification__reason textarea { min-height: 7rem; padding: .7rem; border: 1px solid #2a383d; color: #f6f8f9; background: #080b0d; resize: vertical; }
+.channel-order-notification__reason textarea,
+.channel-order-notification__reason select { width: 100%; min-height: 2.7rem; padding: .7rem; border: 1px solid #2a383d; color: #f6f8f9; background: #080b0d; }
+.channel-reject-body textarea,
+.channel-order-notification__reason textarea { min-height: 7rem; resize: vertical; }
 
 .channel-order-notification-backdrop { z-index: 120; }
 .channel-order-notification { width: min(35rem, calc(100vw - 1.25rem)); border: 1px solid #42dcfa; color: #f6f8f9; background: #0d1214; box-shadow: 0 28px 90px rgba(0, 0, 0, .75); }
@@ -4423,6 +4426,7 @@ html[data-theme=light] .channel-order-notification {
 }
 
 html[data-theme=light] .channel-order-notification__reason textarea,
+html[data-theme=light] .channel-order-notification__reason select,
 html[data-theme=light] .channel-reject-body textarea {
   border-color: #b9ced4;
   color: #193039;

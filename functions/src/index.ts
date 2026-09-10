@@ -1,13 +1,14 @@
 import { logger } from "firebase-functions/logger";
 import { onMutationExecuted } from "firebase-functions/dataconnect";
 import { defineSecret, defineString } from "firebase-functions/params";
-import { onRequest } from "firebase-functions/v2/https";
+import { onRequest, onCall, HttpsError } from "firebase-functions/v2/https";
 import { setGlobalOptions } from "firebase-functions/v2/options";
 import { onSchedule } from "firebase-functions/v2/scheduler";
-import { heartbeatMerchantIds, isIfoodKeepalive, parseIfoodEvents, sha256, verifyIfoodSignature } from "./domain.js";
+import { heartbeatMerchantIds, isIfoodKeepalive, parseIfoodEvents, verifyIfoodSignature, type IfoodEvent } from "./domain.js";
 import { IfoodClient } from "./ifood.js";
 import {
   connectedHeartbeatMerchants,
+  cancellationReasonsForUser,
   drainIfoodWork,
   pollIfoodEvents,
   purgeExpiredPayloads,
@@ -27,8 +28,8 @@ setGlobalOptions({
   serviceAccount,
   memory: "512MiB",
   timeoutSeconds: 120,
-  maxInstances: 20,
-  concurrency: 20,
+  maxInstances: 5,
+  concurrency: 4,
   labels: { component: "ifood-adapter" },
 });
 
@@ -44,7 +45,7 @@ const secureWorkerOptions = {
   region: "southamerica-east1" as const,
   secrets: [clientId, clientSecret],
   retry: true,
-  maxInstances: 20,
+  maxInstances: 5,
 };
 
 async function drainTriggeredWork(): Promise<void> {
@@ -97,7 +98,7 @@ export const ifoodWebhook = onRequest({
     return;
   }
   const contentType = request.get("content-type")?.toLowerCase() ?? "";
-  if (!contentType.startsWith("application/json")) {
+  if (contentType.split(";")[0]?.trim() !== "application/json") {
     response.status(415).send("Unsupported Media Type");
     return;
   }
@@ -122,41 +123,31 @@ export const ifoodWebhook = onRequest({
           ? "BASE64_44"
           : "UNEXPECTED";
 
-    let canonicalJsonMatch = false;
-    try {
-      const parsedBody = JSON.parse(rawBody.toString("utf8"));
-      const canonicalBody = Buffer.from(JSON.stringify(parsedBody), "utf8");
-      canonicalJsonMatch = verifyIfoodSignature(
-        canonicalBody,
-        signature,
-        webhookSecret,
-      );
-    } catch {
-      canonicalJsonMatch = false;
-    }
-
     logger.warn("Webhook iFood recusado por assinatura inválida.", {
       signatureFormat,
       signatureLength: normalizedSignature.length,
       bodyLength: rawBody.length,
-      bodyFingerprint: sha256(rawBody).slice(0, 16),
-      canonicalJsonMatch,
-      secretHasSurroundingWhitespace: webhookSecret !== webhookSecret.trim(),
     });
     response.status(401).send("Unauthorized");
     return;
   }
+  let events: IfoodEvent[];
   try {
-    const events = parseIfoodEvents(JSON.parse(rawBody.toString("utf8")));
+    events = parseIfoodEvents(JSON.parse(rawBody.toString("utf8")));
     if (!events.length || events.length > 100) throw new Error("Quantidade de eventos inválida.");
-
+  } catch {
+    response.status(400).send("Bad Request");
+    return;
+  }
+  try {
+    const requestId = request.get("x-request-id") ?? "";
     const keepaliveEvents = events.filter(isIfoodKeepalive);
     const businessEvents = events.filter((event) => !isIfoodKeepalive(event));
-    await registerWebhookEvents(businessEvents, request.get("x-request-id") ?? "");
+    await registerWebhookEvents(businessEvents, requestId);
 
     const requestedMerchantIds = [...new Set(keepaliveEvents.flatMap(heartbeatMerchantIds))];
     if (requestedMerchantIds.length) {
-      const merchantIds = await connectedHeartbeatMerchants(keepaliveEvents);
+      const merchantIds = await connectedHeartbeatMerchants(keepaliveEvents, requestId);
       response.status(202).json({ merchantIds });
       return;
     }
@@ -197,5 +188,24 @@ export const purgeIfoodPayloads = onSchedule({
   } catch (error) {
     logger.error("A política de retenção iFood falhou.", { errorType: error instanceof Error ? error.name : "UnknownError" });
     throw new Error("Falha transitória ao aplicar a retenção iFood.");
+  }
+});
+export const ifoodCancellationReasons = onCall({
+  secrets: [clientId, clientSecret],
+  timeoutSeconds: 45,
+  maxInstances: 5,
+  concurrency: 4,
+}, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Entre novamente para consultar o pedido.");
+  const orderId: unknown = request.data?.orderId;
+  if (typeof orderId !== "string" || !/^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/i.test(orderId)) {
+    throw new HttpsError("invalid-argument", "Pedido inválido.");
+  }
+  try {
+    return { reasons: await cancellationReasonsForUser(client(), request.auth.uid, orderId) };
+  } catch (error) {
+    if (error instanceof Error && error.message === "ORDER_ACCESS_DENIED") throw new HttpsError("permission-denied", "Pedido indisponível para esta ação.");
+    logger.warn("Falha ao consultar motivos de cancelamento iFood.", { errorType: error instanceof Error ? error.name : "UnknownError" });
+    throw new HttpsError("unavailable", "Não foi possível consultar os motivos no iFood. Tente novamente.");
   }
 });

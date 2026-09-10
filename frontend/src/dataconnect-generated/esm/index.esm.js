@@ -882,6 +882,18 @@ export function systemRecordSalesChannelCommandResult(dcOrVars, vars) {
   return executeMutation(systemRecordSalesChannelCommandResultRef(dcInstance, inputVars));
 }
 
+export const systemRefreshSalesChannelOrderAfterPickingRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'SystemRefreshSalesChannelOrderAfterPicking', inputVars);
+}
+systemRefreshSalesChannelOrderAfterPickingRef.operationName = 'SystemRefreshSalesChannelOrderAfterPicking';
+
+export function systemRefreshSalesChannelOrderAfterPicking(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(systemRefreshSalesChannelOrderAfterPickingRef(dcInstance, inputVars));
+}
+
 export const systemRecordSalesChannelSyncResultRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
@@ -1043,7 +1055,7 @@ export const systemIfoodConnectionsForPollingRef = (dcOrVars, vars) => {
 systemIfoodConnectionsForPollingRef.operationName = 'SystemIfoodConnectionsForPolling';
 
 export function systemIfoodConnectionsForPolling(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(systemIfoodConnectionsForPollingRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1056,7 +1068,7 @@ export const systemIfoodConnectionByMerchantRef = (dcOrVars, vars) => {
 systemIfoodConnectionByMerchantRef.operationName = 'SystemIfoodConnectionByMerchant';
 
 export function systemIfoodConnectionByMerchant(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(systemIfoodConnectionByMerchantRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1069,7 +1081,7 @@ export const systemSalesChannelMappingsForSyncRef = (dcOrVars, vars) => {
 systemSalesChannelMappingsForSyncRef.operationName = 'SystemSalesChannelMappingsForSync';
 
 export function systemSalesChannelMappingsForSync(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(systemSalesChannelMappingsForSyncRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1397,5 +1409,18 @@ export function operationalAnalyticsDashboard(dcOrVars, varsOrOptions, options) 
   
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(operationalAnalyticsDashboardRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const systemSalesChannelOrderForActorRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'SystemSalesChannelOrderForActor', inputVars);
+}
+systemSalesChannelOrderForActorRef.operationName = 'SystemSalesChannelOrderForActor';
+
+export function systemSalesChannelOrderForActor(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(systemSalesChannelOrderForActorRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 

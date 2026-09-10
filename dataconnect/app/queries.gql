@@ -98,11 +98,11 @@ query SalesChannelOptions($requestKey: String!) @auth(level: USER) {
       JOIN app_pages p ON p.page_key='CANAIS_VENDA' AND p.active
       LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=p.id AND up.tenant_id=u.tenant_id
       LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=p.id AND rp.tenant_id=u.tenant_id
-      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_access,rp.can_access,false)
+      WHERE u.id=$1 AND (u.blocked_until IS NULL OR u.blocked_until<=now()) AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_access,rp.can_access,false)
     )
     SELECT jsonb_build_object(
-      'branches',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',b.id,'name',b.name) ORDER BY lower(b.name)) FROM branches b JOIN actor a ON a.tenant_id=b.tenant_id WHERE b.active AND b.deleted_at IS NULL),'[]'::jsonb),
-      'connections',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',c.id,'provider',c.provider,'displayName',c.display_name,'branchId',c.branch_id,'branchName',b.name,'status',c.status,'authorizationStatus',c.authorization_status,'enabled',c.enabled) ORDER BY lower(c.display_name)) FROM sales_channel_connections c JOIN actor a ON a.tenant_id=c.tenant_id JOIN branches b ON b.id=c.branch_id AND b.tenant_id=c.tenant_id WHERE c.active AND c.deleted_at IS NULL),'[]'::jsonb)
+      'branches',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',b.id,'name',b.name) ORDER BY lower(b.name)) FROM branches b JOIN actor a ON a.tenant_id=b.tenant_id AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1 AND ub.tenant_id=b.tenant_id AND ub.branch_id=b.id AND ub.active)) WHERE b.active AND b.deleted_at IS NULL),'[]'::jsonb),
+      'connections',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',c.id,'provider',c.provider,'displayName',c.display_name,'branchId',c.branch_id,'branchName',b.name,'status',c.status,'catalogProfile',c.catalog_profile,'authorizationStatus',c.authorization_status,'enabled',c.enabled) ORDER BY lower(c.display_name)) FROM sales_channel_connections c JOIN actor a ON a.tenant_id=c.tenant_id AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1 AND ub.tenant_id=c.tenant_id AND ub.branch_id=c.branch_id AND ub.active)) JOIN branches b ON b.id=c.branch_id AND b.tenant_id=c.tenant_id WHERE c.active AND c.deleted_at IS NULL),'[]'::jsonb)
     ) data FROM actor WHERE $2<>''
   """,params:[{_expr:"auth.uid"},$requestKey])
 }
@@ -116,12 +116,12 @@ query SalesChannelConnectionsV2($term: String!, $provider: String!, $status: Str
       JOIN app_pages p ON p.page_key='CANAIS_VENDA' AND p.active
       LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=p.id AND up.tenant_id=u.tenant_id
       LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=p.id AND rp.tenant_id=u.tenant_id
-      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_access,rp.can_access,false)
+      WHERE u.id=$1 AND (u.blocked_until IS NULL OR u.blocked_until<=now()) AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_access,rp.can_access,false)
     ), base AS (
       SELECT c.*,b.name branch_name,
         (SELECT count(*) FROM sales_channel_product_mappings m WHERE m.tenant_id=c.tenant_id AND m.connection_id=c.id AND m.active AND m.deleted_at IS NULL) mapping_count,
         (SELECT count(*) FROM sales_channel_orders o WHERE o.tenant_id=c.tenant_id AND o.connection_id=c.id AND o.status='PENDING') pending_orders
-      FROM sales_channel_connections c JOIN actor a ON a.tenant_id=c.tenant_id
+      FROM sales_channel_connections c JOIN actor a ON a.tenant_id=c.tenant_id AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1 AND ub.tenant_id=c.tenant_id AND ub.branch_id=c.branch_id AND ub.active))
       JOIN branches b ON b.id=c.branch_id AND b.tenant_id=c.tenant_id
       WHERE c.active AND c.deleted_at IS NULL
     ), eligible AS (
@@ -147,7 +147,7 @@ query SalesChannelConnectionsV2($term: String!, $provider: String!, $status: Str
     SELECT jsonb_build_object(
       'rows',COALESCE((SELECT jsonb_agg(jsonb_build_object(
         'id',id,'provider',provider,'displayName',display_name,'externalStoreId',external_store_id,
-        'branchId',branch_id,'branchName',branch_name,'status',status,'authorizationStatus',authorization_status,
+        'branchId',branch_id,'branchName',branch_name,'status',status,'catalogProfile',catalog_profile,'authorizationStatus',authorization_status,
         'integrationMode',integration_mode,'webhookStatus',webhook_status,'enabled',enabled,'tokenExpiresAt',token_expires_at,
         'lastHealthCheckAt',last_health_check_at,'lastSuccessAt',last_success_at,'lastSyncedAt',last_synced_at,
         'lastRequestId',last_request_id,'lastError',last_error,'consecutiveFailures',consecutive_failures,
@@ -173,12 +173,12 @@ query SalesChannelProductMappingsV2($term: String!, $provider: String!, $connect
       JOIN app_pages pg ON pg.page_key='CANAIS_VENDA' AND pg.active
       LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
       LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
-      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_access,rp.can_access,false)
+      WHERE u.id=$1 AND (u.blocked_until IS NULL OR u.blocked_until<=now()) AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_access,rp.can_access,false)
     ), base AS (
-      SELECT m.*,p.name product_name,p.internal_code,p.ean,c.provider,c.display_name connection_name,b.name branch_name
+      SELECT m.*,p.name product_name,p.internal_code,p.ean,c.provider,c.catalog_profile,c.display_name connection_name,b.name branch_name
       FROM sales_channel_product_mappings m JOIN actor a ON a.tenant_id=m.tenant_id
       JOIN products p ON p.id=m.product_id AND p.tenant_id=m.tenant_id AND p.active AND p.deleted_at IS NULL
-      JOIN sales_channel_connections c ON c.id=m.connection_id AND c.tenant_id=m.tenant_id AND c.active AND c.deleted_at IS NULL
+      JOIN sales_channel_connections c ON c.id=m.connection_id AND c.tenant_id=m.tenant_id AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1 AND ub.tenant_id=c.tenant_id AND ub.branch_id=c.branch_id AND ub.active)) AND c.active AND c.deleted_at IS NULL
       JOIN branches b ON b.id=c.branch_id AND b.tenant_id=c.tenant_id
       WHERE m.active AND m.deleted_at IS NULL
     ), eligible AS (
@@ -202,7 +202,7 @@ query SalesChannelProductMappingsV2($term: String!, $provider: String!, $connect
       LIMIT LEAST(GREATEST($8,1),100) OFFSET GREATEST($9,0)
     )
     SELECT jsonb_build_object(
-      'rows',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',id,'connectionId',connection_id,'connectionName',connection_name,'provider',provider,'branchName',branch_name,'productId',product_id,'productName',product_name,'internalCode',internal_code,'ean',ean,'externalProductId',external_product_id,'externalProductName',external_product_name,'syncPrice',sync_price,'syncStock',sync_stock,'enabled',enabled,'status',status,'syncStatus',sync_status,'lastSyncedAt',last_synced_at,'lastError',last_error,'version',version,'updatedAt',updated_at) ORDER BY array_position(ARRAY(SELECT id FROM page),id)) FROM page),'[]'::jsonb),
+      'rows',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',id,'connectionId',connection_id,'connectionName',connection_name,'provider',provider,'catalogProfile',catalog_profile,'branchName',branch_name,'productId',product_id,'productName',product_name,'internalCode',internal_code,'ean',ean,'externalProductId',external_product_id,'externalProductName',external_product_name,'syncPrice',sync_price,'syncStock',sync_stock,'enabled',enabled,'status',status,'syncStatus',sync_status,'lastSyncedAt',last_synced_at,'lastError',last_error,'version',version,'updatedAt',updated_at) ORDER BY array_position(ARRAY(SELECT id FROM page),id)) FROM page),'[]'::jsonb),
       'total',(SELECT count(*) FROM eligible),
       'summary',jsonb_build_object('total',(SELECT count(*) FROM base),'automatic',(SELECT count(*) FROM base WHERE enabled AND (sync_price OR sync_stock)),'pending',(SELECT count(*) FROM base WHERE sync_status IN ('PENDING','QUEUED')),'errors',(SELECT count(*) FROM base WHERE sync_status='ERROR'))
     ) data FROM actor WHERE $10<>''
@@ -217,9 +217,9 @@ query SalesChannelProductOptions($term: String!, $limit: Int!, $requestKey: Stri
       JOIN app_pages pg ON pg.page_key='CANAIS_VENDA' AND pg.active
       LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
       LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
-      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_access,rp.can_access,false)
+      WHERE u.id=$1 AND (u.blocked_until IS NULL OR u.blocked_until<=now()) AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_access,rp.can_access,false)
     )
-    SELECT p.id,p.name,p.internal_code AS "internalCode",p.ean FROM products p JOIN actor a ON a.tenant_id=p.tenant_id
+    SELECT p.id,p.name,p.internal_code AS "internalCode",p.ean,p.scale_code AS "scaleCode" FROM products p JOIN actor a ON a.tenant_id=p.tenant_id
     WHERE p.active AND p.deleted_at IS NULL AND $4<>'' AND ($2='' OR p.name ILIKE '%'||$2||'%' OR p.internal_code ILIKE '%'||$2||'%' OR COALESCE(p.ean,'') ILIKE '%'||$2||'%')
     ORDER BY lower(p.name),p.id LIMIT LEAST(GREATEST($3,1),50)
   """,params:[{_expr:"auth.uid"},$term,$limit,$requestKey])
@@ -233,16 +233,16 @@ query SalesChannelOperations($connectionId: UUID, $requestKey: String!) @auth(le
       JOIN app_pages pg ON pg.page_key='CANAIS_VENDA' AND pg.active
       LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
       LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
-      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_access,rp.can_access,false)
+      WHERE u.id=$1 AND (u.blocked_until IS NULL OR u.blocked_until<=now()) AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_access,rp.can_access,false)
     )
     SELECT jsonb_build_object(
-      'events',COALESCE((SELECT jsonb_agg(x ORDER BY x."receivedAt" DESC) FROM (SELECT e.id,e.connection_id AS "connectionId",c.display_name AS "connectionName",e.provider,e.provider_event_id AS "providerEventId",e.event_type AS "eventType",e.request_id AS "requestId",e.status,e.attempts,e.received_at AS "receivedAt",e.processed_at AS "processedAt",e.acknowledged_at AS "acknowledgedAt",e.last_error AS "lastError" FROM sales_channel_event_inbox e JOIN actor a ON a.tenant_id=e.tenant_id JOIN sales_channel_connections c ON c.id=e.connection_id AND c.tenant_id=e.tenant_id WHERE ($2::uuid IS NULL OR e.connection_id=$2) ORDER BY e.received_at DESC LIMIT 50)x),'[]'::jsonb),
-      'commands',COALESCE((SELECT jsonb_agg(x ORDER BY x."createdAt" DESC) FROM (SELECT q.id,q.connection_id AS "connectionId",c.display_name AS "connectionName",q.order_id AS "orderId",q.provider,q.action,q.status,q.attempts,q.partner_request_id AS "partnerRequestId",q.response_code AS "responseCode",q.last_error AS "lastError",q.created_at AS "createdAt",q.processed_at AS "processedAt" FROM sales_channel_commands q JOIN actor a ON a.tenant_id=q.tenant_id JOIN sales_channel_connections c ON c.id=q.connection_id AND c.tenant_id=q.tenant_id WHERE ($2::uuid IS NULL OR q.connection_id=$2) ORDER BY q.created_at DESC LIMIT 50)x),'[]'::jsonb),
-      'jobs',COALESCE((SELECT jsonb_agg(x ORDER BY x."createdAt" DESC) FROM (SELECT j.id,j.connection_id AS "connectionId",c.display_name AS "connectionName",j.provider,j.job_type AS "jobType",j.status,j.total_items AS "totalItems",j.processed_items AS "processedItems",j.failed_items AS "failedItems",j.attempts,j.last_error AS "lastError",j.created_at AS "createdAt",j.finished_at AS "finishedAt" FROM sales_channel_sync_jobs j JOIN actor a ON a.tenant_id=j.tenant_id JOIN sales_channel_connections c ON c.id=j.connection_id AND c.tenant_id=j.tenant_id WHERE ($2::uuid IS NULL OR j.connection_id=$2) ORDER BY j.created_at DESC LIMIT 50)x),'[]'::jsonb),
+      'events',COALESCE((SELECT jsonb_agg(x ORDER BY x."receivedAt" DESC) FROM (SELECT e.id,e.connection_id AS "connectionId",c.display_name AS "connectionName",e.provider,e.provider_event_id AS "providerEventId",e.event_type AS "eventType",e.request_id AS "requestId",e.status,e.attempts,e.received_at AS "receivedAt",e.processed_at AS "processedAt",e.acknowledged_at AS "acknowledgedAt",e.last_error AS "lastError" FROM sales_channel_event_inbox e JOIN actor a ON a.tenant_id=e.tenant_id JOIN sales_channel_connections c ON c.id=e.connection_id AND c.tenant_id=e.tenant_id AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1 AND ub.tenant_id=c.tenant_id AND ub.branch_id=c.branch_id AND ub.active)) WHERE ($2::uuid IS NULL OR e.connection_id=$2) ORDER BY e.received_at DESC LIMIT 50)x),'[]'::jsonb),
+      'commands',COALESCE((SELECT jsonb_agg(x ORDER BY x."createdAt" DESC) FROM (SELECT q.id,q.connection_id AS "connectionId",c.display_name AS "connectionName",q.order_id AS "orderId",q.provider,q.action,q.status,q.attempts,q.partner_request_id AS "partnerRequestId",q.response_code AS "responseCode",q.last_error AS "lastError",q.created_at AS "createdAt",q.processed_at AS "processedAt" FROM sales_channel_commands q JOIN actor a ON a.tenant_id=q.tenant_id JOIN sales_channel_connections c ON c.id=q.connection_id AND c.tenant_id=q.tenant_id AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1 AND ub.tenant_id=c.tenant_id AND ub.branch_id=c.branch_id AND ub.active)) WHERE ($2::uuid IS NULL OR q.connection_id=$2) ORDER BY q.created_at DESC LIMIT 50)x),'[]'::jsonb),
+      'jobs',COALESCE((SELECT jsonb_agg(x ORDER BY x."createdAt" DESC) FROM (SELECT j.id,j.connection_id AS "connectionId",c.display_name AS "connectionName",j.provider,j.job_type AS "jobType",j.status,j.total_items AS "totalItems",j.processed_items AS "processedItems",j.failed_items AS "failedItems",j.attempts,j.last_error AS "lastError",j.created_at AS "createdAt",j.finished_at AS "finishedAt" FROM sales_channel_sync_jobs j JOIN actor a ON a.tenant_id=j.tenant_id JOIN sales_channel_connections c ON c.id=j.connection_id AND c.tenant_id=j.tenant_id AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1 AND ub.tenant_id=c.tenant_id AND ub.branch_id=c.branch_id AND ub.active)) WHERE ($2::uuid IS NULL OR j.connection_id=$2) ORDER BY j.created_at DESC LIMIT 50)x),'[]'::jsonb),
       'summary',jsonb_build_object(
-        'eventFailures',(SELECT count(*) FROM sales_channel_event_inbox e JOIN actor a ON a.tenant_id=e.tenant_id WHERE e.status='ERROR' AND ($2::uuid IS NULL OR e.connection_id=$2)),
-        'queuedCommands',(SELECT count(*) FROM sales_channel_commands q JOIN actor a ON a.tenant_id=q.tenant_id WHERE q.status IN ('QUEUED','PROCESSING','RETRY') AND ($2::uuid IS NULL OR q.connection_id=$2)),
-        'syncFailures',(SELECT count(*) FROM sales_channel_sync_jobs j JOIN actor a ON a.tenant_id=j.tenant_id WHERE j.status='ERROR' AND ($2::uuid IS NULL OR j.connection_id=$2))
+        'eventFailures',(SELECT count(*) FROM sales_channel_event_inbox e JOIN actor a ON a.tenant_id=e.tenant_id JOIN sales_channel_connections c ON c.id=e.connection_id AND c.tenant_id=e.tenant_id AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1 AND ub.tenant_id=c.tenant_id AND ub.branch_id=c.branch_id AND ub.active)) WHERE e.status='ERROR' AND ($2::uuid IS NULL OR e.connection_id=$2)),
+        'queuedCommands',(SELECT count(*) FROM sales_channel_commands q JOIN actor a ON a.tenant_id=q.tenant_id JOIN sales_channel_connections c ON c.id=q.connection_id AND c.tenant_id=q.tenant_id AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1 AND ub.tenant_id=c.tenant_id AND ub.branch_id=c.branch_id AND ub.active)) WHERE q.status IN ('QUEUED','PROCESSING','RETRY','AWAITING_PARTNER') AND ($2::uuid IS NULL OR q.connection_id=$2)),
+        'syncFailures',(SELECT count(*) FROM (SELECT DISTINCT ON (j.tenant_id,j.connection_id,j.job_type) j.status FROM sales_channel_sync_jobs j JOIN actor a ON a.tenant_id=j.tenant_id JOIN sales_channel_connections c ON c.id=j.connection_id AND c.tenant_id=j.tenant_id AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1 AND ub.tenant_id=c.tenant_id AND ub.branch_id=c.branch_id AND ub.active)) WHERE ($2::uuid IS NULL OR j.connection_id=$2) ORDER BY j.tenant_id,j.connection_id,j.job_type,j.created_at DESC,j.id DESC) current_jobs WHERE current_jobs.status='ERROR')
       )
     ) data FROM actor WHERE $3<>''
   """,params:[{_expr:"auth.uid"},$connectionId,$requestKey])
@@ -253,9 +253,9 @@ query SalesChannelOperations($connectionId: UUID, $requestKey: String!) @auth(le
 query SystemSalesChannelWorkQueue($workerId: String!, $requestKey: String!) @auth(level: NO_ACCESS) {
   _select(sql: """
     SELECT jsonb_build_object(
-      'commands',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',q.id,'tenantId',q.tenant_id,'connectionId',q.connection_id,'orderId',q.order_id,'providerOrderId',o.provider_order_id,'orderType',o.order_type,'partnerStatus',o.partner_status,'provider',q.provider,'action',q.action,'payload',q.payload,'attempts',q.attempts,'leaseUntil',q.lease_until,'secretReference',c.secret_reference,'externalStoreId',c.external_store_id) ORDER BY q.scheduled_at,q.id) FROM sales_channel_commands q JOIN sales_channel_connections c ON c.id=q.connection_id AND c.tenant_id=q.tenant_id LEFT JOIN sales_channel_orders o ON o.id=q.order_id AND o.tenant_id=q.tenant_id WHERE q.status='PROCESSING' AND q.locked_by=left(btrim($1),180) AND q.lease_until>now()),'[]'::jsonb),
-      'events',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',e.id,'tenantId',e.tenant_id,'connectionId',e.connection_id,'provider',e.provider,'providerEventId',e.provider_event_id,'eventType',e.event_type,'requestId',e.request_id,'payloadHash',e.payload_hash,'payload',e.payload,'attempts',e.attempts,'leaseUntil',e.lease_until,'secretReference',c.secret_reference,'externalStoreId',c.external_store_id) ORDER BY e.received_at,e.id) FROM sales_channel_event_inbox e JOIN sales_channel_connections c ON c.id=e.connection_id AND c.tenant_id=e.tenant_id WHERE e.status='PROCESSING' AND e.locked_by=left(btrim($1),180) AND e.lease_until>now()),'[]'::jsonb),
-      'jobs',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',j.id,'tenantId',j.tenant_id,'connectionId',j.connection_id,'provider',j.provider,'jobType',j.job_type,'attempts',j.attempts,'leaseUntil',j.lease_until,'secretReference',c.secret_reference,'externalStoreId',c.external_store_id) ORDER BY j.scheduled_at,j.id) FROM sales_channel_sync_jobs j JOIN sales_channel_connections c ON c.id=j.connection_id AND c.tenant_id=j.tenant_id WHERE j.status='PROCESSING' AND j.locked_by=left(btrim($1),180) AND j.lease_until>now()),'[]'::jsonb)
+      'commands',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',q.id,'tenantId',q.tenant_id,'connectionId',q.connection_id,'orderId',q.order_id,'providerOrderId',o.provider_order_id,'orderType',o.order_type,'partnerStatus',o.partner_status,'provider',q.provider,'catalogProfile',c.catalog_profile,'action',q.action,'payload',q.payload,'attempts',q.attempts,'leaseUntil',q.lease_until,'secretReference',c.secret_reference,'externalStoreId',c.external_store_id) ORDER BY q.scheduled_at,q.id) FROM sales_channel_commands q JOIN sales_channel_connections c ON c.id=q.connection_id AND c.tenant_id=q.tenant_id LEFT JOIN sales_channel_orders o ON o.id=q.order_id AND o.tenant_id=q.tenant_id WHERE c.active AND c.enabled AND c.deleted_at IS NULL AND c.status='ACTIVE' AND c.authorization_status='AUTHORIZED' AND q.status='PROCESSING' AND q.locked_by=left(btrim($1),180) AND q.lease_until>now()),'[]'::jsonb),
+      'events',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',e.id,'tenantId',e.tenant_id,'connectionId',e.connection_id,'provider',e.provider,'providerEventId',e.provider_event_id,'eventType',e.event_type,'requestId',e.request_id,'payloadHash',e.payload_hash,'payload',e.payload,'attempts',e.attempts,'leaseUntil',e.lease_until,'secretReference',c.secret_reference,'externalStoreId',c.external_store_id) ORDER BY e.received_at,e.id) FROM sales_channel_event_inbox e JOIN sales_channel_connections c ON c.id=e.connection_id AND c.tenant_id=e.tenant_id WHERE c.active AND c.enabled AND c.deleted_at IS NULL AND c.status='ACTIVE' AND c.authorization_status='AUTHORIZED' AND e.status='PROCESSING' AND e.locked_by=left(btrim($1),180) AND e.lease_until>now()),'[]'::jsonb),
+      'jobs',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',j.id,'tenantId',j.tenant_id,'connectionId',j.connection_id,'provider',j.provider,'jobType',j.job_type,'processedItems',j.processed_items,'cursor',j.cursor,'catalogProfile',c.catalog_profile,'attempts',j.attempts,'leaseUntil',j.lease_until,'secretReference',c.secret_reference,'externalStoreId',c.external_store_id) ORDER BY j.scheduled_at,j.id) FROM sales_channel_sync_jobs j JOIN sales_channel_connections c ON c.id=j.connection_id AND c.tenant_id=j.tenant_id WHERE c.active AND c.enabled AND c.deleted_at IS NULL AND j.status='PROCESSING' AND j.locked_by=left(btrim($1),180) AND j.lease_until>now()),'[]'::jsonb)
     ) data WHERE length(btrim($1)) BETWEEN 8 AND 180 AND $2<>''
   """,params:[$workerId,$requestKey])
 }
@@ -266,7 +266,7 @@ query SystemIfoodConnectionsForPolling($requestKey: String!) @auth(level: NO_ACC
   _select(sql: """
     SELECT c.id AS "connectionId",c.tenant_id AS "tenantId",c.external_store_id AS "externalStoreId",c.integration_mode AS "integrationMode",c.webhook_status AS "webhookStatus"
     FROM sales_channel_connections c
-    WHERE c.provider='IFOOD' AND c.active AND c.deleted_at IS NULL AND c.enabled AND c.status='ACTIVE' AND c.authorization_status='AUTHORIZED'
+    WHERE c.provider='IFOOD' AND EXISTS(SELECT 1 FROM tenants t WHERE t.id=c.tenant_id AND t.active AND t.deleted_at IS NULL) AND EXISTS(SELECT 1 FROM branches b WHERE b.id=c.branch_id AND b.tenant_id=c.tenant_id AND b.active AND b.deleted_at IS NULL) AND c.active AND c.deleted_at IS NULL AND c.enabled AND c.status='ACTIVE' AND c.authorization_status='AUTHORIZED'
       AND c.external_store_id IS NOT NULL AND length(btrim($1)) BETWEEN 8 AND 150
     ORDER BY c.id
   """,params:[$requestKey])
@@ -276,31 +276,35 @@ query SystemIfoodConnectionByMerchant($merchantId: String!, $requestKey: String!
   _select(sql: """
     SELECT c.id AS "connectionId",c.tenant_id AS "tenantId",c.external_store_id AS "externalStoreId",c.integration_mode AS "integrationMode",c.webhook_status AS "webhookStatus"
     FROM sales_channel_connections c
-    WHERE c.provider='IFOOD' AND c.provider_store_key=concat('IFOOD:',left(btrim($1),160))
+    WHERE c.provider='IFOOD' AND EXISTS(SELECT 1 FROM tenants t WHERE t.id=c.tenant_id AND t.active AND t.deleted_at IS NULL) AND EXISTS(SELECT 1 FROM branches b WHERE b.id=c.branch_id AND b.tenant_id=c.tenant_id AND b.active AND b.deleted_at IS NULL) AND c.provider_store_key=concat('IFOOD:',left(btrim($1),160))
       AND c.active AND c.deleted_at IS NULL AND c.enabled AND c.status='ACTIVE' AND c.authorization_status='AUTHORIZED'
       AND length(btrim($1)) BETWEEN 1 AND 160 AND length(btrim($2)) BETWEEN 8 AND 150
     LIMIT 2
   """,params:[$merchantId,$requestKey])
 }
 
-query SystemSalesChannelMappingsForSync($jobId: UUID!, $requestKey: String!) @auth(level: NO_ACCESS) {
+query SystemSalesChannelMappingsForSync($jobId: UUID!, $workerId: String!, $requestKey: String!) @auth(level: NO_ACCESS) {
   _select(sql: """
-    SELECT m.id AS "mappingId",m.external_product_id AS "externalProductId",m.sync_price AS "syncPrice",m.sync_stock AS "syncStock",
-      COALESCE(pr.promotional_price_cents,p.sale_price_cents)::text AS "priceCents",GREATEST(COALESCE(sb.quantity,0),0)::text AS "stockQuantity"
+    SELECT m.id AS "mappingId",count(*) OVER()::text AS remaining,m.version,now() AS "snapshotAt",m.external_product_id AS "externalProductId",m.external_product_name AS "externalProductName",m.sync_price AS "syncPrice",m.sync_stock AS "syncStock",m.last_synced_at AS "lastSyncedAt",
+      p.name AS "productName",p.internal_code AS "internalCode",p.image_url AS "imageUrl",p.brand,p.size,p.size_type AS "sizeType",left(p.notes,1000) AS description,category.name AS "categoryName",subcategory.name AS "subcategoryName",
+      COALESCE(pr.promotional_price_cents,p.sale_price_cents)::text AS "priceCents",p.sale_price_cents::text AS "basePriceCents",pr.promotional_price_cents::text AS "promotionPriceCents",GREATEST(COALESCE(sb.quantity,0),0)::text AS "stockQuantity"
     FROM sales_channel_sync_jobs j
     JOIN sales_channel_connections c ON c.id=j.connection_id AND c.tenant_id=j.tenant_id
     JOIN sales_channel_product_mappings m ON m.connection_id=c.id AND m.tenant_id=c.tenant_id AND m.active AND m.deleted_at IS NULL AND m.enabled
     JOIN products p ON p.id=m.product_id AND p.tenant_id=m.tenant_id AND p.active AND p.deleted_at IS NULL
+    JOIN categories category ON category.id=p.category_id AND category.tenant_id=p.tenant_id AND category.active AND category.deleted_at IS NULL
+    LEFT JOIN subcategories subcategory ON subcategory.id=p.subcategory_id AND subcategory.tenant_id=p.tenant_id AND subcategory.active AND subcategory.deleted_at IS NULL
     LEFT JOIN stock_balances sb ON sb.tenant_id=m.tenant_id AND sb.branch_id=c.branch_id AND sb.product_id=m.product_id
     LEFT JOIN LATERAL (
       SELECT x.promotional_price_cents FROM promotions x WHERE x.tenant_id=p.tenant_id AND x.product_id=p.id AND x.active AND x.deleted_at IS NULL
         AND now()>=x.starts_at AND now()<x.ends_at ORDER BY x.promotional_price_cents,x.id LIMIT 1
     ) pr ON true
     WHERE j.id=$1 AND j.status='PROCESSING' AND j.provider='IFOOD' AND j.job_type IN ('CATALOG','PRICE','STOCK','FULL')
-      AND length(btrim($2)) BETWEEN 8 AND 150
-      AND ((j.job_type IN ('PRICE','FULL','CATALOG') AND m.sync_price) OR (j.job_type IN ('STOCK','FULL','CATALOG') AND m.sync_stock))
-    ORDER BY m.id
-  """,params:[$jobId,$requestKey])
+      AND j.locked_by=$2 AND j.lease_until>now() AND c.active AND c.enabled AND c.deleted_at IS NULL AND c.status='ACTIVE' AND c.authorization_status='AUTHORIZED'
+      AND (j.cursor IS NULL OR m.id>j.cursor) AND length(btrim($3)) BETWEEN 8 AND 150
+      AND ((c.catalog_profile='GROCERY' AND j.job_type IN ('CATALOG','FULL')) OR (j.job_type IN ('PRICE','FULL','CATALOG') AND m.sync_price) OR (j.job_type IN ('STOCK','FULL','CATALOG') AND m.sync_stock))
+    ORDER BY m.id LIMIT 7
+  """,params:[$jobId,$workerId,$requestKey])
 }
 
 query SalesChannelOrdersV2($filters: Any!, $sortField: String!, $sortDirection: String!, $limit: Int!, $offset: Int!, $requestKey: String!) @auth(level: USER) {
@@ -311,11 +315,11 @@ query SalesChannelOrdersV2($filters: Any!, $sortField: String!, $sortDirection: 
       JOIN app_pages p ON p.page_key='CANAIS_VENDA' AND p.active
       LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=p.id AND up.tenant_id=u.tenant_id
       LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=p.id AND rp.tenant_id=u.tenant_id
-      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_access,rp.can_access,false)
+      WHERE u.id=$1 AND (u.blocked_until IS NULL OR u.blocked_until<=now()) AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_access,rp.can_access,false)
     ), f AS (SELECT COALESCE($2::jsonb,'{}'::jsonb) value), base AS (
-      SELECT o.*,c.provider,c.display_name connection_name,c.authorization_status,b.name branch_name
+      SELECT o.*,c.provider,c.catalog_profile,c.display_name connection_name,c.authorization_status,b.name branch_name
       FROM sales_channel_orders o JOIN actor a ON a.tenant_id=o.tenant_id CROSS JOIN f
-      JOIN sales_channel_connections c ON c.id=o.connection_id AND c.tenant_id=o.tenant_id
+      JOIN sales_channel_connections c ON c.id=o.connection_id AND c.tenant_id=o.tenant_id AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1 AND ub.tenant_id=c.tenant_id AND ub.branch_id=c.branch_id AND ub.active))
       JOIN branches b ON b.id=o.branch_id AND b.tenant_id=o.tenant_id
       WHERE (COALESCE(f.value->>'term','')='' OR o.display_code ILIKE '%'||(f.value->>'term')||'%' OR o.provider_order_id ILIKE '%'||(f.value->>'term')||'%' OR COALESCE(o.customer_name,'') ILIKE '%'||(f.value->>'term')||'%')
         AND (COALESCE(f.value->>'provider','')='' OR c.provider=f.value->>'provider')
@@ -342,7 +346,7 @@ query SalesChannelOrdersV2($filters: Any!, $sortField: String!, $sortDirection: 
       LIMIT LEAST(GREATEST($5,1),100) OFFSET GREATEST($6,0)
     )
     SELECT jsonb_build_object(
-      'rows',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',o.id,'providerOrderId',o.provider_order_id,'displayCode',o.display_code,'provider',o.provider,'connectionName',o.connection_name,'authorizationStatus',o.authorization_status,'branchId',o.branch_id,'branchName',o.branch_name,'customerName',o.customer_name,'orderType',o.order_type,'paymentMethod',o.payment_method,'deliveryAddress',o.delivery_address,'notes',o.notes,'subtotalCents',o.subtotal_cents::text,'deliveryFeeCents',o.delivery_fee_cents::text,'discountCents',o.discount_cents::text,'totalCents',o.total_cents::text,'status',o.status,'partnerStatus',o.partner_status,'pendingAction',o.pending_action,'commandStatus',o.command_status,'lastPartnerRequestId',o.last_partner_request_id,'receivedAt',o.received_at,'acceptedAt',o.accepted_at,'rejectedAt',o.rejected_at,'completedAt',o.completed_at,'statusUpdatedAt',o.status_updated_at,'rejectionReason',o.rejection_reason,'version',o.version,'items',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',i.id,'name',i.name,'quantity',i.quantity,'unitPriceCents',i.unit_price_cents::text,'totalCents',i.total_cents::text,'observation',i.observation) ORDER BY i.created_at) FROM sales_channel_order_items i WHERE i.order_id=o.id AND i.tenant_id=o.tenant_id),'[]'::jsonb),'history',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',h.id,'fromStatus',h.from_status,'toStatus',h.to_status,'providerStatus',h.provider_status,'origin',h.origin,'reason',h.reason,'createdAt',h.created_at) ORDER BY h.created_at DESC) FROM sales_channel_status_history h WHERE h.order_id=o.id AND h.tenant_id=o.tenant_id),'[]'::jsonb)) ORDER BY array_position(ARRAY(SELECT id FROM page),o.id)) FROM page o),'[]'::jsonb),
+      'rows',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',o.id,'providerOrderId',o.provider_order_id,'displayCode',o.display_code,'provider',o.provider,'catalogProfile',o.catalog_profile,'connectionName',o.connection_name,'authorizationStatus',o.authorization_status,'branchId',o.branch_id,'branchName',o.branch_name,'customerName',o.customer_name,'orderType',o.order_type,'paymentMethod',o.payment_method,'deliveryAddress',o.delivery_address,'notes',o.notes,'subtotalCents',o.subtotal_cents::text,'deliveryFeeCents',o.delivery_fee_cents::text,'discountCents',o.discount_cents::text,'totalCents',o.total_cents::text,'status',o.status,'partnerStatus',o.partner_status,'pendingAction',o.pending_action,'commandStatus',o.command_status,'grocerySeparationStarted',EXISTS(SELECT 1 FROM sales_channel_commands started WHERE started.order_id=o.id AND started.tenant_id=o.tenant_id AND started.action='ACCEPT' AND started.status='CONFIRMED'),'lastPartnerRequestId',o.last_partner_request_id,'receivedAt',o.received_at,'acceptedAt',o.accepted_at,'rejectedAt',o.rejected_at,'completedAt',o.completed_at,'statusUpdatedAt',o.status_updated_at,'rejectionReason',o.rejection_reason,'version',o.version,'items',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',i.id,'externalItemId',i.external_item_id,'name',i.name,'quantity',i.quantity,'unitPriceCents',i.unit_price_cents::text,'totalCents',i.total_cents::text,'observation',i.observation) ORDER BY i.created_at) FROM sales_channel_order_items i WHERE i.order_id=o.id AND i.tenant_id=o.tenant_id),'[]'::jsonb),'history',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',h.id,'fromStatus',h.from_status,'toStatus',h.to_status,'providerStatus',h.provider_status,'origin',h.origin,'reason',h.reason,'createdAt',h.created_at) ORDER BY h.created_at DESC) FROM sales_channel_status_history h WHERE h.order_id=o.id AND h.tenant_id=o.tenant_id),'[]'::jsonb)) ORDER BY array_position(ARRAY(SELECT id FROM page),o.id)) FROM page o),'[]'::jsonb),
       'total',(SELECT count(*) FROM eligible),
       'summary',jsonb_build_object('pending',(SELECT count(*) FROM base WHERE status='PENDING'),'accepted',(SELECT count(*) FROM base WHERE status='ACCEPTED'),'completed',(SELECT count(*) FROM base WHERE status='COMPLETED'),'attention',(SELECT count(*) FROM base WHERE command_status='ERROR' OR status IN ('REJECTED','CANCELLED')))
     ) data FROM actor WHERE $7<>''
@@ -355,18 +359,18 @@ query SalesChannelWorkspace($requestKey: String!) @auth(level: USER) {
       SELECT u.id, u.tenant_id
       FROM users u
       JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
-      JOIN roles r ON r.id=u.role_id AND r.active AND r.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
       JOIN app_pages p ON p.page_key='CANAIS_VENDA' AND p.active
       LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=p.id AND up.tenant_id=u.tenant_id
       LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=p.id AND rp.tenant_id=u.tenant_id
-      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
+      WHERE u.id=$1 AND (u.blocked_until IS NULL OR u.blocked_until<=now()) AND u.active AND u.deleted_at IS NULL
         AND COALESCE(up.can_access,rp.can_access,false)
     )
     SELECT jsonb_build_object(
-      'branches',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',b.id,'name',b.name) ORDER BY lower(b.name)) FROM branches b JOIN actor a ON a.tenant_id=b.tenant_id WHERE b.active AND b.deleted_at IS NULL),'[]'::jsonb),
-      'connections',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',c.id,'provider',c.provider,'displayName',c.display_name,'externalStoreId',c.external_store_id,'branchId',c.branch_id,'branchName',b.name,'status',c.status,'enabled',c.enabled,'lastSyncedAt',c.last_synced_at,'lastError',c.last_error,'active',c.active,'createdAt',c.created_at,'updatedAt',c.updated_at) ORDER BY lower(c.provider),lower(c.display_name)) FROM sales_channel_connections c JOIN actor a ON a.tenant_id=c.tenant_id JOIN branches b ON b.id=c.branch_id AND b.tenant_id=c.tenant_id WHERE c.active AND c.deleted_at IS NULL),'[]'::jsonb),
+      'branches',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',b.id,'name',b.name) ORDER BY lower(b.name)) FROM branches b JOIN actor a ON a.tenant_id=b.tenant_id AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1 AND ub.tenant_id=b.tenant_id AND ub.branch_id=b.id AND ub.active)) WHERE b.active AND b.deleted_at IS NULL),'[]'::jsonb),
+      'connections',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',c.id,'provider',c.provider,'displayName',c.display_name,'externalStoreId',c.external_store_id,'branchId',c.branch_id,'branchName',b.name,'status',c.status,'enabled',c.enabled,'lastSyncedAt',c.last_synced_at,'lastError',c.last_error,'active',c.active,'createdAt',c.created_at,'updatedAt',c.updated_at) ORDER BY lower(c.provider),lower(c.display_name)) FROM sales_channel_connections c JOIN actor a ON a.tenant_id=c.tenant_id AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1 AND ub.tenant_id=c.tenant_id AND ub.branch_id=c.branch_id AND ub.active)) JOIN branches b ON b.id=c.branch_id AND b.tenant_id=c.tenant_id WHERE c.active AND c.deleted_at IS NULL),'[]'::jsonb),
       'products',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',p.id,'name',p.name,'internalCode',p.internal_code,'ean',p.ean) ORDER BY lower(p.name)) FROM products p JOIN actor a ON a.tenant_id=p.tenant_id WHERE p.active AND p.deleted_at IS NULL),'[]'::jsonb),
-      'mappings',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',m.id,'connectionId',m.connection_id,'productId',m.product_id,'productName',p.name,'internalCode',p.internal_code,'externalProductId',m.external_product_id,'externalProductName',m.external_product_name,'syncPrice',m.sync_price,'syncStock',m.sync_stock,'enabled',m.enabled,'status',m.status) ORDER BY lower(p.name)) FROM sales_channel_product_mappings m JOIN actor a ON a.tenant_id=m.tenant_id JOIN products p ON p.id=m.product_id AND p.tenant_id=m.tenant_id WHERE m.active AND m.deleted_at IS NULL),'[]'::jsonb)
+      'mappings',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',m.id,'connectionId',m.connection_id,'productId',m.product_id,'productName',p.name,'internalCode',p.internal_code,'externalProductId',m.external_product_id,'externalProductName',m.external_product_name,'syncPrice',m.sync_price,'syncStock',m.sync_stock,'enabled',m.enabled,'status',m.status) ORDER BY lower(p.name)) FROM sales_channel_product_mappings m JOIN actor a ON a.tenant_id=m.tenant_id JOIN products p ON p.id=m.product_id AND p.tenant_id=m.tenant_id JOIN sales_channel_connections c ON c.id=m.connection_id AND c.tenant_id=m.tenant_id AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1 AND ub.tenant_id=c.tenant_id AND ub.branch_id=c.branch_id AND ub.active)) WHERE m.active AND m.deleted_at IS NULL),'[]'::jsonb)
     ) AS data
     FROM actor
     WHERE $2<>''
@@ -378,15 +382,15 @@ query SalesChannelOrders($term: String!, $status: String!, $provider: String!, $
     WITH actor AS (
       SELECT u.tenant_id FROM users u
       JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
-      JOIN roles r ON r.id=u.role_id AND r.active AND r.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
       JOIN app_pages p ON p.page_key='CANAIS_VENDA' AND p.active
       LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=p.id AND up.tenant_id=u.tenant_id
       LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=p.id AND rp.tenant_id=u.tenant_id
-      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_access,rp.can_access,false)
+      WHERE u.id=$1 AND (u.blocked_until IS NULL OR u.blocked_until<=now()) AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_access,rp.can_access,false)
     ), eligible AS (
       SELECT o.*,c.provider,b.name branch_name FROM sales_channel_orders o
       JOIN actor a ON a.tenant_id=o.tenant_id
-      JOIN sales_channel_connections c ON c.id=o.connection_id AND c.tenant_id=o.tenant_id
+      JOIN sales_channel_connections c ON c.id=o.connection_id AND c.tenant_id=o.tenant_id AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1 AND ub.tenant_id=c.tenant_id AND ub.branch_id=c.branch_id AND ub.active))
       JOIN branches b ON b.id=o.branch_id AND b.tenant_id=o.tenant_id
       WHERE ($2='' OR o.display_code ILIKE '%'||$2||'%' OR COALESCE(o.customer_name,'') ILIKE '%'||$2||'%')
         AND ($3='' OR o.status=$3) AND ($4='' OR c.provider=$4) AND ($5::uuid IS NULL OR o.branch_id=$5)
@@ -401,8 +405,8 @@ query SalesChannelOrders($term: String!, $status: String!, $provider: String!, $
 
 query LatestPendingSalesChannelOrder($requestKey: String!) @auth(level: USER) {
   _select(sql: """
-    WITH actor AS (SELECT u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages p ON p.page_key='CANAIS_VENDA' AND p.active LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=p.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=p.id AND rp.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_access,rp.can_access,false)), latest AS (SELECT o.*,c.provider,c.authorization_status,b.name branch_name FROM sales_channel_orders o JOIN actor a ON a.tenant_id=o.tenant_id JOIN sales_channel_connections c ON c.id=o.connection_id AND c.tenant_id=o.tenant_id AND c.active AND c.deleted_at IS NULL AND c.enabled AND c.status='ACTIVE' AND c.authorization_status='AUTHORIZED' JOIN branches b ON b.id=o.branch_id AND b.tenant_id=o.tenant_id WHERE o.status='PENDING' AND o.command_status='IDLE' ORDER BY o.received_at DESC LIMIT 1)
-    SELECT jsonb_build_object('id',o.id,'displayCode',o.display_code,'provider',o.provider,'authorizationStatus',o.authorization_status,'branchName',o.branch_name,'customerName',o.customer_name,'totalCents',o.total_cents::text,'receivedAt',o.received_at,'version',o.version,'items',COALESCE((SELECT jsonb_agg(jsonb_build_object('name',i.name,'quantity',i.quantity,'observation',i.observation) ORDER BY i.created_at) FROM sales_channel_order_items i WHERE i.order_id=o.id AND i.tenant_id=o.tenant_id),'[]'::jsonb)) data FROM latest o WHERE $2<>''
+    WITH actor AS (SELECT u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages p ON p.page_key='CANAIS_VENDA' AND p.active LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=p.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=p.id AND rp.tenant_id=u.tenant_id WHERE u.id=$1 AND (u.blocked_until IS NULL OR u.blocked_until<=now()) AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_access,rp.can_access,false)), latest AS (SELECT o.*,c.provider,c.catalog_profile,c.authorization_status,b.name branch_name FROM sales_channel_orders o JOIN actor a ON a.tenant_id=o.tenant_id JOIN sales_channel_connections c ON c.id=o.connection_id AND c.tenant_id=o.tenant_id AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1 AND ub.tenant_id=c.tenant_id AND ub.branch_id=c.branch_id AND ub.active)) AND c.active AND c.deleted_at IS NULL AND c.enabled AND c.status='ACTIVE' AND c.authorization_status='AUTHORIZED' JOIN branches b ON b.id=o.branch_id AND b.tenant_id=o.tenant_id WHERE o.status='PENDING' AND o.command_status='IDLE' ORDER BY o.received_at DESC LIMIT 1)
+    SELECT jsonb_build_object('id',o.id,'displayCode',o.display_code,'provider',o.provider,'catalogProfile',o.catalog_profile,'authorizationStatus',o.authorization_status,'branchName',o.branch_name,'customerName',o.customer_name,'totalCents',o.total_cents::text,'receivedAt',o.received_at,'version',o.version,'items',COALESCE((SELECT jsonb_agg(jsonb_build_object('name',i.name,'quantity',i.quantity,'observation',i.observation) ORDER BY i.created_at) FROM sales_channel_order_items i WHERE i.order_id=o.id AND i.tenant_id=o.tenant_id),'[]'::jsonb)) data FROM latest o WHERE $2<>''
   """,params:[{_expr:"auth.uid"},$requestKey])
 }
 
@@ -654,7 +658,7 @@ query ListCustomers($search: String!, $sortField: String, $sortDirection: String
 
 query ListProducts($search: String!, $sortField: String, $sortDirection: String, $limit: Int!, $offset: Int!, $requestKey: String) @auth(level: USER) {
   _select(sql: """
-    WITH base AS (SELECT p.id,p.name,p.internal_code AS "internalCode",p.ean,p.brand,p.size_type AS "sizeType",p.size,p.color,
+    WITH base AS (SELECT p.id,p.name,p.internal_code AS "internalCode",p.ean,p.scale_code AS "scaleCode",p.image_url AS "imageUrl",p.brand,p.size_type AS "sizeType",p.size,p.color,
       p.maximum_stock AS "maximumStock",p.minimum_stock AS "minimumStock",p.sale_price_cents::text AS "salePriceCents",
       p.cost_price_cents::text AS "costPriceCents",p.weighted_product AS "weightedProduct",p.bundle_product AS "bundleProduct",
       p.allow_negative_stock AS "allowNegativeStock",p.notes,p.active,p.category_id AS "categoryId",c.name AS "categoryName",
@@ -673,7 +677,7 @@ query ListProducts($search: String!, $sortField: String, $sortDirection: String,
     LEFT JOIN subcategories sc ON sc.id=p.subcategory_id AND sc.tenant_id=p.tenant_id
     LEFT JOIN suppliers s ON s.id=p.supplier_id AND s.tenant_id=p.tenant_id
     WHERE COALESCE(up.can_access,rp.can_access,false)
-      AND ($2='' OR concat_ws(' ',p.name,p.internal_code,p.ean,p.brand,c.name,sc.name) ILIKE '%'||$2||'%')
+      AND ($2='' OR concat_ws(' ',p.name,p.internal_code,p.ean,p.scale_code,p.brand,c.name,sc.name) ILIKE '%'||$2||'%')
       AND ($7 IS NULL OR $7<>'')
     ) SELECT * FROM base ORDER BY
       CASE WHEN $4='asc' AND $3 IN ('maximumStock','minimumStock','salePriceCents','costPriceCents','effectivePriceCents') THEN (to_jsonb(base)->>$3)::numeric END ASC NULLS LAST,
@@ -1184,4 +1188,26 @@ query OperationalAnalyticsDashboard($from: Date!, $to: Date!, $filters: Any!, $r
       'categories',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',id,'name',name,'level',level,'quantity',quantity,'revenueCents',revenue::text,'costCents',cost::text,'profitCents',(revenue-cost)::text,'marginPercent',CASE WHEN revenue=0 THEN 0 ELSE round((revenue-cost)*100.0/revenue,2)END,'growthPercent',CASE WHEN previous_revenue=0 THEN 0 ELSE round((revenue-previous_revenue)*100.0/previous_revenue,2)END) ORDER BY level,revenue DESC) FROM category_values),'[]')
     ) data FROM actor WHERE $5<>''
   """,params:[{_expr:"auth.uid"},$from,$to,$filters,$requestKey])
+}
+
+# Only a trusted callable passes the Firebase UID; tenant/branch come from SQL.
+query SystemSalesChannelOrderForActor($userId: String!, $orderId: UUID!) @auth(level: NO_ACCESS) {
+  _select(sql: """
+    SELECT o.provider_order_id AS "orderId",c.external_store_id AS "merchantId"
+    FROM users u
+    JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+    JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+    JOIN app_pages p ON p.page_key='CANAIS_VENDA' AND p.active
+    LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=p.id AND up.tenant_id=u.tenant_id
+    LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=p.id AND rp.tenant_id=u.tenant_id
+    JOIN sales_channel_orders o ON o.id=$2 AND o.tenant_id=u.tenant_id
+    JOIN sales_channel_connections c ON c.id=o.connection_id AND c.tenant_id=o.tenant_id AND c.provider='IFOOD'
+    JOIN branches b ON b.id=c.branch_id AND b.tenant_id=c.tenant_id AND b.active AND b.deleted_at IS NULL
+    WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+      AND COALESCE(up.can_update,rp.can_update,false)
+      AND c.active AND c.enabled AND c.deleted_at IS NULL AND c.status='ACTIVE' AND c.authorization_status='AUTHORIZED'
+      AND o.status IN ('PENDING','ACCEPTED')
+      AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=u.id)
+        OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=u.id AND ub.tenant_id=u.tenant_id AND ub.branch_id=c.branch_id AND ub.active))
+  """,params:[$userId,$orderId])
 }

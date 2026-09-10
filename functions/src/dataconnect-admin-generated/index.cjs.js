@@ -518,6 +518,13 @@ function systemRecordSalesChannelCommandResult(dcOrVarsOrOptions, varsOrOptions,
 }
 exports.systemRecordSalesChannelCommandResult = systemRecordSalesChannelCommandResult;
 
+function systemRefreshSalesChannelOrderAfterPicking(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeMutation('SystemRefreshSalesChannelOrderAfterPicking', inputVars, inputOpts);
+}
+exports.systemRefreshSalesChannelOrderAfterPicking = systemRefreshSalesChannelOrderAfterPicking;
+
 function systemRecordSalesChannelSyncResult(dcOrVarsOrOptions, varsOrOptions, options) {
   const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
   dcInstance.useGen(true);
@@ -797,3 +804,11 @@ function operationalAnalyticsDashboard(dcOrVarsOrOptions, varsOrOptions, options
   return dcInstance.executeQuery('OperationalAnalyticsDashboard', inputVars, inputOpts);
 }
 exports.operationalAnalyticsDashboard = operationalAnalyticsDashboard;
+
+function systemSalesChannelOrderForActor(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeQuery('SystemSalesChannelOrderForActor', inputVars, inputOpts);
+}
+exports.systemSalesChannelOrderForActor = systemSalesChannelOrderForActor;
+

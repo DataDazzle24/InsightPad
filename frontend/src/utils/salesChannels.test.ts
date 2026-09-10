@@ -22,5 +22,6 @@ describe("sales channel helpers", () => {
   it("counts filters and escapes spreadsheet CSV", () => {
     expect(countActiveFilters({ provider: "IFOOD", status: "", branchId: null })).toBe(1);
     expect(buildSalesChannelCsv(["Nome"], [['Loja "Centro"']])).toContain('"Loja ""Centro"""');
+    expect(buildSalesChannelCsv(["Nome"], [[" =HYPERLINK(\"https://example.com\")"]])).toContain("' =HYPERLINK");
   });
 });
