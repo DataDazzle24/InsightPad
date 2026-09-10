@@ -60,7 +60,7 @@ assert_expected_migration() {
   [[ "$(grep -Ec 'ADD COLUMN' "${diff_file}" || true)" == "3" ]] || fail "o diff SQL não contém exatamente as três colunas esperadas."
   grep -Eq 'ADD COLUMN "catalog_profile" character varying\(32\).*NOT NULL.*DEFAULT.*UNVERIFIED|ADD COLUMN "catalog_profile" character varying\(32\).*DEFAULT.*UNVERIFIED.*NOT NULL' "${diff_file}" \
     || fail "catalog_profile não apareceu com varchar(32), NOT NULL e DEFAULT UNVERIFIED."
-  grep -Eq 'ADD COLUMN "partner_event_at" timestamp with time zone NULL' "${diff_file}" \
+  grep -Eq 'ADD COLUMN "partner_event_at" (timestamptz|timestamp with time zone) NULL' "${diff_file}" \
     || fail "partner_event_at timestamptz NULL não apareceu como esperado."
   grep -Eq 'ADD COLUMN "cursor" uuid NULL' "${diff_file}" \
     || fail "cursor uuid NULL não apareceu como esperado."
