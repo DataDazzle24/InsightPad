@@ -1872,7 +1872,7 @@ mutation ReleaseDeviceSession($sessionToken: String!) @auth(level: USER) {
   """,params:[{_expr:"auth.uid"},$sessionToken])
 }
 
-mutation CreateSalesChannelConnection($provider: String!, $branchId: UUID!, $displayName: String!, $externalStoreId: String!) @auth(level: USER) @transaction {
+mutation CreateSalesChannelConnection($provider: String!, $branchId: UUID!, $displayName: String!, $externalStoreId: String!, $catalogProfile: String @retired) @auth(level: USER) @transaction {
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u
@@ -1900,7 +1900,7 @@ mutation CreateSalesChannelConnection($provider: String!, $branchId: UUID!, $dis
   """,params:[{_expr:"auth.uid"},$provider,$branchId,$displayName,$externalStoreId])
 }
 
-mutation UpdateSalesChannelConnection($id: UUID!, $displayName: String!, $externalStoreId: String!, $enabled: Boolean!) @auth(level: USER) @transaction {
+mutation UpdateSalesChannelConnection($id: UUID!, $displayName: String!, $externalStoreId: String!, $enabled: Boolean!, $catalogProfile: String @retired) @auth(level: USER) @transaction {
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages p ON p.page_key='CANAIS_VENDA' AND p.active LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=p.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=p.id AND rp.tenant_id=u.tenant_id WHERE u.id=$1 AND (u.blocked_until IS NULL OR u.blocked_until<=now()) AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_update,rp.can_update,false)

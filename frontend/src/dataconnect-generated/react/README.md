@@ -970,7 +970,7 @@ The `SalesChannelOperations` Query requires an argument of type `SalesChannelOpe
 ```javascript
 export interface SalesChannelOperationsVariables {
   connectionId?: UUIDString | null;
-  limit: number;
+  limit?: number;
   requestKey: string;
 }
 ```
@@ -999,7 +999,7 @@ export default function SalesChannelOperationsComponent() {
   // The `useSalesChannelOperations` Query hook requires an argument of type `SalesChannelOperationsVariables`:
   const salesChannelOperationsVars: SalesChannelOperationsVariables = {
     connectionId: ..., // optional
-    limit: ..., 
+    limit: ..., // optional
     requestKey: ..., 
   };
 

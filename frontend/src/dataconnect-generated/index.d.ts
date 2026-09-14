@@ -796,7 +796,7 @@ export interface SalesChannelOperationsData {
 
 export interface SalesChannelOperationsVariables {
   connectionId?: UUIDString | null;
-  limit: number;
+  limit?: number;
   requestKey: string;
 }
 

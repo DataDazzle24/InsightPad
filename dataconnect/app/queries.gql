@@ -225,7 +225,7 @@ query SalesChannelProductOptions($term: String!, $limit: Int!, $requestKey: Stri
   """,params:[{_expr:"auth.uid"},$term,$limit,$requestKey])
 }
 
-query SalesChannelOperations($connectionId: UUID, $limit: Int!, $requestKey: String!) @auth(level: USER) {
+query SalesChannelOperations($connectionId: UUID, $limit: Int! = 50, $requestKey: String!) @auth(level: USER) {
   _select(sql: """
     WITH actor AS (
       SELECT u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL

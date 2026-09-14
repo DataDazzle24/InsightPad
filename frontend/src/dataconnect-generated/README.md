@@ -1156,7 +1156,7 @@ The `SalesChannelOperations` query requires an argument of type `SalesChannelOpe
 ```typescript
 export interface SalesChannelOperationsVariables {
   connectionId?: UUIDString | null;
-  limit: number;
+  limit?: number;
   requestKey: string;
 }
 ```
@@ -1178,7 +1178,7 @@ import { connectorConfig, salesChannelOperations, SalesChannelOperationsVariable
 // The `SalesChannelOperations` query requires an argument of type `SalesChannelOperationsVariables`:
 const salesChannelOperationsVars: SalesChannelOperationsVariables = {
   connectionId: ..., // optional
-  limit: ..., 
+  limit: ..., // optional
   requestKey: ..., 
 };
 
@@ -1210,7 +1210,7 @@ import { connectorConfig, salesChannelOperationsRef, SalesChannelOperationsVaria
 // The `SalesChannelOperations` query requires an argument of type `SalesChannelOperationsVariables`:
 const salesChannelOperationsVars: SalesChannelOperationsVariables = {
   connectionId: ..., // optional
-  limit: ..., 
+  limit: ..., // optional
   requestKey: ..., 
 };
 
