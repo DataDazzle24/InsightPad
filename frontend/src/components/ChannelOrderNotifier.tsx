@@ -130,23 +130,26 @@ export function ChannelOrderNotifier() {
   }, [order, playAlert, soundEnabled]);
 
   async function toggleSound() {
-    const next = !soundEnabled;
-    setSoundEnabled(next);
-    if (next) {
-      window.setTimeout(() => {
-        const context = audio.current ?? new AudioContext();
-        audio.current = context;
-        void context.resume().then(() => {
-          const oscillator = context.createOscillator();
-          const gain = context.createGain();
-          oscillator.frequency.value = 1046.5;
-          gain.gain.value = 0.08;
-          oscillator.connect(gain);
-          gain.connect(context.destination);
-          oscillator.start();
-          oscillator.stop(context.currentTime + 0.16);
-        });
-      }, 0);
+    if (soundEnabled) {
+      setSoundEnabled(false);
+      return;
+    }
+    try {
+      const context = audio.current ?? new AudioContext();
+      audio.current = context;
+      if (context.state === "suspended") await context.resume();
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.frequency.value = 1046.5;
+      gain.gain.value = 0.08;
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+      oscillator.start();
+      oscillator.stop(context.currentTime + 0.16);
+      setSoundEnabled(true);
+    } catch (caught) {
+      console.error("O navegador não liberou o teste de som.", caught);
+      setError("O navegador bloqueou o som. Clique novamente em “Ativar som” depois de interagir com a página.");
     }
   }
 
