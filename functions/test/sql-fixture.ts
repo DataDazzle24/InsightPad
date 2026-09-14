@@ -30,6 +30,10 @@ export async function database() {
       if (literal) def = ` DEFAULT ${literal.startsWith('"') ? `'${literal.slice(1, -1)}'` : literal}`;
       columns.push(`"${column}" ${dataType}${def}${name === "id" ? " PRIMARY KEY" : annotations!.includes("@unique") ? " UNIQUE" : ""}`);
     }
+    const compositeKey = /key:\s*\[([^\]]+)\]/.exec(match[0])?.[1]
+      ?.match(/"([^"]+)"/g)
+      ?.map((name) => `"${snake(name.slice(1, -1))}_id"`);
+    if (compositeKey?.length) columns.push(`UNIQUE (${compositeKey.join(",")})`);
     await db.exec(`CREATE TABLE "${match[2]}" (${columns.join(",")})`);
   }
   return db;

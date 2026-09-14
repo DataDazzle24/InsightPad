@@ -8,12 +8,14 @@ import { heartbeatMerchantIds, isIfoodKeepalive, parseIfoodEvents, verifyIfoodSi
 import { IfoodClient } from "./ifood.js";
 import {
   connectedHeartbeatMerchants,
+  availableMerchantsForUser,
   cancellationReasonsForUser,
   drainIfoodWork,
   pollIfoodEvents,
   purgeExpiredPayloads,
   queueDueIfoodSynchronizations,
   registerWebhookEvents,
+  merchantOperationForUser,
 } from "./worker.js";
 
 const clientId = defineSecret("IFOOD_CLIENT_ID");
@@ -78,8 +80,23 @@ export const onIfoodOrderActionRetried = onMutationExecuted(
   drainTriggeredWork,
 );
 
+export const onIfoodOrderReconciliationRequested = onMutationExecuted(
+  { ...secureWorkerOptions, operation: "RequestSalesChannelOrderReconciliation" },
+  drainTriggeredWork,
+);
+
+export const onIfoodOrderItemMapped = onMutationExecuted(
+  { ...secureWorkerOptions, operation: "MapSalesChannelOrderItem" },
+  drainTriggeredWork,
+);
+
 export const onIfoodEventRegistered = onMutationExecuted(
   { ...secureWorkerOptions, operation: "SystemRegisterSalesChannelEvent" },
+  drainTriggeredWork,
+);
+
+export const onIfoodEventsRegistered = onMutationExecuted(
+  { ...secureWorkerOptions, operation: "SystemRegisterSalesChannelEvents" },
   drainTriggeredWork,
 );
 
@@ -143,7 +160,10 @@ export const ifoodWebhook = onRequest({
     const requestId = request.get("x-request-id") ?? "";
     const keepaliveEvents = events.filter(isIfoodKeepalive);
     const businessEvents = events.filter((event) => !isIfoodKeepalive(event));
-    await registerWebhookEvents(businessEvents, requestId);
+    const storedEvents = await registerWebhookEvents(businessEvents, requestId);
+    if (storedEvents !== businessEvents.length) {
+      logger.warn("Webhook iFood continha eventos de lojas não vinculadas; os demais eventos foram preservados.", { received: businessEvents.length, stored: storedEvents, unmapped: businessEvents.length - storedEvents });
+    }
 
     const requestedMerchantIds = [...new Set(keepaliveEvents.flatMap(heartbeatMerchantIds))];
     if (requestedMerchantIds.length) {
@@ -207,5 +227,49 @@ export const ifoodCancellationReasons = onCall({
     if (error instanceof Error && error.message === "ORDER_ACCESS_DENIED") throw new HttpsError("permission-denied", "Pedido indisponível para esta ação.");
     logger.warn("Falha ao consultar motivos de cancelamento iFood.", { errorType: error instanceof Error ? error.name : "UnknownError" });
     throw new HttpsError("unavailable", "Não foi possível consultar os motivos no iFood. Tente novamente.");
+  }
+});
+
+const UUID_PATTERN = /^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/i;
+
+export const ifoodAvailableMerchants = onCall({
+  secrets: [clientId, clientSecret],
+  timeoutSeconds: 45,
+  memory: "256MiB",
+  maxInstances: 3,
+  concurrency: 8,
+}, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Entre novamente para consultar as lojas.");
+  const connectionId: unknown = request.data?.connectionId;
+  if (typeof connectionId !== "string" || !UUID_PATTERN.test(connectionId)) throw new HttpsError("invalid-argument", "Conexão inválida.");
+  try {
+    return { merchants: await availableMerchantsForUser(client(), request.auth.uid, connectionId) };
+  } catch (error) {
+    if (error instanceof Error && error.message === "CONNECTION_ACCESS_DENIED") throw new HttpsError("permission-denied", "Você não pode configurar esta conexão.");
+    logger.warn("Falha ao listar lojas autorizadas no iFood.", { errorType: error instanceof Error ? error.name : "UnknownError" });
+    throw new HttpsError("unavailable", "Não foi possível consultar as lojas autorizadas no iFood.");
+  }
+});
+
+export const ifoodMerchantOperations = onCall({
+  secrets: [clientId, clientSecret],
+  timeoutSeconds: 45,
+  memory: "256MiB",
+  maxInstances: 3,
+  concurrency: 8,
+}, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Entre novamente para gerenciar a loja.");
+  const connectionId: unknown = request.data?.connectionId;
+  const action: unknown = request.data?.action;
+  if (typeof connectionId !== "string" || !UUID_PATTERN.test(connectionId) || typeof action !== "string" || !["READ", "SAVE_HOURS", "CREATE_INTERRUPTION", "DELETE_INTERRUPTION"].includes(action)) {
+    throw new HttpsError("invalid-argument", "Operação de loja inválida.");
+  }
+  try {
+    return { data: await merchantOperationForUser(client(), request.auth.uid, connectionId, action, request.data?.payload) };
+  } catch (error) {
+    if (error instanceof Error && error.message === "CONNECTION_ACCESS_DENIED") throw new HttpsError("permission-denied", "Você não pode realizar esta ação.");
+    if (error instanceof Error && error.message === "CONNECTION_NOT_READY") throw new HttpsError("failed-precondition", "Autorize uma conexão ativa antes de gerenciar a loja.");
+    logger.warn("Falha em operação da loja iFood.", { action, errorType: error instanceof Error ? error.name : "UnknownError" });
+    throw new HttpsError("unavailable", "O iFood não concluiu a operação. Confira os dados e tente novamente.");
   }
 });

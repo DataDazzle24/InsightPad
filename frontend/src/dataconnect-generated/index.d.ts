@@ -215,7 +215,6 @@ export interface CreateSalesChannelConnectionVariables {
   branchId: UUIDString;
   displayName: string;
   externalStoreId: string;
-  catalogProfile?: string | null;
 }
 
 export interface CreateSalesChannelProductMappingData {
@@ -475,6 +474,16 @@ export interface ListSuppliersVariables {
   requestKey?: string | null;
 }
 
+export interface MapSalesChannelOrderItemData {
+  _execute?: number | null;
+}
+
+export interface MapSalesChannelOrderItemVariables {
+  itemId: UUIDString;
+  productId: UUIDString;
+  requestKey: string;
+}
+
 export interface OfflineOperation_Key {
   id: UUIDString;
   __typename?: 'OfflineOperation_Key';
@@ -653,6 +662,15 @@ export interface RequestSalesChannelAuthorizationVariables {
   requestKey: string;
 }
 
+export interface RequestSalesChannelOrderReconciliationData {
+  _execute?: number | null;
+}
+
+export interface RequestSalesChannelOrderReconciliationVariables {
+  id: UUIDString;
+  requestKey: string;
+}
+
 export interface RequestSalesChannelSyncData {
   _execute?: number | null;
 }
@@ -778,6 +796,7 @@ export interface SalesChannelOperationsData {
 
 export interface SalesChannelOperationsVariables {
   connectionId?: UUIDString | null;
+  limit: number;
   requestKey: string;
 }
 
@@ -860,6 +879,12 @@ export interface SalesChannelProductOptionsVariables {
 export interface SalesChannelStatusHistory_Key {
   id: UUIDString;
   __typename?: 'SalesChannelStatusHistory_Key';
+}
+
+export interface SalesChannelStockReservation_Key {
+  orderId: UUIDString;
+  productId: UUIDString;
+  __typename?: 'SalesChannelStockReservation_Key';
 }
 
 export interface SalesChannelSyncJob_Key {
@@ -1165,6 +1190,15 @@ export interface SystemIfoodConnectionByMerchantVariables {
   requestKey: string;
 }
 
+export interface SystemIfoodConnectionsByMerchantsData {
+  _select?: unknown[] | null;
+}
+
+export interface SystemIfoodConnectionsByMerchantsVariables {
+  merchantIds: unknown;
+  requestKey: string;
+}
+
 export interface SystemIfoodConnectionsForPollingData {
   _select?: unknown[] | null;
 }
@@ -1182,6 +1216,15 @@ export interface SystemIngestSalesChannelOrderVariables {
   payload: unknown;
 }
 
+export interface SystemMarkSalesChannelWebhookActiveData {
+  _execute?: number | null;
+}
+
+export interface SystemMarkSalesChannelWebhookActiveVariables {
+  connectionIds: unknown;
+  requestId: string;
+}
+
 export interface SystemPurgeExpiredSalesChannelPayloadsData {
   _execute?: number | null;
 }
@@ -1196,6 +1239,16 @@ export interface SystemQueueDueSalesChannelSyncJobsData {
 
 export interface SystemQueueDueSalesChannelSyncJobsVariables {
   requestKey: string;
+}
+
+export interface SystemReconcileSalesChannelCommerceData {
+  _execute?: number | null;
+}
+
+export interface SystemReconcileSalesChannelCommerceVariables {
+  connectionId: UUIDString;
+  providerOrderId: string;
+  payload: unknown;
 }
 
 export interface SystemRecordSalesChannelCommandResultData {
@@ -1253,6 +1306,24 @@ export interface SystemRegisterSalesChannelEventData {
 export interface SystemRegisterSalesChannelEventVariables {
   connectionId: UUIDString;
   payload: unknown;
+}
+
+export interface SystemRegisterSalesChannelEventsData {
+  _execute?: number | null;
+}
+
+export interface SystemRegisterSalesChannelEventsVariables {
+  connectionId: UUIDString;
+  payloads: unknown;
+}
+
+export interface SystemSalesChannelConnectionForActorData {
+  _select?: unknown[] | null;
+}
+
+export interface SystemSalesChannelConnectionForActorVariables {
+  userId: string;
+  connectionId: UUIDString;
 }
 
 export interface SystemSalesChannelMappingsForSyncData {
@@ -1354,7 +1425,6 @@ export interface UpdateSalesChannelConnectionVariables {
   displayName: string;
   externalStoreId: string;
   enabled: boolean;
-  catalogProfile?: string | null;
 }
 
 export interface UpdateSalesChannelProductMappingData {
@@ -2169,6 +2239,30 @@ export const retrySalesChannelCommandRef: RetrySalesChannelCommandRef;
 export function retrySalesChannelCommand(vars: RetrySalesChannelCommandVariables): MutationPromise<RetrySalesChannelCommandData, RetrySalesChannelCommandVariables>;
 export function retrySalesChannelCommand(dc: DataConnect, vars: RetrySalesChannelCommandVariables): MutationPromise<RetrySalesChannelCommandData, RetrySalesChannelCommandVariables>;
 
+interface RequestSalesChannelOrderReconciliationRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: RequestSalesChannelOrderReconciliationVariables): MutationRef<RequestSalesChannelOrderReconciliationData, RequestSalesChannelOrderReconciliationVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: RequestSalesChannelOrderReconciliationVariables): MutationRef<RequestSalesChannelOrderReconciliationData, RequestSalesChannelOrderReconciliationVariables>;
+  operationName: string;
+}
+export const requestSalesChannelOrderReconciliationRef: RequestSalesChannelOrderReconciliationRef;
+
+export function requestSalesChannelOrderReconciliation(vars: RequestSalesChannelOrderReconciliationVariables): MutationPromise<RequestSalesChannelOrderReconciliationData, RequestSalesChannelOrderReconciliationVariables>;
+export function requestSalesChannelOrderReconciliation(dc: DataConnect, vars: RequestSalesChannelOrderReconciliationVariables): MutationPromise<RequestSalesChannelOrderReconciliationData, RequestSalesChannelOrderReconciliationVariables>;
+
+interface MapSalesChannelOrderItemRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: MapSalesChannelOrderItemVariables): MutationRef<MapSalesChannelOrderItemData, MapSalesChannelOrderItemVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: MapSalesChannelOrderItemVariables): MutationRef<MapSalesChannelOrderItemData, MapSalesChannelOrderItemVariables>;
+  operationName: string;
+}
+export const mapSalesChannelOrderItemRef: MapSalesChannelOrderItemRef;
+
+export function mapSalesChannelOrderItem(vars: MapSalesChannelOrderItemVariables): MutationPromise<MapSalesChannelOrderItemData, MapSalesChannelOrderItemVariables>;
+export function mapSalesChannelOrderItem(dc: DataConnect, vars: MapSalesChannelOrderItemVariables): MutationPromise<MapSalesChannelOrderItemData, MapSalesChannelOrderItemVariables>;
+
 interface RequestSalesChannelSyncRef {
   /* Allow users to create refs without passing in DataConnect */
   (vars: RequestSalesChannelSyncVariables): MutationRef<RequestSalesChannelSyncData, RequestSalesChannelSyncVariables>;
@@ -2229,6 +2323,30 @@ export const systemRegisterSalesChannelEventRef: SystemRegisterSalesChannelEvent
 export function systemRegisterSalesChannelEvent(vars: SystemRegisterSalesChannelEventVariables): MutationPromise<SystemRegisterSalesChannelEventData, SystemRegisterSalesChannelEventVariables>;
 export function systemRegisterSalesChannelEvent(dc: DataConnect, vars: SystemRegisterSalesChannelEventVariables): MutationPromise<SystemRegisterSalesChannelEventData, SystemRegisterSalesChannelEventVariables>;
 
+interface SystemRegisterSalesChannelEventsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SystemRegisterSalesChannelEventsVariables): MutationRef<SystemRegisterSalesChannelEventsData, SystemRegisterSalesChannelEventsVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SystemRegisterSalesChannelEventsVariables): MutationRef<SystemRegisterSalesChannelEventsData, SystemRegisterSalesChannelEventsVariables>;
+  operationName: string;
+}
+export const systemRegisterSalesChannelEventsRef: SystemRegisterSalesChannelEventsRef;
+
+export function systemRegisterSalesChannelEvents(vars: SystemRegisterSalesChannelEventsVariables): MutationPromise<SystemRegisterSalesChannelEventsData, SystemRegisterSalesChannelEventsVariables>;
+export function systemRegisterSalesChannelEvents(dc: DataConnect, vars: SystemRegisterSalesChannelEventsVariables): MutationPromise<SystemRegisterSalesChannelEventsData, SystemRegisterSalesChannelEventsVariables>;
+
+interface SystemMarkSalesChannelWebhookActiveRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SystemMarkSalesChannelWebhookActiveVariables): MutationRef<SystemMarkSalesChannelWebhookActiveData, SystemMarkSalesChannelWebhookActiveVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SystemMarkSalesChannelWebhookActiveVariables): MutationRef<SystemMarkSalesChannelWebhookActiveData, SystemMarkSalesChannelWebhookActiveVariables>;
+  operationName: string;
+}
+export const systemMarkSalesChannelWebhookActiveRef: SystemMarkSalesChannelWebhookActiveRef;
+
+export function systemMarkSalesChannelWebhookActive(vars: SystemMarkSalesChannelWebhookActiveVariables): MutationPromise<SystemMarkSalesChannelWebhookActiveData, SystemMarkSalesChannelWebhookActiveVariables>;
+export function systemMarkSalesChannelWebhookActive(dc: DataConnect, vars: SystemMarkSalesChannelWebhookActiveVariables): MutationPromise<SystemMarkSalesChannelWebhookActiveData, SystemMarkSalesChannelWebhookActiveVariables>;
+
 interface SystemRecordSalesChannelEventResultRef {
   /* Allow users to create refs without passing in DataConnect */
   (vars: SystemRecordSalesChannelEventResultVariables): MutationRef<SystemRecordSalesChannelEventResultData, SystemRecordSalesChannelEventResultVariables>;
@@ -2264,6 +2382,18 @@ export const systemApplySalesChannelOrderEventRef: SystemApplySalesChannelOrderE
 
 export function systemApplySalesChannelOrderEvent(vars: SystemApplySalesChannelOrderEventVariables): MutationPromise<SystemApplySalesChannelOrderEventData, SystemApplySalesChannelOrderEventVariables>;
 export function systemApplySalesChannelOrderEvent(dc: DataConnect, vars: SystemApplySalesChannelOrderEventVariables): MutationPromise<SystemApplySalesChannelOrderEventData, SystemApplySalesChannelOrderEventVariables>;
+
+interface SystemReconcileSalesChannelCommerceRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SystemReconcileSalesChannelCommerceVariables): MutationRef<SystemReconcileSalesChannelCommerceData, SystemReconcileSalesChannelCommerceVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SystemReconcileSalesChannelCommerceVariables): MutationRef<SystemReconcileSalesChannelCommerceData, SystemReconcileSalesChannelCommerceVariables>;
+  operationName: string;
+}
+export const systemReconcileSalesChannelCommerceRef: SystemReconcileSalesChannelCommerceRef;
+
+export function systemReconcileSalesChannelCommerce(vars: SystemReconcileSalesChannelCommerceVariables): MutationPromise<SystemReconcileSalesChannelCommerceData, SystemReconcileSalesChannelCommerceVariables>;
+export function systemReconcileSalesChannelCommerce(dc: DataConnect, vars: SystemReconcileSalesChannelCommerceVariables): MutationPromise<SystemReconcileSalesChannelCommerceData, SystemReconcileSalesChannelCommerceVariables>;
 
 interface SystemQueueDueSalesChannelSyncJobsRef {
   /* Allow users to create refs without passing in DataConnect */
@@ -2480,6 +2610,18 @@ export const systemIfoodConnectionByMerchantRef: SystemIfoodConnectionByMerchant
 
 export function systemIfoodConnectionByMerchant(vars: SystemIfoodConnectionByMerchantVariables, options?: ExecuteQueryOptions): QueryPromise<SystemIfoodConnectionByMerchantData, SystemIfoodConnectionByMerchantVariables>;
 export function systemIfoodConnectionByMerchant(dc: DataConnect, vars: SystemIfoodConnectionByMerchantVariables, options?: ExecuteQueryOptions): QueryPromise<SystemIfoodConnectionByMerchantData, SystemIfoodConnectionByMerchantVariables>;
+
+interface SystemIfoodConnectionsByMerchantsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SystemIfoodConnectionsByMerchantsVariables): QueryRef<SystemIfoodConnectionsByMerchantsData, SystemIfoodConnectionsByMerchantsVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SystemIfoodConnectionsByMerchantsVariables): QueryRef<SystemIfoodConnectionsByMerchantsData, SystemIfoodConnectionsByMerchantsVariables>;
+  operationName: string;
+}
+export const systemIfoodConnectionsByMerchantsRef: SystemIfoodConnectionsByMerchantsRef;
+
+export function systemIfoodConnectionsByMerchants(vars: SystemIfoodConnectionsByMerchantsVariables, options?: ExecuteQueryOptions): QueryPromise<SystemIfoodConnectionsByMerchantsData, SystemIfoodConnectionsByMerchantsVariables>;
+export function systemIfoodConnectionsByMerchants(dc: DataConnect, vars: SystemIfoodConnectionsByMerchantsVariables, options?: ExecuteQueryOptions): QueryPromise<SystemIfoodConnectionsByMerchantsData, SystemIfoodConnectionsByMerchantsVariables>;
 
 interface SystemSalesChannelMappingsForSyncRef {
   /* Allow users to create refs without passing in DataConnect */
@@ -2804,4 +2946,16 @@ export const systemSalesChannelOrderForActorRef: SystemSalesChannelOrderForActor
 
 export function systemSalesChannelOrderForActor(vars: SystemSalesChannelOrderForActorVariables, options?: ExecuteQueryOptions): QueryPromise<SystemSalesChannelOrderForActorData, SystemSalesChannelOrderForActorVariables>;
 export function systemSalesChannelOrderForActor(dc: DataConnect, vars: SystemSalesChannelOrderForActorVariables, options?: ExecuteQueryOptions): QueryPromise<SystemSalesChannelOrderForActorData, SystemSalesChannelOrderForActorVariables>;
+
+interface SystemSalesChannelConnectionForActorRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SystemSalesChannelConnectionForActorVariables): QueryRef<SystemSalesChannelConnectionForActorData, SystemSalesChannelConnectionForActorVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SystemSalesChannelConnectionForActorVariables): QueryRef<SystemSalesChannelConnectionForActorData, SystemSalesChannelConnectionForActorVariables>;
+  operationName: string;
+}
+export const systemSalesChannelConnectionForActorRef: SystemSalesChannelConnectionForActorRef;
+
+export function systemSalesChannelConnectionForActor(vars: SystemSalesChannelConnectionForActorVariables, options?: ExecuteQueryOptions): QueryPromise<SystemSalesChannelConnectionForActorData, SystemSalesChannelConnectionForActorVariables>;
+export function systemSalesChannelConnectionForActor(dc: DataConnect, vars: SystemSalesChannelConnectionForActorVariables, options?: ExecuteQueryOptions): QueryPromise<SystemSalesChannelConnectionForActorData, SystemSalesChannelConnectionForActorVariables>;
 

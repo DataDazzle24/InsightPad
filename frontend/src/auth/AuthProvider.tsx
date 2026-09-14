@@ -30,22 +30,29 @@ const ACCESS_RECHECK_MS = 30_000
 let pendingSessionToken = ''
 const deviceId=()=>{const key='insightpad.device.id';let value=localStorage.getItem(key);if(!value){value=`${crypto.randomUUID()}${crypto.randomUUID()}`;localStorage.setItem(key,value)}return value}
 const sessionKey=(uid:string)=>`insightpad.device.session:${uid}`
+const deviceName=()=>`${navigator.platform||'Dispositivo'} · ${navigator.userAgent.slice(0,120)}`
+async function sessionTokenHash(value:string){const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value));return Array.from(new Uint8Array(bytes),byte=>byte.toString(16).padStart(2,'0')).join('')}
 
 async function validateExclusiveSession(user:User){
   const key=sessionKey(user.uid)
   let token=pendingSessionToken||localStorage.getItem(key)||''
   const mustClaim=Boolean(pendingSessionToken)||!token
   if(!token)token=`${crypto.randomUUID()}${crypto.randomUUID()}`
+  const tokenHash=await sessionTokenHash(token)
   if(mustClaim){
     localStorage.setItem(key,token)
-    await executeMutation(mutationRef(dataConnect,'ClaimDeviceSession',{sessionToken:token,deviceId:deviceId(),deviceName:`${navigator.platform||'Dispositivo'} · ${navigator.userAgent.slice(0,120)}`}))
+    await executeMutation(mutationRef(dataConnect,'ClaimDeviceSession',{sessionToken:tokenHash,deviceId:deviceId(),deviceName:deviceName()}))
     pendingSessionToken=''
     return
   }
-  const result=await executeQuery(queryRef(dataConnect,'ValidateDeviceSession',{sessionToken:token,requestKey:crypto.randomUUID()}))
-  const valid=Boolean(((result.data as{_select?:Array<{valid?:boolean}>})._select??[])[0]?.valid)
+  const validate=async(value:string)=>{const result=await executeQuery(queryRef(dataConnect,'ValidateDeviceSession',{sessionToken:value,requestKey:crypto.randomUUID()}));return Boolean(((result.data as{_select?:Array<{valid?:boolean}>})._select??[])[0]?.valid)}
+  let valid=await validate(tokenHash)
+  if(!valid&&await validate(token)){
+    await executeMutation(mutationRef(dataConnect,'ClaimDeviceSession',{sessionToken:tokenHash,deviceId:deviceId(),deviceName:deviceName()}))
+    valid=true
+  }
   if(!valid)throw new Error('DEVICE_SESSION_REPLACED')
-  await executeMutation(mutationRef(dataConnect,'TouchDeviceSession',{sessionToken:token}))
+  await executeMutation(mutationRef(dataConnect,'TouchDeviceSession',{sessionToken:tokenHash}))
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
@@ -185,7 +192,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   async function signOut() {
     setStatus('loading')
     const user=auth.currentUser,token=user?localStorage.getItem(sessionKey(user.uid)):null
-    if(user&&token){try{await executeMutation(mutationRef(dataConnect,'ReleaseDeviceSession',{sessionToken:token}))}catch(cause){console.warn('Não foi possível liberar a sessão do dispositivo.',cause)}localStorage.removeItem(sessionKey(user.uid))}
+    if(user&&token){try{await executeMutation(mutationRef(dataConnect,'ReleaseDeviceSession',{sessionToken:await sessionTokenHash(token)}))}catch(cause){console.warn('Não foi possível liberar a sessão do dispositivo.',cause)}localStorage.removeItem(sessionKey(user.uid))}
     await firebaseSignOut(auth)
   }
 

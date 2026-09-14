@@ -910,12 +910,17 @@ mutation SaveProduct($id: UUID, $payload: Any!, $components: Any) @auth(level: U
         AND (NULLIF($3::jsonb->>'subcategoryId','') IS NULL OR sc.id IS NOT NULL) AND (NULLIF($3::jsonb->>'supplierId','') IS NULL OR sp.id IS NOT NULL)
         AND (NULLIF($3::jsonb->>'maximumStock','') IS NULL OR NULLIF($3::jsonb->>'minimumStock','') IS NULL OR
              ($3::jsonb->>'maximumStock')::numeric>=($3::jsonb->>'minimumStock')::numeric)
-        AND (NULLIF($3::jsonb->>'sizeType','') IS NULL OR
-          (($3::jsonb->>'sizeType')='ML' AND ($3::jsonb->>'size')=ANY(ARRAY['150','250','275','313','330','350','473','500','510','600','750','965','998'])) OR
-          (($3::jsonb->>'sizeType')='L' AND ($3::jsonb->>'size')=ANY(ARRAY['1','1,5','2','2,5','3'])) OR
-          (($3::jsonb->>'sizeType')='KG' AND ($3::jsonb->>'size')=ANY(ARRAY['1','3','5'])) OR
-          (($3::jsonb->>'sizeType')='G' AND ($3::jsonb->>'size')=ANY(ARRAY['76','140','150','500'])) OR
-          (($3::jsonb->>'sizeType')='UN' AND ($3::jsonb->>'size')='100'))
+        AND (NULLIF($3::jsonb->>'sizeType','') IS NULL OR CASE
+          WHEN ($3::jsonb->>'sizeType') IN ('ML','L','KG','G','UN')
+            AND COALESCE($3::jsonb->>'size','') ~ '^(0|[1-9][0-9]{0,4})(,[0-9]{1,3})?$'
+          THEN CASE $3::jsonb->>'sizeType'
+            WHEN 'ML' THEN position(',' in $3::jsonb->>'size')=0 AND replace($3::jsonb->>'size',',','.')::numeric BETWEEN 1 AND 2000
+            WHEN 'L' THEN replace($3::jsonb->>'size',',','.')::numeric BETWEEN 0.001 AND 50
+            WHEN 'KG' THEN replace($3::jsonb->>'size',',','.')::numeric BETWEEN 0.001 AND 50
+            WHEN 'G' THEN position(',' in $3::jsonb->>'size')=0 AND replace($3::jsonb->>'size',',','.')::numeric BETWEEN 1 AND 50000
+            WHEN 'UN' THEN position(',' in $3::jsonb->>'size')=0 AND replace($3::jsonb->>'size',',','.')::numeric BETWEEN 1 AND 50
+            ELSE false END
+          ELSE false END)
         AND (
           (NOT COALESCE(($3::jsonb->>'bundleProduct')::boolean,false) AND jsonb_array_length(COALESCE($4::jsonb,'[]'::jsonb))=0)
           OR (
@@ -946,6 +951,8 @@ mutation SaveProduct($id: UUID, $payload: Any!, $components: Any) @auth(level: U
           WHERE current_product.id=$2 AND current_product.tenant_id=a.tenant_id
             AND mapping.external_product_id IS DISTINCT FROM COALESCE(NULLIF(regexp_replace($3::jsonb->>'ean','\s','','g'),''),NULLIF(btrim($3::jsonb->>'scaleCode'),''))
         ))
+        AND NOT EXISTS(SELECT 1 FROM promotions promotion WHERE promotion.tenant_id=a.tenant_id AND promotion.product_id=COALESCE($2::uuid,'00000000-0000-0000-0000-000000000000')
+          AND promotion.active AND promotion.deleted_at IS NULL AND (promotion.promotional_price_cents::numeric*100)>=(COALESCE(($3::jsonb->>'salePriceCents')::bigint,0)::numeric*95))
       ON CONFLICT(id) DO UPDATE SET category_id=EXCLUDED.category_id,subcategory_id=EXCLUDED.subcategory_id,supplier_id=EXCLUDED.supplier_id,name=EXCLUDED.name,
         internal_code=EXCLUDED.internal_code,ean=EXCLUDED.ean,scale_code=EXCLUDED.scale_code,image_url=EXCLUDED.image_url,brand=EXCLUDED.brand,size_type=EXCLUDED.size_type,size=EXCLUDED.size,color=EXCLUDED.color,
         maximum_stock=EXCLUDED.maximum_stock,minimum_stock=EXCLUDED.minimum_stock,sale_price_cents=EXCLUDED.sale_price_cents,cost_price_cents=EXCLUDED.cost_price_cents,
@@ -1003,10 +1010,10 @@ mutation SetProductStatus($id: UUID!, $active: Boolean!) @auth(level: USER) @tra
       INSERT INTO sales_channel_commands(id,tenant_id,connection_id,command_key,provider,action,payload,status,attempts,scheduled_at,created_by_uid,created_at,updated_at)
       SELECT gen_random_uuid(),p.tenant_id,m.connection_id,concat(p.tenant_id,':PRODUCT:',m.id,':',m.version,':DEACTIVATE'),c.provider,'DEACTIVATE_PRODUCT',jsonb_build_object('barcode',m.external_product_id,'name',COALESCE(NULLIF(m.external_product_name,''),p.name)),'QUEUED',0,now(),$1,now(),now()
       FROM changed p JOIN sales_channel_product_mappings m ON m.product_id=p.id AND m.tenant_id=p.tenant_id AND m.active AND m.deleted_at IS NULL AND m.enabled
-      JOIN sales_channel_connections c ON c.id=m.connection_id AND c.tenant_id=m.tenant_id AND c.provider='IFOOD' AND c.catalog_profile='GROCERY' AND c.active AND c.deleted_at IS NULL AND c.enabled AND c.status='ACTIVE' AND c.authorization_status='AUTHORIZED'
+      JOIN sales_channel_connections c ON c.id=m.connection_id AND c.tenant_id=m.tenant_id AND c.provider='IFOOD' AND c.catalog_profile IN ('RESTAURANT','GROCERY') AND c.active AND c.deleted_at IS NULL AND c.enabled AND c.status='ACTIVE' AND c.authorization_status='AUTHORIZED'
       WHERE NOT $3 ON CONFLICT(command_key) DO NOTHING RETURNING id
     ), mappings_reset AS (
-      UPDATE sales_channel_product_mappings m SET last_synced_at=NULL,sync_status='PENDING',last_error=NULL,version=m.version+1,updated_at=now()
+      UPDATE sales_channel_product_mappings m SET last_synced_at=NULL,sync_status='PENDING',publication_status='DRAFT',needs_full_publication=true,last_error=NULL,version=m.version+1,updated_at=now()
       FROM changed p WHERE $3 AND m.product_id=p.id AND m.tenant_id=p.tenant_id AND m.active AND m.deleted_at IS NULL RETURNING m.id
     )
     INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
@@ -1073,9 +1080,9 @@ mutation SavePromotion($id: UUID, $productId: UUID!, $promotionalPriceCents: Int
       WHERE u.id=$1 AND u.active AND COALESCE(up.can_update,rp.can_update,false)
     ),saved AS (
       INSERT INTO promotions(id,tenant_id,product_id,promotional_price_cents,starts_at,ends_at,active,created_at,updated_at)
-      SELECT COALESCE($2::uuid,gen_random_uuid()),a.tenant_id,$3,$4,$5,$6,true,now(),now() FROM actor a JOIN products p ON p.id=$3 AND p.tenant_id=a.tenant_id AND p.active
-      WHERE $4>0 AND $4<p.sale_price_cents AND $5<$6 AND NOT EXISTS(SELECT 1 FROM promotions x WHERE x.tenant_id=a.tenant_id AND x.product_id=$3 AND x.active
-        AND x.id<>COALESCE($2::uuid,'00000000-0000-0000-0000-000000000000') AND tstzrange(x.starts_at,x.ends_at,'[)')&&tstzrange($5,$6,'[)'))
+      SELECT COALESCE($2::uuid,gen_random_uuid()),a.tenant_id,$3::uuid,$4::bigint,$5::timestamptz,$6::timestamptz,true,now(),now() FROM actor a JOIN products p ON p.id=$3::uuid AND p.tenant_id=a.tenant_id AND p.active
+      WHERE $4::bigint>0 AND ($4::numeric*100)<(p.sale_price_cents::numeric*95) AND $5::timestamptz<$6::timestamptz AND NOT EXISTS(SELECT 1 FROM promotions x WHERE x.tenant_id=a.tenant_id AND x.product_id=$3::uuid AND x.active
+        AND x.id<>COALESCE($2::uuid,'00000000-0000-0000-0000-000000000000') AND tstzrange(x.starts_at,x.ends_at,'[)')&&tstzrange($5::timestamptz,$6::timestamptz,'[)'))
       ON CONFLICT(id) DO UPDATE SET promotional_price_cents=EXCLUDED.promotional_price_cents,starts_at=EXCLUDED.starts_at,ends_at=EXCLUDED.ends_at,updated_at=now()
       WHERE promotions.tenant_id=EXCLUDED.tenant_id RETURNING id,tenant_id,product_id
     ) INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
@@ -1097,6 +1104,7 @@ mutation SetPromotionStatus($id: UUID!, $active: Boolean!) @auth(level: USER) @t
       WHERE p.id=$2 AND p.tenant_id=a.tenant_id
         AND product.id=p.product_id AND product.tenant_id=a.tenant_id
         AND product.active AND product.deleted_at IS NULL
+        AND (NOT $3 OR (p.promotional_price_cents::numeric*100)<(product.sale_price_cents::numeric*95))
         AND (NOT $3 OR NOT EXISTS(
         SELECT 1 FROM promotions x WHERE x.tenant_id=p.tenant_id AND x.product_id=p.product_id AND x.active
           AND x.deleted_at IS NULL AND x.id<>p.id AND tstzrange(x.starts_at,x.ends_at,'[)')&&tstzrange(p.starts_at,p.ends_at,'[)')))
@@ -1282,10 +1290,19 @@ mutation SetProductsStatusBatch($ids: Any!, $active: Boolean!) @auth(level: USER
       FROM eligible e WHERE p.id=e.id AND (SELECT count(*) FROM input)>0
         AND (SELECT count(*) FROM eligible)=(SELECT count(*) FROM input)
       RETURNING p.id,p.tenant_id,p.name
+    ),deactivation AS (
+      INSERT INTO sales_channel_commands(id,tenant_id,connection_id,command_key,provider,action,payload,status,attempts,scheduled_at,created_by_uid,created_at,updated_at)
+      SELECT gen_random_uuid(),p.tenant_id,m.connection_id,concat(p.tenant_id,':PRODUCT:',m.id,':',m.version,':DEACTIVATE'),c.provider,'DEACTIVATE_PRODUCT',jsonb_build_object('barcode',m.external_product_id,'name',COALESCE(NULLIF(m.external_product_name,''),p.name)),'QUEUED',0,now(),$1,now(),now()
+      FROM changed p JOIN sales_channel_product_mappings m ON m.product_id=p.id AND m.tenant_id=p.tenant_id AND m.active AND m.deleted_at IS NULL AND m.enabled
+      JOIN sales_channel_connections c ON c.id=m.connection_id AND c.tenant_id=m.tenant_id AND c.provider='IFOOD' AND c.catalog_profile IN ('RESTAURANT','GROCERY') AND c.active AND c.deleted_at IS NULL AND c.enabled AND c.status='ACTIVE' AND c.authorization_status='AUTHORIZED'
+      WHERE NOT $3 ON CONFLICT(command_key) DO NOTHING RETURNING id
+    ),mappings_reset AS (
+      UPDATE sales_channel_product_mappings m SET last_synced_at=NULL,sync_status='PENDING',publication_status='DRAFT',needs_full_publication=true,last_error=NULL,version=m.version+1,updated_at=now()
+      FROM changed p WHERE $3 AND m.product_id=p.id AND m.tenant_id=p.tenant_id AND m.active AND m.deleted_at IS NULL RETURNING m.id
     )
     INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
     SELECT tenant_id,$1,'Cadastros','CAD_PRODUTO',CASE WHEN $3 THEN 'RESTORE' ELSE 'ARCHIVE' END,'Product',id::text,
-      'Status do produto alterado em lote',true,'SQL_CONNECT',jsonb_build_object('active',$3,'name',name),now() FROM changed
+      'Status do produto alterado em lote',true,'SQL_CONNECT',jsonb_build_object('active',$3,'name',name,'deactivationQueued',(SELECT count(*) FROM deactivation),'mappingsReset',(SELECT count(*) FROM mappings_reset)),now() FROM changed
   """,params:[{_expr:"auth.uid"},$ids,$active])
 }
 
@@ -1855,7 +1872,7 @@ mutation ReleaseDeviceSession($sessionToken: String!) @auth(level: USER) {
   """,params:[{_expr:"auth.uid"},$sessionToken])
 }
 
-mutation CreateSalesChannelConnection($provider: String!, $branchId: UUID!, $displayName: String!, $externalStoreId: String!, $catalogProfile: String = "UNVERIFIED") @auth(level: USER) @transaction {
+mutation CreateSalesChannelConnection($provider: String!, $branchId: UUID!, $displayName: String!, $externalStoreId: String!) @auth(level: USER) @transaction {
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u
@@ -1870,21 +1887,20 @@ mutation CreateSalesChannelConnection($provider: String!, $branchId: UUID!, $dis
       SELECT a.tenant_id,b.id,concat(a.tenant_id,':',b.id,':',upper(btrim($2))),
         CASE WHEN btrim($5)='' THEN NULL ELSE concat(a.tenant_id,':',upper(btrim($2)),':',left(btrim($5),160)) END,
         CASE WHEN btrim($5)='' THEN NULL ELSE concat(upper(btrim($2)),':',left(btrim($5),160)) END,
-        CASE WHEN $6 IN ('UNVERIFIED','RESTAURANT','GROCERY') THEN $6 ELSE 'UNVERIFIED' END,upper(btrim($2)),left(btrim($4),160),NULLIF(left(btrim($5),160),''),'DRAFT','NOT_CONNECTED',
-        CASE WHEN upper(btrim($2))='IFOOD' THEN 'POLLING' WHEN upper(btrim($2))='ZE_DELIVERY' THEN 'HYBRID' ELSE 'WEBHOOK' END,
+        'UNVERIFIED',upper(btrim($2)),left(btrim($4),160),NULLIF(left(btrim($5),160),''),'DRAFT','NOT_CONNECTED','HYBRID',
         'NOT_CONFIGURED',true,true,now(),now()
       FROM actor a JOIN branches b ON b.id=$3 AND b.tenant_id=a.tenant_id AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1 AND ub.tenant_id=b.tenant_id AND ub.branch_id=b.id AND ub.active)) AND b.active AND b.deleted_at IS NULL
-      WHERE upper(btrim($2)) IN ('IFOOD','ZE_DELIVERY','NINETYNINE_FOOD') AND length(btrim($4))>=2
+      WHERE upper(btrim($2))='IFOOD' AND length(btrim($4))>=2
         AND NOT EXISTS(SELECT 1 FROM sales_channel_connections c WHERE c.tenant_id=a.tenant_id AND c.branch_id=b.id AND c.provider=upper(btrim($2)) AND c.active AND c.deleted_at IS NULL)
         AND (btrim($5)='' OR NOT EXISTS(SELECT 1 FROM sales_channel_connections c WHERE c.provider=upper(btrim($2)) AND c.external_store_id=btrim($5) AND c.active AND c.deleted_at IS NULL))
       RETURNING id,tenant_id,provider,display_name,branch_id
     )
     INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
     SELECT i.tenant_id,$1,'Integrações','CANAIS_VENDA','CREATE','SalesChannelConnection',i.id::text,'Canal de venda preparado',true,'SQL_CONNECT',jsonb_build_object('provider',i.provider,'displayName',i.display_name,'branchId',i.branch_id),now() FROM inserted i
-  """,params:[{_expr:"auth.uid"},$provider,$branchId,$displayName,$externalStoreId,$catalogProfile])
+  """,params:[{_expr:"auth.uid"},$provider,$branchId,$displayName,$externalStoreId])
 }
 
-mutation UpdateSalesChannelConnection($id: UUID!, $displayName: String!, $externalStoreId: String!, $enabled: Boolean!, $catalogProfile: String) @auth(level: USER) @transaction {
+mutation UpdateSalesChannelConnection($id: UUID!, $displayName: String!, $externalStoreId: String!, $enabled: Boolean!) @auth(level: USER) @transaction {
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages p ON p.page_key='CANAIS_VENDA' AND p.active LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=p.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=p.id AND rp.tenant_id=u.tenant_id WHERE u.id=$1 AND (u.blocked_until IS NULL OR u.blocked_until<=now()) AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_update,rp.can_update,false)
@@ -1892,7 +1908,7 @@ mutation UpdateSalesChannelConnection($id: UUID!, $displayName: String!, $extern
       UPDATE sales_channel_connections c SET display_name=left(btrim($3),160),external_store_id=NULLIF(left(btrim($4),160),''),
         external_store_key=CASE WHEN btrim($4)='' THEN NULL ELSE concat(c.tenant_id,':',c.provider,':',left(btrim($4),160)) END,
         provider_store_key=CASE WHEN btrim($4)='' THEN NULL ELSE concat(c.provider,':',left(btrim($4),160)) END,
-        catalog_profile=CASE WHEN $6 IN ('UNVERIFIED','RESTAURANT','GROCERY') THEN $6 ELSE c.catalog_profile END,
+        catalog_profile=c.catalog_profile,
         status=CASE WHEN COALESCE(c.external_store_id,'')<>btrim($4) THEN 'DRAFT' ELSE c.status END,
         authorization_status=CASE WHEN COALESCE(c.external_store_id,'')<>btrim($4) THEN 'NOT_CONNECTED' ELSE c.authorization_status END,
         authorized_at=CASE WHEN COALESCE(c.external_store_id,'')<>btrim($4) THEN NULL ELSE c.authorized_at END,
@@ -1904,27 +1920,37 @@ mutation UpdateSalesChannelConnection($id: UUID!, $displayName: String!, $extern
           AND NOT EXISTS(SELECT 1 FROM sales_channel_orders o WHERE o.connection_id=c.id)
           AND NOT EXISTS(SELECT 1 FROM sales_channel_event_inbox e WHERE e.connection_id=c.id)
           AND NOT EXISTS(SELECT 1 FROM sales_channel_sync_jobs j WHERE j.connection_id=c.id AND j.status IN ('QUEUED','RETRY','PROCESSING'))))
-        AND (COALESCE($6,c.catalog_profile)=c.catalog_profile OR (
-          NOT EXISTS(SELECT 1 FROM sales_channel_product_mappings m WHERE m.connection_id=c.id AND m.active AND m.deleted_at IS NULL)
-          AND NOT EXISTS(SELECT 1 FROM sales_channel_sync_jobs j WHERE j.connection_id=c.id AND j.status IN ('QUEUED','RETRY','PROCESSING'))))
         AND NOT EXISTS(SELECT 1 FROM sales_channel_connections x WHERE x.provider=c.provider AND x.id<>c.id AND x.active AND x.deleted_at IS NULL AND x.external_store_id=btrim($4) AND btrim($4)<>'')
       RETURNING c.id,c.tenant_id,c.provider,c.display_name,c.enabled
     )
     INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
     SELECT c.tenant_id,$1,'Integrações','CANAIS_VENDA','UPDATE','SalesChannelConnection',c.id::text,'Configuração do canal atualizada',true,'SQL_CONNECT',jsonb_build_object('provider',c.provider,'displayName',c.display_name,'enabled',c.enabled),now() FROM changed c
-  """,params:[{_expr:"auth.uid"},$id,$displayName,$externalStoreId,$enabled,$catalogProfile])
+  """,params:[{_expr:"auth.uid"},$id,$displayName,$externalStoreId,$enabled])
 }
 
 mutation ArchiveSalesChannelConnection($id: UUID!) @auth(level: USER) @transaction {
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages p ON p.page_key='CANAIS_VENDA' AND p.active LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=p.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=p.id AND rp.tenant_id=u.tenant_id WHERE u.id=$1 AND (u.blocked_until IS NULL OR u.blocked_until<=now()) AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_delete,rp.can_delete,false)
+    ), target AS (
+      SELECT c.*,EXISTS(SELECT 1 FROM sales_channel_product_mappings m WHERE m.connection_id=c.id AND m.tenant_id=c.tenant_id AND m.active AND m.deleted_at IS NULL AND m.enabled AND (m.last_synced_at IS NOT NULL OR m.publication_status='ACCEPTED')) needs_remote_cleanup
+      FROM sales_channel_connections c JOIN actor a ON a.tenant_id=c.tenant_id
+      WHERE c.id=$2 AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1 AND ub.tenant_id=c.tenant_id AND ub.branch_id=c.branch_id AND ub.active)) AND c.active AND c.deleted_at IS NULL
+      FOR UPDATE OF c
+    ), decommissioning AS (
+      UPDATE sales_channel_connections c SET status='DECOMMISSIONING',enabled=true,last_error=NULL,updated_at=now()
+      FROM target t WHERE c.id=t.id AND t.provider='IFOOD' AND t.catalog_profile IN ('RESTAURANT','GROCERY') AND t.authorization_status='AUTHORIZED' AND t.needs_remote_cleanup RETURNING c.*
+    ), deactivations AS (
+      INSERT INTO sales_channel_commands(id,tenant_id,connection_id,command_key,provider,action,payload,status,attempts,scheduled_at,created_by_uid,created_at,updated_at)
+      SELECT gen_random_uuid(),m.tenant_id,m.connection_id,concat(m.tenant_id,':CONNECTION:',m.connection_id,':PRODUCT:',m.id,':DEACTIVATE'),c.provider,'DEACTIVATE_PRODUCT',jsonb_build_object('barcode',m.external_product_id,'name',COALESCE(NULLIF(m.external_product_name,''),p.name)),'QUEUED',0,now(),$1,now(),now()
+      FROM decommissioning c JOIN sales_channel_product_mappings m ON m.connection_id=c.id AND m.tenant_id=c.tenant_id AND m.active AND m.deleted_at IS NULL AND m.enabled AND (m.last_synced_at IS NOT NULL OR m.publication_status='ACCEPTED')
+      JOIN products p ON p.id=m.product_id AND p.tenant_id=m.tenant_id ON CONFLICT(command_key) DO NOTHING RETURNING id,connection_id,tenant_id
     ), archived AS (
       UPDATE sales_channel_connections c SET connection_key=CASE WHEN c.connection_key IS NULL THEN NULL ELSE concat(c.connection_key,':archived:',c.id) END,
         external_store_key=CASE WHEN c.external_store_key IS NULL THEN NULL ELSE concat(c.external_store_key,':archived:',c.id) END,
         provider_store_key=NULL,
         active=false,enabled=false,status='ARCHIVED',authorization_status='REVOKED',deleted_at=now(),updated_at=now()
-      FROM actor a WHERE c.id=$2 AND c.tenant_id=a.tenant_id AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1 AND ub.tenant_id=c.tenant_id AND ub.branch_id=c.branch_id AND ub.active)) AND c.active AND c.deleted_at IS NULL RETURNING c.id,c.tenant_id,c.provider,c.display_name
+      FROM target t WHERE c.id=t.id AND NOT EXISTS(SELECT 1 FROM decommissioning d WHERE d.id=t.id) RETURNING c.*
     ), archived_mappings AS (
       UPDATE sales_channel_product_mappings m SET mapping_key=CASE WHEN m.mapping_key IS NULL THEN NULL ELSE concat(m.mapping_key,':archived:',m.id) END,
         external_mapping_key=CASE WHEN m.external_mapping_key IS NULL THEN NULL ELSE concat(m.external_mapping_key,':archived:',m.id) END,
@@ -1932,16 +1958,16 @@ mutation ArchiveSalesChannelConnection($id: UUID!) @auth(level: USER) @transacti
       FROM archived c WHERE m.connection_id=c.id AND m.tenant_id=c.tenant_id AND m.active RETURNING m.id
     ), cancelled_commands AS (
       UPDATE sales_channel_commands q SET status='CANCELLED',last_error='Conexão removida pelo usuário.',processed_at=now(),updated_at=now()
-      FROM archived c WHERE q.connection_id=c.id AND q.tenant_id=c.tenant_id AND q.status IN ('QUEUED','RETRY','PROCESSING') RETURNING q.id
+      FROM target c WHERE q.connection_id=c.id AND q.tenant_id=c.tenant_id AND q.status IN ('QUEUED','RETRY','PROCESSING') AND q.action<>'DEACTIVATE_PRODUCT' RETURNING q.id
     ), cancelled_events AS (
       UPDATE sales_channel_event_inbox e SET status='CANCELLED',last_error='Conexão removida pelo usuário.',lease_until=NULL,locked_by=NULL,updated_at=now()
-      FROM archived c WHERE e.connection_id=c.id AND e.tenant_id=c.tenant_id AND e.status IN ('RECEIVED','ERROR','PROCESSING') RETURNING e.id
+      FROM target c WHERE e.connection_id=c.id AND e.tenant_id=c.tenant_id AND e.status IN ('RECEIVED','ERROR','PROCESSING') RETURNING e.id
     ), cancelled_jobs AS (
       UPDATE sales_channel_sync_jobs j SET status='CANCELLED',last_error='Conexão removida pelo usuário.',finished_at=now(),updated_at=now()
-      FROM archived c WHERE j.connection_id=c.id AND j.tenant_id=c.tenant_id AND j.status IN ('QUEUED','RETRY','PROCESSING') RETURNING j.id
+      FROM target c WHERE j.connection_id=c.id AND j.tenant_id=c.tenant_id AND j.status IN ('QUEUED','RETRY','PROCESSING') RETURNING j.id
     )
     INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,before_data,after_data,created_at)
-    SELECT c.tenant_id,$1,'Integrações','CANAIS_VENDA','ARCHIVE','SalesChannelConnection',c.id::text,'Canal, vínculos e filas pendentes desativados',true,'SQL_CONNECT',jsonb_build_object('provider',c.provider,'displayName',c.display_name),jsonb_build_object('mappingsArchived',(SELECT count(*) FROM archived_mappings),'commandsCancelled',(SELECT count(*) FROM cancelled_commands),'eventsCancelled',(SELECT count(*) FROM cancelled_events),'jobsCancelled',(SELECT count(*) FROM cancelled_jobs)),now() FROM archived c
+    SELECT c.tenant_id,$1,'Integrações','CANAIS_VENDA',CASE WHEN EXISTS(SELECT 1 FROM decommissioning d WHERE d.id=c.id) THEN 'DECOMMISSION' ELSE 'ARCHIVE' END,'SalesChannelConnection',c.id::text,CASE WHEN EXISTS(SELECT 1 FROM decommissioning d WHERE d.id=c.id) THEN 'Desativação remota iniciada antes do arquivamento' ELSE 'Canal e filas pendentes arquivados' END,true,'SQL_CONNECT',jsonb_build_object('provider',c.provider,'displayName',c.display_name),jsonb_build_object('deactivationsQueued',(SELECT count(*) FROM deactivations),'mappingsArchived',(SELECT count(*) FROM archived_mappings),'commandsCancelled',(SELECT count(*) FROM cancelled_commands),'eventsCancelled',(SELECT count(*) FROM cancelled_events),'jobsCancelled',(SELECT count(*) FROM cancelled_jobs)),now() FROM target c
   """,params:[{_expr:"auth.uid"},$id])
 }
 
@@ -1951,7 +1977,7 @@ mutation CreateSalesChannelProductMapping($connectionId: UUID!, $productId: UUID
       SELECT a.id actor_id,a.tenant_id,c.id connection_id,p.id product_id,
         CASE WHEN c.catalog_profile='GROCERY' THEN COALESCE(NULLIF(btrim(p.ean),''),NULLIF(btrim(p.scale_code),'')) ELSE NULLIF(btrim($4),'') END partner_id
       FROM actor a JOIN sales_channel_connections c ON c.id=$2 AND c.tenant_id=a.tenant_id AND c.active AND c.deleted_at IS NULL AND c.catalog_profile IN ('RESTAURANT','GROCERY')
-      JOIN products p ON p.id=$3 AND p.tenant_id=a.tenant_id AND p.active AND p.deleted_at IS NULL
+      JOIN products p ON p.id=$3 AND p.tenant_id=a.tenant_id AND p.active AND p.deleted_at IS NULL AND NOT p.bundle_product
       WHERE (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1 AND ub.tenant_id=c.tenant_id AND ub.branch_id=c.branch_id AND ub.active))
     ), inserted AS (
       INSERT INTO sales_channel_product_mappings(tenant_id,connection_id,product_id,mapping_key,external_mapping_key,external_product_id,external_product_name,sync_price,sync_stock,enabled,status,active,created_at,updated_at)
@@ -1964,15 +1990,20 @@ mutation CreateSalesChannelProductMapping($connectionId: UUID!, $productId: UUID
 mutation UpdateSalesChannelProductMapping($id: UUID!, $externalProductId: String!, $externalProductName: String!, $syncPrice: Boolean!, $syncStock: Boolean!, $enabled: Boolean!) @auth(level: USER) @transaction {
   _execute(sql: """
     WITH actor AS (SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages page ON page.page_key='CANAIS_VENDA' AND page.active LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=page.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=page.id AND rp.tenant_id=u.tenant_id WHERE u.id=$1 AND (u.blocked_until IS NULL OR u.blocked_until<=now()) AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_manage,rp.can_manage,false)), candidate AS (
-      SELECT m.id,m.tenant_id,m.connection_id,CASE WHEN c.catalog_profile='GROCERY' THEN COALESCE(NULLIF(btrim(p.ean),''),NULLIF(btrim(p.scale_code),'')) ELSE NULLIF(btrim($3),'') END partner_id
+      SELECT m.id,m.tenant_id,m.connection_id,m.enabled was_enabled,p.name product_name,CASE WHEN c.catalog_profile='GROCERY' THEN COALESCE(NULLIF(btrim(p.ean),''),NULLIF(btrim(p.scale_code),'')) ELSE NULLIF(btrim($3),'') END partner_id
       FROM sales_channel_product_mappings m JOIN actor a ON a.tenant_id=m.tenant_id
       JOIN sales_channel_connections c ON c.id=m.connection_id AND c.tenant_id=m.tenant_id AND c.catalog_profile IN ('RESTAURANT','GROCERY')
-      JOIN products p ON p.id=m.product_id AND p.tenant_id=m.tenant_id AND p.active AND p.deleted_at IS NULL
+      JOIN products p ON p.id=m.product_id AND p.tenant_id=m.tenant_id AND p.active AND p.deleted_at IS NULL AND NOT p.bundle_product
       WHERE m.id=$2 AND m.active AND m.deleted_at IS NULL AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1 AND ub.tenant_id=c.tenant_id AND ub.branch_id=c.branch_id AND ub.active))
     ), changed AS (
       UPDATE sales_channel_product_mappings m SET external_mapping_key=concat(m.tenant_id,':',m.connection_id,':',x.partner_id),external_product_id=left(x.partner_id,160),external_product_name=NULLIF(left(btrim($4),240),''),sync_price=$5,sync_stock=$6,enabled=$7,sync_status='PENDING',last_error=NULL,version=m.version+1,updated_at=now()
-      FROM candidate x WHERE m.id=x.id AND length(x.partner_id) BETWEEN 1 AND 160 AND NOT EXISTS(SELECT 1 FROM sales_channel_product_mappings other WHERE other.tenant_id=m.tenant_id AND other.connection_id=m.connection_id AND other.id<>m.id AND other.external_product_id=x.partner_id AND other.active AND other.deleted_at IS NULL) RETURNING m.*
-    ) INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at) SELECT tenant_id,$1,'Integrações','CANAIS_VENDA','UPDATE','SalesChannelProductMapping',id::text,'Vínculo de produto atualizado',true,'SQL_CONNECT',jsonb_build_object('externalProductId',external_product_id,'syncPrice',sync_price,'syncStock',sync_stock,'enabled',enabled),now() FROM changed
+      FROM candidate x WHERE m.id=x.id AND length(x.partner_id) BETWEEN 1 AND 160 AND NOT EXISTS(SELECT 1 FROM sales_channel_product_mappings other WHERE other.tenant_id=m.tenant_id AND other.connection_id=m.connection_id AND other.id<>m.id AND other.external_product_id=x.partner_id AND other.active AND other.deleted_at IS NULL) RETURNING m.*,x.was_enabled,x.product_name
+    ), deactivation AS (
+      INSERT INTO sales_channel_commands(id,tenant_id,connection_id,command_key,provider,action,payload,status,attempts,scheduled_at,created_by_uid,created_at,updated_at)
+      SELECT gen_random_uuid(),m.tenant_id,m.connection_id,concat(m.tenant_id,':PRODUCT:',m.id,':',m.version,':DEACTIVATE'),c.provider,'DEACTIVATE_PRODUCT',jsonb_build_object('barcode',m.external_product_id,'name',COALESCE(NULLIF(m.external_product_name,''),m.product_name)),'QUEUED',0,now(),$1,now(),now()
+      FROM changed m JOIN sales_channel_connections c ON c.id=m.connection_id AND c.tenant_id=m.tenant_id AND c.provider='IFOOD' AND c.catalog_profile IN ('RESTAURANT','GROCERY') AND c.active AND c.deleted_at IS NULL AND c.enabled AND c.status='ACTIVE' AND c.authorization_status='AUTHORIZED'
+      WHERE m.was_enabled AND NOT m.enabled ON CONFLICT(command_key) DO NOTHING RETURNING id
+    ) INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at) SELECT tenant_id,$1,'Integrações','CANAIS_VENDA','UPDATE','SalesChannelProductMapping',id::text,'Vínculo de produto atualizado',true,'SQL_CONNECT',jsonb_build_object('externalProductId',external_product_id,'syncPrice',sync_price,'syncStock',sync_stock,'enabled',enabled,'deactivationQueued',(SELECT count(*) FROM deactivation)),now() FROM changed
   """,params:[{_expr:"auth.uid"},$id,$externalProductId,$externalProductName,$syncPrice,$syncStock,$enabled])
 }
 
@@ -1984,7 +2015,7 @@ mutation ArchiveSalesChannelProductMapping($id: UUID!) @auth(level: USER) @trans
     ), deactivation AS (
       INSERT INTO sales_channel_commands(id,tenant_id,connection_id,command_key,provider,action,payload,status,attempts,scheduled_at,created_by_uid,created_at,updated_at)
       SELECT gen_random_uuid(),m.tenant_id,m.connection_id,concat(m.tenant_id,':PRODUCT:',m.id,':',m.version,':DEACTIVATE'),c.provider,'DEACTIVATE_PRODUCT',jsonb_build_object('barcode',m.external_product_id,'name',COALESCE(NULLIF(m.external_product_name,''),p.name)),'QUEUED',0,now(),$1,now(),now()
-      FROM archived m JOIN sales_channel_connections c ON c.id=m.connection_id AND c.tenant_id=m.tenant_id AND c.provider='IFOOD' AND c.catalog_profile='GROCERY' AND c.active AND c.deleted_at IS NULL AND c.enabled AND c.status='ACTIVE' AND c.authorization_status='AUTHORIZED'
+      FROM archived m JOIN sales_channel_connections c ON c.id=m.connection_id AND c.tenant_id=m.tenant_id AND c.provider='IFOOD' AND c.catalog_profile IN ('RESTAURANT','GROCERY') AND c.active AND c.deleted_at IS NULL AND c.enabled AND c.status='ACTIVE' AND c.authorization_status='AUTHORIZED'
       JOIN products p ON p.id=m.product_id AND p.tenant_id=m.tenant_id
       ON CONFLICT(command_key) DO NOTHING RETURNING id
     ) INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,before_data,after_data,created_at) SELECT tenant_id,$1,'Integrações','CANAIS_VENDA','ARCHIVE','SalesChannelProductMapping',id::text,'Vínculo removido e desativação no parceiro enfileirada quando aplicável',true,'SQL_CONNECT',jsonb_build_object('connectionId',connection_id,'productId',product_id),jsonb_build_object('deactivationQueued',(SELECT count(*) FROM deactivation)),now() FROM archived
@@ -2094,6 +2125,7 @@ mutation RetrySalesChannelCommand($id: UUID!) @auth(level: USER) @transaction {
       UPDATE sales_channel_commands q SET status='RETRY',scheduled_at=now(),locked_at=NULL,processed_at=NULL,last_error=NULL,updated_at=now()
       FROM actor a JOIN sales_channel_connections c ON c.tenant_id=a.tenant_id AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1 AND ub.tenant_id=c.tenant_id AND ub.branch_id=c.branch_id AND ub.active)) AND c.active AND c.deleted_at IS NULL AND c.enabled AND c.status='ACTIVE' AND c.authorization_status='AUTHORIZED'
       WHERE q.id=$2 AND q.tenant_id=a.tenant_id AND q.connection_id=c.id AND q.status='ERROR' AND q.attempts<8
+        AND NOT q.outcome_unknown AND q.action NOT IN ('ADD_ITEM','REPLACE_ITEM','UPDATE_ITEM','REMOVE_ITEM')
       RETURNING q.*
     ), order_changed AS (
       UPDATE sales_channel_orders o SET command_status='QUEUED',updated_at=now() FROM changed q
@@ -2102,6 +2134,74 @@ mutation RetrySalesChannelCommand($id: UUID!) @auth(level: USER) @transaction {
     INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
     SELECT q.tenant_id,$1,'Integrações','CANAIS_VENDA','RETRY','SalesChannelCommand',q.id::text,'Comando de parceiro reenfileirado',true,'SQL_CONNECT',jsonb_build_object('action',q.action,'attempts',q.attempts,'orderUpdated',(SELECT count(*) FROM order_changed)),now() FROM changed q
   """,params:[{_expr:"auth.uid"},$id])
+}
+
+mutation RequestSalesChannelOrderReconciliation($id: UUID!, $requestKey: String!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+      JOIN app_pages p ON p.page_key='CANAIS_VENDA' AND p.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=p.id AND up.tenant_id=u.tenant_id
+      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=p.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now()) AND COALESCE(up.can_update,rp.can_update,false)
+    ), candidate AS (
+      SELECT o.*,c.provider,a.id actor_id FROM sales_channel_orders o JOIN actor a ON a.tenant_id=o.tenant_id
+      JOIN sales_channel_connections c ON c.id=o.connection_id AND c.tenant_id=o.tenant_id AND c.provider='IFOOD' AND c.active AND c.deleted_at IS NULL AND c.enabled AND c.status='ACTIVE' AND c.authorization_status='AUTHORIZED'
+      WHERE o.id=$2 AND length(btrim($3)) BETWEEN 8 AND 150
+        AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1 AND ub.tenant_id=o.tenant_id AND ub.branch_id=o.branch_id AND ub.active))
+        AND NOT EXISTS(SELECT 1 FROM sales_channel_commands active WHERE active.order_id=o.id AND active.status IN ('QUEUED','RETRY','PROCESSING') AND active.action='RECONCILE_ORDER')
+    ), queued AS (
+      INSERT INTO sales_channel_commands(id,tenant_id,connection_id,order_id,command_key,provider,action,payload,status,attempts,scheduled_at,created_by_uid,created_at,updated_at)
+      SELECT gen_random_uuid(),o.tenant_id,o.connection_id,o.id,concat(o.tenant_id,':ORDER:',o.id,':RECONCILE:',left(btrim($3),150)),o.provider,'RECONCILE_ORDER',jsonb_build_object('orderVersion',o.version,'orderStatus',o.status),'QUEUED',0,now(),o.actor_id,now(),now()
+      FROM candidate o ON CONFLICT(command_key) DO NOTHING RETURNING *
+    ), changed AS (
+      UPDATE sales_channel_orders o SET command_status='RECONCILING',updated_at=now() FROM queued q WHERE o.id=q.order_id AND o.tenant_id=q.tenant_id RETURNING o.id
+    )
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+    SELECT q.tenant_id,$1,'Integrações','CANAIS_VENDA','RECONCILE','SalesChannelOrder',q.order_id::text,'Reconciliação segura solicitada',true,'SQL_CONNECT',jsonb_build_object('commandId',q.id,'orderUpdated',(SELECT count(*) FROM changed)),now() FROM queued q
+  """,params:[{_expr:"auth.uid"},$id,$requestKey])
+}
+
+mutation MapSalesChannelOrderItem($itemId: UUID!, $productId: UUID!, $requestKey: String!) @auth(level: USER) @transaction {
+  _execute(sql: """
+    WITH actor AS (
+      SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages p ON p.page_key='CANAIS_VENDA' AND p.active
+      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=p.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=p.id AND rp.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_manage,rp.can_manage,false)
+    ), candidate AS (
+      SELECT i.*,o.connection_id,o.branch_id,o.status order_status,o.version order_version,c.provider,c.catalog_profile,p.id selected_product_id,p.name product_name,
+        COALESCE(NULLIF(i.external_product_id,''),NULLIF(i.ean,'')) partner_id,a.id actor_id
+      FROM sales_channel_order_items i JOIN sales_channel_orders o ON o.id=i.order_id AND o.tenant_id=i.tenant_id JOIN actor a ON a.tenant_id=i.tenant_id
+      JOIN sales_channel_connections c ON c.id=o.connection_id AND c.tenant_id=o.tenant_id AND c.provider='IFOOD' AND c.active AND c.deleted_at IS NULL AND c.enabled AND c.status='ACTIVE' AND c.authorization_status='AUTHORIZED'
+      JOIN products p ON p.id=$3 AND p.tenant_id=i.tenant_id AND p.active AND p.deleted_at IS NULL AND NOT p.bundle_product
+      WHERE i.id=$2 AND length(btrim($4)) BETWEEN 8 AND 150 AND COALESCE(NULLIF(i.external_product_id,''),NULLIF(i.ean,'')) IS NOT NULL
+        AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1 AND ub.tenant_id=o.tenant_id AND ub.branch_id=o.branch_id AND ub.active))
+        AND NOT EXISTS(SELECT 1 FROM sales_channel_product_mappings conflict WHERE conflict.tenant_id=i.tenant_id AND conflict.connection_id=o.connection_id AND conflict.active AND conflict.deleted_at IS NULL AND ((conflict.external_product_id=COALESCE(NULLIF(i.external_product_id,''),NULLIF(i.ean,'')) AND conflict.product_id<>p.id) OR (conflict.product_id=p.id AND conflict.external_product_id<>COALESCE(NULLIF(i.external_product_id,''),NULLIF(i.ean,'')))))
+    ), mapping_created AS (
+      INSERT INTO sales_channel_product_mappings(tenant_id,connection_id,product_id,mapping_key,external_mapping_key,external_product_id,external_product_name,sync_price,sync_stock,enabled,status,publication_status,needs_full_publication,sync_status,active,created_at,updated_at)
+      SELECT x.tenant_id,x.connection_id,x.selected_product_id,concat(x.tenant_id,':',x.connection_id,':',x.selected_product_id),concat(x.tenant_id,':',x.connection_id,':',x.partner_id),left(x.partner_id,160),left(x.name,240),false,false,true,'MAPPED','ACCEPTED',false,'COMPLETED',true,now(),now()
+      FROM candidate x WHERE NOT EXISTS(SELECT 1 FROM sales_channel_product_mappings m WHERE m.tenant_id=x.tenant_id AND m.connection_id=x.connection_id AND m.active AND m.deleted_at IS NULL AND (m.product_id=x.selected_product_id OR m.external_product_id=x.partner_id))
+      ON CONFLICT DO NOTHING RETURNING id
+    ), resolved AS (
+      SELECT x.*,COALESCE((SELECT m.product_id FROM sales_channel_product_mappings m WHERE m.tenant_id=x.tenant_id AND m.connection_id=x.connection_id AND m.active AND m.deleted_at IS NULL AND (m.external_product_id=x.partner_id OR m.product_id=x.selected_product_id) ORDER BY CASE WHEN m.external_product_id=x.partner_id AND m.product_id=x.selected_product_id THEN 0 ELSE 1 END LIMIT 1),x.selected_product_id) mapped_product_id
+      FROM candidate x CROSS JOIN (SELECT count(*) FROM mapping_created) barrier
+    ), mapped AS (
+      UPDATE sales_channel_order_items i SET product_id=x.mapped_product_id,mapping_status='MAPPED'
+      FROM resolved x JOIN sales_channel_orders o ON o.connection_id=x.connection_id AND o.tenant_id=x.tenant_id
+      WHERE i.order_id=o.id AND i.tenant_id=o.tenant_id AND (i.external_product_id=x.partner_id OR i.ean=x.partner_id) RETURNING i.order_id,i.tenant_id
+    ), queued AS (
+      INSERT INTO sales_channel_commands(id,tenant_id,connection_id,order_id,command_key,provider,action,payload,status,attempts,scheduled_at,created_by_uid,created_at,updated_at)
+      SELECT gen_random_uuid(),x.tenant_id,x.connection_id,x.order_id,concat(x.tenant_id,':ORDER:',x.order_id,':MAP_RECONCILE:',left(btrim($4),150)),x.provider,'RECONCILE_ORDER',jsonb_build_object('orderVersion',x.order_version,'mappedItemId',x.id),'QUEUED',0,now(),x.actor_id,now(),now()
+      FROM resolved x WHERE EXISTS(SELECT 1 FROM mapped m WHERE m.order_id=x.order_id) ON CONFLICT(command_key) DO NOTHING RETURNING order_id,tenant_id
+    ), order_changed AS (
+      UPDATE sales_channel_orders o SET commerce_status=CASE WHEN EXISTS(SELECT 1 FROM sales_channel_order_items i WHERE i.order_id=o.id AND i.product_id IS NULL) THEN 'BLOCKED_MAPPING' ELSE 'RECONCILING' END,commerce_error=CASE WHEN EXISTS(SELECT 1 FROM sales_channel_order_items i WHERE i.order_id=o.id AND i.product_id IS NULL) THEN o.commerce_error ELSE NULL END,command_status=CASE WHEN EXISTS(SELECT 1 FROM queued q WHERE q.order_id=o.id) THEN 'RECONCILING' ELSE o.command_status END,updated_at=now()
+      FROM resolved x WHERE o.id=x.order_id AND o.tenant_id=x.tenant_id RETURNING o.id,o.tenant_id
+    )
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+    SELECT x.tenant_id,$1,'Integrações','CANAIS_VENDA','MAP_ORDER_ITEM','SalesChannelOrderItem',x.id::text,'Item do pedido vinculado a produto interno',true,'SQL_CONNECT',jsonb_build_object('productId',x.mapped_product_id,'ordersUpdated',(SELECT count(*) FROM mapped),'reconciliationQueued',(SELECT count(*) FROM queued),'orderUpdated',(SELECT count(*) FROM order_changed)),now() FROM resolved x
+  """,params:[{_expr:"auth.uid"},$itemId,$productId,$requestKey])
 }
 
 mutation RequestSalesChannelSync($connectionId: UUID!, $scope: String!, $requestKey: String!) @auth(level: USER) @transaction {
@@ -2175,7 +2275,7 @@ mutation SystemClaimSalesChannelWork($provider: String!, $workerId: String!, $li
       WHERE (btrim($1)='' OR upper(btrim($1)) IN ('IFOOD','ZE_DELIVERY','NINETYNINE_FOOD')) AND length(btrim($2)) BETWEEN 8 AND 180
     ), command_candidates AS (
       SELECT q.id FROM sales_channel_commands q JOIN sales_channel_connections c ON c.id=q.connection_id AND c.tenant_id=q.tenant_id CROSS JOIN input i
-      WHERE (i.provider='' OR q.provider=i.provider) AND c.active AND c.deleted_at IS NULL AND c.enabled AND EXISTS(SELECT 1 FROM tenants tenant WHERE tenant.id=c.tenant_id AND tenant.active AND tenant.deleted_at IS NULL) AND EXISTS(SELECT 1 FROM branches branch WHERE branch.id=c.branch_id AND branch.tenant_id=c.tenant_id AND branch.active AND branch.deleted_at IS NULL) AND c.status='ACTIVE' AND c.authorization_status='AUTHORIZED'
+      WHERE (i.provider='' OR q.provider=i.provider) AND c.active AND c.deleted_at IS NULL AND c.enabled AND EXISTS(SELECT 1 FROM tenants tenant WHERE tenant.id=c.tenant_id AND tenant.active AND tenant.deleted_at IS NULL) AND EXISTS(SELECT 1 FROM branches branch WHERE branch.id=c.branch_id AND branch.tenant_id=c.tenant_id AND branch.active AND branch.deleted_at IS NULL) AND (c.status='ACTIVE' OR (c.status='DECOMMISSIONING' AND q.action='DEACTIVATE_PRODUCT')) AND c.authorization_status='AUTHORIZED'
         AND (q.status IN ('QUEUED','RETRY') OR (q.status='PROCESSING' AND q.lease_until<now())) AND q.attempts<8 AND q.scheduled_at<=now()
       ORDER BY q.scheduled_at,q.id FOR UPDATE OF q SKIP LOCKED LIMIT (SELECT batch_limit FROM input)
     ), claimed_commands AS (
@@ -2211,18 +2311,21 @@ mutation SystemUpdateSalesChannelConnection($connectionId: UUID!, $payload: Any!
         external_store_id=COALESCE(NULLIF(left(btrim(i.j->>'externalStoreId'),160),''),c.external_store_id),
         external_store_key=CASE WHEN NULLIF(btrim(i.j->>'externalStoreId'),'') IS NULL THEN c.external_store_key ELSE concat(c.tenant_id,':',c.provider,':',left(btrim(i.j->>'externalStoreId'),160)) END,
         provider_store_key=CASE WHEN NULLIF(btrim(i.j->>'externalStoreId'),'') IS NULL THEN c.provider_store_key ELSE concat(c.provider,':',left(btrim(i.j->>'externalStoreId'),160)) END,
-        status=CASE WHEN upper(i.j->>'status') IN ('DRAFT','PENDING_APPROVAL','ACTIVE','ERROR','SUSPENDED') THEN upper(i.j->>'status') ELSE c.status END,
+        status=CASE WHEN upper(i.j->>'status') IN ('DRAFT','PENDING_APPROVAL','ACTIVE','ERROR','SUSPENDED','DECOMMISSIONING','ARCHIVED') THEN upper(i.j->>'status') ELSE c.status END,
         authorization_status=CASE WHEN upper(i.j->>'authorizationStatus') IN ('NOT_CONNECTED','PENDING','PENDING_APPROVAL','AUTHORIZED','EXPIRED','REVOKED','ERROR') THEN upper(i.j->>'authorizationStatus') ELSE c.authorization_status END,
         secret_reference=COALESCE(NULLIF(left(btrim(i.j->>'secretReference'),500),''),c.secret_reference),
         authorized_at=CASE WHEN upper(i.j->>'authorizationStatus')='AUTHORIZED' THEN COALESCE(c.authorized_at,now()) ELSE c.authorized_at END,
         integration_mode=CASE WHEN upper(i.j->>'integrationMode') IN ('POLLING','WEBHOOK','HYBRID') THEN upper(i.j->>'integrationMode') ELSE c.integration_mode END,
         webhook_status=CASE WHEN upper(i.j->>'webhookStatus') IN ('NOT_CONFIGURED','PENDING','ACTIVE','ERROR','DISABLED') THEN upper(i.j->>'webhookStatus') ELSE c.webhook_status END,
+        catalog_profile=CASE WHEN upper(i.j->>'catalogProfile') IN ('RESTAURANT','GROCERY','UNVERIFIED') THEN upper(i.j->>'catalogProfile') ELSE c.catalog_profile END,
         token_expires_at=CASE WHEN NULLIF(i.j->>'tokenExpiresAt','') IS NULL THEN c.token_expires_at ELSE (i.j->>'tokenExpiresAt')::timestamptz END,
+        last_polling_at=CASE WHEN COALESCE((i.j->>'polled')::boolean,false) THEN now() ELSE c.last_polling_at END,
+        last_merchant_snapshot_at=CASE WHEN i.j ? 'merchantSnapshot' THEN now() ELSE c.last_merchant_snapshot_at END,
         last_health_check_at=now(),last_success_at=CASE WHEN COALESCE((i.j->>'success')::boolean,true) THEN now() ELSE c.last_success_at END,
         last_request_id=NULLIF(left(btrim(i.j->>'requestId'),180),''),last_error=NULLIF(left(btrim(i.j->>'error'),1000),''),
         consecutive_failures=CASE WHEN COALESCE((i.j->>'success')::boolean,true) THEN 0 ELSE LEAST(c.consecutive_failures+1,100000) END,
-        capabilities=COALESCE(i.j->'capabilities',c.capabilities),updated_at=now()
-      FROM input i WHERE c.id=$1 AND c.active AND c.enabled AND c.deleted_at IS NULL
+        capabilities=COALESCE(i.j->'capabilities',c.capabilities),merchant_snapshot=COALESCE(i.j->'merchantSnapshot',c.merchant_snapshot),updated_at=now()
+      FROM input i WHERE c.id=$1 AND c.active AND c.deleted_at IS NULL
         AND (NOT (i.j ? 'jobId') OR (COALESCE(c.external_store_id,'')=COALESCE(i.j->>'expectedExternalStoreId','') AND EXISTS(SELECT 1 FROM sales_channel_sync_jobs j WHERE j.id=(i.j->>'jobId')::uuid AND j.connection_id=c.id AND j.tenant_id=c.tenant_id AND j.status='PROCESSING' AND j.locked_by=i.j->>'workerId' AND j.lease_until>now()))) RETURNING c.id
     ) SELECT count(*) FROM changed
   """,params:[$connectionId,$payload])
@@ -2237,14 +2340,51 @@ mutation SystemRegisterSalesChannelEvent($connectionId: UUID!, $payload: Any!) @
         AND btrim(i.j->>'payloadHash') ~ '^[0-9a-f]{64}$'
         AND octet_length(COALESCE((i.j->'payload')::text,''))<=262144
     ), inserted AS (
-      INSERT INTO sales_channel_event_inbox(id,tenant_id,connection_id,event_key,provider,provider_event_id,event_type,request_id,payload_hash,payload,contains_personal_data,status,attempts,received_at,retention_until,created_at,updated_at)
-      SELECT gen_random_uuid(),c.tenant_id,c.id,concat(c.tenant_id,':',c.provider,':',left(btrim(i.j->>'eventId'),200)),c.provider,left(btrim(i.j->>'eventId'),200),left(btrim(i.j->>'eventType'),100),NULLIF(left(btrim(i.j->>'requestId'),180),''),left(btrim(i.j->>'payloadHash'),128),i.j->'payload',COALESCE((i.j->>'containsPersonalData')::boolean,false),'RECEIVED',0,now(),CASE WHEN COALESCE((i.j->>'containsPersonalData')::boolean,false) THEN now()+interval '30 days' ELSE now()+interval '90 days' END,now(),now()
+      INSERT INTO sales_channel_event_inbox(id,tenant_id,connection_id,event_key,provider,provider_event_id,event_type,request_id,payload_hash,original_payload_hash,source,payload,contains_personal_data,status,attempts,received_at,retention_until,created_at,updated_at)
+      SELECT gen_random_uuid(),c.tenant_id,c.id,concat(c.tenant_id,':',c.provider,':',left(btrim(i.j->>'eventId'),200)),c.provider,left(btrim(i.j->>'eventId'),200),left(btrim(i.j->>'eventType'),100),NULLIF(left(btrim(i.j->>'requestId'),180),''),left(btrim(i.j->>'payloadHash'),128),left(btrim(i.j->>'payloadHash'),128),CASE WHEN upper(i.j->>'source') IN ('WEBHOOK','POLLING') THEN upper(i.j->>'source') ELSE 'WEBHOOK' END,i.j->'payload',COALESCE((i.j->>'containsPersonalData')::boolean,false),'RECEIVED',0,now(),CASE WHEN COALESCE((i.j->>'containsPersonalData')::boolean,false) THEN now()+interval '30 days' ELSE now()+interval '90 days' END,now(),now()
       FROM connection c,input i ON CONFLICT(event_key) DO UPDATE
         SET updated_at=sales_channel_event_inbox.updated_at
         WHERE sales_channel_event_inbox.payload_hash=EXCLUDED.payload_hash
       RETURNING id
     ) SELECT count(*) FROM inserted
   """,params:[$connectionId,$payload])
+}
+
+# Persists up to 100 events for one merchant atomically. An exact duplicate is
+# counted as durable; a conflicting payload hash rejects the whole batch.
+mutation SystemRegisterSalesChannelEvents($connectionId: UUID!, $payloads: Any!) @auth(level: NO_ACCESS) @transaction {
+  _execute(sql: """
+    WITH raw AS (
+      SELECT value j FROM jsonb_array_elements(COALESCE($2::jsonb,'[]'::jsonb))
+    ), valid AS (
+      SELECT j FROM raw WHERE length(btrim(j->>'eventId')) BETWEEN 1 AND 200 AND length(btrim(j->>'eventType')) BETWEEN 1 AND 100
+        AND btrim(j->>'payloadHash') ~ '^[0-9a-f]{64}$' AND octet_length(COALESCE((j->'payload')::text,''))<=262144
+    ), guard AS (
+      SELECT (SELECT count(*) FROM raw) total,(SELECT count(*) FROM valid) valid_total,(SELECT count(DISTINCT btrim(j->>'eventId')) FROM valid) distinct_total
+    ), connection AS (
+      SELECT c.* FROM sales_channel_connections c,guard g WHERE c.id=$1 AND c.active AND c.deleted_at IS NULL AND c.enabled
+        AND c.status='ACTIVE' AND c.authorization_status='AUTHORIZED' AND g.total BETWEEN 1 AND 100 AND g.total=g.valid_total AND g.total=g.distinct_total
+        AND octet_length(COALESCE($2::jsonb,'[]'::jsonb)::text)<=1048576
+        AND NOT EXISTS(SELECT 1 FROM valid v JOIN sales_channel_event_inbox old ON old.event_key=concat(c.tenant_id,':',c.provider,':',left(btrim(v.j->>'eventId'),200)) WHERE old.payload_hash<>left(btrim(v.j->>'payloadHash'),128))
+    ), inserted AS (
+      INSERT INTO sales_channel_event_inbox(id,tenant_id,connection_id,event_key,provider,provider_event_id,event_type,request_id,payload_hash,original_payload_hash,source,payload,contains_personal_data,status,attempts,received_at,retention_until,created_at,updated_at)
+      SELECT gen_random_uuid(),c.tenant_id,c.id,concat(c.tenant_id,':',c.provider,':',left(btrim(i.j->>'eventId'),200)),c.provider,left(btrim(i.j->>'eventId'),200),left(btrim(i.j->>'eventType'),100),NULLIF(left(btrim(i.j->>'requestId'),180),''),left(btrim(i.j->>'payloadHash'),128),left(btrim(i.j->>'payloadHash'),128),CASE WHEN upper(i.j->>'source') IN ('WEBHOOK','POLLING') THEN upper(i.j->>'source') ELSE 'WEBHOOK' END,i.j->'payload',COALESCE((i.j->>'containsPersonalData')::boolean,false),'RECEIVED',0,now(),CASE WHEN COALESCE((i.j->>'containsPersonalData')::boolean,false) THEN now()+interval '30 days' ELSE now()+interval '90 days' END,now(),now()
+      FROM connection c CROSS JOIN valid i ON CONFLICT(event_key) DO UPDATE SET updated_at=sales_channel_event_inbox.updated_at
+        WHERE sales_channel_event_inbox.payload_hash=EXCLUDED.payload_hash
+      RETURNING id
+    ) SELECT count(*) FROM inserted
+  """,params:[$connectionId,$payloads])
+}
+
+mutation SystemMarkSalesChannelWebhookActive($connectionIds: Any!, $requestId: String!) @auth(level: NO_ACCESS) @transaction {
+  _execute(sql: """
+    WITH ids AS (SELECT DISTINCT value::uuid id FROM jsonb_array_elements_text(COALESCE($1::jsonb,'[]'::jsonb))), changed AS (
+      UPDATE sales_channel_connections c SET webhook_status='ACTIVE',integration_mode='HYBRID',last_health_check_at=now(),last_success_at=now(),last_request_id=NULLIF(left(btrim($2),180),''),last_error=NULL,consecutive_failures=0,updated_at=now()
+      FROM ids i WHERE c.id=i.id AND c.provider='IFOOD' AND c.active AND c.deleted_at IS NULL AND c.enabled AND c.status='ACTIVE' AND c.authorization_status='AUTHORIZED'
+        AND jsonb_array_length(COALESCE($1::jsonb,'[]'::jsonb)) BETWEEN 1 AND 100
+      RETURNING c.id
+    ) SELECT count(*) FROM changed
+  """,params:[$connectionIds,$requestId])
 }
 
 mutation SystemRecordSalesChannelEventResult($eventId: UUID!, $workerId: String!, $payload: Any!) @auth(level: NO_ACCESS) @transaction {
@@ -2266,22 +2406,50 @@ mutation SystemIngestSalesChannelOrder($connectionId: UUID!, $payload: Any!) @au
     WITH input AS (SELECT COALESCE($2::jsonb,'{}'::jsonb) j), connection AS (
       SELECT c.*,i.j FROM sales_channel_connections c CROSS JOIN input i WHERE c.id=$1 AND c.active AND c.deleted_at IS NULL AND c.enabled
         AND c.status='ACTIVE' AND c.authorization_status='AUTHORIZED' AND c.external_store_id=i.j->>'merchantId'
-        AND EXISTS(SELECT 1 FROM sales_channel_event_inbox e WHERE e.id=(i.j->>'eventId')::uuid AND e.connection_id=c.id AND e.tenant_id=c.tenant_id AND e.locked_by=i.j->>'workerId' AND e.status='PROCESSING' AND e.lease_until>now())
+        AND (EXISTS(SELECT 1 FROM sales_channel_event_inbox e WHERE e.id=NULLIF(i.j->>'eventId','')::uuid AND e.connection_id=c.id AND e.tenant_id=c.tenant_id AND e.locked_by=i.j->>'workerId' AND e.status='PROCESSING' AND e.lease_until>now())
+          OR EXISTS(SELECT 1 FROM sales_channel_commands q WHERE q.id=NULLIF(i.j->>'commandId','')::uuid AND q.connection_id=c.id AND q.tenant_id=c.tenant_id AND q.locked_by=i.j->>'workerId' AND q.status='PROCESSING' AND q.lease_until>now()))
         AND length(btrim(i.j->>'providerOrderId')) BETWEEN 1 AND 160 AND jsonb_typeof(COALESCE(i.j->'items','[]'::jsonb))='array'
         AND jsonb_array_length(COALESCE(i.j->'items','[]'::jsonb)) BETWEEN 1 AND 300
-    ), inserted AS (
-      INSERT INTO sales_channel_orders(id,tenant_id,branch_id,connection_id,idempotency_key,provider_order_id,display_code,status,partner_status,command_status,customer_name,order_type,payment_method,delivery_address,notes,subtotal_cents,delivery_fee_cents,discount_cents,total_cents,received_at,status_updated_at,version,created_at,updated_at)
-      SELECT gen_random_uuid(),c.tenant_id,c.branch_id,c.id,concat(c.tenant_id,':',c.provider,':',left(btrim(c.j->>'providerOrderId'),160)),left(btrim(c.j->>'providerOrderId'),160),left(COALESCE(NULLIF(btrim(c.j->>'displayCode'),''),btrim(c.j->>'providerOrderId')),80),'PENDING',NULLIF(left(btrim(c.j->>'partnerStatus'),80),''),'IDLE',NULLIF(left(btrim(c.j->>'customerName'),160),''),COALESCE(NULLIF(upper(left(btrim(c.j->>'orderType'),32)),''),'DELIVERY'),NULLIF(left(btrim(c.j->>'paymentMethod'),80),''),NULLIF(c.j->>'deliveryAddress',''),NULLIF(c.j->>'notes',''),GREATEST(COALESCE((c.j->>'subtotalCents')::bigint,0),0),GREATEST(COALESCE((c.j->>'deliveryFeeCents')::bigint,0),0),GREATEST(COALESCE((c.j->>'discountCents')::bigint,0),0),GREATEST(COALESCE((c.j->>'totalCents')::bigint,0),0),COALESCE(NULLIF(c.j->>'receivedAt','')::timestamptz,now()),now(),1,now(),now()
-      FROM connection c ON CONFLICT(idempotency_key) DO NOTHING RETURNING *
+    ), upserted AS (
+      INSERT INTO sales_channel_orders(id,tenant_id,branch_id,connection_id,idempotency_key,provider_order_id,display_code,status,partner_status,command_status,customer_name,order_type,payment_method,delivery_provider,delivery_address,notes,subtotal_cents,delivery_fee_cents,discount_cents,total_cents,scheduled_at,preparation_start_at,commerce_status,stock_reservation_status,snapshot_hash,received_at,status_updated_at,version,created_at,updated_at)
+      SELECT gen_random_uuid(),c.tenant_id,c.branch_id,c.id,concat(c.tenant_id,':',c.provider,':',left(btrim(c.j->>'providerOrderId'),160)),left(btrim(c.j->>'providerOrderId'),160),left(COALESCE(NULLIF(btrim(c.j->>'displayCode'),''),btrim(c.j->>'providerOrderId')),80),CASE WHEN upper(c.j->>'reconciledStatus') IN ('PENDING','ACCEPTED','REJECTED','COMPLETED','CANCELLED') THEN upper(c.j->>'reconciledStatus') ELSE 'PENDING' END,NULLIF(left(btrim(c.j->>'partnerStatus'),80),''),'IDLE',NULLIF(left(btrim(c.j->>'customerName'),160),''),COALESCE(NULLIF(upper(left(btrim(c.j->>'orderType'),32)),''),'DELIVERY'),NULLIF(left(btrim(c.j->>'paymentMethod'),80),''),CASE WHEN upper(c.j->>'deliveryProvider') IN ('IFOOD','MERCHANT','UNKNOWN') THEN upper(c.j->>'deliveryProvider') ELSE 'UNKNOWN' END,NULLIF(c.j->>'deliveryAddress',''),NULLIF(c.j->>'notes',''),GREATEST(COALESCE((c.j->>'subtotalCents')::bigint,0),0),GREATEST(COALESCE((c.j->>'deliveryFeeCents')::bigint,0),0),GREATEST(COALESCE((c.j->>'discountCents')::bigint,0),0),GREATEST(COALESCE((c.j->>'totalCents')::bigint,0),0),NULLIF(c.j->>'scheduledAt','')::timestamptz,NULLIF(c.j->>'preparationStartAt','')::timestamptz,'PENDING_MAPPING','NOT_RESERVED',NULLIF(left(btrim(c.j->>'snapshotHash'),128),''),COALESCE(NULLIF(c.j->>'receivedAt','')::timestamptz,now()),now(),1,now(),now()
+      FROM connection c ON CONFLICT(idempotency_key) DO UPDATE SET
+        display_code=EXCLUDED.display_code,status=CASE WHEN EXCLUDED.status='CANCELLED' THEN 'CANCELLED' WHEN sales_channel_orders.status IN ('COMPLETED','CANCELLED','REJECTED') THEN sales_channel_orders.status WHEN NULLIF(c.j->>'reconciledStatus','') IS NOT NULL THEN EXCLUDED.status ELSE sales_channel_orders.status END,partner_status=CASE WHEN sales_channel_orders.status IN ('REJECTED','CANCELLED') THEN sales_channel_orders.partner_status ELSE EXCLUDED.partner_status END,
+        customer_name=CASE WHEN sales_channel_orders.personal_data_purged_at IS NULL THEN EXCLUDED.customer_name END,order_type=EXCLUDED.order_type,payment_method=EXCLUDED.payment_method,delivery_provider=EXCLUDED.delivery_provider,delivery_address=CASE WHEN sales_channel_orders.personal_data_purged_at IS NULL THEN EXCLUDED.delivery_address END,notes=CASE WHEN sales_channel_orders.personal_data_purged_at IS NULL THEN EXCLUDED.notes END,
+        subtotal_cents=EXCLUDED.subtotal_cents,delivery_fee_cents=EXCLUDED.delivery_fee_cents,discount_cents=EXCLUDED.discount_cents,total_cents=EXCLUDED.total_cents,scheduled_at=EXCLUDED.scheduled_at,preparation_start_at=EXCLUDED.preparation_start_at,
+        snapshot_hash=EXCLUDED.snapshot_hash,status_updated_at=now(),version=sales_channel_orders.version+1,updated_at=now()
+      WHERE sales_channel_orders.connection_id=EXCLUDED.connection_id AND sales_channel_orders.tenant_id=EXCLUDED.tenant_id
+        AND sales_channel_orders.snapshot_hash IS DISTINCT FROM EXCLUDED.snapshot_hash
+      RETURNING *
+    ), released_old AS (
+      UPDATE sales_channel_stock_reservations r SET status='RELEASED',released_at=now(),updated_at=now()
+      FROM upserted o WHERE r.order_id=o.id AND r.tenant_id=o.tenant_id AND r.status='RESERVED' RETURNING r.order_id
+    ), cleared AS (
+      DELETE FROM sales_channel_order_items item USING upserted o WHERE item.order_id=o.id AND item.tenant_id=o.tenant_id RETURNING item.id
     ), items AS (
-      INSERT INTO sales_channel_order_items(id,tenant_id,order_id,external_item_id,name,quantity,unit_price_cents,total_cents,observation,created_at)
-      SELECT gen_random_uuid(),o.tenant_id,o.id,NULLIF(left(btrim(x.external_item_id),160),''),left(btrim(x.name),240),x.quantity,GREATEST(COALESCE(x.unit_price_cents,0),0),GREATEST(COALESCE(x.total_cents,0),0),NULLIF(left(btrim(x.observation),500),''),now()
-      FROM inserted o CROSS JOIN input i CROSS JOIN LATERAL jsonb_to_recordset(COALESCE(i.j->'items','[]'::jsonb)) AS x(external_item_id text,name text,quantity numeric,unit_price_cents bigint,total_cents bigint,observation text)
-      WHERE length(btrim(x.name))>0 AND x.quantity>0 RETURNING id
+      INSERT INTO sales_channel_order_items(id,tenant_id,order_id,product_id,external_item_id,external_product_id,ean,mapping_status,name,quantity,unit_price_cents,total_cents,observation,created_at)
+      SELECT gen_random_uuid(),o.tenant_id,o.id,m.product_id,NULLIF(left(btrim(x.external_item_id),160),''),NULLIF(left(btrim(x.external_product_id),160),''),NULLIF(left(btrim(x.ean),32),''),CASE WHEN m.product_id IS NULL THEN 'UNMAPPED' ELSE 'MAPPED' END,left(btrim(x.name),240),x.quantity,GREATEST(COALESCE(x.unit_price_cents,0),0),GREATEST(COALESCE(x.total_cents,0),0),CASE WHEN o.personal_data_purged_at IS NULL THEN NULLIF(left(btrim(x.observation),500),'') END,now()
+      FROM upserted o CROSS JOIN input i CROSS JOIN (SELECT count(*) FROM cleared) barrier
+      CROSS JOIN LATERAL jsonb_to_recordset(COALESCE(i.j->'items','[]'::jsonb)) AS x(external_item_id text,external_product_id text,ean text,name text,quantity numeric,unit_price_cents bigint,total_cents bigint,observation text)
+      LEFT JOIN LATERAL (
+        SELECT mapping.product_id FROM sales_channel_product_mappings mapping JOIN products p ON p.id=mapping.product_id AND p.tenant_id=mapping.tenant_id AND p.active AND p.deleted_at IS NULL
+        WHERE mapping.tenant_id=o.tenant_id AND mapping.connection_id=o.connection_id AND mapping.active AND mapping.enabled AND mapping.deleted_at IS NULL
+          AND (mapping.external_product_id IN (NULLIF(btrim(x.external_product_id),''),NULLIF(btrim(x.ean),'')) OR (p.internal_code IS NOT NULL AND p.internal_code=NULLIF(btrim(x.external_product_id),'')))
+        ORDER BY CASE WHEN mapping.external_product_id=NULLIF(btrim(x.ean),'') THEN 0 ELSE 1 END LIMIT 1
+      ) m ON true
+      WHERE length(btrim(x.name))>0 AND x.quantity>0 RETURNING *
+    ), mapping_state AS (
+      SELECT o.id,o.tenant_id,o.status,count(i.id) item_count,count(i.product_id) mapped_count
+      FROM upserted o LEFT JOIN items i ON i.order_id=o.id AND i.tenant_id=o.tenant_id GROUP BY o.id,o.tenant_id,o.status
+    ), order_mapping AS (
+      UPDATE sales_channel_orders o SET commerce_status=CASE WHEN m.item_count=0 OR m.item_count<>m.mapped_count THEN 'BLOCKED_MAPPING' WHEN o.status='PENDING' THEN 'READY' WHEN o.status='ACCEPTED' THEN 'RESERVATION_PENDING' WHEN o.status='COMPLETED' THEN 'POSTING_PENDING' ELSE 'RELEASED' END,
+        commerce_error=CASE WHEN m.item_count=0 OR m.item_count<>m.mapped_count THEN 'Vincule todos os itens do pedido a produtos do Insight Pad.' ELSE NULL END,stock_reservation_status=CASE WHEN o.status='ACCEPTED' AND m.item_count=m.mapped_count THEN 'PENDING' WHEN o.status IN ('REJECTED','CANCELLED') THEN 'RELEASED' ELSE o.stock_reservation_status END,updated_at=now()
+      FROM mapping_state m WHERE o.id=m.id AND o.tenant_id=m.tenant_id RETURNING o.*
     ), history AS (
       INSERT INTO sales_channel_status_history(id,tenant_id,connection_id,order_id,event_id,from_status,to_status,provider_status,origin,correlation_id,created_at)
-      SELECT gen_random_uuid(),o.tenant_id,o.connection_id,o.id,NULLIF(i.j->>'eventId','')::uuid,NULL,'PENDING',o.partner_status,'PARTNER_EVENT',o.provider_order_id,now() FROM inserted o CROSS JOIN input i RETURNING id
-    ) SELECT count(*)+(SELECT count(*) FROM items)+(SELECT count(*) FROM history) FROM inserted
+      SELECT gen_random_uuid(),o.tenant_id,o.connection_id,o.id,CASE WHEN NULLIF(i.j->>'commandId','') IS NULL THEN NULLIF(i.j->>'eventId','')::uuid END,o.status,o.status,o.partner_status,'ORDER_SNAPSHOT',COALESCE(NULLIF(i.j->>'eventId',''),NULLIF(i.j->>'commandId',''),o.provider_order_id),now()
+      FROM order_mapping o CROSS JOIN input i WHERE NOT EXISTS(SELECT 1 FROM sales_channel_status_history h WHERE h.order_id=o.id AND h.origin='ORDER_SNAPSHOT' AND h.correlation_id=COALESCE(NULLIF(i.j->>'eventId',''),NULLIF(i.j->>'commandId',''),o.provider_order_id)) RETURNING id
+    ) SELECT count(*)+(SELECT count(*) FROM items)+(SELECT count(*) FROM history)+(SELECT count(*) FROM released_old) FROM upserted
   """,params:[$connectionId,$payload])
 }
 
@@ -2291,7 +2459,9 @@ mutation SystemApplySalesChannelOrderEvent($connectionId: UUID!, $providerOrderI
   _execute(sql: """
     WITH input AS (SELECT $3::jsonb j), candidate AS (
       SELECT o.id,o.status old_status,o.pending_action,i.j,
-        CASE WHEN o.status IN ('COMPLETED','CANCELLED','REJECTED') THEN o.status
+        CASE WHEN i.j->>'status'='CANCELLED' THEN 'CANCELLED'
+          WHEN o.status IN ('CANCELLED','REJECTED') THEN o.status
+          WHEN o.status='COMPLETED' THEN o.status
           WHEN i.j->>'status' IN ('COMPLETED','CANCELLED','REJECTED') THEN i.j->>'status'
           WHEN o.status='ACCEPTED' THEN o.status ELSE i.j->>'status' END next_status
       FROM sales_channel_orders o JOIN sales_channel_connections c ON c.id=o.connection_id AND c.tenant_id=o.tenant_id CROSS JOIN input i
@@ -2306,7 +2476,7 @@ mutation SystemApplySalesChannelOrderEvent($connectionId: UUID!, $providerOrderI
       FOR UPDATE OF o
     ), changed AS (
       UPDATE sales_channel_orders o SET status=x.next_status,
-        partner_status=CASE WHEN x.old_status IN ('COMPLETED','CANCELLED','REJECTED') THEN o.partner_status ELSE left(x.j->>'partnerStatus',80) END,
+        partner_status=CASE WHEN x.old_status IN ('CANCELLED','REJECTED') OR (x.old_status='COMPLETED' AND x.next_status<>'CANCELLED') THEN o.partner_status ELSE left(x.j->>'partnerStatus',80) END,
         partner_event_at=(x.j->>'occurredAt')::timestamptz,
         pending_action=CASE WHEN x.next_status IN ('COMPLETED','CANCELLED','REJECTED') OR (x.next_status='ACCEPTED' AND o.pending_action='ACCEPT') OR (o.pending_action='COMPLETE' AND x.j->>'partnerStatus' IN ('READY_TO_PICKUP','RTP','DISPATCHED','DSP')) THEN NULL ELSE o.pending_action END,
         command_status=CASE WHEN x.next_status IN ('COMPLETED','CANCELLED','REJECTED') OR (x.next_status='ACCEPTED' AND o.pending_action='ACCEPT') OR (o.pending_action='COMPLETE' AND x.j->>'partnerStatus' IN ('READY_TO_PICKUP','RTP','DISPATCHED','DSP')) THEN 'CONFIRMED' ELSE o.command_status END,
@@ -2322,6 +2492,142 @@ mutation SystemApplySalesChannelOrderEvent($connectionId: UUID!, $providerOrderI
       INSERT INTO sales_channel_status_history(id,tenant_id,connection_id,order_id,event_id,from_status,to_status,provider_status,origin,reason,created_at)
       SELECT gen_random_uuid(),o.tenant_id,o.connection_id,o.id,(o.j->>'eventId')::uuid,o.old_status,o.status,o.partner_status,'PARTNER_EVENT_APPLIED',left(o.j->>'reason',500),now() FROM changed o RETURNING id
     ) SELECT count(*)+(SELECT count(*) FROM history)+(SELECT count(*) FROM confirmed) FROM changed
+  """,params:[$connectionId,$providerOrderId,$payload])
+}
+
+# Converts the partner lifecycle into Insight Pad commerce records atomically.
+# The event/command lease is evidence that only the trusted adapter can invoke
+# this operation. Reprocessing is harmless: sale and stock keys are stable.
+mutation SystemReconcileSalesChannelCommerce($connectionId: UUID!, $providerOrderId: String!, $payload: Any!) @auth(level: NO_ACCESS) @transaction {
+  _execute(sql: """
+    WITH input AS (SELECT COALESCE($3::jsonb,'{}'::jsonb) j), target AS (
+      SELECT o.*,i.j FROM sales_channel_orders o
+      JOIN sales_channel_connections c ON c.id=o.connection_id AND c.tenant_id=o.tenant_id
+      CROSS JOIN input i
+      WHERE o.connection_id=$1 AND o.provider_order_id=$2 AND c.provider='IFOOD' AND c.external_store_id=i.j->>'merchantId'
+        AND c.active AND c.deleted_at IS NULL AND c.enabled AND c.status='ACTIVE' AND c.authorization_status='AUTHORIZED'
+        AND (EXISTS(SELECT 1 FROM sales_channel_event_inbox e WHERE e.id=NULLIF(i.j->>'eventId','')::uuid AND e.connection_id=c.id AND e.tenant_id=c.tenant_id AND e.status='PROCESSING' AND e.locked_by=i.j->>'workerId' AND e.lease_until>now())
+          OR EXISTS(SELECT 1 FROM sales_channel_commands q WHERE q.id=NULLIF(i.j->>'commandId','')::uuid AND q.connection_id=c.id AND q.tenant_id=c.tenant_id AND ((q.status='PROCESSING' AND q.locked_by=i.j->>'workerId' AND q.lease_until>now()) OR (q.status IN ('CONFIRMED','AWAITING_PARTNER') AND q.processed_at>now()-interval '10 minutes'))))
+      FOR UPDATE OF o
+    ), item_state AS (
+      SELECT t.id order_id,t.tenant_id,count(i.id) item_count,count(i.product_id) mapped_count
+      FROM target t LEFT JOIN sales_channel_order_items i ON i.order_id=t.id AND i.tenant_id=t.tenant_id
+      GROUP BY t.id,t.tenant_id
+    ), required_stock AS (
+      SELECT t.id order_id,t.tenant_id,t.branch_id,COALESCE(pc.component_product_id,i.product_id) product_id,
+        sum(i.quantity*COALESCE(pc.quantity,1))::numeric(18,3) quantity
+      FROM target t JOIN item_state s ON s.order_id=t.id AND s.item_count=s.mapped_count AND s.item_count>0
+      JOIN sales_channel_order_items i ON i.order_id=t.id AND i.tenant_id=t.tenant_id AND i.product_id IS NOT NULL
+      JOIN products p ON p.id=i.product_id AND p.tenant_id=i.tenant_id AND p.active AND p.deleted_at IS NULL
+      LEFT JOIN product_components pc ON pc.tenant_id=p.tenant_id AND pc.parent_product_id=p.id AND p.bundle_product
+      GROUP BY t.id,t.tenant_id,t.branch_id,COALESCE(pc.component_product_id,i.product_id)
+    ), reservations AS (
+      INSERT INTO sales_channel_stock_reservations(order_id,product_id,tenant_id,branch_id,quantity,status,reserved_at,released_at,posted_at,updated_at)
+      SELECT rs.order_id,rs.product_id,rs.tenant_id,rs.branch_id,rs.quantity,'RESERVED',now(),NULL,NULL,now()
+      FROM required_stock rs JOIN target t ON t.id=rs.order_id AND t.status='ACCEPTED'
+      ON CONFLICT(order_id,product_id) DO UPDATE SET quantity=EXCLUDED.quantity,status='RESERVED',reserved_at=now(),released_at=NULL,posted_at=NULL,updated_at=now()
+      RETURNING order_id,product_id
+    ), released AS (
+      UPDATE sales_channel_stock_reservations r SET status='RELEASED',released_at=COALESCE(r.released_at,now()),updated_at=now()
+      FROM target t WHERE r.order_id=t.id AND r.tenant_id=t.tenant_id AND r.status='RESERVED' AND t.status IN ('PENDING','REJECTED','CANCELLED')
+      RETURNING r.order_id
+    ), payment_method_created AS (
+      INSERT INTO payment_methods(id,tenant_id,code,name,requires_change,active,created_at,updated_at)
+      SELECT gen_random_uuid(),t.tenant_id,'IFOOD_CHANNEL','iFood — pagamento no canal',false,true,now(),now()
+      FROM target t JOIN item_state s ON s.order_id=t.id AND s.item_count=s.mapped_count AND s.item_count>0
+      WHERE t.status='COMPLETED' AND NOT EXISTS(SELECT 1 FROM payment_methods pm WHERE pm.tenant_id=t.tenant_id AND pm.code='IFOOD_CHANNEL')
+      RETURNING id,tenant_id
+    ), payment_method AS (
+      SELECT id,tenant_id FROM payment_method_created
+      UNION ALL
+      SELECT pm.id,pm.tenant_id FROM payment_methods pm JOIN target t ON t.tenant_id=pm.tenant_id WHERE pm.code='IFOOD_CHANNEL'
+      LIMIT 1
+    ), sale_created AS (
+      INSERT INTO sales(id,tenant_id,branch_id,client_operation_id,source,external_reference,status,subtotal_cents,discount_cents,surcharge_cents,total_cents,change_cents,sold_at,created_by_uid,created_at,updated_at)
+      SELECT gen_random_uuid(),t.tenant_id,t.branch_id,left('channel:'||t.id::text,100),'IFOOD',t.provider_order_id,'COMPLETED',t.subtotal_cents,t.discount_cents,0,t.total_cents,0,COALESCE(t.completed_at,now()),'system:ifood',now(),now()
+      FROM target t JOIN item_state s ON s.order_id=t.id AND s.item_count=s.mapped_count AND s.item_count>0
+      WHERE t.status='COMPLETED' AND t.sale_id IS NULL AND NOT EXISTS(SELECT 1 FROM sales old WHERE old.tenant_id=t.tenant_id AND old.client_operation_id=left('channel:'||t.id::text,100))
+      RETURNING *
+    ), sale_selected AS (
+      SELECT s.* FROM sale_created s
+      UNION ALL
+      SELECT s.* FROM sales s JOIN target t ON s.tenant_id=t.tenant_id AND s.client_operation_id=left('channel:'||t.id::text,100)
+      LIMIT 1
+    ), sale_items_created AS (
+      INSERT INTO sale_items(id,tenant_id,sale_id,product_id,quantity,unit_list_price_cents,unit_sale_price_cents,unit_cost_cents,discount_cents,total_cents,status,created_at,updated_at)
+      SELECT gen_random_uuid(),s.tenant_id,s.id,i.product_id,i.quantity,i.unit_price_cents,i.unit_price_cents,p.cost_price_cents,0,i.total_cents,'ACTIVE',now(),now()
+      FROM sale_created s JOIN target t ON t.tenant_id=s.tenant_id
+      JOIN sales_channel_order_items i ON i.order_id=t.id AND i.tenant_id=t.tenant_id
+      JOIN products p ON p.id=i.product_id AND p.tenant_id=i.tenant_id
+      RETURNING sale_id
+    ), payment_created AS (
+      INSERT INTO sale_payments(id,tenant_id,sale_id,payment_method_id,amount_cents,sequence,external_reference,status,created_at)
+      SELECT gen_random_uuid(),s.tenant_id,s.id,pm.id,s.total_cents,1,s.external_reference,'CONFIRMED',now()
+      FROM sale_created s JOIN payment_method pm ON pm.tenant_id=s.tenant_id RETURNING sale_id
+    ), movement_type_created AS (
+      INSERT INTO stock_movement_types(id,tenant_id,code,name,direction,active,created_at,updated_at)
+      SELECT gen_random_uuid(),s.tenant_id,'SALE','Saída por venda','OUT',true,now(),now() FROM sale_created s
+      WHERE NOT EXISTS(SELECT 1 FROM stock_movement_types mt WHERE mt.tenant_id=s.tenant_id AND mt.code='SALE')
+      RETURNING id,tenant_id
+    ), movement_type AS (
+      SELECT id,tenant_id FROM movement_type_created
+      UNION ALL
+      SELECT mt.id,mt.tenant_id FROM stock_movement_types mt JOIN sale_created s ON s.tenant_id=mt.tenant_id WHERE mt.code='SALE'
+      LIMIT 1
+    ), movements AS (
+      INSERT INTO stock_movements(id,tenant_id,branch_id,product_id,movement_type_id,sale_id,client_operation_id,quantity,unit_gross_cents,unit_cost_cents,occurred_at,status,created_by_uid,created_at)
+      SELECT gen_random_uuid(),s.tenant_id,s.branch_id,rs.product_id,mt.id,s.id,s.client_operation_id,rs.quantity,0,p.cost_price_cents,s.sold_at,'POSTED','system:ifood',now()
+      FROM sale_created s JOIN target t ON t.tenant_id=s.tenant_id JOIN required_stock rs ON rs.order_id=t.id
+      JOIN products p ON p.id=rs.product_id AND p.tenant_id=rs.tenant_id JOIN movement_type mt ON mt.tenant_id=s.tenant_id
+      RETURNING tenant_id,branch_id,product_id,quantity,sale_id
+    ), balances AS (
+      INSERT INTO stock_balances(tenant_id,branch_id,product_id,quantity,average_cost_cents,version,updated_at)
+      SELECT tenant_id,branch_id,product_id,-quantity,0,1,now() FROM movements
+      ON CONFLICT(branch_id,product_id) DO UPDATE SET quantity=stock_balances.quantity+EXCLUDED.quantity,version=stock_balances.version+1,updated_at=now()
+      RETURNING product_id
+    ), reservations_posted AS (
+      UPDATE sales_channel_stock_reservations r SET status='POSTED',posted_at=now(),updated_at=now()
+      FROM movements m WHERE r.order_id IN (SELECT id FROM target) AND r.tenant_id=m.tenant_id AND r.product_id=m.product_id
+      RETURNING r.order_id
+    ), attached AS (
+      UPDATE sales_channel_orders o SET sale_id=s.id FROM sale_selected s JOIN target t ON t.tenant_id=s.tenant_id
+      WHERE o.id=t.id AND o.sale_id IS NULL RETURNING o.id,o.tenant_id,o.sale_id
+    ), cancelled_sale AS (
+      UPDATE sales s SET status='CANCELLED',cancelled_at=now(),cancellation_reason='Cancelado pelo iFood',updated_at=now()
+      FROM target t WHERE t.status IN ('CANCELLED','REJECTED') AND s.id=t.sale_id AND s.tenant_id=t.tenant_id AND s.status='COMPLETED'
+      RETURNING s.*
+    ), cancelled_items AS (
+      UPDATE sale_items i SET status='CANCELLED',updated_at=now() FROM cancelled_sale s WHERE i.sale_id=s.id AND i.tenant_id=s.tenant_id AND i.status='ACTIVE' RETURNING i.id
+    ), cancelled_payments AS (
+      UPDATE sale_payments p SET status='CANCELLED' FROM cancelled_sale s WHERE p.sale_id=s.id AND p.tenant_id=s.tenant_id AND p.status='CONFIRMED' RETURNING p.id
+    ), reversed AS (
+      UPDATE stock_movements m SET status='REVERSED',reversed_at=now() FROM cancelled_sale s WHERE m.sale_id=s.id AND m.tenant_id=s.tenant_id AND m.status='POSTED'
+      RETURNING m.tenant_id,m.branch_id,m.product_id,m.quantity
+    ), restored AS (
+      UPDATE stock_balances b SET quantity=b.quantity+r.quantity,version=b.version+1,updated_at=now() FROM reversed r
+      WHERE b.tenant_id=r.tenant_id AND b.branch_id=r.branch_id AND b.product_id=r.product_id RETURNING b.product_id
+    ), reservations_reversed AS (
+      UPDATE sales_channel_stock_reservations r SET status='REVERSED',released_at=COALESCE(r.released_at,now()),updated_at=now()
+      FROM target t WHERE r.order_id=t.id AND r.tenant_id=t.tenant_id AND r.status='POSTED' AND t.status IN ('REJECTED','CANCELLED')
+      RETURNING r.order_id
+    ), commerce AS (
+      UPDATE sales_channel_orders o SET
+        commerce_status=CASE
+          WHEN s.item_count=0 OR s.item_count<>s.mapped_count THEN 'BLOCKED_MAPPING'
+          WHEN o.status='COMPLETED' AND COALESCE(o.sale_id,a.sale_id) IS NOT NULL THEN 'POSTED'
+          WHEN o.status='COMPLETED' THEN 'POSTING_PENDING'
+          WHEN o.status='ACCEPTED' THEN CASE WHEN EXISTS(SELECT 1 FROM required_stock rs LEFT JOIN stock_balances sb ON sb.tenant_id=rs.tenant_id AND sb.branch_id=rs.branch_id AND sb.product_id=rs.product_id JOIN products p ON p.id=rs.product_id AND p.tenant_id=rs.tenant_id WHERE rs.order_id=o.id AND NOT p.allow_negative_stock AND COALESCE(sb.quantity,0)-COALESCE((SELECT sum(other.quantity) FROM sales_channel_stock_reservations other WHERE other.tenant_id=rs.tenant_id AND other.branch_id=rs.branch_id AND other.product_id=rs.product_id AND other.order_id<>o.id AND other.status='RESERVED'),0)<rs.quantity) THEN 'RESERVED_WITH_SHORTAGE' ELSE 'RESERVED' END
+          WHEN o.status IN ('REJECTED','CANCELLED') THEN CASE WHEN EXISTS(SELECT 1 FROM cancelled_sale) OR EXISTS(SELECT 1 FROM sales persisted WHERE persisted.id=o.sale_id AND persisted.status='CANCELLED') THEN 'REVERSED' ELSE 'RELEASED' END ELSE 'READY' END,
+        commerce_error=CASE WHEN s.item_count=0 OR s.item_count<>s.mapped_count THEN 'Vincule todos os itens do pedido a produtos do Insight Pad.' WHEN o.status='ACCEPTED' AND EXISTS(SELECT 1 FROM required_stock rs LEFT JOIN stock_balances sb ON sb.tenant_id=rs.tenant_id AND sb.branch_id=rs.branch_id AND sb.product_id=rs.product_id JOIN products p ON p.id=rs.product_id AND p.tenant_id=rs.tenant_id WHERE rs.order_id=o.id AND NOT p.allow_negative_stock AND COALESCE(sb.quantity,0)-COALESCE((SELECT sum(other.quantity) FROM sales_channel_stock_reservations other WHERE other.tenant_id=rs.tenant_id AND other.branch_id=rs.branch_id AND other.product_id=rs.product_id AND other.order_id<>o.id AND other.status='RESERVED'),0)<rs.quantity) THEN 'O pedido está reservado, mas o estoque disponível ficou insuficiente após considerar os demais pedidos aceitos.' ELSE NULL END,
+        stock_reservation_status=CASE WHEN o.status='COMPLETED' AND COALESCE(o.sale_id,a.sale_id) IS NOT NULL THEN 'POSTED' WHEN o.status='ACCEPTED' THEN 'RESERVED' WHEN o.status IN ('REJECTED','CANCELLED') AND (EXISTS(SELECT 1 FROM cancelled_sale) OR EXISTS(SELECT 1 FROM sales persisted WHERE persisted.id=o.sale_id AND persisted.status='CANCELLED')) THEN 'REVERSED' WHEN o.status IN ('REJECTED','CANCELLED') THEN 'RELEASED' ELSE 'NOT_RESERVED' END,
+        sale_id=COALESCE(o.sale_id,a.sale_id),updated_at=now()
+      FROM item_state s LEFT JOIN attached a ON a.id=s.order_id WHERE o.id=s.order_id AND o.tenant_id=s.tenant_id RETURNING o.*
+    ), audit AS (
+      INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+      SELECT o.tenant_id,'system:ifood','Integrações','CANAIS_VENDA','RECONCILE_COMMERCE','SalesChannelOrder',o.id::text,'Pedido do canal reconciliado com venda e estoque',true,'IFOOD_ADAPTER',jsonb_build_object('status',o.status,'commerceStatus',o.commerce_status,'saleId',o.sale_id,'reservationStatus',o.stock_reservation_status),now()
+      FROM commerce o WHERE EXISTS(SELECT 1 FROM sale_created) OR EXISTS(SELECT 1 FROM cancelled_sale) OR EXISTS(SELECT 1 FROM reservations)
+      RETURNING id
+    ) SELECT count(*)+(SELECT count(*) FROM sale_created)+(SELECT count(*) FROM movements)+(SELECT count(*) FROM cancelled_sale)+(SELECT count(*) FROM audit) FROM commerce
   """,params:[$connectionId,$providerOrderId,$payload])
 }
 
@@ -2342,7 +2648,7 @@ mutation SystemQueueDueSalesChannelSyncJobs($requestKey: String!) @auth(level: N
       ) promotion ON true
       WHERE c.provider='IFOOD' AND c.active AND c.deleted_at IS NULL AND c.enabled AND c.status='ACTIVE' AND c.authorization_status='AUTHORIZED' AND c.catalog_profile IN ('RESTAURANT','GROCERY')
         AND m.sync_status<>'ERROR' AND (m.sync_price OR m.sync_stock)
-        AND (m.last_synced_at IS NULL
+        AND (m.last_synced_at IS NULL OR (m.next_promotion_change_at IS NOT NULL AND m.next_promotion_change_at<=now())
           OR (m.sync_price AND GREATEST(p.updated_at,COALESCE(promotion.updated_at,p.updated_at))>m.last_synced_at)
           OR (m.sync_stock AND sb.updated_at>m.last_synced_at))
         AND length(btrim($1)) BETWEEN 8 AND 150
@@ -2351,7 +2657,20 @@ mutation SystemQueueDueSalesChannelSyncJobs($requestKey: String!) @auth(level: N
       INSERT INTO sales_channel_sync_jobs(id,tenant_id,connection_id,job_key,provider,job_type,status,scheduled_at,created_at,updated_at)
       SELECT gen_random_uuid(),d.tenant_id,d.id,concat(d.tenant_id,':AUTO:',d.id,':',floor(extract(epoch FROM now())/60)::bigint),d.provider,'FULL','QUEUED',now(),now(),now()
       FROM due d ON CONFLICT(job_key) DO NOTHING RETURNING id
-    ) SELECT count(*) FROM queued
+    ), reconciliation_due AS (
+      SELECT DISTINCT ON (o.id) o.id order_id,o.tenant_id,o.connection_id,c.provider,q.id source_command_id
+      FROM sales_channel_orders o JOIN sales_channel_connections c ON c.id=o.connection_id AND c.tenant_id=o.tenant_id AND c.provider='IFOOD' AND c.active AND c.deleted_at IS NULL AND c.enabled AND c.status='ACTIVE' AND c.authorization_status='AUTHORIZED'
+      JOIN sales_channel_commands q ON q.order_id=o.id AND q.tenant_id=o.tenant_id
+      WHERE length(btrim($1)) BETWEEN 8 AND 150 AND ((q.outcome_unknown AND q.reconciliation_due_at<=now()) OR (q.status='AWAITING_PARTNER' AND q.processed_at<now()-interval '10 minutes'))
+        AND NOT EXISTS(SELECT 1 FROM sales_channel_commands active WHERE active.order_id=o.id AND active.action='RECONCILE_ORDER' AND active.status IN ('QUEUED','RETRY','PROCESSING'))
+      ORDER BY o.id,q.created_at DESC
+    ), reconciliations AS (
+      INSERT INTO sales_channel_commands(id,tenant_id,connection_id,order_id,command_key,provider,action,payload,status,attempts,scheduled_at,created_at,updated_at)
+      SELECT gen_random_uuid(),d.tenant_id,d.connection_id,d.order_id,concat(d.tenant_id,':ORDER:',d.order_id,':AUTO_RECONCILE:',d.source_command_id),d.provider,'RECONCILE_ORDER',jsonb_build_object('sourceCommandId',d.source_command_id),'QUEUED',0,now(),now(),now()
+      FROM reconciliation_due d ON CONFLICT(command_key) DO NOTHING RETURNING order_id,tenant_id
+    ), orders_marked AS (
+      UPDATE sales_channel_orders o SET command_status='RECONCILING',updated_at=now() FROM reconciliations r WHERE o.id=r.order_id AND o.tenant_id=r.tenant_id RETURNING o.id
+    ) SELECT (SELECT count(*) FROM queued)+(SELECT count(*) FROM reconciliations)+(SELECT count(*) FROM orders_marked)
   """,params:[$requestKey])
 }
 
@@ -2359,10 +2678,17 @@ mutation SystemQueueDueSalesChannelSyncJobs($requestKey: String!) @auth(level: N
 # payloads. PII payloads have the shorter retention window set at ingestion.
 mutation SystemPurgeExpiredSalesChannelPayloads($requestKey: String!) @auth(level: NO_ACCESS) @transaction {
   _execute(sql: """
-    WITH purged AS (
-      UPDATE sales_channel_event_inbox SET payload='{}'::jsonb,payload_hash='44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a',contains_personal_data=false,updated_at=now()
+    WITH raw_payloads_purged AS (
+      UPDATE sales_channel_event_inbox SET payload='{}'::jsonb,payload_hash='44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a',contains_personal_data=false,purged_at=COALESCE(purged_at,now()),updated_at=now()
       WHERE retention_until<now() AND payload<>'{}'::jsonb AND length(btrim($1)) BETWEEN 8 AND 150 RETURNING id
-    ) SELECT count(*) FROM purged
+    ), normalized_orders_purged AS (
+      UPDATE sales_channel_orders SET customer_name=NULL,delivery_address=NULL,notes=NULL,personal_data_purged_at=now(),updated_at=now()
+      WHERE status IN ('COMPLETED','CANCELLED','REJECTED') AND personal_data_purged_at IS NULL
+        AND status_updated_at<now()-interval '90 days' AND length(btrim($1)) BETWEEN 8 AND 150 RETURNING id
+    ), item_observations_purged AS (
+      UPDATE sales_channel_order_items item SET observation=NULL FROM normalized_orders_purged orders
+      WHERE item.order_id=orders.id AND item.observation IS NOT NULL RETURNING item.id
+    ) SELECT (SELECT count(*) FROM raw_payloads_purged)+(SELECT count(*) FROM normalized_orders_purged)+(SELECT count(*) FROM item_observations_purged)
   """,params:[$requestKey])
 }
 
@@ -2370,6 +2696,7 @@ mutation SystemRecordSalesChannelCommandResult($commandId: UUID!, $workerId: Str
   _execute(sql: """
     WITH input AS (SELECT COALESCE($3::jsonb,'{}'::jsonb) j), command AS (
       UPDATE sales_channel_commands q SET status=CASE
+        WHEN COALESCE((i.j->>'outcomeUnknown')::boolean,false) THEN 'ERROR'
         WHEN COALESCE((i.j->>'success')::boolean,false) AND (
           NOT COALESCE((i.j->>'awaitingPartner')::boolean,true) OR EXISTS(
             SELECT 1 FROM sales_channel_orders current_order
@@ -2381,13 +2708,15 @@ mutation SystemRecordSalesChannelCommandResult($commandId: UUID!, $workerId: Str
         WHEN COALESCE((i.j->>'success')::boolean,false) THEN 'AWAITING_PARTNER'
         WHEN COALESCE((i.j->>'retryable')::boolean,false) AND q.attempts<7 THEN 'RETRY' ELSE 'ERROR' END,
         attempts=q.attempts+1,scheduled_at=CASE WHEN NOT COALESCE((i.j->>'success')::boolean,false) AND COALESCE((i.j->>'retryable')::boolean,false) AND q.attempts<7 THEN now()+interval '1 second'*LEAST(GREATEST(COALESCE((i.j->>'retryAfterSeconds')::int,5),5),900) ELSE q.scheduled_at END,
-        locked_at=NULL,locked_by=NULL,lease_until=NULL,processed_at=CASE WHEN COALESCE((i.j->>'success')::boolean,false) OR NOT COALESCE((i.j->>'retryable')::boolean,false) OR q.attempts>=7 THEN now() ELSE NULL END,partner_request_id=NULLIF(left(btrim(i.j->>'requestId'),180),''),response_code=NULLIF(i.j->>'responseCode','')::int,last_error=CASE WHEN COALESCE((i.j->>'success')::boolean,false) THEN NULL ELSE COALESCE(NULLIF(left(btrim(i.j->>'error'),1000),''),'Falha não detalhada pelo parceiro.') END,updated_at=now()
+        locked_at=NULL,locked_by=NULL,lease_until=NULL,processed_at=CASE WHEN COALESCE((i.j->>'success')::boolean,false) OR NOT COALESCE((i.j->>'retryable')::boolean,false) OR q.attempts>=7 THEN now() ELSE NULL END,partner_request_id=NULLIF(left(btrim(i.j->>'requestId'),180),''),response_code=NULLIF(i.j->>'responseCode','')::int,
+        outcome_unknown=COALESCE((i.j->>'outcomeUnknown')::boolean,false),reconciliation_due_at=CASE WHEN COALESCE((i.j->>'outcomeUnknown')::boolean,false) THEN now() ELSE NULL END,
+        last_error=CASE WHEN COALESCE((i.j->>'success')::boolean,false) THEN NULL WHEN COALESCE((i.j->>'outcomeUnknown')::boolean,false) THEN 'O iFood pode ter aplicado a alteração. O pedido será reconciliado antes de permitir nova tentativa.' ELSE COALESCE(NULLIF(left(btrim(i.j->>'error'),1000),''),'Falha não detalhada pelo parceiro.') END,updated_at=now()
       FROM input i WHERE q.id=$1 AND q.status='PROCESSING' AND q.locked_by=left($2,180) AND q.lease_until>now() RETURNING q.*,i.j
     ), changed AS (
       UPDATE sales_channel_orders o SET
         status=CASE WHEN o.status NOT IN ('COMPLETED','CANCELLED','REJECTED') AND COALESCE((q.j->>'success')::boolean,false) AND NOT COALESCE((q.j->>'awaitingPartner')::boolean,true) AND q.action='ACCEPT' AND q.j->>'partnerStatus'='SEPARATION_STARTED' THEN 'ACCEPTED' ELSE o.status END,
         pending_action=CASE WHEN COALESCE((q.j->>'success')::boolean,false) AND NOT COALESCE((q.j->>'awaitingPartner')::boolean,true) THEN NULL WHEN o.pending_action=q.action THEN o.pending_action ELSE NULL END,
-        command_status=CASE WHEN o.pending_action IS NULL THEN o.command_status WHEN COALESCE((q.j->>'success')::boolean,false) AND NOT COALESCE((q.j->>'awaitingPartner')::boolean,true) THEN 'CONFIRMED' WHEN COALESCE((q.j->>'success')::boolean,false) THEN 'AWAITING_PARTNER' WHEN q.status='RETRY' THEN 'QUEUED' ELSE 'ERROR' END,
+        command_status=CASE WHEN COALESCE((q.j->>'outcomeUnknown')::boolean,false) THEN 'RECONCILIATION_REQUIRED' WHEN o.pending_action IS NULL THEN o.command_status WHEN COALESCE((q.j->>'success')::boolean,false) AND NOT COALESCE((q.j->>'awaitingPartner')::boolean,true) THEN 'CONFIRMED' WHEN COALESCE((q.j->>'success')::boolean,false) THEN 'AWAITING_PARTNER' WHEN q.status='RETRY' THEN 'QUEUED' ELSE 'ERROR' END,
         partner_status=COALESCE(NULLIF(left(btrim(q.j->>'partnerStatus'),80),''),o.partner_status),accepted_at=CASE WHEN o.status NOT IN ('COMPLETED','CANCELLED','REJECTED') AND COALESCE((q.j->>'success')::boolean,false) AND NOT COALESCE((q.j->>'awaitingPartner')::boolean,true) AND q.action='ACCEPT' AND q.j->>'partnerStatus'='SEPARATION_STARTED' THEN COALESCE(o.accepted_at,now()) ELSE o.accepted_at END,last_partner_request_id=q.partner_request_id,status_updated_at=now(),version=o.version+1,updated_at=now()
       FROM command q WHERE o.id=q.order_id AND o.tenant_id=q.tenant_id RETURNING o.*,q.id command_id,q.action,q.payload command_payload,q.last_error
     ), history AS (
@@ -2396,7 +2725,15 @@ mutation SystemRecordSalesChannelCommandResult($commandId: UUID!, $workerId: Str
     ), connection_health AS (
       UPDATE sales_channel_connections c SET last_health_check_at=now(),last_success_at=CASE WHEN q.status IN ('CONFIRMED','AWAITING_PARTNER') THEN now() ELSE c.last_success_at END,last_request_id=q.partner_request_id,last_error=q.last_error,consecutive_failures=CASE WHEN q.status IN ('CONFIRMED','AWAITING_PARTNER') THEN 0 ELSE LEAST(c.consecutive_failures+1,100000) END,updated_at=now()
       FROM command q WHERE c.id=q.connection_id AND c.tenant_id=q.tenant_id RETURNING c.id
-    ) SELECT count(*)+(SELECT count(*) FROM history)+(SELECT count(*) FROM connection_health) FROM changed
+    ), decommissioned AS (
+      UPDATE sales_channel_connections c SET connection_key=CASE WHEN c.connection_key IS NULL THEN NULL ELSE concat(c.connection_key,':archived:',c.id) END,external_store_key=CASE WHEN c.external_store_key IS NULL THEN NULL ELSE concat(c.external_store_key,':archived:',c.id) END,provider_store_key=NULL,active=false,enabled=false,status='ARCHIVED',authorization_status='REVOKED',deleted_at=now(),updated_at=now()
+      FROM command q WHERE q.action='DEACTIVATE_PRODUCT' AND q.status='CONFIRMED' AND c.id=q.connection_id AND c.tenant_id=q.tenant_id AND c.status='DECOMMISSIONING'
+        AND NOT EXISTS(SELECT 1 FROM sales_channel_commands pending WHERE pending.connection_id=c.id AND pending.action='DEACTIVATE_PRODUCT' AND pending.id<>q.id AND pending.status<>'CONFIRMED')
+      RETURNING c.id,c.tenant_id
+    ), decommissioned_mappings AS (
+      UPDATE sales_channel_product_mappings m SET mapping_key=CASE WHEN m.mapping_key IS NULL THEN NULL ELSE concat(m.mapping_key,':archived:',m.id) END,external_mapping_key=CASE WHEN m.external_mapping_key IS NULL THEN NULL ELSE concat(m.external_mapping_key,':archived:',m.id) END,active=false,enabled=false,status='ARCHIVED',sync_status='CANCELLED',publication_status='ARCHIVED',deleted_at=now(),updated_at=now()
+      FROM decommissioned c WHERE m.connection_id=c.id AND m.tenant_id=c.tenant_id AND m.active RETURNING m.id
+    ) SELECT count(*)+(SELECT count(*) FROM history)+(SELECT count(*) FROM connection_health)+(SELECT count(*) FROM decommissioned)+(SELECT count(*) FROM decommissioned_mappings) FROM changed
   """,params:[$commandId,$workerId,$payload])
 }
 
@@ -2446,7 +2783,8 @@ mutation SystemRecordSalesChannelMappingResult($mappingId: UUID!, $payload: Any!
   _execute(sql: """
     WITH input AS (SELECT COALESCE($2::jsonb,'{}'::jsonb) j), changed AS (
       UPDATE sales_channel_product_mappings m SET sync_status=CASE WHEN COALESCE((i.j->>'success')::boolean,false) THEN 'COMPLETED' ELSE 'ERROR' END,
-        status=CASE WHEN COALESCE((i.j->>'success')::boolean,false) THEN 'MAPPED' ELSE m.status END,last_synced_at=CASE WHEN COALESCE((i.j->>'success')::boolean,false) THEN (i.j->>'snapshotAt')::timestamptz ELSE m.last_synced_at END,
+        status=CASE WHEN COALESCE((i.j->>'success')::boolean,false) THEN 'MAPPED' ELSE m.status END,publication_status=CASE WHEN COALESCE((i.j->>'success')::boolean,false) THEN 'ACCEPTED' ELSE 'ERROR' END,needs_full_publication=CASE WHEN COALESCE((i.j->>'success')::boolean,false) THEN false ELSE m.needs_full_publication END,last_synced_at=CASE WHEN COALESCE((i.j->>'success')::boolean,false) THEN (i.j->>'snapshotAt')::timestamptz ELSE m.last_synced_at END,
+        last_effective_promotion_cents=CASE WHEN COALESCE((i.j->>'success')::boolean,false) THEN NULLIF(i.j->>'effectivePromotionCents','')::bigint ELSE m.last_effective_promotion_cents END,next_promotion_change_at=CASE WHEN COALESCE((i.j->>'success')::boolean,false) THEN NULLIF(i.j->>'nextPromotionChangeAt','')::timestamptz ELSE m.next_promotion_change_at END,
         last_error=CASE WHEN COALESCE((i.j->>'success')::boolean,false) THEN NULL ELSE COALESCE(NULLIF(left(btrim(i.j->>'error'),1000),''),'Falha não detalhada na sincronização do produto.') END,version=m.version+1,updated_at=now()
       FROM input i WHERE m.id=$1 AND m.active AND m.enabled AND m.deleted_at IS NULL AND m.version=(i.j->>'expectedVersion')::int
         AND EXISTS(SELECT 1 FROM sales_channel_sync_jobs job JOIN sales_channel_connections c ON c.id=job.connection_id AND c.tenant_id=job.tenant_id WHERE job.id=(i.j->>'jobId')::uuid AND job.connection_id=m.connection_id AND job.tenant_id=m.tenant_id AND job.status='PROCESSING' AND job.locked_by=i.j->>'workerId' AND job.lease_until>now() AND c.active AND c.enabled AND c.deleted_at IS NULL) RETURNING m.id

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { executeMutation, executeQuery, getDataConnect, mutationRef, queryRef } from "firebase/data-connect";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { connectorConfig } from "@insightpad/dataconnect";
@@ -17,6 +17,8 @@ const mutationApplied = (result: unknown) => Boolean((result as { data?: { _exec
 
 export function ChannelOrderNotifier() {
   const permission = useAuth().permissions.CANAIS_VENDA;
+  const location = useLocation();
+  const ordersPageVisible = location.pathname === "/integracoes/canais/pedidos";
   const [order, setOrder] = useState<PendingOrder | null>(null);
   const [busy, setBusy] = useState(false);
   const [rejecting, setRejecting] = useState(false);
@@ -28,16 +30,17 @@ export function ChannelOrderNotifier() {
   const close = useCallback(() => { if (order) sessionStorage.setItem(`channel-order-seen:${order.id}`, String(order.version)); setOrder(null); setRejecting(false); setReason(""); setReasonCode(""); setReasons([]); setLoadingReasons(false); setError(""); }, [order]);
   useDialogAccessibility(Boolean(order), close);
   const check = useCallback(async () => {
-    if (!permission?.canAccess || document.visibilityState === "hidden") return;
+    if (!permission?.canUpdate || ordersPageVisible || document.visibilityState === "hidden") return;
     try {
       const result = await executeQuery(queryRef(dc, "LatestPendingSalesChannelOrder", { requestKey: crypto.randomUUID() }));
-      const next = (((result.data as { _select?: { data?: PendingOrder }[] })._select ?? [])[0]?.data) ?? null;
-      if (next && sessionStorage.getItem(`channel-order-seen:${next.id}`) !== String(next.version)) setOrder(next);
+      const pending = (((result.data as { _select?: { data?: { orders?: PendingOrder[] } }[] })._select ?? [])[0]?.data?.orders) ?? [];
+      const next = pending.find((item) => sessionStorage.getItem(`channel-order-seen:${item.id}`) !== String(item.version));
+      setOrder((current) => current ?? next ?? null);
     } catch (caught) { console.error("Falha ao verificar novos pedidos", caught); }
-  }, [permission?.canAccess]);
+  }, [ordersPageVisible, permission?.canUpdate]);
   useEffect(() => {
     const initial = window.setTimeout(() => void check(), 0);
-    const timer = window.setInterval(() => void check(), 30_000);
+    const timer = window.setInterval(() => void check(), 15_000);
     const onVisible = () => { if (document.visibilityState === "visible") void check(); };
     document.addEventListener("visibilitychange", onVisible);
     return () => { window.clearTimeout(initial); window.clearInterval(timer); document.removeEventListener("visibilitychange", onVisible); };

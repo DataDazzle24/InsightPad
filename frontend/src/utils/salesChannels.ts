@@ -1,31 +1,16 @@
-export type SalesChannelProvider = "IFOOD" | "ZE_DELIVERY" | "NINETYNINE_FOOD";
-
-export const SALES_CHANNEL_PROVIDERS: Record<
-  SalesChannelProvider,
-  { label: string; shortLabel: string; mode: string; capabilities: string[] }
-> = {
+export const SALES_CHANNEL_PROVIDERS = {
   IFOOD: {
     label: "iFood",
     shortLabel: "iFood",
     mode: "Eventos + confirmação",
     capabilities: ["Pedidos", "Aceite e recusa", "Catálogo", "Preço", "Estoque"],
   },
-  ZE_DELIVERY: {
-    label: "Zé Delivery",
-    shortLabel: "Zé Delivery",
-    mode: "Webhook + contingência",
-    capabilities: ["Pedidos", "Aceite e recusa", "Catálogo", "Preço", "Estoque"],
-  },
-  NINETYNINE_FOOD: {
-    label: "99Food",
-    shortLabel: "99Food",
-    mode: "Webhook",
-    capabilities: ["Pedidos", "Aceite e recusa", "Catálogo", "Preço", "Estoque"],
-  },
-};
+} as const;
+export type SalesChannelProvider = keyof typeof SALES_CHANNEL_PROVIDERS;
 
 export function salesChannelProviderLabel(provider: string) {
-  return SALES_CHANNEL_PROVIDERS[provider as SalesChannelProvider]?.label ?? provider;
+  const legacyLabels: Record<string, string> = { ZE_DELIVERY: "Zé Delivery", NINETYNINE_FOOD: "99Food" };
+  return SALES_CHANNEL_PROVIDERS[provider as SalesChannelProvider]?.label ?? legacyLabels[provider] ?? provider;
 }
 
 export function isSalesChannelOperational(connection: {

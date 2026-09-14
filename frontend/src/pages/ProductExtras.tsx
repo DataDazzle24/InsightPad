@@ -114,6 +114,10 @@ export function ProductExtras({
       setMessage("O preço promocional deve ser menor que o preço normal do produto.");
       return;
     }
+    if (priceCents * 100 >= Number(product.salePriceCents) * 95) {
+      setMessage("O desconto promocional precisa ser superior a 5% para publicação nos canais.");
+      return;
+    }
     if (!promotion.startsAt || !promotion.endsAt || ends <= starts) {
       setMessage("A data final deve ser posterior à data inicial.");
       return;

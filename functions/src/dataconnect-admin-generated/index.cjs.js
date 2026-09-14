@@ -441,6 +441,20 @@ function retrySalesChannelCommand(dcOrVarsOrOptions, varsOrOptions, options) {
 }
 exports.retrySalesChannelCommand = retrySalesChannelCommand;
 
+function requestSalesChannelOrderReconciliation(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeMutation('RequestSalesChannelOrderReconciliation', inputVars, inputOpts);
+}
+exports.requestSalesChannelOrderReconciliation = requestSalesChannelOrderReconciliation;
+
+function mapSalesChannelOrderItem(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeMutation('MapSalesChannelOrderItem', inputVars, inputOpts);
+}
+exports.mapSalesChannelOrderItem = mapSalesChannelOrderItem;
+
 function requestSalesChannelSync(dcOrVarsOrOptions, varsOrOptions, options) {
   const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
   dcInstance.useGen(true);
@@ -476,6 +490,20 @@ function systemRegisterSalesChannelEvent(dcOrVarsOrOptions, varsOrOptions, optio
 }
 exports.systemRegisterSalesChannelEvent = systemRegisterSalesChannelEvent;
 
+function systemRegisterSalesChannelEvents(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeMutation('SystemRegisterSalesChannelEvents', inputVars, inputOpts);
+}
+exports.systemRegisterSalesChannelEvents = systemRegisterSalesChannelEvents;
+
+function systemMarkSalesChannelWebhookActive(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeMutation('SystemMarkSalesChannelWebhookActive', inputVars, inputOpts);
+}
+exports.systemMarkSalesChannelWebhookActive = systemMarkSalesChannelWebhookActive;
+
 function systemRecordSalesChannelEventResult(dcOrVarsOrOptions, varsOrOptions, options) {
   const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
   dcInstance.useGen(true);
@@ -496,6 +524,13 @@ function systemApplySalesChannelOrderEvent(dcOrVarsOrOptions, varsOrOptions, opt
   return dcInstance.executeMutation('SystemApplySalesChannelOrderEvent', inputVars, inputOpts);
 }
 exports.systemApplySalesChannelOrderEvent = systemApplySalesChannelOrderEvent;
+
+function systemReconcileSalesChannelCommerce(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeMutation('SystemReconcileSalesChannelCommerce', inputVars, inputOpts);
+}
+exports.systemReconcileSalesChannelCommerce = systemReconcileSalesChannelCommerce;
 
 function systemQueueDueSalesChannelSyncJobs(dcOrVarsOrOptions, varsOrOptions, options) {
   const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
@@ -622,6 +657,13 @@ function systemIfoodConnectionByMerchant(dcOrVarsOrOptions, varsOrOptions, optio
   return dcInstance.executeQuery('SystemIfoodConnectionByMerchant', inputVars, inputOpts);
 }
 exports.systemIfoodConnectionByMerchant = systemIfoodConnectionByMerchant;
+
+function systemIfoodConnectionsByMerchants(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeQuery('SystemIfoodConnectionsByMerchants', inputVars, inputOpts);
+}
+exports.systemIfoodConnectionsByMerchants = systemIfoodConnectionsByMerchants;
 
 function systemSalesChannelMappingsForSync(dcOrVarsOrOptions, varsOrOptions, options) {
   const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
@@ -811,4 +853,11 @@ function systemSalesChannelOrderForActor(dcOrVarsOrOptions, varsOrOptions, optio
   return dcInstance.executeQuery('SystemSalesChannelOrderForActor', inputVars, inputOpts);
 }
 exports.systemSalesChannelOrderForActor = systemSalesChannelOrderForActor;
+
+function systemSalesChannelConnectionForActor(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeQuery('SystemSalesChannelConnectionForActor', inputVars, inputOpts);
+}
+exports.systemSalesChannelConnectionForActor = systemSalesChannelConnectionForActor;
 

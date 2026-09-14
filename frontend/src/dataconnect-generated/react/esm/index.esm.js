@@ -1,4 +1,4 @@
-import { verifySalesChannelOrderConstraintsRef, bootstrapSalesChannelsNavigationRef, bootstrapSalesChannelsNavigationV2Ref, bootstrapNavigationCatalogRef, createCategoryRef, updateCategoryRef, archiveCategoryRef, createSubcategoryRef, updateSubcategoryRef, archiveSubcategoryRef, restoreCategoryRef, restoreSubcategoryRef, createCategoriesBatchRef, createSubcategoriesBatchRef, saveBranchRef, setBranchStatusRef, saveSupplierRef, setSupplierStatusRef, saveCustomerRef, setCustomerStatusRef, saveProductRef, setProductStatusRef, saveProductComponentsRef, savePromotionRef, setPromotionStatusRef, setCategoriesStatusBatchRef, setSubcategoriesStatusBatchRef, setBranchesStatusBatchRef, setSuppliersStatusBatchRef, setCustomersStatusBatchRef, setProductsStatusBatchRef, ensureSalesDefaultsRef, postSaleRef, cancelSaleRef, createPlatformTenantRef, updatePlatformTenantRef, setPlatformTenantStatusRef, linkPlatformUserRef, setPlatformUserStatusRef, setPlatformRolePermissionRef, createPlatformInvoiceRef, updatePlatformInvoiceRef, voidPlatformInvoiceRef, settlePlatformInvoiceRef, reversePlatformPaymentRef, postStockAdjustmentRef, postStockTransferRef, saveStockBatchRef, reverseStockOperationRef, openCashSessionRef, registerCashMovementRef, claimDeviceSessionRef, touchDeviceSessionRef, releaseDeviceSessionRef, createSalesChannelConnectionRef, updateSalesChannelConnectionRef, archiveSalesChannelConnectionRef, createSalesChannelProductMappingRef, updateSalesChannelProductMappingRef, archiveSalesChannelProductMappingRef, queueSalesChannelOrderActionRef, retrySalesChannelCommandRef, requestSalesChannelSyncRef, requestSalesChannelAuthorizationRef, systemClaimSalesChannelWorkRef, systemUpdateSalesChannelConnectionRef, systemRegisterSalesChannelEventRef, systemRecordSalesChannelEventResultRef, systemIngestSalesChannelOrderRef, systemApplySalesChannelOrderEventRef, systemQueueDueSalesChannelSyncJobsRef, systemPurgeExpiredSalesChannelPayloadsRef, systemRecordSalesChannelCommandResultRef, systemRefreshSalesChannelOrderAfterPickingRef, systemRecordSalesChannelSyncResultRef, systemRecordSalesChannelMappingResultRef, closeCashSessionRef, getCurrentUserRef, getCurrentUserAccessRef, validateDeviceSessionRef, salesChannelOptionsRef, salesChannelConnectionsV2Ref, salesChannelProductMappingsV2Ref, salesChannelProductOptionsRef, salesChannelOperationsRef, systemSalesChannelWorkQueueRef, systemIfoodConnectionsForPollingRef, systemIfoodConnectionByMerchantRef, systemSalesChannelMappingsForSyncRef, salesChannelOrdersV2Ref, salesChannelWorkspaceRef, salesChannelOrdersRef, latestPendingSalesChannelOrderRef, salesWorkspaceRef, listSalesRef, saleDetailsRef, listCategoriesRef, listSubcategoriesRef, categoryOptionsRef, listBranchesRef, listSuppliersRef, listCustomersRef, listProductsRef, registrationOptionsRef, productComponentsRef, productPromotionsRef, platformAdminWorkspaceRef, platformBillingWorkspaceRef, platformBillingWorkspaceV2Ref, stockWorkspaceRef, dailyProfitDashboardRef, stockOperationDetailsRef, financialIndicatorsDashboardRef, operationalAnalyticsDashboardRef, systemSalesChannelOrderForActorRef, connectorConfig } from '../../esm/index.esm.js';
+import { verifySalesChannelOrderConstraintsRef, bootstrapSalesChannelsNavigationRef, bootstrapSalesChannelsNavigationV2Ref, bootstrapNavigationCatalogRef, createCategoryRef, updateCategoryRef, archiveCategoryRef, createSubcategoryRef, updateSubcategoryRef, archiveSubcategoryRef, restoreCategoryRef, restoreSubcategoryRef, createCategoriesBatchRef, createSubcategoriesBatchRef, saveBranchRef, setBranchStatusRef, saveSupplierRef, setSupplierStatusRef, saveCustomerRef, setCustomerStatusRef, saveProductRef, setProductStatusRef, saveProductComponentsRef, savePromotionRef, setPromotionStatusRef, setCategoriesStatusBatchRef, setSubcategoriesStatusBatchRef, setBranchesStatusBatchRef, setSuppliersStatusBatchRef, setCustomersStatusBatchRef, setProductsStatusBatchRef, ensureSalesDefaultsRef, postSaleRef, cancelSaleRef, createPlatformTenantRef, updatePlatformTenantRef, setPlatformTenantStatusRef, linkPlatformUserRef, setPlatformUserStatusRef, setPlatformRolePermissionRef, createPlatformInvoiceRef, updatePlatformInvoiceRef, voidPlatformInvoiceRef, settlePlatformInvoiceRef, reversePlatformPaymentRef, postStockAdjustmentRef, postStockTransferRef, saveStockBatchRef, reverseStockOperationRef, openCashSessionRef, registerCashMovementRef, claimDeviceSessionRef, touchDeviceSessionRef, releaseDeviceSessionRef, createSalesChannelConnectionRef, updateSalesChannelConnectionRef, archiveSalesChannelConnectionRef, createSalesChannelProductMappingRef, updateSalesChannelProductMappingRef, archiveSalesChannelProductMappingRef, queueSalesChannelOrderActionRef, retrySalesChannelCommandRef, requestSalesChannelOrderReconciliationRef, mapSalesChannelOrderItemRef, requestSalesChannelSyncRef, requestSalesChannelAuthorizationRef, systemClaimSalesChannelWorkRef, systemUpdateSalesChannelConnectionRef, systemRegisterSalesChannelEventRef, systemRegisterSalesChannelEventsRef, systemMarkSalesChannelWebhookActiveRef, systemRecordSalesChannelEventResultRef, systemIngestSalesChannelOrderRef, systemApplySalesChannelOrderEventRef, systemReconcileSalesChannelCommerceRef, systemQueueDueSalesChannelSyncJobsRef, systemPurgeExpiredSalesChannelPayloadsRef, systemRecordSalesChannelCommandResultRef, systemRefreshSalesChannelOrderAfterPickingRef, systemRecordSalesChannelSyncResultRef, systemRecordSalesChannelMappingResultRef, closeCashSessionRef, getCurrentUserRef, getCurrentUserAccessRef, validateDeviceSessionRef, salesChannelOptionsRef, salesChannelConnectionsV2Ref, salesChannelProductMappingsV2Ref, salesChannelProductOptionsRef, salesChannelOperationsRef, systemSalesChannelWorkQueueRef, systemIfoodConnectionsForPollingRef, systemIfoodConnectionByMerchantRef, systemIfoodConnectionsByMerchantsRef, systemSalesChannelMappingsForSyncRef, salesChannelOrdersV2Ref, salesChannelWorkspaceRef, salesChannelOrdersRef, latestPendingSalesChannelOrderRef, salesWorkspaceRef, listSalesRef, saleDetailsRef, listCategoriesRef, listSubcategoriesRef, categoryOptionsRef, listBranchesRef, listSuppliersRef, listCustomersRef, listProductsRef, registrationOptionsRef, productComponentsRef, productPromotionsRef, platformAdminWorkspaceRef, platformBillingWorkspaceRef, platformBillingWorkspaceV2Ref, stockWorkspaceRef, dailyProfitDashboardRef, stockOperationDetailsRef, financialIndicatorsDashboardRef, operationalAnalyticsDashboardRef, systemSalesChannelOrderForActorRef, systemSalesChannelConnectionForActorRef, connectorConfig } from '../../esm/index.esm.js';
 import { validateArgs, CallerSdkTypeEnum } from 'firebase/data-connect';
 import { useDataConnectQuery, useDataConnectMutation, validateReactArgs } from '@tanstack-query-firebase/react/data-connect';
 
@@ -496,6 +496,22 @@ export function useRetrySalesChannelCommand(dcOrOptions, options) {
   return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
 }
 
+export function useRequestSalesChannelOrderReconciliation(dcOrOptions, options) {
+  const { dc: dcInstance, vars: inputOpts } = validateArgs(connectorConfig, dcOrOptions, options);
+  function refFactory(vars) {
+    return requestSalesChannelOrderReconciliationRef(dcInstance, vars);
+  }
+  return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
+export function useMapSalesChannelOrderItem(dcOrOptions, options) {
+  const { dc: dcInstance, vars: inputOpts } = validateArgs(connectorConfig, dcOrOptions, options);
+  function refFactory(vars) {
+    return mapSalesChannelOrderItemRef(dcInstance, vars);
+  }
+  return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
 export function useRequestSalesChannelSync(dcOrOptions, options) {
   const { dc: dcInstance, vars: inputOpts } = validateArgs(connectorConfig, dcOrOptions, options);
   function refFactory(vars) {
@@ -536,6 +552,22 @@ export function useSystemRegisterSalesChannelEvent(dcOrOptions, options) {
   return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
 }
 
+export function useSystemRegisterSalesChannelEvents(dcOrOptions, options) {
+  const { dc: dcInstance, vars: inputOpts } = validateArgs(connectorConfig, dcOrOptions, options);
+  function refFactory(vars) {
+    return systemRegisterSalesChannelEventsRef(dcInstance, vars);
+  }
+  return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
+export function useSystemMarkSalesChannelWebhookActive(dcOrOptions, options) {
+  const { dc: dcInstance, vars: inputOpts } = validateArgs(connectorConfig, dcOrOptions, options);
+  function refFactory(vars) {
+    return systemMarkSalesChannelWebhookActiveRef(dcInstance, vars);
+  }
+  return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
 export function useSystemRecordSalesChannelEventResult(dcOrOptions, options) {
   const { dc: dcInstance, vars: inputOpts } = validateArgs(connectorConfig, dcOrOptions, options);
   function refFactory(vars) {
@@ -556,6 +588,14 @@ export function useSystemApplySalesChannelOrderEvent(dcOrOptions, options) {
   const { dc: dcInstance, vars: inputOpts } = validateArgs(connectorConfig, dcOrOptions, options);
   function refFactory(vars) {
     return systemApplySalesChannelOrderEventRef(dcInstance, vars);
+  }
+  return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
+export function useSystemReconcileSalesChannelCommerce(dcOrOptions, options) {
+  const { dc: dcInstance, vars: inputOpts } = validateArgs(connectorConfig, dcOrOptions, options);
+  function refFactory(vars) {
+    return systemReconcileSalesChannelCommerceRef(dcInstance, vars);
   }
   return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
 }
@@ -680,6 +720,12 @@ export function useSystemIfoodConnectionsForPolling(dcOrVars, varsOrOptions, opt
 export function useSystemIfoodConnectionByMerchant(dcOrVars, varsOrOptions, options) {
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateReactArgs(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   const ref = systemIfoodConnectionByMerchantRef(dcInstance, inputVars);
+  return useDataConnectQuery(ref, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
+export function useSystemIfoodConnectionsByMerchants(dcOrVars, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateReactArgs(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  const ref = systemIfoodConnectionsByMerchantsRef(dcInstance, inputVars);
   return useDataConnectQuery(ref, inputOpts, CallerSdkTypeEnum.GeneratedReact);
 }
 
@@ -842,5 +888,11 @@ export function useOperationalAnalyticsDashboard(dcOrVars, varsOrOptions, option
 export function useSystemSalesChannelOrderForActor(dcOrVars, varsOrOptions, options) {
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateReactArgs(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   const ref = systemSalesChannelOrderForActorRef(dcInstance, inputVars);
+  return useDataConnectQuery(ref, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
+export function useSystemSalesChannelConnectionForActor(dcOrVars, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateReactArgs(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  const ref = systemSalesChannelConnectionForActorRef(dcInstance, inputVars);
   return useDataConnectQuery(ref, inputOpts, CallerSdkTypeEnum.GeneratedReact);
 }

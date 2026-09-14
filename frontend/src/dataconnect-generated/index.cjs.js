@@ -876,6 +876,34 @@ exports.retrySalesChannelCommand = function retrySalesChannelCommand(dcOrVars, v
 }
 ;
 
+const requestSalesChannelOrderReconciliationRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RequestSalesChannelOrderReconciliation', inputVars);
+}
+requestSalesChannelOrderReconciliationRef.operationName = 'RequestSalesChannelOrderReconciliation';
+exports.requestSalesChannelOrderReconciliationRef = requestSalesChannelOrderReconciliationRef;
+
+exports.requestSalesChannelOrderReconciliation = function requestSalesChannelOrderReconciliation(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(requestSalesChannelOrderReconciliationRef(dcInstance, inputVars));
+}
+;
+
+const mapSalesChannelOrderItemRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'MapSalesChannelOrderItem', inputVars);
+}
+mapSalesChannelOrderItemRef.operationName = 'MapSalesChannelOrderItem';
+exports.mapSalesChannelOrderItemRef = mapSalesChannelOrderItemRef;
+
+exports.mapSalesChannelOrderItem = function mapSalesChannelOrderItem(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(mapSalesChannelOrderItemRef(dcInstance, inputVars));
+}
+;
+
 const requestSalesChannelSyncRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
@@ -946,6 +974,34 @@ exports.systemRegisterSalesChannelEvent = function systemRegisterSalesChannelEve
 }
 ;
 
+const systemRegisterSalesChannelEventsRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'SystemRegisterSalesChannelEvents', inputVars);
+}
+systemRegisterSalesChannelEventsRef.operationName = 'SystemRegisterSalesChannelEvents';
+exports.systemRegisterSalesChannelEventsRef = systemRegisterSalesChannelEventsRef;
+
+exports.systemRegisterSalesChannelEvents = function systemRegisterSalesChannelEvents(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(systemRegisterSalesChannelEventsRef(dcInstance, inputVars));
+}
+;
+
+const systemMarkSalesChannelWebhookActiveRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'SystemMarkSalesChannelWebhookActive', inputVars);
+}
+systemMarkSalesChannelWebhookActiveRef.operationName = 'SystemMarkSalesChannelWebhookActive';
+exports.systemMarkSalesChannelWebhookActiveRef = systemMarkSalesChannelWebhookActiveRef;
+
+exports.systemMarkSalesChannelWebhookActive = function systemMarkSalesChannelWebhookActive(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(systemMarkSalesChannelWebhookActiveRef(dcInstance, inputVars));
+}
+;
+
 const systemRecordSalesChannelEventResultRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
@@ -985,6 +1041,20 @@ exports.systemApplySalesChannelOrderEventRef = systemApplySalesChannelOrderEvent
 exports.systemApplySalesChannelOrderEvent = function systemApplySalesChannelOrderEvent(dcOrVars, vars) {
   const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
   return executeMutation(systemApplySalesChannelOrderEventRef(dcInstance, inputVars));
+}
+;
+
+const systemReconcileSalesChannelCommerceRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'SystemReconcileSalesChannelCommerce', inputVars);
+}
+systemReconcileSalesChannelCommerceRef.operationName = 'SystemReconcileSalesChannelCommerce';
+exports.systemReconcileSalesChannelCommerceRef = systemReconcileSalesChannelCommerceRef;
+
+exports.systemReconcileSalesChannelCommerce = function systemReconcileSalesChannelCommerce(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(systemReconcileSalesChannelCommerceRef(dcInstance, inputVars));
 }
 ;
 
@@ -1248,6 +1318,21 @@ exports.systemIfoodConnectionByMerchant = function systemIfoodConnectionByMercha
   
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(systemIfoodConnectionByMerchantRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const systemIfoodConnectionsByMerchantsRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'SystemIfoodConnectionsByMerchants', inputVars);
+}
+systemIfoodConnectionsByMerchantsRef.operationName = 'SystemIfoodConnectionsByMerchants';
+exports.systemIfoodConnectionsByMerchantsRef = systemIfoodConnectionsByMerchantsRef;
+
+exports.systemIfoodConnectionsByMerchants = function systemIfoodConnectionsByMerchants(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(systemIfoodConnectionsByMerchantsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;
 
@@ -1653,5 +1738,20 @@ exports.systemSalesChannelOrderForActor = function systemSalesChannelOrderForAct
   
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(systemSalesChannelOrderForActorRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const systemSalesChannelConnectionForActorRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'SystemSalesChannelConnectionForActor', inputVars);
+}
+systemSalesChannelConnectionForActorRef.operationName = 'SystemSalesChannelConnectionForActor';
+exports.systemSalesChannelConnectionForActorRef = systemSalesChannelConnectionForActorRef;
+
+exports.systemSalesChannelConnectionForActor = function systemSalesChannelConnectionForActor(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(systemSalesChannelConnectionForActorRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;

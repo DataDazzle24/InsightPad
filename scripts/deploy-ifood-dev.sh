@@ -8,7 +8,8 @@ readonly EXPECTED_SERVICE_ACCOUNT="insightpad-ifood-adapter@${FIREBASE_PROJECT}.
 readonly SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 readonly REPOSITORY="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 readonly ENV_FILE="${REPOSITORY}/functions/.env.${FIREBASE_PROJECT}"
-readonly FIREBASE=(npx --yes firebase-tools@15.29.0)
+readonly FIREBASE=(npx --yes firebase-tools@15.30.0)
+export NO_COLOR=1
 
 MIGRATION_LOG=""
 EXPERIMENT_DISABLED_BY_SCRIPT="false"
@@ -48,8 +49,7 @@ activate_node_22() {
 
 assert_expected_migration() {
   local diff_file="$1"
-  local add_count
-  local known_count
+  local diff_hash
 
   if grep -Eq 'matches SQL Connect Schema exactly|is compatible with SQL Connect Schema' "${diff_file}"; then
     return 1
@@ -59,31 +59,13 @@ assert_expected_migration() {
     fail "o diff SQL contém uma operação destrutiva ou inesperada. Nada foi migrado."
   fi
 
-  add_count="$(grep -Ec 'ADD COLUMN' "${diff_file}" || true)"
-  [[ "${add_count}" -ge 1 && "${add_count}" -le 5 ]] || fail "o diff SQL não contém somente o conjunto aditivo esperado."
-  known_count="$(grep -Ec 'ADD COLUMN "(catalog_profile|partner_event_at|cursor|image_url|scale_code)"' "${diff_file}" || true)"
-  [[ "${known_count}" == "${add_count}" ]] || fail "o diff SQL contém coluna não aprovada. Nada foi migrado."
-
-  if grep -q 'ADD COLUMN "catalog_profile"' "${diff_file}"; then
-    grep -Eq 'ADD COLUMN "catalog_profile" character varying\(32\).*NOT NULL.*DEFAULT.*UNVERIFIED|ADD COLUMN "catalog_profile" character varying\(32\).*DEFAULT.*UNVERIFIED.*NOT NULL' "${diff_file}" \
-      || fail "catalog_profile não apareceu com varchar(32), NOT NULL e DEFAULT UNVERIFIED."
+  diff_hash="$(sha256sum "${diff_file}" | awk '{print $1}')"
+  if [[ ! "${APPROVED_MIGRATION_SHA256:-}" =~ ^[a-f0-9]{64}$ ]]; then
+    printf 'Hash SHA-256 do diff completo: %s\n' "${diff_hash}" >&2
+    fail "revise todo o diff acima e execute novamente com APPROVED_MIGRATION_SHA256 igual ao hash exibido."
   fi
-  if grep -q 'ADD COLUMN "partner_event_at"' "${diff_file}"; then
-    grep -Eq 'ADD COLUMN "partner_event_at" (timestamptz|timestamp with time zone) NULL' "${diff_file}" \
-      || fail "partner_event_at timestamptz NULL não apareceu como esperado."
-  fi
-  if grep -q 'ADD COLUMN "cursor"' "${diff_file}"; then
-    grep -Eq 'ADD COLUMN "cursor" uuid NULL' "${diff_file}" \
-      || fail "cursor uuid NULL não apareceu como esperado."
-  fi
-  if grep -q 'ADD COLUMN "image_url"' "${diff_file}"; then
-    grep -Eq 'ADD COLUMN "image_url" character varying\(1000\) NULL' "${diff_file}" \
-      || fail "image_url não apareceu com varchar(1000) NULL como esperado."
-  fi
-  if grep -q 'ADD COLUMN "scale_code"' "${diff_file}"; then
-    grep -Eq 'ADD COLUMN "scale_code" character varying\(32\) NULL' "${diff_file}" \
-      || fail "scale_code não apareceu com varchar(32) NULL como esperado."
-  fi
+  [[ "${APPROVED_MIGRATION_SHA256}" == "${diff_hash}" ]] \
+    || fail "o diff SQL mudou depois da aprovação; o hash completo não corresponde. Nada foi migrado."
 
   return 0
 }
@@ -115,6 +97,7 @@ npm --prefix frontend ci
 (cd functions && node -e "require.resolve('@rolldown/binding-linux-x64-gnu')") \
   || fail "o binding nativo do Rolldown não foi instalado."
 "${FIREBASE[@]}" dataconnect:sdk:generate --project="${FIREBASE_PROJECT}"
+node scripts/normalize-dataconnect-sdk.mjs
 git diff --quiet || fail "a geração do SDK alterou arquivos; versione os SDKs antes do deploy."
 npm --prefix functions run lint
 npm --prefix functions test
@@ -128,7 +111,7 @@ MIGRATION_LOG="$(mktemp)"
 "${FIREBASE[@]}" dataconnect:sql:diff --project="${FIREBASE_PROJECT}" 2>&1 | tee "${MIGRATION_LOG}"
 
 if assert_expected_migration "${MIGRATION_LOG}"; then
-  printf 'Foram encontradas somente colunas aditivas aprovadas. Digite MIGRAR para aplicar no DEV: '
+  printf 'Foram encontradas alterações aditivas aprovadas pelo hash completo. Digite MIGRAR para aplicar no DEV: '
   read -r confirmation </dev/tty
   [[ "${confirmation}" == "MIGRAR" ]] || fail "migração cancelada pelo operador."
 
@@ -158,9 +141,14 @@ functions=(
   onIfoodSyncRequested
   onIfoodOrderActionQueued
   onIfoodOrderActionRetried
+  onIfoodOrderReconciliationRequested
+  onIfoodOrderItemMapped
   onIfoodEventRegistered
+  onIfoodEventsRegistered
   ifoodWebhook
   ifoodCancellationReasons
+  ifoodAvailableMerchants
+  ifoodMerchantOperations
   reconcileIfood
   purgeIfoodPayloads
 )
@@ -173,6 +161,7 @@ readonly HOST="https://${FIREBASE_PROJECT}.web.app"
 readonly WEBHOOK="${HOST}/api/ifood/webhook"
 
 hosting_status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' "${HOST}")"
+hosting_headers="$(curl --silent --show-error --head "${HOST}")"
 get_status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' "${WEBHOOK}")"
 unsigned_status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' --request POST --header 'Content-Type: application/json' --data '{"id":"unsigned-smoke-test"}' "${WEBHOOK}")"
 invalid_type_status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' --request POST --header 'Content-Type: text/plain' --data '{}' "${WEBHOOK}")"
@@ -181,9 +170,12 @@ invalid_type_status="$(curl --silent --show-error --output /dev/null --write-out
 [[ "${get_status}" == "405" ]] || fail "GET do webhook respondeu HTTP ${get_status}, esperado 405."
 [[ "${unsigned_status}" == "401" ]] || fail "POST sem assinatura respondeu HTTP ${unsigned_status}, esperado 401."
 [[ "${invalid_type_status}" == "415" ]] || fail "Content-Type inválido respondeu HTTP ${invalid_type_status}, esperado 415."
+grep -Eiq '^cache-control:.*no-cache.*no-store' <<<"${hosting_headers}" || fail "a raiz do Hosting não publicou a política no-cache esperada."
+grep -Eiq '^content-security-policy:' <<<"${hosting_headers}" || fail "o Hosting não publicou Content-Security-Policy."
 
 echo "Hosting: 200"
 echo "Webhook GET: 405"
 echo "Webhook sem assinatura: 401"
 echo "Webhook Content-Type inválido: 415"
+echo "Hosting cache/CSP: protegidos"
 echo "Deploy DEV concluído. Produção ${PRODUCTION_PROJECT} não foi alterada."

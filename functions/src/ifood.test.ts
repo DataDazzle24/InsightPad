@@ -140,6 +140,6 @@ describe("cliente iFood", () => {
   });
 
   it("envia promoção zero para remover um preço promocional anterior", () => {
-    expect(groceryProductFromSource({ barcode: "7890000000000", name: "Produto", basePriceCents: "1990", includeDetails: false, sendPrice: true, sendStock: false, activate: false })).toMatchObject({ prices: { price: 19.9, promotionPrice: 0 } });
+    expect(groceryProductFromSource({ barcode: "7890000000000", name: "Produto", basePriceCents: "1990", includeDetails: false, sendPrice: true, sendStock: false, activate: false })).toMatchObject({ prices: { price: 19.9, promotionPrice: null } });
   });
 });

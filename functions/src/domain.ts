@@ -5,12 +5,12 @@ export type JsonRecord = Record<string, unknown>;
 
 const ifoodEventSchema = z.object({
   id: z.string().trim().min(1).max(200),
-  code: z.string().trim().max(100).optional(),
-  fullCode: z.string().trim().max(100).optional(),
+  code: z.string().trim().min(1).max(100).optional(),
+  fullCode: z.string().trim().min(1).max(100).optional(),
   orderId: z.string().trim().max(160).optional(),
   merchantId: z.string().trim().max(160).optional(),
-  createdAt: z.string().trim().max(80).optional(),
-}).passthrough();
+  createdAt: z.string().trim().max(80).refine((value) => !Number.isNaN(Date.parse(value)), "Data de evento inválida.").optional(),
+}).passthrough().refine((event) => Boolean(event.code || event.fullCode), "Evento iFood sem código.");
 
 export type IfoodEvent = z.infer<typeof ifoodEventSchema>;
 
@@ -21,16 +21,22 @@ export type NormalizedOrder = {
   customerName: string;
   orderType: string;
   paymentMethod: string;
+  deliveryProvider: IfoodDeliveryProvider;
   deliveryAddress: string;
   notes: string;
   subtotalCents: number;
   deliveryFeeCents: number;
   discountCents: number;
   totalCents: number;
+  scheduledAt: string;
+  preparationStartAt: string;
+  snapshotHash: string;
   receivedAt: string;
   eventId: string;
   items: Array<{
     external_item_id: string;
+    external_product_id: string;
+    ean: string;
     name: string;
     quantity: number;
     unit_price_cents: number;
@@ -84,6 +90,12 @@ export function eventType(event: IfoodEvent): string {
   return firstString(event, "fullCode", "code") || "UNKNOWN";
 }
 
+export function isIfoodOrderEvent(event: IfoodEvent): boolean {
+  if (!eventOrderId(event)) return false;
+  const code = eventType(event).toUpperCase();
+  return Boolean(ORDER_EVENTS[code]) || code === "ORDER_PATCHED" || code === "ORDER_CANCELLATION_REQUEST" || code.startsWith("HANDSHAKE_") || code.startsWith("SEPARATION_") || code.startsWith("DELIVERY_");
+}
+
 export type OrderStatus = "PENDING" | "ACCEPTED" | "REJECTED" | "COMPLETED" | "CANCELLED";
 
 // Only explicit lifecycle events change an order. Cancellation requests,
@@ -99,7 +111,18 @@ const ORDER_EVENTS: Record<string, OrderStatus> = {
 };
 
 export function eventStatus(event: IfoodEvent): OrderStatus | undefined {
-  return ORDER_EVENTS[eventType(event).toUpperCase()];
+  return orderStatusFromCode(eventType(event));
+}
+
+export function orderStatusFromCode(code: string): OrderStatus | undefined {
+  const normalized = code.trim().toUpperCase();
+  if (ORDER_EVENTS[normalized]) return ORDER_EVENTS[normalized];
+  if (["PLACED", "PENDING"].includes(normalized)) return "PENDING";
+  if (["CONFIRMED", "PREPARATION_STARTED", "SEPARATION_STARTED", "SEPARATION_ENDED", "READY_TO_PICKUP", "DISPATCHED"].includes(normalized)) return "ACCEPTED";
+  if (["CONCLUDED", "COMPLETED", "DELIVERED"].includes(normalized)) return "COMPLETED";
+  if (["CANCELLED", "ORDER_CANCELLED"].includes(normalized)) return "CANCELLED";
+  if (["REJECTED", "ORDER_REJECTED"].includes(normalized)) return "REJECTED";
+  return undefined;
 }
 
 export function assertOrderIdentity(order: unknown, orderId: string, merchantId: string): void {
@@ -216,6 +239,8 @@ function flattenItems(items: unknown[]): NormalizedOrder["items"] {
       // catalog identifiers so Grocery item modifiers cannot target a SKU by
       // mistake when the same product appears more than once in the order.
       external_item_id: firstString(item, "uniqueId", "id", "externalCode"),
+      external_product_id: firstString(item, "externalCode", "product.externalCode", "product.id", "id"),
+      ean: firstString(item, "ean", "barcode", "product.ean", "product.barcode").slice(0, 32),
       name: name.slice(0, 240),
       quantity,
       unit_price_cents: unitCents,
@@ -244,6 +269,12 @@ function benefitTotal(order: unknown): number {
   return asArray(readPath(order, "benefits")).reduce<number>((sum, item) => sum + amount(item, "value"), 0);
 }
 
+function isoTimestamp(value: unknown, ...paths: string[]): string {
+  const text = firstString(value, ...paths);
+  const parsed = Date.parse(text);
+  return text && !Number.isNaN(parsed) ? new Date(parsed).toISOString() : "";
+}
+
 export function normalizeIfoodOrder(order: unknown, inboxEventId: string, sourceEvent?: IfoodEvent): NormalizedOrder {
   const providerOrderId = firstString(order, "id", "orderId") || (sourceEvent ? eventOrderId(sourceEvent) : "");
   if (!providerOrderId) throw new Error("O pedido recebido do iFood não possui identificador.");
@@ -252,23 +283,27 @@ export function normalizeIfoodOrder(order: unknown, inboxEventId: string, source
   const payments = asArray(readPath(order, "payments.methods"));
   const payment = payments[0];
   const partnerStatus = firstString(order, "orderStatus", "status") || (sourceEvent ? eventType(sourceEvent) : "PLACED");
-  return {
+  const normalized = {
     providerOrderId: providerOrderId.slice(0, 160),
     displayCode: (firstString(order, "displayId", "displayCode") || providerOrderId).slice(0, 80),
     partnerStatus: partnerStatus.slice(0, 80),
     customerName: firstString(order, "customer.name").slice(0, 160),
     orderType: normalizeOrderType(firstString(order, "orderType", "delivery.mode")),
     paymentMethod: firstString(payment, "method", "type", "card.brand").slice(0, 80),
+    deliveryProvider: ifoodDeliveryProvider(order),
     deliveryAddress: deliveryAddress(order),
     notes: firstString(order, "additionalInfo", "observations", "delivery.observations").slice(0, 1000),
     subtotalCents: amount(order, "total.subTotal", "total.subtotal"),
     deliveryFeeCents: amount(order, "total.deliveryFee"),
     discountCents: amount(order, "total.benefits") || benefitTotal(order),
     totalCents: amount(order, "total.orderAmount", "total.total", "orderAmount"),
-    receivedAt: firstString(order, "createdAt") || sourceEvent?.createdAt || new Date().toISOString(),
+    scheduledAt: isoTimestamp(order, "schedule.deliveryDateTimeStart", "schedule.deliveryDateTime", "scheduledAt"),
+    preparationStartAt: isoTimestamp(order, "schedule.preparationStartDateTime", "preparationStartAt"),
+    receivedAt: isoTimestamp(order, "createdAt") || sourceEvent?.createdAt || new Date().toISOString(),
     eventId: inboxEventId,
     items,
   };
+  return { ...normalized, snapshotHash: sha256(JSON.stringify(normalized)) };
 }
 
 export function sha256(value: Buffer | string): string {

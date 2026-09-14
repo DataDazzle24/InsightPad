@@ -59,7 +59,7 @@ describe("PostgreSQL: lifecycle and scope", () => {
     expect((await operation(db,"SystemSalesChannelOrderForActor",["actor",ids.order])).rows).toHaveLength(0);
     const result = await operation(db,"SalesChannelOptions",["actor","request-123"]);
     expect((result.rows[0] as {data:{connections:unknown[]}}).data.connections).toHaveLength(0);
-    const operations = await operation(db,"SalesChannelOperations",["actor",null,"request-123"]);
+    const operations = await operation(db,"SalesChannelOperations",["actor",null,50,"request-123"]);
     expect((operations.rows[0] as {data:{summary:{eventFailures:number;queuedCommands:number;syncFailures:number}}}).data.summary).toEqual({eventFailures:0,queuedCommands:0,syncFailures:0});
     const workspace = await operation(db,"SalesChannelWorkspace",["actor","request-123"]);
     expect((workspace.rows[0] as {data:{connections:unknown[];mappings:unknown[]}}).data).toMatchObject({connections:[],mappings:[]});
@@ -99,9 +99,9 @@ describe("PostgreSQL: lifecycle and scope", () => {
     expect((await db.query("SELECT id FROM sales_channel_commands WHERE action='ACCEPT'")).rows).toHaveLength(1);
   });
   it("does not retarget a connection with existing orders or mappings", async () => {
-    await operation(db,"UpdateSalesChannelConnection",["actor",ids.connection,"Loja","different-merchant",true,"RESTAURANT"]);
+    await operation(db,"UpdateSalesChannelConnection",["actor",ids.connection,"Loja","different-merchant",true]);
     expect((await db.query<{external_store_id:string}>("SELECT external_store_id FROM sales_channel_connections")).rows[0]?.external_store_id).toBe("merchant-1");
-    await operation(db,"UpdateSalesChannelConnection",["actor",ids.connection,"Loja","merchant-1",true,"GROCERY"]);
+    await operation(db,"UpdateSalesChannelConnection",["actor",ids.connection,"Loja","merchant-1",true]);
     expect((await db.query<{catalog_profile:string}>("SELECT catalog_profile FROM sales_channel_connections")).rows[0]?.catalog_profile).toBe("RESTAURANT");
   });
 
@@ -113,6 +113,15 @@ describe("PostgreSQL: lifecycle and scope", () => {
     expect(Number((first.rows[0] as {count:unknown}).count)).toBe(1);
     expect(Number((duplicate.rows[0] as {count:unknown}).count)).toBe(1);
     expect(Number((conflict.rows[0] as {count:unknown}).count)).toBe(0);
+  });
+
+  it("stores event batches atomically and rejects a conflicting hash", async () => {
+    const payload = (id:string,hash:string) => ({eventId:id,eventType:"PLACED",payloadHash:hash,payload:{id},containsPersonalData:true,source:"WEBHOOK"});
+    const first = await operation(db,"SystemRegisterSalesChannelEvents",[ids.connection,[payload("batch-1","a".repeat(64)),payload("batch-2","b".repeat(64))]]);
+    expect(Number((first.rows[0] as {count:unknown}).count)).toBe(2);
+    const conflict = await operation(db,"SystemRegisterSalesChannelEvents",[ids.connection,[payload("batch-1","c".repeat(64)),payload("batch-3","d".repeat(64))]]);
+    expect(Number((conflict.rows[0] as {count:unknown}).count)).toBe(0);
+    expect((await db.query("SELECT provider_event_id FROM sales_channel_event_inbox WHERE provider_event_id='batch-3'")).rows).toHaveLength(0);
   });
 
   it("queues catalog work only for an assigned Restaurant or Grocery connection", async () => {
@@ -131,14 +140,14 @@ describe("PostgreSQL: lifecycle and scope", () => {
 
   it("counts only the latest synchronization outcome as an active failure", async () => {
     await db.exec("UPDATE sales_channel_sync_jobs SET status='ERROR',created_at=now()-interval '1 minute'");
-    const failed = await operation(db,"SalesChannelOperations",["actor",ids.connection,"request-failed"]);
+    const failed = await operation(db,"SalesChannelOperations",["actor",ids.connection,50,"request-failed"]);
     expect(Number((failed.rows[0] as {data:{summary:{syncFailures:unknown}}}).data.summary.syncFailures)).toBe(1);
 
     await db.query(
       "INSERT INTO sales_channel_sync_jobs(id,tenant_id,connection_id,job_key,provider,job_type,status,created_at) VALUES ($1,$2,$3,'authorization-recovered','IFOOD','FULL','COMPLETED',now())",
       ["00000000-0000-4000-8000-000000000014",ids.tenant,ids.connection],
     );
-    const recovered = await operation(db,"SalesChannelOperations",["actor",ids.connection,"request-recovered"]);
+    const recovered = await operation(db,"SalesChannelOperations",["actor",ids.connection,50,"request-recovered"]);
     expect(Number((recovered.rows[0] as {data:{summary:{syncFailures:unknown}}}).data.summary.syncFailures)).toBe(0);
   });
 });
@@ -151,6 +160,24 @@ describe("PostgreSQL: catalog checkpoints", () => {
     expect((await db.query<{scale_code:string,image_url:string}>("SELECT scale_code,image_url FROM products WHERE id=$1",[ids.product])).rows[0]).toEqual({scale_code:"BAL-01",image_url:"https://cdn.example.com/produto.jpg"});
     await operation(db,"SaveProduct",["actor",ids.product,{...payload,imageUrl:"http://inseguro.example.com/produto.jpg"},[]]);
     expect((await db.query<{image_url:string}>("SELECT image_url FROM products WHERE id=$1",[ids.product])).rows[0]?.image_url).toBe("https://cdn.example.com/produto.jpg");
+  });
+  it("accepts every safe package range exposed by the product interface", async () => {
+    await db.exec("UPDATE app_pages SET page_key='CAD_PRODUTO'");
+    const payload = {name:"Produto",categoryId:ids.category,internalCode:"SKU-1",ean:"7890000000000",salePriceCents:2500,costPriceCents:1000,minimumStock:0,maximumStock:10,weightedProduct:false,bundleProduct:false,allowNegativeStock:false,sizeType:"ML",size:"1000"};
+    await operation(db,"SaveProduct",["actor",ids.product,payload,[]]);
+    expect((await db.query<{size_type:string;size:string}>("SELECT size_type,size FROM products WHERE id=$1",[ids.product])).rows[0]).toEqual({size_type:"ML",size:"1000"});
+    await operation(db,"SaveProduct",["actor",ids.product,{...payload,sizeType:"UN",size:"5"},[]]);
+    expect((await db.query<{size_type:string;size:string}>("SELECT size_type,size FROM products WHERE id=$1",[ids.product])).rows[0]).toEqual({size_type:"UN",size:"5"});
+  });
+  it("requires a channel-compatible promotional discount above five percent", async () => {
+    await db.exec("UPDATE app_pages SET page_key='CAD_PRODUTO'");
+    await db.query("UPDATE products SET sale_price_cents=10000 WHERE id=$1",[ids.product]);
+    const starts = new Date(Date.now()+60_000).toISOString();
+    const ends = new Date(Date.now()+3_600_000).toISOString();
+    await operation(db,"SavePromotion",["actor",null,ids.product,9500,starts,ends]);
+    expect((await db.query("SELECT id FROM promotions")).rows).toHaveLength(0);
+    await operation(db,"SavePromotion",["actor",null,ids.product,9499,starts,ends]);
+    expect((await db.query("SELECT id FROM promotions")).rows).toHaveLength(1);
   });
   it("blocks changing the Grocery barcode until the old partner item is deactivated", async () => {
     await db.exec("UPDATE app_pages SET page_key='CAD_PRODUTO'; UPDATE sales_channel_connections SET catalog_profile='GROCERY'; UPDATE sales_channel_product_mappings SET external_product_id='7890000000000'");
@@ -165,6 +192,11 @@ describe("PostgreSQL: catalog checkpoints", () => {
     await db.exec("UPDATE products SET scale_code='BAL-01'");
     await operation(db,"CreateSalesChannelProductMapping",["actor",ids.connection,ids.product,"","",true,true]);
     expect((await db.query<{external_product_id:string}>("SELECT external_product_id FROM sales_channel_product_mappings")).rows[0]?.external_product_id).toBe("BAL-01");
+  });
+  it("keeps bundle products out of channel mappings until component stock is supported", async () => {
+    await db.exec("DELETE FROM sales_channel_product_mappings; UPDATE products SET bundle_product=true");
+    await operation(db,"CreateSalesChannelProductMapping",["actor",ids.connection,ids.product,"item-combo","Combo",true,true]);
+    expect((await db.query("SELECT id FROM sales_channel_product_mappings")).rows).toHaveLength(0);
   });
   it("deactivates Grocery products on archive and forces full publication on restore", async () => {
     await db.exec("DELETE FROM sales_channel_commands; UPDATE app_pages SET page_key='CAD_PRODUTO'; UPDATE sales_channel_connections SET catalog_profile='GROCERY'; UPDATE sales_channel_product_mappings SET last_synced_at=now(),sync_status='COMPLETED'");
@@ -203,5 +235,95 @@ describe("PostgreSQL: catalog checkpoints", () => {
   it("requires job ownership to read product values", async () => {
     expect((await operation(db,"SystemSalesChannelMappingsForSync",[ids.job,"worker-123","request-123"])).rows).toHaveLength(1);
     expect((await operation(db,"SystemSalesChannelMappingsForSync",[ids.job,"other-worker","request-123"])).rows).toHaveLength(0);
+  });
+});
+
+describe("PostgreSQL: channel commerce", () => {
+  const evidence = () => ({merchantId:"merchant-1",eventId:ids.event,workerId:"worker-123"});
+  async function mappedOrder(status: "ACCEPTED" | "COMPLETED" = "ACCEPTED") {
+    await db.query("UPDATE products SET cost_price_cents=500,allow_negative_stock=false WHERE id=$1",[ids.product]);
+    await db.query("UPDATE sales_channel_order_items SET product_id=$1,mapping_status='MAPPED',external_product_id='item-1',unit_price_cents=1500,total_cents=1500 WHERE id=$2",[ids.product,ids.orderItem]);
+    await db.query("UPDATE sales_channel_orders SET status=$1::text,pending_action=NULL,command_status='CONFIRMED',subtotal_cents=1500,total_cents=1500,completed_at=CASE WHEN $1::text='COMPLETED' THEN now() ELSE NULL END WHERE id=$2",[status,ids.order]);
+    await db.query("INSERT INTO stock_balances(tenant_id,branch_id,product_id,quantity) VALUES ($1,$2,$3,10)",[ids.tenant,ids.branch,ids.product]);
+  }
+
+  it("reserves mapped stock exactly once after partner acceptance", async () => {
+    await mappedOrder();
+    await operation(db,"SystemReconcileSalesChannelCommerce",[ids.connection,"order-1",evidence()]);
+    await operation(db,"SystemReconcileSalesChannelCommerce",[ids.connection,"order-1",evidence()]);
+    expect((await db.query<{quantity:string;status:string}>("SELECT quantity::text,status FROM sales_channel_stock_reservations")).rows).toEqual([{quantity:"1.000",status:"RESERVED"}]);
+    expect(await order()).toMatchObject({commerce_status:"RESERVED",stock_reservation_status:"RESERVED",sale_id:null});
+    expect((await db.query("SELECT id FROM sales")).rows).toHaveLength(0);
+  });
+
+  it("creates one sale and one stock movement when completion is confirmed", async () => {
+    await mappedOrder("COMPLETED");
+    await operation(db,"SystemReconcileSalesChannelCommerce",[ids.connection,"order-1",evidence()]);
+    await operation(db,"SystemReconcileSalesChannelCommerce",[ids.connection,"order-1",evidence()]);
+    expect((await db.query<{source:string;external_reference:string;status:string}>("SELECT source,external_reference,status FROM sales")).rows).toEqual([{source:"IFOOD",external_reference:"order-1",status:"COMPLETED"}]);
+    expect((await db.query("SELECT id FROM sale_items")).rows).toHaveLength(1);
+    expect((await db.query("SELECT id FROM sale_payments")).rows).toHaveLength(1);
+    expect((await db.query<{quantity:string;status:string}>("SELECT quantity::text,status FROM stock_movements")).rows).toEqual([{quantity:"1.000",status:"POSTED"}]);
+    expect((await db.query<{quantity:string}>("SELECT quantity::text FROM stock_balances")).rows[0]?.quantity).toBe("9.000");
+    expect(await order()).toMatchObject({commerce_status:"POSTED",stock_reservation_status:"POSTED"});
+  });
+
+  it("reverses sale and stock once after a partner cancellation", async () => {
+    await mappedOrder("COMPLETED");
+    await operation(db,"SystemReconcileSalesChannelCommerce",[ids.connection,"order-1",evidence()]);
+    await db.query("UPDATE sales_channel_orders SET status='CANCELLED' WHERE id=$1",[ids.order]);
+    await operation(db,"SystemReconcileSalesChannelCommerce",[ids.connection,"order-1",evidence()]);
+    await operation(db,"SystemReconcileSalesChannelCommerce",[ids.connection,"order-1",evidence()]);
+    expect((await db.query<{status:string}>("SELECT status FROM sales")).rows[0]?.status).toBe("CANCELLED");
+    expect((await db.query<{status:string}>("SELECT status FROM stock_movements")).rows[0]?.status).toBe("REVERSED");
+    expect((await db.query<{quantity:string}>("SELECT quantity::text FROM stock_balances")).rows[0]?.quantity).toBe("10.000");
+    expect(await order()).toMatchObject({commerce_status:"REVERSED",stock_reservation_status:"REVERSED"});
+  });
+
+  it("blocks commerce until every item has an internal product", async () => {
+    await db.query("UPDATE sales_channel_orders SET status='COMPLETED',subtotal_cents=1500,total_cents=1500 WHERE id=$1",[ids.order]);
+    await operation(db,"SystemReconcileSalesChannelCommerce",[ids.connection,"order-1",evidence()]);
+    expect(await order()).toMatchObject({commerce_status:"BLOCKED_MAPPING",sale_id:null});
+    expect((await db.query("SELECT id FROM sales")).rows).toHaveLength(0);
+  });
+
+  it("maps a channel item and queues a read-only reconciliation", async () => {
+    await db.query("UPDATE sales_channel_order_items SET external_product_id='item-1' WHERE id=$1",[ids.orderItem]);
+    await db.exec("DELETE FROM sales_channel_commands");
+    await operation(db,"MapSalesChannelOrderItem",["actor",ids.orderItem,ids.product,"mapping-request"]);
+    expect((await db.query<{product_id:string;mapping_status:string}>("SELECT product_id,mapping_status FROM sales_channel_order_items WHERE id=$1",[ids.orderItem])).rows[0]).toEqual({product_id:ids.product,mapping_status:"MAPPED"});
+    expect((await db.query<{action:string;status:string}>("SELECT action,status FROM sales_channel_commands")).rows[0]).toEqual({action:"RECONCILE_ORDER",status:"QUEUED"});
+  });
+});
+
+describe("PostgreSQL: hardening and decommissioning", () => {
+  it("preserves the original event hash after privacy purge", async () => {
+    const payload = {eventId:"provider-event-purge",eventType:"PLACED",payloadHash:"c".repeat(64),payload:{id:"provider-event-purge"},containsPersonalData:true,source:"POLLING"};
+    await operation(db,"SystemRegisterSalesChannelEvent",[ids.connection,payload]);
+    await db.exec("UPDATE sales_channel_event_inbox SET retention_until=now()-interval '1 second' WHERE provider_event_id='provider-event-purge'");
+    await operation(db,"SystemPurgeExpiredSalesChannelPayloads",["purge-request"]);
+    expect((await db.query<{payload:unknown;original_payload_hash:string;source:string;purged_at:string|null}>("SELECT payload,original_payload_hash,source,purged_at FROM sales_channel_event_inbox WHERE provider_event_id='provider-event-purge'")).rows[0]).toMatchObject({payload:{},original_payload_hash:"c".repeat(64),source:"POLLING"});
+  });
+
+  it("removes normalized personal data from terminal orders after retention", async () => {
+    await db.query("UPDATE sales_channel_orders SET status='COMPLETED',customer_name='Cliente',delivery_address='Rua privada',notes='Referência privada',status_updated_at=now()-interval '91 days' WHERE id=$1",[ids.order]);
+    await db.query("UPDATE sales_channel_order_items SET observation='Interfone privado' WHERE id=$1",[ids.orderItem]);
+    await operation(db,"SystemPurgeExpiredSalesChannelPayloads",["privacy-purge-request"]);
+    expect((await db.query<{customer_name:string|null;delivery_address:string|null;notes:string|null;personal_data_purged_at:string|null}>("SELECT customer_name,delivery_address,notes,personal_data_purged_at FROM sales_channel_orders WHERE id=$1",[ids.order])).rows[0]).toMatchObject({customer_name:null,delivery_address:null,notes:null});
+    expect((await db.query<{observation:string|null}>("SELECT observation FROM sales_channel_order_items WHERE id=$1",[ids.orderItem])).rows[0]?.observation).toBeNull();
+  });
+
+  it("queues Restaurant deactivation before archiving a connection", async () => {
+    await db.exec("DELETE FROM sales_channel_commands; UPDATE sales_channel_product_mappings SET last_synced_at=now(),publication_status='ACCEPTED'");
+    await operation(db,"ArchiveSalesChannelConnection",["actor",ids.connection]);
+    expect((await db.query<{status:string;active:boolean}>("SELECT status,active FROM sales_channel_connections WHERE id=$1",[ids.connection])).rows[0]).toEqual({status:"DECOMMISSIONING",active:true});
+    expect((await db.query<{action:string;status:string}>("SELECT action,status FROM sales_channel_commands")).rows[0]).toEqual({action:"DEACTIVATE_PRODUCT",status:"QUEUED"});
+  });
+
+  it("queues remote deactivation when a published mapping is disabled", async () => {
+    await db.exec("DELETE FROM sales_channel_commands");
+    await operation(db,"UpdateSalesChannelProductMapping",["actor",ids.mapping,"item-1","Produto",true,true,false]);
+    expect((await db.query<{enabled:boolean}>("SELECT enabled FROM sales_channel_product_mappings WHERE id=$1",[ids.mapping])).rows[0]?.enabled).toBe(false);
+    expect((await db.query<{action:string}>("SELECT action FROM sales_channel_commands")).rows[0]?.action).toBe("DEACTIVATE_PRODUCT");
   });
 });

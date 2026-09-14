@@ -21,8 +21,29 @@ export class IfoodHttpError extends Error {
 }
 
 type Token = { value: string; expiresAt: number };
-type RequestResult<T> = { data: T; status: number; requestId: string };
+export type RequestResult<T> = { data: T; status: number; requestId: string };
 type FetchLike = typeof fetch;
+
+export type MerchantOpeningShift = {
+  dayOfWeek: "SUNDAY" | "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY";
+  start: string;
+  duration: number;
+};
+
+const openingShiftSchema = z.object({
+  dayOfWeek: z.enum(["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"]),
+  start: z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$/),
+  duration: z.number().int().min(15).max(1440),
+}).strict();
+
+const interruptionSchema = z.object({
+  id: z.string().trim().min(8).max(160),
+  description: z.string().trim().min(3).max(180),
+  start: z.string().datetime({ offset: true }),
+  end: z.string().datetime({ offset: true }),
+}).strict().refine((value) => Date.parse(value.end) > Date.parse(value.start), {
+  message: "O fim da pausa precisa ser posterior ao início.",
+});
 
 const groceryProductSchema = z.object({
   barcode: z.string().trim().min(1).max(160),
@@ -46,8 +67,8 @@ const groceryProductSchema = z.object({
   }).optional(),
   prices: z.object({
     price: z.number().positive().finite(),
-    promotionPrice: z.number().nonnegative().finite().optional(),
-  }).refine((value) => value.promotionPrice === undefined || value.promotionPrice <= value.price, {
+    promotionPrice: z.number().positive().finite().nullable().optional(),
+  }).refine((value) => value.promotionPrice == null || value.promotionPrice <= value.price, {
     message: "O preço promocional não pode superar o preço normal.",
   }).optional(),
   scalePrices: z.array(z.object({
@@ -109,9 +130,9 @@ export function groceryProductFromSource(source: GroceryProductSource): GroceryP
     : undefined;
   const price = source.sendPrice ? cents(source.basePriceCents, "preço") : undefined;
   const promotion = source.sendPrice
-    ? (Number(source.promotionPriceCents) > 0 ? cents(source.promotionPriceCents, "preço promocional") : 0)
+    ? (Number(source.promotionPriceCents) > 0 ? cents(source.promotionPriceCents, "preço promocional") : null)
     : undefined;
-  if (price !== undefined && promotion !== undefined && promotion > price) throw new Error("O produto possui preço promocional superior ao preço normal.");
+  if (price !== undefined && promotion != null && promotion > price) throw new Error("O produto possui preço promocional superior ao preço normal.");
   const stock = Number(source.stockQuantity ?? 0);
   if (source.sendStock && (!Number.isFinite(stock) || stock < 0)) throw new Error("O produto precisa de um estoque válido para sincronizar.");
   return groceryProductSchema.parse({
@@ -164,6 +185,36 @@ export class IfoodClient {
 
   async merchant(merchantId: string): Promise<RequestResult<JsonRecord>> {
     return this.request(`/merchant/v1.0/merchants/${encodeURIComponent(merchantId)}`);
+  }
+
+  merchantStatus(merchantId: string): Promise<RequestResult<unknown>> {
+    return this.request(`/merchant/v1.0/merchants/${encodeURIComponent(merchantId)}/status`);
+  }
+
+  merchantOpeningHours(merchantId: string): Promise<RequestResult<unknown>> {
+    return this.request(`/merchant/v1.0/merchants/${encodeURIComponent(merchantId)}/opening-hours`);
+  }
+
+  merchantInterruptions(merchantId: string): Promise<RequestResult<unknown>> {
+    return this.request(`/merchant/v1.0/merchants/${encodeURIComponent(merchantId)}/interruptions`);
+  }
+
+  updateMerchantOpeningHours(merchantId: string, shifts: MerchantOpeningShift[]): Promise<RequestResult<unknown>> {
+    const parsed = z.array(openingShiftSchema).min(1).max(56).parse(shifts);
+    return this.request(`/merchant/v1.0/merchants/${encodeURIComponent(merchantId)}/opening-hours`, {
+      method: "PUT",
+      body: { storeId: merchantId, shifts: parsed },
+    });
+  }
+
+  createMerchantInterruption(merchantId: string, input: { id: string; description: string; start: string; end: string }): Promise<RequestResult<unknown>> {
+    const payload = interruptionSchema.parse(input);
+    return this.request(`/merchant/v1.0/merchants/${encodeURIComponent(merchantId)}/interruptions`, { method: "POST", body: payload });
+  }
+
+  deleteMerchantInterruption(merchantId: string, interruptionId: string): Promise<RequestResult<unknown>> {
+    const id = z.string().trim().min(8).max(160).parse(interruptionId);
+    return this.request(`/merchant/v1.0/merchants/${encodeURIComponent(merchantId)}/interruptions/${encodeURIComponent(id)}`, { method: "DELETE" });
   }
 
   async pollEvents(merchantIds: string[]): Promise<RequestResult<unknown[]>> {
@@ -364,6 +415,13 @@ function httpError(response: Response, requestId: string): IfoodHttpError {
 
 export function merchantId(merchant: JsonRecord): string {
   return firstString(merchant, "id", "merchantId", "uuid");
+}
+
+export function merchantCatalogProfile(merchant: JsonRecord): "RESTAURANT" | "GROCERY" | "UNVERIFIED" {
+  const type = firstString(merchant, "type", "merchantType", "category").toUpperCase();
+  if (type === "RESTAURANT" || type === "FOOD") return "RESTAURANT";
+  if (["GROCERY", "MARKET", "PHARMACY", "PETSHOP", "BEVERAGES", "SHOP"].some((value) => type.includes(value))) return "GROCERY";
+  return "UNVERIFIED";
 }
 
 export function cancellationCode(reason: JsonRecord): string {
