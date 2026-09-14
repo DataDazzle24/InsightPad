@@ -393,7 +393,16 @@ query SalesChannelOrdersV2($filters: Any!, $sortField: String!, $sortDirection: 
         'pendingAction',o.pending_action,'commandStatus',o.command_status,'commerceStatus',o.commerce_status,'commerceError',o.commerce_error,'stockReservationStatus',o.stock_reservation_status,'saleId',o.sale_id,
         'grocerySeparationStarted',EXISTS(SELECT 1 FROM sales_channel_commands started WHERE started.order_id=o.id AND started.tenant_id=o.tenant_id AND started.action='ACCEPT' AND started.status='CONFIRMED'),
         'lastPartnerRequestId',o.last_partner_request_id,'receivedAt',o.received_at,'scheduledAt',o.scheduled_at,'preparationStartAt',o.preparation_start_at,'acceptedAt',o.accepted_at,'rejectedAt',o.rejected_at,'completedAt',o.completed_at,'statusUpdatedAt',o.status_updated_at,'rejectionReason',o.rejection_reason,'version',o.version,
-        'items',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',i.id,'productId',i.product_id,'mappingStatus',i.mapping_status,'externalItemId',i.external_item_id,'externalProductId',i.external_product_id,'ean',i.ean,'name',i.name,'quantity',i.quantity,'unitPriceCents',i.unit_price_cents::text,'totalCents',i.total_cents::text,'observation',i.observation) ORDER BY i.created_at) FROM sales_channel_order_items i WHERE i.order_id=o.id AND i.tenant_id=o.tenant_id),'[]'::jsonb),
+        'items',COALESCE((SELECT jsonb_agg(jsonb_build_object(
+          'id',i.id,'productId',i.product_id,'productName',p.name,'mappingStatus',i.mapping_status,'externalItemId',i.external_item_id,'externalProductId',i.external_product_id,'ean',i.ean,'name',i.name,'quantity',i.quantity,
+          'unitPriceCents',i.unit_price_cents::text,'totalCents',i.total_cents::text,'observation',i.observation,'allowNegativeStock',COALESCE(p.allow_negative_stock,false),
+          'physicalStock',COALESCE(sb.quantity,0),'reservedStock',COALESCE(r.quantity,0),'availableStock',COALESCE(sb.quantity,0)-COALESCE(r.quantity,0)
+        ) ORDER BY i.created_at)
+        FROM sales_channel_order_items i
+        LEFT JOIN products p ON p.id=i.product_id AND p.tenant_id=i.tenant_id
+        LEFT JOIN stock_balances sb ON sb.tenant_id=i.tenant_id AND sb.branch_id=o.branch_id AND sb.product_id=i.product_id
+        LEFT JOIN LATERAL (SELECT COALESCE(sum(res.quantity),0) quantity FROM sales_channel_stock_reservations res WHERE res.tenant_id=i.tenant_id AND res.branch_id=o.branch_id AND res.product_id=i.product_id AND res.status='RESERVED') r ON true
+        WHERE i.order_id=o.id AND i.tenant_id=o.tenant_id),'[]'::jsonb),
         'history',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',h.id,'fromStatus',h.from_status,'toStatus',h.to_status,'providerStatus',h.provider_status,'origin',h.origin,'reason',h.reason,'createdAt',h.created_at) ORDER BY h.created_at DESC) FROM sales_channel_status_history h WHERE h.order_id=o.id AND h.tenant_id=o.tenant_id),'[]'::jsonb)
       ) ORDER BY array_position(ARRAY(SELECT id FROM page),o.id)) FROM page o),'[]'::jsonb),
       'total',(SELECT count(*) FROM eligible),
