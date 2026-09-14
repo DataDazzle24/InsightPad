@@ -4490,3 +4490,43 @@ html[data-theme=light] .channel-reject-body textarea {
   color: #193039;
   background: #f8fbfc;
 }
+
+
+/* Qualidade operacional: canais, vendas e estoque disponível */
+.channel-field-error { color: #ff8fa2 !important; font-size: .6rem !important; line-height: 1.45; text-transform: none !important; }
+.channel-product-readiness,
+.channel-mapping-confirmation { margin-top: .85rem; padding: .75rem; border: 1px solid rgba(66, 220, 250, .3); background: rgba(66, 220, 250, .045); }
+.channel-product-readiness h3,
+.channel-mapping-confirmation h3 { margin: 0 0 .55rem; color: #e9f0f2; font: 800 .62rem var(--mono); text-transform: uppercase; }
+.channel-product-readiness > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .45rem; }
+.channel-product-readiness > div > span { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: .12rem .4rem; min-width: 0; padding: .55rem; border: 1px solid #2b393e; background: #090d0f; }
+.channel-product-readiness i { grid-row: 1 / span 2; font-size: 1.1rem; }
+.channel-product-readiness b { font: 800 .55rem var(--mono); text-transform: uppercase; }
+.channel-product-readiness small { overflow: hidden; color: #8fa0a6; text-overflow: ellipsis; }
+.channel-product-readiness .ready i { color: #36db2e; }
+.channel-product-readiness .warning i { color: #ffc857; }
+.channel-product-readiness .blocked { border-color: rgba(255, 82, 109, .48); }
+.channel-product-readiness .blocked i { color: #ff6078; }
+.channel-mapping-confirmation p { margin: .25rem 0; }
+.channel-mapping-confirmation > small { color: #91a2a8; }
+.channel-notification-sound { display: inline-flex; align-items: center; gap: .35rem; margin: .7rem 1.1rem 0; padding: .42rem .6rem; border: 1px solid #43545a; color: #a7b5ba; background: #090d0f; font: 800 .55rem var(--mono); text-transform: uppercase; }
+.channel-notification-sound.active { border-color: rgba(54, 219, 46, .55); color: #72e66c; background: rgba(54, 219, 46, .06); }
+.channel-notification-sound .material-symbols-rounded { font-size: 1rem; }
+.sales-source { display: inline-flex; align-items: center; min-height: 1.45rem; padding: .18rem .42rem; border: 1px solid #405057; color: #adbbc0; font: 800 .53rem var(--mono); letter-spacing: .04em; text-transform: uppercase; }
+.sales-source--ifood { border-color: rgba(255, 82, 109, .65); color: #ff7d90; background: rgba(255, 82, 109, .08); }
+.sales-source--pos { border-color: rgba(66, 220, 250, .45); color: #67dff6; background: rgba(66, 220, 250, .06); }
+.stock-reserved { color: #ffc857; font-weight: 800; }
+
+html[data-theme=light] .channel-product-readiness,
+html[data-theme=light] .channel-mapping-confirmation { background: #f6fbfc; }
+html[data-theme=light] .channel-product-readiness > div > span,
+html[data-theme=light] .channel-notification-sound { background: #fff; }
+html[data-theme=light] .channel-product-readiness h3,
+html[data-theme=light] .channel-mapping-confirmation h3 { color: #172126; }
+html[data-theme=light] .channel-mapping-confirmation > small { color: #5d7078; }
+
+@media (max-width: 760px) {
+  .channel-product-readiness > div { grid-template-columns: 1fr; }
+  .channel-order-notification > header { grid-template-columns: auto 1fr; }
+  .channel-order-notification > header > strong { grid-column: 2; }
+}
