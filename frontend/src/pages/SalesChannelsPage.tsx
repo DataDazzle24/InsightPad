@@ -45,7 +45,7 @@ type Mapping = {
   publicationStatus: string; needsFullPublication: boolean; nextPromotionChangeAt?: string | null;
   lastError?: string | null; version: number; updatedAt: string;
 };
-type ProductOption = { id: string; name: string; internalCode?: string | null; ean?: string | null; scaleCode?: string | null; salePriceCents?: string | number; weightedProduct?: boolean; physicalStock?: string | number; reservedStock?: string | number; availableStock?: string | number };
+type ProductOption = { id: string; name: string; internalCode?: string | null; ean?: string | null; scaleCode?: string | null; salePriceCents?: string | number; weightedProduct?: boolean; active?: boolean; physicalStock?: string | number; reservedStock?: string | number; availableStock?: string | number };
 type Operation = { id: string; connectionId: string; connectionName: string; provider: SalesChannelProvider; status: string; attempts: number; lastError?: string | null };
 type EventOperation = Operation & { providerEventId: string; eventType: string; source: string; receivedAt: string };
 type CommandOperation = Operation & { action: string; outcomeUnknown: boolean; reconciliationDueAt?: string | null; createdAt: string };
@@ -302,7 +302,7 @@ function MappingModal({ editing, connections, form, setForm, busy, onClose, onSu
     const timer = window.setTimeout(async () => {
       setLoading(true);
       try {
-        const result = await executeQuery(queryRef(dc, "SalesChannelProductOptions", { term: term.trim(), connectionId: form.connectionId || null, limit: 30, requestKey: crypto.randomUUID() }));
+        const result = await executeQuery(queryRef(dc, "SalesChannelProductOptions", { term: term.trim(), connectionId: form.connectionId || null, productId: editing?.productId ?? null, limit: 30, requestKey: crypto.randomUUID() }));
         if (!cancelled) setProducts((result.data as { _select?: ProductOption[] })._select ?? []);
       } catch (error) {
         console.error(error);
@@ -312,7 +312,7 @@ function MappingModal({ editing, connections, form, setForm, busy, onClose, onSu
       }
     }, term ? 250 : 0);
     return () => { cancelled = true; window.clearTimeout(timer); };
-  }, [form.connectionId, term]);
+  }, [editing?.productId, form.connectionId, term]);
 
   const connection = connections.find((item) => item.id === form.connectionId);
   const grocery = connection?.catalogProfile === "GROCERY";
@@ -320,8 +320,9 @@ function MappingModal({ editing, connections, form, setForm, busy, onClose, onSu
   const groceryIdentifier = resolveGroceryIdentifier(selectedProduct?.ean ?? (editing ? editing.ean : null), selectedProduct?.scaleCode);
   const identifierValue = grocery ? groceryIdentifier.value : form.externalProductId.trim();
   const priceReady = Number(selectedProduct?.salePriceCents ?? 0) > 0;
+  const registrationReady = selectedProduct?.active !== false;
   const productLoaded = Boolean(selectedProduct && selectedProduct.salePriceCents !== undefined);
-  const productReady = Boolean(form.productId) && productLoaded && ((!form.enabled && Boolean(editing)) || (priceReady && (!grocery || groceryIdentifier.valid)));
+  const productReady = Boolean(form.productId) && productLoaded && ((!form.enabled && Boolean(editing)) || (registrationReady && priceReady && (!grocery || groceryIdentifier.valid)));
 
   return <div className="catalog-backdrop"><section className="catalog-modal master-modal channel-modal" role="dialog" aria-modal="true" aria-label="Adicionar produto ao iFood">
     <header><div><span className="eyebrow">Produtos no iFood</span><h2>{editing ? "Configurar produto" : "Adicionar produto ao iFood"}</h2></div><button onClick={onClose} aria-label="Fechar">×</button></header>
@@ -348,6 +349,7 @@ function MappingModal({ editing, connections, form, setForm, busy, onClose, onSu
       {form.productId && <section className="channel-product-readiness" aria-live="polite">
         <h3>Conferência antes de salvar</h3>
         {!productLoaded && loading ? <p>Carregando preço e estoque da filial...</p> : <div>
+          <span className={registrationReady ? "ready" : "blocked"}><i className="material-symbols-rounded">{registrationReady ? "check_circle" : "error"}</i><b>Cadastro</b><small>{registrationReady ? "Produto ativo no Insight Pad" : "Produto inativo; desative o vínculo ou reative o cadastro"}</small></span>
           <span className={priceReady ? "ready" : "blocked"}><i className="material-symbols-rounded">{priceReady ? "check_circle" : "error"}</i><b>Preço</b><small>{priceReady ? money(selectedProduct?.salePriceCents) : "Cadastre um preço de venda maior que zero"}</small></span>
           <span className={!grocery || groceryIdentifier.valid ? "ready" : "blocked"}><i className="material-symbols-rounded">{!grocery || groceryIdentifier.valid ? "check_circle" : "error"}</i><b>Identificador</b><small>{grocery ? (groceryIdentifier.valid ? `${groceryIdentifier.kind} ${groceryIdentifier.value}` : "Corrija no cadastro do produto") : (identifierValue || "Informe o ID do item")}</small></span>
           <span className={Number(selectedProduct?.availableStock ?? 0) > 0 ? "ready" : "warning"}><i className="material-symbols-rounded">inventory_2</i><b>Estoque da filial</b><small>Físico {stockNumber(selectedProduct?.physicalStock)} · reservado {stockNumber(selectedProduct?.reservedStock)} · disponível {stockNumber(selectedProduct?.availableStock)}</small></span>
@@ -396,7 +398,7 @@ function StoreOperations({ connection, canManage, onClose }: { connection: Conne
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
   useDialogAccessibility(true, onClose);
-  const reload = useCallback(async () => { setBusy("READ"); setMessage(""); try { const result = await runMerchantOperation({ connectionId: connection.id, action: "READ" }); const next = (result.data.data as typeof data) ?? {}; setData(next); const parsed = parseStoreShifts(next.openingHours); if (parsed.length) setShifts(parsed); } catch { setMessage("Não foi possível consultar o estado da loja no iFood."); } finally { setBusy(""); } }, [connection.id]);
+  const reload = useCallback(async () => { setBusy("READ"); setMessage(""); try { const result = await runMerchantOperation({ connectionId: connection.id, action: "READ" }); const next = (result.data.data as typeof data) ?? {}; setData(next); const parsed = parseStoreShifts(next.openingHours); if (Object.prototype.hasOwnProperty.call(next, "openingHours")) setShifts(parsed); } catch { setMessage("Não foi possível consultar o estado da loja no iFood."); } finally { setBusy(""); } }, [connection.id]);
   useEffect(() => { const timer = window.setTimeout(() => void reload(), 0); return () => window.clearTimeout(timer); }, [reload]);
   async function action(name: string, payload?: unknown) { setBusy(name); setMessage(""); try { await runMerchantOperation({ connectionId: connection.id, action: name, payload }); setMessage("Alteração confirmada pelo iFood."); await reload(); } catch { setMessage("O iFood não concluiu a alteração. Revise os dados e tente novamente."); } finally { setBusy(""); } }
   const interruptions = objectRecords(data.interruptions);
