@@ -2673,7 +2673,7 @@ mutation SystemReconcileSalesChannelCommerce($connectionId: UUID!, $providerOrde
       LIMIT 1
     ), sale_created AS (
       INSERT INTO sales(id,tenant_id,branch_id,client_operation_id,source,external_reference,status,subtotal_cents,discount_cents,surcharge_cents,total_cents,change_cents,sold_at,created_by_uid,created_at,updated_at)
-      SELECT gen_random_uuid(),t.tenant_id,t.branch_id,left('channel:'||t.id::text,100),'IFOOD',t.provider_order_id,'COMPLETED',t.subtotal_cents,t.discount_cents,0,t.total_cents,0,COALESCE(t.completed_at,now()),'system:ifood',now(),now()
+      SELECT gen_random_uuid(),t.tenant_id,t.branch_id,left('channel:'||t.id::text,100),'IFOOD',t.provider_order_id,'COMPLETED',t.subtotal_cents,t.discount_cents,t.delivery_fee_cents,t.total_cents,0,COALESCE(t.completed_at,now()),'system:ifood',now(),now()
       FROM target t JOIN item_state s ON s.order_id=t.id AND s.item_count=s.mapped_count AND s.item_count>0
       WHERE t.status='COMPLETED' AND t.sale_id IS NULL AND NOT EXISTS(SELECT 1 FROM sales old WHERE old.tenant_id=t.tenant_id AND old.client_operation_id=left('channel:'||t.id::text,100))
       RETURNING *
@@ -2682,16 +2682,29 @@ mutation SystemReconcileSalesChannelCommerce($connectionId: UUID!, $providerOrde
       UNION ALL
       SELECT s.* FROM sales s JOIN target t ON s.tenant_id=t.tenant_id AND s.client_operation_id=left('channel:'||t.id::text,100)
       LIMIT 1
-    ), sale_items_created AS (
-      INSERT INTO sale_items(id,tenant_id,sale_id,product_id,quantity,unit_list_price_cents,unit_sale_price_cents,unit_cost_cents,discount_cents,total_cents,status,created_at,updated_at)
-      SELECT gen_random_uuid(),s.tenant_id,s.id,i.product_id,i.quantity,i.unit_price_cents,i.unit_price_cents,p.cost_price_cents,0,i.total_cents,'ACTIVE',now(),now()
+    ), sale_item_base AS (
+      SELECT s.tenant_id,s.id sale_id,i.id item_id,i.product_id,i.quantity,i.unit_price_cents,i.total_cents,p.cost_price_cents,
+        ROW_NUMBER() OVER(ORDER BY i.created_at,i.id) rn,COUNT(*) OVER() cnt,
+        SUM(i.total_cents) OVER() item_total,
+        LEAST(t.discount_cents,SUM(i.total_cents) OVER()) allocatable_discount
       FROM sale_created s JOIN target t ON t.tenant_id=s.tenant_id
       JOIN sales_channel_order_items i ON i.order_id=t.id AND i.tenant_id=t.tenant_id
       JOIN products p ON p.id=i.product_id AND p.tenant_id=i.tenant_id
+    ), sale_item_allocated AS (
+      SELECT b.*,CASE WHEN b.item_total=0 THEN 0 ELSE floor(b.allocatable_discount*(b.total_cents::numeric/b.item_total))::bigint END allocated_discount
+      FROM sale_item_base b
+    ), sale_items_created AS (
+      INSERT INTO sale_items(id,tenant_id,sale_id,product_id,quantity,unit_list_price_cents,unit_sale_price_cents,unit_cost_cents,discount_cents,total_cents,status,created_at,updated_at)
+      SELECT gen_random_uuid(),tenant_id,sale_id,product_id,quantity,unit_price_cents,
+        CASE WHEN quantity>0 THEN round((total_cents-final_discount)::numeric/quantity)::bigint ELSE 0 END,cost_price_cents,final_discount,total_cents-final_discount,'ACTIVE',now(),now()
+      FROM (
+        SELECT a.*,CASE WHEN rn=cnt THEN allocatable_discount-COALESCE(SUM(allocated_discount) OVER(ORDER BY rn ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING),0) ELSE allocated_discount END final_discount
+        FROM sale_item_allocated a
+      ) allocated
       RETURNING sale_id
     ), payment_created AS (
       INSERT INTO sale_payments(id,tenant_id,sale_id,payment_method_id,amount_cents,sequence,external_reference,status,created_at)
-      SELECT gen_random_uuid(),s.tenant_id,s.id,pm.id,s.total_cents,1,s.external_reference,'CONFIRMED',now()
+      SELECT gen_random_uuid(),s.tenant_id,s.id,pm.id,s.total_cents,1,left('iFood:'||s.external_reference,160),'CONFIRMED',now()
       FROM sale_created s JOIN payment_method pm ON pm.tenant_id=s.tenant_id RETURNING sale_id
     ), movement_type_created AS (
       INSERT INTO stock_movement_types(id,tenant_id,code,name,direction,active,created_at,updated_at)
@@ -2753,7 +2766,7 @@ mutation SystemReconcileSalesChannelCommerce($connectionId: UUID!, $providerOrde
       FROM item_state s LEFT JOIN attached a ON a.id=s.order_id WHERE o.id=s.order_id AND o.tenant_id=s.tenant_id RETURNING o.*
     ), audit AS (
       INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
-      SELECT o.tenant_id,'system:ifood','Integrações','CANAIS_VENDA','RECONCILE_COMMERCE','SalesChannelOrder',o.id::text,'Pedido do canal reconciliado com venda e estoque',true,'IFOOD_ADAPTER',jsonb_build_object('status',o.status,'commerceStatus',o.commerce_status,'saleId',o.sale_id,'reservationStatus',o.stock_reservation_status),now()
+      SELECT o.tenant_id,'system:ifood','Integrações','CANAIS_VENDA','RECONCILE_COMMERCE','SalesChannelOrder',o.id::text,'Pedido do canal reconciliado com venda e estoque',true,'IFOOD_ADAPTER',jsonb_build_object('status',o.status,'commerceStatus',o.commerce_status,'saleId',o.sale_id,'reservationStatus',o.stock_reservation_status,'subtotalCents',o.subtotal_cents,'deliveryFeeCents',o.delivery_fee_cents,'discountCents',o.discount_cents,'totalCents',o.total_cents),now()
       FROM commerce o WHERE EXISTS(SELECT 1 FROM sale_created) OR EXISTS(SELECT 1 FROM cancelled_sale) OR EXISTS(SELECT 1 FROM reservations)
       RETURNING id
     ) SELECT count(*)+(SELECT count(*) FROM sale_created)+(SELECT count(*) FROM movements)+(SELECT count(*) FROM cancelled_sale)+(SELECT count(*) FROM audit) FROM commerce
