@@ -24,6 +24,8 @@ type Balance = {
   branchId: string;
   branchName: string;
   quantity: number;
+  reservedQuantity: number;
+  availableQuantity: number;
   averageCostCents: string;
 };
 type Product = {
@@ -213,10 +215,14 @@ export function StockPage() {
         data.products
           .map((p) => {
             const b = p.balances.find((i) => i.branchId === branch),
-              quantity = Number(b?.quantity ?? 0);
+              physicalQuantity = Number(b?.quantity ?? 0),
+              reservedQuantity = Number(b?.reservedQuantity ?? 0),
+              quantity = Number(b?.availableQuantity ?? Math.max(physicalQuantity - reservedQuantity, 0));
             return {
               ...p,
               quantity,
+              physicalQuantity,
+              reservedQuantity,
               cost: b?.averageCostCents ?? p.costPriceCents,
               status:
                 quantity <= 0
@@ -260,7 +266,7 @@ export function StockPage() {
     summary = useMemo(
       () => ({
         count: balance.length,
-        value: balance.reduce((s, p) => s + p.quantity * Number(p.cost), 0),
+        value: balance.reduce((s, p) => s + p.physicalQuantity * Number(p.cost), 0),
         low: balance.filter((p) => p.status === "low").length,
         empty: balance.filter((p) => p.status === "empty").length,
       }),
@@ -574,7 +580,9 @@ export function StockPage() {
               "EAN",
               "Categoria",
               "Filial",
-              "Saldo",
+              "Saldo físico",
+              "Reservado iFood",
+              "Disponível",
               "Mínimo",
               "Máximo",
               "Custo médio",
@@ -586,6 +594,8 @@ export function StockPage() {
               p.ean ?? "",
               p.categoryName ?? "",
               data.branches.find((b) => b.id === branch)?.name ?? "",
+              p.physicalQuantity,
+              p.reservedQuantity,
               p.quantity,
               p.minimumStock,
               p.maximumStock,
@@ -763,7 +773,9 @@ export function StockPage() {
                 <tr>
                   <th>Produto</th>
                   <th>Categoria</th>
-                  <th>Saldo</th>
+                  <th>Físico</th>
+                  <th>Reservado</th>
+                  <th>Disponível</th>
                   <th>Mínimo</th>
                   <th>Máximo</th>
                   <th>Custo médio</th>
@@ -803,9 +815,9 @@ export function StockPage() {
                         <small>{p.internalCode || p.ean || "Sem código"}</small>
                       </td>
                       <td>{p.categoryName || "—"}</td>
-                      <td>
-                        <strong>{num(p.quantity)}</strong>
-                      </td>
+                      <td>{num(p.physicalQuantity)}</td>
+                      <td><strong className={p.reservedQuantity > 0 ? "stock-reserved" : ""}>{num(p.reservedQuantity)}</strong></td>
+                      <td><strong>{num(p.quantity)}</strong></td>
                       <td>{num(p.minimumStock)}</td>
                       <td>{num(p.maximumStock)}</td>
                       <td>{money(p.cost)}</td>
