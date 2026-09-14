@@ -2312,7 +2312,7 @@ mutation MapSalesChannelOrderItem($itemId: UUID!, $productId: UUID!, $requestKey
       SELECT DISTINCT o.id order_id,o.tenant_id,o.connection_id,o.version,o.status,o.commerce_status,x.provider,x.actor_id,x.partner_id
       FROM mapped m JOIN sales_channel_orders o ON o.id=m.order_id AND o.tenant_id=m.tenant_id
       JOIN resolved x ON x.tenant_id=o.tenant_id AND x.connection_id=o.connection_id
-      WHERE o.status IN ('ACCEPTED','COMPLETED','CANCELLED','REJECTED') AND o.commerce_status IN ('PENDING','BLOCKED_MAPPING','RECONCILING','RESERVED','RESERVED_WITH_SHORTAGE')
+      WHERE o.status IN ('ACCEPTED','COMPLETED','CANCELLED','REJECTED') AND o.commerce_status IN ('PENDING','PENDING_MAPPING','BLOCKED_MAPPING','RECONCILING','RESERVED','RESERVED_WITH_SHORTAGE')
     ), queued AS (
       INSERT INTO sales_channel_commands(id,tenant_id,connection_id,order_id,command_key,provider,action,payload,status,attempts,scheduled_at,created_by_uid,created_at,updated_at)
       SELECT gen_random_uuid(),x.tenant_id,x.connection_id,x.order_id,concat(x.tenant_id,':ORDER:',x.order_id,':MAP_RECONCILE:',left(btrim($4),150)),x.provider,'RECONCILE_ORDER',jsonb_build_object('orderVersion',x.version,'mappedPartnerId',x.partner_id),'QUEUED',0,now(),x.actor_id,now(),now()
