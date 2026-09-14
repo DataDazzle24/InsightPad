@@ -358,6 +358,19 @@ describe("PostgreSQL: channel commerce", () => {
     expect((await db.query<{action:string;status:string}>("SELECT action,status FROM sales_channel_commands")).rows).toEqual([{action:"ACCEPT",status:"QUEUED"}]);
   });
 
+  it("blocks acceptance for an unverified channel or inactive mapped product", async () => {
+    await db.exec("DELETE FROM sales_channel_commands");
+    await db.query("UPDATE sales_channel_order_items SET product_id=$1,mapping_status='MAPPED' WHERE id=$2",[ids.product,ids.orderItem]);
+    await db.query("INSERT INTO stock_balances(tenant_id,branch_id,product_id,quantity) VALUES ($1,$2,$3,5)",[ids.tenant,ids.branch,ids.product]);
+    await db.exec("UPDATE sales_channel_orders SET status='PENDING',pending_action=NULL,command_status='IDLE',version=1; UPDATE sales_channel_connections SET catalog_profile='UNVERIFIED'");
+    await operation(db,"QueueSalesChannelOrderAction",["actor",ids.order,"ACCEPT","",1,"",null,"",0]);
+    expect((await db.query("SELECT id FROM sales_channel_commands")).rows).toHaveLength(0);
+
+    await db.exec("UPDATE sales_channel_connections SET catalog_profile='RESTAURANT'; UPDATE products SET active=false");
+    await operation(db,"QueueSalesChannelOrderAction",["actor",ids.order,"ACCEPT","",1,"",null,"",0]);
+    expect((await db.query("SELECT id FROM sales_channel_commands")).rows).toHaveLength(0);
+  });
+
   it("reports the mapped product and exact available stock to the order interface", async () => {
     await mappedOrder();
     await operation(db,"SystemReconcileSalesChannelCommerce",[ids.connection,"order-1",evidence()]);
