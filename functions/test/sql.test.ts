@@ -357,6 +357,27 @@ describe("PostgreSQL: channel commerce", () => {
     await operation(db,"QueueSalesChannelOrderAction",["actor",ids.order,"ACCEPT","",1,"",null,"",0]);
     expect((await db.query<{action:string;status:string}>("SELECT action,status FROM sales_channel_commands")).rows).toEqual([{action:"ACCEPT",status:"QUEUED"}]);
   });
+
+  it("reports the mapped product and exact available stock to the order interface", async () => {
+    await mappedOrder();
+    await operation(db,"SystemReconcileSalesChannelCommerce",[ids.connection,"order-1",evidence()]);
+
+    const options = await operation(db,"SalesChannelProductOptions",["actor","Produto",ids.connection,30,"product-options-request"]);
+    const product = options.rows[0] as {physicalStock:string;reservedStock:string;availableStock:string};
+    expect(Number(product.physicalStock)).toBe(10);
+    expect(Number(product.reservedStock)).toBe(1);
+    expect(Number(product.availableStock)).toBe(9);
+
+    const orders = await operation(db,"SalesChannelOrdersV2",["actor",{},"","",50,0,"orders-request"]);
+    const data = (orders.rows[0] as {data:{rows:{items:{productId:string;productName:string;physicalStock:number;reservedStock:number;availableStock:number}[]}[]}}).data;
+    expect(data.rows[0]?.items[0]).toMatchObject({
+      productId:ids.product,
+      productName:"Produto",
+      physicalStock:10,
+      reservedStock:1,
+      availableStock:9,
+    });
+  });
 });
 
 describe("PostgreSQL: protected iFood sales", () => {
