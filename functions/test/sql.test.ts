@@ -375,7 +375,7 @@ describe("PostgreSQL: channel commerce", () => {
     await mappedOrder();
     await operation(db,"SystemReconcileSalesChannelCommerce",[ids.connection,"order-1",evidence()]);
 
-    const options = await operation(db,"SalesChannelProductOptions",["actor","Produto",ids.connection,30,"product-options-request"]);
+    const options = await operation(db,"SalesChannelProductOptions",["actor","Produto",ids.connection,null,30,"product-options-request"]);
     const product = options.rows[0] as {physicalStock:string;reservedStock:string;availableStock:string};
     expect(Number(product.physicalStock)).toBe(10);
     expect(Number(product.reservedStock)).toBe(1);
@@ -427,8 +427,8 @@ describe("PostgreSQL: hardening and decommissioning", () => {
     expect((await db.query<{action:string;status:string}>("SELECT action,status FROM sales_channel_commands")).rows[0]).toEqual({action:"DEACTIVATE_PRODUCT",status:"QUEUED"});
   });
 
-  it("queues remote deactivation when a published mapping is disabled", async () => {
-    await db.exec("DELETE FROM sales_channel_commands");
+  it("queues remote deactivation even when the linked Grocery product became invalid", async () => {
+    await db.exec("DELETE FROM sales_channel_commands; UPDATE sales_channel_connections SET catalog_profile='GROCERY'; UPDATE products SET active=false,sale_price_cents=0,ean='invalid'");
     await operation(db,"UpdateSalesChannelProductMapping",["actor",ids.mapping,"item-1","Produto",true,true,false]);
     expect((await db.query<{enabled:boolean}>("SELECT enabled FROM sales_channel_product_mappings WHERE id=$1",[ids.mapping])).rows[0]?.enabled).toBe(false);
     expect((await db.query<{action:string}>("SELECT action FROM sales_channel_commands")).rows[0]?.action).toBe("DEACTIVATE_PRODUCT");
