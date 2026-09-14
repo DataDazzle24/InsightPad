@@ -195,17 +195,13 @@ export function SalesChannelsPage() {
   async function authorize(connection: Connection, merchantId: string) {
     setActing(connection.id);
     try {
-      if ((connection.externalStoreId ?? "") !== merchantId) {
-        const updated = await executeMutation(mutationRef(dc, "UpdateSalesChannelConnection", { id: connection.id, displayName: connection.displayName, externalStoreId: merchantId, enabled: true }));
-        if (!mutationApplied(updated)) throw new Error("Loja não selecionada");
-      }
-      const result = await executeMutation(mutationRef(dc, "RequestSalesChannelAuthorization", { connectionId: connection.id, requestKey: crypto.randomUUID() }));
+      const result = await executeMutation(mutationRef(dc, "ConnectSalesChannelMerchant", { connectionId: connection.id, merchantId, requestKey: crypto.randomUUID() }));
       if (!mutationApplied(result)) throw new Error("Conexão não elegível");
       setAuthorization(null);
       await refresh("Validação segura iniciada. Acompanhe o resultado em Diagnóstico ou Operações.");
     } catch (error) {
       console.error(error);
-      setNotice({ type: "error", text: "Não foi possível iniciar a autorização. Confira se a loja já foi liberada para o aplicativo no Portal do Parceiro iFood." });
+      setNotice({ type: "error", text: "Não foi possível vincular esta loja. Confira sua permissão de gerenciamento, se a loja já está vinculada a outra conexão e tente novamente." });
     } finally { setActing(null); }
   }
   async function retry(id: string) {

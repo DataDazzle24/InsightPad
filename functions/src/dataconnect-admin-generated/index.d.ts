@@ -172,6 +172,16 @@ export interface CloseCashSessionVariables {
   notes: string;
 }
 
+export interface ConnectSalesChannelMerchantData {
+  _execute?: number | null;
+}
+
+export interface ConnectSalesChannelMerchantVariables {
+  connectionId: UUIDString;
+  merchantId: string;
+  requestKey: string;
+}
+
 export interface CreateCategoriesBatchData {
   _execute?: number | null;
 }
@@ -1772,6 +1782,11 @@ export function createSalesChannelConnection(vars: CreateSalesChannelConnectionV
 export function updateSalesChannelConnection(dc: DataConnect, vars: UpdateSalesChannelConnectionVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpdateSalesChannelConnectionData>>;
 /** Generated Node Admin SDK operation action function for the 'UpdateSalesChannelConnection' Mutation. Allow users to pass in custom DataConnect instances. */
 export function updateSalesChannelConnection(vars: UpdateSalesChannelConnectionVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpdateSalesChannelConnectionData>>;
+
+/** Generated Node Admin SDK operation action function for the 'ConnectSalesChannelMerchant' Mutation. Allow users to execute without passing in DataConnect. */
+export function connectSalesChannelMerchant(dc: DataConnect, vars: ConnectSalesChannelMerchantVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<ConnectSalesChannelMerchantData>>;
+/** Generated Node Admin SDK operation action function for the 'ConnectSalesChannelMerchant' Mutation. Allow users to pass in custom DataConnect instances. */
+export function connectSalesChannelMerchant(vars: ConnectSalesChannelMerchantVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<ConnectSalesChannelMerchantData>>;
 
 /** Generated Node Admin SDK operation action function for the 'ArchiveSalesChannelConnection' Mutation. Allow users to execute without passing in DataConnect. */
 export function archiveSalesChannelConnection(dc: DataConnect, vars: ArchiveSalesChannelConnectionVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<ArchiveSalesChannelConnectionData>>;

@@ -792,6 +792,20 @@ exports.updateSalesChannelConnection = function updateSalesChannelConnection(dcO
 }
 ;
 
+const connectSalesChannelMerchantRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'ConnectSalesChannelMerchant', inputVars);
+}
+connectSalesChannelMerchantRef.operationName = 'ConnectSalesChannelMerchant';
+exports.connectSalesChannelMerchantRef = connectSalesChannelMerchantRef;
+
+exports.connectSalesChannelMerchant = function connectSalesChannelMerchant(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(connectSalesChannelMerchantRef(dcInstance, inputVars));
+}
+;
+
 const archiveSalesChannelConnectionRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();

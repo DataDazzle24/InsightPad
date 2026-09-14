@@ -399,6 +399,13 @@ function updateSalesChannelConnection(dcOrVarsOrOptions, varsOrOptions, options)
 }
 exports.updateSalesChannelConnection = updateSalesChannelConnection;
 
+function connectSalesChannelMerchant(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeMutation('ConnectSalesChannelMerchant', inputVars, inputOpts);
+}
+exports.connectSalesChannelMerchant = connectSalesChannelMerchant;
+
 function archiveSalesChannelConnection(dcOrVarsOrOptions, varsOrOptions, options) {
   const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
   dcInstance.useGen(true);

@@ -107,6 +107,7 @@ This README will guide you through the process of using the generated JavaScript
   - [*ReleaseDeviceSession*](#releasedevicesession)
   - [*CreateSalesChannelConnection*](#createsaleschannelconnection)
   - [*UpdateSalesChannelConnection*](#updatesaleschannelconnection)
+  - [*ConnectSalesChannelMerchant*](#connectsaleschannelmerchant)
   - [*ArchiveSalesChannelConnection*](#archivesaleschannelconnection)
   - [*CreateSalesChannelProductMapping*](#createsaleschannelproductmapping)
   - [*UpdateSalesChannelProductMapping*](#updatesaleschannelproductmapping)
@@ -11216,6 +11217,121 @@ const ref = updateSalesChannelConnectionRef({ id: ..., displayName: ..., externa
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
 const ref = updateSalesChannelConnectionRef(dataConnect, updateSalesChannelConnectionVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+## ConnectSalesChannelMerchant
+You can execute the `ConnectSalesChannelMerchant` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+connectSalesChannelMerchant(vars: ConnectSalesChannelMerchantVariables): MutationPromise<ConnectSalesChannelMerchantData, ConnectSalesChannelMerchantVariables>;
+
+interface ConnectSalesChannelMerchantRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ConnectSalesChannelMerchantVariables): MutationRef<ConnectSalesChannelMerchantData, ConnectSalesChannelMerchantVariables>;
+}
+export const connectSalesChannelMerchantRef: ConnectSalesChannelMerchantRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+connectSalesChannelMerchant(dc: DataConnect, vars: ConnectSalesChannelMerchantVariables): MutationPromise<ConnectSalesChannelMerchantData, ConnectSalesChannelMerchantVariables>;
+
+interface ConnectSalesChannelMerchantRef {
+  ...
+  (dc: DataConnect, vars: ConnectSalesChannelMerchantVariables): MutationRef<ConnectSalesChannelMerchantData, ConnectSalesChannelMerchantVariables>;
+}
+export const connectSalesChannelMerchantRef: ConnectSalesChannelMerchantRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the connectSalesChannelMerchantRef:
+```typescript
+const name = connectSalesChannelMerchantRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `ConnectSalesChannelMerchant` mutation requires an argument of type `ConnectSalesChannelMerchantVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface ConnectSalesChannelMerchantVariables {
+  connectionId: UUIDString;
+  merchantId: string;
+  requestKey: string;
+}
+```
+### Return Type
+Recall that executing the `ConnectSalesChannelMerchant` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `ConnectSalesChannelMerchantData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface ConnectSalesChannelMerchantData {
+  _execute?: number | null;
+}
+```
+### Using `ConnectSalesChannelMerchant`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, connectSalesChannelMerchant, ConnectSalesChannelMerchantVariables } from '@insightpad/dataconnect';
+
+// The `ConnectSalesChannelMerchant` mutation requires an argument of type `ConnectSalesChannelMerchantVariables`:
+const connectSalesChannelMerchantVars: ConnectSalesChannelMerchantVariables = {
+  connectionId: ..., 
+  merchantId: ..., 
+  requestKey: ..., 
+};
+
+// Call the `connectSalesChannelMerchant()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await connectSalesChannelMerchant(connectSalesChannelMerchantVars);
+// Variables can be defined inline as well.
+const { data } = await connectSalesChannelMerchant({ connectionId: ..., merchantId: ..., requestKey: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await connectSalesChannelMerchant(dataConnect, connectSalesChannelMerchantVars);
+
+console.log(data._execute);
+
+// Or, you can use the `Promise` API.
+connectSalesChannelMerchant(connectSalesChannelMerchantVars).then((response) => {
+  const data = response.data;
+  console.log(data._execute);
+});
+```
+
+### Using `ConnectSalesChannelMerchant`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, connectSalesChannelMerchantRef, ConnectSalesChannelMerchantVariables } from '@insightpad/dataconnect';
+
+// The `ConnectSalesChannelMerchant` mutation requires an argument of type `ConnectSalesChannelMerchantVariables`:
+const connectSalesChannelMerchantVars: ConnectSalesChannelMerchantVariables = {
+  connectionId: ..., 
+  merchantId: ..., 
+  requestKey: ..., 
+};
+
+// Call the `connectSalesChannelMerchantRef()` function to get a reference to the mutation.
+const ref = connectSalesChannelMerchantRef(connectSalesChannelMerchantVars);
+// Variables can be defined inline as well.
+const ref = connectSalesChannelMerchantRef({ connectionId: ..., merchantId: ..., requestKey: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = connectSalesChannelMerchantRef(dataConnect, connectSalesChannelMerchantVars);
 
 // Call `executeMutation()` on the reference to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.

@@ -105,6 +105,32 @@ describe("PostgreSQL: lifecycle and scope", () => {
     expect((await db.query<{catalog_profile:string}>("SELECT catalog_profile FROM sales_channel_connections")).rows[0]?.catalog_profile).toBe("RESTAURANT");
   });
 
+  it("connects a merchant atomically with manage permission only", async () => {
+    await db.exec("DELETE FROM sales_channel_commands; DELETE FROM sales_channel_event_inbox; DELETE FROM sales_channel_sync_jobs; DELETE FROM sales_channel_order_items; DELETE FROM sales_channel_orders; DELETE FROM sales_channel_product_mappings");
+    await db.exec("UPDATE role_page_permissions SET can_update=false,can_manage=true; UPDATE sales_channel_connections SET external_store_id=NULL,status='DRAFT',authorization_status='NOT_CONNECTED',catalog_profile='UNVERIFIED'");
+    await operation(db,"ConnectSalesChannelMerchant",["actor",ids.connection,"merchant-selected","authorization-request"]);
+    expect((await db.query<{external_store_id:string;status:string;authorization_status:string}>("SELECT external_store_id,status,authorization_status FROM sales_channel_connections WHERE id=$1",[ids.connection])).rows[0]).toEqual({
+      external_store_id:"merchant-selected",status:"PENDING_APPROVAL",authorization_status:"PENDING",
+    });
+    expect((await db.query<{job_type:string;status:string}>("SELECT job_type,status FROM sales_channel_sync_jobs WHERE connection_id=$1",[ids.connection])).rows).toEqual([
+      {job_type:"AUTHORIZATION",status:"QUEUED"},
+    ]);
+  });
+
+  it("denies merchant connection without manage permission", async () => {
+    await db.exec("DELETE FROM sales_channel_commands; DELETE FROM sales_channel_event_inbox; DELETE FROM sales_channel_sync_jobs; DELETE FROM sales_channel_order_items; DELETE FROM sales_channel_orders; DELETE FROM sales_channel_product_mappings");
+    await db.exec("UPDATE role_page_permissions SET can_update=true,can_manage=false; UPDATE sales_channel_connections SET external_store_id=NULL,status='DRAFT',authorization_status='NOT_CONNECTED',catalog_profile='UNVERIFIED'");
+    await operation(db,"ConnectSalesChannelMerchant",["actor",ids.connection,"merchant-selected","authorization-request"]);
+    expect((await db.query<{external_store_id:string|null}>("SELECT external_store_id FROM sales_channel_connections WHERE id=$1",[ids.connection])).rows[0]?.external_store_id).toBeNull();
+    expect((await db.query("SELECT id FROM sales_channel_sync_jobs WHERE job_type='AUTHORIZATION'")).rows).toHaveLength(0);
+  });
+
+  it("does not retarget a merchant connection that already has history", async () => {
+    await operation(db,"ConnectSalesChannelMerchant",["actor",ids.connection,"different-merchant","authorization-request"]);
+    expect((await db.query<{external_store_id:string}>("SELECT external_store_id FROM sales_channel_connections WHERE id=$1",[ids.connection])).rows[0]?.external_store_id).toBe("merchant-1");
+    expect((await db.query("SELECT id FROM sales_channel_sync_jobs WHERE job_type='AUTHORIZATION'")).rows).toHaveLength(0);
+  });
+
   it("acknowledges only events durably stored with the same payload", async () => {
     const payload = {eventId:"provider-event-1",eventType:"PLACED",payloadHash:"a".repeat(64),payload:{id:"provider-event-1"},containsPersonalData:true};
     const first = await operation(db,"SystemRegisterSalesChannelEvent",[ids.connection,payload]);

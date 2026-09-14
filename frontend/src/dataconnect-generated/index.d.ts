@@ -174,6 +174,16 @@ export interface CloseCashSessionVariables {
   notes: string;
 }
 
+export interface ConnectSalesChannelMerchantData {
+  _execute?: number | null;
+}
+
+export interface ConnectSalesChannelMerchantVariables {
+  connectionId: UUIDString;
+  merchantId: string;
+  requestKey: string;
+}
+
 export interface CreateCategoriesBatchData {
   _execute?: number | null;
 }
@@ -2166,6 +2176,18 @@ export const updateSalesChannelConnectionRef: UpdateSalesChannelConnectionRef;
 
 export function updateSalesChannelConnection(vars: UpdateSalesChannelConnectionVariables): MutationPromise<UpdateSalesChannelConnectionData, UpdateSalesChannelConnectionVariables>;
 export function updateSalesChannelConnection(dc: DataConnect, vars: UpdateSalesChannelConnectionVariables): MutationPromise<UpdateSalesChannelConnectionData, UpdateSalesChannelConnectionVariables>;
+
+interface ConnectSalesChannelMerchantRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ConnectSalesChannelMerchantVariables): MutationRef<ConnectSalesChannelMerchantData, ConnectSalesChannelMerchantVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ConnectSalesChannelMerchantVariables): MutationRef<ConnectSalesChannelMerchantData, ConnectSalesChannelMerchantVariables>;
+  operationName: string;
+}
+export const connectSalesChannelMerchantRef: ConnectSalesChannelMerchantRef;
+
+export function connectSalesChannelMerchant(vars: ConnectSalesChannelMerchantVariables): MutationPromise<ConnectSalesChannelMerchantData, ConnectSalesChannelMerchantVariables>;
+export function connectSalesChannelMerchant(dc: DataConnect, vars: ConnectSalesChannelMerchantVariables): MutationPromise<ConnectSalesChannelMerchantData, ConnectSalesChannelMerchantVariables>;
 
 interface ArchiveSalesChannelConnectionRef {
   /* Allow users to create refs without passing in DataConnect */
