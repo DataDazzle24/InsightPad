@@ -394,7 +394,7 @@ query SalesChannelOrdersV2($filters: Any!, $sortField: String!, $sortDirection: 
         'grocerySeparationStarted',EXISTS(SELECT 1 FROM sales_channel_commands started WHERE started.order_id=o.id AND started.tenant_id=o.tenant_id AND started.action='ACCEPT' AND started.status='CONFIRMED'),
         'lastPartnerRequestId',o.last_partner_request_id,'receivedAt',o.received_at,'scheduledAt',o.scheduled_at,'preparationStartAt',o.preparation_start_at,'acceptedAt',o.accepted_at,'rejectedAt',o.rejected_at,'completedAt',o.completed_at,'statusUpdatedAt',o.status_updated_at,'rejectionReason',o.rejection_reason,'version',o.version,
         'items',COALESCE((SELECT jsonb_agg(jsonb_build_object(
-          'id',i.id,'productId',i.product_id,'productName',p.name,'mappingStatus',i.mapping_status,'externalItemId',i.external_item_id,'externalProductId',i.external_product_id,'ean',i.ean,'name',i.name,'quantity',i.quantity,
+          'id',i.id,'productId',i.product_id,'productName',p.name,'productUsable',COALESCE(p.active AND p.deleted_at IS NULL AND NOT p.bundle_product,false),'mappingStatus',i.mapping_status,'externalItemId',i.external_item_id,'externalProductId',i.external_product_id,'ean',i.ean,'name',i.name,'quantity',i.quantity,
           'unitPriceCents',i.unit_price_cents::text,'totalCents',i.total_cents::text,'observation',i.observation,'allowNegativeStock',COALESCE(p.allow_negative_stock,false),
           'physicalStock',COALESCE(sb.quantity,0),'reservedStock',COALESCE(r.quantity,0),'availableStock',COALESCE(sb.quantity,0)-COALESCE(r.quantity,0)
         ) ORDER BY i.created_at)
@@ -464,7 +464,16 @@ query SalesChannelOrders($term: String!, $status: String!, $provider: String!, $
 query LatestPendingSalesChannelOrder($requestKey: String!) @auth(level: USER) {
   _select(sql: """
     WITH actor AS (SELECT u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages p ON p.page_key='CANAIS_VENDA' AND p.active LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=p.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=p.id AND rp.tenant_id=u.tenant_id WHERE u.id=$1 AND (u.blocked_until IS NULL OR u.blocked_until<=now()) AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_update,rp.can_update,false)), pending AS (SELECT o.*,c.provider,c.catalog_profile,c.authorization_status,b.name branch_name FROM sales_channel_orders o JOIN actor a ON a.tenant_id=o.tenant_id JOIN sales_channel_connections c ON c.id=o.connection_id AND c.tenant_id=o.tenant_id AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1 AND ub.tenant_id=c.tenant_id AND ub.branch_id=c.branch_id AND ub.active)) AND c.active AND c.deleted_at IS NULL AND c.enabled AND c.status='ACTIVE' AND c.authorization_status='AUTHORIZED' JOIN branches b ON b.id=o.branch_id AND b.tenant_id=o.tenant_id WHERE o.status='PENDING' AND o.command_status='IDLE' ORDER BY o.received_at ASC,o.id ASC LIMIT 5)
-    SELECT jsonb_build_object('orders',COALESCE(jsonb_agg(jsonb_build_object('id',o.id,'displayCode',o.display_code,'provider',o.provider,'catalogProfile',o.catalog_profile,'authorizationStatus',o.authorization_status,'branchName',o.branch_name,'customerName',o.customer_name,'totalCents',o.total_cents::text,'receivedAt',o.received_at,'version',o.version,'items',COALESCE((SELECT jsonb_agg(jsonb_build_object('name',i.name,'quantity',i.quantity,'observation',i.observation) ORDER BY i.created_at) FROM sales_channel_order_items i WHERE i.order_id=o.id AND i.tenant_id=o.tenant_id),'[]'::jsonb)) ORDER BY o.received_at,o.id),'[]'::jsonb)) data FROM pending o WHERE $2<>''
+    SELECT jsonb_build_object('orders',COALESCE(jsonb_agg(jsonb_build_object('id',o.id,'displayCode',o.display_code,'provider',o.provider,'catalogProfile',o.catalog_profile,'authorizationStatus',o.authorization_status,'branchName',o.branch_name,'customerName',o.customer_name,'totalCents',o.total_cents::text,'receivedAt',o.received_at,'version',o.version,'items',COALESCE((SELECT jsonb_agg(jsonb_build_object(
+      'name',i.name,'quantity',i.quantity,'observation',i.observation,'productId',i.product_id,'productName',p.name,
+      'productUsable',COALESCE(p.active AND p.deleted_at IS NULL AND NOT p.bundle_product,false),'allowNegativeStock',COALESCE(p.allow_negative_stock,false),
+      'availableStock',COALESCE(sb.quantity,0)-COALESCE(r.quantity,0)
+    ) ORDER BY i.created_at)
+    FROM sales_channel_order_items i
+    LEFT JOIN products p ON p.id=i.product_id AND p.tenant_id=i.tenant_id
+    LEFT JOIN stock_balances sb ON sb.tenant_id=i.tenant_id AND sb.branch_id=o.branch_id AND sb.product_id=i.product_id
+    LEFT JOIN LATERAL (SELECT COALESCE(sum(res.quantity),0) quantity FROM sales_channel_stock_reservations res WHERE res.tenant_id=i.tenant_id AND res.branch_id=o.branch_id AND res.product_id=i.product_id AND res.status='RESERVED') r ON true
+    WHERE i.order_id=o.id AND i.tenant_id=o.tenant_id),'[]'::jsonb)) ORDER BY o.received_at,o.id),'[]'::jsonb)) data FROM pending o WHERE $2<>''
   """,params:[{_expr:"auth.uid"},$requestKey])
 }
 
