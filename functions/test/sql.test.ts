@@ -211,11 +211,20 @@ describe("PostgreSQL: catalog checkpoints", () => {
     await operation(db,"SaveProduct",["actor",ids.product,payload,[]]);
     expect((await db.query<{ean:string}>("SELECT ean FROM products WHERE id=$1",[ids.product])).rows[0]?.ean).toBe("7890000000000");
   });
-  it("derives a Grocery mapping from EAN or scale code and rejects products without either", async () => {
+  it("validates Grocery GTIN checksums and accepts a safe scale code fallback", async () => {
     await db.exec("DELETE FROM sales_channel_product_mappings; UPDATE sales_channel_connections SET catalog_profile='GROCERY'; UPDATE products SET ean=NULL,scale_code=NULL");
     await operation(db,"CreateSalesChannelProductMapping",["actor",ids.connection,ids.product,"","",true,true]);
     expect((await db.query("SELECT id FROM sales_channel_product_mappings")).rows).toHaveLength(0);
-    await db.exec("UPDATE products SET scale_code='BAL-01'");
+
+    await db.exec("UPDATE products SET ean='7890000000002'");
+    await operation(db,"CreateSalesChannelProductMapping",["actor",ids.connection,ids.product,"","",true,true]);
+    expect((await db.query("SELECT id FROM sales_channel_product_mappings")).rows).toHaveLength(0);
+
+    await db.exec("UPDATE products SET ean='7890000000000'");
+    await operation(db,"CreateSalesChannelProductMapping",["actor",ids.connection,ids.product,"","",true,true]);
+    expect((await db.query<{external_product_id:string}>("SELECT external_product_id FROM sales_channel_product_mappings")).rows[0]?.external_product_id).toBe("7890000000000");
+
+    await db.exec("DELETE FROM sales_channel_product_mappings; UPDATE products SET ean=NULL,scale_code='BAL-01'");
     await operation(db,"CreateSalesChannelProductMapping",["actor",ids.connection,ids.product,"","",true,true]);
     expect((await db.query<{external_product_id:string}>("SELECT external_product_id FROM sales_channel_product_mappings")).rows[0]?.external_product_id).toBe("BAL-01");
   });
@@ -282,13 +291,14 @@ describe("PostgreSQL: channel commerce", () => {
     expect((await db.query("SELECT id FROM sales")).rows).toHaveLength(0);
   });
 
-  it("creates one sale and one stock movement when completion is confirmed", async () => {
+  it("creates one sale with official totals, allocated discount and one stock movement", async () => {
     await mappedOrder("COMPLETED");
+    await db.query("UPDATE sales_channel_orders SET subtotal_cents=1500,delivery_fee_cents=300,discount_cents=200,total_cents=1600 WHERE id=$1",[ids.order]);
     await operation(db,"SystemReconcileSalesChannelCommerce",[ids.connection,"order-1",evidence()]);
     await operation(db,"SystemReconcileSalesChannelCommerce",[ids.connection,"order-1",evidence()]);
-    expect((await db.query<{source:string;external_reference:string;status:string}>("SELECT source,external_reference,status FROM sales")).rows).toEqual([{source:"IFOOD",external_reference:"order-1",status:"COMPLETED"}]);
-    expect((await db.query("SELECT id FROM sale_items")).rows).toHaveLength(1);
-    expect((await db.query("SELECT id FROM sale_payments")).rows).toHaveLength(1);
+    expect((await db.query<{source:string;external_reference:string;status:string;subtotal_cents:string;discount_cents:string;surcharge_cents:string;total_cents:string}>("SELECT source,external_reference,status,subtotal_cents::text,discount_cents::text,surcharge_cents::text,total_cents::text FROM sales")).rows).toEqual([{source:"IFOOD",external_reference:"order-1",status:"COMPLETED",subtotal_cents:"1500",discount_cents:"200",surcharge_cents:"300",total_cents:"1600"}]);
+    expect((await db.query<{discount_cents:string;total_cents:string;unit_sale_price_cents:string}>("SELECT discount_cents::text,total_cents::text,unit_sale_price_cents::text FROM sale_items")).rows).toEqual([{discount_cents:"200",total_cents:"1300",unit_sale_price_cents:"1300"}]);
+    expect((await db.query<{amount_cents:string;external_reference:string}>("SELECT amount_cents::text,external_reference FROM sale_payments")).rows).toEqual([{amount_cents:"1600",external_reference:"iFood:order-1"}]);
     expect((await db.query<{quantity:string;status:string}>("SELECT quantity::text,status FROM stock_movements")).rows).toEqual([{quantity:"1.000",status:"POSTED"}]);
     expect((await db.query<{quantity:string}>("SELECT quantity::text FROM stock_balances")).rows[0]?.quantity).toBe("9.000");
     expect(await order()).toMatchObject({commerce_status:"POSTED",stock_reservation_status:"POSTED"});
@@ -313,12 +323,49 @@ describe("PostgreSQL: channel commerce", () => {
     expect((await db.query("SELECT id FROM sales")).rows).toHaveLength(0);
   });
 
-  it("maps a channel item and queues a read-only reconciliation", async () => {
-    await db.query("UPDATE sales_channel_order_items SET external_product_id='item-1' WHERE id=$1",[ids.orderItem]);
+  it("maps every affected item and queues reconciliation for every unfinished commerce record", async () => {
+    const secondOrder="00000000-0000-4000-8000-000000000016",secondItem="00000000-0000-4000-8000-000000000017";
     await db.exec("DELETE FROM sales_channel_commands");
+    await db.query("UPDATE sales_channel_orders SET status='COMPLETED',command_status='IDLE',commerce_status='BLOCKED_MAPPING' WHERE id=$1",[ids.order]);
+    await db.query("UPDATE sales_channel_order_items SET external_product_id='item-1' WHERE id=$1",[ids.orderItem]);
+    await db.query("INSERT INTO sales_channel_orders(id,tenant_id,branch_id,connection_id,provider_order_id,display_code,status,partner_status,command_status,commerce_status) VALUES ($1,$2,$3,$4,'order-2','5678','ACCEPTED','CONFIRMED','IDLE','BLOCKED_MAPPING')",[secondOrder,ids.tenant,ids.branch,ids.connection]);
+    await db.query("INSERT INTO sales_channel_order_items(id,tenant_id,order_id,external_item_id,external_product_id,name,quantity) VALUES ($1,$2,$3,'bag-item-2','item-1','Produto',2)",[secondItem,ids.tenant,secondOrder]);
+
     await operation(db,"MapSalesChannelOrderItem",["actor",ids.orderItem,ids.product,"mapping-request"]);
-    expect((await db.query<{product_id:string;mapping_status:string}>("SELECT product_id,mapping_status FROM sales_channel_order_items WHERE id=$1",[ids.orderItem])).rows[0]).toEqual({product_id:ids.product,mapping_status:"MAPPED"});
-    expect((await db.query<{action:string;status:string}>("SELECT action,status FROM sales_channel_commands")).rows[0]).toEqual({action:"RECONCILE_ORDER",status:"QUEUED"});
+
+    expect((await db.query<{product_id:string;mapping_status:string}>("SELECT product_id,mapping_status FROM sales_channel_order_items ORDER BY id")).rows).toEqual([
+      {product_id:ids.product,mapping_status:"MAPPED"},
+      {product_id:ids.product,mapping_status:"MAPPED"},
+    ]);
+    expect((await db.query<{action:string;status:string}>("SELECT action,status FROM sales_channel_commands ORDER BY order_id")).rows).toEqual([
+      {action:"RECONCILE_ORDER",status:"QUEUED"},
+      {action:"RECONCILE_ORDER",status:"QUEUED"},
+    ]);
+  });
+
+  it("blocks acceptance until every item is mapped and enough stock is available", async () => {
+    await db.exec("DELETE FROM sales_channel_commands");
+    await db.query("UPDATE sales_channel_orders SET status='PENDING',pending_action=NULL,command_status='IDLE',version=1 WHERE id=$1",[ids.order]);
+    await operation(db,"QueueSalesChannelOrderAction",["actor",ids.order,"ACCEPT","",1,"",null,"",0]);
+    expect((await db.query("SELECT id FROM sales_channel_commands")).rows).toHaveLength(0);
+
+    await db.query("UPDATE sales_channel_order_items SET product_id=$1,mapping_status='MAPPED' WHERE id=$2",[ids.product,ids.orderItem]);
+    await operation(db,"QueueSalesChannelOrderAction",["actor",ids.order,"ACCEPT","",1,"",null,"",0]);
+    expect((await db.query("SELECT id FROM sales_channel_commands")).rows).toHaveLength(0);
+
+    await db.query("INSERT INTO stock_balances(tenant_id,branch_id,product_id,quantity) VALUES ($1,$2,$3,1)",[ids.tenant,ids.branch,ids.product]);
+    await operation(db,"QueueSalesChannelOrderAction",["actor",ids.order,"ACCEPT","",1,"",null,"",0]);
+    expect((await db.query<{action:string;status:string}>("SELECT action,status FROM sales_channel_commands")).rows).toEqual([{action:"ACCEPT",status:"QUEUED"}]);
+  });
+});
+
+describe("PostgreSQL: protected iFood sales", () => {
+  it("refuses a direct cancellation outside the channel order workflow", async () => {
+    const saleId="00000000-0000-4000-8000-000000000018";
+    await db.exec("UPDATE app_pages SET page_key='GESTAO_VENDAS'");
+    await db.query("INSERT INTO sales(id,tenant_id,branch_id,client_operation_id,source,external_reference,status,total_cents,created_by_uid) VALUES ($1,$2,$3,'channel:test','IFOOD','order-test','COMPLETED',1500,'system:ifood')",[saleId,ids.tenant,ids.branch]);
+    await operation(db,"CancelSale",["actor",saleId,"Cancelamento local indevido"]);
+    expect((await db.query<{status:string;cancelled_at:string|null}>("SELECT status,cancelled_at FROM sales WHERE id=$1",[saleId])).rows[0]).toEqual({status:"COMPLETED",cancelled_at:null});
   });
 });
 
