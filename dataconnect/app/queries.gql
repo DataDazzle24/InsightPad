@@ -387,7 +387,7 @@ query SalesChannelOrdersV2($filters: Any!, $sortField: String!, $sortDirection: 
     )
     SELECT jsonb_build_object(
       'rows',COALESCE((SELECT jsonb_agg(jsonb_build_object(
-        'id',o.id,'providerOrderId',o.provider_order_id,'displayCode',o.display_code,'provider',o.provider,'catalogProfile',o.catalog_profile,'connectionName',o.connection_name,'authorizationStatus',o.authorization_status,
+        'id',o.id,'providerOrderId',o.provider_order_id,'displayCode',o.display_code,'provider',o.provider,'catalogProfile',o.catalog_profile,'connectionId',o.connection_id,'connectionName',o.connection_name,'authorizationStatus',o.authorization_status,
         'branchId',o.branch_id,'branchName',o.branch_name,'customerName',o.customer_name,'orderType',o.order_type,'paymentMethod',o.payment_method,'deliveryProvider',o.delivery_provider,'deliveryAddress',o.delivery_address,'notes',o.notes,
         'subtotalCents',o.subtotal_cents::text,'deliveryFeeCents',o.delivery_fee_cents::text,'discountCents',o.discount_cents::text,'totalCents',o.total_cents::text,'status',o.status,'partnerStatus',o.partner_status,
         'pendingAction',o.pending_action,'commandStatus',o.command_status,'commerceStatus',o.commerce_status,'commerceError',o.commerce_error,'stockReservationStatus',o.stock_reservation_status,'saleId',o.sale_id,
