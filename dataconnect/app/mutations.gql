@@ -1357,7 +1357,7 @@ mutation PostSale($payload: Any!) @auth(level: USER) @transaction {
     ),payments AS (
       SELECT h.tenant_id,x.payment_method_id,x.amount_cents,x.sequence,x.external_reference,pm.requires_change
       FROM header h CROSS JOIN LATERAL jsonb_to_recordset(COALESCE(h.j->'payments','[]'::jsonb)) AS x(payment_method_id uuid,amount_cents bigint,sequence int,external_reference text)
-      JOIN payment_methods pm ON pm.id=x.payment_method_id AND pm.tenant_id=h.tenant_id AND pm.active WHERE x.amount_cents>0
+      JOIN payment_methods pm ON pm.id=x.payment_method_id AND pm.tenant_id=h.tenant_id AND pm.active AND pm.code<>'IFOOD_CHANNEL' WHERE x.amount_cents>0
     ),payment_total AS (SELECT COALESCE(SUM(amount_cents),0)::bigint amount,COUNT(*) count,COALESCE(bool_or(requires_change),false) has_change FROM payments),
     required_stock AS (
       SELECT p.tenant_id,p.branch_id,COALESCE(pc.component_product_id,p.product_id) product_id,
@@ -1376,8 +1376,8 @@ mutation PostSale($payload: Any!) @auth(level: USER) @transaction {
         AND (pt.amount=t.subtotal-t.requested_discount+t.surcharge OR pt.has_change)
         AND (t.customer_id IS NULL OR c.id IS NOT NULL) AND (t.cash_session_id IS NULL OR cs.id IS NOT NULL)
         AND NOT EXISTS(SELECT 1 FROM sales old WHERE old.tenant_id=t.tenant_id AND old.client_operation_id=t.operation_id)
-        AND (t.replaces_sale_id IS NULL OR EXISTS(SELECT 1 FROM sales old WHERE old.id=t.replaces_sale_id AND old.tenant_id=t.tenant_id AND old.status='COMPLETED'))
-        AND NOT EXISTS(SELECT 1 FROM required_stock rs JOIN products p ON p.id=rs.product_id AND p.tenant_id=rs.tenant_id LEFT JOIN stock_balances sb ON sb.tenant_id=rs.tenant_id AND sb.branch_id=rs.branch_id AND sb.product_id=rs.product_id WHERE NOT p.allow_negative_stock AND COALESCE(sb.quantity,0)<rs.quantity)
+        AND (t.replaces_sale_id IS NULL OR EXISTS(SELECT 1 FROM sales old WHERE old.id=t.replaces_sale_id AND old.tenant_id=t.tenant_id AND old.status='COMPLETED' AND COALESCE(old.source,'POS')<>'IFOOD' AND NOT EXISTS(SELECT 1 FROM sales_channel_orders channel_order WHERE channel_order.sale_id=old.id AND channel_order.tenant_id=old.tenant_id)))
+        AND NOT EXISTS(SELECT 1 FROM required_stock rs JOIN products p ON p.id=rs.product_id AND p.tenant_id=rs.tenant_id LEFT JOIN stock_balances sb ON sb.tenant_id=rs.tenant_id AND sb.branch_id=rs.branch_id AND sb.product_id=rs.product_id WHERE NOT p.allow_negative_stock AND COALESCE(sb.quantity,0)-COALESCE((SELECT sum(r.quantity) FROM sales_channel_stock_reservations r WHERE r.tenant_id=rs.tenant_id AND r.branch_id=rs.branch_id AND r.product_id=rs.product_id AND r.status='RESERVED'),0)<rs.quantity)
     ),sale AS (
       INSERT INTO sales(id,tenant_id,branch_id,customer_id,cash_session_id,replaces_sale_id,client_operation_id,status,subtotal_cents,discount_cents,surcharge_cents,total_cents,change_cents,sold_at,created_by_uid,created_at,updated_at)
       SELECT gen_random_uuid(),tenant_id,branch_id,customer_id,cash_session_id,replaces_sale_id,operation_id,'COMPLETED',subtotal,requested_discount,surcharge,subtotal-requested_discount+surcharge,change_amount,now(),id,now(),now() FROM eligible RETURNING *
@@ -1424,7 +1424,7 @@ mutation CancelSale($saleId: UUID!, $reason: String!) @auth(level: USER) @transa
       JOIN app_pages pg ON pg.page_key='GESTAO_VENDAS' AND pg.active LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
       WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_delete,rp.can_delete,false)
     ),cancelled AS (
-      UPDATE sales s SET status='CANCELLED',cancelled_at=now(),cancellation_reason=left(btrim($3),255),updated_at=now() FROM actor a WHERE s.id=$2 AND s.tenant_id=a.tenant_id AND s.status='COMPLETED' AND length(btrim($3))>=5 RETURNING s.*
+      UPDATE sales s SET status='CANCELLED',cancelled_at=now(),cancellation_reason=left(btrim($3),255),updated_at=now() FROM actor a WHERE s.id=$2 AND s.tenant_id=a.tenant_id AND s.status='COMPLETED' AND COALESCE(s.source,'POS')<>'IFOOD' AND NOT EXISTS(SELECT 1 FROM sales_channel_orders channel_order WHERE channel_order.sale_id=s.id AND channel_order.tenant_id=s.tenant_id) AND length(btrim($3))>=5 RETURNING s.*
     ),items AS (UPDATE sale_items i SET status='CANCELLED',updated_at=now() FROM cancelled s WHERE i.sale_id=s.id AND i.tenant_id=s.tenant_id AND i.status='ACTIVE' RETURNING i.id),
     payments AS (UPDATE sale_payments p SET status='CANCELLED' FROM cancelled s WHERE p.sale_id=s.id AND p.tenant_id=s.tenant_id AND p.status='CONFIRMED' RETURNING p.id),
     reversed AS (UPDATE stock_movements m SET status='REVERSED',reversed_at=now() FROM cancelled s WHERE m.sale_id=s.id AND m.tenant_id=s.tenant_id AND m.status='POSTED' RETURNING m.tenant_id,m.branch_id,m.product_id,m.quantity),
@@ -2160,6 +2160,16 @@ mutation QueueSalesChannelOrderAction($id: UUID!, $action: String!, $reason: Str
           OR (i.action='COMPLETE' AND o.status='ACCEPTED') OR (i.action='CANCEL' AND o.status IN ('PENDING','ACCEPTED')) OR (i.action IN ('ADD_ITEM','REPLACE_ITEM','UPDATE_ITEM','REMOVE_ITEM') AND o.status='ACCEPTED'))
         AND (c.catalog_profile<>'GROCERY' OR i.action IN ('ACCEPT','REJECT','CANCEL') OR EXISTS(SELECT 1 FROM sales_channel_commands started WHERE started.order_id=o.id AND started.tenant_id=o.tenant_id AND started.action='ACCEPT' AND started.status='CONFIRMED'))
         AND (i.action NOT IN ('REJECT','CANCEL') OR length(i.reason)>=5)
+        AND (i.action<>'ACCEPT' OR NOT EXISTS(SELECT 1 FROM sales_channel_order_items unmapped WHERE unmapped.order_id=o.id AND unmapped.tenant_id=o.tenant_id AND unmapped.product_id IS NULL))
+        AND (i.action<>'ACCEPT' OR NOT EXISTS(
+          SELECT 1 FROM (
+            SELECT oi.product_id,sum(oi.quantity)::numeric(18,3) quantity
+            FROM sales_channel_order_items oi WHERE oi.order_id=o.id AND oi.tenant_id=o.tenant_id AND oi.product_id IS NOT NULL
+            GROUP BY oi.product_id
+          ) requested JOIN products stock_product ON stock_product.id=requested.product_id AND stock_product.tenant_id=o.tenant_id
+          LEFT JOIN stock_balances balance ON balance.tenant_id=o.tenant_id AND balance.branch_id=o.branch_id AND balance.product_id=requested.product_id
+          WHERE NOT stock_product.allow_negative_stock AND COALESCE(balance.quantity,0)-COALESCE((SELECT sum(reservation.quantity) FROM sales_channel_stock_reservations reservation WHERE reservation.tenant_id=o.tenant_id AND reservation.branch_id=o.branch_id AND reservation.product_id=requested.product_id AND reservation.order_id<>o.id AND reservation.status='RESERVED'),0)<requested.quantity
+        ))
         AND (i.action NOT IN ('REPLACE_ITEM','UPDATE_ITEM','REMOVE_ITEM') OR (order_item.id IS NOT NULL AND order_item.external_item_id IS NOT NULL))
         AND (i.action NOT IN ('ADD_ITEM','REPLACE_ITEM') OR (length(btrim($8)) BETWEEN 1 AND 160 AND btrim($8) ~ '^[A-Za-z0-9._-]+$'))
         AND (i.action NOT IN ('ADD_ITEM','REPLACE_ITEM','UPDATE_ITEM') OR ($9>0 AND $9<=10000 AND round($9::numeric,3)=$9::numeric))
@@ -2714,6 +2724,10 @@ mutation SystemQueueDueSalesChannelSyncJobs($requestKey: String!) @auth(level: N
       JOIN products p ON p.id=m.product_id AND p.tenant_id=m.tenant_id AND p.active AND p.deleted_at IS NULL
       LEFT JOIN stock_balances sb ON sb.tenant_id=m.tenant_id AND sb.branch_id=c.branch_id AND sb.product_id=m.product_id
       LEFT JOIN LATERAL (
+        SELECT max(r.updated_at) updated_at FROM sales_channel_stock_reservations r
+        WHERE r.tenant_id=m.tenant_id AND r.branch_id=c.branch_id AND r.product_id=m.product_id
+      ) reservation ON true
+      LEFT JOIN LATERAL (
         SELECT max(pr.updated_at) updated_at FROM promotions pr
         WHERE pr.tenant_id=p.tenant_id AND pr.product_id=p.id AND pr.deleted_at IS NULL
       ) promotion ON true
@@ -2721,7 +2735,7 @@ mutation SystemQueueDueSalesChannelSyncJobs($requestKey: String!) @auth(level: N
         AND m.sync_status<>'ERROR' AND (m.sync_price OR m.sync_stock)
         AND (m.last_synced_at IS NULL OR (m.next_promotion_change_at IS NOT NULL AND m.next_promotion_change_at<=now())
           OR (m.sync_price AND GREATEST(p.updated_at,COALESCE(promotion.updated_at,p.updated_at))>m.last_synced_at)
-          OR (m.sync_stock AND sb.updated_at>m.last_synced_at))
+          OR (m.sync_stock AND GREATEST(COALESCE(sb.updated_at,'epoch'::timestamptz),COALESCE(reservation.updated_at,'epoch'::timestamptz))>m.last_synced_at))
         AND length(btrim($1)) BETWEEN 8 AND 150
         AND NOT EXISTS(SELECT 1 FROM sales_channel_sync_jobs active_job WHERE active_job.connection_id=c.id AND active_job.status IN ('QUEUED','RETRY','PROCESSING'))
     ), queued AS (
