@@ -13,8 +13,24 @@ const SOUND_PREFERENCE_KEY = "insightpad:channel-order-sound";
 const SOUND_LEASE_PREFIX = "insightpad:channel-order-sound:";
 type CancellationReason = { code: string; label: string };
 const fetchCancellationReasons = httpsCallable<{ orderId: string }, { reasons: CancellationReason[] }>(getFunctions(firebaseApp, "southamerica-east1"), "ifoodCancellationReasons");
-type PendingOrder = { id: string; displayCode: string; provider: SalesChannelProvider; catalogProfile: "UNVERIFIED" | "RESTAURANT" | "GROCERY"; authorizationStatus: string; branchName: string; customerName?: string | null; totalCents: string; receivedAt: string; version: number; items: { name: string; quantity: number; observation?: string | null }[] };
+type PendingItem = { name: string; quantity: number; observation?: string | null; productId?: string | null; productName?: string | null; productUsable?: boolean; allowNegativeStock?: boolean; availableStock?: string | number };
+type PendingOrder = { id: string; displayCode: string; provider: SalesChannelProvider; catalogProfile: "UNVERIFIED" | "RESTAURANT" | "GROCERY"; authorizationStatus: string; branchName: string; customerName?: string | null; totalCents: string; receivedAt: string; version: number; items: PendingItem[] };
 const money = (value: string) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(value) / 100);
+function pendingAcceptanceIssue(order: PendingOrder): string | null {
+  if (order.catalogProfile === "UNVERIFIED") return "O tipo da loja ainda não foi validado. Abra a conexão antes de operar o pedido.";
+  if (order.items.some((item) => !item.productId)) return "Existem itens sem vínculo com o estoque. Abra os detalhes antes de aceitar.";
+  if (order.items.some((item) => !item.productUsable)) return "Há produto vinculado inativo ou indisponível. Corrija o cadastro antes de aceitar.";
+  const required = new Map<string,{ quantity: number; available: number; allowNegative: boolean }>();
+  order.items.forEach((item) => {
+    if (!item.productId) return;
+    const current = required.get(item.productId) ?? { quantity: 0, available: Number(item.availableStock ?? 0), allowNegative: Boolean(item.allowNegativeStock) };
+    current.quantity += Number(item.quantity);
+    required.set(item.productId,current);
+  });
+  return [...required.values()].some((item) => !item.allowNegative && item.available < item.quantity)
+    ? "Estoque disponível insuficiente. Abra os detalhes para conferir."
+    : null;
+}
 const mutationApplied = (result: unknown) => Boolean((result as { data?: { _execute?: unknown } })?.data?._execute);
 
 export function ChannelOrderNotifier() {
@@ -204,14 +220,16 @@ export function ChannelOrderNotifier() {
 
   if (!order) return null;
   const validRejection = reason.trim().length >= 5 && (order.provider !== "IFOOD" || reasons.some((item) => item.code === reasonCode));
+  const acceptanceIssue = pendingAcceptanceIssue(order);
 
   return <div className="catalog-backdrop channel-order-notification-backdrop"><section className="channel-order-notification" role="alertdialog" aria-modal="true" aria-label="Novo pedido recebido">
     <header><span className="material-symbols-rounded">notifications_active</span><div><small>Novo pedido · {salesChannelProviderLabel(order.provider)}</small><h2>Pedido #{order.displayCode}</h2><p>{order.branchName}{order.customerName ? ` · ${order.customerName}` : ""}</p></div><strong>{money(order.totalCents)}</strong></header>
     <button className={`channel-notification-sound ${soundEnabled ? "active" : ""}`} type="button" onClick={() => void toggleSound()} aria-pressed={soundEnabled} title={soundEnabled ? "Desativar o alerta sonoro" : "Ativar e testar o alerta sonoro"}><span className="material-symbols-rounded">{soundEnabled ? "volume_up" : "volume_off"}</span>{soundEnabled ? "Som ativado" : "Ativar som"}</button>
     <div className="channel-order-notification__items"><h3>Itens</h3>{order.items.map((item, index) => <article key={`${item.name}-${index}`}><strong>{item.quantity}×</strong><span>{item.name}{item.observation && <small>{item.observation}</small>}</span></article>)}</div>
+    {acceptanceIssue && !error && <p className="channel-notification-error" role="alert">{acceptanceIssue}</p>}
     {error && <p className="channel-notification-error" role="alert">{error}</p>}
     {rejecting && <label className="channel-order-notification__reason"><span>Motivo da recusa</span>{order.provider === "IFOOD" && <select value={reasonCode} disabled={loadingReasons || busy} onChange={(event) => { setReasonCode(event.target.value); setReason(reasons.find((item) => item.code === event.target.value)?.label ?? ""); }}><option value="">{loadingReasons ? "Consultando iFood..." : "Selecione o motivo"}</option>{reasons.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}</select>}<textarea autoFocus={order.provider !== "IFOOD"} maxLength={500} value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Informe pelo menos 5 caracteres" /></label>}
-    <footer><Link to="/integracoes/canais/pedidos" onClick={close}>Ver detalhes</Link><button onClick={() => { if (rejecting) void act("REJECT"); else void beginReject(); }} disabled={busy || loadingReasons || (rejecting && !validRejection)} className="catalog-action catalog-action--danger">{rejecting ? "Confirmar recusa" : "Recusar"}</button>{!rejecting && <button className="catalog-action catalog-action--success" onClick={() => void act("ACCEPT")} disabled={busy}>{busy ? "Enviando..." : "Solicitar aceite"}</button>}<button className="channel-notification-later" onClick={close} disabled={busy}>Dispensar alerta</button></footer>
+    <footer><Link to="/integracoes/canais/pedidos" onClick={close}>{order.catalogProfile === "GROCERY" ? "Abrir separação" : "Ver detalhes"}</Link><button onClick={() => { if (rejecting) void act("REJECT"); else void beginReject(); }} disabled={busy || loadingReasons || (rejecting && !validRejection)} className="catalog-action catalog-action--danger">{rejecting ? "Confirmar recusa" : "Recusar"}</button>{!rejecting && order.catalogProfile !== "GROCERY" && <button className="catalog-action catalog-action--success" onClick={() => void act("ACCEPT")} disabled={busy || Boolean(acceptanceIssue)} title={acceptanceIssue ?? undefined}>{busy ? "Enviando..." : "Aceitar pedido"}</button>}<button className="channel-notification-later" onClick={close} disabled={busy}>Dispensar alerta</button></footer>
     <small className="channel-order-notification__security"><span className="material-symbols-rounded">sync_lock</span>O alerta sonoro continua enquanto este aviso estiver aberto. O status muda somente após confirmação do parceiro.</small>
   </section></div>;
 }
