@@ -321,7 +321,7 @@ function MappingModal({ editing, connections, form, setForm, busy, onClose, onSu
   const identifierValue = grocery ? groceryIdentifier.value : form.externalProductId.trim();
   const priceReady = Number(selectedProduct?.salePriceCents ?? 0) > 0;
   const productLoaded = Boolean(selectedProduct && selectedProduct.salePriceCents !== undefined);
-  const productReady = Boolean(form.productId) && productLoaded && priceReady && (!grocery || groceryIdentifier.valid);
+  const productReady = Boolean(form.productId) && productLoaded && ((!form.enabled && Boolean(editing)) || (priceReady && (!grocery || groceryIdentifier.valid)));
 
   return <div className="catalog-backdrop"><section className="catalog-modal master-modal channel-modal" role="dialog" aria-modal="true" aria-label="Adicionar produto ao iFood">
     <header><div><span className="eyebrow">Produtos no iFood</span><h2>{editing ? "Configurar produto" : "Adicionar produto ao iFood"}</h2></div><button onClick={onClose} aria-label="Fechar">×</button></header>
