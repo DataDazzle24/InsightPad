@@ -1100,7 +1100,7 @@ query FinancialIndicatorsDashboard($from: Date!, $to: Date!, $filters: Any!, $re
       SELECT COALESCE($4::jsonb,'{}'::jsonb) AS value
     ), filtered_items AS (
       SELECT i.sale_id,i.product_id,i.quantity,i.total_cents,i.unit_cost_cents,
-             s.branch_id,(s.sold_at AT TIME ZONE a.timezone)::date AS sale_day,
+             s.branch_id,s.source AS sale_source,(s.sold_at AT TIME ZONE a.timezone)::date AS sale_day,
              p.name AS product_name,c.name AS category_name,sc.name AS subcategory_name
       FROM sale_items i
       JOIN sales s ON s.id=i.sale_id AND s.tenant_id=i.tenant_id
@@ -1116,6 +1116,7 @@ query FinancialIndicatorsDashboard($from: Date!, $to: Date!, $filters: Any!, $re
         AND (COALESCE(jsonb_array_length(f.value->'categories'),0)=0 OR EXISTS(SELECT 1 FROM jsonb_array_elements_text(COALESCE(f.value->'categories','[]'::jsonb)) x WHERE x.value=p.category_id::text))
         AND (COALESCE(jsonb_array_length(f.value->'subcategories'),0)=0 OR EXISTS(SELECT 1 FROM jsonb_array_elements_text(COALESCE(f.value->'subcategories','[]'::jsonb)) x WHERE x.value=p.subcategory_id::text))
         AND (COALESCE(jsonb_array_length(f.value->'suppliers'),0)=0 OR EXISTS(SELECT 1 FROM jsonb_array_elements_text(COALESCE(f.value->'suppliers','[]'::jsonb)) x WHERE x.value=p.supplier_id::text))
+        AND (COALESCE(jsonb_array_length(f.value->'sources'),0)=0 OR EXISTS(SELECT 1 FROM jsonb_array_elements_text(COALESCE(f.value->'sources','[]'::jsonb)) x WHERE x.value=s.source))
     ), eligible_sales AS (
       SELECT s.id,s.total_cents,(s.sold_at AT TIME ZONE a.timezone)::date AS sale_day
       FROM sales s JOIN actor a ON a.tenant_id=s.tenant_id
@@ -1136,8 +1137,9 @@ query FinancialIndicatorsDashboard($from: Date!, $to: Date!, $filters: Any!, $re
     ), closed_months AS (
       SELECT date_trunc('month',s.sold_at AT TIME ZONE a.timezone)::date AS month,count(s.id)::int AS volume,
              COALESCE(sum(s.total_cents),0)::bigint AS revenue,COALESCE(sum(c.cost),0)::bigint AS cost
-      FROM sales s JOIN actor a ON a.tenant_id=s.tenant_id LEFT JOIN historical_sale_cost c ON c.sale_id=s.id
+      FROM sales s JOIN actor a ON a.tenant_id=s.tenant_id LEFT JOIN historical_sale_cost c ON c.sale_id=s.id CROSS JOIN filter_input f
       WHERE s.status='COMPLETED' AND date_trunc('month',s.sold_at AT TIME ZONE a.timezone)<date_trunc('month',current_timestamp AT TIME ZONE a.timezone)
+        AND (COALESCE(jsonb_array_length(f.value->'sources'),0)=0 OR EXISTS(SELECT 1 FROM jsonb_array_elements_text(COALESCE(f.value->'sources','[]'::jsonb)) x WHERE x.value=s.source))
       GROUP BY date_trunc('month',s.sold_at AT TIME ZONE a.timezone)::date ORDER BY month DESC LIMIT 12
     ), monthly_stats AS (
       SELECT COALESCE((SELECT volume FROM closed_months ORDER BY month DESC LIMIT 1),0) AS last_volume,
@@ -1155,7 +1157,8 @@ query FinancialIndicatorsDashboard($from: Date!, $to: Date!, $filters: Any!, $re
         'products',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',p.id,'name',p.name) ORDER BY lower(p.name)) FROM products p JOIN actor a ON a.tenant_id=p.tenant_id WHERE p.active AND p.deleted_at IS NULL),'[]'::jsonb),
         'categories',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',c.id,'name',c.name) ORDER BY lower(c.name)) FROM categories c JOIN actor a ON a.tenant_id=c.tenant_id WHERE c.active AND c.deleted_at IS NULL),'[]'::jsonb),
         'subcategories',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',s.id,'name',s.name) ORDER BY lower(s.name)) FROM subcategories s JOIN actor a ON a.tenant_id=s.tenant_id WHERE s.active AND s.deleted_at IS NULL),'[]'::jsonb),
-        'suppliers',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',s.id,'name',COALESCE(s.trade_name,s.legal_name)) ORDER BY lower(COALESCE(s.trade_name,s.legal_name))) FROM suppliers s JOIN actor a ON a.tenant_id=s.tenant_id WHERE s.active AND s.deleted_at IS NULL),'[]'::jsonb)
+        'suppliers',COALESCE((SELECT jsonb_agg(jsonb_build_object('id',s.id,'name',COALESCE(s.trade_name,s.legal_name)) ORDER BY lower(COALESCE(s.trade_name,s.legal_name))) FROM suppliers s JOIN actor a ON a.tenant_id=s.tenant_id WHERE s.active AND s.deleted_at IS NULL),'[]'::jsonb),
+        'sources',jsonb_build_array(jsonb_build_object('id','POS','name','Balcão / PDV'),jsonb_build_object('id','IFOOD','name','iFood'))
       ),
       'cards',(SELECT jsonb_build_object('volume',volume,'revenueCents',revenue::text,'costCents',cost::text,'profitCents',(revenue-cost)::text,'marginPercent',CASE WHEN revenue=0 THEN 0 ELSE round((revenue-cost)*100.0/revenue,2) END,'ticketCents',CASE WHEN volume=0 THEN '0' ELSE round(revenue::numeric/volume)::bigint::text END) FROM totals),
       'monthly',(SELECT jsonb_build_object('lastVolume',last_volume,'averageVolume',avg_volume,'volumeGrowth',CASE WHEN avg_volume=0 THEN 0 ELSE round((last_volume-avg_volume)*100.0/avg_volume,2) END,'lastProfitCents',last_profit::text,'averageProfitCents',avg_profit::text,'profitGrowth',CASE WHEN avg_profit=0 THEN 0 ELSE round((last_profit-avg_profit)*100.0/avg_profit,2) END,'months',months) FROM monthly_stats),
