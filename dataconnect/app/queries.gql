@@ -209,7 +209,7 @@ query SalesChannelProductMappingsV2($term: String!, $provider: String!, $connect
   """,params:[{_expr:"auth.uid"},$term,$provider,$connectionId,$status,$sortField,$sortDirection,$limit,$offset,$requestKey])
 }
 
-query SalesChannelProductOptions($term: String!, $connectionId: UUID, $limit: Int!, $requestKey: String!) @auth(level: USER) {
+query SalesChannelProductOptions($term: String!, $connectionId: UUID, $productId: UUID, $limit: Int!, $requestKey: String!) @auth(level: USER) {
   _select(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -223,7 +223,7 @@ query SalesChannelProductOptions($term: String!, $connectionId: UUID, $limit: In
       WHERE c.id=$3 AND c.active AND c.deleted_at IS NULL
         AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1 AND ub.tenant_id=c.tenant_id AND ub.branch_id=c.branch_id AND ub.active))
     )
-    SELECT p.id,p.name,p.internal_code AS "internalCode",p.ean,p.scale_code AS "scaleCode",p.sale_price_cents AS "salePriceCents",p.weighted_product AS "weightedProduct",
+    SELECT p.id,p.name,p.internal_code AS "internalCode",p.ean,p.scale_code AS "scaleCode",p.sale_price_cents AS "salePriceCents",p.weighted_product AS "weightedProduct",p.active,
       COALESCE(sb.quantity,0) AS "physicalStock",COALESCE(reserved.quantity,0) AS "reservedStock",
       COALESCE(sb.quantity,0)-COALESCE(reserved.quantity,0) AS "availableStock"
     FROM products p JOIN actor a ON a.tenant_id=p.tenant_id
@@ -233,11 +233,12 @@ query SalesChannelProductOptions($term: String!, $connectionId: UUID, $limit: In
       SELECT COALESCE(sum(r.quantity),0) quantity FROM sales_channel_stock_reservations r
       WHERE r.tenant_id=p.tenant_id AND r.branch_id=c.branch_id AND r.product_id=p.id AND r.status='RESERVED'
     ) reserved ON true
-    WHERE p.active AND p.deleted_at IS NULL AND NOT p.bundle_product AND $5<>''
+    WHERE NOT p.bundle_product AND (p.active OR p.id=$4) AND (p.deleted_at IS NULL OR p.id=$4) AND $6<>''
+      AND ($4::uuid IS NULL OR p.id=$4)
       AND ($3::uuid IS NULL OR c.branch_id IS NOT NULL)
-      AND ($2='' OR p.name ILIKE '%'||$2||'%' OR p.internal_code ILIKE '%'||$2||'%' OR COALESCE(p.ean,'') ILIKE '%'||$2||'%' OR COALESCE(p.scale_code,'') ILIKE '%'||$2||'%')
-    ORDER BY lower(p.name),p.id LIMIT LEAST(GREATEST($4,1),50)
-  """,params:[{_expr:"auth.uid"},$term,$connectionId,$limit,$requestKey])
+      AND ($4::uuid IS NOT NULL OR $2='' OR p.name ILIKE '%'||$2||'%' OR p.internal_code ILIKE '%'||$2||'%' OR COALESCE(p.ean,'') ILIKE '%'||$2||'%' OR COALESCE(p.scale_code,'') ILIKE '%'||$2||'%')
+    ORDER BY lower(p.name),p.id LIMIT LEAST(GREATEST($5,1),50)
+  """,params:[{_expr:"auth.uid"},$term,$connectionId,$productId,$limit,$requestKey])
 }
 
 query SalesChannelOperations($connectionId: UUID, $limit: Int! = 50, $requestKey: String!) @auth(level: USER) {
