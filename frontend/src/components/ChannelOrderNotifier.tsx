@@ -111,13 +111,23 @@ export function ChannelOrderNotifier() {
   useEffect(() => () => { void audio.current?.close(); }, []);
 
   useEffect(() => {
-    const initial = window.setTimeout(() => void check(), 0);
-    const timer = window.setInterval(() => void check(), document.visibilityState === "visible" ? 15_000 : 30_000);
-    const onVisible = () => { if (document.visibilityState === "visible") void check(); };
+    let stopped = false;
+    let timer = 0;
+    const schedule = (delay: number) => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(async () => {
+        await check();
+        if (!stopped) schedule(document.visibilityState === "visible" ? 15_000 : 60_000);
+      }, delay);
+    };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") schedule(0);
+    };
+    schedule(0);
     document.addEventListener("visibilitychange", onVisible);
     return () => {
-      window.clearTimeout(initial);
-      window.clearInterval(timer);
+      stopped = true;
+      window.clearTimeout(timer);
       document.removeEventListener("visibilitychange", onVisible);
     };
   }, [check]);
@@ -201,7 +211,7 @@ export function ChannelOrderNotifier() {
     <div className="channel-order-notification__items"><h3>Itens</h3>{order.items.map((item, index) => <article key={`${item.name}-${index}`}><strong>{item.quantity}×</strong><span>{item.name}{item.observation && <small>{item.observation}</small>}</span></article>)}</div>
     {error && <p className="channel-notification-error" role="alert">{error}</p>}
     {rejecting && <label className="channel-order-notification__reason"><span>Motivo da recusa</span>{order.provider === "IFOOD" && <select value={reasonCode} disabled={loadingReasons || busy} onChange={(event) => { setReasonCode(event.target.value); setReason(reasons.find((item) => item.code === event.target.value)?.label ?? ""); }}><option value="">{loadingReasons ? "Consultando iFood..." : "Selecione o motivo"}</option>{reasons.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}</select>}<textarea autoFocus={order.provider !== "IFOOD"} maxLength={500} value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Informe pelo menos 5 caracteres" /></label>}
-    <footer><Link to="/integracoes/canais/pedidos" onClick={close}>Ver detalhes</Link><button onClick={() => { if (rejecting) void act("REJECT"); else void beginReject(); }} disabled={busy || loadingReasons || (rejecting && !validRejection)} className="catalog-action catalog-action--danger">{rejecting ? "Confirmar recusa" : "Recusar"}</button>{!rejecting && <button className="catalog-action catalog-action--success" onClick={() => void act("ACCEPT")} disabled={busy}>{busy ? "Enviando..." : "Solicitar aceite"}</button>}<button className="channel-notification-later" onClick={close} disabled={busy}>Lembrar depois</button></footer>
-    <small className="channel-order-notification__security"><span className="material-symbols-rounded">sync_lock</span>O alerta continuará até você abrir ou dispensar o pedido. O status muda somente após confirmação do parceiro.</small>
+    <footer><Link to="/integracoes/canais/pedidos" onClick={close}>Ver detalhes</Link><button onClick={() => { if (rejecting) void act("REJECT"); else void beginReject(); }} disabled={busy || loadingReasons || (rejecting && !validRejection)} className="catalog-action catalog-action--danger">{rejecting ? "Confirmar recusa" : "Recusar"}</button>{!rejecting && <button className="catalog-action catalog-action--success" onClick={() => void act("ACCEPT")} disabled={busy}>{busy ? "Enviando..." : "Solicitar aceite"}</button>}<button className="channel-notification-later" onClick={close} disabled={busy}>Dispensar alerta</button></footer>
+    <small className="channel-order-notification__security"><span className="material-symbols-rounded">sync_lock</span>O alerta sonoro continua enquanto este aviso estiver aberto. O status muda somente após confirmação do parceiro.</small>
   </section></div>;
 }
