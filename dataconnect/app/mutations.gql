@@ -2187,7 +2187,7 @@ mutation QueueSalesChannelOrderAction($id: UUID!, $action: String!, $reason: Str
       JOIN sales_channel_connections c ON c.id=o.connection_id AND c.tenant_id=o.tenant_id AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=$1 AND ub.tenant_id=c.tenant_id AND ub.branch_id=c.branch_id AND ub.active))
       LEFT JOIN sales_channel_order_items order_item ON order_item.id=$7 AND order_item.order_id=o.id AND order_item.tenant_id=o.tenant_id
       WHERE o.id=$2 AND o.version=$5 AND c.active AND c.deleted_at IS NULL AND c.enabled
-        AND c.status='ACTIVE' AND c.authorization_status='AUTHORIZED'
+        AND c.status='ACTIVE' AND c.authorization_status='AUTHORIZED' AND c.catalog_profile IN ('RESTAURANT','GROCERY')
         AND (i.action IN ('ACCEPT','REJECT','COMPLETE','CANCEL') OR (c.catalog_profile='GROCERY' AND i.action IN ('ADD_ITEM','REPLACE_ITEM','UPDATE_ITEM','REMOVE_ITEM')))
         AND o.command_status NOT IN ('QUEUED','RETRY','PROCESSING','AWAITING_PARTNER')
         AND ((i.action IN ('ACCEPT','REJECT') AND o.status='PENDING')
@@ -2195,8 +2195,13 @@ mutation QueueSalesChannelOrderAction($id: UUID!, $action: String!, $reason: Str
           OR (i.action='COMPLETE' AND o.status='ACCEPTED') OR (i.action='CANCEL' AND o.status IN ('PENDING','ACCEPTED')) OR (i.action IN ('ADD_ITEM','REPLACE_ITEM','UPDATE_ITEM','REMOVE_ITEM') AND o.status='ACCEPTED'))
         AND (c.catalog_profile<>'GROCERY' OR i.action IN ('ACCEPT','REJECT','CANCEL') OR EXISTS(SELECT 1 FROM sales_channel_commands started WHERE started.order_id=o.id AND started.tenant_id=o.tenant_id AND started.action='ACCEPT' AND started.status='CONFIRMED'))
         AND (i.action NOT IN ('REJECT','CANCEL') OR length(i.reason)>=5)
-        AND (i.action<>'ACCEPT' OR NOT EXISTS(SELECT 1 FROM sales_channel_order_items unmapped WHERE unmapped.order_id=o.id AND unmapped.tenant_id=o.tenant_id AND unmapped.product_id IS NULL))
-        AND (i.action<>'ACCEPT' OR NOT EXISTS(
+        AND (i.action<>'ACCEPT' OR o.status<>'PENDING' OR NOT EXISTS(
+          SELECT 1 FROM sales_channel_order_items unmapped
+          LEFT JOIN products mapped_product ON mapped_product.id=unmapped.product_id AND mapped_product.tenant_id=unmapped.tenant_id
+          WHERE unmapped.order_id=o.id AND unmapped.tenant_id=o.tenant_id
+            AND (unmapped.product_id IS NULL OR mapped_product.id IS NULL OR NOT mapped_product.active OR mapped_product.deleted_at IS NOT NULL OR mapped_product.bundle_product)
+        ))
+        AND (i.action<>'ACCEPT' OR o.status<>'PENDING' OR NOT EXISTS(
           SELECT 1 FROM (
             SELECT oi.product_id,sum(oi.quantity)::numeric(18,3) quantity
             FROM sales_channel_order_items oi WHERE oi.order_id=o.id AND oi.tenant_id=o.tenant_id AND oi.product_id IS NOT NULL
