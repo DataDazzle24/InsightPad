@@ -885,6 +885,8 @@ The `SalesChannelProductOptions` Query requires an argument of type `SalesChanne
 ```javascript
 export interface SalesChannelProductOptionsVariables {
   term: string;
+  connectionId?: UUIDString | null;
+  productId?: UUIDString | null;
   limit: number;
   requestKey: string;
 }
@@ -914,6 +916,8 @@ export default function SalesChannelProductOptionsComponent() {
   // The `useSalesChannelProductOptions` Query hook requires an argument of type `SalesChannelProductOptionsVariables`:
   const salesChannelProductOptionsVars: SalesChannelProductOptionsVariables = {
     term: ..., 
+    connectionId: ..., // optional
+    productId: ..., // optional
     limit: ..., 
     requestKey: ..., 
   };
@@ -922,7 +926,7 @@ export default function SalesChannelProductOptionsComponent() {
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useSalesChannelProductOptions(salesChannelProductOptionsVars);
   // Variables can be defined inline as well.
-  const query = useSalesChannelProductOptions({ term: ..., limit: ..., requestKey: ..., });
+  const query = useSalesChannelProductOptions({ term: ..., connectionId: ..., productId: ..., limit: ..., requestKey: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);

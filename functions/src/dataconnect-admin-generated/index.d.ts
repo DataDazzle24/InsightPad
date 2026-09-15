@@ -880,6 +880,8 @@ export interface SalesChannelProductOptionsData {
 
 export interface SalesChannelProductOptionsVariables {
   term: string;
+  connectionId?: UUIDString | null;
+  productId?: UUIDString | null;
   limit: number;
   requestKey: string;
 }

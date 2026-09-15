@@ -1042,6 +1042,8 @@ The `SalesChannelProductOptions` query requires an argument of type `SalesChanne
 ```typescript
 export interface SalesChannelProductOptionsVariables {
   term: string;
+  connectionId?: UUIDString | null;
+  productId?: UUIDString | null;
   limit: number;
   requestKey: string;
 }
@@ -1064,6 +1066,8 @@ import { connectorConfig, salesChannelProductOptions, SalesChannelProductOptions
 // The `SalesChannelProductOptions` query requires an argument of type `SalesChannelProductOptionsVariables`:
 const salesChannelProductOptionsVars: SalesChannelProductOptionsVariables = {
   term: ..., 
+  connectionId: ..., // optional
+  productId: ..., // optional
   limit: ..., 
   requestKey: ..., 
 };
@@ -1072,7 +1076,7 @@ const salesChannelProductOptionsVars: SalesChannelProductOptionsVariables = {
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await salesChannelProductOptions(salesChannelProductOptionsVars);
 // Variables can be defined inline as well.
-const { data } = await salesChannelProductOptions({ term: ..., limit: ..., requestKey: ..., });
+const { data } = await salesChannelProductOptions({ term: ..., connectionId: ..., productId: ..., limit: ..., requestKey: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -1096,6 +1100,8 @@ import { connectorConfig, salesChannelProductOptionsRef, SalesChannelProductOpti
 // The `SalesChannelProductOptions` query requires an argument of type `SalesChannelProductOptionsVariables`:
 const salesChannelProductOptionsVars: SalesChannelProductOptionsVariables = {
   term: ..., 
+  connectionId: ..., // optional
+  productId: ..., // optional
   limit: ..., 
   requestKey: ..., 
 };
@@ -1103,7 +1109,7 @@ const salesChannelProductOptionsVars: SalesChannelProductOptionsVariables = {
 // Call the `salesChannelProductOptionsRef()` function to get a reference to the query.
 const ref = salesChannelProductOptionsRef(salesChannelProductOptionsVars);
 // Variables can be defined inline as well.
-const ref = salesChannelProductOptionsRef({ term: ..., limit: ..., requestKey: ..., });
+const ref = salesChannelProductOptionsRef({ term: ..., connectionId: ..., productId: ..., limit: ..., requestKey: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);

@@ -72,6 +72,8 @@ describe("PostgreSQL: lifecycle and scope", () => {
 
   it("queues Grocery separation and validates bag item ownership", async () => {
     await db.exec("DELETE FROM sales_channel_commands; UPDATE sales_channel_connections SET catalog_profile='GROCERY'; UPDATE sales_channel_orders SET status='PENDING',pending_action=NULL,command_status='IDLE'");
+    await db.query("UPDATE sales_channel_order_items SET product_id=$1,mapping_status='MAPPED' WHERE id=$2",[ids.product,ids.orderItem]);
+    await db.query("INSERT INTO stock_balances(tenant_id,branch_id,product_id,quantity) VALUES ($1,$2,$3,10)",[ids.tenant,ids.branch,ids.product]);
     await operation(db,"QueueSalesChannelOrderAction",["actor",ids.order,"ACCEPT","",1,"",null,"",0]);
     const separation = (await db.query<{id:string,action:string}>("SELECT id,action FROM sales_channel_commands")).rows[0]!;
     expect(separation.action).toBe("ACCEPT");
@@ -291,6 +293,26 @@ describe("PostgreSQL: channel commerce", () => {
     expect((await db.query("SELECT id FROM sales")).rows).toHaveLength(0);
   });
 
+  it("updates an accepted order snapshot without exposing or losing its reserved stock", async () => {
+    await mappedOrder();
+    await db.query("UPDATE sales_channel_orders SET idempotency_key=$1 WHERE id=$2",[`${ids.tenant}:IFOOD:order-1`,ids.order]);
+    await operation(db,"SystemReconcileSalesChannelCommerce",[ids.connection,"order-1",evidence()]);
+    await db.query("UPDATE products SET active=false WHERE id=$1",[ids.product]);
+
+    await operation(db,"SystemIngestSalesChannelOrder",[ids.connection,{
+      ...evidence(),providerOrderId:"order-1",displayCode:"1234",reconciledStatus:"ACCEPTED",partnerStatus:"CONFIRMED",
+      customerName:"Cliente",orderType:"DELIVERY",paymentMethod:"ONLINE",deliveryProvider:"IFOOD",deliveryAddress:"Rua teste",notes:"",
+      subtotalCents:3000,deliveryFeeCents:0,discountCents:0,totalCents:3000,scheduledAt:"",preparationStartAt:"",
+      snapshotHash:"patched-snapshot",receivedAt:new Date().toISOString(),items:[{
+        external_item_id:"bag-item-1",external_product_id:"item-1",ean:"",name:"Produto",quantity:2,unit_price_cents:1500,total_cents:3000,observation:"",
+      }],
+    }]);
+
+    expect((await db.query<{quantity:string;status:string}>("SELECT quantity::text,status FROM sales_channel_stock_reservations")).rows).toEqual([{quantity:"2.000",status:"RESERVED"}]);
+    expect((await db.query<{product_id:string;quantity:string}>("SELECT product_id,quantity::text FROM sales_channel_order_items")).rows).toEqual([{product_id:ids.product,quantity:"2"}]);
+    expect(await order()).toMatchObject({commerce_status:"RESERVED",stock_reservation_status:"RESERVED"});
+  });
+
   it("creates one sale with official totals, allocated discount and one stock movement", async () => {
     await mappedOrder("COMPLETED");
     await db.query("UPDATE sales_channel_orders SET subtotal_cents=1500,delivery_fee_cents=300,discount_cents=200,total_cents=1600 WHERE id=$1",[ids.order]);
@@ -356,6 +378,26 @@ describe("PostgreSQL: channel commerce", () => {
     await db.query("INSERT INTO stock_balances(tenant_id,branch_id,product_id,quantity) VALUES ($1,$2,$3,1)",[ids.tenant,ids.branch,ids.product]);
     await operation(db,"QueueSalesChannelOrderAction",["actor",ids.order,"ACCEPT","",1,"",null,"",0]);
     expect((await db.query<{action:string;status:string}>("SELECT action,status FROM sales_channel_commands")).rows).toEqual([{action:"ACCEPT",status:"QUEUED"}]);
+    expect((await db.query<{quantity:string;status:string}>("SELECT quantity::text,status FROM sales_channel_stock_reservations")).rows).toEqual([{quantity:"1.000",status:"RESERVED"}]);
+    expect(await order()).toMatchObject({stock_reservation_status:"RESERVED"});
+  });
+
+  it("keeps a failed acceptance reserved until the operator explicitly rejects the pending order", async () => {
+    await db.exec("DELETE FROM sales_channel_commands");
+    await db.query("UPDATE sales_channel_order_items SET product_id=$1,mapping_status='MAPPED' WHERE id=$2",[ids.product,ids.orderItem]);
+    await db.query("INSERT INTO stock_balances(tenant_id,branch_id,product_id,quantity) VALUES ($1,$2,$3,5)",[ids.tenant,ids.branch,ids.product]);
+    await db.query("UPDATE sales_channel_orders SET status='PENDING',pending_action=NULL,command_status='IDLE',version=1 WHERE id=$1",[ids.order]);
+    await operation(db,"QueueSalesChannelOrderAction",["actor",ids.order,"ACCEPT","",1,"",null,"",0]);
+
+    const accept=(await db.query<{id:string}>("SELECT id FROM sales_channel_commands WHERE action='ACCEPT'")).rows[0]!;
+    await db.query("UPDATE sales_channel_commands SET status='PROCESSING',locked_by='worker-123',lease_until=now()+interval '5 minutes' WHERE id=$1",[accept.id]);
+    await operation(db,"SystemRecordSalesChannelCommandResult",[accept.id,"worker-123",{success:false,retryable:false,error:"Recusa técnica"}]);
+    expect((await db.query<{status:string}>("SELECT status FROM sales_channel_stock_reservations")).rows[0]?.status).toBe("RESERVED");
+
+    const failed=await order();
+    await operation(db,"QueueSalesChannelOrderAction",["actor",ids.order,"REJECT","Pedido recusado pelo operador",Number(failed.version),"",null,"",0]);
+    expect((await db.query<{status:string}>("SELECT status FROM sales_channel_stock_reservations")).rows[0]?.status).toBe("RELEASED");
+    expect(await order()).toMatchObject({stock_reservation_status:"RELEASED",pending_action:"REJECT"});
   });
 
   it("blocks acceptance for an unverified channel or inactive mapped product", async () => {

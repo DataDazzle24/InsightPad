@@ -362,7 +362,10 @@ async function processEvent(client: IfoodClient, workerId: string, eventWork: Ev
         const orderResponse = await client.getOrder(orderId);
         assertOrderIdentity(orderResponse.data, orderId, eventWork.externalStoreId ?? "");
         const order = normalizeIfoodOrder(orderResponse.data, eventWork.id, event);
-        await systemIngestSalesChannelOrder(dc, { connectionId: eventWork.connectionId, payload: { ...order, workerId, merchantId: eventWork.externalStoreId } });
+        await systemIngestSalesChannelOrder(dc, {
+          connectionId: eventWork.connectionId,
+          payload: { ...order, workerId, merchantId: eventWork.externalStoreId, reconciledStatus: orderStatusFromCode(order.partnerStatus) },
+        });
       } catch (error) {
         if (!(error instanceof IfoodHttpError && error.status === 404)) throw error;
         if (eventStatus(event) === "PENDING") {
