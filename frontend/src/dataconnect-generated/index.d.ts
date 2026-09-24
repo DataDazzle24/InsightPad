@@ -25,6 +25,16 @@ export interface AccountReceivable_Key {
   __typename?: 'AccountReceivable_Key';
 }
 
+export interface AcknowledgeSalesChannelOrderAlertData {
+  _execute?: number | null;
+}
+
+export interface AcknowledgeSalesChannelOrderAlertVariables {
+  id: UUIDString;
+  version: number;
+  alertKind: string;
+}
+
 export interface AppPage_Key {
   id: UUIDString;
   __typename?: 'AppPage_Key';
@@ -238,6 +248,9 @@ export interface CreateSalesChannelProductMappingVariables {
   externalProductName: string;
   syncPrice: boolean;
   syncStock: boolean;
+  priceMode: string;
+  customPriceCents?: Int64String | null;
+  remoteProductState: string;
 }
 
 export interface CreateSubcategoriesBatchData {
@@ -275,6 +288,20 @@ export interface DailyProfitDashboardVariables {
 
 export interface EnsureSalesDefaultsData {
   _execute?: number | null;
+}
+
+export interface ExportSalesChannelManagementData {
+  _select?: unknown[] | null;
+}
+
+export interface ExportSalesChannelManagementVariables {
+  section: string;
+  term: string;
+  provider: string;
+  status: string;
+  branchId?: UUIDString | null;
+  connectionId?: UUIDString | null;
+  requestKey: string;
 }
 
 export interface FinancialAccount_Key {
@@ -715,6 +742,14 @@ export interface RetrySalesChannelCommandVariables {
   id: UUIDString;
 }
 
+export interface RetrySalesChannelDecommissioningData {
+  _execute?: number | null;
+}
+
+export interface RetrySalesChannelDecommissioningVariables {
+  id: UUIDString;
+}
+
 export interface ReversePlatformPaymentData {
   _execute?: number | null;
 }
@@ -769,6 +804,17 @@ export interface Sale_Key {
   __typename?: 'Sale_Key';
 }
 
+export interface SalesChannelAnalyticsDashboardData {
+  _select?: unknown[] | null;
+}
+
+export interface SalesChannelAnalyticsDashboardVariables {
+  from: DateString;
+  to: DateString;
+  filters: unknown;
+  requestKey: string;
+}
+
 export interface SalesChannelCommand_Key {
   id: UUIDString;
   __typename?: 'SalesChannelCommand_Key';
@@ -800,6 +846,11 @@ export interface SalesChannelEventInbox_Key {
   __typename?: 'SalesChannelEventInbox_Key';
 }
 
+export interface SalesChannelFinancialEntry_Key {
+  id: UUIDString;
+  __typename?: 'SalesChannelFinancialEntry_Key';
+}
+
 export interface SalesChannelOperationsData {
   _select?: unknown[] | null;
 }
@@ -818,9 +869,34 @@ export interface SalesChannelOptionsVariables {
   requestKey: string;
 }
 
+export interface SalesChannelOrderAdjustment_Key {
+  id: UUIDString;
+  __typename?: 'SalesChannelOrderAdjustment_Key';
+}
+
+export interface SalesChannelOrderAlertAcknowledgment_Key {
+  orderId: UUIDString;
+  userId: string;
+  __typename?: 'SalesChannelOrderAlertAcknowledgment_Key';
+}
+
+export interface SalesChannelOrderDetailsData {
+  _select?: unknown[] | null;
+}
+
+export interface SalesChannelOrderDetailsVariables {
+  id: UUIDString;
+  requestKey: string;
+}
+
 export interface SalesChannelOrderItem_Key {
   id: UUIDString;
   __typename?: 'SalesChannelOrderItem_Key';
+}
+
+export interface SalesChannelOrderPayment_Key {
+  id: UUIDString;
+  __typename?: 'SalesChannelOrderPayment_Key';
 }
 
 export interface SalesChannelOrder_Key {
@@ -1338,6 +1414,14 @@ export interface SystemSalesChannelConnectionForActorVariables {
   connectionId: UUIDString;
 }
 
+export interface SystemSalesChannelHealthMetricsData {
+  _select?: unknown[] | null;
+}
+
+export interface SystemSalesChannelHealthMetricsVariables {
+  requestKey: string;
+}
+
 export interface SystemSalesChannelMappingsForSyncData {
   _select?: unknown[] | null;
 }
@@ -1373,6 +1457,17 @@ export interface SystemUpdateSalesChannelConnectionData {
 export interface SystemUpdateSalesChannelConnectionVariables {
   connectionId: UUIDString;
   payload: unknown;
+}
+
+export interface SystemUpsertSalesChannelFinancialEventsData {
+  _execute?: number | null;
+}
+
+export interface SystemUpsertSalesChannelFinancialEventsVariables {
+  connectionId: UUIDString;
+  jobId: UUIDString;
+  workerId: string;
+  payloads: unknown;
 }
 
 export interface TenantBillingProfile_Key {
@@ -1450,6 +1545,9 @@ export interface UpdateSalesChannelProductMappingVariables {
   syncPrice: boolean;
   syncStock: boolean;
   enabled: boolean;
+  priceMode: string;
+  customPriceCents?: Int64String | null;
+  remoteProductState: string;
 }
 
 export interface UpdateSubcategoryData {
@@ -2263,6 +2361,18 @@ export const retrySalesChannelCommandRef: RetrySalesChannelCommandRef;
 export function retrySalesChannelCommand(vars: RetrySalesChannelCommandVariables): MutationPromise<RetrySalesChannelCommandData, RetrySalesChannelCommandVariables>;
 export function retrySalesChannelCommand(dc: DataConnect, vars: RetrySalesChannelCommandVariables): MutationPromise<RetrySalesChannelCommandData, RetrySalesChannelCommandVariables>;
 
+interface RetrySalesChannelDecommissioningRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: RetrySalesChannelDecommissioningVariables): MutationRef<RetrySalesChannelDecommissioningData, RetrySalesChannelDecommissioningVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: RetrySalesChannelDecommissioningVariables): MutationRef<RetrySalesChannelDecommissioningData, RetrySalesChannelDecommissioningVariables>;
+  operationName: string;
+}
+export const retrySalesChannelDecommissioningRef: RetrySalesChannelDecommissioningRef;
+
+export function retrySalesChannelDecommissioning(vars: RetrySalesChannelDecommissioningVariables): MutationPromise<RetrySalesChannelDecommissioningData, RetrySalesChannelDecommissioningVariables>;
+export function retrySalesChannelDecommissioning(dc: DataConnect, vars: RetrySalesChannelDecommissioningVariables): MutationPromise<RetrySalesChannelDecommissioningData, RetrySalesChannelDecommissioningVariables>;
+
 interface RequestSalesChannelOrderReconciliationRef {
   /* Allow users to create refs without passing in DataConnect */
   (vars: RequestSalesChannelOrderReconciliationVariables): MutationRef<RequestSalesChannelOrderReconciliationData, RequestSalesChannelOrderReconciliationVariables>;
@@ -2274,6 +2384,18 @@ export const requestSalesChannelOrderReconciliationRef: RequestSalesChannelOrder
 
 export function requestSalesChannelOrderReconciliation(vars: RequestSalesChannelOrderReconciliationVariables): MutationPromise<RequestSalesChannelOrderReconciliationData, RequestSalesChannelOrderReconciliationVariables>;
 export function requestSalesChannelOrderReconciliation(dc: DataConnect, vars: RequestSalesChannelOrderReconciliationVariables): MutationPromise<RequestSalesChannelOrderReconciliationData, RequestSalesChannelOrderReconciliationVariables>;
+
+interface AcknowledgeSalesChannelOrderAlertRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: AcknowledgeSalesChannelOrderAlertVariables): MutationRef<AcknowledgeSalesChannelOrderAlertData, AcknowledgeSalesChannelOrderAlertVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: AcknowledgeSalesChannelOrderAlertVariables): MutationRef<AcknowledgeSalesChannelOrderAlertData, AcknowledgeSalesChannelOrderAlertVariables>;
+  operationName: string;
+}
+export const acknowledgeSalesChannelOrderAlertRef: AcknowledgeSalesChannelOrderAlertRef;
+
+export function acknowledgeSalesChannelOrderAlert(vars: AcknowledgeSalesChannelOrderAlertVariables): MutationPromise<AcknowledgeSalesChannelOrderAlertData, AcknowledgeSalesChannelOrderAlertVariables>;
+export function acknowledgeSalesChannelOrderAlert(dc: DataConnect, vars: AcknowledgeSalesChannelOrderAlertVariables): MutationPromise<AcknowledgeSalesChannelOrderAlertData, AcknowledgeSalesChannelOrderAlertVariables>;
 
 interface MapSalesChannelOrderItemRef {
   /* Allow users to create refs without passing in DataConnect */
@@ -2418,6 +2540,18 @@ export const systemReconcileSalesChannelCommerceRef: SystemReconcileSalesChannel
 
 export function systemReconcileSalesChannelCommerce(vars: SystemReconcileSalesChannelCommerceVariables): MutationPromise<SystemReconcileSalesChannelCommerceData, SystemReconcileSalesChannelCommerceVariables>;
 export function systemReconcileSalesChannelCommerce(dc: DataConnect, vars: SystemReconcileSalesChannelCommerceVariables): MutationPromise<SystemReconcileSalesChannelCommerceData, SystemReconcileSalesChannelCommerceVariables>;
+
+interface SystemUpsertSalesChannelFinancialEventsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SystemUpsertSalesChannelFinancialEventsVariables): MutationRef<SystemUpsertSalesChannelFinancialEventsData, SystemUpsertSalesChannelFinancialEventsVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SystemUpsertSalesChannelFinancialEventsVariables): MutationRef<SystemUpsertSalesChannelFinancialEventsData, SystemUpsertSalesChannelFinancialEventsVariables>;
+  operationName: string;
+}
+export const systemUpsertSalesChannelFinancialEventsRef: SystemUpsertSalesChannelFinancialEventsRef;
+
+export function systemUpsertSalesChannelFinancialEvents(vars: SystemUpsertSalesChannelFinancialEventsVariables): MutationPromise<SystemUpsertSalesChannelFinancialEventsData, SystemUpsertSalesChannelFinancialEventsVariables>;
+export function systemUpsertSalesChannelFinancialEvents(dc: DataConnect, vars: SystemUpsertSalesChannelFinancialEventsVariables): MutationPromise<SystemUpsertSalesChannelFinancialEventsData, SystemUpsertSalesChannelFinancialEventsVariables>;
 
 interface SystemQueueDueSalesChannelSyncJobsRef {
   /* Allow users to create refs without passing in DataConnect */
@@ -2575,6 +2709,18 @@ export const salesChannelProductMappingsV2Ref: SalesChannelProductMappingsV2Ref;
 export function salesChannelProductMappingsV2(vars: SalesChannelProductMappingsV2Variables, options?: ExecuteQueryOptions): QueryPromise<SalesChannelProductMappingsV2Data, SalesChannelProductMappingsV2Variables>;
 export function salesChannelProductMappingsV2(dc: DataConnect, vars: SalesChannelProductMappingsV2Variables, options?: ExecuteQueryOptions): QueryPromise<SalesChannelProductMappingsV2Data, SalesChannelProductMappingsV2Variables>;
 
+interface ExportSalesChannelManagementRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ExportSalesChannelManagementVariables): QueryRef<ExportSalesChannelManagementData, ExportSalesChannelManagementVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ExportSalesChannelManagementVariables): QueryRef<ExportSalesChannelManagementData, ExportSalesChannelManagementVariables>;
+  operationName: string;
+}
+export const exportSalesChannelManagementRef: ExportSalesChannelManagementRef;
+
+export function exportSalesChannelManagement(vars: ExportSalesChannelManagementVariables, options?: ExecuteQueryOptions): QueryPromise<ExportSalesChannelManagementData, ExportSalesChannelManagementVariables>;
+export function exportSalesChannelManagement(dc: DataConnect, vars: ExportSalesChannelManagementVariables, options?: ExecuteQueryOptions): QueryPromise<ExportSalesChannelManagementData, ExportSalesChannelManagementVariables>;
+
 interface SalesChannelProductOptionsRef {
   /* Allow users to create refs without passing in DataConnect */
   (vars: SalesChannelProductOptionsVariables): QueryRef<SalesChannelProductOptionsData, SalesChannelProductOptionsVariables>;
@@ -2623,6 +2769,18 @@ export const systemIfoodConnectionsForPollingRef: SystemIfoodConnectionsForPolli
 export function systemIfoodConnectionsForPolling(vars: SystemIfoodConnectionsForPollingVariables, options?: ExecuteQueryOptions): QueryPromise<SystemIfoodConnectionsForPollingData, SystemIfoodConnectionsForPollingVariables>;
 export function systemIfoodConnectionsForPolling(dc: DataConnect, vars: SystemIfoodConnectionsForPollingVariables, options?: ExecuteQueryOptions): QueryPromise<SystemIfoodConnectionsForPollingData, SystemIfoodConnectionsForPollingVariables>;
 
+interface SystemSalesChannelHealthMetricsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SystemSalesChannelHealthMetricsVariables): QueryRef<SystemSalesChannelHealthMetricsData, SystemSalesChannelHealthMetricsVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SystemSalesChannelHealthMetricsVariables): QueryRef<SystemSalesChannelHealthMetricsData, SystemSalesChannelHealthMetricsVariables>;
+  operationName: string;
+}
+export const systemSalesChannelHealthMetricsRef: SystemSalesChannelHealthMetricsRef;
+
+export function systemSalesChannelHealthMetrics(vars: SystemSalesChannelHealthMetricsVariables, options?: ExecuteQueryOptions): QueryPromise<SystemSalesChannelHealthMetricsData, SystemSalesChannelHealthMetricsVariables>;
+export function systemSalesChannelHealthMetrics(dc: DataConnect, vars: SystemSalesChannelHealthMetricsVariables, options?: ExecuteQueryOptions): QueryPromise<SystemSalesChannelHealthMetricsData, SystemSalesChannelHealthMetricsVariables>;
+
 interface SystemIfoodConnectionByMerchantRef {
   /* Allow users to create refs without passing in DataConnect */
   (vars: SystemIfoodConnectionByMerchantVariables): QueryRef<SystemIfoodConnectionByMerchantData, SystemIfoodConnectionByMerchantVariables>;
@@ -2670,6 +2828,18 @@ export const salesChannelOrdersV2Ref: SalesChannelOrdersV2Ref;
 
 export function salesChannelOrdersV2(vars: SalesChannelOrdersV2Variables, options?: ExecuteQueryOptions): QueryPromise<SalesChannelOrdersV2Data, SalesChannelOrdersV2Variables>;
 export function salesChannelOrdersV2(dc: DataConnect, vars: SalesChannelOrdersV2Variables, options?: ExecuteQueryOptions): QueryPromise<SalesChannelOrdersV2Data, SalesChannelOrdersV2Variables>;
+
+interface SalesChannelOrderDetailsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SalesChannelOrderDetailsVariables): QueryRef<SalesChannelOrderDetailsData, SalesChannelOrderDetailsVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SalesChannelOrderDetailsVariables): QueryRef<SalesChannelOrderDetailsData, SalesChannelOrderDetailsVariables>;
+  operationName: string;
+}
+export const salesChannelOrderDetailsRef: SalesChannelOrderDetailsRef;
+
+export function salesChannelOrderDetails(vars: SalesChannelOrderDetailsVariables, options?: ExecuteQueryOptions): QueryPromise<SalesChannelOrderDetailsData, SalesChannelOrderDetailsVariables>;
+export function salesChannelOrderDetails(dc: DataConnect, vars: SalesChannelOrderDetailsVariables, options?: ExecuteQueryOptions): QueryPromise<SalesChannelOrderDetailsData, SalesChannelOrderDetailsVariables>;
 
 interface SalesChannelWorkspaceRef {
   /* Allow users to create refs without passing in DataConnect */
@@ -2946,6 +3116,18 @@ export const financialIndicatorsDashboardRef: FinancialIndicatorsDashboardRef;
 
 export function financialIndicatorsDashboard(vars: FinancialIndicatorsDashboardVariables, options?: ExecuteQueryOptions): QueryPromise<FinancialIndicatorsDashboardData, FinancialIndicatorsDashboardVariables>;
 export function financialIndicatorsDashboard(dc: DataConnect, vars: FinancialIndicatorsDashboardVariables, options?: ExecuteQueryOptions): QueryPromise<FinancialIndicatorsDashboardData, FinancialIndicatorsDashboardVariables>;
+
+interface SalesChannelAnalyticsDashboardRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SalesChannelAnalyticsDashboardVariables): QueryRef<SalesChannelAnalyticsDashboardData, SalesChannelAnalyticsDashboardVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SalesChannelAnalyticsDashboardVariables): QueryRef<SalesChannelAnalyticsDashboardData, SalesChannelAnalyticsDashboardVariables>;
+  operationName: string;
+}
+export const salesChannelAnalyticsDashboardRef: SalesChannelAnalyticsDashboardRef;
+
+export function salesChannelAnalyticsDashboard(vars: SalesChannelAnalyticsDashboardVariables, options?: ExecuteQueryOptions): QueryPromise<SalesChannelAnalyticsDashboardData, SalesChannelAnalyticsDashboardVariables>;
+export function salesChannelAnalyticsDashboard(dc: DataConnect, vars: SalesChannelAnalyticsDashboardVariables, options?: ExecuteQueryOptions): QueryPromise<SalesChannelAnalyticsDashboardData, SalesChannelAnalyticsDashboardVariables>;
 
 interface OperationalAnalyticsDashboardRef {
   /* Allow users to create refs without passing in DataConnect */

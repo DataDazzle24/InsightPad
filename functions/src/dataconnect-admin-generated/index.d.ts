@@ -23,6 +23,16 @@ export interface AccountReceivable_Key {
   __typename?: 'AccountReceivable_Key';
 }
 
+export interface AcknowledgeSalesChannelOrderAlertData {
+  _execute?: number | null;
+}
+
+export interface AcknowledgeSalesChannelOrderAlertVariables {
+  id: UUIDString;
+  version: number;
+  alertKind: string;
+}
+
 export interface AppPage_Key {
   id: UUIDString;
   __typename?: 'AppPage_Key';
@@ -236,6 +246,9 @@ export interface CreateSalesChannelProductMappingVariables {
   externalProductName: string;
   syncPrice: boolean;
   syncStock: boolean;
+  priceMode: string;
+  customPriceCents?: Int64String | null;
+  remoteProductState: string;
 }
 
 export interface CreateSubcategoriesBatchData {
@@ -273,6 +286,20 @@ export interface DailyProfitDashboardVariables {
 
 export interface EnsureSalesDefaultsData {
   _execute?: number | null;
+}
+
+export interface ExportSalesChannelManagementData {
+  _select?: unknown[] | null;
+}
+
+export interface ExportSalesChannelManagementVariables {
+  section: string;
+  term: string;
+  provider: string;
+  status: string;
+  branchId?: UUIDString | null;
+  connectionId?: UUIDString | null;
+  requestKey: string;
 }
 
 export interface FinancialAccount_Key {
@@ -713,6 +740,14 @@ export interface RetrySalesChannelCommandVariables {
   id: UUIDString;
 }
 
+export interface RetrySalesChannelDecommissioningData {
+  _execute?: number | null;
+}
+
+export interface RetrySalesChannelDecommissioningVariables {
+  id: UUIDString;
+}
+
 export interface ReversePlatformPaymentData {
   _execute?: number | null;
 }
@@ -767,6 +802,17 @@ export interface Sale_Key {
   __typename?: 'Sale_Key';
 }
 
+export interface SalesChannelAnalyticsDashboardData {
+  _select?: unknown[] | null;
+}
+
+export interface SalesChannelAnalyticsDashboardVariables {
+  from: DateString;
+  to: DateString;
+  filters: unknown;
+  requestKey: string;
+}
+
 export interface SalesChannelCommand_Key {
   id: UUIDString;
   __typename?: 'SalesChannelCommand_Key';
@@ -798,6 +844,11 @@ export interface SalesChannelEventInbox_Key {
   __typename?: 'SalesChannelEventInbox_Key';
 }
 
+export interface SalesChannelFinancialEntry_Key {
+  id: UUIDString;
+  __typename?: 'SalesChannelFinancialEntry_Key';
+}
+
 export interface SalesChannelOperationsData {
   _select?: unknown[] | null;
 }
@@ -816,9 +867,34 @@ export interface SalesChannelOptionsVariables {
   requestKey: string;
 }
 
+export interface SalesChannelOrderAdjustment_Key {
+  id: UUIDString;
+  __typename?: 'SalesChannelOrderAdjustment_Key';
+}
+
+export interface SalesChannelOrderAlertAcknowledgment_Key {
+  orderId: UUIDString;
+  userId: string;
+  __typename?: 'SalesChannelOrderAlertAcknowledgment_Key';
+}
+
+export interface SalesChannelOrderDetailsData {
+  _select?: unknown[] | null;
+}
+
+export interface SalesChannelOrderDetailsVariables {
+  id: UUIDString;
+  requestKey: string;
+}
+
 export interface SalesChannelOrderItem_Key {
   id: UUIDString;
   __typename?: 'SalesChannelOrderItem_Key';
+}
+
+export interface SalesChannelOrderPayment_Key {
+  id: UUIDString;
+  __typename?: 'SalesChannelOrderPayment_Key';
 }
 
 export interface SalesChannelOrder_Key {
@@ -1336,6 +1412,14 @@ export interface SystemSalesChannelConnectionForActorVariables {
   connectionId: UUIDString;
 }
 
+export interface SystemSalesChannelHealthMetricsData {
+  _select?: unknown[] | null;
+}
+
+export interface SystemSalesChannelHealthMetricsVariables {
+  requestKey: string;
+}
+
 export interface SystemSalesChannelMappingsForSyncData {
   _select?: unknown[] | null;
 }
@@ -1371,6 +1455,17 @@ export interface SystemUpdateSalesChannelConnectionData {
 export interface SystemUpdateSalesChannelConnectionVariables {
   connectionId: UUIDString;
   payload: unknown;
+}
+
+export interface SystemUpsertSalesChannelFinancialEventsData {
+  _execute?: number | null;
+}
+
+export interface SystemUpsertSalesChannelFinancialEventsVariables {
+  connectionId: UUIDString;
+  jobId: UUIDString;
+  workerId: string;
+  payloads: unknown;
 }
 
 export interface TenantBillingProfile_Key {
@@ -1448,6 +1543,9 @@ export interface UpdateSalesChannelProductMappingVariables {
   syncPrice: boolean;
   syncStock: boolean;
   enabled: boolean;
+  priceMode: string;
+  customPriceCents?: Int64String | null;
+  remoteProductState: string;
 }
 
 export interface UpdateSubcategoryData {
@@ -1820,10 +1918,20 @@ export function retrySalesChannelCommand(dc: DataConnect, vars: RetrySalesChanne
 /** Generated Node Admin SDK operation action function for the 'RetrySalesChannelCommand' Mutation. Allow users to pass in custom DataConnect instances. */
 export function retrySalesChannelCommand(vars: RetrySalesChannelCommandVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<RetrySalesChannelCommandData>>;
 
+/** Generated Node Admin SDK operation action function for the 'RetrySalesChannelDecommissioning' Mutation. Allow users to execute without passing in DataConnect. */
+export function retrySalesChannelDecommissioning(dc: DataConnect, vars: RetrySalesChannelDecommissioningVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<RetrySalesChannelDecommissioningData>>;
+/** Generated Node Admin SDK operation action function for the 'RetrySalesChannelDecommissioning' Mutation. Allow users to pass in custom DataConnect instances. */
+export function retrySalesChannelDecommissioning(vars: RetrySalesChannelDecommissioningVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<RetrySalesChannelDecommissioningData>>;
+
 /** Generated Node Admin SDK operation action function for the 'RequestSalesChannelOrderReconciliation' Mutation. Allow users to execute without passing in DataConnect. */
 export function requestSalesChannelOrderReconciliation(dc: DataConnect, vars: RequestSalesChannelOrderReconciliationVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<RequestSalesChannelOrderReconciliationData>>;
 /** Generated Node Admin SDK operation action function for the 'RequestSalesChannelOrderReconciliation' Mutation. Allow users to pass in custom DataConnect instances. */
 export function requestSalesChannelOrderReconciliation(vars: RequestSalesChannelOrderReconciliationVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<RequestSalesChannelOrderReconciliationData>>;
+
+/** Generated Node Admin SDK operation action function for the 'AcknowledgeSalesChannelOrderAlert' Mutation. Allow users to execute without passing in DataConnect. */
+export function acknowledgeSalesChannelOrderAlert(dc: DataConnect, vars: AcknowledgeSalesChannelOrderAlertVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<AcknowledgeSalesChannelOrderAlertData>>;
+/** Generated Node Admin SDK operation action function for the 'AcknowledgeSalesChannelOrderAlert' Mutation. Allow users to pass in custom DataConnect instances. */
+export function acknowledgeSalesChannelOrderAlert(vars: AcknowledgeSalesChannelOrderAlertVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<AcknowledgeSalesChannelOrderAlertData>>;
 
 /** Generated Node Admin SDK operation action function for the 'MapSalesChannelOrderItem' Mutation. Allow users to execute without passing in DataConnect. */
 export function mapSalesChannelOrderItem(dc: DataConnect, vars: MapSalesChannelOrderItemVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<MapSalesChannelOrderItemData>>;
@@ -1884,6 +1992,11 @@ export function systemApplySalesChannelOrderEvent(vars: SystemApplySalesChannelO
 export function systemReconcileSalesChannelCommerce(dc: DataConnect, vars: SystemReconcileSalesChannelCommerceVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<SystemReconcileSalesChannelCommerceData>>;
 /** Generated Node Admin SDK operation action function for the 'SystemReconcileSalesChannelCommerce' Mutation. Allow users to pass in custom DataConnect instances. */
 export function systemReconcileSalesChannelCommerce(vars: SystemReconcileSalesChannelCommerceVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<SystemReconcileSalesChannelCommerceData>>;
+
+/** Generated Node Admin SDK operation action function for the 'SystemUpsertSalesChannelFinancialEvents' Mutation. Allow users to execute without passing in DataConnect. */
+export function systemUpsertSalesChannelFinancialEvents(dc: DataConnect, vars: SystemUpsertSalesChannelFinancialEventsVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<SystemUpsertSalesChannelFinancialEventsData>>;
+/** Generated Node Admin SDK operation action function for the 'SystemUpsertSalesChannelFinancialEvents' Mutation. Allow users to pass in custom DataConnect instances. */
+export function systemUpsertSalesChannelFinancialEvents(vars: SystemUpsertSalesChannelFinancialEventsVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<SystemUpsertSalesChannelFinancialEventsData>>;
 
 /** Generated Node Admin SDK operation action function for the 'SystemQueueDueSalesChannelSyncJobs' Mutation. Allow users to execute without passing in DataConnect. */
 export function systemQueueDueSalesChannelSyncJobs(dc: DataConnect, vars: SystemQueueDueSalesChannelSyncJobsVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<SystemQueueDueSalesChannelSyncJobsData>>;
@@ -1950,6 +2063,11 @@ export function salesChannelProductMappingsV2(dc: DataConnect, vars: SalesChanne
 /** Generated Node Admin SDK operation action function for the 'SalesChannelProductMappingsV2' Query. Allow users to pass in custom DataConnect instances. */
 export function salesChannelProductMappingsV2(vars: SalesChannelProductMappingsV2Variables, options?: OperationOptions): Promise<ExecuteOperationResponse<SalesChannelProductMappingsV2Data>>;
 
+/** Generated Node Admin SDK operation action function for the 'ExportSalesChannelManagement' Query. Allow users to execute without passing in DataConnect. */
+export function exportSalesChannelManagement(dc: DataConnect, vars: ExportSalesChannelManagementVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<ExportSalesChannelManagementData>>;
+/** Generated Node Admin SDK operation action function for the 'ExportSalesChannelManagement' Query. Allow users to pass in custom DataConnect instances. */
+export function exportSalesChannelManagement(vars: ExportSalesChannelManagementVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<ExportSalesChannelManagementData>>;
+
 /** Generated Node Admin SDK operation action function for the 'SalesChannelProductOptions' Query. Allow users to execute without passing in DataConnect. */
 export function salesChannelProductOptions(dc: DataConnect, vars: SalesChannelProductOptionsVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<SalesChannelProductOptionsData>>;
 /** Generated Node Admin SDK operation action function for the 'SalesChannelProductOptions' Query. Allow users to pass in custom DataConnect instances. */
@@ -1970,6 +2088,11 @@ export function systemIfoodConnectionsForPolling(dc: DataConnect, vars: SystemIf
 /** Generated Node Admin SDK operation action function for the 'SystemIfoodConnectionsForPolling' Query. Allow users to pass in custom DataConnect instances. */
 export function systemIfoodConnectionsForPolling(vars: SystemIfoodConnectionsForPollingVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<SystemIfoodConnectionsForPollingData>>;
 
+/** Generated Node Admin SDK operation action function for the 'SystemSalesChannelHealthMetrics' Query. Allow users to execute without passing in DataConnect. */
+export function systemSalesChannelHealthMetrics(dc: DataConnect, vars: SystemSalesChannelHealthMetricsVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<SystemSalesChannelHealthMetricsData>>;
+/** Generated Node Admin SDK operation action function for the 'SystemSalesChannelHealthMetrics' Query. Allow users to pass in custom DataConnect instances. */
+export function systemSalesChannelHealthMetrics(vars: SystemSalesChannelHealthMetricsVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<SystemSalesChannelHealthMetricsData>>;
+
 /** Generated Node Admin SDK operation action function for the 'SystemIfoodConnectionByMerchant' Query. Allow users to execute without passing in DataConnect. */
 export function systemIfoodConnectionByMerchant(dc: DataConnect, vars: SystemIfoodConnectionByMerchantVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<SystemIfoodConnectionByMerchantData>>;
 /** Generated Node Admin SDK operation action function for the 'SystemIfoodConnectionByMerchant' Query. Allow users to pass in custom DataConnect instances. */
@@ -1989,6 +2112,11 @@ export function systemSalesChannelMappingsForSync(vars: SystemSalesChannelMappin
 export function salesChannelOrdersV2(dc: DataConnect, vars: SalesChannelOrdersV2Variables, options?: OperationOptions): Promise<ExecuteOperationResponse<SalesChannelOrdersV2Data>>;
 /** Generated Node Admin SDK operation action function for the 'SalesChannelOrdersV2' Query. Allow users to pass in custom DataConnect instances. */
 export function salesChannelOrdersV2(vars: SalesChannelOrdersV2Variables, options?: OperationOptions): Promise<ExecuteOperationResponse<SalesChannelOrdersV2Data>>;
+
+/** Generated Node Admin SDK operation action function for the 'SalesChannelOrderDetails' Query. Allow users to execute without passing in DataConnect. */
+export function salesChannelOrderDetails(dc: DataConnect, vars: SalesChannelOrderDetailsVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<SalesChannelOrderDetailsData>>;
+/** Generated Node Admin SDK operation action function for the 'SalesChannelOrderDetails' Query. Allow users to pass in custom DataConnect instances. */
+export function salesChannelOrderDetails(vars: SalesChannelOrderDetailsVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<SalesChannelOrderDetailsData>>;
 
 /** Generated Node Admin SDK operation action function for the 'SalesChannelWorkspace' Query. Allow users to execute without passing in DataConnect. */
 export function salesChannelWorkspace(dc: DataConnect, vars: SalesChannelWorkspaceVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<SalesChannelWorkspaceData>>;
@@ -2104,6 +2232,11 @@ export function stockOperationDetails(vars: StockOperationDetailsVariables, opti
 export function financialIndicatorsDashboard(dc: DataConnect, vars: FinancialIndicatorsDashboardVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<FinancialIndicatorsDashboardData>>;
 /** Generated Node Admin SDK operation action function for the 'FinancialIndicatorsDashboard' Query. Allow users to pass in custom DataConnect instances. */
 export function financialIndicatorsDashboard(vars: FinancialIndicatorsDashboardVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<FinancialIndicatorsDashboardData>>;
+
+/** Generated Node Admin SDK operation action function for the 'SalesChannelAnalyticsDashboard' Query. Allow users to execute without passing in DataConnect. */
+export function salesChannelAnalyticsDashboard(dc: DataConnect, vars: SalesChannelAnalyticsDashboardVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<SalesChannelAnalyticsDashboardData>>;
+/** Generated Node Admin SDK operation action function for the 'SalesChannelAnalyticsDashboard' Query. Allow users to pass in custom DataConnect instances. */
+export function salesChannelAnalyticsDashboard(vars: SalesChannelAnalyticsDashboardVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<SalesChannelAnalyticsDashboardData>>;
 
 /** Generated Node Admin SDK operation action function for the 'OperationalAnalyticsDashboard' Query. Allow users to execute without passing in DataConnect. */
 export function operationalAnalyticsDashboard(dc: DataConnect, vars: OperationalAnalyticsDashboardVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<OperationalAnalyticsDashboardData>>;

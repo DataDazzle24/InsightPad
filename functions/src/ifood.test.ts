@@ -2,6 +2,19 @@ import { describe, expect, it, vi } from "vitest";
 import { groceryProductFromSource, IfoodClient, IfoodHttpError } from "./ifood.js";
 
 describe("cliente iFood", () => {
+  it("pagina todas as lojas autorizadas sem truncar o onboarding", async () => {
+    const firstPage = Array.from({ length: 100 }, (_, index) => ({ id: `merchant-${index + 1}` }));
+    const fetcher = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ accessToken: "token-seguro-com-tamanho-valido", expiresIn: 21600 }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(firstPage), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify([{ id: "merchant-101" }]), { status: 200 }));
+    const client = new IfoodClient("client-id", "client-secret", fetcher);
+
+    await expect(client.merchants()).resolves.toHaveLength(101);
+    expect(fetcher.mock.calls[1]?.[0]).toBe("https://merchant-api.ifood.com.br/merchant/v1.0/merchants?page=1&size=100");
+    expect(fetcher.mock.calls[2]?.[0]).toBe("https://merchant-api.ifood.com.br/merchant/v1.0/merchants?page=2&size=100");
+  });
+
   it("reutiliza token válido e nunca envia o segredo nas APIs de negócio", async () => {
     const fetcher = vi.fn<typeof fetch>()
       .mockResolvedValueOnce(new Response(JSON.stringify({ accessToken: "token-seguro-com-tamanho-valido", expiresIn: 21600 }), { status: 200 }))
@@ -52,6 +65,22 @@ describe("cliente iFood", () => {
     await expect(client.merchants()).rejects.toMatchObject<IfoodHttpError>({ status: 502, retryable: true, requestId: "req-1" });
   });
 
+  it("interrompe respostas excessivas antes de mantê-las em memória", async () => {
+    const fetcher = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ accessToken: "token-seguro-com-tamanho-valido", expiresIn: 21600 }), { status: 200 }))
+      .mockResolvedValueOnce(new Response("{}", { status: 200, headers: { "content-length": String(3 * 1024 * 1024), "x-request-id": "req-large" } }));
+    const client = new IfoodClient("client-id", "client-secret", fetcher);
+    await expect(client.merchants()).rejects.toMatchObject<IfoodHttpError>({ status: 502, retryable: true, requestId: "req-large" });
+  });
+
+  it("converte UTF-8 inválido do parceiro em falha controlada", async () => {
+    const fetcher = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ accessToken: "token-seguro-com-tamanho-valido", expiresIn: 21600 }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(new Uint8Array([0xc3, 0x28]), { status: 200, headers: { "x-request-id": "req-encoding" } }));
+    const client = new IfoodClient("client-id", "client-secret", fetcher);
+    await expect(client.merchants()).rejects.toMatchObject<IfoodHttpError>({ status: 502, retryable: true, requestId: "req-encoding" });
+  });
+
   it("recusa polling com envelope inesperado", async () => {
     const fetcher = vi.fn<typeof fetch>()
       .mockResolvedValueOnce(new Response(JSON.stringify({ accessToken: "token-seguro-com-tamanho-valido", expiresIn: 21600 }), { status: 200 }))
@@ -78,14 +107,53 @@ describe("cliente iFood", () => {
     expect(fetcher).not.toHaveBeenCalled();
   });
 
-  it("atualiza preço e disponibilidade pelo endpoint JSON Merge Patch atual", async () => {
+  it("atualiza preço e disponibilidade pelos contratos específicos do catálogo", async () => {
     const fetcher = vi.fn<typeof fetch>()
       .mockResolvedValueOnce(new Response(JSON.stringify({ accessToken: "token-seguro-com-tamanho-valido", expiresIn: 21600 }), { status: 200 }))
+      .mockResolvedValueOnce(new Response("", { status: 200 }))
       .mockResolvedValueOnce(new Response("", { status: 200 }));
     const client = new IfoodClient("client-id", "client-secret", fetcher);
-    await client.updateCatalogItem("merchant-1", "item-1", { priceCents: 2590, available: false });
-    expect(fetcher.mock.calls[1]?.[0]).toBe("https://merchant-api.ifood.com.br/catalog/v2.0/merchants/merchant-1/items/item-1");
-    expect(JSON.parse(String(fetcher.mock.calls[1]?.[1]?.body))).toEqual({ price: { value: 25.9 }, status: "UNAVAILABLE" });
+    await expect(client.updateCatalogItem("merchant-1", "item-1", { priceCents: 2590, available: false }))
+      .resolves.toMatchObject({ confirmationState: "CONFIRMED" });
+    expect(fetcher.mock.calls.slice(1).map((call) => [call[0], call[1]?.method, JSON.parse(String(call[1]?.body))])).toEqual([
+      ["https://merchant-api.ifood.com.br/catalog/v2.0/merchants/merchant-1/items/price", "PATCH", { itemId: "item-1", price: { value: 25.9 } }],
+      ["https://merchant-api.ifood.com.br/catalog/v2.0/merchants/merchant-1/items/status", "PATCH", { itemId: "item-1", status: "UNAVAILABLE" }],
+    ]);
+  });
+
+  it("só confirma a publicação assíncrona depois de consultar o lote", async () => {
+    const fetcher = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ accessToken: "token-seguro-com-tamanho-valido", expiresIn: 21600 }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ batchId: "batch-1" }), { status: 202, headers: { "x-request-id": "req-received" } }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ batchStatus: "COMPLETED", results: [{ status: "SUCCESS" }] }), { status: 200, headers: { "x-request-id": "req-confirmed" } }));
+    const client = new IfoodClient("client-id", "client-secret", fetcher);
+
+    await expect(client.updateCatalogItem("merchant-1", "item-1", { priceCents: 2590 })).resolves.toMatchObject({
+      confirmationState: "CONFIRMED",
+      operationId: "batch-1",
+    });
+    expect(fetcher.mock.calls[2]?.[0]).toBe("https://merchant-api.ifood.com.br/catalog/v2.0/merchants/merchant-1/batch/batch-1");
+  });
+
+  it("mantém um lote pendente como recebido para reconciliação posterior", async () => {
+    const fetcher = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ accessToken: "token-seguro-com-tamanho-valido", expiresIn: 21600 }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ batchStatus: "PROCESSING" }), { status: 200 }));
+    const client = new IfoodClient("client-id", "client-secret", fetcher);
+
+    await expect(client.catalogBatchConfirmation("merchant-1", "batch-pending")).resolves.toBe("RECEIVED");
+    expect(fetcher.mock.calls[1]?.[0]).toBe("https://merchant-api.ifood.com.br/catalog/v2.0/merchants/merchant-1/batch/batch-pending");
+  });
+
+  it("não mascara a recusa assíncrona de um item do catálogo", async () => {
+    const fetcher = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ accessToken: "token-seguro-com-tamanho-valido", expiresIn: 21600 }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ batchId: "batch-2" }), { status: 202 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ batchStatus: "COMPLETED", failureCount: 1, results: [{ status: "FAILED" }] }), { status: 200, headers: { "x-request-id": "req-failed" } }));
+    const client = new IfoodClient("client-id", "client-secret", fetcher);
+
+    await expect(client.updateCatalogItem("merchant-1", "item-1", { available: true }))
+      .rejects.toMatchObject<IfoodHttpError>({ status: 422, retryable: false, requestId: "req-failed" });
   });
 
   it("monta e publica um produto Grocery sem jamais solicitar reset do catálogo", async () => {
@@ -129,17 +197,43 @@ describe("cliente iFood", () => {
     ]);
   });
 
-  it("recusa preços e quantidades inválidos antes de chamar o parceiro", () => {
+  it("recusa preços e quantidades inválidos antes de chamar o parceiro", async () => {
     const fetcher = vi.fn<typeof fetch>();
     const client = new IfoodClient("client-id", "client-secret", fetcher);
-    expect(() => client.updateCatalogItem("merchant-1", "item-1", { priceCents: 0 })).toThrow("preço positivo");
-    expect(() => client.updateCatalogItem("merchant-1", "item-1", { priceCents: 10.5 })).toThrow("preço positivo");
+    await expect(client.updateCatalogItem("merchant-1", "item-1", { priceCents: 0 })).rejects.toThrow("preço positivo");
+    await expect(client.updateCatalogItem("merchant-1", "item-1", { priceCents: 10.5 })).rejects.toThrow("preço positivo");
     expect(() => client.updatePickingItem("order-1", "item-1", 0)).toThrow("quantidade positiva");
     expect(() => groceryProductFromSource({ barcode: "7890000000000", name: "Produto", imageUrl: "http://inseguro.example.com/item.jpg", includeDetails: true, sendPrice: false, sendStock: false, activate: true })).toThrow("HTTPS");
     expect(fetcher).not.toHaveBeenCalled();
   });
 
+  it("recusa horários sobrepostos, inclusive quando cruzam a meia-noite", async () => {
+    const fetcher = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ accessToken: "token-seguro-com-tamanho-valido", expiresIn: 21600 }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+    const client = new IfoodClient("client-id", "client-secret", fetcher);
+    expect(() => client.updateMerchantOpeningHours("merchant-1", [
+      { dayOfWeek: "MONDAY", start: "18:00:00", duration: 480 },
+      { dayOfWeek: "TUESDAY", start: "01:00:00", duration: 120 },
+    ])).toThrow("não podem se sobrepor");
+    await expect(client.updateMerchantOpeningHours("merchant-1", [
+      { dayOfWeek: "MONDAY", start: "09:00:00", duration: 240 },
+      { dayOfWeek: "MONDAY", start: "14:00:00", duration: 240 },
+    ])).resolves.toMatchObject({ status: 204 });
+  });
+
   it("envia promoção zero para remover um preço promocional anterior", () => {
     expect(groceryProductFromSource({ barcode: "7890000000000", name: "Produto", basePriceCents: "1990", includeDetails: false, sendPrice: true, sendStock: false, activate: false })).toMatchObject({ prices: { price: 19.9, promotionPrice: null } });
+  });
+
+  it("consulta eventos financeiros apenas pelo endpoint oficial e com paginação limitada", async () => {
+    const fetcher = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ accessToken: "token-seguro-com-tamanho-valido", expiresIn: 21600 }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ financialEvents: [] }), { status: 200 }));
+    const client = new IfoodClient("client-id", "client-secret", fetcher);
+    await client.financialEvents("merchant-1", "2026-09-01", "2026-09-15", 2, 100);
+    expect(fetcher.mock.calls[1]?.[0]).toBe("https://merchant-api.ifood.com.br/financial/v3.0/merchants/merchant-1/financial-events?beginDate=2026-09-01&endDate=2026-09-15&page=2&size=100");
+    expect(() => client.financialEvents("merchant-1", "15/09/2026", "2026-09-15", 1)).toThrow();
+    expect(() => client.financialEvents("merchant-1", "2026-09-01", "2026-09-15", 1, 101)).toThrow();
   });
 });

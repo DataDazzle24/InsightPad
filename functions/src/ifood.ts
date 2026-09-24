@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { asRecord, firstString, type JsonRecord } from "./domain.js";
+import { asArray, asRecord, firstString, type JsonRecord } from "./domain.js";
 
 const tokenSchema = z.object({
   accessToken: z.string().min(20),
@@ -22,6 +22,10 @@ export class IfoodHttpError extends Error {
 
 type Token = { value: string; expiresAt: number };
 export type RequestResult<T> = { data: T; status: number; requestId: string };
+export type CatalogUpdateResult = RequestResult<unknown> & {
+  confirmationState: "CONFIRMED" | "RECEIVED";
+  operationId?: string;
+};
 type FetchLike = typeof fetch;
 
 export type MerchantOpeningShift = {
@@ -35,6 +39,31 @@ const openingShiftSchema = z.object({
   start: z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$/),
   duration: z.number().int().min(15).max(1440),
 }).strict();
+
+const WEEK_SECONDS = 7 * 24 * 60 * 60;
+const STORE_DAY_INDEX: Record<MerchantOpeningShift["dayOfWeek"], number> = {
+  SUNDAY: 0, MONDAY: 1, TUESDAY: 2, WEDNESDAY: 3, THURSDAY: 4, FRIDAY: 5, SATURDAY: 6,
+};
+
+function openingHoursDoNotOverlap(shifts: MerchantOpeningShift[]): boolean {
+  const intervals = shifts.map((shift) => {
+    const [hour = 0, minute = 0, second = 0] = shift.start.split(":").map(Number);
+    const start = STORE_DAY_INDEX[shift.dayOfWeek] * 86_400 + hour * 3_600 + minute * 60 + second;
+    return { start, end: start + shift.duration * 60 };
+  });
+  return intervals.every((current, index) => intervals.every((candidate, candidateIndex) => {
+    if (index === candidateIndex) return true;
+    return [-WEEK_SECONDS, 0, WEEK_SECONDS].every((offset) => {
+      const start = candidate.start + offset;
+      const end = candidate.end + offset;
+      return current.end <= start || end <= current.start;
+    });
+  }));
+}
+
+const openingHoursSchema = z.array(openingShiftSchema).min(1).max(56).refine(openingHoursDoNotOverlap, {
+  message: "Os horários de funcionamento não podem se sobrepor.",
+});
 
 const interruptionSchema = z.object({
   id: z.string().trim().min(8).max(160),
@@ -174,13 +203,23 @@ export class IfoodClient {
   }
 
   async merchants(): Promise<JsonRecord[]> {
-    const response = await this.request<unknown>("/merchant/v1.0/merchants");
-    const root = asRecord(response.data);
-    const merchants = Array.isArray(response.data) ? response.data : root.merchants;
-    if (!Array.isArray(merchants)) {
-      throw new IfoodHttpError("O iFood retornou lojas em formato inválido.", 502, response.requestId, true);
+    const pageSize = 100;
+    const result = new Map<string, JsonRecord>();
+    for (let page = 1; page <= 50; page += 1) {
+      const response = await this.request<unknown>(`/merchant/v1.0/merchants?page=${page}&size=${pageSize}`);
+      const root = asRecord(response.data);
+      const merchants = Array.isArray(response.data) ? response.data : root.merchants;
+      if (!Array.isArray(merchants)) {
+        throw new IfoodHttpError("O iFood retornou lojas em formato inválido.", 502, response.requestId, true);
+      }
+      const rows = merchants.map(asRecord);
+      for (const merchant of rows) {
+        const id = merchantId(merchant);
+        if (id) result.set(id, merchant);
+      }
+      if (rows.length < pageSize) return [...result.values()];
     }
-    return merchants.map(asRecord);
+    throw new IfoodHttpError("O iFood retornou mais de 5.000 lojas. Refine o credenciamento do aplicativo antes de continuar.", 502, "", false);
   }
 
   async merchant(merchantId: string): Promise<RequestResult<JsonRecord>> {
@@ -200,7 +239,7 @@ export class IfoodClient {
   }
 
   updateMerchantOpeningHours(merchantId: string, shifts: MerchantOpeningShift[]): Promise<RequestResult<unknown>> {
-    const parsed = z.array(openingShiftSchema).min(1).max(56).parse(shifts);
+    const parsed = openingHoursSchema.parse(shifts);
     return this.request(`/merchant/v1.0/merchants/${encodeURIComponent(merchantId)}/opening-hours`, {
       method: "PUT",
       body: { storeId: merchantId, shifts: parsed },
@@ -280,20 +319,82 @@ export class IfoodClient {
     });
   }
 
-  updateCatalogItem(merchantId: string, itemId: string, changes: { priceCents?: number; available?: boolean }): Promise<RequestResult<unknown>> {
+  financialEvents(merchantId: string, beginDate: string, endDate: string, page: number, size = 100): Promise<RequestResult<unknown>> {
+    const id = z.string().trim().min(1).max(160).parse(merchantId);
+    const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+    const from = date.parse(beginDate);
+    const to = date.parse(endDate);
+    const pageNumber = z.number().int().min(1).max(10_000).parse(page);
+    const pageSize = z.number().int().min(1).max(100).parse(size);
+    return this.request(`/financial/v3.0/merchants/${encodeURIComponent(id)}/financial-events?beginDate=${from}&endDate=${to}&page=${pageNumber}&size=${pageSize}`);
+  }
+
+  async updateCatalogItem(merchantId: string, itemId: string, changes: { priceCents?: number; available?: boolean }): Promise<CatalogUpdateResult> {
     if (changes.priceCents !== undefined && (!Number.isSafeInteger(changes.priceCents) || changes.priceCents <= 0)) {
       throw new Error("O produto precisa de um preço positivo e válido para sincronizar.");
     }
     if (changes.priceCents === undefined && changes.available === undefined) {
       throw new Error("O produto não possui alterações de catálogo para sincronizar.");
     }
-    return this.request(`/catalog/v2.0/merchants/${encodeURIComponent(merchantId)}/items/${encodeURIComponent(itemId)}`, {
-      method: "PATCH",
-      body: {
-        ...(changes.priceCents === undefined ? {} : { price: { value: changes.priceCents / 100 } }),
-        ...(changes.available === undefined ? {} : { status: changes.available ? "AVAILABLE" : "UNAVAILABLE" }),
-      },
-    });
+    const results: RequestResult<unknown>[] = [];
+    if (changes.priceCents !== undefined) {
+      results.push(await this.request(`/catalog/v2.0/merchants/${encodeURIComponent(merchantId)}/items/price`, {
+        method: "PATCH",
+        body: { itemId, price: { value: changes.priceCents / 100 } },
+      }));
+    }
+    if (changes.available !== undefined) {
+      results.push(await this.request(`/catalog/v2.0/merchants/${encodeURIComponent(merchantId)}/items/status`, {
+        method: "PATCH",
+        body: { itemId, status: changes.available ? "AVAILABLE" : "UNAVAILABLE" },
+      }));
+    }
+    let confirmationState: CatalogUpdateResult["confirmationState"] = "CONFIRMED";
+    let operationId: string | undefined;
+    for (const result of results) {
+      const batchId = firstString(asRecord(result.data), "batchId", "id");
+      if (batchId) {
+        operationId = batchId;
+        const confirmed = await this.waitForCatalogBatch(merchantId, batchId);
+        if (!confirmed) confirmationState = "RECEIVED";
+      } else if (result.status === 202) confirmationState = "RECEIVED";
+    }
+    const last = results.at(-1)!;
+    return { ...last, confirmationState, ...(operationId ? { operationId } : {}) };
+  }
+
+  async catalogBatch(merchantId: string, batchId: string): Promise<RequestResult<unknown>> {
+    const merchant = z.string().trim().min(1).max(160).parse(merchantId);
+    const batch = z.string().trim().min(1).max(180).parse(batchId);
+    return this.request(`/catalog/v2.0/merchants/${encodeURIComponent(merchant)}/batch/${encodeURIComponent(batch)}`);
+  }
+
+  async catalogBatchConfirmation(merchantId: string, batchId: string): Promise<"CONFIRMED" | "RECEIVED"> {
+    const response = await this.catalogBatch(merchantId, batchId);
+    const data = asRecord(response.data);
+    const status = firstString(data, "batchStatus", "status").toUpperCase();
+    if (["ERROR", "FAILED", "FAILURE", "CANCELLED"].includes(status)) {
+      throw new IfoodHttpError("O iFood recusou o lote de atualização do catálogo.", 422, response.requestId, false);
+    }
+    if (["COMPLETED", "FINISHED"].includes(status)) {
+      const results = asArray(data.results).map(asRecord);
+      const failed = results.some((item) => ["ERROR", "FAILED", "FAILURE"].includes(firstString(item, "result", "status").toUpperCase()));
+      const failureCount = Number(data.failureCount ?? data.failedCount ?? 0);
+      if (failed || (Number.isFinite(failureCount) && failureCount > 0)) {
+        throw new IfoodHttpError("O iFood recusou um ou mais itens do lote de catálogo.", 422, response.requestId, false);
+      }
+      return "CONFIRMED";
+    }
+    return "RECEIVED";
+  }
+
+  private async waitForCatalogBatch(merchantId: string, batchId: string): Promise<boolean> {
+    const waits = [0, 500, 1_000, 2_000, 3_000];
+    for (const wait of waits) {
+      if (wait) await new Promise((resolve) => setTimeout(resolve, wait));
+      if (await this.catalogBatchConfirmation(merchantId, batchId) === "CONFIRMED") return true;
+    }
+    return false;
   }
 
   ingestGroceryProducts(merchantId: string, products: GroceryProduct[], mode: "FULL" | "PATCH"): Promise<RequestResult<unknown>> {
@@ -368,7 +469,7 @@ export class IfoodClient {
       return this.request<T>(path, options, false);
     }
     if (!response.ok) throw httpError(response, requestId);
-    const text = await response.text();
+    const text = await readLimitedResponse(response, 2 * 1024 * 1024);
     try {
       return { data: (text ? JSON.parse(text) : {}) as T, status: response.status, requestId };
     } catch {
@@ -398,11 +499,42 @@ export class IfoodClient {
     });
     const requestId = response.headers.get("x-request-id") ?? response.headers.get("traceid") ?? "";
     if (!response.ok) throw httpError(response, requestId);
-    const raw: unknown = await response.json().catch(() => null);
+    const rawText = await readLimitedResponse(response, 64 * 1024);
+    let raw: unknown = null;
+    try { raw = rawText ? JSON.parse(rawText) : null; } catch { raw = null; }
     const parsed = tokenSchema.safeParse(raw);
     if (!parsed.success) throw new IfoodHttpError("O iFood retornou uma autenticação inválida.", 502, requestId, true);
     const payload = parsed.data;
     return { value: payload.accessToken, expiresAt: Date.now() + payload.expiresIn * 1000 };
+  }
+}
+
+async function readLimitedResponse(response: Response, maxBytes: number): Promise<string> {
+  const declaredLength = Number(response.headers.get("content-length"));
+  if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
+    throw new IfoodHttpError("O iFood retornou uma resposta maior que o limite seguro.", 502, response.headers.get("x-request-id") ?? "", true);
+  }
+  if (!response.body) return "";
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let received = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    received += value.byteLength;
+    if (received > maxBytes) {
+      await reader.cancel().catch(() => undefined);
+      throw new IfoodHttpError("O iFood retornou uma resposta maior que o limite seguro.", 502, response.headers.get("x-request-id") ?? "", true);
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(received);
+  let offset = 0;
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch {
+    throw new IfoodHttpError("O iFood retornou uma resposta com codificação inválida.", 502, response.headers.get("x-request-id") ?? "", true);
   }
 }
 

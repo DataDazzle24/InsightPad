@@ -173,7 +173,10 @@ type UserDeviceSession @table(name: "user_device_sessions", key: "user") {
 
 # A tenant-owned sales channel configuration. OAuth tokens and partner secrets
 # are deliberately kept outside this database, in managed server-side secrets.
-type SalesChannelConnection @table(name: "sales_channel_connections", key: "id") {
+type SalesChannelConnection
+  @table(name: "sales_channel_connections", key: "id")
+  @index(name: "sales_channel_connections_health_idx", fields: ["provider", "status", "authorizationStatus", "enabled"])
+  @index(name: "sales_channel_connections_tenant_branch_idx", fields: ["tenantId", "branchId", "active"]) {
   id: UUID! @default(expr: "uuidV4()")
   tenant: Tenant! @ref(fields: "tenantId", references: "id")
   tenantId: UUID! @col(name: "tenant_id")
@@ -200,6 +203,7 @@ type SalesChannelConnection @table(name: "sales_channel_connections", key: "id")
   lastMerchantSnapshotAt: Timestamp @col(name: "last_merchant_snapshot_at")
   lastSuccessAt: Timestamp @col(name: "last_success_at")
   lastSyncedAt: Timestamp @col(name: "last_synced_at")
+  lastFinancialSyncAt: Timestamp @col(name: "last_financial_sync_at")
   lastRequestId: String @col(name: "last_request_id", dataType: "varchar(180)")
   lastError: String @col(name: "last_error", dataType: "varchar(1000)")
   consecutiveFailures: Int! @default(value: 0) @col(name: "consecutive_failures")
@@ -212,7 +216,10 @@ type SalesChannelConnection @table(name: "sales_channel_connections", key: "id")
   deletedAt: Timestamp @col(name: "deleted_at")
 }
 
-type SalesChannelProductMapping @table(name: "sales_channel_product_mappings", key: "id") {
+type SalesChannelProductMapping
+  @table(name: "sales_channel_product_mappings", key: "id")
+  @index(name: "sales_channel_mappings_sync_idx", fields: ["connectionId", "syncStatus", "active", "updatedAt"])
+  @index(name: "sales_channel_mappings_product_idx", fields: ["tenantId", "productId", "active"]) {
   id: UUID! @default(expr: "uuidV4()")
   tenant: Tenant! @ref(fields: "tenantId", references: "id")
   tenantId: UUID! @col(name: "tenant_id")
@@ -226,10 +233,20 @@ type SalesChannelProductMapping @table(name: "sales_channel_product_mappings", k
   externalProductName: String @col(name: "external_product_name", dataType: "varchar(240)")
   syncPrice: Boolean! @default(value: false) @col(name: "sync_price")
   syncStock: Boolean! @default(value: false) @col(name: "sync_stock")
+  # PRODUCT follows the regular Insight Pad price and promotions. CUSTOM keeps
+  # an explicit channel price, preventing a local price change from silently
+  # changing the commercial strategy used on iFood.
+  priceMode: String! @default(value: "PRODUCT") @col(name: "price_mode", dataType: "varchar(24)")
+  customPriceCents: Int64 @col(name: "custom_price_cents")
+  remoteProductState: String! @default(value: "NEW") @col(name: "remote_product_state", dataType: "varchar(24)")
   enabled: Boolean! @default(value: true)
   status: String! @default(value: "MAPPED") @col(dataType: "varchar(32)")
   syncStatus: String! @default(value: "PENDING") @col(name: "sync_status", dataType: "varchar(32)")
   publicationStatus: String! @default(value: "DRAFT") @col(name: "publication_status", dataType: "varchar(32)")
+  partnerOperationId: String @col(name: "partner_operation_id", dataType: "varchar(180)")
+  partnerAcceptedAt: Timestamp @col(name: "partner_accepted_at")
+  partnerConfirmedAt: Timestamp @col(name: "partner_confirmed_at")
+  partnerConfirmationDueAt: Timestamp @col(name: "partner_confirmation_due_at")
   needsFullPublication: Boolean! @default(value: true) @col(name: "needs_full_publication")
   lastEffectivePromotionCents: Int64 @col(name: "last_effective_promotion_cents")
   nextPromotionChangeAt: Timestamp @col(name: "next_promotion_change_at")
@@ -243,7 +260,10 @@ type SalesChannelProductMapping @table(name: "sales_channel_product_mappings", k
 }
 
 # Inbound partner orders. Webhooks insert here server-side with a provider idempotency key.
-type SalesChannelOrder @table(name: "sales_channel_orders", key: "id") {
+type SalesChannelOrder
+  @table(name: "sales_channel_orders", key: "id")
+  @index(name: "sales_channel_orders_connection_status_idx", fields: ["connectionId", "status", "receivedAt"], order: [ASC, ASC, DESC])
+  @index(name: "sales_channel_orders_branch_status_idx", fields: ["tenantId", "branchId", "status", "receivedAt"], order: [ASC, ASC, ASC, DESC]) {
   id: UUID! @default(expr: "uuidV4()")
   tenant: Tenant! @ref(fields: "tenantId", references: "id")
   tenantId: UUID! @col(name: "tenant_id")
@@ -269,13 +289,26 @@ type SalesChannelOrder @table(name: "sales_channel_orders", key: "id") {
   subtotalCents: Int64! @default(value: 0) @col(name: "subtotal_cents")
   deliveryFeeCents: Int64! @default(value: 0) @col(name: "delivery_fee_cents")
   discountCents: Int64! @default(value: 0) @col(name: "discount_cents")
+  additionalFeeCents: Int64! @default(value: 0) @col(name: "additional_fee_cents")
+  prepaidCents: Int64! @default(value: 0) @col(name: "prepaid_cents")
+  pendingPaymentCents: Int64! @default(value: 0) @col(name: "pending_payment_cents")
+  merchantDiscountCents: Int64! @default(value: 0) @col(name: "merchant_discount_cents")
+  ifoodDiscountCents: Int64! @default(value: 0) @col(name: "ifood_discount_cents")
+  providerFeeCents: Int64! @default(value: 0) @col(name: "provider_fee_cents")
+  netAmountCents: Int64 @col(name: "net_amount_cents")
+  paymentIntegrityStatus: String! @default(value: "UNVERIFIED") @col(name: "payment_integrity_status", dataType: "varchar(32)")
   totalCents: Int64! @default(value: 0) @col(name: "total_cents")
   scheduledAt: Timestamp @col(name: "scheduled_at")
   preparationStartAt: Timestamp @col(name: "preparation_start_at")
+  attentionType: String @col(name: "attention_type", dataType: "varchar(60)")
+  attentionDeadlineAt: Timestamp @col(name: "attention_deadline_at")
+  attentionData: Any @col(name: "attention_data")
   commerceStatus: String! @default(value: "PENDING_MAPPING") @col(name: "commerce_status", dataType: "varchar(40)")
   commerceError: String @col(name: "commerce_error", dataType: "varchar(1000)")
   stockReservationStatus: String! @default(value: "NOT_RESERVED") @col(name: "stock_reservation_status", dataType: "varchar(32)")
   snapshotHash: String @col(name: "snapshot_hash", dataType: "varchar(128)")
+  commerceSourceHash: String @col(name: "commerce_source_hash", dataType: "varchar(128)")
+  commerceSnapshotHash: String @col(name: "commerce_snapshot_hash", dataType: "varchar(128)")
   receivedAt: Timestamp! @default(expr: "request.time") @col(name: "received_at")
   acceptedAt: Timestamp @col(name: "accepted_at")
   rejectedAt: Timestamp @col(name: "rejected_at")
@@ -305,17 +338,90 @@ type SalesChannelOrderItem @table(name: "sales_channel_order_items", key: "id") 
   mappingStatus: String! @default(value: "PENDING") @col(name: "mapping_status", dataType: "varchar(32)")
   name: String! @col(dataType: "varchar(240)")
   quantity: Float!
+  # Immutable bill-of-materials snapshot used for reservation and final stock
+  # posting. Product component edits after acceptance must not rewrite history.
+  stockSnapshot: Any @col(name: "stock_snapshot")
   unitPriceCents: Int64! @default(value: 0) @col(name: "unit_price_cents")
   totalCents: Int64! @default(value: 0) @col(name: "total_cents")
   observation: String @col(dataType: "varchar(500)")
   createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
 }
 
+# Payment breakdown received from the Order API. Keeping each method avoids
+# turning mixed orders (for example prepaid + cash) into one synthetic payment.
+type SalesChannelOrderPayment @table(name: "sales_channel_order_payments", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  order: SalesChannelOrder! @ref(fields: "orderId", references: "id")
+  orderId: UUID! @col(name: "order_id")
+  paymentKey: String! @unique @col(name: "payment_key", dataType: "varchar(520)")
+  method: String! @col(dataType: "varchar(80)")
+  paymentType: String @col(name: "payment_type", dataType: "varchar(40)")
+  cardBrand: String @col(name: "card_brand", dataType: "varchar(80)")
+  walletName: String @col(name: "wallet_name", dataType: "varchar(80)")
+  currency: String! @default(value: "BRL") @col(dataType: "varchar(8)")
+  prepaid: Boolean! @default(value: false)
+  amountCents: Int64! @default(value: 0) @col(name: "amount_cents")
+  changeForCents: Int64 @col(name: "change_for_cents")
+  sequence: Int! @default(value: 1)
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+}
+
+# Benefits and additional fees remain itemized with their liable party. This is
+# required to distinguish a merchant-funded discount from an iFood-funded one.
+type SalesChannelOrderAdjustment @table(name: "sales_channel_order_adjustments", key: "id") {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  order: SalesChannelOrder! @ref(fields: "orderId", references: "id")
+  orderId: UUID! @col(name: "order_id")
+  adjustmentKey: String! @unique @col(name: "adjustment_key", dataType: "varchar(520)")
+  kind: String! @col(dataType: "varchar(32)")
+  target: String @col(dataType: "varchar(60)")
+  targetId: String @col(name: "target_id", dataType: "varchar(160)")
+  liableParty: String @col(name: "liable_party", dataType: "varchar(80)")
+  description: String @col(dataType: "varchar(300)")
+  amountCents: Int64! @default(value: 0) @col(name: "amount_cents")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+}
+
+# Exact entries returned by Financial v3.0. Negative transfer-impact entries
+# are the source of truth for iFood fees; no guessed commission is posted.
+type SalesChannelFinancialEntry
+  @table(name: "sales_channel_financial_entries", key: "id")
+  @index(name: "sales_channel_financial_connection_idx", fields: ["connectionId", "occurredAt"], order: [ASC, DESC])
+  @index(name: "sales_channel_financial_order_idx", fields: ["orderId", "occurredAt"], order: [ASC, DESC]) {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  connection: SalesChannelConnection! @ref(fields: "connectionId", references: "id")
+  connectionId: UUID! @col(name: "connection_id")
+  order: SalesChannelOrder @ref(fields: "orderId", references: "id")
+  orderId: UUID @col(name: "order_id")
+  entryKey: String! @unique @col(name: "entry_key", dataType: "varchar(520)")
+  name: String! @col(dataType: "varchar(100)")
+  description: String @col(dataType: "varchar(300)")
+  product: String @col(dataType: "varchar(80)")
+  trigger: String @col(dataType: "varchar(100)")
+  referenceType: String @col(name: "reference_type", dataType: "varchar(60)")
+  referenceId: String @col(name: "reference_id", dataType: "varchar(160)")
+  classification: String! @default(value: "UNCLASSIFIED") @col(dataType: "varchar(40)")
+  amountCents: Int64! @col(name: "amount_cents")
+  billingBaseCents: Int64 @col(name: "billing_base_cents")
+  hasTransferImpact: Boolean! @default(value: false) @col(name: "has_transfer_impact")
+  competence: String @col(dataType: "varchar(7)")
+  occurredAt: Timestamp! @col(name: "occurred_at")
+  receivedAt: Timestamp! @default(expr: "request.time") @col(name: "received_at")
+}
+
 # Stock promised to an accepted channel order. Reservations reduce the
 # quantity published to partners but only become an auditable SALE movement
 # when the partner confirms completion.
 type SalesChannelStockReservation
-  @table(name: "sales_channel_stock_reservations", key: ["order", "product"]) {
+  @table(name: "sales_channel_stock_reservations", key: ["order", "product"])
+  @index(name: "sales_channel_reservations_stock_idx", fields: ["tenantId", "branchId", "status"]) {
   order: SalesChannelOrder!
   product: Product!
   tenant: Tenant! @ref(fields: "tenantId", references: "id")
@@ -330,9 +436,27 @@ type SalesChannelStockReservation
   updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
 }
 
+# A dismissal belongs to one user and one exact order version. A later order
+# patch increments the version and becomes visible again automatically.
+type SalesChannelOrderAlertAcknowledgment
+  @table(name: "sales_channel_order_alert_acknowledgments", key: ["order", "user"]) {
+  order: SalesChannelOrder!
+  user: User!
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  orderVersion: Int! @col(name: "order_version")
+  acknowledgedAt: Timestamp! @default(expr: "request.time") @col(name: "acknowledged_at")
+  receptionAcknowledgedAt: Timestamp @col(name: "reception_acknowledged_at")
+  preparationAcknowledgedAt: Timestamp @col(name: "preparation_acknowledged_at")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+}
+
 # Durable inbox for partner webhooks and polling events. Raw payload access is
 # server-only; the customer UI receives only operational metadata.
-type SalesChannelEventInbox @table(name: "sales_channel_event_inbox", key: "id") {
+type SalesChannelEventInbox
+  @table(name: "sales_channel_event_inbox", key: "id")
+  @index(name: "sales_channel_events_queue_idx", fields: ["status", "leaseUntil", "receivedAt"])
+  @index(name: "sales_channel_events_connection_idx", fields: ["connectionId", "status", "receivedAt"], order: [ASC, ASC, DESC]) {
   id: UUID! @default(expr: "uuidV4()")
   tenant: Tenant! @ref(fields: "tenantId", references: "id")
   tenantId: UUID! @col(name: "tenant_id")
@@ -364,7 +488,10 @@ type SalesChannelEventInbox @table(name: "sales_channel_event_inbox", key: "id")
 
 # Durable outbox. A server worker claims these commands and talks to the
 # partner API; browser clients never receive partner credentials.
-type SalesChannelCommand @table(name: "sales_channel_commands", key: "id") {
+type SalesChannelCommand
+  @table(name: "sales_channel_commands", key: "id")
+  @index(name: "sales_channel_commands_queue_idx", fields: ["status", "scheduledAt", "leaseUntil"])
+  @index(name: "sales_channel_commands_order_idx", fields: ["orderId", "status", "scheduledAt"]) {
   id: UUID! @default(expr: "uuidV4()")
   tenant: Tenant! @ref(fields: "tenantId", references: "id")
   tenantId: UUID! @col(name: "tenant_id")
@@ -415,7 +542,10 @@ type SalesChannelStatusHistory @table(name: "sales_channel_status_history", key:
   createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
 }
 
-type SalesChannelSyncJob @table(name: "sales_channel_sync_jobs", key: "id") {
+type SalesChannelSyncJob
+  @table(name: "sales_channel_sync_jobs", key: "id")
+  @index(name: "sales_channel_jobs_queue_idx", fields: ["status", "scheduledAt", "leaseUntil"])
+  @index(name: "sales_channel_jobs_connection_idx", fields: ["connectionId", "status", "createdAt"], order: [ASC, ASC, DESC]) {
   id: UUID! @default(expr: "uuidV4()")
   tenant: Tenant! @ref(fields: "tenantId", references: "id")
   tenantId: UUID! @col(name: "tenant_id")
@@ -429,6 +559,7 @@ type SalesChannelSyncJob @table(name: "sales_channel_sync_jobs", key: "id") {
   processedItems: Int! @default(value: 0) @col(name: "processed_items")
   failedItems: Int! @default(value: 0) @col(name: "failed_items")
   cursor: UUID
+  checkpoint: Any
   attempts: Int! @default(value: 0)
   scheduledAt: Timestamp! @default(expr: "request.time") @col(name: "scheduled_at")
   lockedBy: String @col(name: "locked_by", dataType: "varchar(180)")
@@ -648,6 +779,7 @@ type PaymentMethod @table(name: "payment_methods", key: "id") {
   tenant: Tenant! @ref(fields: "tenantId", references: "id")
   tenantId: UUID! @col(name: "tenant_id")
   legacyId: String @col(name: "legacy_id", dataType: "varchar(64)")
+  methodKey: String @unique @col(name: "method_key", dataType: "varchar(180)")
   code: String! @col(dataType: "varchar(40)")
   name: String! @col(dataType: "varchar(100)")
   requiresChange: Boolean! @default(value: false) @col(name: "requires_change")
@@ -906,8 +1038,13 @@ type AccountReceivable @table(name: "accounts_receivable", key: "id") {
   categoryId: UUID @col(name: "category_id")
   account: FinancialAccount @ref(fields: "accountId", references: "id")
   accountId: UUID @col(name: "account_id")
+  source: String! @default(value: "MANUAL") @col(dataType: "varchar(40)")
+  externalReference: String @col(name: "external_reference", dataType: "varchar(180)")
+  idempotencyKey: String @unique @col(name: "idempotency_key", dataType: "varchar(220)")
   description: String! @col(dataType: "varchar(180)")
   amountCents: Int64! @col(name: "amount_cents")
+  grossAmountCents: Int64 @col(name: "gross_amount_cents")
+  feeAmountCents: Int64 @col(name: "fee_amount_cents")
   dueDate: Date! @col(name: "due_date")
   receivedAt: Timestamp @col(name: "received_at")
   receivedAmountCents: Int64 @col(name: "received_amount_cents")

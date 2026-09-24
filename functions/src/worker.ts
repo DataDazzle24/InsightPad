@@ -21,10 +21,13 @@ import {
   systemRecordSalesChannelSyncResult,
   systemRegisterSalesChannelEvents,
   systemSalesChannelMappingsForSync,
+  systemSalesChannelHealthMetrics,
   systemSalesChannelWorkQueue,
   systemUpdateSalesChannelConnection,
+  systemUpsertSalesChannelFinancialEvents,
 } from "@insightpad/dataconnect-admin";
 import {
+  asArray,
   asRecord,
   assertOrderIdentity,
   orderAlreadyApplied,
@@ -35,9 +38,12 @@ import {
   firstString,
   heartbeatMerchantIds,
   ifoodCompletionAction,
+  isIfoodGroceryPreInvoiceEvent,
+  isIfoodGroceryReadyForInvoiceEvent,
   isIfoodOrderEvent,
   isIfoodKeepalive,
   normalizeIfoodOrder,
+  normalizeIfoodFinancialEvent,
   orderStatusFromCode,
   parseIfoodEvents,
   retryDelaySeconds,
@@ -64,19 +70,26 @@ type CommandWork = {
   connectionId: string;
   providerOrderId?: string;
   orderType?: string;
+  deliveryProvider?: string;
   partnerStatus?: string;
   catalogProfile?: string;
   action: string;
   payload: unknown;
+  sourceAction?: string;
+  sourcePayload?: unknown;
+  sourceOutcomeUnknown?: boolean;
   attempts: number;
   externalStoreId?: string;
 };
+
+type ReconciliationOutcome = "APPLIED" | "NOT_APPLIED" | "UNKNOWN";
 
 type EventWork = {
   id: string;
   connectionId: string;
   providerEventId: string;
   eventType: string;
+  catalogProfile?: string;
   externalStoreId?: string;
   requestId?: string;
   payload: unknown;
@@ -89,12 +102,28 @@ type JobWork = {
   jobType: string;
   catalogProfile?: string;
   cursor?: string;
+  checkpoint?: unknown;
   processedItems?: number;
   attempts: number;
   externalStoreId?: string;
+  lastFinancialSyncAt?: string;
 };
 
 type WorkQueue = { commands: CommandWork[]; events: EventWork[]; jobs: JobWork[] };
+export type SalesChannelHealthMetrics = {
+  activeConnections: number;
+  unhealthyConnections: number;
+  eventErrors: number;
+  eventBacklog: number;
+  commandErrors: number;
+  commandBacklog: number;
+  syncErrors: number;
+  syncBacklog: number;
+  catalogReceiptsToVerify: number;
+  commerceBlocked: number;
+  financialPending: number;
+  capturedAt: string;
+};
 
 type MappingWork = {
   mappingId: string;
@@ -117,6 +146,8 @@ type MappingWork = {
   stockQuantity: string;
   lastSyncedAt?: string;
   publicationStatus?: string;
+  partnerOperationId?: string;
+  partnerConfirmationDueAt?: string;
   needsFullPublication: boolean;
   nextPromotionChangeAt?: string;
   version: number;
@@ -351,20 +382,102 @@ export async function pollIfoodEvents(client: IfoodClient): Promise<{ received: 
   return { received, acknowledged: acknowledgedCount, unmapped };
 }
 
+export async function salesChannelHealthSnapshot(): Promise<SalesChannelHealthMetrics | undefined> {
+  return box<SalesChannelHealthMetrics>(await systemSalesChannelHealthMetrics(dc, { requestKey: randomUUID() }));
+}
+
+async function getOrderSnapshot(client: IfoodClient, orderId: string, grocery: boolean) {
+  if (!grocery) return client.getOrder(orderId);
+  const [standard, virtualBag] = await Promise.all([client.getOrder(orderId), client.getOrderVirtualBag(orderId)]);
+  const data: JsonRecord = { ...standard.data, ...virtualBag.data };
+  for (const key of ["delivery", "orderType", "schedule", "createdAt"] as const) {
+    if (standard.data[key] !== undefined) data[key] = standard.data[key];
+  }
+  const canonicalId = firstString(standard.data, "id", "orderId");
+  const canonicalStatus = firstString(standard.data, "orderStatus", "status");
+  if (canonicalId) data.id = canonicalId;
+  if (canonicalStatus) data.orderStatus = canonicalStatus;
+  if (standard.data.merchant !== undefined) data.merchant = standard.data.merchant;
+  if (standard.data.merchantId !== undefined) data.merchantId = standard.data.merchantId;
+  return { ...virtualBag, data };
+}
+
+function reconciliationOutcome(command: CommandWork, currentStatus: string, snapshot: ReturnType<typeof normalizeIfoodOrder>): ReconciliationOutcome {
+  const action = (command.sourceAction ?? "").toUpperCase();
+  if (!action) return firstString(asRecord(command.payload), "sourceCommandId") ? "UNKNOWN" : "APPLIED";
+  if (!["ADD_ITEM", "REPLACE_ITEM", "UPDATE_ITEM", "REMOVE_ITEM"].includes(action)) {
+    return orderAlreadyApplied(action, currentStatus) ? "APPLIED" : "NOT_APPLIED";
+  }
+  const source = asRecord(command.sourcePayload);
+  const externalItemId = firstString(source, "externalItemId");
+  const ean = firstString(source, "ean");
+  const quantity = Number(source.quantity);
+  const byId = externalItemId ? snapshot.items.find((item) => item.external_item_id === externalItemId) : undefined;
+  const byEan = ean ? snapshot.items.filter((item) => item.ean === ean) : [];
+  const sameQuantity = (value: number) => Number.isFinite(quantity) && Math.abs(value - quantity) < 0.0005;
+
+  if (action === "REMOVE_ITEM") return externalItemId ? (byId ? "NOT_APPLIED" : "APPLIED") : "UNKNOWN";
+  if (action === "UPDATE_ITEM") return externalItemId && Number.isFinite(quantity)
+    ? (byId && sameQuantity(byId.quantity) ? "APPLIED" : "NOT_APPLIED")
+    : "UNKNOWN";
+  if (action === "REPLACE_ITEM") {
+    if (!externalItemId || !ean || !Number.isFinite(quantity)) return "UNKNOWN";
+    return ((byId?.ean === ean && sameQuantity(byId.quantity)) || byEan.some((item) => sameQuantity(item.quantity))) ? "APPLIED" : "NOT_APPLIED";
+  }
+  if (!ean || !Number.isFinite(quantity)) return "UNKNOWN";
+  return byEan.some((item) => sameQuantity(item.quantity)) ? "APPLIED" : "NOT_APPLIED";
+}
+
 async function processEvent(client: IfoodClient, workerId: string, eventWork: EventWork): Promise<void> {
   try {
     const event = parseIfoodEvents(eventWork.payload)[0];
     if (!event) throw new Error("Evento iFood vazio.");
     const orderId = eventOrderId(event);
     const status = eventStatus(event);
+    const eventCode = eventType(event).toUpperCase();
+    const attentionType = eventCode === "ORDER_CANCELLATION_REQUEST"
+      ? "CANCELLATION_REQUEST"
+      : eventCode.startsWith("HANDSHAKE_") && !/(RESOLVED|SETTLED|CLOSED|EXPIRED)$/.test(eventCode)
+        ? "HANDSHAKE"
+        : undefined;
+    const clearAttention = eventCode.startsWith("HANDSHAKE_") && /(RESOLVED|SETTLED|CLOSED|EXPIRED)$/.test(eventCode);
+    const rawDeadline = firstString(event, "metadata.expiresAt", "metadata.deadline", "expiresAt", "deadline");
+    const attentionDeadlineAt = rawDeadline && !Number.isNaN(Date.parse(rawDeadline)) ? new Date(rawDeadline).toISOString() : "";
+    const attentionData = attentionType ? {
+      eventType: eventCode,
+      disputeId: firstString(event, "metadata.disputeId", "disputeId", "metadata.id").slice(0, 160),
+      reason: firstString(event, "metadata.reason", "reason").slice(0, 300),
+    } : undefined;
+    let classification = "UNSUPPORTED";
     if (orderId && isIfoodOrderEvent(event)) {
+      // Grocery orders are intentionally imported only when the virtual bag is
+      // ready for invoicing. Earlier lifecycle events do not guarantee that
+      // the Picking payload is available and must not poison the inbox retry.
+      if (eventWork.catalogProfile === "GROCERY" && isIfoodGroceryPreInvoiceEvent(event)) {
+        await systemRecordSalesChannelEventResult(dc, {
+          eventId: eventWork.id,
+          workerId,
+          payload: { success: true, acknowledged: true, classification: "IGNORED" },
+        });
+        return;
+      }
+      classification = "PROCESSED";
       try {
-        const orderResponse = await client.getOrder(orderId);
+        const orderResponse = await getOrderSnapshot(client, orderId, eventWork.catalogProfile === "GROCERY");
         assertOrderIdentity(orderResponse.data, orderId, eventWork.externalStoreId ?? "");
         const order = normalizeIfoodOrder(orderResponse.data, eventWork.id, event);
+        const importAtReadyForInvoice = eventWork.catalogProfile === "GROCERY" && isIfoodGroceryReadyForInvoiceEvent(event);
         await systemIngestSalesChannelOrder(dc, {
           connectionId: eventWork.connectionId,
-          payload: { ...order, workerId, merchantId: eventWork.externalStoreId, reconciledStatus: orderStatusFromCode(order.partnerStatus) },
+          payload: {
+            ...order,
+            ...(importAtReadyForInvoice ? { partnerStatus: eventCode } : {}),
+            workerId,
+            merchantId: eventWork.externalStoreId,
+            reconciledStatus: importAtReadyForInvoice ? "PENDING" : orderStatusFromCode(order.partnerStatus),
+            ...(attentionType ? { attentionType, attentionDeadlineAt, attentionData } : {}),
+            ...(clearAttention ? { clearAttention: true } : {}),
+          },
         });
       } catch (error) {
         if (!(error instanceof IfoodHttpError && error.status === 404)) throw error;
@@ -405,7 +518,7 @@ async function processEvent(client: IfoodClient, workerId: string, eventWork: Ev
     await systemRecordSalesChannelEventResult(dc, {
       eventId: eventWork.id,
       workerId,
-      payload: { success: true, acknowledged: true },
+      payload: { success: true, acknowledged: true, classification },
     });
   } catch (error) {
     const failure = safeError(error, eventWork.attempts + 1);
@@ -427,9 +540,17 @@ async function processCommand(client: IfoodClient, workerId: string, command: Co
       const payload = asRecord(command.payload);
       const barcode = firstString(payload, "barcode");
       const name = firstString(payload, "name");
-      const response = catalogProfile === "GROCERY"
-        ? await client.ingestGroceryProducts(merchantId, [{ barcode, name, active: false }], "PATCH")
-        : await client.updateCatalogItem(merchantId, barcode, { available: false });
+      let response: { status: number; requestId: string };
+      try {
+        response = catalogProfile === "GROCERY"
+          ? await client.ingestGroceryProducts(merchantId, [{ barcode, name, active: false }], "PATCH")
+          : await client.updateCatalogItem(merchantId, barcode, { available: false });
+      } catch (error) {
+        // Removing an already absent partner item reaches the intended final
+        // state and must not leave the whole connection stuck forever.
+        if (!(error instanceof IfoodHttpError && error.status === 404)) throw error;
+        response = { status: 404, requestId: error.requestId };
+      }
       await systemRecordSalesChannelCommandResult(dc, {
         commandId: command.id,
         workerId,
@@ -438,13 +559,13 @@ async function processCommand(client: IfoodClient, workerId: string, command: Co
       return;
     }
     if (!command.providerOrderId) throw new Error("Comando sem pedido externo associado.");
-    const current = await client.getOrder(command.providerOrderId);
-    assertOrderIdentity(current.data, command.providerOrderId, command.externalStoreId ?? "");
-    const currentStatus = firstString(current.data, "orderStatus", "status") || command.partnerStatus || "";
-    const payload = asRecord(command.payload);
     const grocery = command.catalogProfile === "GROCERY";
     if (command.action === "RECONCILE_ORDER") {
-      const snapshot = normalizeIfoodOrder(current.data, command.id);
+      const reconciled = await getOrderSnapshot(client, command.providerOrderId, grocery);
+      assertOrderIdentity(reconciled.data, command.providerOrderId, command.externalStoreId ?? "");
+      const currentStatus = firstString(reconciled.data, "orderStatus", "status") || command.partnerStatus || "";
+      const snapshot = normalizeIfoodOrder(reconciled.data, command.id);
+      const outcome = reconciliationOutcome(command, currentStatus, snapshot);
       await systemIngestSalesChannelOrder(dc, {
         connectionId: command.connectionId,
         payload: { ...snapshot, eventId: "", commandId: command.id, workerId, merchantId: command.externalStoreId, reconciledStatus: orderStatusFromCode(currentStatus) },
@@ -452,7 +573,17 @@ async function processCommand(client: IfoodClient, workerId: string, command: Co
       await systemRecordSalesChannelCommandResult(dc, {
         commandId: command.id,
         workerId,
-        payload: { success: true, requestId: current.requestId, responseCode: current.status, partnerStatus: currentStatus, awaitingPartner: false },
+        payload: {
+          success: true,
+          requestId: reconciled.requestId,
+          responseCode: reconciled.status,
+          partnerStatus: currentStatus,
+          awaitingPartner: false,
+          reconciliationNotApplied: outcome === "NOT_APPLIED",
+          reconciliationUnresolved: outcome === "UNKNOWN",
+          ...(outcome === "NOT_APPLIED" ? { error: "A consulta confirmou que a alteração anterior não foi aplicada pelo iFood. Revise o pedido antes de enviá-la novamente." } : {}),
+          ...(outcome === "UNKNOWN" ? { error: "O estado atual foi atualizado, mas não foi possível comprovar automaticamente o resultado da alteração anterior." } : {}),
+        },
       });
       await systemReconcileSalesChannelCommerce(dc, {
         connectionId: command.connectionId,
@@ -461,12 +592,17 @@ async function processCommand(client: IfoodClient, workerId: string, command: Co
       });
       return;
     }
+    const current = await client.getOrder(command.providerOrderId);
+    assertOrderIdentity(current.data, command.providerOrderId, command.externalStoreId ?? "");
+    const currentStatus = firstString(current.data, "orderStatus", "status") || command.partnerStatus || "";
+    const payload = asRecord(command.payload);
     let response: { status: number; requestId: string } = current;
     let partnerStatus: string | undefined;
     let awaitingPartner = true;
     let pickingSnapshot: ReturnType<typeof normalizeIfoodOrder> | undefined;
     if (["ADD_ITEM", "REPLACE_ITEM", "UPDATE_ITEM", "REMOVE_ITEM"].includes(command.action)) {
       if (!grocery) throw new Error("A operação de separação de itens só é válida para pedidos Mercado.");
+      if (currentStatus.toUpperCase() !== "SEPARATION_STARTED") throw new Error("A separação precisa estar iniciada e ainda aberta no iFood para alterar itens.");
       const uniqueId = firstString(payload, "externalItemId");
       const ean = firstString(payload, "ean");
       const quantity = Number(payload.quantity);
@@ -478,7 +614,7 @@ async function processCommand(client: IfoodClient, workerId: string, command: Co
       mutationWithUnknownOutcome = false;
       awaitingPartner = false;
       try {
-        const refreshed = await client.getOrderVirtualBag(command.providerOrderId);
+        const refreshed = await getOrderSnapshot(client, command.providerOrderId, true);
         assertOrderIdentity(refreshed.data, command.providerOrderId, command.externalStoreId ?? "");
         pickingSnapshot = normalizeIfoodOrder(refreshed.data, command.id);
       } catch {
@@ -499,10 +635,13 @@ async function processCommand(client: IfoodClient, workerId: string, command: Co
         partnerStatus = "SEPARATION_STARTED";
         awaitingPartner = false;
       } else if (command.action === "COMPLETE" && grocery) {
+        if (currentStatus.toUpperCase() !== "SEPARATION_STARTED") throw new Error("A separação precisa estar iniciada no iFood antes de ser concluída.");
+        mutationWithUnknownOutcome = true;
         response = await client.endSeparation(command.providerOrderId);
+        mutationWithUnknownOutcome = false;
         partnerStatus = "SEPARATION_ENDED";
         awaitingPartner = false;
-        const refreshed = await client.getOrder(command.providerOrderId);
+        const refreshed = await getOrderSnapshot(client, command.providerOrderId, true);
         assertOrderIdentity(refreshed.data, command.providerOrderId, command.externalStoreId ?? "");
         pickingSnapshot = normalizeIfoodOrder(refreshed.data, command.id);
       } else if (command.action === "ACCEPT") {
@@ -510,14 +649,13 @@ async function processCommand(client: IfoodClient, workerId: string, command: Co
         response = await client.startPreparation(command.providerOrderId);
         partnerStatus = "PREPARATION_STARTED";
       } else if (command.action === "COMPLETE") {
-        const completionAction = ifoodCompletionAction(command.orderType ?? "", current.data);
-        if (completionAction === "DISPATCH") {
-          response = await client.dispatchOrder(command.providerOrderId);
-          partnerStatus = "DISPATCHED";
-        } else {
-          response = await client.readyToPickup(command.providerOrderId);
-          partnerStatus = "READY_TO_PICKUP";
-        }
+        ifoodCompletionAction(command.orderType ?? "", current.data);
+        response = await client.readyToPickup(command.providerOrderId);
+        partnerStatus = "READY_TO_PICKUP";
+      } else if (command.action === "DISPATCH") {
+        if ((command.deliveryProvider ?? "").toUpperCase() !== "MERCHANT") throw new Error("A expedição manual só é válida quando a entrega é realizada pela loja.");
+        response = await client.dispatchOrder(command.providerOrderId);
+        partnerStatus = "DISPATCHED";
       } else if (command.action === "REJECT" || command.action === "CANCEL") {
         const requestedReason = firstString(payload, "reason");
         const requestedCode = firstString(payload, "cancellationCode");
@@ -532,7 +670,11 @@ async function processCommand(client: IfoodClient, workerId: string, command: Co
       } else {
         throw new Error("Ação de pedido não suportada pelo adaptador iFood.");
       }
-    } else partnerStatus = currentStatus;
+    } else {
+      partnerStatus = currentStatus;
+      if (grocery && ((command.action === "ACCEPT" && ["SEPARATION_STARTED", "SEPARATION_ENDED"].includes(currentStatus.toUpperCase()))
+        || (command.action === "COMPLETE" && currentStatus.toUpperCase() === "SEPARATION_ENDED"))) awaitingPartner = false;
+    }
     if (pickingSnapshot) {
       await systemIngestSalesChannelOrder(dc, {
         connectionId: command.connectionId,
@@ -585,6 +727,9 @@ async function authorizeConnection(client: IfoodClient, workerId: string, job: J
   const token = await client.tokenMetadata();
   const restaurantCatalog = profile === "RESTAURANT";
   const groceryCatalog = profile === "GROCERY";
+  const verifiedAt = new Date().toISOString();
+  const pendingCapability = { state: "PENDING", reason: "Será validado na primeira operação real deste módulo." };
+  const notApplicableCapability = { state: "NOT_APPLICABLE", reason: "Este recurso não se aplica ao tipo desta loja." };
   const merchantSnapshot = {
     id: externalStoreId,
     name: firstString(verified.data, "name", "tradingName", "corporateName") || firstString(selected, "name"),
@@ -608,18 +753,21 @@ async function authorizeConnection(client: IfoodClient, workerId: string, job: J
       secretReference: "secret-manager://IFOOD_CLIENT_SECRET",
       success: true,
       capabilities: {
-        merchant: true,
-        events: true,
-        order: true,
+        merchant: { state: "VERIFIED", verifiedAt, source: "MERCHANT_API" },
+        storeOperations: { state: "VERIFIED", verifiedAt, source: "MERCHANT_STATUS" },
+        events: pendingCapability,
+        order: pendingCapability,
         catalog: {
+          state: profile === "UNVERIFIED" ? "BLOCKED" : "PENDING",
           profile,
           verified: profile !== "UNVERIFIED",
-          initialPublication: groceryCatalog ? "REQUIRES_ITEM_API_APPROVAL" : false,
-          price: restaurantCatalog || groceryCatalog,
-          availability: restaurantCatalog || groceryCatalog,
-          inventoryQuantity: groceryCatalog,
+          initialPublication: groceryCatalog ? pendingCapability : notApplicableCapability,
+          price: restaurantCatalog || groceryCatalog ? pendingCapability : notApplicableCapability,
+          availability: restaurantCatalog || groceryCatalog ? pendingCapability : notApplicableCapability,
+          inventoryQuantity: groceryCatalog ? pendingCapability : notApplicableCapability,
         },
-        grocerySeparation: groceryCatalog ? "REQUIRES_PICKING_APPROVAL" : false,
+        grocerySeparation: groceryCatalog ? pendingCapability : notApplicableCapability,
+        financial: pendingCapability,
       },
     },
   });
@@ -640,9 +788,9 @@ async function synchronizeMappings(client: IfoodClient, workerId: string, job: J
   let processed = 0;
   let failed = 0;
   let retryableFailure: SafeError | undefined;
-  const recordSuccess = async (mapping: MappingWork) => {
+  const recordSuccess = async (mapping: MappingWork, confirmationState: "CONFIRMED" | "RECEIVED", partnerOperationId = "") => {
     processed += 1;
-    await systemRecordSalesChannelMappingResult(dc, { mappingId: mapping.mappingId, payload: { success: true, jobId: job.id, workerId, expectedVersion: mapping.version, snapshotAt: mapping.snapshotAt, effectivePromotionCents: mapping.promotionPriceCents, nextPromotionChangeAt: mapping.nextPromotionChangeAt } });
+    await systemRecordSalesChannelMappingResult(dc, { mappingId: mapping.mappingId, payload: { success: true, confirmationState, partnerOperationId, jobId: job.id, workerId, expectedVersion: mapping.version, snapshotAt: mapping.snapshotAt, effectivePromotionCents: mapping.promotionPriceCents, nextPromotionChangeAt: mapping.nextPromotionChangeAt } });
   };
   const recordFailure = async (mapping: MappingWork, error: unknown) => {
     failed += 1;
@@ -651,6 +799,35 @@ async function synchronizeMappings(client: IfoodClient, workerId: string, job: J
     await systemRecordSalesChannelMappingResult(dc, { mappingId: mapping.mappingId, payload: { success: false, error: failure.message, jobId: job.id, workerId, expectedVersion: mapping.version } });
   };
 
+  if (job.jobType === "CATALOG_CONFIRMATION") {
+    await mapConcurrent(mappings, 3, async (mapping) => {
+      try {
+        if (!mapping.partnerOperationId) throw new Error("A sincronização não possui identificador do lote do iFood.");
+        const confirmationState = await client.catalogBatchConfirmation(job.externalStoreId!, mapping.partnerOperationId);
+        await recordSuccess(mapping, confirmationState, mapping.partnerOperationId);
+      } catch (error) {
+        await recordFailure(mapping, error);
+      }
+    });
+    const success = failed === 0;
+    await systemRecordSalesChannelSyncResult(dc, {
+      jobId: job.id,
+      workerId,
+      payload: {
+        success,
+        retryable: !success && Boolean(retryableFailure),
+        retryAfterSeconds: retryableFailure?.retryAfterSeconds,
+        error: success ? undefined : `${failed} lote(s) de catálogo não puderam ser confirmados no iFood.`,
+        continuation: success && hasMore,
+        cursor: success && hasMore ? mappings.at(-1)?.mappingId : job.cursor,
+        totalItems: (job.processedItems ?? 0) + Number(mappings[0]?.remaining ?? 0),
+        processedItems: (job.processedItems ?? 0) + (success ? processed : 0),
+        failedItems: failed,
+      },
+    });
+    return;
+  }
+
   if (job.catalogProfile === "GROCERY") {
     const groups = [
       { method: "FULL" as const, values: mappings.filter((mapping) => mapping.needsFullPublication) },
@@ -658,8 +835,9 @@ async function synchronizeMappings(client: IfoodClient, workerId: string, job: J
     ];
     for (const group of groups) {
       if (!group.values.length) continue;
-      try {
-        const products = group.values.map((mapping) => groceryProductFromSource({
+      const synchronizeBatch = async (values: MappingWork[]): Promise<void> => {
+        try {
+          const products = values.map((mapping) => groceryProductFromSource({
           barcode: mapping.externalProductId,
           name: mapping.externalProductName || mapping.productName,
           internalCode: mapping.internalCode,
@@ -678,19 +856,29 @@ async function synchronizeMappings(client: IfoodClient, workerId: string, job: J
           sendStock: group.method === "FULL" || (mapping.syncStock && job.jobType !== "PRICE"),
           activate: group.method === "FULL",
         }));
-        await client.ingestGroceryProducts(job.externalStoreId, products, group.method);
-        await mapConcurrent(group.values, 8, recordSuccess);
-      } catch (error) {
-        await mapConcurrent(group.values, 8, (mapping) => recordFailure(mapping, error));
-      }
+          const response = await client.ingestGroceryProducts(job.externalStoreId!, products, group.method);
+          const operationId = firstString(asRecord(response.data), "batchId", "id") || response.requestId;
+          await mapConcurrent(values, 8, (mapping) => recordSuccess(mapping, response.status === 202 ? "RECEIVED" : "CONFIRMED", operationId));
+        } catch (error) {
+          const failure = safeError(error, job.attempts + 1);
+          if (failure.retryable || values.length === 1) {
+            await mapConcurrent(values, 8, (mapping) => recordFailure(mapping, error));
+            return;
+          }
+          const middle = Math.ceil(values.length / 2);
+          await synchronizeBatch(values.slice(0, middle));
+          await synchronizeBatch(values.slice(middle));
+        }
+      };
+      await synchronizeBatch(group.values);
     }
   } else await mapConcurrent(mappings, 3, async (mapping) => {
     try {
-      await client.updateCatalogItem(job.externalStoreId!, mapping.externalProductId, {
+      const response = await client.updateCatalogItem(job.externalStoreId!, mapping.externalProductId, {
         ...(mapping.syncPrice && job.jobType !== "STOCK" ? { priceCents: Number(mapping.priceCents) } : {}),
         ...(mapping.syncStock && job.jobType !== "PRICE" ? { available: Number(mapping.stockQuantity) > 0 } : {}),
       });
-      await recordSuccess(mapping);
+      await recordSuccess(mapping, response.confirmationState, response.operationId || response.requestId);
     } catch (error) {
       await recordFailure(mapping, error);
     }
@@ -713,9 +901,51 @@ async function synchronizeMappings(client: IfoodClient, workerId: string, job: J
   });
 }
 
+function utcDate(value: Date): string {
+  return value.toISOString().slice(0, 10);
+}
+
+async function synchronizeFinancialEvents(client: IfoodClient, workerId: string, job: JobWork): Promise<void> {
+  if (!job.externalStoreId) throw new Error("A conexão não possui ID oficial da loja iFood.");
+  const now = new Date();
+  const checkpoint = asRecord(job.checkpoint);
+  const previous = job.lastFinancialSyncAt ? new Date(job.lastFinancialSyncAt) : new Date(now.getTime() - 7 * 86_400_000);
+  const safePrevious = Number.isNaN(previous.getTime()) ? new Date(now.getTime() - 7 * 86_400_000) : previous;
+  // Re-read one day to absorb delayed events. The database entry key makes the
+  // overlap free of duplicates while reducing API and Cloud Function cost.
+  const calculatedBegin = new Date(Math.max(now.getTime() - 31 * 86_400_000, safePrevious.getTime() - 86_400_000));
+  const beginText = firstString(checkpoint, "beginDate") || utcDate(calculatedBegin);
+  const endText = firstString(checkpoint, "endDate") || utcDate(now);
+  let page = Math.max(1, Math.floor(Number(checkpoint.page) || 1));
+  let processedThisRun = 0;
+  let requestId = "";
+  let hasNext = false;
+  for (let pageCount = 0; pageCount < 5; pageCount += 1) {
+    const response = await client.financialEvents(job.externalStoreId, beginText, endText, page, 100);
+    requestId = response.requestId || requestId;
+    const containers = Array.isArray(response.data) ? response.data.map(asRecord) : [asRecord(response.data)];
+    const rawEvents = containers.flatMap((container) => asArray(container.financialEvents));
+    const directEvents = rawEvents.length ? rawEvents : (Array.isArray(response.data) && response.data.every((item) => firstString(item, "name")) ? response.data : []);
+    const entries = directEvents.map((event) => normalizeIfoodFinancialEvent(event, job.externalStoreId!));
+    const unique = [...new Map(entries.map((entry) => [entry.entry_key, entry])).values()];
+    await systemUpsertSalesChannelFinancialEvents(dc, { connectionId: job.connectionId, jobId: job.id, workerId, payloads: unique });
+    processedThisRun += unique.length;
+    hasNext = containers.some((container) => container.hasNextPage === true);
+    if (!hasNext) break;
+    page += 1;
+  }
+  const processedTotal = (job.processedItems ?? 0) + processedThisRun;
+  await systemRecordSalesChannelSyncResult(dc, {
+    jobId: job.id,
+    workerId,
+    payload: { success: true, requestId, continuation: hasNext, ...(hasNext ? { checkpoint: { beginDate: beginText, endDate: endText, page } } : {}), totalItems: processedTotal, processedItems: processedTotal, failedItems: 0 },
+  });
+}
+
 async function processJob(client: IfoodClient, workerId: string, job: JobWork): Promise<void> {
   try {
     if (job.jobType === "AUTHORIZATION") await authorizeConnection(client, workerId, job);
+    else if (job.jobType === "FINANCIAL") await synchronizeFinancialEvents(client, workerId, job);
     else await synchronizeMappings(client, workerId, job);
   } catch (error) {
     const failure = safeError(error, job.attempts + 1);
@@ -798,7 +1028,7 @@ async function connectionForActor(userId: string, connectionId: string, manage =
 export async function availableMerchantsForUser(client: IfoodClient, userId: string, connectionId: string): Promise<Array<{ id: string; name: string; type: string; catalogProfile: string }>> {
   await connectionForActor(userId, connectionId, true);
   const merchants = await client.merchants();
-  return merchants.slice(0, 500).flatMap((merchant) => {
+  return merchants.flatMap((merchant) => {
     const id = merchantId(merchant);
     if (!id) return [];
     return [{

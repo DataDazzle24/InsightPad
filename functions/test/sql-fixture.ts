@@ -16,7 +16,7 @@ export async function database() {
       const field = /^\s+(\w+): (\w+)!?(.*)$/.exec(line);
       if (!field || field[3]!.includes("@ref")) continue;
       const [, name, type, annotations] = field;
-      const types: Record<string, string> = { String: "text", UUID: "uuid", Int: "integer", Int64: "bigint", Float: "numeric", Timestamp: "timestamptz", Boolean: "boolean", Any: "jsonb" };
+      const types: Record<string, string> = { String: "text", UUID: "uuid", Int: "integer", Int64: "bigint", Float: "numeric", Date: "date", Timestamp: "timestamptz", Boolean: "boolean", Any: "jsonb" };
       if (!types[type!]) {
         columns.push(`"${snake(name!)}_id" ${type === "User" ? "text" : "uuid"}`);
         continue;

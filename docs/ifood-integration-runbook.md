@@ -32,11 +32,17 @@ nas tabelas operacionais.
 | Aceite e preparo de restaurante | Implementado | Estado interno só muda após evento oficial |
 | Recusa e cancelamento | Implementado | Motivo elegível é consultado no iFood e escolhido pelo usuário |
 | Pronto para retirada e despacho | Implementado | Ação depende do responsável pela entrega |
-| Vínculo de item já existente, preço e disponibilidade de restaurante | Implementado | Usa `PATCH /catalog/v2.0/merchants/{merchantId}/items/{itemId}`; rotas depreciadas não são usadas |
+| Vínculo de item já existente, preço e disponibilidade de restaurante | Implementado | Usa os contratos específicos `PATCH /items/price` e `PATCH /items/status` e consulta o lote quando o parceiro devolve `batchId` |
 | Publicação inicial e atualização de produto Grocery | Implementado | Item API v1 com `reset=false`; POST no primeiro envio e PATCH nos seguintes |
 | Preço, promoção, estoque, categoria e imagem Grocery | Implementado | Derivados do cadastro interno e enviados somente por HTTPS autenticado |
 | Separação Grocery | Implementado | Confirmar/iniciar, finalizar, adicionar, substituir, alterar quantidade e remover item |
 | Desativação de produto Grocery | Implementado | Remover o vínculo enfileira `active=false` antes de encerrar o acompanhamento |
+| Conversão em venda e estoque | Implementado com bloqueios de integridade | A venda só é lançada após confirmação e com produtos e pagamentos reconciliados |
+| Produtos compostos/combos | Implementado | A reserva e a baixa usam um snapshot imutável dos componentes existente no aceite |
+| Preço exclusivo do iFood | Implementado | O vínculo pode acompanhar o cadastro ou manter preço promocional/base específico do canal |
+| Pagamentos, descontos e subsídio iFood | Implementado | Separa valor online, valor na entrega, desconto do lojista e subsídio do parceiro |
+| Taxas e repasse financeiro | Implementado quando o módulo do parceiro fornece os eventos | A classificação é explícita; descrições livres não são interpretadas como taxa |
+| Alerta de novo pedido | Implementado | Aviso visual, som, notificação do navegador e confirmação durável por usuário/versão |
 
 Restaurante e Mercado permanecem em fluxos separados. Um produto Grocery é
 identificado por EAN ou código de balança; um item Restaurant é identificado
@@ -71,8 +77,10 @@ venda > Operações** que os eventos chegam como `ACKNOWLEDGED`.
    e não pode ser digitado livremente no modal de canais.
 7. Execute **Publicar**. O primeiro envio usa POST da Item API com
    `reset=false`; os próximos usam PATCH e somente os campos acompanhados.
-8. Confira o resultado em **Operações**. HTTP `202` significa que a ingestão foi
-   aceita pelo iFood; a interface mostra esse estado como **Aceito pelo iFood**.
+8. Confira o resultado em **Operações**. HTTP `202` sem confirmação posterior
+   significa somente **Recebido pelo iFood**. Quando o parceiro fornece
+   `batchId`, o adaptador consulta o lote e só mostra **Confirmado no iFood**
+   depois da conclusão sem falhas de item.
 
 ## Operação de pedidos Grocery
 
@@ -95,8 +103,59 @@ venda > Operações** que os eventos chegam como `ACKNOWLEDGED`.
 - A conta de serviço do adaptador recebe somente Data Connect Data Admin,
   escrita de logs, recebimento de eventos e acesso às duas versões de segredo.
 - Eventos maiores que 256 KiB e webhooks sem assinatura válida são recusados.
+- Respostas de negócio maiores que 2 MiB, respostas OAuth maiores que 64 KiB e
+  conteúdo com UTF-8 inválido são interrompidos antes do processamento.
 - Payloads brutos expiram; os metadados de auditoria permanecem.
 - Uma loja iFood ativa não pode ser conectada a duas empresas Insight Pad.
+- As funções autenticadas aceitam `ENFORCE_APP_CHECK=true` por ambiente. Só
+  habilite a exigência depois de registrar e validar todos os clientes web no
+  Firebase App Check; ativar antes disso bloquearia usuários legítimos.
+
+## Release de produção
+
+Produção possui configuração própria e deliberadamente separada de DEV:
+
+- `.firebaserc.production` aponta exclusivamente para `insightpad-dd`;
+- `firebase.production.json` fixa Data Connect, Functions Node 22, Hosting,
+  rewrite do webhook, cache do shell e cabeçalhos de segurança;
+- `frontend/.env.production.example` exige o aplicativo web e a chave pública
+  do reCAPTCHA Enterprise registrados em produção;
+- `functions/.env.insightpad-dd.example` exige a conta de serviço dedicada e
+  `ENFORCE_APP_CHECK=true`.
+
+Antes de qualquer promoção, copie os exemplos para os arquivos locais ignorados
+pelo Git, preencha somente valores públicos no frontend e mantenha segredos no
+Secret Manager. Execute `scripts/validate-ifood-production.sh` na branch
+`release/production-v1`. O script é apenas um gate local: recusa configuração
+DEV, runtime incorreto, árvore suja ou App Check ausente; executa todas as
+suítes e o build de produção, mas não migra nem publica nada.
+
+Depois do gate local, ainda são obrigatórios: revisão humana do diff SQL
+aditivo, conferência de IAM/segredos, registro e enforcement do App Check no
+console, criação das políticas de alerta abaixo e autorização explícita para o
+deploy.
+
+## Monitoramento e alertas
+
+O scheduler registra a cada ciclo um `cycleId` e, a cada cinco minutos, um
+snapshot agregado sem dados pessoais com `metricType=IFOOD_RECONCILIATION`.
+Crie métricas baseadas em logs no Cloud Monitoring e alerte quando:
+
+| Campo/filtro | Limite inicial | Ação |
+| --- | ---: | --- |
+| `metricType=IFOOD_RECONCILIATION_FAILURE` | 1 ocorrência | Investigar falha do ciclo e disponibilidade do parceiro |
+| `unhealthyConnections` | maior que 0 por 10 min | Verificar OAuth, loja suspensa e última requisição |
+| `eventBacklog` ou `commandBacklog` | maior que 0 por 10 min | Verificar leases, retries e latência do worker |
+| `eventErrors`, `commandErrors` ou `syncErrors` | maior que 0 | Abrir **Histórico e problemas** e corrigir a causa antes de reenfileirar |
+| `catalogReceiptsToVerify` | maior que 0 por 15 min | Confirmar o lote no iFood e não prometer publicação ao cliente |
+| `commerceBlocked` | maior que 0 | Corrigir vínculo, pagamento ou caixa; não lançar venda parcial |
+| `financialPending` | maior que 0 por 24 h | Executar conciliação e conferir taxa/repasse |
+
+Mantenha também alertas nativos para erros de Functions, p95 do webhook acima
+de 1 segundo, p99 acima de 1,8 segundo, instâncias no limite, falhas do
+Scheduler e uso anormal de Secret Manager. Os limites devem ser recalibrados
+depois das primeiras quatro semanas de operação, preservando o objetivo do
+webhook responder `202` em menos de dois segundos.
 
 ## Validação mínima
 
@@ -115,6 +174,21 @@ venda > Operações** que os eventos chegam como `ACKNOWLEDGED`.
     pela Picking API antes de finalizar a separação.
 11. Remover um vínculo Grocery cria o comando de desativação do produto.
 12. Nenhum token, segredo ou payload bruto aparece no navegador.
+13. Um pedido sem produto vinculado permanece bloqueado e não gera venda nem
+    movimentação parcial de estoque.
+14. Um combo reserva e baixa exatamente os componentes existentes no instante
+    do aceite, mesmo que a composição seja editada depois.
+15. Pagamento ausente, moeda divergente ou soma incompatível bloqueia a venda
+    para reconciliação, sem inventar uma forma de pagamento.
+16. Desconto financiado pelo iFood não reduz a receita do lojista; desconto do
+    estabelecimento reduz. Taxas só entram depois da conciliação financeira.
+17. A mesma versão de um pedido alerta uma vez por usuário; uma atualização
+    relevante do pedido torna o alerta visível novamente.
+18. Horários que se sobrepõem, inclusive atravessando a meia-noite, são
+    recusados antes de chegar ao parceiro.
+19. Eventos operacionais repetidos não recriam a venda nem movimentam o estoque
+    novamente; somente alteração efetiva de itens, valores ou pagamentos gera
+    uma revisão comercial idempotente.
 
 O EAN/código de balança não pode ser trocado enquanto houver vínculo Grocery
 ativo. Remova primeiro o vínculo, aguarde a confirmação de `active=false`,
@@ -124,26 +198,34 @@ deixar o item antigo vendável no parceiro.
 ## Alteração de banco desta versão
 
 Antes do deploy do Data Connect em DEV, `dataconnect:sql:diff` deve listar
-somente alterações aditivas já aprovadas (o diff pode conter apenas as que ainda
-não existem no ambiente):
+somente alterações aditivas. Além das colunas de catálogo de versões anteriores
+que ainda não existirem no ambiente, esta entrega adiciona:
 
-- `sales_channel_connections.catalog_profile varchar(32) NOT NULL DEFAULT 'UNVERIFIED'`;
-- `sales_channel_orders.partner_event_at timestamptz NULL`;
-- `sales_channel_sync_jobs.cursor uuid NULL`;
-- `products.image_url varchar(1000) NULL`;
-- `products.scale_code varchar(32) NULL`.
+- em `sales_channel_orders`: `payment_integrity_status`, `attention_type`,
+  `attention_deadline_at`, `attention_data` e `commerce_source_hash`;
+- em `sales_channel_order_items`: `stock_snapshot`;
+- em `sales_channel_financial_entries`: `classification`;
+- em `sales_channel_sync_jobs`: `checkpoint`;
+- em `sales_channel_product_mappings`: identificador da operação, estado e
+  prazos da confirmação assíncrona;
+- em `accounts_receivable`: origem, referência externa, idempotência, valor
+  bruto e taxa do parceiro;
+- em `sales_channel_order_alert_acknowledgments`: confirmações independentes
+  de recebimento e de início do preparo;
+- índices compostos nas filas, pedidos, vínculos, reservas, conexões e eventos
+  financeiros usados pelos workers e pelas telas operacionais.
 
-Não execute uma migração `exact` se o diff trouxer remoção ou alteração
-destrutiva. Depois da migração compatível, gere novamente os dois SDKs do Data
-Connect e publique Data Connect, Functions e Hosting na mesma janela. O Hosting
-possui `pinTag` no webhook; por isso, Functions e Hosting precisam ser
-publicados juntos para o endpoint apontar para a revisão nova.
+Não execute uma migração `exact` se o diff trouxer remoção, truncamento ou
+alteração destrutiva. O procedimento versionado em
+`scripts/deploy-ifood-dev.sh` calcula o SHA-256 do diff SQL completo e só migra
+quando o operador revisa esse conteúdo, informa o hash exato e confirma
+literalmente `MIGRAR`. Isso evita que uma coluna inesperada seja aceita apenas
+por coincidir com uma lista parcial.
 
-O procedimento completo e protegido está versionado em
-`scripts/deploy-ifood-dev.sh`. Ele aceita somente branch `agent/*`, projeto
-`insightpad-dd-dev`, árvore Git limpa, Node 22, conta de serviço dedicada e
-somente o subconjunto das cinco alterações SQL acima. A migração exige a
-confirmação literal `MIGRAR`.
+Depois da migração compatível, gere novamente os dois SDKs do Data Connect e
+publique Data Connect, Functions e Hosting na mesma janela. O Hosting possui
+`pinTag` no webhook; por isso, Functions e Hosting precisam ser publicados
+juntos para o endpoint apontar para a revisão nova.
 
 ## Resposta a incidentes
 

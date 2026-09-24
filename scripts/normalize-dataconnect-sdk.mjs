@@ -17,3 +17,22 @@ if (!peer.includes("^14.")) {
   manifest.peerDependencies["firebase-admin"] = `${peer} || ^14.0.0`;
   await writeFile(packageUrl, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
 }
+
+// Firebase's generator occasionally leaves spaces at the end of placeholder
+// lines in documentation and JavaScript. Normalize only generated files so
+// repeated SDK generation remains deterministic and release diffs stay clean.
+for (const relativePath of [
+  "../frontend/src/dataconnect-generated/README.md",
+  "../frontend/src/dataconnect-generated/react/README.md",
+  "../frontend/src/dataconnect-generated/esm/index.esm.js",
+  "../frontend/src/dataconnect-generated/index.cjs.js",
+  "../frontend/src/dataconnect-generated/react/esm/index.esm.js",
+  "../frontend/src/dataconnect-generated/react/index.cjs.js",
+  "../functions/src/dataconnect-admin-generated/esm/index.esm.js",
+  "../functions/src/dataconnect-admin-generated/index.cjs.js",
+]) {
+  const url = new URL(relativePath, import.meta.url);
+  const generated = await readFile(url, "utf8");
+  const normalized = generated.replace(/[ \t]+$/gm, "");
+  if (normalized !== generated) await writeFile(url, normalized, "utf8");
+}

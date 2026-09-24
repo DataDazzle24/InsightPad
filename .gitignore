@@ -6,6 +6,8 @@ credentials*.json
 .env
 .env.*
 !.env.example
+!frontend/.env.production.example
+!functions/.env.insightpad-dd.example
 
 # Dependências
 node_modules/

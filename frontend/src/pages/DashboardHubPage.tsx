@@ -9,7 +9,8 @@ import {
   type Notice,
 } from "../components/SalesUi";
 import { DailyProfitDashboardPage } from "./DailyProfitDashboardPage";
-type View = "sales" | "stock" | "customers" | "categories";
+import { ChannelDashboardPage } from "./ChannelDashboardPage";
+type View = "sales" | "channels" | "stock" | "customers" | "categories";
 type Stock = {
   cards: Record<string, string | number>;
   monthly: Array<Record<string, string | number>>;
@@ -47,6 +48,7 @@ const dc = getDataConnect(firebaseApp, connectorConfig),
   iso = (d: Date) => d.toISOString().slice(0, 10),
   views: Array<{ key: View; label: string; icon: string }> = [
     { key: "sales", label: "Vendas", icon: "monitoring" },
+    { key: "channels", label: "Canais", icon: "hub" },
     { key: "stock", label: "Estoque", icon: "inventory_2" },
     { key: "customers", label: "Clientes", icon: "groups" },
     { key: "categories", label: "Categorias", icon: "category" },
@@ -70,6 +72,8 @@ export function DashboardHubPage() {
       <div className="dashboard-hub__content">
         {view === "sales" ? (
           <DailyProfitDashboardPage />
+        ) : view === "channels" ? (
+          <ChannelDashboardPage />
         ) : (
           <Operational view={view} />
         )}
@@ -77,7 +81,7 @@ export function DashboardHubPage() {
     </section>
   );
 }
-function Operational({ view }: { view: Exclude<View, "sales"> }) {
+function Operational({ view }: { view: Exclude<View, "sales" | "channels"> }) {
   const now = new Date(),
     start = new Date(now.getFullYear(), now.getMonth(), 1),
     [from, setFrom] = useState(iso(start)),

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { logger } from "firebase-functions/logger";
 import { onMutationExecuted } from "firebase-functions/dataconnect";
 import { defineSecret, defineString } from "firebase-functions/params";
@@ -16,14 +17,15 @@ import {
   queueDueIfoodSynchronizations,
   registerWebhookEvents,
   merchantOperationForUser,
+  salesChannelHealthSnapshot,
 } from "./worker.js";
 
 const clientId = defineSecret("IFOOD_CLIENT_ID");
 const clientSecret = defineSecret("IFOOD_CLIENT_SECRET");
 const serviceAccount = defineString("IFOOD_SERVICE_ACCOUNT", {
-  default: "insightpad-ifood-adapter@insightpad-dd-dev.iam.gserviceaccount.com",
   description: "Conta de serviço exclusiva do adaptador iFood neste ambiente.",
 });
+const enforceAppCheck = process.env.ENFORCE_APP_CHECK === "true";
 
 setGlobalOptions({
   region: "southamerica-east1",
@@ -185,13 +187,19 @@ export const reconcileIfood = onSchedule({
   timeoutSeconds: 180,
   maxInstances: 1,
 }, async () => {
+  const cycleId = randomUUID();
   try {
     const polling = await pollIfoodEvents(client());
     await queueDueIfoodSynchronizations();
     const processed = await drainIfoodWork(client(), 5);
-    logger.info("Reconciliação iFood concluída.", { ...polling, processed });
+    let health: Awaited<ReturnType<typeof salesChannelHealthSnapshot>>;
+    if (new Date().getUTCMinutes() % 5 === 0) health = await salesChannelHealthSnapshot();
+    const hasAttention = Boolean(health && (health.unhealthyConnections || health.eventErrors || health.eventBacklog || health.commandErrors || health.commandBacklog || health.syncErrors || health.syncBacklog || health.commerceBlocked || health.financialPending));
+    const metadata = { metricType: "IFOOD_RECONCILIATION", cycleId, ...polling, processed, ...(health ?? {}) };
+    if (hasAttention) logger.warn("Reconciliação iFood concluída com itens que exigem atenção.", metadata);
+    else logger.info("Reconciliação iFood concluída.", metadata);
   } catch (error) {
-    logger.error("A reconciliação iFood falhou.", { errorType: error instanceof Error ? error.name : "UnknownError" });
+    logger.error("A reconciliação iFood falhou.", { metricType: "IFOOD_RECONCILIATION_FAILURE", cycleId, errorType: error instanceof Error ? error.name : "UnknownError" });
     throw new Error("Falha transitória na reconciliação iFood.");
   }
 });
@@ -212,6 +220,7 @@ export const purgeIfoodPayloads = onSchedule({
 });
 export const ifoodCancellationReasons = onCall({
   secrets: [clientId, clientSecret],
+  enforceAppCheck,
   timeoutSeconds: 45,
   maxInstances: 5,
   concurrency: 4,
@@ -234,6 +243,7 @@ const UUID_PATTERN = /^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/i;
 
 export const ifoodAvailableMerchants = onCall({
   secrets: [clientId, clientSecret],
+  enforceAppCheck,
   timeoutSeconds: 45,
   memory: "256MiB",
   maxInstances: 3,
@@ -253,6 +263,7 @@ export const ifoodAvailableMerchants = onCall({
 
 export const ifoodMerchantOperations = onCall({
   secrets: [clientId, clientSecret],
+  enforceAppCheck,
   timeoutSeconds: 45,
   memory: "256MiB",
   maxInstances: 3,
