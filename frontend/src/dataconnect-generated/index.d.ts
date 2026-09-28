@@ -248,9 +248,9 @@ export interface CreateSalesChannelProductMappingVariables {
   externalProductName: string;
   syncPrice: boolean;
   syncStock: boolean;
-  priceMode: string;
+  priceMode?: string;
   customPriceCents?: Int64String | null;
-  remoteProductState: string;
+  remoteProductState?: string;
 }
 
 export interface CreateSubcategoriesBatchData {
@@ -1545,9 +1545,9 @@ export interface UpdateSalesChannelProductMappingVariables {
   syncPrice: boolean;
   syncStock: boolean;
   enabled: boolean;
-  priceMode: string;
+  priceMode?: string;
   customPriceCents?: Int64String | null;
-  remoteProductState: string;
+  remoteProductState?: string;
 }
 
 export interface UpdateSubcategoryData {

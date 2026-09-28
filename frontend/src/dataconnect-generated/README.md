@@ -11974,9 +11974,9 @@ export interface CreateSalesChannelProductMappingVariables {
   externalProductName: string;
   syncPrice: boolean;
   syncStock: boolean;
-  priceMode: string;
+  priceMode?: string;
   customPriceCents?: Int64String | null;
-  remoteProductState: string;
+  remoteProductState?: string;
 }
 ```
 ### Return Type
@@ -12002,9 +12002,9 @@ const createSalesChannelProductMappingVars: CreateSalesChannelProductMappingVari
   externalProductName: ...,
   syncPrice: ...,
   syncStock: ...,
-  priceMode: ...,
+  priceMode: ..., // optional
   customPriceCents: ..., // optional
-  remoteProductState: ...,
+  remoteProductState: ..., // optional
 };
 
 // Call the `createSalesChannelProductMapping()` function to execute the mutation.
@@ -12040,9 +12040,9 @@ const createSalesChannelProductMappingVars: CreateSalesChannelProductMappingVari
   externalProductName: ...,
   syncPrice: ...,
   syncStock: ...,
-  priceMode: ...,
+  priceMode: ..., // optional
   customPriceCents: ..., // optional
-  remoteProductState: ...,
+  remoteProductState: ..., // optional
 };
 
 // Call the `createSalesChannelProductMappingRef()` function to get a reference to the mutation.
@@ -12107,9 +12107,9 @@ export interface UpdateSalesChannelProductMappingVariables {
   syncPrice: boolean;
   syncStock: boolean;
   enabled: boolean;
-  priceMode: string;
+  priceMode?: string;
   customPriceCents?: Int64String | null;
-  remoteProductState: string;
+  remoteProductState?: string;
 }
 ```
 ### Return Type
@@ -12135,9 +12135,9 @@ const updateSalesChannelProductMappingVars: UpdateSalesChannelProductMappingVari
   syncPrice: ...,
   syncStock: ...,
   enabled: ...,
-  priceMode: ...,
+  priceMode: ..., // optional
   customPriceCents: ..., // optional
-  remoteProductState: ...,
+  remoteProductState: ..., // optional
 };
 
 // Call the `updateSalesChannelProductMapping()` function to execute the mutation.
@@ -12173,9 +12173,9 @@ const updateSalesChannelProductMappingVars: UpdateSalesChannelProductMappingVari
   syncPrice: ...,
   syncStock: ...,
   enabled: ...,
-  priceMode: ...,
+  priceMode: ..., // optional
   customPriceCents: ..., // optional
-  remoteProductState: ...,
+  remoteProductState: ..., // optional
 };
 
 // Call the `updateSalesChannelProductMappingRef()` function to get a reference to the mutation.

@@ -2042,7 +2042,7 @@ mutation ArchiveSalesChannelConnection($id: UUID!) @auth(level: USER) @transacti
   """,params:[{_expr:"auth.uid"},$id])
 }
 
-mutation CreateSalesChannelProductMapping($connectionId: UUID!, $productId: UUID!, $externalProductId: String!, $externalProductName: String!, $syncPrice: Boolean!, $syncStock: Boolean!, $priceMode: String!, $customPriceCents: Int64, $remoteProductState: String!) @auth(level: USER) @transaction {
+mutation CreateSalesChannelProductMapping($connectionId: UUID!, $productId: UUID!, $externalProductId: String!, $externalProductName: String!, $syncPrice: Boolean!, $syncStock: Boolean!, $priceMode: String! = "PRODUCT", $customPriceCents: Int64, $remoteProductState: String! = "NEW") @auth(level: USER) @transaction {
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -2088,7 +2088,7 @@ mutation CreateSalesChannelProductMapping($connectionId: UUID!, $productId: UUID
   """,params:[{_expr:"auth.uid"},$connectionId,$productId,$externalProductId,$externalProductName,$syncPrice,$syncStock,$priceMode,$customPriceCents,$remoteProductState])
 }
 
-mutation UpdateSalesChannelProductMapping($id: UUID!, $externalProductId: String!, $externalProductName: String!, $syncPrice: Boolean!, $syncStock: Boolean!, $enabled: Boolean!, $priceMode: String!, $customPriceCents: Int64, $remoteProductState: String!) @auth(level: USER) @transaction {
+mutation UpdateSalesChannelProductMapping($id: UUID!, $externalProductId: String!, $externalProductName: String!, $syncPrice: Boolean!, $syncStock: Boolean!, $enabled: Boolean!, $priceMode: String! = "PRODUCT", $customPriceCents: Int64, $remoteProductState: String! = "NEW") @auth(level: USER) @transaction {
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL

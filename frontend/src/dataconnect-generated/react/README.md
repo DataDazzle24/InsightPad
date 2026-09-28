@@ -9733,9 +9733,9 @@ export interface CreateSalesChannelProductMappingVariables {
   externalProductName: string;
   syncPrice: boolean;
   syncStock: boolean;
-  priceMode: string;
+  priceMode?: string;
   customPriceCents?: Int64String | null;
-  remoteProductState: string;
+  remoteProductState?: string;
 }
 ```
 ### Return Type
@@ -9791,9 +9791,9 @@ export default function CreateSalesChannelProductMappingComponent() {
     externalProductName: ...,
     syncPrice: ...,
     syncStock: ...,
-    priceMode: ...,
+    priceMode: ..., // optional
     customPriceCents: ..., // optional
-    remoteProductState: ...,
+    remoteProductState: ..., // optional
   };
   mutation.mutate(createSalesChannelProductMappingVars);
   // Variables can be defined inline as well.
@@ -9843,9 +9843,9 @@ export interface UpdateSalesChannelProductMappingVariables {
   syncPrice: boolean;
   syncStock: boolean;
   enabled: boolean;
-  priceMode: string;
+  priceMode?: string;
   customPriceCents?: Int64String | null;
-  remoteProductState: string;
+  remoteProductState?: string;
 }
 ```
 ### Return Type
@@ -9901,9 +9901,9 @@ export default function UpdateSalesChannelProductMappingComponent() {
     syncPrice: ...,
     syncStock: ...,
     enabled: ...,
-    priceMode: ...,
+    priceMode: ..., // optional
     customPriceCents: ..., // optional
-    remoteProductState: ...,
+    remoteProductState: ..., // optional
   };
   mutation.mutate(updateSalesChannelProductMappingVars);
   // Variables can be defined inline as well.
