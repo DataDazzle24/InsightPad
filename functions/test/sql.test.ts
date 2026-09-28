@@ -86,6 +86,8 @@ describe("PostgreSQL: lifecycle and scope", () => {
     expect((result.rows[0] as {data:{connections:unknown[]}}).data.connections).toHaveLength(0);
     const operations = await operation(db,"SalesChannelOperations",["actor",null,50,"request-123"]);
     expect((operations.rows[0] as {data:{summary:{eventFailures:number;queuedCommands:number;syncFailures:number}}}).data.summary).toEqual({eventFailures:0,queuedCommands:0,syncFailures:0});
+    const operatorOperations = await operation(db,"SalesChannelOperations",["operator",null,50,"request-operator"]);
+    expect(operatorOperations.rows).toHaveLength(0);
     const workspace = await operation(db,"SalesChannelWorkspace",["actor","request-123"]);
     expect((workspace.rows[0] as {data:{connections:unknown[];mappings:unknown[]}}).data).toMatchObject({connections:[],mappings:[]});
   });

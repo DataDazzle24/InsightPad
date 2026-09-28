@@ -56,14 +56,15 @@ export const ids = {
   job: "00000000-0000-4000-8000-000000000011", product: "00000000-0000-4000-8000-000000000012",
   mapping: "00000000-0000-4000-8000-000000000013", category: "00000000-0000-4000-8000-000000000014",
   orderItem: "00000000-0000-4000-8000-000000000015",
+  operatorRole: "00000000-0000-4000-8000-000000000016",
 };
 export async function seed(db: PGlite) {
   await db.query("INSERT INTO tenants(id) VALUES ($1),($2)", [ids.tenant,ids.otherTenant]);
   await db.query("INSERT INTO branches(id,tenant_id) VALUES ($1,$3),($2,$3)", [ids.branch,ids.otherBranch,ids.tenant]);
-  await db.query("INSERT INTO roles(id,tenant_id) VALUES ($1,$2)", [ids.role,ids.tenant]);
-  await db.query("INSERT INTO users(id,tenant_id,role_id) VALUES ('actor',$1,$2),('other',$3,$2)", [ids.tenant,ids.role,ids.otherTenant]);
+  await db.query("INSERT INTO roles(id,tenant_id,name,system_role) VALUES ($1,$3,'Administrador da Plataforma',true),($2,$3,'Operador',false)", [ids.role,ids.operatorRole,ids.tenant]);
+  await db.query("INSERT INTO users(id,tenant_id,role_id) VALUES ('actor',$1,$2),('operator',$1,$3),('other',$4,$2)", [ids.tenant,ids.role,ids.operatorRole,ids.otherTenant]);
   await db.query("INSERT INTO app_pages(id,page_key) VALUES ($1,'CANAIS_VENDA')",[ids.page]);
-  await db.query("INSERT INTO role_page_permissions(role_id,page_id,tenant_id,can_access,can_update,can_manage,can_create,can_delete) VALUES ($1,$2,$3,true,true,true,true,true)",[ids.role,ids.page,ids.tenant]);
+  await db.query("INSERT INTO role_page_permissions(role_id,page_id,tenant_id,can_access,can_update,can_manage,can_create,can_delete) VALUES ($1,$3,$4,true,true,true,true,true),($2,$3,$4,true,true,true,true,true)",[ids.role,ids.operatorRole,ids.page,ids.tenant]);
   await db.query("INSERT INTO sales_channel_connections(id,tenant_id,branch_id,provider,external_store_id,status,authorization_status,catalog_profile) VALUES ($1,$2,$3,'IFOOD','merchant-1','ACTIVE','AUTHORIZED','RESTAURANT')",[ids.connection,ids.tenant,ids.branch]);
   await db.query("INSERT INTO sales_channel_orders(id,tenant_id,branch_id,connection_id,provider_order_id,display_code,status,partner_status,pending_action,command_status) VALUES ($1,$2,$3,$4,'order-1','1234','ACCEPTED','CONFIRMED','COMPLETE','PROCESSING')",[ids.order,ids.tenant,ids.branch,ids.connection]);
   await db.query("INSERT INTO sales_channel_order_items(id,tenant_id,order_id,external_item_id,name,quantity) VALUES ($1,$2,$3,'bag-item-1','Produto',1)",[ids.orderItem,ids.tenant,ids.order]);

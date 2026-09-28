@@ -14,6 +14,7 @@ const SOUND_PREFERENCE_KEY = "insightpad:channel-order-sound";
 const NOTIFICATION_PREFERENCE_KEY = "insightpad:channel-order-browser-notification";
 const SOUND_LEASE_PREFIX = "insightpad:channel-order-sound:";
 const POLL_LEASE_KEY = "insightpad:channel-order-poll-lease";
+const IFOOD_ORDER_ALERT_URL = "/audio/ifood-order-alert.mp3";
 const storageGet = (key: string) => { try { return localStorage.getItem(key); } catch { return null; } };
 const storageSet = (key: string, value: string) => { try { localStorage.setItem(key, value); } catch { /* Private mode may disable storage. */ } };
 function cleanupExpiredSoundLeases() {
@@ -55,7 +56,7 @@ export function ChannelOrderNotifier() {
   const [soundEnabled, setSoundEnabled] = useState(() => storageGet(SOUND_PREFERENCE_KEY) !== "off");
   const [browserNotifications, setBrowserNotifications] = useState(() => storageGet(NOTIFICATION_PREFERENCE_KEY) === "on");
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const audio = useRef<AudioContext | null>(null);
+  const audio = useRef<HTMLAudioElement | null>(null);
   const tabId = useRef(crypto.randomUUID());
   const [busy, setBusy] = useState(false);
   const [rejecting, setRejecting] = useState(false);
@@ -65,13 +66,13 @@ export function ChannelOrderNotifier() {
   const [loadingReasons, setLoadingReasons] = useState(false);
   const [error, setError] = useState("");
 
-  const ensureAudio = useCallback(async () => {
-    if (!soundEnabled) return null;
-    const context = audio.current ?? new AudioContext();
-    audio.current = context;
-    if (context.state === "suspended") await context.resume();
-    return context;
-  }, [soundEnabled]);
+  const getAlertAudio = useCallback(() => {
+    if (!audio.current) {
+      audio.current = new Audio(IFOOD_ORDER_ALERT_URL);
+      audio.current.preload = "auto";
+    }
+    return audio.current;
+  }, []);
 
   const playAlert = useCallback(async (orderId?: string) => {
     if (!soundEnabled) return;
@@ -82,26 +83,14 @@ export function ChannelOrderNotifier() {
       storageSet(leaseKey, String(Date.now()));
     }
     try {
-      const context = await ensureAudio();
-      if (!context) return;
-      [880, 1174.66, 880].forEach((frequency, index) => {
-        const oscillator = context.createOscillator();
-        const gain = context.createGain();
-        const start = context.currentTime + index * 0.24;
-        oscillator.type = "sine";
-        oscillator.frequency.setValueAtTime(frequency, start);
-        gain.gain.setValueAtTime(0.0001, start);
-        gain.gain.exponentialRampToValueAtTime(0.14, start + 0.03);
-        gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.2);
-        oscillator.connect(gain);
-        gain.connect(context.destination);
-        oscillator.start(start);
-        oscillator.stop(start + 0.21);
-      });
+      const player = getAlertAudio();
+      player.pause();
+      player.currentTime = 0;
+      await player.play();
     } catch (caught) {
       console.info("O navegador aguardará uma interação do usuário para liberar o som de pedidos.", caught);
     }
-  }, [ensureAudio, soundEnabled]);
+  }, [getAlertAudio, soundEnabled]);
 
   const resetAlertState = useCallback(() => {
     setRejecting(false);
@@ -166,16 +155,16 @@ export function ChannelOrderNotifier() {
 
   useEffect(() => {
     if (!soundEnabled) return;
-    const prime = () => { void ensureAudio(); };
+    const prime = () => { const player = getAlertAudio(); if (player.readyState === 0) player.load(); };
     document.addEventListener("pointerdown", prime, { passive: true });
     document.addEventListener("keydown", prime);
     return () => {
       document.removeEventListener("pointerdown", prime);
       document.removeEventListener("keydown", prime);
     };
-  }, [ensureAudio, soundEnabled]);
+  }, [getAlertAudio, soundEnabled]);
 
-  useEffect(() => () => { void audio.current?.close(); }, []);
+  useEffect(() => () => { audio.current?.pause(); }, []);
 
   useEffect(() => {
     let stopped = false;
@@ -213,21 +202,15 @@ export function ChannelOrderNotifier() {
 
   async function toggleSound() {
     if (soundEnabled) {
+      audio.current?.pause();
       setSoundEnabled(false);
       return;
     }
     try {
-      const context = audio.current ?? new AudioContext();
-      audio.current = context;
-      if (context.state === "suspended") await context.resume();
-      const oscillator = context.createOscillator();
-      const gain = context.createGain();
-      oscillator.frequency.value = 1046.5;
-      gain.gain.value = 0.08;
-      oscillator.connect(gain);
-      gain.connect(context.destination);
-      oscillator.start();
-      oscillator.stop(context.currentTime + 0.16);
+      const player = getAlertAudio();
+      player.pause();
+      player.currentTime = 0;
+      await player.play();
       setSoundEnabled(true);
     } catch (caught) {
       console.error("O navegador não liberou o teste de som.", caught);

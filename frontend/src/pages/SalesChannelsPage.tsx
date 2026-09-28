@@ -62,6 +62,7 @@ type Paged<T> = { rows: T[]; total: number; summary: Record<string, number> };
 type Filters = { provider: string; status: string; branchId: string; connectionId: string };
 type ConnectionForm = { provider: SalesChannelProvider; branchId: string; displayName: string; externalStoreId: string; enabled: boolean };
 type MappingForm = { connectionId: string; productId: string; externalProductId: string; externalProductName: string; syncPrice: boolean; syncStock: boolean; enabled: boolean; priceMode: "PRODUCT" | "CUSTOM"; customPrice: string; remoteProductState: "NEW" | "EXISTING" | "REACTIVATE" };
+type MappingIntent = MappingForm["remoteProductState"];
 type StoreOperationAction = "SAVE_HOURS" | "CREATE_INTERRUPTION" | "DELETE_INTERRUPTION";
 
 const emptyOptions: Options = { branches: [], connections: [] };
@@ -105,10 +106,12 @@ const storeOperationSuccess: Record<StoreOperationAction, string> = {
 };
 
 export function SalesChannelsPage() {
-  const permission = useAuth().permissions.CANAIS_VENDA;
+  const { permissions, profile } = useAuth();
+  const permission = permissions.CANAIS_VENDA;
+  const platformSupport = profile?.role.systemRole === true && profile.role.name === "Administrador da Plataforma";
   const [params, setParams] = useSearchParams();
   const requested = params.get("section");
-  const section: Section = requested === "products" || requested === "operations" ? requested : "connections";
+  const section: Section = requested === "products" || (requested === "operations" && platformSupport) ? requested : "connections";
   const [options, setOptions] = useState<Options>(emptyOptions);
   const [connections, setConnections] = useState<Paged<Connection>>({ rows: [], total: 0, summary: {} });
   const [mappings, setMappings] = useState<Paged<Mapping>>({ rows: [], total: 0, summary: {} });
@@ -160,6 +163,7 @@ export function SalesChannelsPage() {
 
   useEffect(() => { const timer = window.setTimeout(() => void loadOptions().catch((error) => { console.error(error); setNotice({ type: "error", text: "Não foi possível carregar filiais e conexões." }); }), 0); return () => window.clearTimeout(timer); }, [loadOptions]);
   useEffect(() => { const timer = window.setTimeout(() => void load(), term ? 350 : 0); return () => { window.clearTimeout(timer); sequence.current += 1; }; }, [load, term]);
+  useEffect(() => { if (requested === "operations" && !platformSupport) setParams({}, { replace: true }); }, [platformSupport, requested, setParams]);
   useEffect(() => { if (!notice) return; const timer = window.setTimeout(() => setNotice(null), 7000); return () => window.clearTimeout(timer); }, [notice]);
   useEffect(() => {
     if (section !== "connections" || !connections.rows.some((item) => ["PENDING", "PENDING_APPROVAL"].includes(item.authorizationStatus))) return;
@@ -175,7 +179,15 @@ export function SalesChannelsPage() {
   function changeSort(key: string) { setSort((current) => nextTableSort(current, key)); setPage(0); }
   function clearTools() { setTerm(""); setFilters(emptyFilters()); setDraftFilters(emptyFilters()); setSort(null); setPage(0); setOperationLimit(50); }
   function openConnection(item?: Connection) { setConnectionModal(item ?? "new"); setConnectionForm(item ? { provider: item.provider, branchId: item.branchId, displayName: item.displayName, externalStoreId: item.externalStoreId ?? "", enabled: item.enabled } : blankConnection(options.branches[0]?.id)); }
-  function openMapping(item?: Mapping) { const initial = options.connections[0]; setMappingModal(item ?? "new"); setMappingForm(item ? { connectionId: item.connectionId, productId: item.productId, externalProductId: item.externalProductId, externalProductName: item.externalProductName ?? "", syncPrice: item.syncPrice, syncStock: item.syncStock, enabled: item.enabled, priceMode: item.priceMode ?? "PRODUCT", customPrice: item.customPriceCents ? moneyInputFromCents(item.customPriceCents) : "", remoteProductState: item.remoteProductState ?? (item.needsFullPublication ? "NEW" : "EXISTING") } : { ...blankMapping(initial?.id), syncPrice: initial?.catalogProfile === "GROCERY", syncStock: initial?.catalogProfile === "GROCERY" }); }
+  function openMapping(item?: Mapping, intent: MappingIntent = "NEW") {
+    const initial = item
+      ? options.connections.find((connection) => connection.id === item.connectionId)
+      : intent === "EXISTING"
+        ? options.connections[0]
+        : options.connections.find((connection) => connection.catalogProfile === "GROCERY");
+    setMappingModal(item ?? "new");
+    setMappingForm(item ? { connectionId: item.connectionId, productId: item.productId, externalProductId: item.externalProductId, externalProductName: item.externalProductName ?? "", syncPrice: item.syncPrice, syncStock: item.syncStock, enabled: item.enabled, priceMode: item.priceMode ?? "PRODUCT", customPrice: item.customPriceCents ? moneyInputFromCents(item.customPriceCents) : "", remoteProductState: item.remoteProductState ?? (item.needsFullPublication ? "NEW" : "EXISTING") } : { ...blankMapping(initial?.id), syncPrice: initial?.catalogProfile === "GROCERY", syncStock: initial?.catalogProfile === "GROCERY", remoteProductState: intent });
+  }
   async function refresh(message?: string) { await Promise.all([load(), loadOptions()]); if (message) setNotice({ type: "success", text: message }); }
   async function saveConnection(event: FormEvent) {
     event.preventDefault();
@@ -287,7 +299,7 @@ export function SalesChannelsPage() {
 
   const pagination = <footer className="catalog-pagination channels-pagination"><button disabled={page === 0 || busy} onClick={() => setPage(Math.max(0, page - 1))}>← Anterior</button><span>Página {page + 1} de {pages} · {total} registro(s)</span><button disabled={page + 1 >= pages || busy} onClick={() => setPage(page + 1)}>Próxima →</button></footer>;
   return <section className="catalog-page channels-page">
-    <header><div className="catalog-title-group"><Link className="catalog-back" to="/modulos/canais" aria-label="Voltar ao submenu de canais" title="Voltar"><span className="material-symbols-rounded">arrow_back</span></Link><div><span className="eyebrow">Canais de venda</span><h1>Gestão de conexões</h1></div></div><nav className="channels-management-tabs" aria-label="Áreas da gestão"><button className={section === "connections" ? "active" : ""} onClick={() => changeSection("connections")}><span className="material-symbols-rounded">hub</span>Conexões</button><button className={section === "products" ? "active" : ""} onClick={() => changeSection("products")}><span className="material-symbols-rounded">inventory_2</span>Catálogo</button><button className={section === "operations" ? "active" : ""} onClick={() => changeSection("operations")}><span className="material-symbols-rounded">monitor_heart</span>Histórico e problemas</button></nav><div className="catalog-header-actions">{hasTools && <button className="catalog-clear-tools" onClick={clearTools}><span className="material-symbols-rounded">ink_eraser</span>Limpar filtros</button>}{section === "connections" && permission?.canCreate && <button className="catalog-primary" onClick={() => openConnection()}><span className="material-symbols-rounded">add_link</span>Novo canal</button>}{section === "products" && permission?.canManage && <button className="catalog-primary" onClick={() => openMapping()} disabled={!options.connections.length}><span className="material-symbols-rounded">add</span>Adicionar produto</button>}</div></header>
+    <header><div className="catalog-title-group"><Link className="catalog-back" to="/modulos/canais" aria-label="Voltar ao submenu de canais" title="Voltar"><span className="material-symbols-rounded">arrow_back</span></Link><div><span className="eyebrow">Canais de venda</span><h1>Gestão de conexões</h1></div></div><nav className="channels-management-tabs" aria-label="Áreas da gestão"><button className={section === "connections" ? "active" : ""} onClick={() => changeSection("connections")}><span className="material-symbols-rounded">hub</span>Conexões</button><button className={section === "products" ? "active" : ""} onClick={() => changeSection("products")}><span className="material-symbols-rounded">inventory_2</span>Catálogo</button>{platformSupport && <button className={section === "operations" ? "active" : ""} onClick={() => changeSection("operations")}><span className="material-symbols-rounded">monitor_heart</span>Histórico e problemas</button>}</nav><div className={`catalog-header-actions${section === "products" ? " channels-catalog-actions" : ""}`}>{hasTools && <button className="catalog-clear-tools" onClick={clearTools}><span className="material-symbols-rounded">ink_eraser</span>Limpar filtros</button>}{section === "connections" && permission?.canCreate && <button className="catalog-primary" onClick={() => openConnection()}><span className="material-symbols-rounded">add_link</span>Novo canal</button>}{section === "products" && permission?.canManage && <><button className="catalog-primary" onClick={() => openMapping(undefined, "NEW")} disabled={!options.connections.some((item) => item.catalogProfile === "GROCERY")} title="Criar um novo item em uma loja iFood Mercado"><span className="material-symbols-rounded">add</span>Adicionar produto</button><button className="catalog-secondary" onClick={() => openMapping(undefined, "EXISTING")} disabled={!options.connections.length} title="Relacionar um item que já existe no iFood"><span className="material-symbols-rounded">link</span>Vincular produto</button><button className="catalog-secondary" onClick={() => openMapping(undefined, "REACTIVATE")} disabled={!options.connections.some((item) => item.catalogProfile === "GROCERY")} title="Reativar um item inativo em uma loja iFood Mercado"><span className="material-symbols-rounded">restart_alt</span>Reativar existente</button></>}</div></header>
     {notice && <div className={`master-toast master-toast--${notice.type}`} role="alert" aria-live="assertive"><span className="material-symbols-rounded">{notice.type === "success" ? "check_circle" : "error"}</span><strong>{notice.text}</strong></div>}
     {section === "connections" && <Kpis activeKey={filters.status} onSelect={(status) => { setFilters({ ...filters, status }); setPage(0); }} items={[["", "link", "Conexões", connections.summary.total, "Ambientes configurados", "info"], ["AUTHORIZED", "verified", "Autorizadas", connections.summary.authorized, "Prontas para operar", "success"], ["PREPARING", "build_circle", "Em preparação", connections.summary.preparing, "Dependem do parceiro", "info"], ["ATTENTION", "warning", "Atenção", connections.summary.attention, "Exigem diagnóstico", "danger"]]} />}
     {section === "products" && <Kpis activeKey={filters.status} onSelect={(status) => { setFilters({ ...filters, status }); setPage(0); }} items={[["", "inventory_2", "Produtos vinculados", mappings.summary.total, "Catálogo integrado", "info"], ["AUTOMATIC", "bolt", "Automáticos", mappings.summary.automatic, "Preço ou estoque ativo", "success"], ["PENDING", "schedule", "Pendentes", mappings.summary.pending, "Aguardam processamento", "info"], ["ERROR", "error", "Com erro", mappings.summary.errors, "Exigem correção", "danger"]]} />}
@@ -364,6 +376,13 @@ function MappingModal({ editing, connections, form, setForm, busy, onClose, onSu
     return () => { cancelled = true; window.clearTimeout(timer); };
   }, [editing, form.connectionId, term]);
 
+  const intent = form.remoteProductState;
+  const availableConnections = editing || intent === "EXISTING" ? connections : connections.filter((item) => item.catalogProfile === "GROCERY");
+  const modalCopy: Record<MappingIntent, { title: string; submit: string }> = {
+    NEW: { title: "Adicionar produto ao iFood", submit: "Salvar e criar no iFood" },
+    EXISTING: { title: "Vincular produto existente", submit: "Salvar vínculo e sincronizar" },
+    REACTIVATE: { title: "Reativar produto existente", submit: "Salvar e reativar no iFood" },
+  };
   const connection = connections.find((item) => item.id === form.connectionId);
   const grocery = connection?.catalogProfile === "GROCERY";
   const selectedProduct = products.find((item) => item.id === form.productId);
@@ -376,14 +395,14 @@ function MappingModal({ editing, connections, form, setForm, busy, onClose, onSu
   const componentsReady = !selectedProduct?.bundleProduct || Number(selectedProduct.componentCount ?? 0) > 0;
   const productReady = Boolean(form.productId) && productLoaded && ((!form.enabled && Boolean(editing)) || (registrationReady && componentsReady && priceReady && (!grocery || groceryIdentifier.valid)));
 
-  return <div className="catalog-backdrop"><section className="catalog-modal master-modal channel-modal" role="dialog" aria-modal="true" aria-label="Adicionar produto ao iFood">
-    <header><div><span className="eyebrow">Catálogo</span><h2>{editing ? "Configurar produto" : "Adicionar produto ao iFood"}</h2></div><button onClick={onClose} aria-label="Fechar">×</button></header>
+  return <div className="catalog-backdrop"><section className="catalog-modal master-modal channel-modal" role="dialog" aria-modal="true" aria-label={editing ? "Configurar produto" : modalCopy[intent].title}>
+    <header><div><span className="eyebrow">Catálogo</span><h2>{editing ? "Configurar produto" : modalCopy[intent].title}</h2></div><button onClick={onClose} aria-label="Fechar">×</button></header>
     <form onSubmit={onSubmit}><div className="channel-modal-body">
       <div className="master-form-grid">
         <label><span>Loja conectada</span><select value={form.connectionId} disabled={Boolean(editing)} onChange={(event) => {
           const next = connections.find((item) => item.id === event.target.value);
           setForm({ ...form, connectionId: event.target.value, externalProductId: next?.catalogProfile === "GROCERY" ? "" : form.externalProductId, syncPrice: next?.catalogProfile === "GROCERY", syncStock: next?.catalogProfile === "GROCERY" });
-        }} required><option value="">Selecione a loja</option>{connections.map((item) => <option key={item.id} value={item.id}>{salesChannelProviderLabel(item.provider)} · {item.displayName} · {item.branchName}</option>)}</select></label>
+        }} required><option value="">Selecione a loja</option>{availableConnections.map((item) => <option key={item.id} value={item.id}>{salesChannelProviderLabel(item.provider)} · {item.displayName} · {item.branchName}</option>)}</select></label>
         <label className="channel-product-picker"><span>Produto cadastrado no Insight Pad</span><input value={term} disabled={Boolean(editing)} onChange={(event) => { const value = event.target.value; setTerm(value); setProducts([]); setPickerOpen(value.trim().length >= 2); setForm({ ...form, productId: "", externalProductId: grocery ? "" : form.externalProductId }); }} placeholder="Digite ao menos 2 caracteres para pesquisar" autoComplete="off" role="combobox" aria-expanded={pickerOpen} aria-controls="channel-product-results" />
           {!editing && pickerOpen && <div id="channel-product-results" className="channel-product-results" role="listbox">{loading ? <small>Pesquisando...</small> : products.length ? products.map((item) => {
             const identifier = resolveGroceryIdentifier(item.ean,item.scaleCode);
@@ -393,14 +412,13 @@ function MappingModal({ editing, connections, form, setForm, busy, onClose, onSu
         </label>
         <label><span>{grocery ? "Identificador usado pelo iFood" : "ID do item no catálogo iFood"}</span><input value={identifierValue} maxLength={160} disabled={grocery} onChange={(event) => setForm({ ...form, externalProductId: event.target.value })} required={!grocery} placeholder={grocery ? "Carregado do cadastro do produto" : "Cole o ID fornecido pelo catálogo iFood"} />{grocery && groceryIdentifier.error && <small className="channel-field-error">{groceryIdentifier.error}</small>}{!grocery && <small>Para Restaurante, esta versão vincula e atualiza preço/disponibilidade de um item que já existe no catálogo iFood.</small>}</label>
         <label><span>Nome exibido no iFood <small>(opcional)</small></span><input value={form.externalProductName} maxLength={240} onChange={(event) => setForm({ ...form, externalProductName: event.target.value })} placeholder={selectedProduct?.name ?? ""} /></label>
-        {grocery && <fieldset className="channel-link-mode"><legend>O produto já existe no iFood?</legend><label className={form.remoteProductState === "NEW" ? "selected" : ""}><input type="radio" name="remoteProductState" checked={form.remoteProductState === "NEW"} onChange={() => setForm({ ...form, remoteProductState: "NEW" })} /><span><b>Não, criar novo</b><small>Cadastra este produto no catálogo iFood.</small></span></label><label className={form.remoteProductState === "EXISTING" ? "selected" : ""}><input type="radio" name="remoteProductState" checked={form.remoteProductState === "EXISTING"} onChange={() => setForm({ ...form, remoteProductState: "EXISTING" })} /><span><b>Sim, vincular existente</b><small>Relaciona pelo EAN ou código de balança; o primeiro envio confirma o vínculo no iFood.</small></span></label><label className={form.remoteProductState === "REACTIVATE" ? "selected" : ""}><input type="radio" name="remoteProductState" checked={form.remoteProductState === "REACTIVATE"} onChange={() => setForm({ ...form, remoteProductState: "REACTIVATE" })} /><span><b>Reativar existente</b><small>Reativa e atualiza um item inativo no iFood.</small></span></label></fieldset>}
         <label><span>Preço usado no iFood</span><select value={form.priceMode} onChange={(event) => { const priceMode = event.target.value as MappingForm["priceMode"]; setForm({ ...form, priceMode, syncPrice: priceMode === "CUSTOM" ? true : form.syncPrice, customPrice: priceMode === "CUSTOM" && !form.customPrice ? moneyInputFromCents(selectedProduct?.salePriceCents ?? editing?.salePriceCents ?? 0) : form.customPrice }); }}><option value="PRODUCT">Mesmo preço do cadastro</option><option value="CUSTOM">Preço exclusivo para o iFood</option></select><small>{form.priceMode === "CUSTOM" ? "Alterações no preço normal e nas promoções do cadastro não substituirão este valor." : "Preço e promoção vigentes no cadastro serão usados."}</small></label>
         {form.priceMode === "CUSTOM" && <label><span>Preço exclusivo no iFood</span><input inputMode="numeric" value={form.customPrice} onChange={(event) => setForm({ ...form, customPrice: maskMoneyInput(event.target.value), syncPrice: true })} placeholder="R$ 0,00" required /><small>Valor que será enviado ao iFood para esta loja.</small></label>}
         <label className="channel-toggle"><input type="checkbox" checked={form.syncPrice} disabled={form.priceMode === "CUSTOM"} onChange={(event) => setForm({ ...form, syncPrice: event.target.checked })} /><span>{form.priceMode === "CUSTOM" ? "Manter o preço exclusivo sincronizado" : "Atualizar o preço automaticamente"}</span></label>
         <label className="channel-toggle"><input type="checkbox" checked={form.syncStock} onChange={(event) => setForm({ ...form, syncStock: event.target.checked })} /><span>{grocery ? "Atualizar a quantidade disponível automaticamente" : "Pausar ou reativar conforme o estoque"}</span></label>
         {editing && <label className="channel-toggle"><input type="checkbox" checked={form.enabled} onChange={(event) => setForm({ ...form, enabled: event.target.checked })} /><span>Produto ativo nesta loja</span></label>}
       </div>
-    </div><footer><button type="button" className="catalog-modal-cancel" onClick={onClose} disabled={busy}>Cancelar</button><button className={`catalog-primary catalog-modal-submit ${editing ? "catalog-modal-submit--edit" : "catalog-modal-submit--create"}`} disabled={busy || !productReady || (!grocery && !identifierValue)}>{busy ? "Salvando e enviando..." : editing ? "Salvar e sincronizar" : "Salvar e enviar ao iFood"}</button></footer></form>
+    </div><footer><button type="button" className="catalog-modal-cancel" onClick={onClose} disabled={busy}>Cancelar</button><button className={`catalog-primary catalog-modal-submit ${editing ? "catalog-modal-submit--edit" : "catalog-modal-submit--create"}`} disabled={busy || !productReady || (!grocery && !identifierValue)}>{busy ? "Salvando e enviando..." : editing ? "Salvar e sincronizar" : modalCopy[intent].submit}</button></footer></form>
   </section></div>;
 }
 
