@@ -117,7 +117,8 @@ if assert_expected_migration "${MIGRATION_LOG}"; then
 
   echo "===== MIGRAÇÃO DEV ====="
   if ! "${FIREBASE[@]}" dataconnect:sql:migrate --project="${FIREBASE_PROJECT}" --force 2>&1 | tee "${MIGRATION_LOG}"; then
-    if grep -q 'Method not found' "${MIGRATION_LOG}"; then
+    # These API contract errors reject the request before executing SQL.
+    if grep -Fq -e 'Method not found' -e 'Invalid JSON payload received. Unknown name "diffs": Cannot find field' "${MIGRATION_LOG}"; then
       "${FIREBASE[@]}" experiments:disable fdcapimigration
       EXPERIMENT_DISABLED_BY_SCRIPT="true"
       "${FIREBASE[@]}" dataconnect:sql:migrate --project="${FIREBASE_PROJECT}" --force
