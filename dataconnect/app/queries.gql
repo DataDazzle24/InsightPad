@@ -1655,7 +1655,7 @@ query PendingPosApprovals($requestKey: String!) @auth(level: USER) {
  LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
  LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
  WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
- AND COALESCE(up.can_manage,rp.can_manage,false))
+ AND COALESCE(up.can_access,rp.can_access,false) AND COALESCE(up.can_manage,rp.can_manage,false))
  SELECT approval.id,approval.kind,approval.cash_amount_cents AS "cashAmountCents",approval.cash_expected_cents AS "cashExpectedCents",approval.cash_description AS "cashDescription",approval.subtotal_cents AS "subtotalCents",approval.discount_cents AS "discountCents",approval.surcharge_cents AS "surchargeCents",approval.created_at AS "createdAt",b.name AS "branchName",u.name AS "operatorName"
  FROM pos_approvals approval JOIN actor a ON a.tenant_id=approval.tenant_id JOIN branches b ON b.id=approval.branch_id AND b.tenant_id=a.tenant_id JOIN users u ON u.id=approval.requested_by_uid AND u.tenant_id=a.tenant_id
  WHERE (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=a.id) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=a.id AND ub.tenant_id=b.tenant_id AND ub.branch_id=b.id AND ub.active)) AND b.active AND b.deleted_at IS NULL AND approval.status='PENDING' AND approval.expires_at>now() AND $2<>'' ORDER BY approval.created_at,approval.id LIMIT 50

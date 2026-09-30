@@ -59,6 +59,19 @@ describe('PDV: venda, caixa e isolamento transacionais',()=>{
   await db.exec("UPDATE pos_approvals SET status='APPROVED',expires_at=now()-interval '1 second'");
   await expect(post(p,'operator')).rejects.toThrow();expect(await sales()).toHaveLength(0);
  });
+ it('aprovação comercial não autoriza preço alterado após a decisão',async()=>{
+  await operation(db,'OpenCashSession',['operator',ids.branch,0,'']);
+  const own=(await db.query<{id:string}>("SELECT id FROM cash_sessions WHERE opened_by_uid='operator'")).rows[0]!.id;
+  const p=payload({cashSessionId:own,discountCents:100});await operation(db,'RequestPosSaleApproval',['operator',p]);
+  const approval=(await db.query<{id:string}>('SELECT id FROM pos_approvals')).rows[0]!.id;await operation(db,'ApprovePosSale',['actor',approval,true]);
+  await db.query('UPDATE products SET sale_price_cents=1600 WHERE id=$1',[ids.product]);
+  await expect(post(p,'operator')).rejects.toThrow();expect(await sales()).toHaveLength(0);
+ });
+ it('negativa explícita de acesso bloqueia gestão e criação por API',async()=>{
+  await db.query("INSERT INTO user_page_permissions(user_id,tenant_id,page_id,can_access,can_create,can_manage) SELECT 'actor',$1,id,false,true,true FROM app_pages WHERE page_key='CAIXA'",[ids.tenant]);
+  await expect(post(payload())).rejects.toThrow();
+  await expect(operation(db,'UpdatePosPolicy',['actor',true,0,0,false])).rejects.toThrow();
+ });
 
  it('sangria exige aprovação acima do limite e repetição não duplica dinheiro',async()=>{
   await operation(db,'OpenCashSession',['operator',ids.branch,1000,'']);
