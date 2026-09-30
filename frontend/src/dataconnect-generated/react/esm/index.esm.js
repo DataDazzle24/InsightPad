@@ -1,4 +1,4 @@
-import { verifySalesChannelOrderConstraintsRef, bootstrapSalesChannelsNavigationRef, bootstrapSalesChannelsNavigationV2Ref, bootstrapNavigationCatalogRef, createCategoryRef, updateCategoryRef, archiveCategoryRef, createSubcategoryRef, updateSubcategoryRef, archiveSubcategoryRef, restoreCategoryRef, restoreSubcategoryRef, createCategoriesBatchRef, createSubcategoriesBatchRef, saveBranchRef, setBranchStatusRef, saveSupplierRef, setSupplierStatusRef, saveCustomerRef, setCustomerStatusRef, saveProductRef, setProductStatusRef, saveProductComponentsRef, savePromotionRef, setPromotionStatusRef, setCategoriesStatusBatchRef, setSubcategoriesStatusBatchRef, setBranchesStatusBatchRef, setSuppliersStatusBatchRef, setCustomersStatusBatchRef, setProductsStatusBatchRef, ensureSalesDefaultsRef, postSaleRef, cancelSaleRef, createPlatformTenantRef, updatePlatformTenantRef, setPlatformTenantStatusRef, linkPlatformUserRef, setPlatformUserStatusRef, setPlatformRolePermissionRef, createPlatformInvoiceRef, updatePlatformInvoiceRef, voidPlatformInvoiceRef, settlePlatformInvoiceRef, reversePlatformPaymentRef, postStockAdjustmentRef, postStockTransferRef, saveStockBatchRef, reverseStockOperationRef, openCashSessionRef, registerCashMovementRef, claimDeviceSessionRef, touchDeviceSessionRef, releaseDeviceSessionRef, createSalesChannelConnectionRef, updateSalesChannelConnectionRef, connectSalesChannelMerchantRef, archiveSalesChannelConnectionRef, createSalesChannelProductMappingRef, updateSalesChannelProductMappingRef, archiveSalesChannelProductMappingRef, queueSalesChannelOrderActionRef, retrySalesChannelCommandRef, retrySalesChannelDecommissioningRef, requestSalesChannelOrderReconciliationRef, acknowledgeSalesChannelOrderAlertRef, mapSalesChannelOrderItemRef, requestSalesChannelSyncRef, requestSalesChannelAuthorizationRef, systemClaimSalesChannelWorkRef, systemUpdateSalesChannelConnectionRef, systemRegisterSalesChannelEventRef, systemRegisterSalesChannelEventsRef, systemMarkSalesChannelWebhookActiveRef, systemRecordSalesChannelEventResultRef, systemIngestSalesChannelOrderRef, systemApplySalesChannelOrderEventRef, systemReconcileSalesChannelCommerceRef, systemUpsertSalesChannelFinancialEventsRef, systemQueueDueSalesChannelSyncJobsRef, systemPurgeExpiredSalesChannelPayloadsRef, systemRecordSalesChannelCommandResultRef, systemRefreshSalesChannelOrderAfterPickingRef, systemRecordSalesChannelSyncResultRef, systemRecordSalesChannelMappingResultRef, closeCashSessionRef, getCurrentUserRef, getCurrentUserAccessRef, validateDeviceSessionRef, salesChannelOptionsRef, salesChannelConnectionsV2Ref, salesChannelProductMappingsV2Ref, exportSalesChannelManagementRef, salesChannelProductOptionsRef, salesChannelOperationsRef, systemSalesChannelWorkQueueRef, systemIfoodConnectionsForPollingRef, systemSalesChannelHealthMetricsRef, systemIfoodConnectionByMerchantRef, systemIfoodConnectionsByMerchantsRef, systemSalesChannelMappingsForSyncRef, salesChannelOrdersV2Ref, salesChannelOrderDetailsRef, salesChannelWorkspaceRef, salesChannelOrdersRef, latestPendingSalesChannelOrderRef, salesWorkspaceRef, listSalesRef, saleDetailsRef, listCategoriesRef, listSubcategoriesRef, categoryOptionsRef, listBranchesRef, listSuppliersRef, listCustomersRef, listProductsRef, registrationOptionsRef, productComponentsRef, productPromotionsRef, platformAdminWorkspaceRef, platformBillingWorkspaceRef, platformBillingWorkspaceV2Ref, stockWorkspaceRef, dailyProfitDashboardRef, stockOperationDetailsRef, financialIndicatorsDashboardRef, salesChannelAnalyticsDashboardRef, operationalAnalyticsDashboardRef, systemSalesChannelOrderForActorRef, systemSalesChannelConnectionForActorRef, connectorConfig } from '../../esm/index.esm.js';
+import { verifySalesChannelOrderConstraintsRef, bootstrapSalesChannelsNavigationRef, bootstrapSalesChannelsNavigationV2Ref, bootstrapNavigationCatalogRef, createCategoryRef, updateCategoryRef, archiveCategoryRef, createSubcategoryRef, updateSubcategoryRef, archiveSubcategoryRef, restoreCategoryRef, restoreSubcategoryRef, createCategoriesBatchRef, createSubcategoriesBatchRef, saveBranchRef, setBranchStatusRef, saveSupplierRef, setSupplierStatusRef, saveCustomerRef, setCustomerStatusRef, saveProductRef, setProductStatusRef, saveProductComponentsRef, savePromotionRef, setPromotionStatusRef, setCategoriesStatusBatchRef, setSubcategoriesStatusBatchRef, setBranchesStatusBatchRef, setSuppliersStatusBatchRef, setCustomersStatusBatchRef, setProductsStatusBatchRef, ensureSalesDefaultsRef, postSaleRef, cancelSaleRef, createPlatformTenantRef, updatePlatformTenantRef, setPlatformTenantStatusRef, linkPlatformUserRef, setPlatformUserStatusRef, setPlatformRolePermissionRef, createPlatformInvoiceRef, updatePlatformInvoiceRef, voidPlatformInvoiceRef, settlePlatformInvoiceRef, reversePlatformPaymentRef, postStockAdjustmentRef, postStockTransferRef, saveStockBatchRef, reverseStockOperationRef, openCashSessionRef, registerCashMovementRef, claimDeviceSessionRef, touchDeviceSessionRef, releaseDeviceSessionRef, createSalesChannelConnectionRef, updateSalesChannelConnectionRef, connectSalesChannelMerchantRef, archiveSalesChannelConnectionRef, createSalesChannelProductMappingRef, updateSalesChannelProductMappingRef, archiveSalesChannelProductMappingRef, queueSalesChannelOrderActionRef, retrySalesChannelCommandRef, retrySalesChannelDecommissioningRef, requestSalesChannelOrderReconciliationRef, acknowledgeSalesChannelOrderAlertRef, mapSalesChannelOrderItemRef, requestSalesChannelSyncRef, requestSalesChannelAuthorizationRef, systemClaimSalesChannelWorkRef, systemUpdateSalesChannelConnectionRef, systemRegisterSalesChannelEventRef, systemRegisterSalesChannelEventsRef, systemMarkSalesChannelWebhookActiveRef, systemRecordSalesChannelEventResultRef, systemIngestSalesChannelOrderRef, systemApplySalesChannelOrderEventRef, systemReconcileSalesChannelCommerceRef, systemUpsertSalesChannelFinancialEventsRef, systemQueueDueSalesChannelSyncJobsRef, systemPurgeExpiredSalesChannelPayloadsRef, systemRecordSalesChannelCommandResultRef, systemRefreshSalesChannelOrderAfterPickingRef, systemRecordSalesChannelSyncResultRef, systemRecordSalesChannelMappingResultRef, closeCashSessionRef, updatePosPolicyRef, requestPosSaleApprovalRef, approvePosSaleRef, requestPosCashApprovalRef, getCurrentUserRef, getCurrentUserAccessRef, validateDeviceSessionRef, salesChannelOptionsRef, salesChannelConnectionsV2Ref, salesChannelProductMappingsV2Ref, exportSalesChannelManagementRef, salesChannelProductOptionsRef, salesChannelOperationsRef, systemSalesChannelWorkQueueRef, systemIfoodConnectionsForPollingRef, systemSalesChannelHealthMetricsRef, systemIfoodConnectionByMerchantRef, systemIfoodConnectionsByMerchantsRef, systemSalesChannelMappingsForSyncRef, salesChannelOrdersV2Ref, salesChannelOrderDetailsRef, salesChannelWorkspaceRef, salesChannelOrdersRef, latestPendingSalesChannelOrderRef, salesWorkspaceRef, listSalesRef, saleDetailsRef, listCategoriesRef, listSubcategoriesRef, categoryOptionsRef, listBranchesRef, listSuppliersRef, listCustomersRef, listProductsRef, registrationOptionsRef, productComponentsRef, productPromotionsRef, platformAdminWorkspaceRef, platformBillingWorkspaceRef, platformBillingWorkspaceV2Ref, stockWorkspaceRef, dailyProfitDashboardRef, stockOperationDetailsRef, financialIndicatorsDashboardRef, salesChannelAnalyticsDashboardRef, operationalAnalyticsDashboardRef, systemSalesChannelOrderForActorRef, systemSalesChannelConnectionForActorRef, searchPosProductsRef, searchPosCustomersRef, posProductBranchesRef, pendingPosApprovalsRef, posSaleApprovalStatusRef, posCashApprovalStatusRef, connectorConfig } from '../../esm/index.esm.js';
 import { validateArgs, CallerSdkTypeEnum } from 'firebase/data-connect';
 import { useDataConnectQuery, useDataConnectMutation, validateReactArgs } from '@tanstack-query-firebase/react/data-connect';
 
@@ -688,6 +688,38 @@ export function useCloseCashSession(dcOrOptions, options) {
   return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
 }
 
+export function useUpdatePosPolicy(dcOrOptions, options) {
+  const { dc: dcInstance, vars: inputOpts } = validateArgs(connectorConfig, dcOrOptions, options);
+  function refFactory(vars) {
+    return updatePosPolicyRef(dcInstance, vars);
+  }
+  return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
+export function useRequestPosSaleApproval(dcOrOptions, options) {
+  const { dc: dcInstance, vars: inputOpts } = validateArgs(connectorConfig, dcOrOptions, options);
+  function refFactory(vars) {
+    return requestPosSaleApprovalRef(dcInstance, vars);
+  }
+  return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
+export function useApprovePosSale(dcOrOptions, options) {
+  const { dc: dcInstance, vars: inputOpts } = validateArgs(connectorConfig, dcOrOptions, options);
+  function refFactory(vars) {
+    return approvePosSaleRef(dcInstance, vars);
+  }
+  return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
+export function useRequestPosCashApproval(dcOrOptions, options) {
+  const { dc: dcInstance, vars: inputOpts } = validateArgs(connectorConfig, dcOrOptions, options);
+  function refFactory(vars) {
+    return requestPosCashApprovalRef(dcInstance, vars);
+  }
+  return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
 
 export function useGetCurrentUser(dcOrOptions, options) {
   const { dc: dcInstance, options: inputOpts } = validateReactArgs(connectorConfig, dcOrOptions, options);
@@ -950,5 +982,41 @@ export function useSystemSalesChannelOrderForActor(dcOrVars, varsOrOptions, opti
 export function useSystemSalesChannelConnectionForActor(dcOrVars, varsOrOptions, options) {
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateReactArgs(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   const ref = systemSalesChannelConnectionForActorRef(dcInstance, inputVars);
+  return useDataConnectQuery(ref, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
+export function useSearchPosProducts(dcOrVars, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateReactArgs(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  const ref = searchPosProductsRef(dcInstance, inputVars);
+  return useDataConnectQuery(ref, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
+export function useSearchPosCustomers(dcOrVars, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateReactArgs(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  const ref = searchPosCustomersRef(dcInstance, inputVars);
+  return useDataConnectQuery(ref, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
+export function usePosProductBranches(dcOrVars, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateReactArgs(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  const ref = posProductBranchesRef(dcInstance, inputVars);
+  return useDataConnectQuery(ref, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
+export function usePendingPosApprovals(dcOrVars, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateReactArgs(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  const ref = pendingPosApprovalsRef(dcInstance, inputVars);
+  return useDataConnectQuery(ref, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
+export function usePosSaleApprovalStatus(dcOrVars, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateReactArgs(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  const ref = posSaleApprovalStatusRef(dcInstance, inputVars);
+  return useDataConnectQuery(ref, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
+export function usePosCashApprovalStatus(dcOrVars, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateReactArgs(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  const ref = posCashApprovalStatusRef(dcInstance, inputVars);
   return useDataConnectQuery(ref, inputOpts, CallerSdkTypeEnum.GeneratedReact);
 }

@@ -8,12 +8,12 @@ export const lineTotal=(item:Pick<CartItem,'quantity'|'unitPriceCents'>)=>Math.r
 export const saleTotals=(items:CartItem[],discountCents=0,surchargeCents=0)=>{const subtotalCents=items.reduce((sum,item)=>sum+lineTotal(item),0);return{subtotalCents,discountCents:Math.min(Math.max(0,discountCents),subtotalCents),surchargeCents:Math.max(0,surchargeCents),totalCents:Math.max(0,subtotalCents-Math.min(Math.max(0,discountCents),subtotalCents)+Math.max(0,surchargeCents))}}
 export function validateCheckout(items:CartItem[],payments:PaymentInput[],discountCents:number,surchargeCents:number,changeMethodIds:Set<string>){
  if(!items.length)return'Adicione ao menos um produto.'
- if(items.some(item=>item.quantity<=0||(!item.weightedProduct&&!Number.isInteger(item.quantity))))return'Confira as quantidades. Produtos não pesáveis exigem números inteiros.'
- if(items.some(item=>!item.allowNegativeStock&&item.stock<item.quantity&&!item.bundleProduct))return'Há produto sem saldo suficiente nesta filial.'
+ if(items.some(item=>!Number.isFinite(item.quantity)||item.quantity<=0||(!item.weightedProduct&&!Number.isInteger(item.quantity))))return'Confira as quantidades. Produtos não pesáveis exigem números inteiros.'
+ if(items.some(item=>!item.allowNegativeStock&&item.stock<item.quantity))return'Há produto sem saldo suficiente nesta filial.'
  const {totalCents}=saleTotals(items,discountCents,surchargeCents),paid=payments.reduce((sum,p)=>sum+p.amountCents,0)
- if(!payments.length||payments.some(p=>!p.paymentMethodId||p.amountCents<=0))return'Informe uma forma e um valor de pagamento válidos.'
+ if(!payments.length||payments.some(p=>!p.paymentMethodId||!Number.isSafeInteger(p.amountCents)||p.amountCents<=0))return'Informe uma forma e um valor de pagamento válidos.'
  if(paid<totalCents)return`Ainda faltam ${money(totalCents-paid)} para concluir.`
- if(paid>totalCents&&!payments.some(p=>changeMethodIds.has(p.paymentMethodId)))return'Pagamento acima do total só é permitido em uma forma que gere troco.'
+ if(paid-totalCents>payments.filter(p=>changeMethodIds.has(p.paymentMethodId)).reduce((sum,p)=>sum+p.amountCents,0))return'Pagamento acima do total só é permitido em uma forma que gere troco.'
  return''
 }
 

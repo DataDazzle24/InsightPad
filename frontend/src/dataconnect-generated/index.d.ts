@@ -40,6 +40,15 @@ export interface AppPage_Key {
   __typename?: 'AppPage_Key';
 }
 
+export interface ApprovePosSaleData {
+  _execute?: number | null;
+}
+
+export interface ApprovePosSaleVariables {
+  approvalId: UUIDString;
+  approved: boolean;
+}
+
 export interface ArchiveCategoryData {
   _execute?: number | null;
 }
@@ -182,6 +191,7 @@ export interface CloseCashSessionVariables {
   sessionId: UUIDString;
   countedAmountCents: Int64String;
   notes: string;
+  operationId?: string | null;
 }
 
 export interface ConnectSalesChannelMerchantData {
@@ -552,6 +562,14 @@ export interface PaymentMethod_Key {
   __typename?: 'PaymentMethod_Key';
 }
 
+export interface PendingPosApprovalsData {
+  _select?: unknown[] | null;
+}
+
+export interface PendingPosApprovalsVariables {
+  requestKey: string;
+}
+
 export interface PlatformAdminWorkspaceData {
   _select?: unknown[] | null;
 }
@@ -592,8 +610,48 @@ export interface PlatformBillingWorkspaceVariables {
   requestKey: string;
 }
 
+export interface PosApproval_Key {
+  id: UUIDString;
+  __typename?: 'PosApproval_Key';
+}
+
+export interface PosCashApprovalStatusData {
+  _select?: unknown[] | null;
+}
+
+export interface PosCashApprovalStatusVariables {
+  operationId: string;
+  requestKey: string;
+}
+
+export interface PosPolicy_Key {
+  tenantId: UUIDString;
+  __typename?: 'PosPolicy_Key';
+}
+
+export interface PosProductBranchesData {
+  _select?: unknown[] | null;
+}
+
+export interface PosProductBranchesVariables {
+  productId: UUIDString;
+  requestKey: string;
+}
+
+export interface PosSaleApprovalStatusData {
+  _select?: unknown[] | null;
+}
+
+export interface PosSaleApprovalStatusVariables {
+  operationId: string;
+  requestKey: string;
+}
+
 export interface PostSaleData {
   _execute?: number | null;
+  result?: {
+    receipt?: unknown | null;
+  };
 }
 
 export interface PostSaleVariables {
@@ -672,6 +730,7 @@ export interface RegisterCashMovementVariables {
   movementType: string;
   amountCents: Int64String;
   description: string;
+  operationId?: string | null;
 }
 
 export interface RegistrationOptionsData {
@@ -688,6 +747,22 @@ export interface ReleaseDeviceSessionData {
 
 export interface ReleaseDeviceSessionVariables {
   sessionToken: string;
+}
+
+export interface RequestPosCashApprovalData {
+  _execute?: number | null;
+}
+
+export interface RequestPosCashApprovalVariables {
+  payload: unknown;
+}
+
+export interface RequestPosSaleApprovalData {
+  _execute?: number | null;
+}
+
+export interface RequestPosSaleApprovalVariables {
+  payload: unknown;
 }
 
 export interface RequestSalesChannelAuthorizationData {
@@ -1061,6 +1136,29 @@ export interface SaveSupplierData {
 export interface SaveSupplierVariables {
   id?: UUIDString | null;
   payload: unknown;
+}
+
+export interface SearchPosCustomersData {
+  _select?: unknown[] | null;
+}
+
+export interface SearchPosCustomersVariables {
+  search?: string | null;
+  limit?: number | null;
+  offset?: number | null;
+  requestKey: string;
+}
+
+export interface SearchPosProductsData {
+  _select?: unknown[] | null;
+}
+
+export interface SearchPosProductsVariables {
+  branchId: UUIDString;
+  search?: string | null;
+  limit?: number | null;
+  offset?: number | null;
+  requestKey: string;
 }
 
 export interface SetBranchStatusData {
@@ -1521,6 +1619,19 @@ export interface UpdatePlatformTenantData {
 
 export interface UpdatePlatformTenantVariables {
   payload: unknown;
+}
+
+export interface UpdatePosPolicyData {
+  _execute?: number | null;
+}
+
+export interface UpdatePosPolicyVariables {
+  requireOpenSession: boolean;
+  operatorDiscountPercent: number;
+  operatorSurchargePercent: number;
+  allowOperatorClose: boolean;
+  operatorWithdrawalLimitCents?: Int64String | null;
+  operatorCloseDifferenceLimitCents?: Int64String | null;
 }
 
 export interface UpdateSalesChannelConnectionData {
@@ -2637,6 +2748,54 @@ export const closeCashSessionRef: CloseCashSessionRef;
 export function closeCashSession(vars: CloseCashSessionVariables): MutationPromise<CloseCashSessionData, CloseCashSessionVariables>;
 export function closeCashSession(dc: DataConnect, vars: CloseCashSessionVariables): MutationPromise<CloseCashSessionData, CloseCashSessionVariables>;
 
+interface UpdatePosPolicyRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: UpdatePosPolicyVariables): MutationRef<UpdatePosPolicyData, UpdatePosPolicyVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: UpdatePosPolicyVariables): MutationRef<UpdatePosPolicyData, UpdatePosPolicyVariables>;
+  operationName: string;
+}
+export const updatePosPolicyRef: UpdatePosPolicyRef;
+
+export function updatePosPolicy(vars: UpdatePosPolicyVariables): MutationPromise<UpdatePosPolicyData, UpdatePosPolicyVariables>;
+export function updatePosPolicy(dc: DataConnect, vars: UpdatePosPolicyVariables): MutationPromise<UpdatePosPolicyData, UpdatePosPolicyVariables>;
+
+interface RequestPosSaleApprovalRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: RequestPosSaleApprovalVariables): MutationRef<RequestPosSaleApprovalData, RequestPosSaleApprovalVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: RequestPosSaleApprovalVariables): MutationRef<RequestPosSaleApprovalData, RequestPosSaleApprovalVariables>;
+  operationName: string;
+}
+export const requestPosSaleApprovalRef: RequestPosSaleApprovalRef;
+
+export function requestPosSaleApproval(vars: RequestPosSaleApprovalVariables): MutationPromise<RequestPosSaleApprovalData, RequestPosSaleApprovalVariables>;
+export function requestPosSaleApproval(dc: DataConnect, vars: RequestPosSaleApprovalVariables): MutationPromise<RequestPosSaleApprovalData, RequestPosSaleApprovalVariables>;
+
+interface ApprovePosSaleRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ApprovePosSaleVariables): MutationRef<ApprovePosSaleData, ApprovePosSaleVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ApprovePosSaleVariables): MutationRef<ApprovePosSaleData, ApprovePosSaleVariables>;
+  operationName: string;
+}
+export const approvePosSaleRef: ApprovePosSaleRef;
+
+export function approvePosSale(vars: ApprovePosSaleVariables): MutationPromise<ApprovePosSaleData, ApprovePosSaleVariables>;
+export function approvePosSale(dc: DataConnect, vars: ApprovePosSaleVariables): MutationPromise<ApprovePosSaleData, ApprovePosSaleVariables>;
+
+interface RequestPosCashApprovalRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: RequestPosCashApprovalVariables): MutationRef<RequestPosCashApprovalData, RequestPosCashApprovalVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: RequestPosCashApprovalVariables): MutationRef<RequestPosCashApprovalData, RequestPosCashApprovalVariables>;
+  operationName: string;
+}
+export const requestPosCashApprovalRef: RequestPosCashApprovalRef;
+
+export function requestPosCashApproval(vars: RequestPosCashApprovalVariables): MutationPromise<RequestPosCashApprovalData, RequestPosCashApprovalVariables>;
+export function requestPosCashApproval(dc: DataConnect, vars: RequestPosCashApprovalVariables): MutationPromise<RequestPosCashApprovalData, RequestPosCashApprovalVariables>;
+
 interface GetCurrentUserRef {
   /* Allow users to create refs without passing in DataConnect */
   (): QueryRef<GetCurrentUserData, undefined>;
@@ -3164,4 +3323,76 @@ export const systemSalesChannelConnectionForActorRef: SystemSalesChannelConnecti
 
 export function systemSalesChannelConnectionForActor(vars: SystemSalesChannelConnectionForActorVariables, options?: ExecuteQueryOptions): QueryPromise<SystemSalesChannelConnectionForActorData, SystemSalesChannelConnectionForActorVariables>;
 export function systemSalesChannelConnectionForActor(dc: DataConnect, vars: SystemSalesChannelConnectionForActorVariables, options?: ExecuteQueryOptions): QueryPromise<SystemSalesChannelConnectionForActorData, SystemSalesChannelConnectionForActorVariables>;
+
+interface SearchPosProductsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SearchPosProductsVariables): QueryRef<SearchPosProductsData, SearchPosProductsVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SearchPosProductsVariables): QueryRef<SearchPosProductsData, SearchPosProductsVariables>;
+  operationName: string;
+}
+export const searchPosProductsRef: SearchPosProductsRef;
+
+export function searchPosProducts(vars: SearchPosProductsVariables, options?: ExecuteQueryOptions): QueryPromise<SearchPosProductsData, SearchPosProductsVariables>;
+export function searchPosProducts(dc: DataConnect, vars: SearchPosProductsVariables, options?: ExecuteQueryOptions): QueryPromise<SearchPosProductsData, SearchPosProductsVariables>;
+
+interface SearchPosCustomersRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SearchPosCustomersVariables): QueryRef<SearchPosCustomersData, SearchPosCustomersVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SearchPosCustomersVariables): QueryRef<SearchPosCustomersData, SearchPosCustomersVariables>;
+  operationName: string;
+}
+export const searchPosCustomersRef: SearchPosCustomersRef;
+
+export function searchPosCustomers(vars: SearchPosCustomersVariables, options?: ExecuteQueryOptions): QueryPromise<SearchPosCustomersData, SearchPosCustomersVariables>;
+export function searchPosCustomers(dc: DataConnect, vars: SearchPosCustomersVariables, options?: ExecuteQueryOptions): QueryPromise<SearchPosCustomersData, SearchPosCustomersVariables>;
+
+interface PosProductBranchesRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: PosProductBranchesVariables): QueryRef<PosProductBranchesData, PosProductBranchesVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: PosProductBranchesVariables): QueryRef<PosProductBranchesData, PosProductBranchesVariables>;
+  operationName: string;
+}
+export const posProductBranchesRef: PosProductBranchesRef;
+
+export function posProductBranches(vars: PosProductBranchesVariables, options?: ExecuteQueryOptions): QueryPromise<PosProductBranchesData, PosProductBranchesVariables>;
+export function posProductBranches(dc: DataConnect, vars: PosProductBranchesVariables, options?: ExecuteQueryOptions): QueryPromise<PosProductBranchesData, PosProductBranchesVariables>;
+
+interface PendingPosApprovalsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: PendingPosApprovalsVariables): QueryRef<PendingPosApprovalsData, PendingPosApprovalsVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: PendingPosApprovalsVariables): QueryRef<PendingPosApprovalsData, PendingPosApprovalsVariables>;
+  operationName: string;
+}
+export const pendingPosApprovalsRef: PendingPosApprovalsRef;
+
+export function pendingPosApprovals(vars: PendingPosApprovalsVariables, options?: ExecuteQueryOptions): QueryPromise<PendingPosApprovalsData, PendingPosApprovalsVariables>;
+export function pendingPosApprovals(dc: DataConnect, vars: PendingPosApprovalsVariables, options?: ExecuteQueryOptions): QueryPromise<PendingPosApprovalsData, PendingPosApprovalsVariables>;
+
+interface PosSaleApprovalStatusRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: PosSaleApprovalStatusVariables): QueryRef<PosSaleApprovalStatusData, PosSaleApprovalStatusVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: PosSaleApprovalStatusVariables): QueryRef<PosSaleApprovalStatusData, PosSaleApprovalStatusVariables>;
+  operationName: string;
+}
+export const posSaleApprovalStatusRef: PosSaleApprovalStatusRef;
+
+export function posSaleApprovalStatus(vars: PosSaleApprovalStatusVariables, options?: ExecuteQueryOptions): QueryPromise<PosSaleApprovalStatusData, PosSaleApprovalStatusVariables>;
+export function posSaleApprovalStatus(dc: DataConnect, vars: PosSaleApprovalStatusVariables, options?: ExecuteQueryOptions): QueryPromise<PosSaleApprovalStatusData, PosSaleApprovalStatusVariables>;
+
+interface PosCashApprovalStatusRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: PosCashApprovalStatusVariables): QueryRef<PosCashApprovalStatusData, PosCashApprovalStatusVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: PosCashApprovalStatusVariables): QueryRef<PosCashApprovalStatusData, PosCashApprovalStatusVariables>;
+  operationName: string;
+}
+export const posCashApprovalStatusRef: PosCashApprovalStatusRef;
+
+export function posCashApprovalStatus(vars: PosCashApprovalStatusVariables, options?: ExecuteQueryOptions): QueryPromise<PosCashApprovalStatusData, PosCashApprovalStatusVariables>;
+export function posCashApprovalStatus(dc: DataConnect, vars: PosCashApprovalStatusVariables, options?: ExecuteQueryOptions): QueryPromise<PosCashApprovalStatusData, PosCashApprovalStatusVariables>;
 

@@ -285,7 +285,9 @@ export function BarcodeScanner({
 }) {
   useDialogAccessibility(true, onClose);
   const video = useRef<HTMLVideoElement>(null),
+    readCallback = useRef(onRead),
     [error, setError] = useState("");
+  useEffect(() => { readCallback.current = onRead }, [onRead]);
   useEffect(() => {
     let stream: MediaStream | undefined,
       timer = 0,
@@ -302,7 +304,7 @@ export function BarcodeScanner({
           stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: { ideal: "environment" } },
           });
-          if (!video.current) return;
+          if (stopped || !video.current) { stream.getTracks().forEach(track => track.stop()); return }
           video.current.srcObject = stream;
           await video.current.play();
           const detector = new DetectorCtor({
@@ -320,8 +322,10 @@ export function BarcodeScanner({
             try {
               const results = await detector.detect(video.current);
               if (results[0]?.rawValue) {
+                stopped = true;
+                stream?.getTracks().forEach(track => track.stop());
                 navigator.vibrate?.(120);
-                onRead(results[0].rawValue);
+                readCallback.current(results[0].rawValue);
                 return;
               }
             } catch {
@@ -335,19 +339,23 @@ export function BarcodeScanner({
           return;
         }
         const { BrowserMultiFormatReader } = await import("@zxing/browser");
-        if (!video.current) return;
+        if (stopped || !video.current) return;
         const reader = new BrowserMultiFormatReader();
         controls = await reader.decodeFromConstraints(
           { video: { facingMode: { ideal: "environment" } } },
           video.current,
           (result) => {
             if (result && !stopped) {
+              stopped = true;
+              controls?.stop();
               navigator.vibrate?.(120);
-              onRead(result.getText());
+              readCallback.current(result.getText());
             }
           },
         );
+        if (stopped) controls.stop();
       } catch {
+        if (stopped) return;
         setError(
           "Não foi possível acessar a câmera. Confirme a permissão e use uma conexão HTTPS.",
         );
@@ -360,7 +368,7 @@ export function BarcodeScanner({
       controls?.stop();
       stream?.getTracks().forEach((track) => track.stop());
     };
-  }, [onRead]);
+  }, []);
   return (
     <div className="catalog-backdrop">
       <section

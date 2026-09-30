@@ -751,7 +751,7 @@ describe("PostgreSQL: protected iFood sales", () => {
     const saleId="00000000-0000-4000-8000-000000000018";
     await db.exec("UPDATE app_pages SET page_key='GESTAO_VENDAS'");
     await db.query("INSERT INTO sales(id,tenant_id,branch_id,client_operation_id,source,external_reference,status,total_cents,created_by_uid) VALUES ($1,$2,$3,'channel:test','IFOOD','order-test','COMPLETED',1500,'system:ifood')",[saleId,ids.tenant,ids.branch]);
-    await operation(db,"CancelSale",["actor",saleId,"Cancelamento local indevido"]);
+    await expect(operation(db,"CancelSale",["actor",saleId,"Cancelamento local indevido"])).rejects.toThrow("POS_REJECTED");
     expect((await db.query<{status:string;cancelled_at:string|null}>("SELECT status,cancelled_at FROM sales WHERE id=$1",[saleId])).rows[0]).toEqual({status:"COMPLETED",cancelled_at:null});
   });
 });

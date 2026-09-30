@@ -62,6 +62,12 @@ You can also follow the instructions from the [Data Connect documentation](https
   - [*OperationalAnalyticsDashboard*](#operationalanalyticsdashboard)
   - [*SystemSalesChannelOrderForActor*](#systemsaleschannelorderforactor)
   - [*SystemSalesChannelConnectionForActor*](#systemsaleschannelconnectionforactor)
+  - [*SearchPosProducts*](#searchposproducts)
+  - [*SearchPosCustomers*](#searchposcustomers)
+  - [*PosProductBranches*](#posproductbranches)
+  - [*PendingPosApprovals*](#pendingposapprovals)
+  - [*PosSaleApprovalStatus*](#possaleapprovalstatus)
+  - [*PosCashApprovalStatus*](#poscashapprovalstatus)
 - [**Mutations**](#mutations)
   - [*BootstrapSalesChannelsNavigation*](#bootstrapsaleschannelsnavigation)
   - [*BootstrapSalesChannelsNavigationV2*](#bootstrapsaleschannelsnavigationv2)
@@ -148,6 +154,10 @@ You can also follow the instructions from the [Data Connect documentation](https
   - [*SystemRecordSalesChannelSyncResult*](#systemrecordsaleschannelsyncresult)
   - [*SystemRecordSalesChannelMappingResult*](#systemrecordsaleschannelmappingresult)
   - [*CloseCashSession*](#closecashsession)
+  - [*UpdatePosPolicy*](#updatepospolicy)
+  - [*RequestPosSaleApproval*](#requestpossaleapproval)
+  - [*ApprovePosSale*](#approvepossale)
+  - [*RequestPosCashApproval*](#requestposcashapproval)
 
 # TanStack Query Firebase & TanStack React Query
 This SDK provides [React](https://react.dev/) hooks generated specific to your application, for the operations found in the connector `app`. These hooks are generated using [TanStack Query Firebase](https://react-query-firebase.invertase.dev/) by our partners at Invertase, a library built on top of [TanStack React Query v5](https://tanstack.com/query/v5/docs/framework/react/overview).
@@ -4195,6 +4205,518 @@ export default function SystemSalesChannelConnectionForActorComponent() {
 }
 ```
 
+## SearchPosProducts
+You can execute the `SearchPosProducts` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
+
+```javascript
+useSearchPosProducts(dc: DataConnect, vars: SearchPosProductsVariables, options?: useDataConnectQueryOptions<SearchPosProductsData>): UseDataConnectQueryResult<SearchPosProductsData, SearchPosProductsVariables>;
+```
+You can also pass in a `DataConnect` instance to the Query hook function.
+```javascript
+useSearchPosProducts(vars: SearchPosProductsVariables, options?: useDataConnectQueryOptions<SearchPosProductsData>): UseDataConnectQueryResult<SearchPosProductsData, SearchPosProductsVariables>;
+```
+
+### Variables
+The `SearchPosProducts` Query requires an argument of type `SearchPosProductsVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface SearchPosProductsVariables {
+  branchId: UUIDString;
+  search?: string | null;
+  limit?: number | null;
+  offset?: number | null;
+  requestKey: string;
+}
+```
+### Return Type
+Recall that calling the `SearchPosProducts` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
+
+To check the status of a Query, use the `UseQueryResult.status` field. You can also check for pending / success / error status using the `UseQueryResult.isPending`, `UseQueryResult.isSuccess`, and `UseQueryResult.isError` fields.
+
+To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `SearchPosProducts` Query is of type `SearchPosProductsData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface SearchPosProductsData {
+  _select?: unknown[] | null;
+}
+```
+
+To learn more about the `UseQueryResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery).
+
+### Using `SearchPosProducts`'s Query hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, SearchPosProductsVariables } from '@insightpad/dataconnect';
+import { useSearchPosProducts } from '@insightpad/dataconnect/react'
+
+export default function SearchPosProductsComponent() {
+  // The `useSearchPosProducts` Query hook requires an argument of type `SearchPosProductsVariables`:
+  const searchPosProductsVars: SearchPosProductsVariables = {
+    branchId: ...,
+    search: ..., // optional
+    limit: ..., // optional
+    offset: ..., // optional
+    requestKey: ...,
+  };
+
+  // You don't have to do anything to "execute" the Query.
+  // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
+  const query = useSearchPosProducts(searchPosProductsVars);
+  // Variables can be defined inline as well.
+  const query = useSearchPosProducts({ branchId: ..., search: ..., limit: ..., offset: ..., requestKey: ..., });
+
+  // You can also pass in a `DataConnect` instance to the Query hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const query = useSearchPosProducts(dataConnect, searchPosProductsVars);
+
+  // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
+  const options = { staleTime: 5 * 1000 };
+  const query = useSearchPosProducts(searchPosProductsVars, options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = { staleTime: 5 * 1000 };
+  const query = useSearchPosProducts(dataConnect, searchPosProductsVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Query.
+  if (query.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
+  }
+
+  // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
+  if (query.isSuccess) {
+    console.log(query.data._select);
+  }
+  return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## SearchPosCustomers
+You can execute the `SearchPosCustomers` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
+
+```javascript
+useSearchPosCustomers(dc: DataConnect, vars: SearchPosCustomersVariables, options?: useDataConnectQueryOptions<SearchPosCustomersData>): UseDataConnectQueryResult<SearchPosCustomersData, SearchPosCustomersVariables>;
+```
+You can also pass in a `DataConnect` instance to the Query hook function.
+```javascript
+useSearchPosCustomers(vars: SearchPosCustomersVariables, options?: useDataConnectQueryOptions<SearchPosCustomersData>): UseDataConnectQueryResult<SearchPosCustomersData, SearchPosCustomersVariables>;
+```
+
+### Variables
+The `SearchPosCustomers` Query requires an argument of type `SearchPosCustomersVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface SearchPosCustomersVariables {
+  search?: string | null;
+  limit?: number | null;
+  offset?: number | null;
+  requestKey: string;
+}
+```
+### Return Type
+Recall that calling the `SearchPosCustomers` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
+
+To check the status of a Query, use the `UseQueryResult.status` field. You can also check for pending / success / error status using the `UseQueryResult.isPending`, `UseQueryResult.isSuccess`, and `UseQueryResult.isError` fields.
+
+To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `SearchPosCustomers` Query is of type `SearchPosCustomersData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface SearchPosCustomersData {
+  _select?: unknown[] | null;
+}
+```
+
+To learn more about the `UseQueryResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery).
+
+### Using `SearchPosCustomers`'s Query hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, SearchPosCustomersVariables } from '@insightpad/dataconnect';
+import { useSearchPosCustomers } from '@insightpad/dataconnect/react'
+
+export default function SearchPosCustomersComponent() {
+  // The `useSearchPosCustomers` Query hook requires an argument of type `SearchPosCustomersVariables`:
+  const searchPosCustomersVars: SearchPosCustomersVariables = {
+    search: ..., // optional
+    limit: ..., // optional
+    offset: ..., // optional
+    requestKey: ...,
+  };
+
+  // You don't have to do anything to "execute" the Query.
+  // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
+  const query = useSearchPosCustomers(searchPosCustomersVars);
+  // Variables can be defined inline as well.
+  const query = useSearchPosCustomers({ search: ..., limit: ..., offset: ..., requestKey: ..., });
+
+  // You can also pass in a `DataConnect` instance to the Query hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const query = useSearchPosCustomers(dataConnect, searchPosCustomersVars);
+
+  // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
+  const options = { staleTime: 5 * 1000 };
+  const query = useSearchPosCustomers(searchPosCustomersVars, options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = { staleTime: 5 * 1000 };
+  const query = useSearchPosCustomers(dataConnect, searchPosCustomersVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Query.
+  if (query.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
+  }
+
+  // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
+  if (query.isSuccess) {
+    console.log(query.data._select);
+  }
+  return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## PosProductBranches
+You can execute the `PosProductBranches` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
+
+```javascript
+usePosProductBranches(dc: DataConnect, vars: PosProductBranchesVariables, options?: useDataConnectQueryOptions<PosProductBranchesData>): UseDataConnectQueryResult<PosProductBranchesData, PosProductBranchesVariables>;
+```
+You can also pass in a `DataConnect` instance to the Query hook function.
+```javascript
+usePosProductBranches(vars: PosProductBranchesVariables, options?: useDataConnectQueryOptions<PosProductBranchesData>): UseDataConnectQueryResult<PosProductBranchesData, PosProductBranchesVariables>;
+```
+
+### Variables
+The `PosProductBranches` Query requires an argument of type `PosProductBranchesVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface PosProductBranchesVariables {
+  productId: UUIDString;
+  requestKey: string;
+}
+```
+### Return Type
+Recall that calling the `PosProductBranches` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
+
+To check the status of a Query, use the `UseQueryResult.status` field. You can also check for pending / success / error status using the `UseQueryResult.isPending`, `UseQueryResult.isSuccess`, and `UseQueryResult.isError` fields.
+
+To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `PosProductBranches` Query is of type `PosProductBranchesData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface PosProductBranchesData {
+  _select?: unknown[] | null;
+}
+```
+
+To learn more about the `UseQueryResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery).
+
+### Using `PosProductBranches`'s Query hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, PosProductBranchesVariables } from '@insightpad/dataconnect';
+import { usePosProductBranches } from '@insightpad/dataconnect/react'
+
+export default function PosProductBranchesComponent() {
+  // The `usePosProductBranches` Query hook requires an argument of type `PosProductBranchesVariables`:
+  const posProductBranchesVars: PosProductBranchesVariables = {
+    productId: ...,
+    requestKey: ...,
+  };
+
+  // You don't have to do anything to "execute" the Query.
+  // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
+  const query = usePosProductBranches(posProductBranchesVars);
+  // Variables can be defined inline as well.
+  const query = usePosProductBranches({ productId: ..., requestKey: ..., });
+
+  // You can also pass in a `DataConnect` instance to the Query hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const query = usePosProductBranches(dataConnect, posProductBranchesVars);
+
+  // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
+  const options = { staleTime: 5 * 1000 };
+  const query = usePosProductBranches(posProductBranchesVars, options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = { staleTime: 5 * 1000 };
+  const query = usePosProductBranches(dataConnect, posProductBranchesVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Query.
+  if (query.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
+  }
+
+  // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
+  if (query.isSuccess) {
+    console.log(query.data._select);
+  }
+  return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## PendingPosApprovals
+You can execute the `PendingPosApprovals` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
+
+```javascript
+usePendingPosApprovals(dc: DataConnect, vars: PendingPosApprovalsVariables, options?: useDataConnectQueryOptions<PendingPosApprovalsData>): UseDataConnectQueryResult<PendingPosApprovalsData, PendingPosApprovalsVariables>;
+```
+You can also pass in a `DataConnect` instance to the Query hook function.
+```javascript
+usePendingPosApprovals(vars: PendingPosApprovalsVariables, options?: useDataConnectQueryOptions<PendingPosApprovalsData>): UseDataConnectQueryResult<PendingPosApprovalsData, PendingPosApprovalsVariables>;
+```
+
+### Variables
+The `PendingPosApprovals` Query requires an argument of type `PendingPosApprovalsVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface PendingPosApprovalsVariables {
+  requestKey: string;
+}
+```
+### Return Type
+Recall that calling the `PendingPosApprovals` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
+
+To check the status of a Query, use the `UseQueryResult.status` field. You can also check for pending / success / error status using the `UseQueryResult.isPending`, `UseQueryResult.isSuccess`, and `UseQueryResult.isError` fields.
+
+To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `PendingPosApprovals` Query is of type `PendingPosApprovalsData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface PendingPosApprovalsData {
+  _select?: unknown[] | null;
+}
+```
+
+To learn more about the `UseQueryResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery).
+
+### Using `PendingPosApprovals`'s Query hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, PendingPosApprovalsVariables } from '@insightpad/dataconnect';
+import { usePendingPosApprovals } from '@insightpad/dataconnect/react'
+
+export default function PendingPosApprovalsComponent() {
+  // The `usePendingPosApprovals` Query hook requires an argument of type `PendingPosApprovalsVariables`:
+  const pendingPosApprovalsVars: PendingPosApprovalsVariables = {
+    requestKey: ...,
+  };
+
+  // You don't have to do anything to "execute" the Query.
+  // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
+  const query = usePendingPosApprovals(pendingPosApprovalsVars);
+  // Variables can be defined inline as well.
+  const query = usePendingPosApprovals({ requestKey: ..., });
+
+  // You can also pass in a `DataConnect` instance to the Query hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const query = usePendingPosApprovals(dataConnect, pendingPosApprovalsVars);
+
+  // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
+  const options = { staleTime: 5 * 1000 };
+  const query = usePendingPosApprovals(pendingPosApprovalsVars, options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = { staleTime: 5 * 1000 };
+  const query = usePendingPosApprovals(dataConnect, pendingPosApprovalsVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Query.
+  if (query.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
+  }
+
+  // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
+  if (query.isSuccess) {
+    console.log(query.data._select);
+  }
+  return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## PosSaleApprovalStatus
+You can execute the `PosSaleApprovalStatus` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
+
+```javascript
+usePosSaleApprovalStatus(dc: DataConnect, vars: PosSaleApprovalStatusVariables, options?: useDataConnectQueryOptions<PosSaleApprovalStatusData>): UseDataConnectQueryResult<PosSaleApprovalStatusData, PosSaleApprovalStatusVariables>;
+```
+You can also pass in a `DataConnect` instance to the Query hook function.
+```javascript
+usePosSaleApprovalStatus(vars: PosSaleApprovalStatusVariables, options?: useDataConnectQueryOptions<PosSaleApprovalStatusData>): UseDataConnectQueryResult<PosSaleApprovalStatusData, PosSaleApprovalStatusVariables>;
+```
+
+### Variables
+The `PosSaleApprovalStatus` Query requires an argument of type `PosSaleApprovalStatusVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface PosSaleApprovalStatusVariables {
+  operationId: string;
+  requestKey: string;
+}
+```
+### Return Type
+Recall that calling the `PosSaleApprovalStatus` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
+
+To check the status of a Query, use the `UseQueryResult.status` field. You can also check for pending / success / error status using the `UseQueryResult.isPending`, `UseQueryResult.isSuccess`, and `UseQueryResult.isError` fields.
+
+To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `PosSaleApprovalStatus` Query is of type `PosSaleApprovalStatusData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface PosSaleApprovalStatusData {
+  _select?: unknown[] | null;
+}
+```
+
+To learn more about the `UseQueryResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery).
+
+### Using `PosSaleApprovalStatus`'s Query hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, PosSaleApprovalStatusVariables } from '@insightpad/dataconnect';
+import { usePosSaleApprovalStatus } from '@insightpad/dataconnect/react'
+
+export default function PosSaleApprovalStatusComponent() {
+  // The `usePosSaleApprovalStatus` Query hook requires an argument of type `PosSaleApprovalStatusVariables`:
+  const posSaleApprovalStatusVars: PosSaleApprovalStatusVariables = {
+    operationId: ...,
+    requestKey: ...,
+  };
+
+  // You don't have to do anything to "execute" the Query.
+  // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
+  const query = usePosSaleApprovalStatus(posSaleApprovalStatusVars);
+  // Variables can be defined inline as well.
+  const query = usePosSaleApprovalStatus({ operationId: ..., requestKey: ..., });
+
+  // You can also pass in a `DataConnect` instance to the Query hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const query = usePosSaleApprovalStatus(dataConnect, posSaleApprovalStatusVars);
+
+  // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
+  const options = { staleTime: 5 * 1000 };
+  const query = usePosSaleApprovalStatus(posSaleApprovalStatusVars, options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = { staleTime: 5 * 1000 };
+  const query = usePosSaleApprovalStatus(dataConnect, posSaleApprovalStatusVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Query.
+  if (query.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
+  }
+
+  // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
+  if (query.isSuccess) {
+    console.log(query.data._select);
+  }
+  return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## PosCashApprovalStatus
+You can execute the `PosCashApprovalStatus` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
+
+```javascript
+usePosCashApprovalStatus(dc: DataConnect, vars: PosCashApprovalStatusVariables, options?: useDataConnectQueryOptions<PosCashApprovalStatusData>): UseDataConnectQueryResult<PosCashApprovalStatusData, PosCashApprovalStatusVariables>;
+```
+You can also pass in a `DataConnect` instance to the Query hook function.
+```javascript
+usePosCashApprovalStatus(vars: PosCashApprovalStatusVariables, options?: useDataConnectQueryOptions<PosCashApprovalStatusData>): UseDataConnectQueryResult<PosCashApprovalStatusData, PosCashApprovalStatusVariables>;
+```
+
+### Variables
+The `PosCashApprovalStatus` Query requires an argument of type `PosCashApprovalStatusVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface PosCashApprovalStatusVariables {
+  operationId: string;
+  requestKey: string;
+}
+```
+### Return Type
+Recall that calling the `PosCashApprovalStatus` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
+
+To check the status of a Query, use the `UseQueryResult.status` field. You can also check for pending / success / error status using the `UseQueryResult.isPending`, `UseQueryResult.isSuccess`, and `UseQueryResult.isError` fields.
+
+To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `PosCashApprovalStatus` Query is of type `PosCashApprovalStatusData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface PosCashApprovalStatusData {
+  _select?: unknown[] | null;
+}
+```
+
+To learn more about the `UseQueryResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery).
+
+### Using `PosCashApprovalStatus`'s Query hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, PosCashApprovalStatusVariables } from '@insightpad/dataconnect';
+import { usePosCashApprovalStatus } from '@insightpad/dataconnect/react'
+
+export default function PosCashApprovalStatusComponent() {
+  // The `usePosCashApprovalStatus` Query hook requires an argument of type `PosCashApprovalStatusVariables`:
+  const posCashApprovalStatusVars: PosCashApprovalStatusVariables = {
+    operationId: ...,
+    requestKey: ...,
+  };
+
+  // You don't have to do anything to "execute" the Query.
+  // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
+  const query = usePosCashApprovalStatus(posCashApprovalStatusVars);
+  // Variables can be defined inline as well.
+  const query = usePosCashApprovalStatus({ operationId: ..., requestKey: ..., });
+
+  // You can also pass in a `DataConnect` instance to the Query hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const query = usePosCashApprovalStatus(dataConnect, posCashApprovalStatusVars);
+
+  // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
+  const options = { staleTime: 5 * 1000 };
+  const query = usePosCashApprovalStatus(posCashApprovalStatusVars, options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = { staleTime: 5 * 1000 };
+  const query = usePosCashApprovalStatus(dataConnect, posCashApprovalStatusVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Query.
+  if (query.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
+  }
+
+  // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
+  if (query.isSuccess) {
+    console.log(query.data._select);
+  }
+  return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
 # Mutations
 
 The React generated SDK provides Mutations hook functions that call and return [`useDataConnectMutation`](https://react-query-firebase.invertase.dev/react/data-connect/mutations) hooks from TanStack Query Firebase.
@@ -7251,6 +7773,9 @@ To access the data returned by a Mutation, use the `UseMutationResult.data` fiel
 ```javascript
 export interface PostSaleData {
   _execute?: number | null;
+  result?: {
+    receipt?: unknown | null;
+  };
 }
 ```
 
@@ -7311,6 +7836,7 @@ export default function PostSaleComponent() {
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
     console.log(mutation.data._execute);
+    console.log(mutation.data.result);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
 }
@@ -8953,6 +9479,7 @@ export interface RegisterCashMovementVariables {
   movementType: string;
   amountCents: Int64String;
   description: string;
+  operationId?: string | null;
 }
 ```
 ### Return Type
@@ -9006,10 +9533,11 @@ export default function RegisterCashMovementComponent() {
     movementType: ...,
     amountCents: ...,
     description: ...,
+    operationId: ..., // optional
   };
   mutation.mutate(registerCashMovementVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ sessionId: ..., movementType: ..., amountCents: ..., description: ..., });
+  mutation.mutate({ sessionId: ..., movementType: ..., amountCents: ..., description: ..., operationId: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -12374,6 +12902,7 @@ export interface CloseCashSessionVariables {
   sessionId: UUIDString;
   countedAmountCents: Int64String;
   notes: string;
+  operationId?: string | null;
 }
 ```
 ### Return Type
@@ -12426,16 +12955,405 @@ export default function CloseCashSessionComponent() {
     sessionId: ...,
     countedAmountCents: ...,
     notes: ...,
+    operationId: ..., // optional
   };
   mutation.mutate(closeCashSessionVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ sessionId: ..., countedAmountCents: ..., notes: ..., });
+  mutation.mutate({ sessionId: ..., countedAmountCents: ..., notes: ..., operationId: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
     onSuccess: () => { console.log('Mutation succeeded!'); }
   };
   mutation.mutate(closeCashSessionVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data._execute);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## UpdatePosPolicy
+You can execute the `UpdatePosPolicy` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useUpdatePosPolicy(options?: useDataConnectMutationOptions<UpdatePosPolicyData, FirebaseError, UpdatePosPolicyVariables>): UseDataConnectMutationResult<UpdatePosPolicyData, UpdatePosPolicyVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useUpdatePosPolicy(dc: DataConnect, options?: useDataConnectMutationOptions<UpdatePosPolicyData, FirebaseError, UpdatePosPolicyVariables>): UseDataConnectMutationResult<UpdatePosPolicyData, UpdatePosPolicyVariables>;
+```
+
+### Variables
+The `UpdatePosPolicy` Mutation requires an argument of type `UpdatePosPolicyVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface UpdatePosPolicyVariables {
+  requireOpenSession: boolean;
+  operatorDiscountPercent: number;
+  operatorSurchargePercent: number;
+  allowOperatorClose: boolean;
+  operatorWithdrawalLimitCents?: Int64String | null;
+  operatorCloseDifferenceLimitCents?: Int64String | null;
+}
+```
+### Return Type
+Recall that calling the `UpdatePosPolicy` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `UpdatePosPolicy` Mutation is of type `UpdatePosPolicyData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface UpdatePosPolicyData {
+  _execute?: number | null;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `UpdatePosPolicy`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, UpdatePosPolicyVariables } from '@insightpad/dataconnect';
+import { useUpdatePosPolicy } from '@insightpad/dataconnect/react'
+
+export default function UpdatePosPolicyComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useUpdatePosPolicy();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useUpdatePosPolicy(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useUpdatePosPolicy(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useUpdatePosPolicy(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useUpdatePosPolicy` Mutation requires an argument of type `UpdatePosPolicyVariables`:
+  const updatePosPolicyVars: UpdatePosPolicyVariables = {
+    requireOpenSession: ...,
+    operatorDiscountPercent: ...,
+    operatorSurchargePercent: ...,
+    allowOperatorClose: ...,
+    operatorWithdrawalLimitCents: ..., // optional
+    operatorCloseDifferenceLimitCents: ..., // optional
+  };
+  mutation.mutate(updatePosPolicyVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ requireOpenSession: ..., operatorDiscountPercent: ..., operatorSurchargePercent: ..., allowOperatorClose: ..., operatorWithdrawalLimitCents: ..., operatorCloseDifferenceLimitCents: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(updatePosPolicyVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data._execute);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## RequestPosSaleApproval
+You can execute the `RequestPosSaleApproval` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useRequestPosSaleApproval(options?: useDataConnectMutationOptions<RequestPosSaleApprovalData, FirebaseError, RequestPosSaleApprovalVariables>): UseDataConnectMutationResult<RequestPosSaleApprovalData, RequestPosSaleApprovalVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useRequestPosSaleApproval(dc: DataConnect, options?: useDataConnectMutationOptions<RequestPosSaleApprovalData, FirebaseError, RequestPosSaleApprovalVariables>): UseDataConnectMutationResult<RequestPosSaleApprovalData, RequestPosSaleApprovalVariables>;
+```
+
+### Variables
+The `RequestPosSaleApproval` Mutation requires an argument of type `RequestPosSaleApprovalVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface RequestPosSaleApprovalVariables {
+  payload: unknown;
+}
+```
+### Return Type
+Recall that calling the `RequestPosSaleApproval` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `RequestPosSaleApproval` Mutation is of type `RequestPosSaleApprovalData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface RequestPosSaleApprovalData {
+  _execute?: number | null;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `RequestPosSaleApproval`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, RequestPosSaleApprovalVariables } from '@insightpad/dataconnect';
+import { useRequestPosSaleApproval } from '@insightpad/dataconnect/react'
+
+export default function RequestPosSaleApprovalComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useRequestPosSaleApproval();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useRequestPosSaleApproval(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useRequestPosSaleApproval(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useRequestPosSaleApproval(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useRequestPosSaleApproval` Mutation requires an argument of type `RequestPosSaleApprovalVariables`:
+  const requestPosSaleApprovalVars: RequestPosSaleApprovalVariables = {
+    payload: ...,
+  };
+  mutation.mutate(requestPosSaleApprovalVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ payload: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(requestPosSaleApprovalVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data._execute);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## ApprovePosSale
+You can execute the `ApprovePosSale` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useApprovePosSale(options?: useDataConnectMutationOptions<ApprovePosSaleData, FirebaseError, ApprovePosSaleVariables>): UseDataConnectMutationResult<ApprovePosSaleData, ApprovePosSaleVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useApprovePosSale(dc: DataConnect, options?: useDataConnectMutationOptions<ApprovePosSaleData, FirebaseError, ApprovePosSaleVariables>): UseDataConnectMutationResult<ApprovePosSaleData, ApprovePosSaleVariables>;
+```
+
+### Variables
+The `ApprovePosSale` Mutation requires an argument of type `ApprovePosSaleVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface ApprovePosSaleVariables {
+  approvalId: UUIDString;
+  approved: boolean;
+}
+```
+### Return Type
+Recall that calling the `ApprovePosSale` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `ApprovePosSale` Mutation is of type `ApprovePosSaleData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface ApprovePosSaleData {
+  _execute?: number | null;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `ApprovePosSale`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, ApprovePosSaleVariables } from '@insightpad/dataconnect';
+import { useApprovePosSale } from '@insightpad/dataconnect/react'
+
+export default function ApprovePosSaleComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useApprovePosSale();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useApprovePosSale(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useApprovePosSale(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useApprovePosSale(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useApprovePosSale` Mutation requires an argument of type `ApprovePosSaleVariables`:
+  const approvePosSaleVars: ApprovePosSaleVariables = {
+    approvalId: ...,
+    approved: ...,
+  };
+  mutation.mutate(approvePosSaleVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ approvalId: ..., approved: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(approvePosSaleVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data._execute);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## RequestPosCashApproval
+You can execute the `RequestPosCashApproval` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useRequestPosCashApproval(options?: useDataConnectMutationOptions<RequestPosCashApprovalData, FirebaseError, RequestPosCashApprovalVariables>): UseDataConnectMutationResult<RequestPosCashApprovalData, RequestPosCashApprovalVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useRequestPosCashApproval(dc: DataConnect, options?: useDataConnectMutationOptions<RequestPosCashApprovalData, FirebaseError, RequestPosCashApprovalVariables>): UseDataConnectMutationResult<RequestPosCashApprovalData, RequestPosCashApprovalVariables>;
+```
+
+### Variables
+The `RequestPosCashApproval` Mutation requires an argument of type `RequestPosCashApprovalVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface RequestPosCashApprovalVariables {
+  payload: unknown;
+}
+```
+### Return Type
+Recall that calling the `RequestPosCashApproval` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `RequestPosCashApproval` Mutation is of type `RequestPosCashApprovalData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface RequestPosCashApprovalData {
+  _execute?: number | null;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `RequestPosCashApproval`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, RequestPosCashApprovalVariables } from '@insightpad/dataconnect';
+import { useRequestPosCashApproval } from '@insightpad/dataconnect/react'
+
+export default function RequestPosCashApprovalComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useRequestPosCashApproval();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useRequestPosCashApproval(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useRequestPosCashApproval(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useRequestPosCashApproval(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useRequestPosCashApproval` Mutation requires an argument of type `RequestPosCashApprovalVariables`:
+  const requestPosCashApprovalVars: RequestPosCashApprovalVariables = {
+    payload: ...,
+  };
+  mutation.mutate(requestPosCashApprovalVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ payload: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(requestPosCashApprovalVars, options);
 
   // Then, you can render your component dynamically based on the status of the Mutation.
   if (mutation.isPending) {

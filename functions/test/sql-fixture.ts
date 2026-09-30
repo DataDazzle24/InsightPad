@@ -8,8 +8,8 @@ const snake = (name: string) => name.replace(/[A-Z]/g, (letter) => `_${letter.to
 
 // Build an isolated PostgreSQL test schema from the actual Data Connect source.
 // This is not a migration generator; the Firebase compiler remains the deployment gate.
-export async function database() {
-  const db = new PGlite();
+export function schemaStatements() {
+  const statements: string[] = [];
   for (const match of schema.matchAll(/^type (\w+)\s+@table\([\s\S]*?name:\s*"([^"]+)"[\s\S]*?\)\s*\{([\s\S]*?)^\}/gm)) {
     const columns: string[] = [];
     for (const line of match[3]!.split("\n")) {
@@ -34,17 +34,46 @@ export async function database() {
       ?.match(/"([^"]+)"/g)
       ?.map((name) => `"${snake(name.slice(1, -1))}_id"`);
     if (compositeKey?.length) columns.push(`UNIQUE (${compositeKey.join(",")})`);
-    await db.exec(`CREATE TABLE "${match[2]}" (${columns.join(",")})`);
+    const singleKey = /key:\s*"([^"\n]+)"/.exec(match[0])?.[1];
+    if (singleKey && singleKey !== "id") columns.push(`UNIQUE ("${snake(singleKey)}_id")`);
+    statements.push(`CREATE TABLE "${match[2]}" (${columns.join(",")})`);
   }
+  return statements;
+}
+
+export async function database() {
+  const db = new PGlite();
+  for (const statement of schemaStatements()) await db.exec(statement);
   return db;
 }
 
 export async function operation(db: PGlite, name: string, params: unknown[]) {
   const start = operations.indexOf(`${name}(`);
   if (start < 0) throw new Error(`Missing operation ${name}`);
-  const sql = /(?:_execute|_select)\(sql: """([\s\S]*?)"""/.exec(operations.slice(start))?.[1];
-  if (!sql) throw new Error(`Missing SQL ${name}`);
-  return db.query(sql, params.map((value) => value !== null && typeof value === "object" ? JSON.stringify(value) : value));
+  const body = operations.slice(start).split("\n}")[0]!;
+  const statements = [...body.matchAll(/(_execute|_selectFirst|_select)\(sql: """([\s\S]*?)""",params:\[([^\n]*)\]\)([^\n]*)/g)];
+  if (!statements.length) throw new Error(`Missing SQL ${name}`);
+  const variables = [...body.split("\n")[0]!.matchAll(/\$(\w+)\s*:/g)].map(match => match[1]!);
+  const userScoped = body.includes('level: USER');
+  let result;
+  await db.exec("SAVEPOINT operation_fields");
+  try {
+    for (const statement of statements) {
+      const values = statement[3]!.split(",").map(raw => {
+        const value = raw.includes('auth.uid') ? params[0] : params[variables.indexOf(raw.trim().slice(1)) + (userScoped ? 1 : 0)];
+        return value !== null && typeof value === "object" ? JSON.stringify(value) : value;
+      });
+      const executed = await db.query(statement[2]!, values);
+      if(statement[1] === "_selectFirst" && result) Object.assign(result, {receipt:executed.rows[0]});
+      else result = executed;
+      if (statement[4]!.includes('@check') && !result.affectedRows) throw new Error(statement[4]!.includes('POS_BRANCH_DENIED') ? 'POS_BRANCH_DENIED' : 'POS_REJECTED');
+    }
+    await db.exec("RELEASE SAVEPOINT operation_fields");
+    return result!;
+  } catch (error) {
+    await db.exec("ROLLBACK TO SAVEPOINT operation_fields; RELEASE SAVEPOINT operation_fields");
+    throw error;
+  }
 }
 
 export const ids = {

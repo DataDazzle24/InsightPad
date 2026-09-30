@@ -38,6 +38,15 @@ export interface AppPage_Key {
   __typename?: 'AppPage_Key';
 }
 
+export interface ApprovePosSaleData {
+  _execute?: number | null;
+}
+
+export interface ApprovePosSaleVariables {
+  approvalId: UUIDString;
+  approved: boolean;
+}
+
 export interface ArchiveCategoryData {
   _execute?: number | null;
 }
@@ -180,6 +189,7 @@ export interface CloseCashSessionVariables {
   sessionId: UUIDString;
   countedAmountCents: Int64String;
   notes: string;
+  operationId?: string | null;
 }
 
 export interface ConnectSalesChannelMerchantData {
@@ -550,6 +560,14 @@ export interface PaymentMethod_Key {
   __typename?: 'PaymentMethod_Key';
 }
 
+export interface PendingPosApprovalsData {
+  _select?: unknown[] | null;
+}
+
+export interface PendingPosApprovalsVariables {
+  requestKey: string;
+}
+
 export interface PlatformAdminWorkspaceData {
   _select?: unknown[] | null;
 }
@@ -590,8 +608,48 @@ export interface PlatformBillingWorkspaceVariables {
   requestKey: string;
 }
 
+export interface PosApproval_Key {
+  id: UUIDString;
+  __typename?: 'PosApproval_Key';
+}
+
+export interface PosCashApprovalStatusData {
+  _select?: unknown[] | null;
+}
+
+export interface PosCashApprovalStatusVariables {
+  operationId: string;
+  requestKey: string;
+}
+
+export interface PosPolicy_Key {
+  tenantId: UUIDString;
+  __typename?: 'PosPolicy_Key';
+}
+
+export interface PosProductBranchesData {
+  _select?: unknown[] | null;
+}
+
+export interface PosProductBranchesVariables {
+  productId: UUIDString;
+  requestKey: string;
+}
+
+export interface PosSaleApprovalStatusData {
+  _select?: unknown[] | null;
+}
+
+export interface PosSaleApprovalStatusVariables {
+  operationId: string;
+  requestKey: string;
+}
+
 export interface PostSaleData {
   _execute?: number | null;
+  result?: {
+    receipt?: unknown | null;
+  };
 }
 
 export interface PostSaleVariables {
@@ -670,6 +728,7 @@ export interface RegisterCashMovementVariables {
   movementType: string;
   amountCents: Int64String;
   description: string;
+  operationId?: string | null;
 }
 
 export interface RegistrationOptionsData {
@@ -686,6 +745,22 @@ export interface ReleaseDeviceSessionData {
 
 export interface ReleaseDeviceSessionVariables {
   sessionToken: string;
+}
+
+export interface RequestPosCashApprovalData {
+  _execute?: number | null;
+}
+
+export interface RequestPosCashApprovalVariables {
+  payload: unknown;
+}
+
+export interface RequestPosSaleApprovalData {
+  _execute?: number | null;
+}
+
+export interface RequestPosSaleApprovalVariables {
+  payload: unknown;
 }
 
 export interface RequestSalesChannelAuthorizationData {
@@ -1059,6 +1134,29 @@ export interface SaveSupplierData {
 export interface SaveSupplierVariables {
   id?: UUIDString | null;
   payload: unknown;
+}
+
+export interface SearchPosCustomersData {
+  _select?: unknown[] | null;
+}
+
+export interface SearchPosCustomersVariables {
+  search?: string | null;
+  limit?: number | null;
+  offset?: number | null;
+  requestKey: string;
+}
+
+export interface SearchPosProductsData {
+  _select?: unknown[] | null;
+}
+
+export interface SearchPosProductsVariables {
+  branchId: UUIDString;
+  search?: string | null;
+  limit?: number | null;
+  offset?: number | null;
+  requestKey: string;
 }
 
 export interface SetBranchStatusData {
@@ -1519,6 +1617,19 @@ export interface UpdatePlatformTenantData {
 
 export interface UpdatePlatformTenantVariables {
   payload: unknown;
+}
+
+export interface UpdatePosPolicyData {
+  _execute?: number | null;
+}
+
+export interface UpdatePosPolicyVariables {
+  requireOpenSession: boolean;
+  operatorDiscountPercent: number;
+  operatorSurchargePercent: number;
+  allowOperatorClose: boolean;
+  operatorWithdrawalLimitCents?: Int64String | null;
+  operatorCloseDifferenceLimitCents?: Int64String | null;
 }
 
 export interface UpdateSalesChannelConnectionData {
@@ -2033,6 +2144,26 @@ export function closeCashSession(dc: DataConnect, vars: CloseCashSessionVariable
 /** Generated Node Admin SDK operation action function for the 'CloseCashSession' Mutation. Allow users to pass in custom DataConnect instances. */
 export function closeCashSession(vars: CloseCashSessionVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<CloseCashSessionData>>;
 
+/** Generated Node Admin SDK operation action function for the 'UpdatePosPolicy' Mutation. Allow users to execute without passing in DataConnect. */
+export function updatePosPolicy(dc: DataConnect, vars: UpdatePosPolicyVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpdatePosPolicyData>>;
+/** Generated Node Admin SDK operation action function for the 'UpdatePosPolicy' Mutation. Allow users to pass in custom DataConnect instances. */
+export function updatePosPolicy(vars: UpdatePosPolicyVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<UpdatePosPolicyData>>;
+
+/** Generated Node Admin SDK operation action function for the 'RequestPosSaleApproval' Mutation. Allow users to execute without passing in DataConnect. */
+export function requestPosSaleApproval(dc: DataConnect, vars: RequestPosSaleApprovalVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<RequestPosSaleApprovalData>>;
+/** Generated Node Admin SDK operation action function for the 'RequestPosSaleApproval' Mutation. Allow users to pass in custom DataConnect instances. */
+export function requestPosSaleApproval(vars: RequestPosSaleApprovalVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<RequestPosSaleApprovalData>>;
+
+/** Generated Node Admin SDK operation action function for the 'ApprovePosSale' Mutation. Allow users to execute without passing in DataConnect. */
+export function approvePosSale(dc: DataConnect, vars: ApprovePosSaleVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<ApprovePosSaleData>>;
+/** Generated Node Admin SDK operation action function for the 'ApprovePosSale' Mutation. Allow users to pass in custom DataConnect instances. */
+export function approvePosSale(vars: ApprovePosSaleVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<ApprovePosSaleData>>;
+
+/** Generated Node Admin SDK operation action function for the 'RequestPosCashApproval' Mutation. Allow users to execute without passing in DataConnect. */
+export function requestPosCashApproval(dc: DataConnect, vars: RequestPosCashApprovalVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<RequestPosCashApprovalData>>;
+/** Generated Node Admin SDK operation action function for the 'RequestPosCashApproval' Mutation. Allow users to pass in custom DataConnect instances. */
+export function requestPosCashApproval(vars: RequestPosCashApprovalVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<RequestPosCashApprovalData>>;
+
 /** Generated Node Admin SDK operation action function for the 'GetCurrentUser' Query. Allow users to execute without passing in DataConnect. */
 export function getCurrentUser(dc: DataConnect, options?: OperationOptions): Promise<ExecuteOperationResponse<GetCurrentUserData>>;
 /** Generated Node Admin SDK operation action function for the 'GetCurrentUser' Query. Allow users to pass in custom DataConnect instances. */
@@ -2252,4 +2383,34 @@ export function systemSalesChannelOrderForActor(vars: SystemSalesChannelOrderFor
 export function systemSalesChannelConnectionForActor(dc: DataConnect, vars: SystemSalesChannelConnectionForActorVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<SystemSalesChannelConnectionForActorData>>;
 /** Generated Node Admin SDK operation action function for the 'SystemSalesChannelConnectionForActor' Query. Allow users to pass in custom DataConnect instances. */
 export function systemSalesChannelConnectionForActor(vars: SystemSalesChannelConnectionForActorVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<SystemSalesChannelConnectionForActorData>>;
+
+/** Generated Node Admin SDK operation action function for the 'SearchPosProducts' Query. Allow users to execute without passing in DataConnect. */
+export function searchPosProducts(dc: DataConnect, vars: SearchPosProductsVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<SearchPosProductsData>>;
+/** Generated Node Admin SDK operation action function for the 'SearchPosProducts' Query. Allow users to pass in custom DataConnect instances. */
+export function searchPosProducts(vars: SearchPosProductsVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<SearchPosProductsData>>;
+
+/** Generated Node Admin SDK operation action function for the 'SearchPosCustomers' Query. Allow users to execute without passing in DataConnect. */
+export function searchPosCustomers(dc: DataConnect, vars: SearchPosCustomersVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<SearchPosCustomersData>>;
+/** Generated Node Admin SDK operation action function for the 'SearchPosCustomers' Query. Allow users to pass in custom DataConnect instances. */
+export function searchPosCustomers(vars: SearchPosCustomersVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<SearchPosCustomersData>>;
+
+/** Generated Node Admin SDK operation action function for the 'PosProductBranches' Query. Allow users to execute without passing in DataConnect. */
+export function posProductBranches(dc: DataConnect, vars: PosProductBranchesVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<PosProductBranchesData>>;
+/** Generated Node Admin SDK operation action function for the 'PosProductBranches' Query. Allow users to pass in custom DataConnect instances. */
+export function posProductBranches(vars: PosProductBranchesVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<PosProductBranchesData>>;
+
+/** Generated Node Admin SDK operation action function for the 'PendingPosApprovals' Query. Allow users to execute without passing in DataConnect. */
+export function pendingPosApprovals(dc: DataConnect, vars: PendingPosApprovalsVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<PendingPosApprovalsData>>;
+/** Generated Node Admin SDK operation action function for the 'PendingPosApprovals' Query. Allow users to pass in custom DataConnect instances. */
+export function pendingPosApprovals(vars: PendingPosApprovalsVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<PendingPosApprovalsData>>;
+
+/** Generated Node Admin SDK operation action function for the 'PosSaleApprovalStatus' Query. Allow users to execute without passing in DataConnect. */
+export function posSaleApprovalStatus(dc: DataConnect, vars: PosSaleApprovalStatusVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<PosSaleApprovalStatusData>>;
+/** Generated Node Admin SDK operation action function for the 'PosSaleApprovalStatus' Query. Allow users to pass in custom DataConnect instances. */
+export function posSaleApprovalStatus(vars: PosSaleApprovalStatusVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<PosSaleApprovalStatusData>>;
+
+/** Generated Node Admin SDK operation action function for the 'PosCashApprovalStatus' Query. Allow users to execute without passing in DataConnect. */
+export function posCashApprovalStatus(dc: DataConnect, vars: PosCashApprovalStatusVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<PosCashApprovalStatusData>>;
+/** Generated Node Admin SDK operation action function for the 'PosCashApprovalStatus' Query. Allow users to pass in custom DataConnect instances. */
+export function posCashApprovalStatus(vars: PosCashApprovalStatusVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<PosCashApprovalStatusData>>;
 

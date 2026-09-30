@@ -1324,25 +1324,38 @@ mutation EnsureSalesDefaults @auth(level: USER) @transaction {
 }
 
 mutation PostSale($payload: Any!) @auth(level: USER) @transaction {
+  lockedBranch: _execute(sql: """
+WITH actor AS (SELECT u.id,u.tenant_id,COALESCE(up.can_manage,rp.can_manage,false) can_manage
+ FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+ JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+ JOIN app_pages pg ON pg.page_key='CAIXA' AND pg.active
+ LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+ LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+ WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+ AND COALESCE(up.can_create,rp.can_create,false))
+ UPDATE branches b SET updated_at=b.updated_at FROM actor a WHERE b.tenant_id=a.tenant_id AND b.active AND b.deleted_at IS NULL AND b.id=NULLIF($2::jsonb->>'branchId','')::uuid AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=a.id) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=a.id AND ub.tenant_id=b.tenant_id AND ub.branch_id=b.id AND ub.active))
+  """,params:[{_expr:"auth.uid"},$payload]) @check(expr: "this > 0", message: "POS_BRANCH_DENIED") @redact
   _execute(sql: """
+
     WITH actor AS (
-      SELECT u.id,u.tenant_id,COALESCE(up.can_manage,rp.can_manage,false) can_manage
-      FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
-      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
-      JOIN app_pages pg ON pg.page_key='CAIXA' AND pg.active
-      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
-      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
-      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_create,rp.can_create,false)
+SELECT u.id,u.tenant_id,COALESCE(up.can_manage,rp.can_manage,false) can_manage
+ FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+ JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+ JOIN app_pages pg ON pg.page_key='CAIXA' AND pg.active
+ LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+ LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+ WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+ AND COALESCE(up.can_create,rp.can_create,false)
     ),input AS (SELECT COALESCE($2::jsonb,'{}'::jsonb) j),header AS (
       SELECT a.*,i.j,(i.j->>'branchId')::uuid branch_id,NULLIF(i.j->>'customerId','')::uuid customer_id,
         NULLIF(i.j->>'cashSessionId','')::uuid cash_session_id,NULLIF(i.j->>'replacesSaleId','')::uuid replaces_sale_id,btrim(i.j->>'clientOperationId') operation_id,
-        GREATEST(COALESCE((i.j->>'discountCents')::bigint,0),0) requested_discount,
-        GREATEST(COALESCE((i.j->>'surchargeCents')::bigint,0),0) surcharge
+        COALESCE((i.j->>'discountCents')::bigint,0) requested_discount,
+        COALESCE((i.j->>'surchargeCents')::bigint,0) surcharge
       FROM actor a CROSS JOIN input i
     ),raw_items AS (
       SELECT h.*,x.product_id,x.quantity,x.requested_price
       FROM header h CROSS JOIN LATERAL jsonb_to_recordset(COALESCE(h.j->'items','[]'::jsonb)) AS x(product_id uuid,quantity numeric,requested_price bigint)
-      WHERE x.quantity>0
+      WHERE x.quantity>0 AND x.quantity<=999999 AND x.quantity=round(x.quantity,3)
     ),priced AS (
       SELECT r.*,p.name,p.weighted_product,p.bundle_product,p.allow_negative_stock,p.cost_price_cents,
         p.sale_price_cents list_price,COALESCE(pr.promotional_price_cents,p.sale_price_cents) effective_price,
@@ -1351,37 +1364,64 @@ mutation PostSale($payload: Any!) @auth(level: USER) @transaction {
       LEFT JOIN LATERAL (SELECT promotional_price_cents FROM promotions q WHERE q.tenant_id=p.tenant_id AND q.product_id=p.id AND q.active AND q.deleted_at IS NULL AND now()>=q.starts_at AND now()<q.ends_at ORDER BY promotional_price_cents,id LIMIT 1) pr ON true
       WHERE (p.weighted_product OR r.quantity=trunc(r.quantity))
     ),totals AS (
-      SELECT h.*,COUNT(ri.product_id) raw_count,COUNT(p.product_id) valid_count,COALESCE(SUM(round(p.quantity*p.unit_price)),0)::bigint subtotal
-      FROM header h LEFT JOIN raw_items ri ON true LEFT JOIN priced p ON p.product_id=ri.product_id AND p.quantity=ri.quantity
+      SELECT h.*,jsonb_array_length(COALESCE(h.j->'items','[]'::jsonb)) raw_count,COUNT(p.product_id) valid_count,COALESCE(SUM(round(p.quantity*p.unit_price)),0)::bigint subtotal
+      FROM header h LEFT JOIN priced p ON p.tenant_id=h.tenant_id
       GROUP BY h.id,h.tenant_id,h.can_manage,h.j,h.branch_id,h.customer_id,h.cash_session_id,h.replaces_sale_id,h.operation_id,h.requested_discount,h.surcharge
     ),payments AS (
       SELECT h.tenant_id,x.payment_method_id,x.amount_cents,x.sequence,x.external_reference,pm.requires_change
       FROM header h CROSS JOIN LATERAL jsonb_to_recordset(COALESCE(h.j->'payments','[]'::jsonb)) AS x(payment_method_id uuid,amount_cents bigint,sequence int,external_reference text)
       JOIN payment_methods pm ON pm.id=x.payment_method_id AND pm.tenant_id=h.tenant_id AND pm.active AND pm.code<>'IFOOD_CHANNEL' WHERE x.amount_cents>0
-    ),payment_total AS (SELECT COALESCE(SUM(amount_cents),0)::bigint amount,COUNT(*) count,COALESCE(bool_or(requires_change),false) has_change FROM payments),
+    ),payment_total AS (SELECT COALESCE(SUM(amount_cents),0)::bigint amount,COUNT(*) count,COALESCE(sum(amount_cents) FILTER(WHERE requires_change),0)::bigint cash_amount FROM payments),
     required_stock AS (
       SELECT p.tenant_id,p.branch_id,COALESCE(pc.component_product_id,p.product_id) product_id,
         SUM(p.quantity*COALESCE(pc.quantity,1)) quantity
       FROM priced p LEFT JOIN product_components pc ON pc.tenant_id=p.tenant_id AND pc.parent_product_id=p.product_id AND p.bundle_product
       GROUP BY p.tenant_id,p.branch_id,COALESCE(pc.component_product_id,p.product_id)
-    ),eligible AS (
+    ) ,old_sale AS (
+ SELECT old.* FROM sales old JOIN header h ON old.id=h.replaces_sale_id AND old.tenant_id=h.tenant_id
+ WHERE old.branch_id=h.branch_id AND old.created_by_uid=h.id AND old.status='COMPLETED' AND COALESCE(old.source,'POS')='POS'
+ AND NOT EXISTS(SELECT 1 FROM sales_channel_orders channel_order WHERE channel_order.sale_id=old.id AND channel_order.tenant_id=old.tenant_id)
+ AND (old.cash_session_id IS NULL OR old.cash_session_id=h.cash_session_id)
+ AND EXISTS(SELECT 1 FROM users u JOIN app_pages pg ON pg.page_key='GESTAO_VENDAS' AND pg.active
+ LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+ LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+ WHERE u.id=h.id AND COALESCE(up.can_delete,rp.can_delete,false))
+ ), refunded_stock AS (
+ SELECT m.tenant_id,m.branch_id,m.product_id,sum(m.quantity) quantity FROM stock_movements m JOIN old_sale o ON o.id=m.sale_id AND o.tenant_id=m.tenant_id
+ WHERE m.status='POSTED' GROUP BY m.tenant_id,m.branch_id,m.product_id
+ ), eligible AS (
       SELECT t.*,pt.amount payment_amount,(pt.amount-(t.subtotal-t.requested_discount+t.surcharge))::bigint change_amount
       FROM totals t CROSS JOIN payment_total pt
       JOIN branches b ON b.id=t.branch_id AND b.tenant_id=t.tenant_id AND b.active AND b.deleted_at IS NULL
       LEFT JOIN customers c ON c.id=t.customer_id AND c.tenant_id=t.tenant_id AND c.active AND c.deleted_at IS NULL
-      LEFT JOIN cash_sessions cs ON cs.id=t.cash_session_id AND cs.tenant_id=t.tenant_id AND cs.branch_id=t.branch_id AND cs.status='OPEN'
-      WHERE length(t.operation_id) BETWEEN 8 AND 100 AND t.raw_count>0 AND t.raw_count=t.valid_count
-        AND t.requested_discount<=t.subtotal AND t.subtotal-t.requested_discount+t.surcharge>=0
+      LEFT JOIN cash_sessions cs ON cs.id=t.cash_session_id AND cs.tenant_id=t.tenant_id AND cs.branch_id=t.branch_id AND cs.status='OPEN' AND cs.opened_by_uid=t.id
+      LEFT JOIN pos_policies policy ON policy.tenant_id=t.tenant_id
+      WHERE (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=t.id) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=t.id AND ub.tenant_id=b.tenant_id AND ub.branch_id=b.id AND ub.active)) AND length(t.operation_id) BETWEEN 8 AND 100 AND t.raw_count>0 AND t.raw_count=t.valid_count
+        AND t.requested_discount>=0 AND t.surcharge>=0 AND t.requested_discount<=t.subtotal AND t.subtotal-t.requested_discount+t.surcharge>=0
+        AND t.raw_count<=200 AND NOT EXISTS(SELECT 1 FROM raw_items GROUP BY product_id HAVING count(*)>1)
+        AND pt.count=jsonb_array_length(COALESCE(t.j->'payments','[]'::jsonb)) AND pt.count BETWEEN 1 AND 20
+        AND (t.can_manage OR (t.requested_discount*100<=t.subtotal*COALESCE(policy.operator_discount_percent,0) AND t.surcharge*100<=t.subtotal*COALESCE(policy.operator_surcharge_percent,0)) OR EXISTS(SELECT 1 FROM pos_approvals approval WHERE approval.tenant_id=t.tenant_id AND approval.branch_id=t.branch_id AND approval.requested_by_uid=t.id AND approval.operation_key=concat(t.tenant_id,':POS:',t.operation_id) AND approval.payload_hash=encode(sha256(convert_to(t.j::text,'UTF8')),'hex') AND approval.status='APPROVED' AND approval.expires_at>now() AND approval.kind='SALE' AND approval.subtotal_cents=t.subtotal AND approval.discount_cents=t.requested_discount AND approval.surcharge_cents=t.surcharge))
+        AND (cs.id IS NOT NULL OR (NOT COALESCE(policy.require_open_session,true) AND pt.cash_amount=0))
         AND pt.count>0 AND pt.amount>=t.subtotal-t.requested_discount+t.surcharge
-        AND (pt.amount=t.subtotal-t.requested_discount+t.surcharge OR pt.has_change)
+        AND (pt.amount=t.subtotal-t.requested_discount+t.surcharge OR pt.amount-(t.subtotal-t.requested_discount+t.surcharge)<=pt.cash_amount)
         AND (t.customer_id IS NULL OR c.id IS NOT NULL) AND (t.cash_session_id IS NULL OR cs.id IS NOT NULL)
         AND NOT EXISTS(SELECT 1 FROM sales old WHERE old.tenant_id=t.tenant_id AND old.client_operation_id=t.operation_id)
-        AND (t.replaces_sale_id IS NULL OR EXISTS(SELECT 1 FROM sales old WHERE old.id=t.replaces_sale_id AND old.tenant_id=t.tenant_id AND old.status='COMPLETED' AND COALESCE(old.source,'POS')<>'IFOOD' AND NOT EXISTS(SELECT 1 FROM sales_channel_orders channel_order WHERE channel_order.sale_id=old.id AND channel_order.tenant_id=old.tenant_id)))
-        AND NOT EXISTS(SELECT 1 FROM required_stock rs JOIN products p ON p.id=rs.product_id AND p.tenant_id=rs.tenant_id LEFT JOIN stock_balances sb ON sb.tenant_id=rs.tenant_id AND sb.branch_id=rs.branch_id AND sb.product_id=rs.product_id WHERE NOT p.allow_negative_stock AND COALESCE(sb.quantity,0)-COALESCE((SELECT sum(r.quantity) FROM sales_channel_stock_reservations r WHERE r.tenant_id=rs.tenant_id AND r.branch_id=rs.branch_id AND r.product_id=rs.product_id AND r.status='RESERVED'),0)<rs.quantity)
+        AND (t.replaces_sale_id IS NULL OR EXISTS(SELECT 1 FROM old_sale))
+        AND NOT EXISTS(SELECT 1 FROM priced parent WHERE parent.bundle_product AND (NOT EXISTS(SELECT 1 FROM product_components pc WHERE pc.tenant_id=parent.tenant_id AND pc.parent_product_id=parent.product_id) OR EXISTS(SELECT 1 FROM product_components pc LEFT JOIN products component ON component.id=pc.component_product_id AND component.tenant_id=pc.tenant_id WHERE pc.tenant_id=parent.tenant_id AND pc.parent_product_id=parent.product_id AND (pc.quantity<=0 OR component.id IS NULL OR NOT component.active OR component.deleted_at IS NOT NULL OR component.bundle_product OR (NOT component.weighted_product AND pc.quantity*parent.quantity<>trunc(pc.quantity*parent.quantity))))))
+        AND NOT EXISTS(SELECT 1 FROM required_stock rs JOIN products p ON p.id=rs.product_id AND p.tenant_id=rs.tenant_id LEFT JOIN stock_balances sb ON sb.tenant_id=rs.tenant_id AND sb.branch_id=rs.branch_id AND sb.product_id=rs.product_id WHERE NOT p.allow_negative_stock AND COALESCE(sb.quantity,0)+COALESCE((SELECT r.quantity FROM refunded_stock r WHERE r.tenant_id=rs.tenant_id AND r.branch_id=rs.branch_id AND r.product_id=rs.product_id),0)-COALESCE((SELECT sum(r.quantity) FROM sales_channel_stock_reservations r WHERE r.tenant_id=rs.tenant_id AND r.branch_id=rs.branch_id AND r.product_id=rs.product_id AND r.status='RESERVED'),0)<rs.quantity)
     ),sale AS (
-      INSERT INTO sales(id,tenant_id,branch_id,customer_id,cash_session_id,replaces_sale_id,client_operation_id,status,subtotal_cents,discount_cents,surcharge_cents,total_cents,change_cents,sold_at,created_by_uid,created_at,updated_at)
-      SELECT gen_random_uuid(),tenant_id,branch_id,customer_id,cash_session_id,replaces_sale_id,operation_id,'COMPLETED',subtotal,requested_discount,surcharge,subtotal-requested_discount+surcharge,change_amount,now(),id,now(),now() FROM eligible RETURNING *
-    ),item_base AS (
+      INSERT INTO sales(id,tenant_id,branch_id,customer_id,cash_session_id,replaces_sale_id,client_operation_id,operation_key,payload_hash,status,subtotal_cents,discount_cents,surcharge_cents,total_cents,change_cents,sold_at,created_by_uid,created_at,updated_at)
+      SELECT gen_random_uuid(),tenant_id,branch_id,customer_id,cash_session_id,replaces_sale_id,operation_id,concat(tenant_id,':POS:',operation_id),encode(sha256(convert_to(j::text,'UTF8')),'hex'),'COMPLETED',subtotal,requested_discount,surcharge,subtotal-requested_discount+surcharge,change_amount,now(),id,now(),now() FROM eligible RETURNING *
+    ), used_approval AS (UPDATE pos_approvals approval SET status='USED' FROM sale s WHERE approval.tenant_id=s.tenant_id AND approval.operation_key=s.operation_key AND approval.status='APPROVED' RETURNING approval.id),
+ cancelled AS (
+ UPDATE sales old SET status='CANCELLED',cancelled_at=now(),cancellation_reason='Corrigida pela venda '||new.id::text,updated_at=now()
+ FROM sale new WHERE old.id=new.replaces_sale_id AND old.tenant_id=new.tenant_id AND old.status='COMPLETED' RETURNING old.*
+ ), cancelled_items AS (UPDATE sale_items i SET status='CANCELLED',updated_at=now() FROM cancelled c WHERE i.sale_id=c.id AND i.tenant_id=c.tenant_id RETURNING i.id),
+ cancelled_payments AS (UPDATE sale_payments p SET status='CANCELLED' FROM cancelled c WHERE p.sale_id=c.id AND p.tenant_id=c.tenant_id RETURNING p.id),
+ reversed AS (UPDATE stock_movements m SET status='REVERSED',reversed_at=now() FROM cancelled c WHERE m.sale_id=c.id AND m.tenant_id=c.tenant_id AND m.status='POSTED' RETURNING m.*),
+ reversal_cash AS (INSERT INTO cash_movements(id,tenant_id,session_id,sale_id,movement_type,amount_cents,description,created_by_uid,created_at)
+ SELECT gen_random_uuid(),c.tenant_id,c.cash_session_id,c.id,'SALE_REVERSAL',-cm.amount_cents,'Correção de venda',$1,now() FROM cancelled c JOIN cash_movements cm ON cm.sale_id=c.id AND cm.tenant_id=c.tenant_id AND cm.movement_type='SALE' WHERE c.cash_session_id IS NOT NULL RETURNING id),
+ item_base AS (
       SELECT s.id sale_id,p.*,s.discount_cents,ROW_NUMBER() OVER(ORDER BY p.product_id) rn,COUNT(*) OVER() cnt,
         CASE WHEN s.subtotal_cents=0 THEN 0 ELSE floor(s.discount_cents*(round(p.quantity*p.unit_price)::numeric/s.subtotal_cents))::bigint END allocated_discount
       FROM sale s JOIN priced p ON p.tenant_id=s.tenant_id
@@ -1402,29 +1442,77 @@ mutation PostSale($payload: Any!) @auth(level: USER) @transaction {
       INSERT INTO stock_movements(id,tenant_id,branch_id,product_id,movement_type_id,sale_id,client_operation_id,quantity,unit_gross_cents,unit_cost_cents,occurred_at,status,created_by_uid,created_at)
       SELECT gen_random_uuid(),s.tenant_id,s.branch_id,rs.product_id,mt.id,s.id,s.client_operation_id,rs.quantity,0,p.cost_price_cents,now(),'POSTED',s.created_by_uid,now()
       FROM sale s JOIN required_stock rs ON rs.tenant_id=s.tenant_id AND rs.branch_id=s.branch_id JOIN products p ON p.id=rs.product_id AND p.tenant_id=rs.tenant_id JOIN movement_type_selected mt ON mt.tenant_id=s.tenant_id RETURNING product_id,tenant_id,branch_id,quantity
-    ),balances AS (
-      INSERT INTO stock_balances(tenant_id,branch_id,product_id,quantity,average_cost_cents,version,updated_at)
-      SELECT tenant_id,branch_id,product_id,-quantity,0,1,now() FROM movements
-      ON CONFLICT(branch_id,product_id) DO UPDATE SET quantity=stock_balances.quantity+EXCLUDED.quantity,version=stock_balances.version+1,updated_at=now() RETURNING product_id
+    ), net_stock AS (
+ SELECT tenant_id,branch_id,product_id,sum(delta) delta FROM (
+ SELECT tenant_id,branch_id,product_id,-quantity delta FROM movements
+ UNION ALL SELECT tenant_id,branch_id,product_id,quantity FROM reversed
+ ) changes GROUP BY tenant_id,branch_id,product_id
+    ), balances AS (
+ INSERT INTO stock_balances(tenant_id,branch_id,product_id,quantity,average_cost_cents,version,updated_at)
+ SELECT tenant_id,branch_id,product_id,delta,0,1,now() FROM net_stock
+ ON CONFLICT(branch_id,product_id) DO UPDATE SET quantity=stock_balances.quantity+EXCLUDED.quantity,version=stock_balances.version+1,updated_at=now() RETURNING product_id
     ),cash AS (
       INSERT INTO cash_movements(id,tenant_id,session_id,sale_id,movement_type,amount_cents,description,created_by_uid,created_at)
       SELECT gen_random_uuid(),s.tenant_id,s.cash_session_id,s.id,'SALE',cash_payment.amount,'Venda '||s.id::text,s.created_by_uid,now()
-      FROM sale s JOIN LATERAL(SELECT GREATEST(COALESCE(sum(sp.amount_cents),0)-s.change_cents,0)::bigint amount FROM sale_payments sp JOIN payment_methods pm ON pm.id=sp.payment_method_id AND pm.tenant_id=sp.tenant_id WHERE sp.sale_id=s.id AND sp.status='CONFIRMED' AND pm.requires_change)cash_payment ON cash_payment.amount>0
+      FROM sale s JOIN LATERAL(SELECT GREATEST(COALESCE(sum(p.amount_cents) FILTER(WHERE p.requires_change),0)-s.change_cents,0)::bigint amount FROM payments p)cash_payment ON cash_payment.amount>0
       WHERE s.cash_session_id IS NOT NULL RETURNING id
+    ), replay AS (
+ SELECT previous.* FROM sales previous JOIN header h ON previous.tenant_id=h.tenant_id AND previous.client_operation_id=h.operation_id
+ JOIN branches b ON b.id=previous.branch_id AND b.tenant_id=previous.tenant_id AND b.active AND b.deleted_at IS NULL
+ WHERE previous.created_by_uid=h.id AND previous.branch_id=h.branch_id AND previous.payload_hash=encode(sha256(convert_to(h.j::text,'UTF8')),'hex')
+ AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=h.id) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=h.id AND ub.tenant_id=b.tenant_id AND ub.branch_id=b.id AND ub.active)) AND NOT EXISTS(SELECT 1 FROM sale)
     )
     INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
       SELECT s.tenant_id,s.created_by_uid,'Vendas','CAIXA','CREATE','Sale',s.id::text,'Venda concluída',true,'SQL_CONNECT',jsonb_build_object('totalCents',s.total_cents,'branchId',s.branch_id,'operationId',s.client_operation_id),now() FROM sale s
-  """,params:[{_expr:"auth.uid"},$payload])
+      UNION ALL SELECT r.tenant_id,r.created_by_uid,'Vendas','CAIXA','REPLAY','Sale',r.id::text,'Operação já processada',true,'SQL_CONNECT',jsonb_build_object('operationId',r.client_operation_id),now() FROM replay r
+
+  """,params:[{_expr:"auth.uid"},$payload]) @check(expr: "this > 0", message: "POS_REJECTED: confira filial, estoque, pagamentos, limites e caixa do operador")
+  result: query {
+    receipt: _selectFirst(sql: """
+      SELECT jsonb_build_object(
+        'id',sale.id,'date',sale.sold_at,'status',sale.status,
+        'subtotalCents',sale.subtotal_cents,'discountCents',sale.discount_cents,'surchargeCents',sale.surcharge_cents,'totalCents',sale.total_cents,'changeCents',sale.change_cents,
+        'tenant',jsonb_build_object('legalName',t.legal_name,'tradeName',t.trade_name,'document',t.document,'email',t.email,'phone',t.phone),
+        'branch',jsonb_build_object('name',b.name,'internalCode',b.internal_code,'postalCode',b.postal_code,'stateCode',b.state_code,'city',b.city,'district',b.district,'street',b.street,'streetNumber',b.street_number,'addressComplement',b.address_complement,'phone',b.phone),
+        'operator',u.name,'customer',COALESCE(customer.name,'Consumidor final'),'offline',false,
+        'items',COALESCE((SELECT jsonb_agg(jsonb_build_object('productId',item.product_id,'name',p.name,'quantity',item.quantity,'unitPriceCents',item.unit_sale_price_cents,'listPriceCents',item.unit_list_price_cents,'costPriceCents',item.unit_cost_cents,'weightedProduct',p.weighted_product,'bundleProduct',p.bundle_product,'stock',0,'allowNegativeStock',p.allow_negative_stock) ORDER BY item.created_at,item.id) FROM sale_items item JOIN products p ON p.id=item.product_id AND p.tenant_id=item.tenant_id WHERE item.sale_id=sale.id AND item.tenant_id=sale.tenant_id AND item.status='ACTIVE'),'[]'::jsonb),
+        'payments',COALESCE((SELECT jsonb_agg(jsonb_build_object('paymentMethodId',payment.payment_method_id,'name',method.name,'amountCents',payment.amount_cents,'sequence',payment.sequence,'externalReference',payment.external_reference) ORDER BY payment.sequence,payment.id) FROM sale_payments payment JOIN payment_methods method ON method.id=payment.payment_method_id AND method.tenant_id=payment.tenant_id WHERE payment.sale_id=sale.id AND payment.tenant_id=sale.tenant_id AND payment.status='CONFIRMED'),'[]'::jsonb)
+      ) AS data
+      FROM sales sale JOIN users u ON u.id=$1 AND u.tenant_id=sale.tenant_id AND u.active AND u.deleted_at IS NULL
+      JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+      JOIN branches b ON b.id=sale.branch_id AND b.tenant_id=sale.tenant_id
+      LEFT JOIN customers customer ON customer.id=sale.customer_id AND customer.tenant_id=sale.tenant_id
+      WHERE sale.created_by_uid=u.id AND sale.client_operation_id=$2::jsonb->>'clientOperationId'
+    """,params:[{_expr:"auth.uid"},$payload])
+  }
+
 }
 
 mutation CancelSale($saleId: UUID!, $reason: String!) @auth(level: USER) @transaction {
+  lockedBranch: _execute(sql: """
+WITH actor AS (SELECT u.id,u.tenant_id,COALESCE(up.can_manage,rp.can_manage,false) can_manage
+ FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+ JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+ JOIN app_pages pg ON pg.page_key='GESTAO_VENDAS' AND pg.active
+ LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+ LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+ WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+ AND COALESCE(up.can_delete,rp.can_delete,false))
+ UPDATE branches b SET updated_at=b.updated_at FROM actor a WHERE b.tenant_id=a.tenant_id AND b.active AND b.deleted_at IS NULL AND b.id IN(SELECT sale.branch_id FROM sales sale WHERE sale.id=$2 AND sale.tenant_id=a.tenant_id) AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=a.id) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=a.id AND ub.tenant_id=b.tenant_id AND ub.branch_id=b.id AND ub.active)) AND ($3::text IS NULL OR $3::text IS NOT NULL)
+  """,params:[{_expr:"auth.uid"},$saleId,$reason]) @check(expr: "this > 0", message: "POS_BRANCH_DENIED") @redact
   _execute(sql: """
+
     WITH actor AS (
-      SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active
-      JOIN app_pages pg ON pg.page_key='GESTAO_VENDAS' AND pg.active LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
-      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_delete,rp.can_delete,false)
+SELECT u.id,u.tenant_id,COALESCE(up.can_manage,rp.can_manage,false) can_manage
+ FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+ JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+ JOIN app_pages pg ON pg.page_key='GESTAO_VENDAS' AND pg.active
+ LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+ LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+ WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+ AND COALESCE(up.can_delete,rp.can_delete,false)
     ),cancelled AS (
-      UPDATE sales s SET status='CANCELLED',cancelled_at=now(),cancellation_reason=left(btrim($3),255),updated_at=now() FROM actor a WHERE s.id=$2 AND s.tenant_id=a.tenant_id AND s.status='COMPLETED' AND COALESCE(s.source,'POS')<>'IFOOD' AND NOT EXISTS(SELECT 1 FROM sales_channel_orders channel_order WHERE channel_order.sale_id=s.id AND channel_order.tenant_id=s.tenant_id) AND length(btrim($3))>=5 RETURNING s.*
+      UPDATE sales s SET status='CANCELLED',cancelled_at=now(),cancellation_reason=left(btrim($3),255),updated_at=now() FROM actor a WHERE s.id=$2 AND s.tenant_id=a.tenant_id AND s.status='COMPLETED' AND COALESCE(s.source,'POS')<>'IFOOD' AND (s.cash_session_id IS NULL OR EXISTS(SELECT 1 FROM cash_sessions cs WHERE cs.id=s.cash_session_id AND cs.tenant_id=s.tenant_id AND cs.status='OPEN')) AND NOT EXISTS(SELECT 1 FROM sales_channel_orders channel_order WHERE channel_order.sale_id=s.id AND channel_order.tenant_id=s.tenant_id) AND length(btrim($3))>=5 RETURNING s.*
     ),items AS (UPDATE sale_items i SET status='CANCELLED',updated_at=now() FROM cancelled s WHERE i.sale_id=s.id AND i.tenant_id=s.tenant_id AND i.status='ACTIVE' RETURNING i.id),
     payments AS (UPDATE sale_payments p SET status='CANCELLED' FROM cancelled s WHERE p.sale_id=s.id AND p.tenant_id=s.tenant_id AND p.status='CONFIRMED' RETURNING p.id),
     reversed AS (UPDATE stock_movements m SET status='REVERSED',reversed_at=now() FROM cancelled s WHERE m.sale_id=s.id AND m.tenant_id=s.tenant_id AND m.status='POSTED' RETURNING m.tenant_id,m.branch_id,m.product_id,m.quantity),
@@ -1432,7 +1520,8 @@ mutation CancelSale($saleId: UUID!, $reason: String!) @auth(level: USER) @transa
     cash AS (INSERT INTO cash_movements(id,tenant_id,session_id,sale_id,movement_type,amount_cents,description,created_by_uid,created_at) SELECT gen_random_uuid(),s.tenant_id,s.cash_session_id,s.id,'SALE_REVERSAL',-original.amount,'Cancelamento: '||left(btrim($3),120),$1,now() FROM cancelled s JOIN LATERAL(SELECT COALESCE(sum(cm.amount_cents),0)::bigint amount FROM cash_movements cm WHERE cm.sale_id=s.id AND cm.movement_type='SALE')original ON original.amount>0 WHERE s.cash_session_id IS NOT NULL RETURNING id)
     INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,before_data,after_data,created_at)
       SELECT tenant_id,$1,'Vendas','GESTAO_VENDAS','CANCEL','Sale',id::text,'Venda cancelada',true,'SQL_CONNECT',jsonb_build_object('status','COMPLETED','totalCents',total_cents),jsonb_build_object('status','CANCELLED','reason',cancellation_reason),now() FROM cancelled
-  """,params:[{_expr:"auth.uid"},$saleId,$reason])
+
+  """,params:[{_expr:"auth.uid"},$saleId,$reason]) @check(expr: "this > 0", message: "POS_REJECTED: confira filial, estoque, pagamentos, limites e caixa do operador")
 }
 
 mutation CreatePlatformTenant($payload: Any!) @auth(level: USER) @transaction {
@@ -1801,25 +1890,36 @@ mutation ReverseStockOperation($operationId: String!, $movementIds: Any!, $reaso
 }
 
 mutation OpenCashSession($branchId: UUID!, $openingAmountCents: Int64!, $notes: String!) @auth(level: USER) @transaction {
+  lockedBranch: _execute(sql: """
+WITH actor AS (SELECT u.id,u.tenant_id,COALESCE(up.can_manage,rp.can_manage,false) can_manage
+ FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+ JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+ JOIN app_pages pg ON pg.page_key='CAIXA' AND pg.active
+ LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+ LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+ WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+ AND COALESCE(up.can_create,rp.can_create,false))
+ UPDATE branches b SET updated_at=b.updated_at FROM actor a WHERE b.tenant_id=a.tenant_id AND b.active AND b.deleted_at IS NULL AND b.id=$2 AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=a.id) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=a.id AND ub.tenant_id=b.tenant_id AND ub.branch_id=b.id AND ub.active)) AND ($3::text IS NULL OR $3::text IS NOT NULL) AND ($4::text IS NULL OR $4::text IS NOT NULL)
+  """,params:[{_expr:"auth.uid"},$branchId,$openingAmountCents,$notes]) @check(expr: "this > 0", message: "POS_BRANCH_DENIED") @redact
   _execute(sql: """
+
     WITH actor AS (
-      SELECT u.id,u.tenant_id FROM users u
-      JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
-      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
-      JOIN app_pages pg ON pg.page_key='CAIXA' AND pg.active
-      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
-      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
-      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_create,rp.can_create,false)
+SELECT u.id,u.tenant_id,COALESCE(up.can_manage,rp.can_manage,false) can_manage
+ FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+ JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+ JOIN app_pages pg ON pg.page_key='CAIXA' AND pg.active
+ LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+ LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+ WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+ AND COALESCE(up.can_create,rp.can_create,false)
     ), branch AS (
       SELECT b.*,a.id actor_id FROM branches b JOIN actor a ON a.tenant_id=b.tenant_id
       WHERE b.id=$2 AND b.active AND b.deleted_at IS NULL
         AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=a.id) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=a.id AND ub.branch_id=b.id AND ub.active))
-    ), locked AS (
-      SELECT b.*,pg_advisory_xact_lock(hashtext(b.id::text)) FROM branch b
-    ), opened AS (
+    ), locked AS (SELECT * FROM branch), opened AS (
       INSERT INTO cash_sessions(id,tenant_id,branch_id,opened_by_uid,opened_at,opening_amount_cents,status,notes,created_at,updated_at)
-      SELECT gen_random_uuid(),tenant_id,id,$1,now(),GREATEST($3,0),'OPEN',NULLIF(left(btrim($4),500),''),now(),now() FROM locked l
-      WHERE NOT EXISTS(SELECT 1 FROM cash_sessions cs WHERE cs.tenant_id=l.tenant_id AND cs.branch_id=l.id AND cs.status='OPEN')
+      SELECT gen_random_uuid(),tenant_id,id,$1,now(),$3::bigint,'OPEN',NULLIF(left(btrim($4),500),''),now(),now() FROM locked l
+      WHERE $3::bigint>=0 AND NOT EXISTS(SELECT 1 FROM cash_sessions cs WHERE cs.tenant_id=l.tenant_id AND cs.branch_id=l.id AND cs.status='OPEN' AND cs.opened_by_uid=$1)
       RETURNING *
     ), movement AS (
       INSERT INTO cash_movements(id,tenant_id,session_id,movement_type,amount_cents,description,created_by_uid,created_at)
@@ -1827,27 +1927,51 @@ mutation OpenCashSession($branchId: UUID!, $openingAmountCents: Int64!, $notes: 
     )
     INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
     SELECT tenant_id,$1,'Vendas','CAIXA','OPEN','CashSession',id::text,'Caixa aberto',true,'SQL_CONNECT',jsonb_build_object('branchId',branch_id,'openingAmountCents',opening_amount_cents),now() FROM opened
-  """,params:[{_expr:"auth.uid"},$branchId,$openingAmountCents,$notes])
+
+  """,params:[{_expr:"auth.uid"},$branchId,$openingAmountCents,$notes]) @check(expr: "this > 0", message: "POS_REJECTED: confira filial, estoque, pagamentos, limites e caixa do operador")
 }
 
-mutation RegisterCashMovement($sessionId: UUID!, $movementType: String!, $amountCents: Int64!, $description: String!) @auth(level: USER) @transaction {
+mutation RegisterCashMovement($sessionId: UUID!, $movementType: String!, $amountCents: Int64!, $description: String!, $operationId: String) @auth(level: USER) @transaction {
+  lockedBranch: _execute(sql: """
+WITH actor AS (SELECT u.id,u.tenant_id,COALESCE(up.can_manage,rp.can_manage,false) can_manage
+ FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+ JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+ JOIN app_pages pg ON pg.page_key='CAIXA' AND pg.active
+ LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+ LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+ WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+ AND COALESCE(up.can_access,rp.can_access,false))
+ UPDATE branches b SET updated_at=b.updated_at FROM actor a WHERE b.tenant_id=a.tenant_id AND b.active AND b.deleted_at IS NULL AND b.id IN(SELECT cs.branch_id FROM cash_sessions cs WHERE cs.id=$2 AND cs.tenant_id=a.tenant_id AND cs.opened_by_uid=a.id) AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=a.id) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=a.id AND ub.tenant_id=b.tenant_id AND ub.branch_id=b.id AND ub.active)) AND ($3::text IS NULL OR $3::text IS NOT NULL) AND ($4::text IS NULL OR $4::text IS NOT NULL) AND ($5::text IS NULL OR $5::text IS NOT NULL)
+   AND ($6::text IS NULL OR $6::text IS NOT NULL)
+""",params:[{_expr:"auth.uid"},$sessionId,$movementType,$amountCents,$description,$operationId]) @check(expr: "this > 0", message: "POS_BRANCH_DENIED") @redact
   _execute(sql: """
+
     WITH actor AS (
-      SELECT u.id,u.tenant_id FROM users u JOIN app_pages pg ON pg.page_key='CAIXA' AND pg.active
-      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
-      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
-      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_manage,rp.can_manage,false)
+SELECT u.id,u.tenant_id,COALESCE(up.can_manage,rp.can_manage,false) can_manage
+ FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+ JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+ JOIN app_pages pg ON pg.page_key='CAIXA' AND pg.active
+ LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+ LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+ WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+ AND COALESCE(up.can_access,rp.can_access,false)
     ), input AS (
-      SELECT a.*,cs.id session_id,upper(btrim($3)) movement_type,abs($4)::bigint amount,btrim($5) description
-      FROM actor a JOIN cash_sessions cs ON cs.id=$2 AND cs.tenant_id=a.tenant_id AND cs.status='OPEN'
+      SELECT a.*,cs.id session_id,upper(btrim($3)) movement_type,$4::bigint amount,btrim($5) description,CASE WHEN $6::text IS NOT NULL THEN concat(a.tenant_id,':CASH:',$6) END operation_key,encode(sha256(convert_to(jsonb_build_object('sessionId',$2::text,'movementType',upper(btrim($3)),'amountCents',$4::bigint,'description',left(btrim($5),500))::text,'UTF8')),'hex') payload_hash
+      FROM actor a JOIN cash_sessions cs ON cs.id=$2 AND cs.tenant_id=a.tenant_id AND cs.status='OPEN' AND cs.opened_by_uid=a.id
     ), inserted AS (
-      INSERT INTO cash_movements(id,tenant_id,session_id,movement_type,amount_cents,description,created_by_uid,created_at)
-      SELECT gen_random_uuid(),tenant_id,session_id,movement_type,CASE WHEN movement_type='WITHDRAWAL' THEN -amount ELSE amount END,left(description,180),$1,now()
-      FROM input WHERE movement_type IN('SUPPLY','WITHDRAWAL') AND amount>0 AND length(description)>=3 RETURNING *
-    )
+      INSERT INTO cash_movements(id,tenant_id,session_id,movement_type,amount_cents,description,created_by_uid,created_at,operation_key,payload_hash)
+      SELECT gen_random_uuid(),tenant_id,session_id,movement_type,CASE WHEN movement_type='WITHDRAWAL' THEN -amount ELSE amount END,left(description,180),$1,now(),operation_key,payload_hash
+      FROM input i WHERE movement_type IN('SUPPLY','WITHDRAWAL') AND amount>0 AND length(description)>=3
+ AND (can_manage OR (movement_type='WITHDRAWAL' AND (amount<=COALESCE((SELECT operator_withdrawal_limit_cents FROM pos_policies WHERE tenant_id=i.tenant_id),0) OR EXISTS(SELECT 1 FROM pos_approvals approval WHERE approval.operation_key=i.operation_key AND approval.payload_hash=i.payload_hash AND approval.kind='WITHDRAWAL' AND approval.requested_by_uid=i.id AND approval.status='APPROVED' AND approval.expires_at>now()))))
+ AND (movement_type<>'WITHDRAWAL' OR amount<=(SELECT cs.opening_amount_cents+COALESCE((SELECT sum(cm.amount_cents) FROM cash_movements cm WHERE cm.session_id=cs.id AND cm.movement_type<>'OPENING'),0) FROM cash_sessions cs WHERE cs.id=i.session_id))
+ AND NOT EXISTS(SELECT 1 FROM cash_movements old WHERE old.operation_key=i.operation_key)
+ RETURNING *
+    ), consumed AS (UPDATE pos_approvals approval SET status='USED' FROM inserted i WHERE approval.operation_key=i.operation_key AND approval.payload_hash=i.payload_hash RETURNING approval.id),
+ replay AS (SELECT cm.* FROM cash_movements cm JOIN actor a ON a.tenant_id=cm.tenant_id AND a.id=cm.created_by_uid WHERE $6::text IS NOT NULL AND cm.operation_key=concat(a.tenant_id,':CASH:',$6) AND cm.payload_hash=encode(sha256(convert_to(jsonb_build_object('sessionId',$2::text,'movementType',upper(btrim($3)),'amountCents',$4::bigint,'description',left(btrim($5),500))::text,'UTF8')),'hex'))
     INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
-    SELECT tenant_id,$1,'Vendas','CAIXA',movement_type,'CashMovement',id::text,description,true,'SQL_CONNECT',jsonb_build_object('sessionId',session_id,'amountCents',amount_cents),now() FROM inserted
-  """,params:[{_expr:"auth.uid"},$sessionId,$movementType,$amountCents,$description])
+    SELECT tenant_id,$1,'Vendas','CAIXA',movement_type,'CashMovement',id::text,description,true,'SQL_CONNECT',jsonb_build_object('sessionId',session_id,'amountCents',amount_cents),now() FROM inserted UNION ALL SELECT tenant_id,$1,'Vendas','CAIXA','REPLAY','CashMovement',id::text,'Repetição reconhecida',true,'SQL_CONNECT',jsonb_build_object('sessionId',session_id),now() FROM replay
+
+  """,params:[{_expr:"auth.uid"},$sessionId,$movementType,$amountCents,$description,$operationId]) @check(expr: "this > 0", message: "POS_REJECTED: confira filial, estoque, pagamentos, limites e caixa do operador")
 }
 
 mutation ClaimDeviceSession($sessionToken: String!, $deviceId: String!, $deviceName: String!) @auth(level: USER) {
@@ -2201,6 +2325,9 @@ mutation TransitionSalesChannelOrder($id: UUID!, $action: String!, $reason: Stri
 # Customer actions are written to a durable outbox. The visible order only
 # reaches its final state after the trusted partner worker confirms the API call.
 mutation QueueSalesChannelOrderAction($id: UUID!, $action: String!, $reason: String!, $expectedVersion: Int!, $cancellationCode: String = "", $itemId: UUID, $ean: String = "", $quantity: Float = 0) @auth(level: USER) @transaction {
+  stockMutex: _execute(sql: """
+ UPDATE branches b SET updated_at=b.updated_at WHERE b.id IN (SELECT o.branch_id FROM sales_channel_orders o JOIN users u ON u.tenant_id=o.tenant_id WHERE o.id=$2 AND u.id=$1 AND u.active AND u.deleted_at IS NULL)
+  """,params:[{_expr:"auth.uid"},$id]) @redact
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u
@@ -2689,6 +2816,9 @@ mutation SystemRecordSalesChannelEventResult($eventId: UUID!, $workerId: String!
 }
 
 mutation SystemIngestSalesChannelOrder($connectionId: UUID!, $payload: Any!) @auth(level: NO_ACCESS) @transaction {
+  stockMutex: _execute(sql: """
+ UPDATE branches b SET updated_at=b.updated_at WHERE b.id IN (SELECT c.branch_id FROM sales_channel_connections c WHERE c.id=$1)
+  """,params:[$connectionId]) @redact
   _execute(sql: """
     WITH input AS (SELECT COALESCE($2::jsonb,'{}'::jsonb) j), connection AS (
       SELECT c.*,i.j FROM sales_channel_connections c CROSS JOIN input i WHERE c.id=$1 AND c.active AND c.deleted_at IS NULL AND c.enabled
@@ -2799,6 +2929,9 @@ mutation SystemIngestSalesChannelOrder($connectionId: UUID!, $payload: Any!) @au
 # Applies partner events without allowing a stale or duplicated event to move an
 # order backwards. The internal inbox event id also makes history idempotent.
 mutation SystemApplySalesChannelOrderEvent($connectionId: UUID!, $providerOrderId: String!, $payload: Any!) @auth(level: NO_ACCESS) @transaction {
+  stockMutex: _execute(sql: """
+ UPDATE branches b SET updated_at=b.updated_at WHERE b.id IN (SELECT c.branch_id FROM sales_channel_connections c WHERE c.id=$1)
+  """,params:[$connectionId]) @redact
   _execute(sql: """
     WITH input AS (SELECT $3::jsonb j), candidate AS (
       SELECT o.id,o.status old_status,o.pending_action,i.j,
@@ -2843,6 +2976,9 @@ mutation SystemApplySalesChannelOrderEvent($connectionId: UUID!, $providerOrderI
 # The event/command lease is evidence that only the trusted adapter can invoke
 # this operation. Reprocessing is harmless: sale and stock keys are stable.
 mutation SystemReconcileSalesChannelCommerce($connectionId: UUID!, $providerOrderId: String!, $payload: Any!) @auth(level: NO_ACCESS) @transaction {
+  stockMutex: _execute(sql: """
+ UPDATE branches b SET updated_at=b.updated_at WHERE b.id IN (SELECT c.branch_id FROM sales_channel_connections c WHERE c.id=$1)
+  """,params:[$connectionId]) @redact
   _execute(sql: """
     WITH input AS (SELECT COALESCE($3::jsonb,'{}'::jsonb) j), target AS (
       SELECT o.*,i.j FROM sales_channel_orders o
@@ -3294,6 +3430,9 @@ mutation SystemRecordSalesChannelCommandResult($commandId: UUID!, $workerId: Str
 # It is deliberately separate from the action acknowledgement: a failed GET
 # must never cause a non-idempotent item modification to be replayed.
 mutation SystemRefreshSalesChannelOrderAfterPicking($commandId: UUID!, $payload: Any!) @auth(level: NO_ACCESS) @transaction {
+  stockMutex: _execute(sql: """
+ UPDATE branches b SET updated_at=b.updated_at WHERE b.id IN (SELECT o.branch_id FROM sales_channel_commands command JOIN sales_channel_orders o ON o.id=command.order_id AND o.tenant_id=command.tenant_id WHERE command.id=$1)
+  """,params:[$commandId]) @redact
   _execute(sql: """
     WITH input AS (SELECT COALESCE($2::jsonb,'{}'::jsonb) j), eligible AS (
       SELECT o.id,o.tenant_id,i.j FROM sales_channel_commands q CROSS JOIN input i
@@ -3367,22 +3506,143 @@ mutation SystemRecordSalesChannelMappingResult($mappingId: UUID!, $payload: Any!
   """,params:[$mappingId,$payload])
 }
 
-mutation CloseCashSession($sessionId: UUID!, $countedAmountCents: Int64!, $notes: String!) @auth(level: USER) @transaction {
+mutation CloseCashSession($sessionId: UUID!, $countedAmountCents: Int64!, $notes: String!, $operationId: String) @auth(level: USER) @transaction {
+  lockedBranch: _execute(sql: """
+WITH actor AS (SELECT u.id,u.tenant_id,COALESCE(up.can_manage,rp.can_manage,false) can_manage
+ FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+ JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+ JOIN app_pages pg ON pg.page_key='CAIXA' AND pg.active
+ LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+ LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+ WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+ AND COALESCE(up.can_access,rp.can_access,false))
+ UPDATE branches b SET updated_at=b.updated_at FROM actor a WHERE b.tenant_id=a.tenant_id AND b.active AND b.deleted_at IS NULL AND b.id IN(SELECT cs.branch_id FROM cash_sessions cs WHERE cs.id=$2 AND cs.tenant_id=a.tenant_id AND cs.opened_by_uid=a.id) AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=a.id) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=a.id AND ub.tenant_id=b.tenant_id AND ub.branch_id=b.id AND ub.active)) AND ($3::text IS NULL OR $3::text IS NOT NULL) AND ($4::text IS NULL OR $4::text IS NOT NULL)
+   AND ($5::text IS NULL OR $5::text IS NOT NULL)
+""",params:[{_expr:"auth.uid"},$sessionId,$countedAmountCents,$notes,$operationId]) @check(expr: "this > 0", message: "POS_BRANCH_DENIED") @redact
   _execute(sql: """
+
     WITH actor AS (
-      SELECT u.id,u.tenant_id FROM users u JOIN app_pages pg ON pg.page_key='CAIXA' AND pg.active
-      LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
-      LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
-      WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_manage,rp.can_manage,false)
+SELECT u.id,u.tenant_id,COALESCE(up.can_manage,rp.can_manage,false) can_manage
+ FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+ JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+ JOIN app_pages pg ON pg.page_key='CAIXA' AND pg.active
+ LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+ LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+ WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+ AND COALESCE(up.can_access,rp.can_access,false)
     ), calculated AS (
       SELECT cs.id,cs.tenant_id,cs.opening_amount_cents+COALESCE(sum(cm.amount_cents) FILTER(WHERE cm.movement_type<>'OPENING'),0) expected
       FROM cash_sessions cs JOIN actor a ON a.tenant_id=cs.tenant_id LEFT JOIN cash_movements cm ON cm.session_id=cs.id
-      WHERE cs.id=$2 AND cs.status='OPEN' GROUP BY cs.id
+      WHERE cs.id=$2 AND cs.status='OPEN' AND cs.opened_by_uid=a.id AND $3::bigint>=0 GROUP BY cs.id
     ), closed AS (
-      UPDATE cash_sessions cs SET closed_by_uid=$1,closed_at=now(),expected_amount_cents=c.expected,counted_amount_cents=GREATEST($3,0),difference_cents=GREATEST($3,0)-c.expected,status='CLOSED',notes=concat_ws(E'\n',cs.notes,NULLIF(left(btrim($4),500),'')),updated_at=now()
-      FROM calculated c WHERE cs.id=c.id RETURNING cs.*
-    )
+      UPDATE cash_sessions cs SET closed_by_uid=$1,closed_at=now(),expected_amount_cents=c.expected,counted_amount_cents=GREATEST($3::bigint,0),difference_cents=GREATEST($3::bigint,0)-c.expected,status='CLOSED',notes=concat_ws(E'\n',cs.notes,NULLIF(left(btrim($4),500),'')),updated_at=now()
+      FROM calculated c,actor a WHERE cs.id=c.id AND cs.status='OPEN' AND cs.opened_by_uid=$1
+ AND (a.can_manage OR (COALESCE((SELECT allow_operator_close FROM pos_policies WHERE tenant_id=cs.tenant_id),false) AND abs($3::bigint-c.expected)<=COALESCE((SELECT operator_close_difference_limit_cents FROM pos_policies WHERE tenant_id=cs.tenant_id),0)) OR EXISTS(SELECT 1 FROM pos_approvals approval WHERE approval.operation_key=concat(cs.tenant_id,':CASH:',$5::text) AND approval.requested_by_uid=$1 AND approval.kind='CLOSE' AND approval.status='APPROVED' AND approval.expires_at>now() AND approval.cash_expected_cents=c.expected AND approval.payload_hash=encode(sha256(convert_to(jsonb_build_object('sessionId',$2::text,'movementType','CLOSE','amountCents',$3::bigint,'description',left(btrim($4),500))::text,'UTF8')),'hex')))
+ RETURNING cs.*
+    ), consumed AS (UPDATE pos_approvals approval SET status='USED' FROM closed cs WHERE approval.operation_key=concat(cs.tenant_id,':CASH:',$5::text) RETURNING approval.id)
     INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
-    SELECT tenant_id,$1,'Vendas','CAIXA','CLOSE','CashSession',id::text,'Caixa fechado',true,'SQL_CONNECT',jsonb_build_object('expectedAmountCents',expected_amount_cents,'countedAmountCents',counted_amount_cents,'differenceCents',difference_cents),now() FROM closed
-  """,params:[{_expr:"auth.uid"},$sessionId,$countedAmountCents,$notes])
+    SELECT tenant_id,$1,'Vendas','CAIXA','CLOSE','CashSession',id::text,'Caixa fechado',true,'SQL_CONNECT',jsonb_build_object('expectedAmountCents',expected_amount_cents,'countedAmountCents',counted_amount_cents,'differenceCents',difference_cents,'operationKey',concat(tenant_id,':CASH:',$5::text),'payloadHash',encode(sha256(convert_to(jsonb_build_object('sessionId',$2::text,'movementType','CLOSE','amountCents',$3::bigint,'description',left(btrim($4),500))::text,'UTF8')),'hex')),now() FROM closed UNION ALL SELECT log.tenant_id,$1,'Vendas','CAIXA','REPLAY','CashSession',$2::text,'Fechamento já confirmado',true,'SQL_CONNECT',log.after_data,now() FROM audit_logs log JOIN actor a ON a.tenant_id=log.tenant_id AND a.id=log.user_id WHERE $5::text IS NOT NULL AND log.entity_name='CashSession' AND log.action='CLOSE' AND log.after_data->>'operationKey'=concat(a.tenant_id,':CASH:',$5::text) AND log.after_data->>'payloadHash'=encode(sha256(convert_to(jsonb_build_object('sessionId',$2::text,'movementType','CLOSE','amountCents',$3::bigint,'description',left(btrim($4),500))::text,'UTF8')),'hex')
+
+  """,params:[{_expr:"auth.uid"},$sessionId,$countedAmountCents,$notes,$operationId]) @check(expr: "this > 0", message: "POS_REJECTED: confira filial, estoque, pagamentos, limites e caixa do operador")
+}
+
+mutation UpdatePosPolicy($requireOpenSession: Boolean!, $operatorDiscountPercent: Int!, $operatorSurchargePercent: Int!, $allowOperatorClose: Boolean!, $operatorWithdrawalLimitCents: Int64 = 0, $operatorCloseDifferenceLimitCents: Int64 = 0) @auth(level: USER) @transaction {
+ _execute(sql: """
+ WITH actor AS (SELECT u.id,u.tenant_id,COALESCE(up.can_manage,rp.can_manage,false) can_manage
+ FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+ JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+ JOIN app_pages pg ON pg.page_key='CAIXA' AND pg.active
+ LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+ LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+ WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+ AND COALESCE(up.can_manage,rp.can_manage,false))
+ ,saved AS (INSERT INTO pos_policies(tenant_id,require_open_session,operator_discount_percent,operator_surcharge_percent,allow_operator_close,operator_withdrawal_limit_cents,operator_close_difference_limit_cents,updated_by_uid,updated_at)
+ SELECT tenant_id,$2,$3,$4,$5,COALESCE($6::bigint,0),COALESCE($7::bigint,0),id,now() FROM actor WHERE $3 BETWEEN 0 AND 100 AND $4 BETWEEN 0 AND 100 AND COALESCE($6::bigint,0)>=0 AND COALESCE($7::bigint,0)>=0
+ ON CONFLICT(tenant_id) DO UPDATE SET require_open_session=EXCLUDED.require_open_session,operator_discount_percent=EXCLUDED.operator_discount_percent,operator_surcharge_percent=EXCLUDED.operator_surcharge_percent,allow_operator_close=EXCLUDED.allow_operator_close,operator_withdrawal_limit_cents=EXCLUDED.operator_withdrawal_limit_cents,operator_close_difference_limit_cents=EXCLUDED.operator_close_difference_limit_cents,updated_by_uid=EXCLUDED.updated_by_uid,updated_at=now() RETURNING *)
+ INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+ SELECT tenant_id,$1,'Vendas','CAIXA','UPDATE','PosPolicy',tenant_id::text,'Regras do caixa atualizadas',true,'SQL_CONNECT',to_jsonb(saved),now() FROM saved
+ """,params:[{_expr:"auth.uid"},$requireOpenSession,$operatorDiscountPercent,$operatorSurchargePercent,$allowOperatorClose,$operatorWithdrawalLimitCents,$operatorCloseDifferenceLimitCents]) @check(expr: "this > 0", message: "POS_POLICY_DENIED")
+}
+
+mutation RequestPosSaleApproval($payload: Any!) @auth(level: USER) @transaction {
+ _execute(sql: """
+    WITH actor AS (
+SELECT u.id,u.tenant_id,COALESCE(up.can_manage,rp.can_manage,false) can_manage
+ FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+ JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+ JOIN app_pages pg ON pg.page_key='CAIXA' AND pg.active
+ LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+ LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+ WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+ AND COALESCE(up.can_create,rp.can_create,false)
+    ),input AS (SELECT COALESCE($2::jsonb,'{}'::jsonb) j),header AS (
+      SELECT a.*,i.j,(i.j->>'branchId')::uuid branch_id,NULLIF(i.j->>'customerId','')::uuid customer_id,
+        NULLIF(i.j->>'cashSessionId','')::uuid cash_session_id,NULLIF(i.j->>'replacesSaleId','')::uuid replaces_sale_id,btrim(i.j->>'clientOperationId') operation_id,
+        COALESCE((i.j->>'discountCents')::bigint,0) requested_discount,
+        COALESCE((i.j->>'surchargeCents')::bigint,0) surcharge
+      FROM actor a CROSS JOIN input i
+    ),raw_items AS (
+      SELECT h.*,x.product_id,x.quantity,x.requested_price
+      FROM header h CROSS JOIN LATERAL jsonb_to_recordset(COALESCE(h.j->'items','[]'::jsonb)) AS x(product_id uuid,quantity numeric,requested_price bigint)
+      WHERE x.quantity>0 AND x.quantity<=999999 AND x.quantity=round(x.quantity,3)
+    ),priced AS (
+      SELECT r.*,p.name,p.weighted_product,p.bundle_product,p.allow_negative_stock,p.cost_price_cents,
+        p.sale_price_cents list_price,COALESCE(pr.promotional_price_cents,p.sale_price_cents) effective_price,
+        CASE WHEN r.can_manage AND r.requested_price IS NOT NULL AND r.requested_price>=0 THEN r.requested_price ELSE COALESCE(pr.promotional_price_cents,p.sale_price_cents) END unit_price
+      FROM raw_items r JOIN products p ON p.id=r.product_id AND p.tenant_id=r.tenant_id AND p.active AND p.deleted_at IS NULL
+      LEFT JOIN LATERAL (SELECT promotional_price_cents FROM promotions q WHERE q.tenant_id=p.tenant_id AND q.product_id=p.id AND q.active AND q.deleted_at IS NULL AND now()>=q.starts_at AND now()<q.ends_at ORDER BY promotional_price_cents,id LIMIT 1) pr ON true
+      WHERE (p.weighted_product OR r.quantity=trunc(r.quantity))
+    ),totals AS (
+      SELECT h.*,jsonb_array_length(COALESCE(h.j->'items','[]'::jsonb)) raw_count,COUNT(p.product_id) valid_count,COALESCE(SUM(round(p.quantity*p.unit_price)),0)::bigint subtotal
+      FROM header h LEFT JOIN priced p ON p.tenant_id=h.tenant_id
+      GROUP BY h.id,h.tenant_id,h.can_manage,h.j,h.branch_id,h.customer_id,h.cash_session_id,h.replaces_sale_id,h.operation_id,h.requested_discount,h.surcharge
+)
+ INSERT INTO pos_approvals(id,tenant_id,branch_id,requested_by_uid,operation_key,payload_hash,subtotal_cents,discount_cents,surcharge_cents,status,expires_at,created_at)
+ SELECT gen_random_uuid(),t.tenant_id,t.branch_id,t.id,concat(t.tenant_id,':POS:',t.operation_id),encode(sha256(convert_to(t.j::text,'UTF8')),'hex'),t.subtotal,t.requested_discount,t.surcharge,'PENDING',now()+interval '30 minutes',now()
+ FROM totals t JOIN branches b ON b.id=t.branch_id AND b.tenant_id=t.tenant_id AND b.active AND b.deleted_at IS NULL
+ WHERE (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=t.id) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=t.id AND ub.tenant_id=b.tenant_id AND ub.branch_id=b.id AND ub.active)) AND length(t.operation_id) BETWEEN 8 AND 100 AND t.raw_count=t.valid_count AND t.raw_count BETWEEN 1 AND 200
+ AND t.requested_discount BETWEEN 0 AND t.subtotal AND t.surcharge>=0 AND NOT t.can_manage
+ ON CONFLICT(operation_key) DO UPDATE SET operation_key=EXCLUDED.operation_key WHERE pos_approvals.payload_hash=EXCLUDED.payload_hash AND pos_approvals.requested_by_uid=EXCLUDED.requested_by_uid
+ """,params:[{_expr:"auth.uid"},$payload]) @check(expr: "this > 0", message: "POS_APPROVAL_DENIED")
+}
+mutation ApprovePosSale($approvalId: UUID!, $approved: Boolean!) @auth(level: USER) @transaction {
+ _execute(sql: """
+ WITH actor AS (SELECT u.id,u.tenant_id,COALESCE(up.can_manage,rp.can_manage,false) can_manage
+ FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+ JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+ JOIN app_pages pg ON pg.page_key='CAIXA' AND pg.active
+ LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+ LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+ WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+ AND COALESCE(up.can_manage,rp.can_manage,false))
+ ,decided AS (UPDATE pos_approvals approval SET status=CASE WHEN $3 THEN 'APPROVED' ELSE 'REJECTED' END,approved_by_uid=a.id,approved_at=now()
+ FROM actor a,branches b WHERE approval.id=$2 AND approval.tenant_id=a.tenant_id AND b.id=approval.branch_id AND b.tenant_id=a.tenant_id
+ AND b.active AND b.deleted_at IS NULL AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=a.id) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=a.id AND ub.tenant_id=b.tenant_id AND ub.branch_id=b.id AND ub.active)) AND approval.status='PENDING' AND approval.expires_at>now() AND approval.requested_by_uid<>a.id RETURNING approval.*)
+ INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+ SELECT tenant_id,$1,'Vendas','CAIXA',status,'PosApproval',id::text,'Decisão gerencial registrada',true,'SQL_CONNECT',jsonb_build_object('kind',kind,'requestedByUid',requested_by_uid,'operationKey',operation_key,'payloadHash',payload_hash,'discountCents',discount_cents,'surchargeCents',surcharge_cents,'cashAmountCents',cash_amount_cents,'cashExpectedCents',cash_expected_cents),now() FROM decided
+ """,params:[{_expr:"auth.uid"},$approvalId,$approved]) @check(expr: "this > 0", message: "POS_APPROVAL_DENIED")
+}
+
+mutation RequestPosCashApproval($payload: Any!) @auth(level: USER) @transaction {
+ _execute(sql: """
+ WITH actor AS (SELECT u.id,u.tenant_id,COALESCE(up.can_manage,rp.can_manage,false) can_manage
+ FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
+ JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+ JOIN app_pages pg ON pg.page_key='CAIXA' AND pg.active
+ LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
+ LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
+ WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+ AND COALESCE(up.can_access,rp.can_access,false)),input AS (SELECT $2::jsonb j),eligible AS (
+ SELECT a.*,cs.id session_id,cs.branch_id,upper(i.j->>'movementType') kind,(i.j->>'amountCents')::bigint amount,left(btrim(i.j->>'description'),500) description,btrim(i.j->>'clientOperationId') operation_id,
+ cs.opening_amount_cents+COALESCE((SELECT sum(cm.amount_cents) FROM cash_movements cm WHERE cm.session_id=cs.id AND cm.movement_type<>'OPENING'),0) expected
+ FROM actor a CROSS JOIN input i JOIN cash_sessions cs ON cs.id=(i.j->>'sessionId')::uuid AND cs.tenant_id=a.tenant_id AND cs.opened_by_uid=a.id AND cs.status='OPEN'
+ JOIN branches b ON b.id=cs.branch_id AND b.tenant_id=a.tenant_id AND b.active AND b.deleted_at IS NULL WHERE (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=a.id) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=a.id AND ub.tenant_id=b.tenant_id AND ub.branch_id=b.id AND ub.active)) AND NOT a.can_manage
+ ),saved AS (
+ INSERT INTO pos_approvals(id,tenant_id,branch_id,requested_by_uid,operation_key,payload_hash,kind,cash_session_id,cash_amount_cents,cash_expected_cents,cash_description,subtotal_cents,discount_cents,surcharge_cents,status,expires_at,created_at)
+ SELECT gen_random_uuid(),tenant_id,branch_id,id,concat(tenant_id,':CASH:',operation_id),encode(sha256(convert_to(jsonb_build_object('sessionId',session_id::text,'movementType',kind,'amountCents',amount,'description',description)::text,'UTF8')),'hex'),kind,session_id,amount,expected,description,0,0,0,'PENDING',now()+interval '30 minutes',now()
+ FROM eligible WHERE length(operation_id) BETWEEN 8 AND 100 AND amount>=0 AND (kind='CLOSE' OR (kind='WITHDRAWAL' AND amount>0 AND amount<=expected AND length(description)>=3))
+ ON CONFLICT(operation_key) DO UPDATE SET operation_key=EXCLUDED.operation_key WHERE pos_approvals.payload_hash=EXCLUDED.payload_hash AND pos_approvals.requested_by_uid=EXCLUDED.requested_by_uid RETURNING *)
+ INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
+ SELECT tenant_id,$1,'Vendas','CAIXA','REQUEST','PosApproval',id::text,'Solicitação de aprovação de caixa',true,'SQL_CONNECT',jsonb_build_object('kind',kind,'amountCents',cash_amount_cents,'expectedCents',cash_expected_cents),now() FROM saved
+ """,params:[{_expr:"auth.uid"},$payload]) @check(expr: "this > 0", message: "POS_APPROVAL_DENIED")
 }

@@ -1212,6 +1212,62 @@ exports.closeCashSession = function closeCashSession(dcOrVars, vars) {
 }
 ;
 
+const updatePosPolicyRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'UpdatePosPolicy', inputVars);
+}
+updatePosPolicyRef.operationName = 'UpdatePosPolicy';
+exports.updatePosPolicyRef = updatePosPolicyRef;
+
+exports.updatePosPolicy = function updatePosPolicy(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(updatePosPolicyRef(dcInstance, inputVars));
+}
+;
+
+const requestPosSaleApprovalRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RequestPosSaleApproval', inputVars);
+}
+requestPosSaleApprovalRef.operationName = 'RequestPosSaleApproval';
+exports.requestPosSaleApprovalRef = requestPosSaleApprovalRef;
+
+exports.requestPosSaleApproval = function requestPosSaleApproval(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(requestPosSaleApprovalRef(dcInstance, inputVars));
+}
+;
+
+const approvePosSaleRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'ApprovePosSale', inputVars);
+}
+approvePosSaleRef.operationName = 'ApprovePosSale';
+exports.approvePosSaleRef = approvePosSaleRef;
+
+exports.approvePosSale = function approvePosSale(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(approvePosSaleRef(dcInstance, inputVars));
+}
+;
+
+const requestPosCashApprovalRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'RequestPosCashApproval', inputVars);
+}
+requestPosCashApprovalRef.operationName = 'RequestPosCashApproval';
+exports.requestPosCashApprovalRef = requestPosCashApprovalRef;
+
+exports.requestPosCashApproval = function requestPosCashApproval(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(requestPosCashApprovalRef(dcInstance, inputVars));
+}
+;
+
 const getCurrentUserRef = (dc) => {
   const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
   dcInstance._useGeneratedSdk();
@@ -1869,5 +1925,95 @@ exports.systemSalesChannelConnectionForActor = function systemSalesChannelConnec
 
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(systemSalesChannelConnectionForActorRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const searchPosProductsRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'SearchPosProducts', inputVars);
+}
+searchPosProductsRef.operationName = 'SearchPosProducts';
+exports.searchPosProductsRef = searchPosProductsRef;
+
+exports.searchPosProducts = function searchPosProducts(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(searchPosProductsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const searchPosCustomersRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'SearchPosCustomers', inputVars);
+}
+searchPosCustomersRef.operationName = 'SearchPosCustomers';
+exports.searchPosCustomersRef = searchPosCustomersRef;
+
+exports.searchPosCustomers = function searchPosCustomers(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(searchPosCustomersRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const posProductBranchesRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'PosProductBranches', inputVars);
+}
+posProductBranchesRef.operationName = 'PosProductBranches';
+exports.posProductBranchesRef = posProductBranchesRef;
+
+exports.posProductBranches = function posProductBranches(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(posProductBranchesRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const pendingPosApprovalsRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'PendingPosApprovals', inputVars);
+}
+pendingPosApprovalsRef.operationName = 'PendingPosApprovals';
+exports.pendingPosApprovalsRef = pendingPosApprovalsRef;
+
+exports.pendingPosApprovals = function pendingPosApprovals(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(pendingPosApprovalsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const posSaleApprovalStatusRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'PosSaleApprovalStatus', inputVars);
+}
+posSaleApprovalStatusRef.operationName = 'PosSaleApprovalStatus';
+exports.posSaleApprovalStatusRef = posSaleApprovalStatusRef;
+
+exports.posSaleApprovalStatus = function posSaleApprovalStatus(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(posSaleApprovalStatusRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const posCashApprovalStatusRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'PosCashApprovalStatus', inputVars);
+}
+posCashApprovalStatusRef.operationName = 'PosCashApprovalStatus';
+exports.posCashApprovalStatusRef = posCashApprovalStatusRef;
+
+exports.posCashApprovalStatus = function posCashApprovalStatus(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(posCashApprovalStatusRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;

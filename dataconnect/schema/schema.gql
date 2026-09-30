@@ -801,6 +801,8 @@ type Sale @table(name: "sales", key: "id") {
   replacesSaleId: UUID @col(name: "replaces_sale_id")
   legacyId: String @col(name: "legacy_id", dataType: "varchar(64)")
   clientOperationId: String! @col(name: "client_operation_id", dataType: "varchar(100)")
+  operationKey: String @unique @col(name: "operation_key", dataType: "varchar(180)")
+  payloadHash: String @col(name: "payload_hash", dataType: "varchar(64)")
   source: String! @default(value: "POS") @col(dataType: "varchar(40)")
   externalReference: String @col(name: "external_reference", dataType: "varchar(160)")
   status: String! @default(value: "COMPLETED") @col(dataType: "varchar(30)")
@@ -1078,6 +1080,8 @@ type CashSession @table(name: "cash_sessions", key: "id") {
 
 type CashMovement @table(name: "cash_movements", key: "id") {
   id: UUID! @default(expr: "uuidV4()")
+  operationKey: String @unique @col(name: "operation_key", dataType: "varchar(180)")
+  payloadHash: String @col(name: "payload_hash", dataType: "varchar(64)")
   tenant: Tenant! @ref(fields: "tenantId", references: "id")
   tenantId: UUID! @col(name: "tenant_id")
   session: CashSession! @ref(fields: "sessionId", references: "id")
@@ -1145,5 +1149,46 @@ type AuditLog @table(name: "audit_logs", key: "id") {
   origin: String @col(dataType: "varchar(120)")
   beforeData: Any @col(name: "before_data")
   afterData: Any @col(name: "after_data")
+  createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
+}
+
+# One cash session per logged-in operator and branch. Commercial exceptions are
+# centrally configured; approval means a currently authenticated manager role.
+type PosPolicy @table(name: "pos_policies", key: "tenant") {
+  tenant: Tenant!
+  requireOpenSession: Boolean! @default(value: true) @col(name: "require_open_session")
+  operatorDiscountPercent: Int! @default(value: 0) @col(name: "operator_discount_percent")
+  operatorSurchargePercent: Int! @default(value: 0) @col(name: "operator_surcharge_percent")
+  allowOperatorClose: Boolean! @default(value: false) @col(name: "allow_operator_close")
+  operatorWithdrawalLimitCents: Int64! @default(value: 0) @col(name: "operator_withdrawal_limit_cents")
+  operatorCloseDifferenceLimitCents: Int64! @default(value: 0) @col(name: "operator_close_difference_limit_cents")
+  updatedByUid: String! @col(name: "updated_by_uid", dataType: "varchar(128)")
+  updatedAt: Timestamp! @default(expr: "request.time") @col(name: "updated_at")
+}
+
+# Approval is issued by a different active manager and bound to the full payload.
+# Store only the digest and amounts, avoiding a second copy of customer/payment data.
+type PosApproval @table(name: "pos_approvals", key: "id")
+ @index(name: "pos_approvals_pending_idx", fields: ["tenantId", "status", "expiresAt"]) {
+  id: UUID! @default(expr: "uuidV4()")
+  tenant: Tenant! @ref(fields: "tenantId", references: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  branch: Branch! @ref(fields: "branchId", references: "id")
+  branchId: UUID! @col(name: "branch_id")
+  requestedByUid: String! @col(name: "requested_by_uid", dataType: "varchar(128)")
+  approvedByUid: String @col(name: "approved_by_uid", dataType: "varchar(128)")
+  operationKey: String! @unique @col(name: "operation_key", dataType: "varchar(180)")
+  payloadHash: String! @col(name: "payload_hash", dataType: "varchar(64)")
+  kind: String! @default(value: "SALE") @col(dataType: "varchar(30)")
+  cashSessionId: UUID @col(name: "cash_session_id")
+  cashAmountCents: Int64 @col(name: "cash_amount_cents")
+  cashExpectedCents: Int64 @col(name: "cash_expected_cents")
+  cashDescription: String @col(name: "cash_description", dataType: "varchar(500)")
+  subtotalCents: Int64! @col(name: "subtotal_cents")
+  discountCents: Int64! @col(name: "discount_cents")
+  surchargeCents: Int64! @col(name: "surcharge_cents")
+  status: String! @default(value: "PENDING") @col(dataType: "varchar(30)")
+  expiresAt: Timestamp! @col(name: "expires_at")
+  approvedAt: Timestamp @col(name: "approved_at")
   createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
 }
