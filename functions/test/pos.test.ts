@@ -6,7 +6,7 @@ const cash='00000000-0000-4000-8000-000000000060', card='00000000-0000-4000-8000
 let session:string;
 beforeAll(async()=>{db=await database();await seed(db);
  await db.exec("INSERT INTO app_pages(id,page_key,active) VALUES (gen_random_uuid(),'CAIXA',true),(gen_random_uuid(),'GESTAO_VENDAS',true)");
- await db.query("INSERT INTO role_page_permissions(role_id,page_id,tenant_id,can_access,can_create,can_delete,can_manage) SELECT $1,id,$2,true,true,true,true FROM app_pages WHERE page_key IN('CAIXA','GESTAO_VENDAS')",[ids.role,ids.tenant]);
+ await db.query("INSERT INTO role_page_permissions(role_id,page_id,tenant_id,can_access,can_create,can_delete,can_update,can_manage) SELECT $1,id,$2,true,true,true,true,true FROM app_pages WHERE page_key IN('CAIXA','GESTAO_VENDAS')",[ids.role,ids.tenant]);
  await db.query("INSERT INTO role_page_permissions(role_id,page_id,tenant_id,can_access,can_create,can_delete,can_manage) SELECT $1,id,$2,true,true,false,false FROM app_pages WHERE page_key IN('CAIXA','GESTAO_VENDAS')",[ids.operatorRole,ids.tenant]);
  await db.query("INSERT INTO payment_methods(id,tenant_id,code,name,requires_change) VALUES ($1,$3,'CASH','Dinheiro',true),($2,$3,'CARD','Cartão',false)",[cash,card,ids.tenant]);
  await db.query("INSERT INTO stock_balances(tenant_id,branch_id,product_id,quantity) VALUES ($1,$2,$3,20)",[ids.tenant,ids.branch,ids.product]);
@@ -18,6 +18,18 @@ const post=async(p:Record<string,unknown>,user='actor')=>operation(db,'PostSale'
 const sales=async()=> (await db.query<Record<string,unknown>>('SELECT * FROM sales ORDER BY created_at,id')).rows;
 const balance=async()=> Number((await db.query<{quantity:string}>('SELECT quantity FROM stock_balances WHERE branch_id=$1 AND product_id=$2',[ids.branch,ids.product])).rows[0]!.quantity);
 describe('PDV: venda, caixa e isolamento transacionais',()=>{
+ it('correção usa permissão de editar sem exigir cancelar',async()=>{
+  await post(payload());const original=(await sales())[0]!;
+  await db.exec("UPDATE role_page_permissions SET can_delete=false,can_update=true WHERE page_id IN(SELECT id FROM app_pages WHERE page_key='GESTAO_VENDAS')");
+  await post(payload({replacesSaleId:original.id}));
+  expect((await sales()).map(row=>row.status).sort()).toEqual(['CANCELLED','COMPLETED']);
+ });
+ it('permissão de cancelar não autoriza corrigir sem editar',async()=>{
+  await post(payload());const original=(await sales())[0]!;
+  await db.exec("UPDATE role_page_permissions SET can_delete=true,can_update=false WHERE page_id IN(SELECT id FROM app_pages WHERE page_key='GESTAO_VENDAS')");
+  await expect(post(payload({replacesSaleId:original.id}))).rejects.toThrow('POS_REJECTED');
+  expect(await sales()).toHaveLength(1);expect(await balance()).toBe(19);
+ });
  it('correção informa estoque atual mais a quantidade estornada da venda original',async()=>{
   await post(payload());const sale=(await sales())[0]!;
   const result=await operation(db,'SaleDetails',['actor',sale.id,'correction']);

@@ -1385,7 +1385,7 @@ SELECT u.id,u.tenant_id,COALESCE(up.can_manage,rp.can_manage,false) can_manage
  AND EXISTS(SELECT 1 FROM users u JOIN app_pages pg ON pg.page_key='GESTAO_VENDAS' AND pg.active
  LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id
  LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
- WHERE u.id=h.id AND COALESCE(up.can_access,rp.can_access,false) AND COALESCE(up.can_delete,rp.can_delete,false))
+ WHERE u.id=h.id AND COALESCE(up.can_access,rp.can_access,false) AND COALESCE(up.can_update,rp.can_update,false))
  ), refunded_stock AS (
  SELECT m.tenant_id,m.branch_id,m.product_id,sum(m.quantity) quantity FROM stock_movements m JOIN old_sale o ON o.id=m.sale_id AND o.tenant_id=m.tenant_id
  WHERE m.status='POSTED' GROUP BY m.tenant_id,m.branch_id,m.product_id
