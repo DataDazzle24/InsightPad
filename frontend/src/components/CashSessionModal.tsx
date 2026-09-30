@@ -61,9 +61,12 @@ export function CashSessionModal({
       return;
     }
     const amountCents = parseMoney(amount);
-    if (amountCents < 0) {
+    if (!Number.isSafeInteger(amountCents) || amountCents < 0) {
       onNotice("Informe um valor válido.");
       return;
+    }
+    if (mode === "policy" && [draftPolicy.operatorWithdrawalLimitCents ?? 0, draftPolicy.operatorCloseDifferenceLimitCents ?? 0].some(value => !Number.isSafeInteger(Number(value)) || Number(value) < 0)) {
+      onNotice("Informe limites monetários válidos."); return;
     }
     const movementType = mode === "close" ? "CLOSE" : mode === "withdrawal" ? "WITHDRAWAL" : "SUPPLY";
     const signature = JSON.stringify({sessionId:session?.id,mode,amountCents,notes});
@@ -216,7 +219,7 @@ export function CashSessionModal({
             {pendingCount > 0 && <p className="wide" role="status">Há {pendingCount} venda(s) deste caixa aguardando confirmação. Sincronize antes de fechar.</p>}
           </div>
         ) : mode === "policy" ? (
-          <form onSubmit={submit}><div className="master-form-grid">
+          <form onSubmit={submit}><fieldset disabled={busy} className="master-form-grid">
             <label className="wide"><input type="checkbox" checked={draftPolicy.requireOpenSession} onChange={event => setDraftPolicy(value => ({...value, requireOpenSession:event.target.checked}))} /> Exigir abertura em todas as vendas</label>
             <label><span>Limite de desconto do operador (%)</span><input type="number" min="0" max="100" required value={draftPolicy.operatorDiscountPercent} onChange={event => setDraftPolicy(value => ({...value, operatorDiscountPercent:Number(event.target.value)}))} /></label>
             <label><span>Limite de acréscimo do operador (%)</span><input type="number" min="0" max="100" required value={draftPolicy.operatorSurchargePercent} onChange={event => setDraftPolicy(value => ({...value, operatorSurchargePercent:Number(event.target.value)}))} /></label>
@@ -224,7 +227,7 @@ export function CashSessionModal({
             <label><span>Limite de sangria sem aprovação</span><input inputMode="numeric" value={maskMoney(Number(draftPolicy.operatorWithdrawalLimitCents ?? 0))} onChange={event => setDraftPolicy(value => ({...value,operatorWithdrawalLimitCents:parseMoney(event.target.value)}))} /></label>
             <label><span>Diferença máxima no fechamento sem aprovação</span><input inputMode="numeric" value={maskMoney(Number(draftPolicy.operatorCloseDifferenceLimitCents ?? 0))} onChange={event => setDraftPolicy(value => ({...value,operatorCloseDifferenceLimitCents:parseMoney(event.target.value)}))} /></label>
             <p className="wide">Receber dinheiro sempre exige caixa aberto. Suprimentos exigem gestão. Sangria e fechamento acima dos limites exigem aprovação por outro gestor. Desabilitar o fechamento do operador exige aprovação em todos os fechamentos.</p>
-          </div><footer><button type="button" className="catalog-modal-cancel" disabled={busy} onClick={() => setMode(session ? "summary" : "open")}>Voltar</button><button className="catalog-primary" disabled={busy}>Salvar regras</button></footer></form>
+          </fieldset><footer><button type="button" className="catalog-modal-cancel" disabled={busy} onClick={() => setMode(session ? "summary" : "open")}>Voltar</button><button className="catalog-primary" disabled={busy}>Salvar regras</button></footer></form>
         ) : (
           <form onSubmit={submit}>
             <fieldset disabled={busy || waitingApproval} className="master-form-grid">
