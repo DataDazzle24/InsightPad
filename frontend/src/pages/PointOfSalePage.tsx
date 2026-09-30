@@ -330,7 +330,7 @@ export function PointOfSalePage() {
           productId: String(item.productId), name: String(item.productName), quantity: Number(item.quantity),
           unitPriceCents: Number(item.unitSalePriceCents), listPriceCents: Number(item.unitListPriceCents), costPriceCents: Number(item.unitCostCents),
           weightedProduct: item.weightedProduct === true, bundleProduct: item.bundleProduct === true,
-          stock: Number(item.quantity), allowNegativeStock: item.allowNegativeStock === true,
+          stock: Number(item.availableStock ?? item.quantity), allowNegativeStock: item.allowNegativeStock === true && item.bundleProduct !== true,
         })));
         setPayments(
           box.payments.map((p, index) => ({
@@ -398,7 +398,7 @@ export function PointOfSalePage() {
       return;
     }
     if (
-      !product.allowNegativeStock &&
+      (!product.allowNegativeStock || product.bundleProduct) &&
       product.stock < q
     ) {
       setNotice(
@@ -417,7 +417,7 @@ export function PointOfSalePage() {
         weightedProduct: product.weightedProduct,
         bundleProduct: product.bundleProduct,
         stock: Number(product.stock),
-        allowNegativeStock: product.allowNegativeStock,
+        allowNegativeStock: product.allowNegativeStock && !product.bundleProduct,
       }),
     );
     setTerm("");

@@ -18,6 +18,12 @@ const post=async(p:Record<string,unknown>,user='actor')=>operation(db,'PostSale'
 const sales=async()=> (await db.query<Record<string,unknown>>('SELECT * FROM sales ORDER BY created_at,id')).rows;
 const balance=async()=> Number((await db.query<{quantity:string}>('SELECT quantity FROM stock_balances WHERE branch_id=$1 AND product_id=$2',[ids.branch,ids.product])).rows[0]!.quantity);
 describe('PDV: venda, caixa e isolamento transacionais',()=>{
+ it('correção informa estoque atual mais a quantidade estornada da venda original',async()=>{
+  await post(payload());const sale=(await sales())[0]!;
+  const result=await operation(db,'SaleDetails',['actor',sale.id,'correction']);
+  const box=(result.rows[0] as {data:{items:Array<{availableStock:number}>}}).data;
+  expect(Number(box.items[0]!.availableStock)).toBe(20);
+ });
  it('comprovante retorna os valores efetivamente precificados pelo servidor',async()=>{
   await operation(db,'OpenCashSession',['operator',ids.branch,0,'']);
   const own=(await db.query<{id:string}>("SELECT id FROM cash_sessions WHERE opened_by_uid='operator'")).rows[0]!.id;
