@@ -169,6 +169,7 @@ export function PointOfSalePage() {
     [productOffset, setProductOffset] = useState(0),
     [productMore, setProductMore] = useState(false),
     [productBusy, setProductBusy] = useState(false),
+    [codeBusy, setCodeBusy] = useState(false),
     [loadedTerm, setLoadedTerm] = useState(""),
     [chosenProduct, setChosenProduct] = useState<Product | null>(null),
     [online, setOnline] = useState(navigator.onLine),
@@ -186,11 +187,14 @@ export function PointOfSalePage() {
     searchBoxRef = useRef<HTMLDivElement>(null),
     previousCheckoutTotal = useRef(0),
     productRequest = useRef(0),
+    codeReadInFlight = useRef(false),
+    branchRef = useRef(branchId),
     workspaceRequest = useRef(0),
     syncInFlight = useRef(false),
     finishInFlight = useRef(false),
     ownerRef = useRef(offlineOwner);
   useEffect(() => { ownerRef.current = offlineOwner }, [offlineOwner]);
+  useEffect(() => { branchRef.current = branchId }, [branchId]);
   const pending = pendingRows.length;
   useDialogAccessibility(checkout, () => { if (!finishInFlight.current) setCheckout(false) });
   useDialogAccessibility(receiptPrompt, () => setReceiptPrompt(false));
@@ -271,15 +275,15 @@ export function PointOfSalePage() {
     try {
       const result = await searchPosProducts(dc, { branchId, search: search.trim(), limit: 31, offset, requestKey: crypto.randomUUID() });
       const rows = (result.data._select ?? []) as Product[];
-      if (request !== productRequest.current) return [] as Product[];
+      if (request !== productRequest.current || branchRef.current !== branchId) return [] as Product[];
       const page = rows.slice(0, 30).map(product => ({ ...product, stockByBranches: [] }));
       setWorkspace(current => ({...current, products: offset ? [...current.products, ...page] : page}));
       setLoadedTerm(search); setProductMore(rows.length > 30); setProductOffset(offset);
       return page;
     } catch {
-      if (request === productRequest.current) setNotice("Não foi possível buscar produtos. Verifique a conexão.");
+      if (request === productRequest.current && branchRef.current === branchId) setNotice("Não foi possível buscar produtos. Verifique a conexão.");
       return [] as Product[];
-    } finally { if (request === productRequest.current) setProductBusy(false) }
+    } finally { if (request === productRequest.current && branchRef.current === branchId) setProductBusy(false) }
   }, [branchId]);
   useEffect(() => {
     const timer = window.setTimeout(() => { void searchProducts(term) }, 250);
@@ -432,8 +436,39 @@ export function PointOfSalePage() {
     setQty(1);
     requestAnimationFrame(() => searchRef.current?.focus());
   }
+  async function readProductCode(raw: string) {
+    const code = raw.trim(), lookupBranch = branchId, lookupOwner = offlineOwner;
+    if (!code || codeReadInFlight.current || busy || loadedBranchId !== lookupBranch || !lookupBranch || !permission?.canCreate || finishInFlight.current) return;
+    codeReadInFlight.current = true;
+    setCodeBusy(true);
+    setChosenProduct(null);
+    setSelectedId("");
+    try {
+      // Exact reads are independent of the debounced result-list generation.
+      const rows = navigator.onLine
+        ? ((await searchPosProducts(dc, { branchId: lookupBranch, search: code, limit: 31, offset: 0, requestKey: crypto.randomUUID() })).data._select ?? []) as Product[]
+        : workspace.products;
+      if (branchRef.current !== lookupBranch || ownerRef.current.uid !== lookupOwner.uid || ownerRef.current.tenantId !== lookupOwner.tenantId) return;
+      const product = rows.find(item => item.ean === code || item.internalCode === code);
+      if (product) {
+        add({ ...product, stockByBranches: [] });
+        setSearchOpen(false);
+      } else {
+        setTerm(code);
+        setSearchOpen(true);
+        setNotice(navigator.onLine ? "Nenhum produto encontrado para esse código." : "Código indisponível no catálogo local. Conecte-se para buscar o produto.");
+      }
+    } catch {
+      if (branchRef.current !== lookupBranch || ownerRef.current.uid !== lookupOwner.uid || ownerRef.current.tenantId !== lookupOwner.tenantId) return;
+      setTerm(code);
+      setNotice("Não foi possível consultar o código. Verifique a conexão e tente novamente.");
+    } finally {
+      codeReadInFlight.current = false;
+      setCodeBusy(false);
+    }
+  }
   function openCheckout() {
-    if (busy || loadedBranchId !== branchId || finishInFlight.current || !permission?.canCreate) return;
+    if (busy || codeReadInFlight.current || loadedBranchId !== branchId || finishInFlight.current || !permission?.canCreate) return;
     if (!cart.length) {
       setNotice("Adicione produtos antes de seguir para o pagamento.");
       return;
@@ -461,7 +496,7 @@ export function PointOfSalePage() {
   }, [checkout, totals.totalCents]);
   useEffect(() => {
     const shortcuts=(event:KeyboardEvent)=>{
-      if (finishInFlight.current || checkout || cashControl || scanner || stockProduct || confirmClear || receiptPrompt || queueOpen || approvalsOpen) return;
+      if (finishInFlight.current || codeReadInFlight.current || checkout || cashControl || scanner || stockProduct || confirmClear || receiptPrompt || queueOpen || approvalsOpen) return;
       if(event.key==='F2'){event.preventDefault();searchRef.current?.focus();setSearchOpen(true)}
       else if(event.key==='F4'){event.preventDefault();openCheckout()}
       else if(event.key==='F6'){event.preventDefault();setScanner(true)}
@@ -684,12 +719,14 @@ export function PointOfSalePage() {
             Filial
             <select
               value={branchId}
-              disabled={busy || Boolean(correctionId)}
+              disabled={busy || codeBusy || scanner || Boolean(correctionId)}
               onChange={(e) => {
+                if (codeReadInFlight.current) return;
                 if (cart.length) {
                   setNotice("Limpe o carrinho antes de trocar de filial.");
                   return;
                 }
+                branchRef.current = e.target.value;
                 setBranchId(e.target.value); setChosenProduct(null); setSelectedId(""); setTerm(""); setWorkspace(current => ({...current,products:[]}));
               }}
             >
@@ -710,6 +747,8 @@ export function PointOfSalePage() {
                   type="text"
                   data-mask="none"
                   ref={searchRef}
+                  disabled={busy || codeBusy}
+                  aria-busy={codeBusy}
                   value={term}
                   role="combobox" aria-autocomplete="list" aria-expanded={searchOpen} aria-controls="pos-product-results" aria-activedescendant={searchOpen && selected ? `pos-product-${selected.id}` : undefined}
                   onFocus={() => setSearchOpen(true)}
@@ -727,12 +766,9 @@ export function PointOfSalePage() {
                     }
                     if (e.key === "Enter") {
                       e.preventDefault();
-                      if (/^\d{8,14}$/.test(term.trim()) && navigator.onLine) {
-                        const rows = await searchProducts(term.trim());
-                        const exact = rows.find(product => product.ean === term.trim() || product.internalCode === term.trim());
-                        if(exact) add(exact); else setNotice("Nenhum produto encontrado para esse código.");
-                      } else if (!productBusy) add();
-                      setSearchOpen(false);
+                      if (e.repeat || codeReadInFlight.current) return;
+                      if (/^\d{8,14}$/.test(term.trim())) await readProductCode(term);
+                      else if (!productBusy) { add(); setSearchOpen(false) }
                     }
                     if (e.key === "Escape") setSearchOpen(false);
                   }}
@@ -741,6 +777,7 @@ export function PointOfSalePage() {
                 <button
                   type="button"
                   className="scan-button"
+                  disabled={busy || codeBusy}
                   onClick={() => setScanner(true)}
                   aria-label="Escanear código de barras"
                 >
@@ -750,6 +787,7 @@ export function PointOfSalePage() {
                 </button>
               </div>
             </label>
+            {codeBusy && <small role="status">Consultando código...</small>}
             {searchOpen && (
               <div id="pos-product-results" role="listbox" aria-label="Produtos encontrados" className="product-results product-results--dropdown">
                 {!filtered.length && <p role="status">{productBusy ? "Buscando produtos..." : "Nenhum produto encontrado."}</p>}
@@ -801,6 +839,7 @@ export function PointOfSalePage() {
                 Quantidade {selected.weightedProduct ? "(kg/L)" : selected.bundleProduct ? "(combos)" : "(un.)"}
                 <input
                   type="number"
+                  disabled={busy || codeBusy}
                   min={selected.weightedProduct ? 0.001 : 1}
                   step={selected.weightedProduct ? 0.001 : 1}
                   value={qty || ""}
@@ -810,6 +849,7 @@ export function PointOfSalePage() {
               </label>
               <button
                 className="catalog-primary"
+                disabled={busy || codeBusy}
                 onClick={() => {
                   add();
                   setSearchOpen(false);
@@ -900,7 +940,7 @@ export function PointOfSalePage() {
             </strong>
             <button
               className="catalog-primary pos-pay"
-              disabled={busy || !permission?.canCreate || !cart.length}
+              disabled={busy || codeBusy || !permission?.canCreate || !cart.length}
               onClick={openCheckout}
             >
               <span className="material-symbols-rounded">payments</span>Ir para
@@ -1172,10 +1212,8 @@ export function PointOfSalePage() {
         <BarcodeScanner
           onClose={() => setScanner(false)}
           onRead={async (code) => {
-            setScanner(false); setChosenProduct(null); setSelectedId("");
-            const rows = await searchProducts(code);
-            const product = rows.find(item => item.ean === code || item.internalCode === code);
-            if(product) add(product); else { setTerm(code); setSearchOpen(true); setNotice("Nenhum produto encontrado para o código lido.") }
+            setScanner(false);
+            await readProductCode(code);
           }}
         />
       )}
