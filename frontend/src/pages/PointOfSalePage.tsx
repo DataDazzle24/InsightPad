@@ -766,7 +766,7 @@ export function PointOfSalePage() {
                     }
                     if (e.key === "Enter") {
                       e.preventDefault();
-                      if (e.repeat || codeReadInFlight.current) return;
+                      if (e.repeat || codeReadInFlight.current || !term.trim()) return;
                       if (/^\d{8,14}$/.test(term.trim())) await readProductCode(term);
                       else if (!productBusy) { add(); setSearchOpen(false) }
                     }
