@@ -141,6 +141,7 @@ export function PointOfSalePage() {
     ),
     branchStorageKey = `insightpad.sale.branch:${profile?.tenant.id ?? "unknown"}:${firebaseUser?.uid ?? "unknown"}`;
   const [workspace, setWorkspace] = useState<Workspace>(empty),
+    [loadedBranchId, setLoadedBranchId] = useState<string | null>(null),
     [branchId, setBranchId] = useState(
       () => localStorage.getItem(branchStorageKey) ?? "",
     ),
@@ -185,6 +186,7 @@ export function PointOfSalePage() {
     searchBoxRef = useRef<HTMLDivElement>(null),
     previousCheckoutTotal = useRef(0),
     productRequest = useRef(0),
+    workspaceRequest = useRef(0),
     syncInFlight = useRef(false),
     finishInFlight = useRef(false),
     ownerRef = useRef(offlineOwner);
@@ -196,6 +198,7 @@ export function PointOfSalePage() {
   useDialogAccessibility(Boolean(stockProduct), () => setStockProduct(null));
   useDialogAccessibility(confirmClear, () => setConfirmClear(false));
   const load = useCallback(async () => {
+    const request = ++workspaceRequest.current;
     setBusy(true);
     try {
       await ensureSalesDefaults(dc);
@@ -206,19 +209,22 @@ export function PointOfSalePage() {
       const data =
         ((result.data._select ?? [])[0] as { data?: Workspace } | undefined)
           ?.data ?? empty;
+      if (request !== workspaceRequest.current) return;
       setWorkspace(current => ({...data, products: current.products}));
+      setLoadedBranchId(branchId);
       if (branchId && !data.branches.some(branch => branch.id === branchId)) {
         setBranchId(""); setCart([]); setChosenProduct(null);
       }
       if (!branchId && data.branches.length === 1)
         setBranchId(data.branches[0].id);
     } catch (error) {
+      if (request !== workspaceRequest.current) return;
       console.error(error);
       setNotice(
         "Não foi possível carregar o caixa. Verifique sua conexão e permissão.",
       );
     } finally {
-      setBusy(false);
+      if (request === workspaceRequest.current) setBusy(false);
     }
   }, [branchId]);
   useEffect(() => {
@@ -229,14 +235,14 @@ export function PointOfSalePage() {
     localStorage.setItem(branchStorageKey, branchId);
   }, [branchId, branchStorageKey]);
   useEffect(() => {
-    if (!busy && workspace.branches.some(branch => branch.id === branchId) && !workspace.openSession && cashPromptedBranch !== branchId) {
+    if (!busy && loadedBranchId === branchId && workspace.branches.some(branch => branch.id === branchId) && !workspace.openSession && cashPromptedBranch !== branchId) {
       const timer = window.setTimeout(() => {
         setCashPromptedBranch(branchId);
         setCashControl(true);
       }, 0);
       return () => window.clearTimeout(timer);
     }
-  }, [branchId, busy, cashPromptedBranch, workspace.openSession, workspace.branches]);
+  }, [branchId, loadedBranchId, busy, cashPromptedBranch, workspace.openSession, workspace.branches]);
   useEffect(() => {
     if (!notice) return;
     const timer = setTimeout(() => setNotice(""), 7000);
@@ -427,7 +433,7 @@ export function PointOfSalePage() {
     requestAnimationFrame(() => searchRef.current?.focus());
   }
   function openCheckout() {
-    if (busy || finishInFlight.current || !permission?.canCreate) return;
+    if (busy || loadedBranchId !== branchId || finishInFlight.current || !permission?.canCreate) return;
     if (!cart.length) {
       setNotice("Adicione produtos antes de seguir para o pagamento.");
       return;
@@ -652,9 +658,9 @@ export function PointOfSalePage() {
           <strong>{clock.toLocaleTimeString("pt-BR")}</strong>
         </div>
         <div className="sales-header-actions">
-          <button onClick={() => setCashControl(true)} disabled={!branchId || busy}>
+          <button onClick={() => setCashControl(true)} disabled={!branchId || busy || loadedBranchId !== branchId}>
             <span className="material-symbols-rounded">point_of_sale</span>
-            {workspace.openSession ? "Caixa aberto" : "Abrir caixa"}
+            {loadedBranchId !== branchId ? "Carregando caixa..." : workspace.openSession ? "Caixa aberto" : "Abrir caixa"}
           </button>
           <span className={`connection ${online ? "online" : "offline"}`}>
             <i />
@@ -1122,8 +1128,9 @@ export function PointOfSalePage() {
           </section>
         </div>
       )}
-      {cashControl && (
+      {cashControl && loadedBranchId === branchId && (
         <CashSessionModal
+          key={`${branchId}:${workspace.openSession?.id ?? "new"}`}
           dc={dc}
           branchId={branchId}
           branchName={
