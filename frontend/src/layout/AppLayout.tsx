@@ -90,7 +90,8 @@ export function AppLayout() {
   return (
     <main
       className="app-frame"
-      onInputCapture={(event) => {
+      onChangeCapture={(event) => {
+        // Format after React detects the change, before the field reads its value.
         if (event.target instanceof HTMLInputElement)
           smartMaskInput(event.target);
       }}

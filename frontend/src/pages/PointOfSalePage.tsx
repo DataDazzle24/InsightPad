@@ -708,6 +708,7 @@ export function PointOfSalePage() {
                 <span className="material-symbols-rounded">search</span>
                 <input
                   type="text"
+                  data-mask="none"
                   ref={searchRef}
                   value={term}
                   role="combobox" aria-autocomplete="list" aria-expanded={searchOpen} aria-controls="pos-product-results" aria-activedescendant={searchOpen && selected ? `pos-product-${selected.id}` : undefined}
@@ -927,7 +928,7 @@ export function PointOfSalePage() {
               <div className="checkout-grid">
                 <label>
                   Buscar cliente
-                  <input value={customerTerm} onChange={event => {setCustomerTerm(event.target.value); setCustomerOffset(0); setCustomerId("")}} placeholder="Nome ou CPF" />
+                  <input data-mask="none" value={customerTerm} onChange={event => {setCustomerTerm(event.target.value); setCustomerOffset(0); setCustomerId("")}} placeholder="Nome ou CPF" />
                   {customerBusy && <small role="status">Buscando clientes...</small>}
                   {customerMore && <button type="button" disabled={customerBusy} onClick={() => setCustomerOffset(value => value + 30)}>Carregar mais clientes</button>}
                 </label>
