@@ -707,6 +707,7 @@ export function PointOfSalePage() {
               <div className="pos-search-input">
                 <span className="material-symbols-rounded">search</span>
                 <input
+                  type="text"
                   ref={searchRef}
                   value={term}
                   role="combobox" aria-autocomplete="list" aria-expanded={searchOpen} aria-controls="pos-product-results" aria-activedescendant={searchOpen && selected ? `pos-product-${selected.id}` : undefined}

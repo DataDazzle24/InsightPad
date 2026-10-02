@@ -9,4 +9,3 @@ export const firebaseEnvSchema = z.object({
   VITE_FIREBASE_APP_ID: z.string().min(1),
   VITE_FIREBASE_APP_CHECK_RECAPTCHA_ENTERPRISE_SITE_KEY: z.string().trim().min(1).optional(),
 })
-
