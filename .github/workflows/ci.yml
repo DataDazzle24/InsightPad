@@ -1,0 +1,62 @@
+name: CI DEV (sem deploy)
+
+on:
+  pull_request:
+  push:
+    branches: ['agent/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+            functions/package-lock.json
+      - name: Instalar por lockfile
+        run: |
+          npm --prefix frontend ci --no-audit --no-fund
+          npm --prefix functions ci --no-audit --no-fund
+      - name: Testar manifesto
+        run: node --test scripts/version-manifest.test.mjs
+      - name: Frontend (lint, testes, tipos e build)
+        run: |
+          npm --prefix frontend run lint
+          npm --prefix frontend test
+          npm --prefix frontend run build -- --mode development
+      - name: Functions (tipos, testes e build)
+        run: |
+          npm --prefix functions run lint
+          npm --prefix functions test
+          npm --prefix functions run build
+      - name: Preparar revisão do modal com Auth mockado
+        run: npm --prefix frontend run build:qa
+      - name: Manifesto de candidato local
+        run: node scripts/version-manifest.mjs --project insightpad-dd-dev
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: candidate-manifest-${{ github.sha }}
+          path: artifacts/version-manifest.json
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: recovery-qa-${{ github.sha }}
+          path: artifacts/recovery-qa
+          if-no-files-found: error
+          retention-days: 14
