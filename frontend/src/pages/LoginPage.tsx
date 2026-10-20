@@ -1,6 +1,7 @@
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
+import { ModalDialog } from "../components/ModalDialog";
 
 type RecoveryMethod = "email" | "sms";
 
@@ -13,6 +14,8 @@ export function LoginPage() {
     [submitting, setSubmitting] = useState(false);
   const [recoveryOpen, setRecoveryOpen] = useState(false),
     [method, setMethod] = useState<RecoveryMethod>("email");
+  const recoveryEmailRef = useRef<HTMLInputElement>(null);
+  const recoverySubmittingRef = useRef(false);
 
   if (status === "authenticated") return <Navigate to="/" replace />;
   if (status === "unauthorized")
@@ -37,6 +40,7 @@ export function LoginPage() {
   }
   async function requestRecovery(event: FormEvent) {
     event.preventDefault();
+    if (recoverySubmittingRef.current || submitting) return;
     setMessage(null);
     if (method === "sms") {
       setMessage(
@@ -48,6 +52,7 @@ export function LoginPage() {
       setMessage("Informe seu e-mail antes de continuar.");
       return;
     }
+    recoverySubmittingRef.current = true;
     setSubmitting(true);
     try {
       await resetPassword(email);
@@ -61,6 +66,7 @@ export function LoginPage() {
       );
       setRecoveryOpen(false);
     } finally {
+      recoverySubmittingRef.current = false;
       setSubmitting(false);
     }
   }
@@ -159,12 +165,15 @@ export function LoginPage() {
         </div>
       </section>
       {recoveryOpen && (
-        <div className="recovery-backdrop">
+        <ModalDialog
+          className="recovery-backdrop"
+          labelledBy="recovery-title"
+          initialFocusRef={recoveryEmailRef}
+          busy={busy}
+          onRequestClose={() => setRecoveryOpen(false)}
+        >
           <section
             className="recovery-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="recovery-title"
           >
             <header>
               <div>
@@ -172,8 +181,10 @@ export function LoginPage() {
                 <h2 id="recovery-title">Recuperar acesso</h2>
               </div>
               <button
+                type="button"
                 onClick={() => setRecoveryOpen(false)}
                 aria-label="Fechar"
+                disabled={busy}
               >
                 ×
               </button>
@@ -186,6 +197,7 @@ export function LoginPage() {
               <div className="recovery-methods">
                 <button
                   type="button"
+                  disabled={busy}
                   className={method === "email" ? "active" : ""}
                   onClick={() => setMethod("email")}
                 >
@@ -195,6 +207,7 @@ export function LoginPage() {
                 </button>
                 <button
                   type="button"
+                  disabled={busy}
                   className={method === "sms" ? "active" : ""}
                   onClick={() => setMethod("sms")}
                 >
@@ -207,11 +220,13 @@ export function LoginPage() {
                 <label>
                   E-mail cadastrado
                   <input
+                    ref={recoveryEmailRef}
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     autoComplete="email"
                     required
+                    disabled={busy}
                   />
                 </label>
               ) : (
@@ -231,11 +246,13 @@ export function LoginPage() {
                   type="button"
                   className="catalog-modal-cancel"
                   onClick={() => setRecoveryOpen(false)}
+                  disabled={busy}
                 >
                   Cancelar
                 </button>
                 <button
                   className="catalog-primary"
+                  type="submit"
                   disabled={busy || method === "sms"}
                 >
                   {method === "sms" ? "Indisponível" : "Enviar instruções"}
@@ -243,7 +260,7 @@ export function LoginPage() {
               </footer>
             </form>
           </section>
-        </div>
+        </ModalDialog>
       )}
     </main>
   );

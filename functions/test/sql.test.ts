@@ -779,7 +779,8 @@ describe("PostgreSQL: iFood financial dashboard", () => {
     await db.query("INSERT INTO sales(id,tenant_id,branch_id,client_operation_id,source,external_reference,status,total_cents,created_by_uid) VALUES ($1,$2,$3,'channel:dashboard','IFOOD','order-1','COMPLETED',3000,'system:ifood')",[sale,ids.tenant,ids.branch]);
     await db.query("INSERT INTO sale_items(id,tenant_id,sale_id,product_id,quantity,unit_list_price_cents,unit_sale_price_cents,unit_cost_cents,total_cents,status) VALUES (gen_random_uuid(),$1,$2,$3,1,1000,1000,200,1000,'ACTIVE'),(gen_random_uuid(),$1,$2,$4,1,2000,2000,400,2000,'ACTIVE')",[ids.tenant,sale,ids.product,secondProduct]);
     await db.query("UPDATE sales_channel_orders SET sale_id=$1,provider_fee_cents=300,net_amount_cents=2700 WHERE id=$2",[sale,ids.order]);
-    const day=new Date().toISOString().slice(0,10);
+    // Reporting dates use the tenant timezone, including the UTC/São Paulo midnight boundary.
+    const day=(await db.query<{day:string}>("SELECT (now() AT TIME ZONE COALESCE(NULLIF(timezone,''),'America/Sao_Paulo'))::date::text AS day FROM tenants WHERE id=$1",[ids.tenant])).rows[0]!.day;
     const dashboard=await operation(db,"FinancialIndicatorsDashboard",["actor",day,day,{products:[ids.product],sources:["IFOOD"]},"financial-dashboard-request"]);
     const data=(dashboard.rows[0] as {data:{cards:Record<string,string|number>;products:Array<Record<string,string|number>>}}).data;
     expect(data.cards).toMatchObject({volume:1,revenueCents:"1000",providerFeeCents:"100",netRevenueCents:"900",costCents:"200",profitCents:"700",financialPendingSales:0});
@@ -795,7 +796,8 @@ describe("PostgreSQL: iFood financial dashboard", () => {
     await db.query("UPDATE sales_channel_orders SET sale_id=$1,status='COMPLETED',total_cents=1500,merchant_discount_cents=100,ifood_discount_cents=300,provider_fee_cents=200,net_amount_cents=1600,completed_at=now(),status_updated_at=now() WHERE id=$2",[sale,ids.order]);
     await db.query("INSERT INTO sales_channel_order_payments(id,tenant_id,order_id,payment_key,method,payment_type,currency,prepaid,amount_cents,sequence) VALUES (gen_random_uuid(),$1,$2,'dashboard-payment','PIX','ONLINE','BRL',true,1500,1)",[ids.tenant,ids.order]);
     await db.query("INSERT INTO sales_channel_financial_entries(id,tenant_id,connection_id,order_id,entry_key,name,description,classification,amount_cents,has_transfer_impact,occurred_at) VALUES (gen_random_uuid(),$1,$2,$3,$4,'COMMISSION_FEE','Comissão iFood','PROVIDER_FEE',-200,true,now())",[ids.tenant,ids.connection,ids.order,"f".repeat(64)]);
-    const day=new Date().toISOString().slice(0,10);
+    // Reporting dates use the tenant timezone, including the UTC/São Paulo midnight boundary.
+    const day=(await db.query<{day:string}>("SELECT (now() AT TIME ZONE COALESCE(NULLIF(timezone,''),'America/Sao_Paulo'))::date::text AS day FROM tenants WHERE id=$1",[ids.tenant])).rows[0]!.day;
     const dashboard=await operation(db,"SalesChannelAnalyticsDashboard",["actor",day,day,{},"channel-dashboard-request"]);
     const data=(dashboard.rows[0] as {data:{cards:Record<string,string|number>;byChannel:unknown[];fees:unknown[];payments:unknown[];topProducts:unknown[]}}).data;
     expect(data.cards).toMatchObject({orders:1,sales:1,grossRevenueCents:"1800",customerPaidCents:"1500",merchantDiscountCents:"100",partnerSubsidyCents:"300",providerFeeCents:"200",netRevenueCents:"1600",costCents:"700",profitCents:"900",financialPendingSales:0});

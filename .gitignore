@@ -24,3 +24,6 @@ dataconnect/.generated/
 # Sistema
 .DS_Store
 Thumbs.db
+
+# Artefatos locais de CI/revisão
+artifacts/
