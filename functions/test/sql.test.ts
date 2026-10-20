@@ -857,6 +857,7 @@ describe("PostgreSQL: product registration",()=>{
  const save=(payload:object,components:unknown[]=[])=>operation(db,'SaveProduct',['actor',null,payload,components]);
 it('permits below-cost prices while refusing negative prices',async()=>{
  expect((await save(product)).affectedRows).toBe(1);expect((await save({...product,name:'Negativo',salePriceCents:-1})).affectedRows).toBe(0);
+ await db.exec('UPDATE role_page_permissions SET can_access=false');expect((await save({...product,name:'Sem acesso'})).affectedRows).toBe(0);
 });
 it('checks each component unit rather than the parent unit',async()=>{
  expect((await save({...product,bundleProduct:true,weightedProduct:true},[{productId:ids.product,quantity:1.5}])).affectedRows).toBe(0);

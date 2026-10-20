@@ -47,4 +47,15 @@ it('revoked role and blocked user cannot read or write the catalog',async()=>{
  expect((await run('CreateCategory','NEGADA')).affectedRows).toBe(0);
  await db.query('UPDATE roles SET active=true WHERE id=$1',[ids.role]);await db.exec("UPDATE users SET blocked_until=now()+interval '1 hour' WHERE id='actor'");
  expect((await run('CreateCategory','NEGADA')).affectedRows).toBe(0);
+ await db.exec("UPDATE users SET blocked_until=NULL WHERE id='actor'; UPDATE role_page_permissions SET can_access=false");expect((await run('CreateCategory','SEM ACESSO')).affectedRows).toBe(0);
+});
+it('subcategory counts remain scoped to tenant and parent, with server filters and numeric sorting',async()=>{
+ const parent=(await db.query<{id:string}>("INSERT INTO categories(tenant_id,name) VALUES($1,'SEGUNDA') RETURNING id",[ids.tenant])).rows[0]!.id;
+ await run('CreateSubcategory',ids.category,'MESMO NOME');await run('CreateSubcategory',parent,'MESMO NOME');
+ const sub=(await db.query<{id:string;category_id:string}>('SELECT id,category_id FROM subcategories ORDER BY category_id')).rows;
+ for(const item of sub)await db.query("INSERT INTO products(tenant_id,category_id,subcategory_id,name) SELECT $1,$2,$3,'Produto '||i FROM generate_series(1,$4::int)i",[ids.tenant,item.category_id,item.id,item.category_id===ids.category?2:1]);
+ await db.query("INSERT INTO products(tenant_id,category_id,subcategory_id,name,active) VALUES($1,$2,$3,'Inativo',false),($4,$2,$3,'Outra empresa',true)",[ids.tenant,ids.category,sub.find(x=>x.category_id===ids.category)!.id,ids.otherTenant]);
+ const list=async(filters:object={})=>await run('ListSubcategories','',null,'productCount','desc',100,0,'test',filters) as Awaited<ReturnType<typeof run>>&{meta:{totalCount:number}};
+ const all=await list();expect(all.rows.map(x=>(x as {productCount:number}).productCount)).toEqual([2,1]);expect(Number(all.meta.totalCount)).toBe(2);
+ expect((await list({categoryId:[parent],productPresence:['with']})).rows).toHaveLength(1);expect((await list({productPresence:['without']})).rows).toHaveLength(0);
 });

@@ -24,10 +24,12 @@ it('first transfer preserves source cost and updates both balances',async()=>{
 });
 it('workspace pages 501 movements and 201 transfers while physical stock uses the full ledger',async()=>{
  await db.query("INSERT INTO stock_movement_types(id,tenant_id,code,name,direction) VALUES($1,$2,'MANUAL_IN','Entrada','IN')",[ids.event,ids.tenant]);
- await db.query("INSERT INTO stock_movements(tenant_id,branch_id,product_id,movement_type_id,client_operation_id,quantity,unit_cost_cents,status,occurred_at) SELECT $1,$2,$3,$4,'history-'||i,1,100,'POSTED',now()-i*interval '1 minute' FROM generate_series(1,501)i",[ids.tenant,ids.branch,ids.product,ids.event]);
+ await db.query("INSERT INTO stock_movements(tenant_id,branch_id,product_id,movement_type_id,client_operation_id,quantity,unit_cost_cents,status,occurred_at) SELECT $1,$2,$3,$4,'history-'||i,i,100,'POSTED',now()-i*interval '1 minute' FROM generate_series(1,501)i",[ids.tenant,ids.branch,ids.product,ids.event]);
  await db.query("INSERT INTO stock_transfers(tenant_id,source_branch_id,destination_branch_id,client_operation_id,status,requested_at) SELECT $1,$2,$3,'transfer-'||i,'COMPLETED',now()-i*interval '1 minute' FROM generate_series(1,201)i",[ids.tenant,ids.branch,ids.otherBranch]);
  const r=await run('StockWorkspace','test',{},100,500,'occurredAt','desc');const data=(r.rows[0] as {data:{movementCount:number;transferCount:number;movements:unknown[];products:Array<{balances:Array<{quantity:number}>}>}}).data;
- expect(data.movementCount).toBe(501);expect(data.transferCount).toBe(201);expect(data.movements).toHaveLength(1);expect(Number(data.products[0]!.balances[0]!.quantity)).toBe(501);
+ expect(data.movementCount).toBe(501);expect(data.transferCount).toBe(201);expect(data.movements).toHaveLength(1);
+ const ascending=await run('StockWorkspace','test',{},100,100,'quantity','asc');expect(Number((ascending.rows[0] as {data:{movements:Array<{quantity:number}>}}).data.movements[0]!.quantity)).toBe(101);
+ const descending=await run('StockWorkspace','test',{},100,0,'quantity','desc');expect(Number((descending.rows[0] as {data:{movements:Array<{quantity:number}>}}).data.movements[0]!.quantity)).toBe(501);expect(Number(data.products[0]!.balances[0]!.quantity)).toBe(125751);
 });
 it('branch restriction blocks writes, transfers and hidden workspace branches',async()=>{
  await db.query('INSERT INTO user_branches(user_id,tenant_id,branch_id,active) VALUES(\'actor\',$1,$2,true)',[ids.tenant,ids.branch]);
