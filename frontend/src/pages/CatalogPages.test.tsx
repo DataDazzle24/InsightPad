@@ -31,6 +31,8 @@ it('AJU-CAT-06..11: names creation controls and appends a blank category without
  await input(field,'Bebidas');await click(button('ADICIONAR OUTRA CATEGORIA'))
  const fields=container.querySelectorAll<HTMLInputElement>('[role="dialog"] input')
  expect(fields).toHaveLength(2);expect(fields[0].value).toBe('Bebidas');expect(fields[1].value).toBe('')
+ expect([...fields].map(el=>el.id)).toEqual(['category-name-0','category-name-1'])
+ expect(fields[1].getAttribute('aria-label')).toBe('Nome da Categoria 2')
  expect(button('CADASTRAR')).toBeTruthy();expect(mocks.create).not.toHaveBeenCalled()
 })
 it('AJU-SUB-03..08/13: parent starts empty on opening and on each appended row',async()=>{
@@ -43,6 +45,7 @@ it('AJU-SUB-03..08/13: parent starts empty on opening and on each appended row',
  await act(async()=>{select.value='11111111-1111-4111-8111-111111111111';select.dispatchEvent(new Event('change',{bubbles:true}))})
  await input(field,'Refrigerantes');await click(button('+ ADICIONAR OUTRA SUBCATEGORIA'))
  expect([...container.querySelectorAll('select')].map(el=>el.value)).toEqual(['11111111-1111-4111-8111-111111111111',''])
+ expect([...container.querySelectorAll('input[placeholder="Bebidas"]')].map(el=>el.id)).toEqual(['subcategory-name-0','subcategory-name-1'])
  expect(button('CADASTRAR')).toBeTruthy()
 })
 it('does not offer category creation without permission',async()=>{mocks.canCreate=false;await render('CAD_CATEGORIA');expect(container.textContent).not.toContain('+ Nova Categoria')})
