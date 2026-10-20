@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/preserve-manual-memoization */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getDataConnect } from "firebase/data-connect";
 import {
   connectorConfig,
@@ -18,6 +18,12 @@ import {
   type Notice,
 } from "../components/SalesUi";
 import { allocateInvoiceCosts, maskMoney, parseMoney } from "../utils/stock";
+import { Link } from 'react-router-dom';
+import { useAuth } from '../auth/useAuth';
+import { SortableTableHeader } from '../components/SortableTableHeader';
+import { nextTableSort,sortTableRows,type TableSort } from '../utils/tableSorting';
+import { csvSafe } from '../utils/registration';
+import { parseQuantityDraft,localDateTimeInput,stockStatusLabel } from '../utils/stock';
 type Branch = { id: string; name: string };
 type Supplier = { id: string; name: string };
 type Balance = {
@@ -38,6 +44,7 @@ type Product = {
   maximumStock: number;
   allowNegativeStock: boolean;
   costPriceCents: string;
+  weightedProduct:boolean;
   balances: Balance[];
 };
 type Movement = {
@@ -71,10 +78,12 @@ type Workspace = {
   products: Product[];
   movements: Movement[];
   transfers: Transfer[];
+  movementCount:number;
+  transferCount:number;
 };
 type Item = {
   productId: string;
-  quantity: number;
+  quantity: string;
   gross: string;
   replaceCost: boolean;
 };
@@ -116,11 +125,12 @@ const dc = getDataConnect(firebaseApp, connectorConfig),
     products: [],
     movements: [],
     transfers: [],
+    movementCount:0,transferCount:0,
   },
-  iso = () => new Date().toISOString().slice(0, 16),
+  iso = () => localDateTimeInput(),
   newItem = (): Item => ({
     productId: "",
-    quantity: 1,
+    quantity: '1',
     gross: "R$ 0,00",
     replaceCost: false,
   }),
@@ -154,6 +164,13 @@ const dc = getDataConnect(firebaseApp, connectorConfig),
       Number(v ?? 0),
     );
 export function StockPage() {
+  const permission=useAuth().permissions.ESTOQUE;
+  const sequence=useRef(0),inFlight=useRef(false),operationKey=useRef({signature:'',id:''}),anchor=useRef('');
+  const [page,setPage]=useState(0),[sort,setSort]=useState<TableSort|null>(null),[selectedIds,setSelectedIds]=useState<string[]>([]),[levels,setLevels]=useState<string[]>([]);
+  const changeSort=(key:string)=>{setSort(value=>nextTableSort(value,key));setPage(0);setSelectedIds([]);setSelected(null)};
+  const chooseView=(value:'movements'|'balance'|'transfers')=>{setView(value);setPage(0);setSelectedIds([]);setSelected(null)};
+  const keyFor=(signature:string)=>{if(operationKey.current.signature!==signature)operationKey.current={signature,id:crypto.randomUUID()};return operationKey.current.id};
+
   const [data, setData] = useState<Workspace>(empty),
     [busy, setBusy] = useState(true),
     [notice, setNotice] = useState<Notice | null>(null),
@@ -185,27 +202,31 @@ export function StockPage() {
     [draft, setDraft] = useState<Filters>(filters),
     [reverseOpen, setReverseOpen] = useState(false),
     [reason, setReason] = useState("");
+  const queryFilters=useMemo(()=>({...filters,search,from:filters.from?new Date(`${filters.from}T00:00:00`).toISOString():'',to:filters.to?new Date(`${filters.to}T23:59:59.999`).toISOString():''}),[filters,search]);
   const load = useCallback(async () => {
+    const request=++sequence.current;
     setBusy(true);
     try {
       const result = await stockWorkspace(dc, {
-          requestKey: crypto.randomUUID(),
+          requestKey: crypto.randomUUID(),filters:queryFilters,limit:100,offset:page*100,sortField:sort?.key,sortDirection:sort?.direction,
         }),
         box =
           ((result.data._select ?? [])[0] as { data?: Workspace } | undefined)
             ?.data ?? empty;
+      if(request!==sequence.current)return;
       setData(box);
       setBranch((v) => v || box.branches[0]?.id || "");
     } catch (error) {
+      if(request!==sequence.current)return;
       console.error(error);
       setNotice({
         type: "error",
         text: "Não foi possível carregar o estoque.",
       });
     } finally {
-      setBusy(false);
+      if(request===sequence.current)setBusy(false);
     }
-  }, []);
+  }, [page,sort,queryFilters]);
   useEffect(() => {
     const timer = setTimeout(() => void load(), 0);
     return () => clearTimeout(timer);
@@ -245,28 +266,12 @@ export function StockPage() {
           ),
       [data.products, branch, search],
     ),
-    movements = useMemo(
-      () =>
-        data.movements.filter(
-          (m) =>
-            (!search ||
-              [m.productName, m.branchName, m.typeName, m.operationId].some(
-                (v) => v.toLowerCase().includes(search.toLowerCase()),
-              )) &&
-            (!filters.types.length || filters.types.includes(m.typeCode)) &&
-            (!filters.products.length ||
-              filters.products.includes(m.productId)) &&
-            (!filters.branches.length ||
-              filters.branches.includes(m.branchId)) &&
-            (!filters.from || m.occurredAt.slice(0, 10) >= filters.from) &&
-            (!filters.to || m.occurredAt.slice(0, 10) <= filters.to),
-        ),
-      [data.movements, filters, search],
-    ),
+    movements = data.movements,
     summary = useMemo(
       () => ({
         count: balance.length,
         value: balance.reduce((s, p) => s + p.physicalQuantity * Number(p.cost), 0),
+        high: balance.filter((p)=>p.status==="high").length,
         low: balance.filter((p) => p.status === "low").length,
         empty: balance.filter((p) => p.status === "empty").length,
       }),
@@ -278,7 +283,7 @@ export function StockPage() {
     ),
     costs = allocateInvoiceCosts(
       form.items.map((i) => ({
-        quantity: Number(i.quantity),
+        quantity: parseQuantityDraft(i.quantity,!!data.products.find(p=>p.id===i.productId)?.weightedProduct)??0,
         unitGrossCents:
           form.direction === "OUT"
             ? Number(
@@ -313,7 +318,7 @@ export function StockPage() {
   function validItems(items: Item[]) {
     if (
       !items.length ||
-      items.some((i) => !i.productId || Number(i.quantity) <= 0)
+      items.some((i) => !i.productId || parseQuantityDraft(i.quantity,!!data.products.find(p=>p.id===i.productId)?.weightedProduct)===null)
     ) {
       setNotice({
         type: "error",
@@ -333,20 +338,21 @@ export function StockPage() {
   function openNew() {
     const value = newForm();
     value.branchId = data.branches[0]?.id || "";
+    operationKey.current={signature:'',id:''};
     setEditing("");
     setForm(value);
     setStep(0);
     setOperationOpen(true);
   }
   async function edit() {
-    if (!selected) {
+    if (!selected||selectedIds.length!==1||!permission?.canUpdate||selected.status!=="POSTED") {
       setNotice({
         type: "info",
         text: "Selecione uma movimentação para editar.",
       });
       return;
     }
-    if (selected.typeCode.startsWith("SALE")) {
+    if (selected.typeCode.startsWith("SALE")||selected.typeCode.startsWith("TRANSFER")) {
       setNotice({
         type: "error",
         text: "Movimentos de venda devem ser corrigidos no Registro de Vendas.",
@@ -377,13 +383,13 @@ export function StockPage() {
       setForm({
         direction: first.direction as "IN" | "OUT",
         branchId: first.branchId,
-        occurredAt: first.occurredAt.slice(0, 16),
+        occurredAt: localDateTimeInput(new Date(first.occurredAt)),
         notes: "",
         items: details.movements
           .filter((m) => m.status === "POSTED")
           .map((m) => ({
             productId: m.productId,
-            quantity: Number(m.quantity),
+            quantity: String(m.quantity),
             gross: maskMoney(
               Number(
                 (m as Movement & { unitGrossCents?: string }).unitGrossCents ??
@@ -398,7 +404,7 @@ export function StockPage() {
           documentType: f?.documentType ?? "NF-e",
           documentNumber: f?.documentNumber ?? "",
           accessKey: f?.accessKey ?? "",
-          issuedAt: f?.issuedAt?.slice(0, 16) ?? "",
+          issuedAt: f?.issuedAt?localDateTimeInput(new Date(f.issuedAt)):"",
           total: setMoney("totalCents"),
           freight: setMoney("freightCents"),
           insurance: setMoney("insuranceCents"),
@@ -419,11 +425,11 @@ export function StockPage() {
         text: "Não foi possível abrir a movimentação.",
       });
     } finally {
-      setBusy(false);
+      inFlight.current=false;setBusy(false);
     }
   }
   async function save() {
-    if (!form.branchId || !validItems(form.items)) return;
+    if (inFlight.current||!(editing?permission?.canUpdate:permission?.canCreate)||!form.branchId || !validItems(form.items)) return;
     if (
       form.fiscalEnabled &&
       form.direction === "IN" &&
@@ -435,7 +441,7 @@ export function StockPage() {
       });
       return;
     }
-    setBusy(true);
+    inFlight.current=true;setBusy(true);
     try {
       const fiscal = Object.fromEntries(
         Object.entries(form.fiscal).map(([k, v]) => [
@@ -453,13 +459,13 @@ export function StockPage() {
           branchId: form.branchId,
           occurredAt: new Date(form.occurredAt).toISOString(),
           notes: form.notes,
-          clientOperationId: crypto.randomUUID(),
+          clientOperationId: keyFor(JSON.stringify({form,editing})),
           replacesOperationId: editing || null,
-          fiscalEnabled: form.fiscalEnabled,
-          fiscal,
+          fiscalEnabled: form.fiscalEnabled&&form.direction==='IN',
+          fiscal:form.fiscalEnabled&&form.direction==='IN'?fiscal:null,
           items: form.items.map((i, n) => ({
             product_id: i.productId,
-            quantity: Number(i.quantity),
+            quantity: parseQuantityDraft(i.quantity,!!data.products.find(p=>p.id===i.productId)?.weightedProduct),
             unit_gross_cents:
               form.direction === "OUT"
                 ? Number(
@@ -474,7 +480,7 @@ export function StockPage() {
       });
       if (!result.data._execute) throw new Error();
       setOperationOpen(false);
-      setSelected(null);
+      setSelected(null);setSelectedIds([]);
       setNotice({
         type: "success",
         text: editing
@@ -489,10 +495,11 @@ export function StockPage() {
         text: "Operação recusada. Verifique permissões, saldo e dados informados.",
       });
     } finally {
-      setBusy(false);
+      inFlight.current=false;setBusy(false);
     }
   }
   async function saveTransfer() {
+    if(inFlight.current||!permission?.canManage||data.branches.length<2)return;
     if (
       !transfer.sourceBranchId ||
       !transfer.destinationBranchId ||
@@ -505,17 +512,17 @@ export function StockPage() {
       return;
     }
     if (!validItems(transfer.items)) return;
-    setBusy(true);
+    inFlight.current=true;setBusy(true);
     try {
       const result = await postStockTransfer(dc, {
         payload: {
           sourceBranchId: transfer.sourceBranchId,
           destinationBranchId: transfer.destinationBranchId,
           notes: transfer.notes,
-          clientOperationId: crypto.randomUUID(),
+          clientOperationId: keyFor(JSON.stringify(transfer)),
           items: transfer.items.map((i) => ({
             product_id: i.productId,
-            quantity: Number(i.quantity),
+            quantity: parseQuantityDraft(i.quantity,!!data.products.find(p=>p.id===i.productId)?.weightedProduct),
           })),
         },
       });
@@ -533,27 +540,27 @@ export function StockPage() {
         text: "Transferência recusada. Verifique saldos e permissões.",
       });
     } finally {
-      setBusy(false);
+      inFlight.current=false;setBusy(false);
     }
   }
   async function reverse() {
-    if (!selected || reason.trim().length < 5) {
+    if (inFlight.current||!permission?.canDelete||!selectedIds.length || reason.trim().length < 5) {
       setNotice({
         type: "error",
         text: "Informe um motivo com pelo menos 5 caracteres.",
       });
       return;
     }
-    setBusy(true);
+    inFlight.current=true;setBusy(true);
     try {
       const result = await reverseStockOperation(dc, {
-        operationId: selected.operationId,
-        movementIds: [],
+        operationId: '',
+        movementIds: selectedIds,
         reason,
       });
       if (!result.data._execute) throw new Error();
       setReverseOpen(false);
-      setSelected(null);
+      setSelected(null);setSelectedIds([]);
       setReason("");
       setNotice({
         type: "success",
@@ -567,10 +574,15 @@ export function StockPage() {
         text: "Não foi possível estornar esta movimentação.",
       });
     } finally {
-      setBusy(false);
+      inFlight.current=false;setBusy(false);
     }
   }
-  function csv() {
+  async function csv() {
+    if(!permission?.canExport)return;
+    setBusy(true);
+    try {
+    const allMovements:Movement[]=[],allTransfers:Transfer[]=[];
+    if(view!=='balance')for(let offset=0;;offset+=1000){const result=await stockWorkspace(dc,{requestKey:crypto.randomUUID(),filters:queryFilters,limit:1000,offset,sortField:sort?.key,sortDirection:sort?.direction});const box=((result.data._select??[])[0] as {data:Workspace}).data;allMovements.push(...box.movements);allTransfers.push(...box.transfers);if((view==='movements'?box.movements:box.transfers).length<1000)break}
     const rows =
       view === "balance"
         ? [
@@ -603,7 +615,7 @@ export function StockPage() {
               p.quantity * Number(p.cost),
             ]),
           ]
-        : [
+        : view==='transfers'? [['ID','Data','Origem','Destino','Itens','Quantidade','Status'],...allTransfers.map(t=>[t.id,t.requestedAt,t.sourceBranch,t.destinationBranch,t.itemCount,t.totalQuantity,stockStatusLabel(t.status)])] : [
             [
               "ID",
               "Operação",
@@ -616,7 +628,7 @@ export function StockPage() {
               "Custo unitário",
               "Status",
             ],
-            ...movements.map((m) => [
+            ...allMovements.map((m) => [
               m.id,
               m.operationId,
               m.occurredAt,
@@ -634,7 +646,7 @@ export function StockPage() {
           "\uFEFF" +
             rows
               .map((r) =>
-                r.map((v) => `"${String(v).replaceAll('"', '""')}"`).join(";"),
+                r.map((v) => `"${csvSafe(String(v)).replaceAll('"', '""')}"`).join(";"),
               )
               .join("\n"),
         ],
@@ -646,17 +658,28 @@ export function StockPage() {
     a.download = `estoque-${view}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+    }catch(error){console.error(error);setNotice({type:'error',text:'Não foi possível exportar o estoque completo.'})}finally{setBusy(false)}
   }
+  const visibleBalances=sortTableRows(balance.filter(p=>!levels.length||levels.includes(p.status)),sort);
+  const count=view==='balance'?visibleBalances.length:view==='movements'?Number(data.movementCount):Number(data.transferCount);
+  function selectMovement(m:Movement,shift:boolean){
+    if(m.status!=='POSTED'||m.typeCode.startsWith('SALE')||m.typeCode.startsWith('TRANSFER')){setNotice({type:'info',text:'Selecione uma movimentação manual registrada. Vendas são corrigidas no Registro de Vendas.'});return}
+    const previous=anchor.current;anchor.current=m.id;setSelected(m);
+    setSelectedIds(current=>{if(shift&&previous){const start=movements.findIndex(x=>x.id===previous),end=movements.findIndex(x=>x.id===m.id);if(start>=0)return [...new Set([...current,...movements.slice(Math.min(start,end),Math.max(start,end)+1).filter(x=>x.branchId===m.branchId&&x.status==='POSTED'&&!/^(SALE|TRANSFER)/.test(x.typeCode)).map(x=>x.id)])].filter(id=>movements.some(x=>x.id===id&&x.branchId===m.branchId))}
+      return current.includes(m.id)?current.filter(id=>id!==m.id):[...current.filter(id=>movements.some(x=>x.id===id&&x.branchId===m.branchId)),m.id]});
+  }
+  const toggleLevel=(level:string)=>{setLevels(current=>current.includes(level)?current.filter(x=>x!==level):[...current,level]);chooseView('balance')};
   return (
     <section className="stock-page">
       <header className="stock-heading">
         <div>
           <span className="eyebrow">ESTOQUE</span>
-          <h1>CONTROLE DE ESTOQUE</h1>
+          <h1><Link to="/" className="catalog-back" aria-label="Voltar ao menu principal"><span className="material-symbols-rounded">arrow_back</span></Link>CONTROLE DE ESTOQUE</h1>
         </div>
+      <nav className="stock-tabs" aria-label="Vistas de estoque">{([['movements','Movimentações'],['transfers','Transferências'],['balance','Saldo atual']] as const).map(([key,label])=><button key={key} className={view===key?'active':''} onClick={()=>chooseView(key)}>{label}</button>)}</nav>
         <div className="stock-heading__actions">
           <button
-            className="stock-heading-action stock-heading-action--transfer"
+            className="stock-heading-action stock-heading-action--transfer" disabled={busy||data.branches.length<2||!permission?.canManage}
             onClick={() => {
               setTransfer({
                 sourceBranchId: data.branches[0]?.id || "",
@@ -670,14 +693,8 @@ export function StockPage() {
             <span className="material-symbols-rounded">move_up</span>Transferir
           </button>
           <button
-            className="stock-heading-action stock-heading-action--edit"
-            onClick={edit}
-          >
-            <span className="material-symbols-rounded">edit</span>Editar
-          </button>
-          <button
             className="catalog-primary stock-heading-action stock-heading-action--create"
-            onClick={openNew}
+            disabled={busy||!permission?.canCreate} onClick={openNew}
           >
             <span className="material-symbols-rounded">add_box</span>Nova
             movimentação
@@ -685,56 +702,21 @@ export function StockPage() {
         </div>
       </header>
       <AppToast notice={notice} onClose={() => setNotice(null)} />
-      <div className="stock-kpis">
-        <article>
-          <span>Produtos</span>
-          <strong>{summary.count}</strong>
-        </article>
-        <article>
-          <span>Valor em estoque</span>
-          <strong>{money(summary.value)}</strong>
-        </article>
-        <article className="warning">
-          <span>Estoque baixo</span>
-          <strong>{summary.low}</strong>
-        </article>
-        <article className="danger">
-          <span>Sem saldo</span>
-          <strong>{summary.empty}</strong>
-        </article>
-      </div>
-      <nav className="stock-tabs">
-        <button
-          className={view === "movements" ? "active" : ""}
-          onClick={() => setView("movements")}
-        >
-          Movimentações
-        </button>
-        <button
-          className={view === "balance" ? "active" : ""}
-          onClick={() => setView("balance")}
-        >
-          Saldo atual
-        </button>
-        <button
-          className={view === "transfers" ? "active" : ""}
-          onClick={() => setView("transfers")}
-        >
-          Transferências
-        </button>
-      </nav>
+      <div className="stock-kpis"><article><span>Valor em estoque</span><strong>{money(summary.value)}</strong></article>{([['low','Estoque baixo',summary.low],['high','Estoque alto',summary.high],['empty','Sem saldo',summary.empty]] as const).map(([level,label,value])=><button key={level} aria-pressed={levels.includes(level)} className={`stock-kpi stock-status--${level}`} onClick={()=>toggleLevel(level)}><span>{label}</span><strong>{value}</strong></button>)}</div>
+
       <div className="stock-panel">
         <div className="stock-toolbar">
           <label>
             <span className="material-symbols-rounded">search</span>
             <input
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {setSearch(e.target.value);setPage(0);setSelectedIds([]);setSelected(null)}}
               placeholder="Pesquisar..."
             />
           </label>
+          <button className="stock-toolbar-action" onClick={()=>{setFilters({types:[],products:[],branches:[],from:'',to:''});setSearch('');setLevels([]);setSort(null);setPage(0);setSelectedIds([]);setSelected(null)}}>Limpar filtros</button>
           {view === "balance" && (
-            <select value={branch} onChange={(e) => setBranch(e.target.value)}>
+            <select value={branch} onChange={(e) => {setBranch(e.target.value);setPage(0)}}>
               {data.branches.map((b) => (
                 <option value={b.id} key={b.id}>
                   {b.name}
@@ -757,21 +739,14 @@ export function StockPage() {
           <button className="stock-toolbar-action" onClick={csv}>
             <span className="material-symbols-rounded">download</span>CSV
           </button>
-          {selected && (
-            <button
-              className="danger stock-action-danger"
-              onClick={() => setReverseOpen(true)}
-            >
-              Estornar
-            </button>
-          )}
+          <button className="stock-heading-action stock-heading-action--edit" disabled={busy||selectedIds.length!==1||!permission?.canUpdate} onClick={edit}>Editar</button><button className="danger stock-action-danger" disabled={busy||!selectedIds.length||!permission?.canDelete} onClick={()=>setReverseOpen(true)}>Estornar</button>
         </div>
           <div className={`stock-table stock-table--${view}`}>
           <table>
             <thead>
               {view === "balance" ? (
                 <tr>
-                  <th>Produto</th>
+                  <SortableTableHeader label="Produto" sortKey="name" sort={sort} onChange={changeSort}/>
                   <th>Categoria</th>
                   <th>Físico</th>
                   <th>Reservado</th>
@@ -785,30 +760,30 @@ export function StockPage() {
               ) : view === "movements" ? (
                 <tr>
                   <th />
-                  <th>Data</th>
-                  <th>Tipo</th>
-                  <th>Produto</th>
-                  <th>Filial</th>
-                  <th>Quantidade</th>
-                  <th>Custo unitário</th>
+                  <SortableTableHeader label="Data" sortKey="occurredAt" sort={sort} onChange={changeSort}/>
+                  <SortableTableHeader label="Tipo" sortKey="typeName" sort={sort} onChange={changeSort}/>
+                  <SortableTableHeader label="Produto" sortKey="productName" sort={sort} onChange={changeSort}/>
+                  <SortableTableHeader label="Filial" sortKey="branchName" sort={sort} onChange={changeSort}/>
+                  <SortableTableHeader label="Quantidade" sortKey="quantity" sort={sort} onChange={changeSort}/>
+                  <SortableTableHeader label="Custo unitário" sortKey="unitCostCents" sort={sort} onChange={changeSort}/>
                   <th>Status</th>
-                  <th>Operação</th>
+
                 </tr>
               ) : (
                 <tr>
-                  <th>Data</th>
+                  <SortableTableHeader label="Data" sortKey="requestedAt" sort={sort} onChange={changeSort}/>
                   <th>Origem</th>
                   <th>Destino</th>
                   <th>Itens</th>
-                  <th>Quantidade</th>
+                  <SortableTableHeader label="Quantidade" sortKey="totalQuantity" sort={sort} onChange={changeSort}/>
                   <th>Status</th>
-                  <th>Operação</th>
+
                 </tr>
               )}
             </thead>
             <tbody>
               {view === "balance"
-                ? balance.map((p) => (
+                ? visibleBalances.slice(page*100,(page+1)*100).map((p) => (
                     <tr key={p.id}>
                       <td>
                         <strong>{p.name}</strong>
@@ -842,15 +817,13 @@ export function StockPage() {
                   ? movements.map((m) => (
                       <tr
                         key={m.id}
-                        className={selected?.id === m.id ? "selected" : ""}
-                        onClick={() =>
-                          setSelected(selected?.id === m.id ? null : m)
-                        }
+                        className={selectedIds.includes(m.id)?"selected":""} title={`ID: ${m.id} · Operação: ${m.operationId}`}
+                        onClick={(event)=>selectMovement(m,event.shiftKey)}
                       >
                         <td>
                           <input
-                            type="radio"
-                            checked={selected?.id === m.id}
+                            type="checkbox" aria-label={`Selecionar ${m.productName} ${m.id}`}
+                            checked={selectedIds.includes(m.id)}
                             readOnly
                           />
                         </td>
@@ -871,14 +844,11 @@ export function StockPage() {
                           {num(m.quantity)}
                         </td>
                         <td>{money(m.unitCostCents)}</td>
-                        <td>{m.status}</td>
-                        <td>
-                          <code>{m.operationId.slice(0, 8)}</code>
-                        </td>
+                        <td><span className={`stock-status stock-status--${m.status.toLowerCase()}`}>{stockStatusLabel(m.status)}</span></td>
                       </tr>
                     ))
                   : data.transfers.map((t) => (
-                      <tr key={t.id}>
+                      <tr key={t.id} title={`ID: ${t.id} · Operação: ${t.operationId}`}>
                         <td>
                           {new Date(t.requestedAt).toLocaleString("pt-BR")}
                         </td>
@@ -886,15 +856,12 @@ export function StockPage() {
                         <td>{t.destinationBranch}</td>
                         <td>{t.itemCount}</td>
                         <td>{num(t.totalQuantity)}</td>
-                        <td>{t.status}</td>
-                        <td>
-                          <code>{t.operationId.slice(0, 8)}</code>
-                        </td>
+                        <td><span className={`stock-status stock-status--${t.status.toLowerCase()}`}>{stockStatusLabel(t.status)}</span></td>
                       </tr>
                     ))}
             </tbody>
           </table>
-        </div>
+        </div><div className="catalog-pagination"><button disabled={busy||page===0} onClick={()=>{setPage(page-1);setSelectedIds([]);setSelected(null)}}>Anterior</button><span>{count===0?0:page*100+1}–{Math.min((page+1)*100,count)} de {count} registros</span><button disabled={busy||(page+1)*100>=count} onClick={()=>{setPage(page+1);setSelectedIds([]);setSelected(null)}}>Próxima</button></div>
       </div>
       {operationOpen && (
         <OperationModal
@@ -1007,7 +974,7 @@ export function StockPage() {
               <button
                 className="catalog-primary stock-filter-apply"
                 onClick={() => {
-                  setFilters(draft);
+                  setFilters(draft);setPage(0);setSelectedIds([]);setSelected(null);
                   setFilterOpen(false);
                 }}
               >
@@ -1100,11 +1067,9 @@ function ItemEditor({
           <label>
             Quantidade
             <input
-              type="number"
-              min=".001"
-              step=".001"
+              type="text" inputMode={products.find(p=>p.id===item.productId)?.weightedProduct?"decimal":"numeric"}
               value={item.quantity}
-              onChange={(e) => update(i, { quantity: Number(e.target.value) })}
+              onChange={(e) => update(i, { quantity: e.target.value })}
             />
           </label>
           <label>
@@ -1293,17 +1258,7 @@ function OperationModal({
           )}{" "}
           {step === 2 && (
             <div className="stock-fiscal">
-              <label className="stock-fiscal-toggle">
-                <input
-                  type="checkbox"
-                  checked={form.fiscalEnabled}
-                  disabled={form.direction === "OUT"}
-                  onChange={(e) =>
-                    setForm((v) => ({ ...v, fiscalEnabled: e.target.checked }))
-                  }
-                />
-                Esta entrada possui nota fiscal
-              </label>
+              <fieldset className="stock-fiscal-toggle"><legend>Esta entrada possui nota fiscal?</legend>{[true,false].map(value=><button type="button" key={String(value)} aria-pressed={form.fiscalEnabled===value} disabled={form.direction==='OUT'} onClick={()=>setForm(v=>({...v,fiscalEnabled:value}))}>{value?'Sim':'Não'}</button>)}</fieldset>
               {form.fiscalEnabled && (
                 <div className="stock-form">
                   <label>

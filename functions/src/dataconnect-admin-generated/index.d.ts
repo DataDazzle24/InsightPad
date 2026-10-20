@@ -444,6 +444,7 @@ export interface ListBranchesVariables {
 
 export interface ListCategoriesData {
   _select?: unknown[] | null;
+  _selectFirst?: unknown | null;
 }
 
 export interface ListCategoriesVariables {
@@ -453,6 +454,7 @@ export interface ListCategoriesVariables {
   limit: number;
   offset: number;
   requestKey?: string | null;
+  filters?: unknown | null;
 }
 
 export interface ListCustomersData {
@@ -494,6 +496,7 @@ export interface ListSalesVariables {
 
 export interface ListSubcategoriesData {
   _select?: unknown[] | null;
+  _selectFirst?: unknown | null;
 }
 
 export interface ListSubcategoriesVariables {
@@ -504,6 +507,7 @@ export interface ListSubcategoriesVariables {
   limit: number;
   offset: number;
   requestKey?: string | null;
+  filters?: unknown | null;
 }
 
 export interface ListSuppliersData {
@@ -1333,6 +1337,11 @@ export interface StockWorkspaceData {
 
 export interface StockWorkspaceVariables {
   requestKey: string;
+  filters?: unknown | null;
+  limit?: number | null;
+  offset?: number | null;
+  sortField?: string | null;
+  sortDirection?: string | null;
 }
 
 export interface Subcategory_Key {

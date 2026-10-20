@@ -1,3 +1,4 @@
+import { parseQuantityDraft } from '../utils/stock';
 import {
   useCallback,
   useEffect,
@@ -89,10 +90,10 @@ type Config = {
 };
 type IdName = { id: string; name: string };
 type SubcategoryOption = IdName & { categoryId: string };
-type ProductOption = IdName & { costPriceCents: string };
+type ProductOption = IdName & { costPriceCents: string;weightedProduct:boolean };
 type KitItem = {
   productId: string;
-  quantity: number;
+  quantity: string;
   allocatedUnitPriceCents?: string;
 };
 type RegistrationOptionSet = {
@@ -1096,7 +1097,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
       if (row?.bundleProduct) {
         try {
           const result = await productComponents(dc, { productId: row.id });
-          loadedKit = (result.data._select ?? []) as KitItem[];
+          loadedKit = ((result.data._select ?? []) as Array<KitItem&{quantity:string|number}>).map(item=>({...item,quantity:String(item.quantity)}));
         } catch (error) {
           console.error(error);
           loadedKit = [];
@@ -1105,7 +1106,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
           );
         }
       } else if (!row && selectedProductKind === "combo") {
-        loadedKit = [{ productId: "", quantity: 1 }];
+        loadedKit = [{ productId: "", quantity: '1' }];
       }
     }
     const initialSection =
@@ -1217,9 +1218,10 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
       (Number(form.minimumStock || 0) < 0 || Number(form.maximumStock || 0) < 0)
     )
       return "Os limites de estoque não podem ser negativos.";
+    if(pageKey==='CAD_PRODUTO'&&['minimumStock','maximumStock'].some(key=>String(form[key]??'').trim()!==''&&parseQuantityDraft(String(form[key]),!!form.weightedProduct,true)===null))return 'Informe limites de estoque válidos para a unidade do produto.';
     if (
       pageKey === "CAD_PRODUTO" &&
-      Number(form.maximumStock || 0) < Number(form.minimumStock || 0)
+      Number(String(form.maximumStock||0).replace(',','.')) < Number(String(form.minimumStock||0).replace(',','.'))
     )
       return "Estoque máximo deve ser maior ou igual ao mínimo.";
     if (
@@ -1234,21 +1236,15 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
       kitItems.some((item) => !item.productId)
     )
       return "Selecione todos os produtos simples da composição.";
-    if (kitItems.some((x) => x.quantity <= 0))
+    if (kitItems.some((x) => parseQuantityDraft(x.quantity,!!options.products.find(p=>p.id===x.productId)?.weightedProduct)===null))
       return "As quantidades dos componentes devem ser maiores que zero.";
     if (new Set(kitItems.map((x) => x.productId)).size !== kitItems.length)
       return "Cada produto só pode aparecer uma vez no combo.";
-    if (
-      pageKey === "CAD_PRODUTO" &&
-      moneyToNumber(form.salePriceCents) <
-        (form.bundleProduct
-          ? comboCostCents / 100
-          : moneyToNumber(form.costPriceCents))
-    )
-      return "O preço de venda não pode ser menor que o preço de custo.";
     return "";
   }
+  const saving=useRef(false);
   async function save() {
+    if(saving.current)return;
     setShowErrors(true);
     const missing = cfg.fields.find(
       (field) => field.required && !String(form[field.key] ?? "").trim(),
@@ -1264,10 +1260,11 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
       setNotice(error);
       return;
     }
-    setBusy(true);
+    saving.current=true;setBusy(true);
     try {
       const payload = { ...form };
       if (pageKey === "CAD_PRODUTO") {
+        for(const key of ['minimumStock','maximumStock'])payload[key]=String(form[key]??'').trim()===''?null:parseQuantityDraft(String(form[key]),!!form.weightedProduct,true);
         payload.costPriceCents = form.bundleProduct
           ? Math.round(comboCostCents)
           : Math.round(moneyToNumber(form.costPriceCents) * 100);
@@ -1284,7 +1281,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
       else
         result = await saveProduct(dc, {
           ...vars,
-          components: form.bundleProduct ? kitItems : [],
+          components: form.bundleProduct ? kitItems.map(item=>({...item,quantity:parseQuantityDraft(item.quantity,!!options.products.find(p=>p.id===item.productId)?.weightedProduct)})) : [],
         });
       if (!result.data._execute) throw new Error();
       setModal(false);
@@ -1299,7 +1296,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
           : "Operação não aplicada. Verifique duplicidades, vínculos e dados informados.",
       );
     } finally {
-      setBusy(false);
+      saving.current=false;setBusy(false);
     }
   }
   async function status(ids: string[], active: boolean) {
@@ -1941,7 +1938,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                     section === "components" &&
                     (kitItems.length === 0 ||
                       kitItems.some(
-                        (item) => !item.productId || item.quantity <= 0,
+                        (item) => !item.productId || parseQuantityDraft(item.quantity,!!options.products.find(p=>p.id===item.productId)?.weightedProduct)===null,
                       ))
                   ) {
                     setNotice(
@@ -1965,7 +1962,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                   return;
                 }
                 setConfirm({
-                  text: "Confirma o salvamento das informações?",
+                  text: pageKey==='CAD_PRODUTO'&&moneyToNumber(form.salePriceCents)<(form.bundleProduct?comboCostCents/100:moneyToNumber(form.costPriceCents))?'ATENÇÃO: o preço de venda está abaixo do custo. Esta venda pode gerar prejuízo. Confirma o cadastro com esse preço?':'Confirma o salvamento das informações?',
                   run: save,
                 });
               }}
@@ -2076,14 +2073,14 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                         <input
                           type={
                             field.type === "number"
-                              ? "number"
+                              ? (pageKey==='CAD_PRODUTO'?"text":"number")
                               : field.type === "money"
                                 ? "text"
                                 : (field.type ?? "text")
                           }
                           min={field.type === "number" ? 0 : undefined}
                           inputMode={
-                            field.type === "money" ? "numeric" : undefined
+                            field.type === "money" ? "numeric" : field.type==='number'&&pageKey==='CAD_PRODUTO'?(form.weightedProduct?'decimal':'numeric'):undefined
                           }
                           disabled={
                             field.key === "costPriceCents" &&
@@ -2166,7 +2163,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                         </small>
                       </div>
                       {kitItems.every(
-                        (item) => item.productId && item.quantity > 0,
+                        (item) => item.productId && parseQuantityDraft(item.quantity,!!options.products.find(p=>p.id===item.productId)?.weightedProduct)!==null,
                       ) && (
                         <button
                           type="button"
@@ -2182,7 +2179,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                             if (hasAvailable)
                               setKitItems((current) => [
                                 ...current,
-                                { productId: "", quantity: 1 },
+                                { productId: "", quantity: '1' },
                               ]);
                             else
                               setNotice(
@@ -2228,9 +2225,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                           <label>
                             <span>Quantidade</span>
                             <input
-                              type="number"
-                              min=".001"
-                              step=".001"
+                              type="text" inputMode={options.products.find(p=>p.id===item.productId)?.weightedProduct?"decimal":"numeric"}
                               value={item.quantity}
                               onChange={(e) =>
                                 setKitItems((v) =>
@@ -2238,7 +2233,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                                     i === index
                                       ? {
                                           ...x,
-                                          quantity: Number(e.target.value),
+                                          quantity:e.target.value,
                                         }
                                       : x,
                                   ),
@@ -2255,7 +2250,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                             <strong>
                               {money(
                                 Number(component?.costPriceCents ?? 0) *
-                                  item.quantity,
+                                  Number(item.quantity.replace(',','.')),
                               )}
                             </strong>
                           </div>

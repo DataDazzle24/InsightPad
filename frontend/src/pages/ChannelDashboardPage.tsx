@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+import { downloadDashboardCsv } from '../utils/dashboardExport';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { executeQuery, getDataConnect, queryRef } from "firebase/data-connect";
 import { connectorConfig } from "@insightpad/dataconnect";
@@ -24,7 +26,7 @@ const number = (value: unknown) => new Intl.NumberFormat("pt-BR", { maximumFract
 const periodLabel = (from: string, to: string) => `${new Date(`${from}T12:00:00`).toLocaleDateString("pt-BR")} — ${new Date(`${to}T12:00:00`).toLocaleDateString("pt-BR")}`;
 function box<T>(value: unknown): T | undefined { return ((value as { data?: { _select?: Array<{ data?: T }> } }).data?._select ?? [])[0]?.data; }
 
-export function ChannelDashboardPage() {
+export function ChannelDashboardPage({navigation}:{navigation?:ReactNode}) {
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth(), 1);
   const [from, setFrom] = useState(iso(start));
@@ -60,7 +62,7 @@ export function ChannelDashboardPage() {
   const cards = data?.cards ?? {};
 
   return <section className="catalog-page analytics-page channel-dashboard">
-    <header className="finance-heading"><div><span className="eyebrow">Dashboard</span><h1>Canais de venda</h1><p>{periodLabel(from, to)}</p></div><div className="finance-actions"><button onClick={() => void load()} disabled={busy}><span className="material-symbols-rounded">refresh</span>Atualizar</button><button className="catalog-primary" onClick={() => { setDraft({ from, to, branchId, connectionId }); setFilterOpen(true); }}><span className="material-symbols-rounded">tune</span>Filtros</button></div></header>
+    <header className="finance-heading"><div><span className="eyebrow">Dashboard</span><h1><Link className="catalog-back" to="/modulos/dashboards" aria-label="Voltar aos dashboards"><span className="material-symbols-rounded">arrow_back</span></Link>Canais de venda</h1><p>{periodLabel(from, to)}</p></div>{navigation}<div className="finance-actions"><button disabled={!data||busy} onClick={()=>window.print()}>PDF</button><button onClick={()=>{setFrom(iso(start));setTo(iso(now));setBranchId('');setConnectionId('');setDraft({from:iso(start),to:iso(now),branchId:'',connectionId:''})}}>Limpar filtros</button><button onClick={() => void load()} disabled={busy}><span className="material-symbols-rounded">refresh</span>Atualizar</button><button className="catalog-primary" onClick={() => { setDraft({ from, to, branchId, connectionId }); setFilterOpen(true); }}><span className="material-symbols-rounded">tune</span>Filtros</button></div></header>
     <AppToast notice={notice} onClose={() => setNotice(null)} />
     {data && <>
       <div className="finance-kpis analytics-kpis channel-dashboard__kpis">
@@ -92,5 +94,5 @@ function Metric({ label, value, detail, tone }: { label: string; value: string; 
 }
 
 function DashboardTable({ title, columns, rows, empty = "Nenhum registro no período." }: { title: string; columns: string[]; rows: ReactNode[][]; empty?: string }) {
-  return <article className="finance-table-card analytics-table"><header><div><span>Análise</span><strong>{title}</strong></div></header><div><table><thead><tr>{columns.map((column) => <th key={column}>{column}</th>)}</tr></thead><tbody>{rows.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, columnIndex) => <td key={`${rowIndex}:${columnIndex}`}>{cell}</td>)}</tr>)}</tbody></table>{!rows.length && <p className="channel-dashboard__empty">{empty}</p>}</div></article>;
+  return <article className="finance-table-card analytics-table"><header><div><span>Análise</span><strong>{title}</strong></div><button onClick={()=>downloadDashboardCsv(title,columns,rows)}>CSV</button></header><div><table><thead><tr>{columns.map((column) => <th key={column}>{column}</th>)}</tr></thead><tbody>{rows.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, columnIndex) => <td key={`${rowIndex}:${columnIndex}`}>{cell}</td>)}</tr>)}</tbody></table>{!rows.length && <p className="channel-dashboard__empty">{empty}</p>}</div></article>;
 }

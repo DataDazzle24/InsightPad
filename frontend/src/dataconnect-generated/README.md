@@ -592,8 +592,8 @@ import { connectorConfig, validateDeviceSession, ValidateDeviceSessionVariables 
 
 // The `ValidateDeviceSession` query requires an argument of type `ValidateDeviceSessionVariables`:
 const validateDeviceSessionVars: ValidateDeviceSessionVariables = {
-  sessionToken: ...,
-  requestKey: ...,
+  sessionToken: ..., 
+  requestKey: ..., 
 };
 
 // Call the `validateDeviceSession()` function to execute the query.
@@ -623,8 +623,8 @@ import { connectorConfig, validateDeviceSessionRef, ValidateDeviceSessionVariabl
 
 // The `ValidateDeviceSession` query requires an argument of type `ValidateDeviceSessionVariables`:
 const validateDeviceSessionVars: ValidateDeviceSessionVariables = {
-  sessionToken: ...,
-  requestKey: ...,
+  sessionToken: ..., 
+  requestKey: ..., 
 };
 
 // Call the `validateDeviceSessionRef()` function to get a reference to the query.
@@ -703,7 +703,7 @@ import { connectorConfig, salesChannelOptions, SalesChannelOptionsVariables } fr
 
 // The `SalesChannelOptions` query requires an argument of type `SalesChannelOptionsVariables`:
 const salesChannelOptionsVars: SalesChannelOptionsVariables = {
-  requestKey: ...,
+  requestKey: ..., 
 };
 
 // Call the `salesChannelOptions()` function to execute the query.
@@ -733,7 +733,7 @@ import { connectorConfig, salesChannelOptionsRef, SalesChannelOptionsVariables }
 
 // The `SalesChannelOptions` query requires an argument of type `SalesChannelOptionsVariables`:
 const salesChannelOptionsVars: SalesChannelOptionsVariables = {
-  requestKey: ...,
+  requestKey: ..., 
 };
 
 // Call the `salesChannelOptionsRef()` function to get a reference to the query.
@@ -820,15 +820,15 @@ import { connectorConfig, salesChannelConnectionsV2, SalesChannelConnectionsV2Va
 
 // The `SalesChannelConnectionsV2` query requires an argument of type `SalesChannelConnectionsV2Variables`:
 const salesChannelConnectionsV2Vars: SalesChannelConnectionsV2Variables = {
-  term: ...,
-  provider: ...,
-  status: ...,
+  term: ..., 
+  provider: ..., 
+  status: ..., 
   branchId: ..., // optional
-  sortField: ...,
-  sortDirection: ...,
-  limit: ...,
-  offset: ...,
-  requestKey: ...,
+  sortField: ..., 
+  sortDirection: ..., 
+  limit: ..., 
+  offset: ..., 
+  requestKey: ..., 
 };
 
 // Call the `salesChannelConnectionsV2()` function to execute the query.
@@ -858,15 +858,15 @@ import { connectorConfig, salesChannelConnectionsV2Ref, SalesChannelConnectionsV
 
 // The `SalesChannelConnectionsV2` query requires an argument of type `SalesChannelConnectionsV2Variables`:
 const salesChannelConnectionsV2Vars: SalesChannelConnectionsV2Variables = {
-  term: ...,
-  provider: ...,
-  status: ...,
+  term: ..., 
+  provider: ..., 
+  status: ..., 
   branchId: ..., // optional
-  sortField: ...,
-  sortDirection: ...,
-  limit: ...,
-  offset: ...,
-  requestKey: ...,
+  sortField: ..., 
+  sortDirection: ..., 
+  limit: ..., 
+  offset: ..., 
+  requestKey: ..., 
 };
 
 // Call the `salesChannelConnectionsV2Ref()` function to get a reference to the query.
@@ -953,15 +953,15 @@ import { connectorConfig, salesChannelProductMappingsV2, SalesChannelProductMapp
 
 // The `SalesChannelProductMappingsV2` query requires an argument of type `SalesChannelProductMappingsV2Variables`:
 const salesChannelProductMappingsV2Vars: SalesChannelProductMappingsV2Variables = {
-  term: ...,
-  provider: ...,
+  term: ..., 
+  provider: ..., 
   connectionId: ..., // optional
-  status: ...,
-  sortField: ...,
-  sortDirection: ...,
-  limit: ...,
-  offset: ...,
-  requestKey: ...,
+  status: ..., 
+  sortField: ..., 
+  sortDirection: ..., 
+  limit: ..., 
+  offset: ..., 
+  requestKey: ..., 
 };
 
 // Call the `salesChannelProductMappingsV2()` function to execute the query.
@@ -991,15 +991,15 @@ import { connectorConfig, salesChannelProductMappingsV2Ref, SalesChannelProductM
 
 // The `SalesChannelProductMappingsV2` query requires an argument of type `SalesChannelProductMappingsV2Variables`:
 const salesChannelProductMappingsV2Vars: SalesChannelProductMappingsV2Variables = {
-  term: ...,
-  provider: ...,
+  term: ..., 
+  provider: ..., 
   connectionId: ..., // optional
-  status: ...,
-  sortField: ...,
-  sortDirection: ...,
-  limit: ...,
-  offset: ...,
-  requestKey: ...,
+  status: ..., 
+  sortField: ..., 
+  sortDirection: ..., 
+  limit: ..., 
+  offset: ..., 
+  requestKey: ..., 
 };
 
 // Call the `salesChannelProductMappingsV2Ref()` function to get a reference to the query.
@@ -1084,13 +1084,13 @@ import { connectorConfig, exportSalesChannelManagement, ExportSalesChannelManage
 
 // The `ExportSalesChannelManagement` query requires an argument of type `ExportSalesChannelManagementVariables`:
 const exportSalesChannelManagementVars: ExportSalesChannelManagementVariables = {
-  section: ...,
-  term: ...,
-  provider: ...,
-  status: ...,
+  section: ..., 
+  term: ..., 
+  provider: ..., 
+  status: ..., 
   branchId: ..., // optional
   connectionId: ..., // optional
-  requestKey: ...,
+  requestKey: ..., 
 };
 
 // Call the `exportSalesChannelManagement()` function to execute the query.
@@ -1120,13 +1120,13 @@ import { connectorConfig, exportSalesChannelManagementRef, ExportSalesChannelMan
 
 // The `ExportSalesChannelManagement` query requires an argument of type `ExportSalesChannelManagementVariables`:
 const exportSalesChannelManagementVars: ExportSalesChannelManagementVariables = {
-  section: ...,
-  term: ...,
-  provider: ...,
-  status: ...,
+  section: ..., 
+  term: ..., 
+  provider: ..., 
+  status: ..., 
   branchId: ..., // optional
   connectionId: ..., // optional
-  requestKey: ...,
+  requestKey: ..., 
 };
 
 // Call the `exportSalesChannelManagementRef()` function to get a reference to the query.
@@ -1209,11 +1209,11 @@ import { connectorConfig, salesChannelProductOptions, SalesChannelProductOptions
 
 // The `SalesChannelProductOptions` query requires an argument of type `SalesChannelProductOptionsVariables`:
 const salesChannelProductOptionsVars: SalesChannelProductOptionsVariables = {
-  term: ...,
+  term: ..., 
   connectionId: ..., // optional
   productId: ..., // optional
-  limit: ...,
-  requestKey: ...,
+  limit: ..., 
+  requestKey: ..., 
 };
 
 // Call the `salesChannelProductOptions()` function to execute the query.
@@ -1243,11 +1243,11 @@ import { connectorConfig, salesChannelProductOptionsRef, SalesChannelProductOpti
 
 // The `SalesChannelProductOptions` query requires an argument of type `SalesChannelProductOptionsVariables`:
 const salesChannelProductOptionsVars: SalesChannelProductOptionsVariables = {
-  term: ...,
+  term: ..., 
   connectionId: ..., // optional
   productId: ..., // optional
-  limit: ...,
-  requestKey: ...,
+  limit: ..., 
+  requestKey: ..., 
 };
 
 // Call the `salesChannelProductOptionsRef()` function to get a reference to the query.
@@ -1330,7 +1330,7 @@ import { connectorConfig, salesChannelOperations, SalesChannelOperationsVariable
 const salesChannelOperationsVars: SalesChannelOperationsVariables = {
   connectionId: ..., // optional
   limit: ..., // optional
-  requestKey: ...,
+  requestKey: ..., 
 };
 
 // Call the `salesChannelOperations()` function to execute the query.
@@ -1362,7 +1362,7 @@ import { connectorConfig, salesChannelOperationsRef, SalesChannelOperationsVaria
 const salesChannelOperationsVars: SalesChannelOperationsVariables = {
   connectionId: ..., // optional
   limit: ..., // optional
-  requestKey: ...,
+  requestKey: ..., 
 };
 
 // Call the `salesChannelOperationsRef()` function to get a reference to the query.
@@ -1442,8 +1442,8 @@ import { connectorConfig, systemSalesChannelWorkQueue, SystemSalesChannelWorkQue
 
 // The `SystemSalesChannelWorkQueue` query requires an argument of type `SystemSalesChannelWorkQueueVariables`:
 const systemSalesChannelWorkQueueVars: SystemSalesChannelWorkQueueVariables = {
-  workerId: ...,
-  requestKey: ...,
+  workerId: ..., 
+  requestKey: ..., 
 };
 
 // Call the `systemSalesChannelWorkQueue()` function to execute the query.
@@ -1473,8 +1473,8 @@ import { connectorConfig, systemSalesChannelWorkQueueRef, SystemSalesChannelWork
 
 // The `SystemSalesChannelWorkQueue` query requires an argument of type `SystemSalesChannelWorkQueueVariables`:
 const systemSalesChannelWorkQueueVars: SystemSalesChannelWorkQueueVariables = {
-  workerId: ...,
-  requestKey: ...,
+  workerId: ..., 
+  requestKey: ..., 
 };
 
 // Call the `systemSalesChannelWorkQueueRef()` function to get a reference to the query.
@@ -1553,7 +1553,7 @@ import { connectorConfig, systemIfoodConnectionsForPolling, SystemIfoodConnectio
 
 // The `SystemIfoodConnectionsForPolling` query requires an argument of type `SystemIfoodConnectionsForPollingVariables`:
 const systemIfoodConnectionsForPollingVars: SystemIfoodConnectionsForPollingVariables = {
-  requestKey: ...,
+  requestKey: ..., 
 };
 
 // Call the `systemIfoodConnectionsForPolling()` function to execute the query.
@@ -1583,7 +1583,7 @@ import { connectorConfig, systemIfoodConnectionsForPollingRef, SystemIfoodConnec
 
 // The `SystemIfoodConnectionsForPolling` query requires an argument of type `SystemIfoodConnectionsForPollingVariables`:
 const systemIfoodConnectionsForPollingVars: SystemIfoodConnectionsForPollingVariables = {
-  requestKey: ...,
+  requestKey: ..., 
 };
 
 // Call the `systemIfoodConnectionsForPollingRef()` function to get a reference to the query.
@@ -1662,7 +1662,7 @@ import { connectorConfig, systemSalesChannelHealthMetrics, SystemSalesChannelHea
 
 // The `SystemSalesChannelHealthMetrics` query requires an argument of type `SystemSalesChannelHealthMetricsVariables`:
 const systemSalesChannelHealthMetricsVars: SystemSalesChannelHealthMetricsVariables = {
-  requestKey: ...,
+  requestKey: ..., 
 };
 
 // Call the `systemSalesChannelHealthMetrics()` function to execute the query.
@@ -1692,7 +1692,7 @@ import { connectorConfig, systemSalesChannelHealthMetricsRef, SystemSalesChannel
 
 // The `SystemSalesChannelHealthMetrics` query requires an argument of type `SystemSalesChannelHealthMetricsVariables`:
 const systemSalesChannelHealthMetricsVars: SystemSalesChannelHealthMetricsVariables = {
-  requestKey: ...,
+  requestKey: ..., 
 };
 
 // Call the `systemSalesChannelHealthMetricsRef()` function to get a reference to the query.
@@ -1772,8 +1772,8 @@ import { connectorConfig, systemIfoodConnectionByMerchant, SystemIfoodConnection
 
 // The `SystemIfoodConnectionByMerchant` query requires an argument of type `SystemIfoodConnectionByMerchantVariables`:
 const systemIfoodConnectionByMerchantVars: SystemIfoodConnectionByMerchantVariables = {
-  merchantId: ...,
-  requestKey: ...,
+  merchantId: ..., 
+  requestKey: ..., 
 };
 
 // Call the `systemIfoodConnectionByMerchant()` function to execute the query.
@@ -1803,8 +1803,8 @@ import { connectorConfig, systemIfoodConnectionByMerchantRef, SystemIfoodConnect
 
 // The `SystemIfoodConnectionByMerchant` query requires an argument of type `SystemIfoodConnectionByMerchantVariables`:
 const systemIfoodConnectionByMerchantVars: SystemIfoodConnectionByMerchantVariables = {
-  merchantId: ...,
-  requestKey: ...,
+  merchantId: ..., 
+  requestKey: ..., 
 };
 
 // Call the `systemIfoodConnectionByMerchantRef()` function to get a reference to the query.
@@ -1884,8 +1884,8 @@ import { connectorConfig, systemIfoodConnectionsByMerchants, SystemIfoodConnecti
 
 // The `SystemIfoodConnectionsByMerchants` query requires an argument of type `SystemIfoodConnectionsByMerchantsVariables`:
 const systemIfoodConnectionsByMerchantsVars: SystemIfoodConnectionsByMerchantsVariables = {
-  merchantIds: ...,
-  requestKey: ...,
+  merchantIds: ..., 
+  requestKey: ..., 
 };
 
 // Call the `systemIfoodConnectionsByMerchants()` function to execute the query.
@@ -1915,8 +1915,8 @@ import { connectorConfig, systemIfoodConnectionsByMerchantsRef, SystemIfoodConne
 
 // The `SystemIfoodConnectionsByMerchants` query requires an argument of type `SystemIfoodConnectionsByMerchantsVariables`:
 const systemIfoodConnectionsByMerchantsVars: SystemIfoodConnectionsByMerchantsVariables = {
-  merchantIds: ...,
-  requestKey: ...,
+  merchantIds: ..., 
+  requestKey: ..., 
 };
 
 // Call the `systemIfoodConnectionsByMerchantsRef()` function to get a reference to the query.
@@ -1997,9 +1997,9 @@ import { connectorConfig, systemSalesChannelMappingsForSync, SystemSalesChannelM
 
 // The `SystemSalesChannelMappingsForSync` query requires an argument of type `SystemSalesChannelMappingsForSyncVariables`:
 const systemSalesChannelMappingsForSyncVars: SystemSalesChannelMappingsForSyncVariables = {
-  jobId: ...,
-  workerId: ...,
-  requestKey: ...,
+  jobId: ..., 
+  workerId: ..., 
+  requestKey: ..., 
 };
 
 // Call the `systemSalesChannelMappingsForSync()` function to execute the query.
@@ -2029,9 +2029,9 @@ import { connectorConfig, systemSalesChannelMappingsForSyncRef, SystemSalesChann
 
 // The `SystemSalesChannelMappingsForSync` query requires an argument of type `SystemSalesChannelMappingsForSyncVariables`:
 const systemSalesChannelMappingsForSyncVars: SystemSalesChannelMappingsForSyncVariables = {
-  jobId: ...,
-  workerId: ...,
-  requestKey: ...,
+  jobId: ..., 
+  workerId: ..., 
+  requestKey: ..., 
 };
 
 // Call the `systemSalesChannelMappingsForSyncRef()` function to get a reference to the query.
@@ -2115,12 +2115,12 @@ import { connectorConfig, salesChannelOrdersV2, SalesChannelOrdersV2Variables } 
 
 // The `SalesChannelOrdersV2` query requires an argument of type `SalesChannelOrdersV2Variables`:
 const salesChannelOrdersV2Vars: SalesChannelOrdersV2Variables = {
-  filters: ...,
-  sortField: ...,
-  sortDirection: ...,
-  limit: ...,
-  offset: ...,
-  requestKey: ...,
+  filters: ..., 
+  sortField: ..., 
+  sortDirection: ..., 
+  limit: ..., 
+  offset: ..., 
+  requestKey: ..., 
 };
 
 // Call the `salesChannelOrdersV2()` function to execute the query.
@@ -2150,12 +2150,12 @@ import { connectorConfig, salesChannelOrdersV2Ref, SalesChannelOrdersV2Variables
 
 // The `SalesChannelOrdersV2` query requires an argument of type `SalesChannelOrdersV2Variables`:
 const salesChannelOrdersV2Vars: SalesChannelOrdersV2Variables = {
-  filters: ...,
-  sortField: ...,
-  sortDirection: ...,
-  limit: ...,
-  offset: ...,
-  requestKey: ...,
+  filters: ..., 
+  sortField: ..., 
+  sortDirection: ..., 
+  limit: ..., 
+  offset: ..., 
+  requestKey: ..., 
 };
 
 // Call the `salesChannelOrdersV2Ref()` function to get a reference to the query.
@@ -2235,8 +2235,8 @@ import { connectorConfig, salesChannelOrderDetails, SalesChannelOrderDetailsVari
 
 // The `SalesChannelOrderDetails` query requires an argument of type `SalesChannelOrderDetailsVariables`:
 const salesChannelOrderDetailsVars: SalesChannelOrderDetailsVariables = {
-  id: ...,
-  requestKey: ...,
+  id: ..., 
+  requestKey: ..., 
 };
 
 // Call the `salesChannelOrderDetails()` function to execute the query.
@@ -2266,8 +2266,8 @@ import { connectorConfig, salesChannelOrderDetailsRef, SalesChannelOrderDetailsV
 
 // The `SalesChannelOrderDetails` query requires an argument of type `SalesChannelOrderDetailsVariables`:
 const salesChannelOrderDetailsVars: SalesChannelOrderDetailsVariables = {
-  id: ...,
-  requestKey: ...,
+  id: ..., 
+  requestKey: ..., 
 };
 
 // Call the `salesChannelOrderDetailsRef()` function to get a reference to the query.
@@ -2346,7 +2346,7 @@ import { connectorConfig, salesChannelWorkspace, SalesChannelWorkspaceVariables 
 
 // The `SalesChannelWorkspace` query requires an argument of type `SalesChannelWorkspaceVariables`:
 const salesChannelWorkspaceVars: SalesChannelWorkspaceVariables = {
-  requestKey: ...,
+  requestKey: ..., 
 };
 
 // Call the `salesChannelWorkspace()` function to execute the query.
@@ -2376,7 +2376,7 @@ import { connectorConfig, salesChannelWorkspaceRef, SalesChannelWorkspaceVariabl
 
 // The `SalesChannelWorkspace` query requires an argument of type `SalesChannelWorkspaceVariables`:
 const salesChannelWorkspaceVars: SalesChannelWorkspaceVariables = {
-  requestKey: ...,
+  requestKey: ..., 
 };
 
 // Call the `salesChannelWorkspaceRef()` function to get a reference to the query.
@@ -2461,13 +2461,13 @@ import { connectorConfig, salesChannelOrders, SalesChannelOrdersVariables } from
 
 // The `SalesChannelOrders` query requires an argument of type `SalesChannelOrdersVariables`:
 const salesChannelOrdersVars: SalesChannelOrdersVariables = {
-  term: ...,
-  status: ...,
-  provider: ...,
+  term: ..., 
+  status: ..., 
+  provider: ..., 
   branchId: ..., // optional
-  limit: ...,
-  offset: ...,
-  requestKey: ...,
+  limit: ..., 
+  offset: ..., 
+  requestKey: ..., 
 };
 
 // Call the `salesChannelOrders()` function to execute the query.
@@ -2497,13 +2497,13 @@ import { connectorConfig, salesChannelOrdersRef, SalesChannelOrdersVariables } f
 
 // The `SalesChannelOrders` query requires an argument of type `SalesChannelOrdersVariables`:
 const salesChannelOrdersVars: SalesChannelOrdersVariables = {
-  term: ...,
-  status: ...,
-  provider: ...,
+  term: ..., 
+  status: ..., 
+  provider: ..., 
   branchId: ..., // optional
-  limit: ...,
-  offset: ...,
-  requestKey: ...,
+  limit: ..., 
+  offset: ..., 
+  requestKey: ..., 
 };
 
 // Call the `salesChannelOrdersRef()` function to get a reference to the query.
@@ -2582,7 +2582,7 @@ import { connectorConfig, latestPendingSalesChannelOrder, LatestPendingSalesChan
 
 // The `LatestPendingSalesChannelOrder` query requires an argument of type `LatestPendingSalesChannelOrderVariables`:
 const latestPendingSalesChannelOrderVars: LatestPendingSalesChannelOrderVariables = {
-  requestKey: ...,
+  requestKey: ..., 
 };
 
 // Call the `latestPendingSalesChannelOrder()` function to execute the query.
@@ -2612,7 +2612,7 @@ import { connectorConfig, latestPendingSalesChannelOrderRef, LatestPendingSalesC
 
 // The `LatestPendingSalesChannelOrder` query requires an argument of type `LatestPendingSalesChannelOrderVariables`:
 const latestPendingSalesChannelOrderVars: LatestPendingSalesChannelOrderVariables = {
-  requestKey: ...,
+  requestKey: ..., 
 };
 
 // Call the `latestPendingSalesChannelOrderRef()` function to get a reference to the query.
@@ -2693,7 +2693,7 @@ import { connectorConfig, salesWorkspace, SalesWorkspaceVariables } from '@insig
 // The `SalesWorkspace` query requires an argument of type `SalesWorkspaceVariables`:
 const salesWorkspaceVars: SalesWorkspaceVariables = {
   branchId: ..., // optional
-  requestKey: ...,
+  requestKey: ..., 
 };
 
 // Call the `salesWorkspace()` function to execute the query.
@@ -2724,7 +2724,7 @@ import { connectorConfig, salesWorkspaceRef, SalesWorkspaceVariables } from '@in
 // The `SalesWorkspace` query requires an argument of type `SalesWorkspaceVariables`:
 const salesWorkspaceVars: SalesWorkspaceVariables = {
   branchId: ..., // optional
-  requestKey: ...,
+  requestKey: ..., 
 };
 
 // Call the `salesWorkspaceRef()` function to get a reference to the query.
@@ -2806,10 +2806,10 @@ import { connectorConfig, listSales, ListSalesVariables } from '@insightpad/data
 
 // The `ListSales` query requires an argument of type `ListSalesVariables`:
 const listSalesVars: ListSalesVariables = {
-  filters: ...,
-  limit: ...,
-  offset: ...,
-  requestKey: ...,
+  filters: ..., 
+  limit: ..., 
+  offset: ..., 
+  requestKey: ..., 
 };
 
 // Call the `listSales()` function to execute the query.
@@ -2839,10 +2839,10 @@ import { connectorConfig, listSalesRef, ListSalesVariables } from '@insightpad/d
 
 // The `ListSales` query requires an argument of type `ListSalesVariables`:
 const listSalesVars: ListSalesVariables = {
-  filters: ...,
-  limit: ...,
-  offset: ...,
-  requestKey: ...,
+  filters: ..., 
+  limit: ..., 
+  offset: ..., 
+  requestKey: ..., 
 };
 
 // Call the `listSalesRef()` function to get a reference to the query.
@@ -2922,8 +2922,8 @@ import { connectorConfig, saleDetails, SaleDetailsVariables } from '@insightpad/
 
 // The `SaleDetails` query requires an argument of type `SaleDetailsVariables`:
 const saleDetailsVars: SaleDetailsVariables = {
-  saleId: ...,
-  requestKey: ...,
+  saleId: ..., 
+  requestKey: ..., 
 };
 
 // Call the `saleDetails()` function to execute the query.
@@ -2953,8 +2953,8 @@ import { connectorConfig, saleDetailsRef, SaleDetailsVariables } from '@insightp
 
 // The `SaleDetails` query requires an argument of type `SaleDetailsVariables`:
 const saleDetailsVars: SaleDetailsVariables = {
-  saleId: ...,
-  requestKey: ...,
+  saleId: ..., 
+  requestKey: ..., 
 };
 
 // Call the `saleDetailsRef()` function to get a reference to the query.
@@ -3019,6 +3019,7 @@ export interface ListCategoriesVariables {
   limit: number;
   offset: number;
   requestKey?: string | null;
+  filters?: unknown | null;
 }
 ```
 ### Return Type
@@ -3028,6 +3029,7 @@ The `data` property is an object of type `ListCategoriesData`, which is defined 
 ```typescript
 export interface ListCategoriesData {
   _select?: unknown[] | null;
+  _selectFirst?: unknown | null;
 }
 ```
 ### Using `ListCategories`'s action shortcut function
@@ -3038,30 +3040,33 @@ import { connectorConfig, listCategories, ListCategoriesVariables } from '@insig
 
 // The `ListCategories` query requires an argument of type `ListCategoriesVariables`:
 const listCategoriesVars: ListCategoriesVariables = {
-  search: ...,
+  search: ..., 
   sortField: ..., // optional
   sortDirection: ..., // optional
-  limit: ...,
-  offset: ...,
+  limit: ..., 
+  offset: ..., 
   requestKey: ..., // optional
+  filters: ..., // optional
 };
 
 // Call the `listCategories()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await listCategories(listCategoriesVars);
 // Variables can be defined inline as well.
-const { data } = await listCategories({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+const { data } = await listCategories({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., filters: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await listCategories(dataConnect, listCategoriesVars);
 
 console.log(data._select);
+console.log(data._selectFirst);
 
 // Or, you can use the `Promise` API.
 listCategories(listCategoriesVars).then((response) => {
   const data = response.data;
   console.log(data._select);
+  console.log(data._selectFirst);
 });
 ```
 
@@ -3073,18 +3078,19 @@ import { connectorConfig, listCategoriesRef, ListCategoriesVariables } from '@in
 
 // The `ListCategories` query requires an argument of type `ListCategoriesVariables`:
 const listCategoriesVars: ListCategoriesVariables = {
-  search: ...,
+  search: ..., 
   sortField: ..., // optional
   sortDirection: ..., // optional
-  limit: ...,
-  offset: ...,
+  limit: ..., 
+  offset: ..., 
   requestKey: ..., // optional
+  filters: ..., // optional
 };
 
 // Call the `listCategoriesRef()` function to get a reference to the query.
 const ref = listCategoriesRef(listCategoriesVars);
 // Variables can be defined inline as well.
-const ref = listCategoriesRef({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+const ref = listCategoriesRef({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., filters: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -3095,11 +3101,13 @@ const ref = listCategoriesRef(dataConnect, listCategoriesVars);
 const { data } = await executeQuery(ref);
 
 console.log(data._select);
+console.log(data._selectFirst);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
   console.log(data._select);
+  console.log(data._selectFirst);
 });
 ```
 
@@ -3144,6 +3152,7 @@ export interface ListSubcategoriesVariables {
   limit: number;
   offset: number;
   requestKey?: string | null;
+  filters?: unknown | null;
 }
 ```
 ### Return Type
@@ -3153,6 +3162,7 @@ The `data` property is an object of type `ListSubcategoriesData`, which is defin
 ```typescript
 export interface ListSubcategoriesData {
   _select?: unknown[] | null;
+  _selectFirst?: unknown | null;
 }
 ```
 ### Using `ListSubcategories`'s action shortcut function
@@ -3163,31 +3173,34 @@ import { connectorConfig, listSubcategories, ListSubcategoriesVariables } from '
 
 // The `ListSubcategories` query requires an argument of type `ListSubcategoriesVariables`:
 const listSubcategoriesVars: ListSubcategoriesVariables = {
-  search: ...,
+  search: ..., 
   categoryId: ..., // optional
   sortField: ..., // optional
   sortDirection: ..., // optional
-  limit: ...,
-  offset: ...,
+  limit: ..., 
+  offset: ..., 
   requestKey: ..., // optional
+  filters: ..., // optional
 };
 
 // Call the `listSubcategories()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await listSubcategories(listSubcategoriesVars);
 // Variables can be defined inline as well.
-const { data } = await listSubcategories({ search: ..., categoryId: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+const { data } = await listSubcategories({ search: ..., categoryId: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., filters: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await listSubcategories(dataConnect, listSubcategoriesVars);
 
 console.log(data._select);
+console.log(data._selectFirst);
 
 // Or, you can use the `Promise` API.
 listSubcategories(listSubcategoriesVars).then((response) => {
   const data = response.data;
   console.log(data._select);
+  console.log(data._selectFirst);
 });
 ```
 
@@ -3199,19 +3212,20 @@ import { connectorConfig, listSubcategoriesRef, ListSubcategoriesVariables } fro
 
 // The `ListSubcategories` query requires an argument of type `ListSubcategoriesVariables`:
 const listSubcategoriesVars: ListSubcategoriesVariables = {
-  search: ...,
+  search: ..., 
   categoryId: ..., // optional
   sortField: ..., // optional
   sortDirection: ..., // optional
-  limit: ...,
-  offset: ...,
+  limit: ..., 
+  offset: ..., 
   requestKey: ..., // optional
+  filters: ..., // optional
 };
 
 // Call the `listSubcategoriesRef()` function to get a reference to the query.
 const ref = listSubcategoriesRef(listSubcategoriesVars);
 // Variables can be defined inline as well.
-const ref = listSubcategoriesRef({ search: ..., categoryId: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+const ref = listSubcategoriesRef({ search: ..., categoryId: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., filters: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -3222,11 +3236,13 @@ const ref = listSubcategoriesRef(dataConnect, listSubcategoriesVars);
 const { data } = await executeQuery(ref);
 
 console.log(data._select);
+console.log(data._selectFirst);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
   console.log(data._select);
+  console.log(data._selectFirst);
 });
 ```
 
@@ -3402,11 +3418,11 @@ import { connectorConfig, listBranches, ListBranchesVariables } from '@insightpa
 
 // The `ListBranches` query requires an argument of type `ListBranchesVariables`:
 const listBranchesVars: ListBranchesVariables = {
-  search: ...,
+  search: ..., 
   sortField: ..., // optional
   sortDirection: ..., // optional
-  limit: ...,
-  offset: ...,
+  limit: ..., 
+  offset: ..., 
   requestKey: ..., // optional
 };
 
@@ -3437,11 +3453,11 @@ import { connectorConfig, listBranchesRef, ListBranchesVariables } from '@insigh
 
 // The `ListBranches` query requires an argument of type `ListBranchesVariables`:
 const listBranchesVars: ListBranchesVariables = {
-  search: ...,
+  search: ..., 
   sortField: ..., // optional
   sortDirection: ..., // optional
-  limit: ...,
-  offset: ...,
+  limit: ..., 
+  offset: ..., 
   requestKey: ..., // optional
 };
 
@@ -3526,11 +3542,11 @@ import { connectorConfig, listSuppliers, ListSuppliersVariables } from '@insight
 
 // The `ListSuppliers` query requires an argument of type `ListSuppliersVariables`:
 const listSuppliersVars: ListSuppliersVariables = {
-  search: ...,
+  search: ..., 
   sortField: ..., // optional
   sortDirection: ..., // optional
-  limit: ...,
-  offset: ...,
+  limit: ..., 
+  offset: ..., 
   requestKey: ..., // optional
 };
 
@@ -3561,11 +3577,11 @@ import { connectorConfig, listSuppliersRef, ListSuppliersVariables } from '@insi
 
 // The `ListSuppliers` query requires an argument of type `ListSuppliersVariables`:
 const listSuppliersVars: ListSuppliersVariables = {
-  search: ...,
+  search: ..., 
   sortField: ..., // optional
   sortDirection: ..., // optional
-  limit: ...,
-  offset: ...,
+  limit: ..., 
+  offset: ..., 
   requestKey: ..., // optional
 };
 
@@ -3650,11 +3666,11 @@ import { connectorConfig, listCustomers, ListCustomersVariables } from '@insight
 
 // The `ListCustomers` query requires an argument of type `ListCustomersVariables`:
 const listCustomersVars: ListCustomersVariables = {
-  search: ...,
+  search: ..., 
   sortField: ..., // optional
   sortDirection: ..., // optional
-  limit: ...,
-  offset: ...,
+  limit: ..., 
+  offset: ..., 
   requestKey: ..., // optional
 };
 
@@ -3685,11 +3701,11 @@ import { connectorConfig, listCustomersRef, ListCustomersVariables } from '@insi
 
 // The `ListCustomers` query requires an argument of type `ListCustomersVariables`:
 const listCustomersVars: ListCustomersVariables = {
-  search: ...,
+  search: ..., 
   sortField: ..., // optional
   sortDirection: ..., // optional
-  limit: ...,
-  offset: ...,
+  limit: ..., 
+  offset: ..., 
   requestKey: ..., // optional
 };
 
@@ -3774,11 +3790,11 @@ import { connectorConfig, listProducts, ListProductsVariables } from '@insightpa
 
 // The `ListProducts` query requires an argument of type `ListProductsVariables`:
 const listProductsVars: ListProductsVariables = {
-  search: ...,
+  search: ..., 
   sortField: ..., // optional
   sortDirection: ..., // optional
-  limit: ...,
-  offset: ...,
+  limit: ..., 
+  offset: ..., 
   requestKey: ..., // optional
 };
 
@@ -3809,11 +3825,11 @@ import { connectorConfig, listProductsRef, ListProductsVariables } from '@insigh
 
 // The `ListProducts` query requires an argument of type `ListProductsVariables`:
 const listProductsVars: ListProductsVariables = {
-  search: ...,
+  search: ..., 
   sortField: ..., // optional
   sortDirection: ..., // optional
-  limit: ...,
-  offset: ...,
+  limit: ..., 
+  offset: ..., 
   requestKey: ..., // optional
 };
 
@@ -4006,7 +4022,7 @@ import { connectorConfig, productComponents, ProductComponentsVariables } from '
 
 // The `ProductComponents` query requires an argument of type `ProductComponentsVariables`:
 const productComponentsVars: ProductComponentsVariables = {
-  productId: ...,
+  productId: ..., 
 };
 
 // Call the `productComponents()` function to execute the query.
@@ -4036,7 +4052,7 @@ import { connectorConfig, productComponentsRef, ProductComponentsVariables } fro
 
 // The `ProductComponents` query requires an argument of type `ProductComponentsVariables`:
 const productComponentsVars: ProductComponentsVariables = {
-  productId: ...,
+  productId: ..., 
 };
 
 // Call the `productComponentsRef()` function to get a reference to the query.
@@ -4115,7 +4131,7 @@ import { connectorConfig, productPromotions, ProductPromotionsVariables } from '
 
 // The `ProductPromotions` query requires an argument of type `ProductPromotionsVariables`:
 const productPromotionsVars: ProductPromotionsVariables = {
-  productId: ...,
+  productId: ..., 
 };
 
 // Call the `productPromotions()` function to execute the query.
@@ -4145,7 +4161,7 @@ import { connectorConfig, productPromotionsRef, ProductPromotionsVariables } fro
 
 // The `ProductPromotions` query requires an argument of type `ProductPromotionsVariables`:
 const productPromotionsVars: ProductPromotionsVariables = {
-  productId: ...,
+  productId: ..., 
 };
 
 // Call the `productPromotionsRef()` function to get a reference to the query.
@@ -4224,7 +4240,7 @@ import { connectorConfig, platformAdminWorkspace, PlatformAdminWorkspaceVariable
 
 // The `PlatformAdminWorkspace` query requires an argument of type `PlatformAdminWorkspaceVariables`:
 const platformAdminWorkspaceVars: PlatformAdminWorkspaceVariables = {
-  requestKey: ...,
+  requestKey: ..., 
 };
 
 // Call the `platformAdminWorkspace()` function to execute the query.
@@ -4254,7 +4270,7 @@ import { connectorConfig, platformAdminWorkspaceRef, PlatformAdminWorkspaceVaria
 
 // The `PlatformAdminWorkspace` query requires an argument of type `PlatformAdminWorkspaceVariables`:
 const platformAdminWorkspaceVars: PlatformAdminWorkspaceVariables = {
-  requestKey: ...,
+  requestKey: ..., 
 };
 
 // Call the `platformAdminWorkspaceRef()` function to get a reference to the query.
@@ -4340,14 +4356,14 @@ import { connectorConfig, platformBillingWorkspace, PlatformBillingWorkspaceVari
 
 // The `PlatformBillingWorkspace` query requires an argument of type `PlatformBillingWorkspaceVariables`:
 const platformBillingWorkspaceVars: PlatformBillingWorkspaceVariables = {
-  term: ...,
-  status: ...,
+  term: ..., 
+  status: ..., 
   tenantId: ..., // optional
   dueFrom: ..., // optional
   dueTo: ..., // optional
-  limit: ...,
-  offset: ...,
-  requestKey: ...,
+  limit: ..., 
+  offset: ..., 
+  requestKey: ..., 
 };
 
 // Call the `platformBillingWorkspace()` function to execute the query.
@@ -4377,14 +4393,14 @@ import { connectorConfig, platformBillingWorkspaceRef, PlatformBillingWorkspaceV
 
 // The `PlatformBillingWorkspace` query requires an argument of type `PlatformBillingWorkspaceVariables`:
 const platformBillingWorkspaceVars: PlatformBillingWorkspaceVariables = {
-  term: ...,
-  status: ...,
+  term: ..., 
+  status: ..., 
   tenantId: ..., // optional
   dueFrom: ..., // optional
   dueTo: ..., // optional
-  limit: ...,
-  offset: ...,
-  requestKey: ...,
+  limit: ..., 
+  offset: ..., 
+  requestKey: ..., 
 };
 
 // Call the `platformBillingWorkspaceRef()` function to get a reference to the query.
@@ -4472,16 +4488,16 @@ import { connectorConfig, platformBillingWorkspaceV2, PlatformBillingWorkspaceV2
 
 // The `PlatformBillingWorkspaceV2` query requires an argument of type `PlatformBillingWorkspaceV2Variables`:
 const platformBillingWorkspaceV2Vars: PlatformBillingWorkspaceV2Variables = {
-  term: ...,
-  status: ...,
+  term: ..., 
+  status: ..., 
   tenantId: ..., // optional
   dueFrom: ..., // optional
   dueTo: ..., // optional
-  sortKey: ...,
-  sortDirection: ...,
-  limit: ...,
-  offset: ...,
-  requestKey: ...,
+  sortKey: ..., 
+  sortDirection: ..., 
+  limit: ..., 
+  offset: ..., 
+  requestKey: ..., 
 };
 
 // Call the `platformBillingWorkspaceV2()` function to execute the query.
@@ -4511,16 +4527,16 @@ import { connectorConfig, platformBillingWorkspaceV2Ref, PlatformBillingWorkspac
 
 // The `PlatformBillingWorkspaceV2` query requires an argument of type `PlatformBillingWorkspaceV2Variables`:
 const platformBillingWorkspaceV2Vars: PlatformBillingWorkspaceV2Variables = {
-  term: ...,
-  status: ...,
+  term: ..., 
+  status: ..., 
   tenantId: ..., // optional
   dueFrom: ..., // optional
   dueTo: ..., // optional
-  sortKey: ...,
-  sortDirection: ...,
-  limit: ...,
-  offset: ...,
-  requestKey: ...,
+  sortKey: ..., 
+  sortDirection: ..., 
+  limit: ..., 
+  offset: ..., 
+  requestKey: ..., 
 };
 
 // Call the `platformBillingWorkspaceV2Ref()` function to get a reference to the query.
@@ -4580,6 +4596,11 @@ The `StockWorkspace` query requires an argument of type `StockWorkspaceVariables
 ```typescript
 export interface StockWorkspaceVariables {
   requestKey: string;
+  filters?: unknown | null;
+  limit?: number | null;
+  offset?: number | null;
+  sortField?: string | null;
+  sortDirection?: string | null;
 }
 ```
 ### Return Type
@@ -4599,14 +4620,19 @@ import { connectorConfig, stockWorkspace, StockWorkspaceVariables } from '@insig
 
 // The `StockWorkspace` query requires an argument of type `StockWorkspaceVariables`:
 const stockWorkspaceVars: StockWorkspaceVariables = {
-  requestKey: ...,
+  requestKey: ..., 
+  filters: ..., // optional
+  limit: ..., // optional
+  offset: ..., // optional
+  sortField: ..., // optional
+  sortDirection: ..., // optional
 };
 
 // Call the `stockWorkspace()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await stockWorkspace(stockWorkspaceVars);
 // Variables can be defined inline as well.
-const { data } = await stockWorkspace({ requestKey: ..., });
+const { data } = await stockWorkspace({ requestKey: ..., filters: ..., limit: ..., offset: ..., sortField: ..., sortDirection: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -4629,13 +4655,18 @@ import { connectorConfig, stockWorkspaceRef, StockWorkspaceVariables } from '@in
 
 // The `StockWorkspace` query requires an argument of type `StockWorkspaceVariables`:
 const stockWorkspaceVars: StockWorkspaceVariables = {
-  requestKey: ...,
+  requestKey: ..., 
+  filters: ..., // optional
+  limit: ..., // optional
+  offset: ..., // optional
+  sortField: ..., // optional
+  sortDirection: ..., // optional
 };
 
 // Call the `stockWorkspaceRef()` function to get a reference to the query.
 const ref = stockWorkspaceRef(stockWorkspaceVars);
 // Variables can be defined inline as well.
-const ref = stockWorkspaceRef({ requestKey: ..., });
+const ref = stockWorkspaceRef({ requestKey: ..., filters: ..., limit: ..., offset: ..., sortField: ..., sortDirection: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -4711,10 +4742,10 @@ import { connectorConfig, dailyProfitDashboard, DailyProfitDashboardVariables } 
 
 // The `DailyProfitDashboard` query requires an argument of type `DailyProfitDashboardVariables`:
 const dailyProfitDashboardVars: DailyProfitDashboardVariables = {
-  from: ...,
-  to: ...,
+  from: ..., 
+  to: ..., 
   branchId: ..., // optional
-  requestKey: ...,
+  requestKey: ..., 
 };
 
 // Call the `dailyProfitDashboard()` function to execute the query.
@@ -4744,10 +4775,10 @@ import { connectorConfig, dailyProfitDashboardRef, DailyProfitDashboardVariables
 
 // The `DailyProfitDashboard` query requires an argument of type `DailyProfitDashboardVariables`:
 const dailyProfitDashboardVars: DailyProfitDashboardVariables = {
-  from: ...,
-  to: ...,
+  from: ..., 
+  to: ..., 
   branchId: ..., // optional
-  requestKey: ...,
+  requestKey: ..., 
 };
 
 // Call the `dailyProfitDashboardRef()` function to get a reference to the query.
@@ -4827,8 +4858,8 @@ import { connectorConfig, stockOperationDetails, StockOperationDetailsVariables 
 
 // The `StockOperationDetails` query requires an argument of type `StockOperationDetailsVariables`:
 const stockOperationDetailsVars: StockOperationDetailsVariables = {
-  operationId: ...,
-  requestKey: ...,
+  operationId: ..., 
+  requestKey: ..., 
 };
 
 // Call the `stockOperationDetails()` function to execute the query.
@@ -4858,8 +4889,8 @@ import { connectorConfig, stockOperationDetailsRef, StockOperationDetailsVariabl
 
 // The `StockOperationDetails` query requires an argument of type `StockOperationDetailsVariables`:
 const stockOperationDetailsVars: StockOperationDetailsVariables = {
-  operationId: ...,
-  requestKey: ...,
+  operationId: ..., 
+  requestKey: ..., 
 };
 
 // Call the `stockOperationDetailsRef()` function to get a reference to the query.
@@ -4941,10 +4972,10 @@ import { connectorConfig, financialIndicatorsDashboard, FinancialIndicatorsDashb
 
 // The `FinancialIndicatorsDashboard` query requires an argument of type `FinancialIndicatorsDashboardVariables`:
 const financialIndicatorsDashboardVars: FinancialIndicatorsDashboardVariables = {
-  from: ...,
-  to: ...,
-  filters: ...,
-  requestKey: ...,
+  from: ..., 
+  to: ..., 
+  filters: ..., 
+  requestKey: ..., 
 };
 
 // Call the `financialIndicatorsDashboard()` function to execute the query.
@@ -4974,10 +5005,10 @@ import { connectorConfig, financialIndicatorsDashboardRef, FinancialIndicatorsDa
 
 // The `FinancialIndicatorsDashboard` query requires an argument of type `FinancialIndicatorsDashboardVariables`:
 const financialIndicatorsDashboardVars: FinancialIndicatorsDashboardVariables = {
-  from: ...,
-  to: ...,
-  filters: ...,
-  requestKey: ...,
+  from: ..., 
+  to: ..., 
+  filters: ..., 
+  requestKey: ..., 
 };
 
 // Call the `financialIndicatorsDashboardRef()` function to get a reference to the query.
@@ -5059,10 +5090,10 @@ import { connectorConfig, salesChannelAnalyticsDashboard, SalesChannelAnalyticsD
 
 // The `SalesChannelAnalyticsDashboard` query requires an argument of type `SalesChannelAnalyticsDashboardVariables`:
 const salesChannelAnalyticsDashboardVars: SalesChannelAnalyticsDashboardVariables = {
-  from: ...,
-  to: ...,
-  filters: ...,
-  requestKey: ...,
+  from: ..., 
+  to: ..., 
+  filters: ..., 
+  requestKey: ..., 
 };
 
 // Call the `salesChannelAnalyticsDashboard()` function to execute the query.
@@ -5092,10 +5123,10 @@ import { connectorConfig, salesChannelAnalyticsDashboardRef, SalesChannelAnalyti
 
 // The `SalesChannelAnalyticsDashboard` query requires an argument of type `SalesChannelAnalyticsDashboardVariables`:
 const salesChannelAnalyticsDashboardVars: SalesChannelAnalyticsDashboardVariables = {
-  from: ...,
-  to: ...,
-  filters: ...,
-  requestKey: ...,
+  from: ..., 
+  to: ..., 
+  filters: ..., 
+  requestKey: ..., 
 };
 
 // Call the `salesChannelAnalyticsDashboardRef()` function to get a reference to the query.
@@ -5177,10 +5208,10 @@ import { connectorConfig, operationalAnalyticsDashboard, OperationalAnalyticsDas
 
 // The `OperationalAnalyticsDashboard` query requires an argument of type `OperationalAnalyticsDashboardVariables`:
 const operationalAnalyticsDashboardVars: OperationalAnalyticsDashboardVariables = {
-  from: ...,
-  to: ...,
-  filters: ...,
-  requestKey: ...,
+  from: ..., 
+  to: ..., 
+  filters: ..., 
+  requestKey: ..., 
 };
 
 // Call the `operationalAnalyticsDashboard()` function to execute the query.
@@ -5210,10 +5241,10 @@ import { connectorConfig, operationalAnalyticsDashboardRef, OperationalAnalytics
 
 // The `OperationalAnalyticsDashboard` query requires an argument of type `OperationalAnalyticsDashboardVariables`:
 const operationalAnalyticsDashboardVars: OperationalAnalyticsDashboardVariables = {
-  from: ...,
-  to: ...,
-  filters: ...,
-  requestKey: ...,
+  from: ..., 
+  to: ..., 
+  filters: ..., 
+  requestKey: ..., 
 };
 
 // Call the `operationalAnalyticsDashboardRef()` function to get a reference to the query.
@@ -5293,8 +5324,8 @@ import { connectorConfig, systemSalesChannelOrderForActor, SystemSalesChannelOrd
 
 // The `SystemSalesChannelOrderForActor` query requires an argument of type `SystemSalesChannelOrderForActorVariables`:
 const systemSalesChannelOrderForActorVars: SystemSalesChannelOrderForActorVariables = {
-  userId: ...,
-  orderId: ...,
+  userId: ..., 
+  orderId: ..., 
 };
 
 // Call the `systemSalesChannelOrderForActor()` function to execute the query.
@@ -5324,8 +5355,8 @@ import { connectorConfig, systemSalesChannelOrderForActorRef, SystemSalesChannel
 
 // The `SystemSalesChannelOrderForActor` query requires an argument of type `SystemSalesChannelOrderForActorVariables`:
 const systemSalesChannelOrderForActorVars: SystemSalesChannelOrderForActorVariables = {
-  userId: ...,
-  orderId: ...,
+  userId: ..., 
+  orderId: ..., 
 };
 
 // Call the `systemSalesChannelOrderForActorRef()` function to get a reference to the query.
@@ -5405,8 +5436,8 @@ import { connectorConfig, systemSalesChannelConnectionForActor, SystemSalesChann
 
 // The `SystemSalesChannelConnectionForActor` query requires an argument of type `SystemSalesChannelConnectionForActorVariables`:
 const systemSalesChannelConnectionForActorVars: SystemSalesChannelConnectionForActorVariables = {
-  userId: ...,
-  connectionId: ...,
+  userId: ..., 
+  connectionId: ..., 
 };
 
 // Call the `systemSalesChannelConnectionForActor()` function to execute the query.
@@ -5436,8 +5467,8 @@ import { connectorConfig, systemSalesChannelConnectionForActorRef, SystemSalesCh
 
 // The `SystemSalesChannelConnectionForActor` query requires an argument of type `SystemSalesChannelConnectionForActorVariables`:
 const systemSalesChannelConnectionForActorVars: SystemSalesChannelConnectionForActorVariables = {
-  userId: ...,
-  connectionId: ...,
+  userId: ..., 
+  connectionId: ..., 
 };
 
 // Call the `systemSalesChannelConnectionForActorRef()` function to get a reference to the query.
@@ -5520,11 +5551,11 @@ import { connectorConfig, searchPosProducts, SearchPosProductsVariables } from '
 
 // The `SearchPosProducts` query requires an argument of type `SearchPosProductsVariables`:
 const searchPosProductsVars: SearchPosProductsVariables = {
-  branchId: ...,
+  branchId: ..., 
   search: ..., // optional
   limit: ..., // optional
   offset: ..., // optional
-  requestKey: ...,
+  requestKey: ..., 
 };
 
 // Call the `searchPosProducts()` function to execute the query.
@@ -5554,11 +5585,11 @@ import { connectorConfig, searchPosProductsRef, SearchPosProductsVariables } fro
 
 // The `SearchPosProducts` query requires an argument of type `SearchPosProductsVariables`:
 const searchPosProductsVars: SearchPosProductsVariables = {
-  branchId: ...,
+  branchId: ..., 
   search: ..., // optional
   limit: ..., // optional
   offset: ..., // optional
-  requestKey: ...,
+  requestKey: ..., 
 };
 
 // Call the `searchPosProductsRef()` function to get a reference to the query.
@@ -5643,7 +5674,7 @@ const searchPosCustomersVars: SearchPosCustomersVariables = {
   search: ..., // optional
   limit: ..., // optional
   offset: ..., // optional
-  requestKey: ...,
+  requestKey: ..., 
 };
 
 // Call the `searchPosCustomers()` function to execute the query.
@@ -5676,7 +5707,7 @@ const searchPosCustomersVars: SearchPosCustomersVariables = {
   search: ..., // optional
   limit: ..., // optional
   offset: ..., // optional
-  requestKey: ...,
+  requestKey: ..., 
 };
 
 // Call the `searchPosCustomersRef()` function to get a reference to the query.
@@ -5756,8 +5787,8 @@ import { connectorConfig, posProductBranches, PosProductBranchesVariables } from
 
 // The `PosProductBranches` query requires an argument of type `PosProductBranchesVariables`:
 const posProductBranchesVars: PosProductBranchesVariables = {
-  productId: ...,
-  requestKey: ...,
+  productId: ..., 
+  requestKey: ..., 
 };
 
 // Call the `posProductBranches()` function to execute the query.
@@ -5787,8 +5818,8 @@ import { connectorConfig, posProductBranchesRef, PosProductBranchesVariables } f
 
 // The `PosProductBranches` query requires an argument of type `PosProductBranchesVariables`:
 const posProductBranchesVars: PosProductBranchesVariables = {
-  productId: ...,
-  requestKey: ...,
+  productId: ..., 
+  requestKey: ..., 
 };
 
 // Call the `posProductBranchesRef()` function to get a reference to the query.
@@ -5867,7 +5898,7 @@ import { connectorConfig, pendingPosApprovals, PendingPosApprovalsVariables } fr
 
 // The `PendingPosApprovals` query requires an argument of type `PendingPosApprovalsVariables`:
 const pendingPosApprovalsVars: PendingPosApprovalsVariables = {
-  requestKey: ...,
+  requestKey: ..., 
 };
 
 // Call the `pendingPosApprovals()` function to execute the query.
@@ -5897,7 +5928,7 @@ import { connectorConfig, pendingPosApprovalsRef, PendingPosApprovalsVariables }
 
 // The `PendingPosApprovals` query requires an argument of type `PendingPosApprovalsVariables`:
 const pendingPosApprovalsVars: PendingPosApprovalsVariables = {
-  requestKey: ...,
+  requestKey: ..., 
 };
 
 // Call the `pendingPosApprovalsRef()` function to get a reference to the query.
@@ -5977,8 +6008,8 @@ import { connectorConfig, posSaleApprovalStatus, PosSaleApprovalStatusVariables 
 
 // The `PosSaleApprovalStatus` query requires an argument of type `PosSaleApprovalStatusVariables`:
 const posSaleApprovalStatusVars: PosSaleApprovalStatusVariables = {
-  operationId: ...,
-  requestKey: ...,
+  operationId: ..., 
+  requestKey: ..., 
 };
 
 // Call the `posSaleApprovalStatus()` function to execute the query.
@@ -6008,8 +6039,8 @@ import { connectorConfig, posSaleApprovalStatusRef, PosSaleApprovalStatusVariabl
 
 // The `PosSaleApprovalStatus` query requires an argument of type `PosSaleApprovalStatusVariables`:
 const posSaleApprovalStatusVars: PosSaleApprovalStatusVariables = {
-  operationId: ...,
-  requestKey: ...,
+  operationId: ..., 
+  requestKey: ..., 
 };
 
 // Call the `posSaleApprovalStatusRef()` function to get a reference to the query.
@@ -6089,8 +6120,8 @@ import { connectorConfig, posCashApprovalStatus, PosCashApprovalStatusVariables 
 
 // The `PosCashApprovalStatus` query requires an argument of type `PosCashApprovalStatusVariables`:
 const posCashApprovalStatusVars: PosCashApprovalStatusVariables = {
-  operationId: ...,
-  requestKey: ...,
+  operationId: ..., 
+  requestKey: ..., 
 };
 
 // Call the `posCashApprovalStatus()` function to execute the query.
@@ -6120,8 +6151,8 @@ import { connectorConfig, posCashApprovalStatusRef, PosCashApprovalStatusVariabl
 
 // The `PosCashApprovalStatus` query requires an argument of type `PosCashApprovalStatusVariables`:
 const posCashApprovalStatusVars: PosCashApprovalStatusVariables = {
-  operationId: ...,
-  requestKey: ...,
+  operationId: ..., 
+  requestKey: ..., 
 };
 
 // Call the `posCashApprovalStatusRef()` function to get a reference to the query.
@@ -6217,8 +6248,8 @@ import { connectorConfig, bootstrapSalesChannelsNavigation, BootstrapSalesChanne
 
 // The `BootstrapSalesChannelsNavigation` mutation requires an argument of type `BootstrapSalesChannelsNavigationVariables`:
 const bootstrapSalesChannelsNavigationVars: BootstrapSalesChannelsNavigationVariables = {
-  tenantId: ...,
-  platformAdminRoleId: ...,
+  tenantId: ..., 
+  platformAdminRoleId: ..., 
 };
 
 // Call the `bootstrapSalesChannelsNavigation()` function to execute the mutation.
@@ -6250,8 +6281,8 @@ import { connectorConfig, bootstrapSalesChannelsNavigationRef, BootstrapSalesCha
 
 // The `BootstrapSalesChannelsNavigation` mutation requires an argument of type `BootstrapSalesChannelsNavigationVariables`:
 const bootstrapSalesChannelsNavigationVars: BootstrapSalesChannelsNavigationVariables = {
-  tenantId: ...,
-  platformAdminRoleId: ...,
+  tenantId: ..., 
+  platformAdminRoleId: ..., 
 };
 
 // Call the `bootstrapSalesChannelsNavigationRef()` function to get a reference to the mutation.
@@ -6451,8 +6482,8 @@ import { connectorConfig, bootstrapNavigationCatalog, BootstrapNavigationCatalog
 
 // The `BootstrapNavigationCatalog` mutation requires an argument of type `BootstrapNavigationCatalogVariables`:
 const bootstrapNavigationCatalogVars: BootstrapNavigationCatalogVariables = {
-  tenantId: ...,
-  platformAdminRoleId: ...,
+  tenantId: ..., 
+  platformAdminRoleId: ..., 
 };
 
 // Call the `bootstrapNavigationCatalog()` function to execute the mutation.
@@ -6536,8 +6567,8 @@ import { connectorConfig, bootstrapNavigationCatalogRef, BootstrapNavigationCata
 
 // The `BootstrapNavigationCatalog` mutation requires an argument of type `BootstrapNavigationCatalogVariables`:
 const bootstrapNavigationCatalogVars: BootstrapNavigationCatalogVariables = {
-  tenantId: ...,
-  platformAdminRoleId: ...,
+  tenantId: ..., 
+  platformAdminRoleId: ..., 
 };
 
 // Call the `bootstrapNavigationCatalogRef()` function to get a reference to the mutation.
@@ -6670,7 +6701,7 @@ import { connectorConfig, createCategory, CreateCategoryVariables } from '@insig
 
 // The `CreateCategory` mutation requires an argument of type `CreateCategoryVariables`:
 const createCategoryVars: CreateCategoryVariables = {
-  name: ...,
+  name: ..., 
 };
 
 // Call the `createCategory()` function to execute the mutation.
@@ -6700,7 +6731,7 @@ import { connectorConfig, createCategoryRef, CreateCategoryVariables } from '@in
 
 // The `CreateCategory` mutation requires an argument of type `CreateCategoryVariables`:
 const createCategoryVars: CreateCategoryVariables = {
-  name: ...,
+  name: ..., 
 };
 
 // Call the `createCategoryRef()` function to get a reference to the mutation.
@@ -6780,8 +6811,8 @@ import { connectorConfig, updateCategory, UpdateCategoryVariables } from '@insig
 
 // The `UpdateCategory` mutation requires an argument of type `UpdateCategoryVariables`:
 const updateCategoryVars: UpdateCategoryVariables = {
-  id: ...,
-  name: ...,
+  id: ..., 
+  name: ..., 
 };
 
 // Call the `updateCategory()` function to execute the mutation.
@@ -6811,8 +6842,8 @@ import { connectorConfig, updateCategoryRef, UpdateCategoryVariables } from '@in
 
 // The `UpdateCategory` mutation requires an argument of type `UpdateCategoryVariables`:
 const updateCategoryVars: UpdateCategoryVariables = {
-  id: ...,
-  name: ...,
+  id: ..., 
+  name: ..., 
 };
 
 // Call the `updateCategoryRef()` function to get a reference to the mutation.
@@ -6891,7 +6922,7 @@ import { connectorConfig, archiveCategory, ArchiveCategoryVariables } from '@ins
 
 // The `ArchiveCategory` mutation requires an argument of type `ArchiveCategoryVariables`:
 const archiveCategoryVars: ArchiveCategoryVariables = {
-  id: ...,
+  id: ..., 
 };
 
 // Call the `archiveCategory()` function to execute the mutation.
@@ -6921,7 +6952,7 @@ import { connectorConfig, archiveCategoryRef, ArchiveCategoryVariables } from '@
 
 // The `ArchiveCategory` mutation requires an argument of type `ArchiveCategoryVariables`:
 const archiveCategoryVars: ArchiveCategoryVariables = {
-  id: ...,
+  id: ..., 
 };
 
 // Call the `archiveCategoryRef()` function to get a reference to the mutation.
@@ -7001,8 +7032,8 @@ import { connectorConfig, createSubcategory, CreateSubcategoryVariables } from '
 
 // The `CreateSubcategory` mutation requires an argument of type `CreateSubcategoryVariables`:
 const createSubcategoryVars: CreateSubcategoryVariables = {
-  categoryId: ...,
-  name: ...,
+  categoryId: ..., 
+  name: ..., 
 };
 
 // Call the `createSubcategory()` function to execute the mutation.
@@ -7032,8 +7063,8 @@ import { connectorConfig, createSubcategoryRef, CreateSubcategoryVariables } fro
 
 // The `CreateSubcategory` mutation requires an argument of type `CreateSubcategoryVariables`:
 const createSubcategoryVars: CreateSubcategoryVariables = {
-  categoryId: ...,
-  name: ...,
+  categoryId: ..., 
+  name: ..., 
 };
 
 // Call the `createSubcategoryRef()` function to get a reference to the mutation.
@@ -7114,9 +7145,9 @@ import { connectorConfig, updateSubcategory, UpdateSubcategoryVariables } from '
 
 // The `UpdateSubcategory` mutation requires an argument of type `UpdateSubcategoryVariables`:
 const updateSubcategoryVars: UpdateSubcategoryVariables = {
-  id: ...,
-  categoryId: ...,
-  name: ...,
+  id: ..., 
+  categoryId: ..., 
+  name: ..., 
 };
 
 // Call the `updateSubcategory()` function to execute the mutation.
@@ -7146,9 +7177,9 @@ import { connectorConfig, updateSubcategoryRef, UpdateSubcategoryVariables } fro
 
 // The `UpdateSubcategory` mutation requires an argument of type `UpdateSubcategoryVariables`:
 const updateSubcategoryVars: UpdateSubcategoryVariables = {
-  id: ...,
-  categoryId: ...,
-  name: ...,
+  id: ..., 
+  categoryId: ..., 
+  name: ..., 
 };
 
 // Call the `updateSubcategoryRef()` function to get a reference to the mutation.
@@ -7227,7 +7258,7 @@ import { connectorConfig, archiveSubcategory, ArchiveSubcategoryVariables } from
 
 // The `ArchiveSubcategory` mutation requires an argument of type `ArchiveSubcategoryVariables`:
 const archiveSubcategoryVars: ArchiveSubcategoryVariables = {
-  id: ...,
+  id: ..., 
 };
 
 // Call the `archiveSubcategory()` function to execute the mutation.
@@ -7257,7 +7288,7 @@ import { connectorConfig, archiveSubcategoryRef, ArchiveSubcategoryVariables } f
 
 // The `ArchiveSubcategory` mutation requires an argument of type `ArchiveSubcategoryVariables`:
 const archiveSubcategoryVars: ArchiveSubcategoryVariables = {
-  id: ...,
+  id: ..., 
 };
 
 // Call the `archiveSubcategoryRef()` function to get a reference to the mutation.
@@ -7336,7 +7367,7 @@ import { connectorConfig, restoreCategory, RestoreCategoryVariables } from '@ins
 
 // The `RestoreCategory` mutation requires an argument of type `RestoreCategoryVariables`:
 const restoreCategoryVars: RestoreCategoryVariables = {
-  id: ...,
+  id: ..., 
 };
 
 // Call the `restoreCategory()` function to execute the mutation.
@@ -7366,7 +7397,7 @@ import { connectorConfig, restoreCategoryRef, RestoreCategoryVariables } from '@
 
 // The `RestoreCategory` mutation requires an argument of type `RestoreCategoryVariables`:
 const restoreCategoryVars: RestoreCategoryVariables = {
-  id: ...,
+  id: ..., 
 };
 
 // Call the `restoreCategoryRef()` function to get a reference to the mutation.
@@ -7445,7 +7476,7 @@ import { connectorConfig, restoreSubcategory, RestoreSubcategoryVariables } from
 
 // The `RestoreSubcategory` mutation requires an argument of type `RestoreSubcategoryVariables`:
 const restoreSubcategoryVars: RestoreSubcategoryVariables = {
-  id: ...,
+  id: ..., 
 };
 
 // Call the `restoreSubcategory()` function to execute the mutation.
@@ -7475,7 +7506,7 @@ import { connectorConfig, restoreSubcategoryRef, RestoreSubcategoryVariables } f
 
 // The `RestoreSubcategory` mutation requires an argument of type `RestoreSubcategoryVariables`:
 const restoreSubcategoryVars: RestoreSubcategoryVariables = {
-  id: ...,
+  id: ..., 
 };
 
 // Call the `restoreSubcategoryRef()` function to get a reference to the mutation.
@@ -7554,7 +7585,7 @@ import { connectorConfig, createCategoriesBatch, CreateCategoriesBatchVariables 
 
 // The `CreateCategoriesBatch` mutation requires an argument of type `CreateCategoriesBatchVariables`:
 const createCategoriesBatchVars: CreateCategoriesBatchVariables = {
-  names: ...,
+  names: ..., 
 };
 
 // Call the `createCategoriesBatch()` function to execute the mutation.
@@ -7584,7 +7615,7 @@ import { connectorConfig, createCategoriesBatchRef, CreateCategoriesBatchVariabl
 
 // The `CreateCategoriesBatch` mutation requires an argument of type `CreateCategoriesBatchVariables`:
 const createCategoriesBatchVars: CreateCategoriesBatchVariables = {
-  names: ...,
+  names: ..., 
 };
 
 // Call the `createCategoriesBatchRef()` function to get a reference to the mutation.
@@ -7663,7 +7694,7 @@ import { connectorConfig, createSubcategoriesBatch, CreateSubcategoriesBatchVari
 
 // The `CreateSubcategoriesBatch` mutation requires an argument of type `CreateSubcategoriesBatchVariables`:
 const createSubcategoriesBatchVars: CreateSubcategoriesBatchVariables = {
-  items: ...,
+  items: ..., 
 };
 
 // Call the `createSubcategoriesBatch()` function to execute the mutation.
@@ -7693,7 +7724,7 @@ import { connectorConfig, createSubcategoriesBatchRef, CreateSubcategoriesBatchV
 
 // The `CreateSubcategoriesBatch` mutation requires an argument of type `CreateSubcategoriesBatchVariables`:
 const createSubcategoriesBatchVars: CreateSubcategoriesBatchVariables = {
-  items: ...,
+  items: ..., 
 };
 
 // Call the `createSubcategoriesBatchRef()` function to get a reference to the mutation.
@@ -7774,7 +7805,7 @@ import { connectorConfig, saveBranch, SaveBranchVariables } from '@insightpad/da
 // The `SaveBranch` mutation requires an argument of type `SaveBranchVariables`:
 const saveBranchVars: SaveBranchVariables = {
   id: ..., // optional
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `saveBranch()` function to execute the mutation.
@@ -7805,7 +7836,7 @@ import { connectorConfig, saveBranchRef, SaveBranchVariables } from '@insightpad
 // The `SaveBranch` mutation requires an argument of type `SaveBranchVariables`:
 const saveBranchVars: SaveBranchVariables = {
   id: ..., // optional
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `saveBranchRef()` function to get a reference to the mutation.
@@ -7885,8 +7916,8 @@ import { connectorConfig, setBranchStatus, SetBranchStatusVariables } from '@ins
 
 // The `SetBranchStatus` mutation requires an argument of type `SetBranchStatusVariables`:
 const setBranchStatusVars: SetBranchStatusVariables = {
-  id: ...,
-  active: ...,
+  id: ..., 
+  active: ..., 
 };
 
 // Call the `setBranchStatus()` function to execute the mutation.
@@ -7916,8 +7947,8 @@ import { connectorConfig, setBranchStatusRef, SetBranchStatusVariables } from '@
 
 // The `SetBranchStatus` mutation requires an argument of type `SetBranchStatusVariables`:
 const setBranchStatusVars: SetBranchStatusVariables = {
-  id: ...,
-  active: ...,
+  id: ..., 
+  active: ..., 
 };
 
 // Call the `setBranchStatusRef()` function to get a reference to the mutation.
@@ -7998,7 +8029,7 @@ import { connectorConfig, saveSupplier, SaveSupplierVariables } from '@insightpa
 // The `SaveSupplier` mutation requires an argument of type `SaveSupplierVariables`:
 const saveSupplierVars: SaveSupplierVariables = {
   id: ..., // optional
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `saveSupplier()` function to execute the mutation.
@@ -8029,7 +8060,7 @@ import { connectorConfig, saveSupplierRef, SaveSupplierVariables } from '@insigh
 // The `SaveSupplier` mutation requires an argument of type `SaveSupplierVariables`:
 const saveSupplierVars: SaveSupplierVariables = {
   id: ..., // optional
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `saveSupplierRef()` function to get a reference to the mutation.
@@ -8109,8 +8140,8 @@ import { connectorConfig, setSupplierStatus, SetSupplierStatusVariables } from '
 
 // The `SetSupplierStatus` mutation requires an argument of type `SetSupplierStatusVariables`:
 const setSupplierStatusVars: SetSupplierStatusVariables = {
-  id: ...,
-  active: ...,
+  id: ..., 
+  active: ..., 
 };
 
 // Call the `setSupplierStatus()` function to execute the mutation.
@@ -8140,8 +8171,8 @@ import { connectorConfig, setSupplierStatusRef, SetSupplierStatusVariables } fro
 
 // The `SetSupplierStatus` mutation requires an argument of type `SetSupplierStatusVariables`:
 const setSupplierStatusVars: SetSupplierStatusVariables = {
-  id: ...,
-  active: ...,
+  id: ..., 
+  active: ..., 
 };
 
 // Call the `setSupplierStatusRef()` function to get a reference to the mutation.
@@ -8222,7 +8253,7 @@ import { connectorConfig, saveCustomer, SaveCustomerVariables } from '@insightpa
 // The `SaveCustomer` mutation requires an argument of type `SaveCustomerVariables`:
 const saveCustomerVars: SaveCustomerVariables = {
   id: ..., // optional
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `saveCustomer()` function to execute the mutation.
@@ -8253,7 +8284,7 @@ import { connectorConfig, saveCustomerRef, SaveCustomerVariables } from '@insigh
 // The `SaveCustomer` mutation requires an argument of type `SaveCustomerVariables`:
 const saveCustomerVars: SaveCustomerVariables = {
   id: ..., // optional
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `saveCustomerRef()` function to get a reference to the mutation.
@@ -8333,8 +8364,8 @@ import { connectorConfig, setCustomerStatus, SetCustomerStatusVariables } from '
 
 // The `SetCustomerStatus` mutation requires an argument of type `SetCustomerStatusVariables`:
 const setCustomerStatusVars: SetCustomerStatusVariables = {
-  id: ...,
-  active: ...,
+  id: ..., 
+  active: ..., 
 };
 
 // Call the `setCustomerStatus()` function to execute the mutation.
@@ -8364,8 +8395,8 @@ import { connectorConfig, setCustomerStatusRef, SetCustomerStatusVariables } fro
 
 // The `SetCustomerStatus` mutation requires an argument of type `SetCustomerStatusVariables`:
 const setCustomerStatusVars: SetCustomerStatusVariables = {
-  id: ...,
-  active: ...,
+  id: ..., 
+  active: ..., 
 };
 
 // Call the `setCustomerStatusRef()` function to get a reference to the mutation.
@@ -8447,7 +8478,7 @@ import { connectorConfig, saveProduct, SaveProductVariables } from '@insightpad/
 // The `SaveProduct` mutation requires an argument of type `SaveProductVariables`:
 const saveProductVars: SaveProductVariables = {
   id: ..., // optional
-  payload: ...,
+  payload: ..., 
   components: ..., // optional
 };
 
@@ -8479,7 +8510,7 @@ import { connectorConfig, saveProductRef, SaveProductVariables } from '@insightp
 // The `SaveProduct` mutation requires an argument of type `SaveProductVariables`:
 const saveProductVars: SaveProductVariables = {
   id: ..., // optional
-  payload: ...,
+  payload: ..., 
   components: ..., // optional
 };
 
@@ -8560,8 +8591,8 @@ import { connectorConfig, setProductStatus, SetProductStatusVariables } from '@i
 
 // The `SetProductStatus` mutation requires an argument of type `SetProductStatusVariables`:
 const setProductStatusVars: SetProductStatusVariables = {
-  id: ...,
-  active: ...,
+  id: ..., 
+  active: ..., 
 };
 
 // Call the `setProductStatus()` function to execute the mutation.
@@ -8591,8 +8622,8 @@ import { connectorConfig, setProductStatusRef, SetProductStatusVariables } from 
 
 // The `SetProductStatus` mutation requires an argument of type `SetProductStatusVariables`:
 const setProductStatusVars: SetProductStatusVariables = {
-  id: ...,
-  active: ...,
+  id: ..., 
+  active: ..., 
 };
 
 // Call the `setProductStatusRef()` function to get a reference to the mutation.
@@ -8672,8 +8703,8 @@ import { connectorConfig, saveProductComponents, SaveProductComponentsVariables 
 
 // The `SaveProductComponents` mutation requires an argument of type `SaveProductComponentsVariables`:
 const saveProductComponentsVars: SaveProductComponentsVariables = {
-  productId: ...,
-  components: ...,
+  productId: ..., 
+  components: ..., 
 };
 
 // Call the `saveProductComponents()` function to execute the mutation.
@@ -8703,8 +8734,8 @@ import { connectorConfig, saveProductComponentsRef, SaveProductComponentsVariabl
 
 // The `SaveProductComponents` mutation requires an argument of type `SaveProductComponentsVariables`:
 const saveProductComponentsVars: SaveProductComponentsVariables = {
-  productId: ...,
-  components: ...,
+  productId: ..., 
+  components: ..., 
 };
 
 // Call the `saveProductComponentsRef()` function to get a reference to the mutation.
@@ -8788,10 +8819,10 @@ import { connectorConfig, savePromotion, SavePromotionVariables } from '@insight
 // The `SavePromotion` mutation requires an argument of type `SavePromotionVariables`:
 const savePromotionVars: SavePromotionVariables = {
   id: ..., // optional
-  productId: ...,
-  promotionalPriceCents: ...,
-  startsAt: ...,
-  endsAt: ...,
+  productId: ..., 
+  promotionalPriceCents: ..., 
+  startsAt: ..., 
+  endsAt: ..., 
 };
 
 // Call the `savePromotion()` function to execute the mutation.
@@ -8822,10 +8853,10 @@ import { connectorConfig, savePromotionRef, SavePromotionVariables } from '@insi
 // The `SavePromotion` mutation requires an argument of type `SavePromotionVariables`:
 const savePromotionVars: SavePromotionVariables = {
   id: ..., // optional
-  productId: ...,
-  promotionalPriceCents: ...,
-  startsAt: ...,
-  endsAt: ...,
+  productId: ..., 
+  promotionalPriceCents: ..., 
+  startsAt: ..., 
+  endsAt: ..., 
 };
 
 // Call the `savePromotionRef()` function to get a reference to the mutation.
@@ -8905,8 +8936,8 @@ import { connectorConfig, setPromotionStatus, SetPromotionStatusVariables } from
 
 // The `SetPromotionStatus` mutation requires an argument of type `SetPromotionStatusVariables`:
 const setPromotionStatusVars: SetPromotionStatusVariables = {
-  id: ...,
-  active: ...,
+  id: ..., 
+  active: ..., 
 };
 
 // Call the `setPromotionStatus()` function to execute the mutation.
@@ -8936,8 +8967,8 @@ import { connectorConfig, setPromotionStatusRef, SetPromotionStatusVariables } f
 
 // The `SetPromotionStatus` mutation requires an argument of type `SetPromotionStatusVariables`:
 const setPromotionStatusVars: SetPromotionStatusVariables = {
-  id: ...,
-  active: ...,
+  id: ..., 
+  active: ..., 
 };
 
 // Call the `setPromotionStatusRef()` function to get a reference to the mutation.
@@ -9017,8 +9048,8 @@ import { connectorConfig, setCategoriesStatusBatch, SetCategoriesStatusBatchVari
 
 // The `SetCategoriesStatusBatch` mutation requires an argument of type `SetCategoriesStatusBatchVariables`:
 const setCategoriesStatusBatchVars: SetCategoriesStatusBatchVariables = {
-  ids: ...,
-  active: ...,
+  ids: ..., 
+  active: ..., 
 };
 
 // Call the `setCategoriesStatusBatch()` function to execute the mutation.
@@ -9048,8 +9079,8 @@ import { connectorConfig, setCategoriesStatusBatchRef, SetCategoriesStatusBatchV
 
 // The `SetCategoriesStatusBatch` mutation requires an argument of type `SetCategoriesStatusBatchVariables`:
 const setCategoriesStatusBatchVars: SetCategoriesStatusBatchVariables = {
-  ids: ...,
-  active: ...,
+  ids: ..., 
+  active: ..., 
 };
 
 // Call the `setCategoriesStatusBatchRef()` function to get a reference to the mutation.
@@ -9129,8 +9160,8 @@ import { connectorConfig, setSubcategoriesStatusBatch, SetSubcategoriesStatusBat
 
 // The `SetSubcategoriesStatusBatch` mutation requires an argument of type `SetSubcategoriesStatusBatchVariables`:
 const setSubcategoriesStatusBatchVars: SetSubcategoriesStatusBatchVariables = {
-  ids: ...,
-  active: ...,
+  ids: ..., 
+  active: ..., 
 };
 
 // Call the `setSubcategoriesStatusBatch()` function to execute the mutation.
@@ -9160,8 +9191,8 @@ import { connectorConfig, setSubcategoriesStatusBatchRef, SetSubcategoriesStatus
 
 // The `SetSubcategoriesStatusBatch` mutation requires an argument of type `SetSubcategoriesStatusBatchVariables`:
 const setSubcategoriesStatusBatchVars: SetSubcategoriesStatusBatchVariables = {
-  ids: ...,
-  active: ...,
+  ids: ..., 
+  active: ..., 
 };
 
 // Call the `setSubcategoriesStatusBatchRef()` function to get a reference to the mutation.
@@ -9241,8 +9272,8 @@ import { connectorConfig, setBranchesStatusBatch, SetBranchesStatusBatchVariable
 
 // The `SetBranchesStatusBatch` mutation requires an argument of type `SetBranchesStatusBatchVariables`:
 const setBranchesStatusBatchVars: SetBranchesStatusBatchVariables = {
-  ids: ...,
-  active: ...,
+  ids: ..., 
+  active: ..., 
 };
 
 // Call the `setBranchesStatusBatch()` function to execute the mutation.
@@ -9272,8 +9303,8 @@ import { connectorConfig, setBranchesStatusBatchRef, SetBranchesStatusBatchVaria
 
 // The `SetBranchesStatusBatch` mutation requires an argument of type `SetBranchesStatusBatchVariables`:
 const setBranchesStatusBatchVars: SetBranchesStatusBatchVariables = {
-  ids: ...,
-  active: ...,
+  ids: ..., 
+  active: ..., 
 };
 
 // Call the `setBranchesStatusBatchRef()` function to get a reference to the mutation.
@@ -9353,8 +9384,8 @@ import { connectorConfig, setSuppliersStatusBatch, SetSuppliersStatusBatchVariab
 
 // The `SetSuppliersStatusBatch` mutation requires an argument of type `SetSuppliersStatusBatchVariables`:
 const setSuppliersStatusBatchVars: SetSuppliersStatusBatchVariables = {
-  ids: ...,
-  active: ...,
+  ids: ..., 
+  active: ..., 
 };
 
 // Call the `setSuppliersStatusBatch()` function to execute the mutation.
@@ -9384,8 +9415,8 @@ import { connectorConfig, setSuppliersStatusBatchRef, SetSuppliersStatusBatchVar
 
 // The `SetSuppliersStatusBatch` mutation requires an argument of type `SetSuppliersStatusBatchVariables`:
 const setSuppliersStatusBatchVars: SetSuppliersStatusBatchVariables = {
-  ids: ...,
-  active: ...,
+  ids: ..., 
+  active: ..., 
 };
 
 // Call the `setSuppliersStatusBatchRef()` function to get a reference to the mutation.
@@ -9465,8 +9496,8 @@ import { connectorConfig, setCustomersStatusBatch, SetCustomersStatusBatchVariab
 
 // The `SetCustomersStatusBatch` mutation requires an argument of type `SetCustomersStatusBatchVariables`:
 const setCustomersStatusBatchVars: SetCustomersStatusBatchVariables = {
-  ids: ...,
-  active: ...,
+  ids: ..., 
+  active: ..., 
 };
 
 // Call the `setCustomersStatusBatch()` function to execute the mutation.
@@ -9496,8 +9527,8 @@ import { connectorConfig, setCustomersStatusBatchRef, SetCustomersStatusBatchVar
 
 // The `SetCustomersStatusBatch` mutation requires an argument of type `SetCustomersStatusBatchVariables`:
 const setCustomersStatusBatchVars: SetCustomersStatusBatchVariables = {
-  ids: ...,
-  active: ...,
+  ids: ..., 
+  active: ..., 
 };
 
 // Call the `setCustomersStatusBatchRef()` function to get a reference to the mutation.
@@ -9577,8 +9608,8 @@ import { connectorConfig, setProductsStatusBatch, SetProductsStatusBatchVariable
 
 // The `SetProductsStatusBatch` mutation requires an argument of type `SetProductsStatusBatchVariables`:
 const setProductsStatusBatchVars: SetProductsStatusBatchVariables = {
-  ids: ...,
-  active: ...,
+  ids: ..., 
+  active: ..., 
 };
 
 // Call the `setProductsStatusBatch()` function to execute the mutation.
@@ -9608,8 +9639,8 @@ import { connectorConfig, setProductsStatusBatchRef, SetProductsStatusBatchVaria
 
 // The `SetProductsStatusBatch` mutation requires an argument of type `SetProductsStatusBatchVariables`:
 const setProductsStatusBatchVars: SetProductsStatusBatchVariables = {
-  ids: ...,
-  active: ...,
+  ids: ..., 
+  active: ..., 
 };
 
 // Call the `setProductsStatusBatchRef()` function to get a reference to the mutation.
@@ -9782,7 +9813,7 @@ import { connectorConfig, postSale, PostSaleVariables } from '@insightpad/dataco
 
 // The `PostSale` mutation requires an argument of type `PostSaleVariables`:
 const postSaleVars: PostSaleVariables = {
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `postSale()` function to execute the mutation.
@@ -9814,7 +9845,7 @@ import { connectorConfig, postSaleRef, PostSaleVariables } from '@insightpad/dat
 
 // The `PostSale` mutation requires an argument of type `PostSaleVariables`:
 const postSaleVars: PostSaleVariables = {
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `postSaleRef()` function to get a reference to the mutation.
@@ -9896,8 +9927,8 @@ import { connectorConfig, cancelSale, CancelSaleVariables } from '@insightpad/da
 
 // The `CancelSale` mutation requires an argument of type `CancelSaleVariables`:
 const cancelSaleVars: CancelSaleVariables = {
-  saleId: ...,
-  reason: ...,
+  saleId: ..., 
+  reason: ..., 
 };
 
 // Call the `cancelSale()` function to execute the mutation.
@@ -9927,8 +9958,8 @@ import { connectorConfig, cancelSaleRef, CancelSaleVariables } from '@insightpad
 
 // The `CancelSale` mutation requires an argument of type `CancelSaleVariables`:
 const cancelSaleVars: CancelSaleVariables = {
-  saleId: ...,
-  reason: ...,
+  saleId: ..., 
+  reason: ..., 
 };
 
 // Call the `cancelSaleRef()` function to get a reference to the mutation.
@@ -10007,7 +10038,7 @@ import { connectorConfig, createPlatformTenant, CreatePlatformTenantVariables } 
 
 // The `CreatePlatformTenant` mutation requires an argument of type `CreatePlatformTenantVariables`:
 const createPlatformTenantVars: CreatePlatformTenantVariables = {
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `createPlatformTenant()` function to execute the mutation.
@@ -10037,7 +10068,7 @@ import { connectorConfig, createPlatformTenantRef, CreatePlatformTenantVariables
 
 // The `CreatePlatformTenant` mutation requires an argument of type `CreatePlatformTenantVariables`:
 const createPlatformTenantVars: CreatePlatformTenantVariables = {
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `createPlatformTenantRef()` function to get a reference to the mutation.
@@ -10116,7 +10147,7 @@ import { connectorConfig, updatePlatformTenant, UpdatePlatformTenantVariables } 
 
 // The `UpdatePlatformTenant` mutation requires an argument of type `UpdatePlatformTenantVariables`:
 const updatePlatformTenantVars: UpdatePlatformTenantVariables = {
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `updatePlatformTenant()` function to execute the mutation.
@@ -10146,7 +10177,7 @@ import { connectorConfig, updatePlatformTenantRef, UpdatePlatformTenantVariables
 
 // The `UpdatePlatformTenant` mutation requires an argument of type `UpdatePlatformTenantVariables`:
 const updatePlatformTenantVars: UpdatePlatformTenantVariables = {
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `updatePlatformTenantRef()` function to get a reference to the mutation.
@@ -10226,8 +10257,8 @@ import { connectorConfig, setPlatformTenantStatus, SetPlatformTenantStatusVariab
 
 // The `SetPlatformTenantStatus` mutation requires an argument of type `SetPlatformTenantStatusVariables`:
 const setPlatformTenantStatusVars: SetPlatformTenantStatusVariables = {
-  tenantId: ...,
-  active: ...,
+  tenantId: ..., 
+  active: ..., 
 };
 
 // Call the `setPlatformTenantStatus()` function to execute the mutation.
@@ -10257,8 +10288,8 @@ import { connectorConfig, setPlatformTenantStatusRef, SetPlatformTenantStatusVar
 
 // The `SetPlatformTenantStatus` mutation requires an argument of type `SetPlatformTenantStatusVariables`:
 const setPlatformTenantStatusVars: SetPlatformTenantStatusVariables = {
-  tenantId: ...,
-  active: ...,
+  tenantId: ..., 
+  active: ..., 
 };
 
 // Call the `setPlatformTenantStatusRef()` function to get a reference to the mutation.
@@ -10337,7 +10368,7 @@ import { connectorConfig, linkPlatformUser, LinkPlatformUserVariables } from '@i
 
 // The `LinkPlatformUser` mutation requires an argument of type `LinkPlatformUserVariables`:
 const linkPlatformUserVars: LinkPlatformUserVariables = {
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `linkPlatformUser()` function to execute the mutation.
@@ -10367,7 +10398,7 @@ import { connectorConfig, linkPlatformUserRef, LinkPlatformUserVariables } from 
 
 // The `LinkPlatformUser` mutation requires an argument of type `LinkPlatformUserVariables`:
 const linkPlatformUserVars: LinkPlatformUserVariables = {
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `linkPlatformUserRef()` function to get a reference to the mutation.
@@ -10447,8 +10478,8 @@ import { connectorConfig, setPlatformUserStatus, SetPlatformUserStatusVariables 
 
 // The `SetPlatformUserStatus` mutation requires an argument of type `SetPlatformUserStatusVariables`:
 const setPlatformUserStatusVars: SetPlatformUserStatusVariables = {
-  userId: ...,
-  active: ...,
+  userId: ..., 
+  active: ..., 
 };
 
 // Call the `setPlatformUserStatus()` function to execute the mutation.
@@ -10478,8 +10509,8 @@ import { connectorConfig, setPlatformUserStatusRef, SetPlatformUserStatusVariabl
 
 // The `SetPlatformUserStatus` mutation requires an argument of type `SetPlatformUserStatusVariables`:
 const setPlatformUserStatusVars: SetPlatformUserStatusVariables = {
-  userId: ...,
-  active: ...,
+  userId: ..., 
+  active: ..., 
 };
 
 // Call the `setPlatformUserStatusRef()` function to get a reference to the mutation.
@@ -10558,7 +10589,7 @@ import { connectorConfig, setPlatformRolePermission, SetPlatformRolePermissionVa
 
 // The `SetPlatformRolePermission` mutation requires an argument of type `SetPlatformRolePermissionVariables`:
 const setPlatformRolePermissionVars: SetPlatformRolePermissionVariables = {
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `setPlatformRolePermission()` function to execute the mutation.
@@ -10588,7 +10619,7 @@ import { connectorConfig, setPlatformRolePermissionRef, SetPlatformRolePermissio
 
 // The `SetPlatformRolePermission` mutation requires an argument of type `SetPlatformRolePermissionVariables`:
 const setPlatformRolePermissionVars: SetPlatformRolePermissionVariables = {
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `setPlatformRolePermissionRef()` function to get a reference to the mutation.
@@ -10667,7 +10698,7 @@ import { connectorConfig, createPlatformInvoice, CreatePlatformInvoiceVariables 
 
 // The `CreatePlatformInvoice` mutation requires an argument of type `CreatePlatformInvoiceVariables`:
 const createPlatformInvoiceVars: CreatePlatformInvoiceVariables = {
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `createPlatformInvoice()` function to execute the mutation.
@@ -10697,7 +10728,7 @@ import { connectorConfig, createPlatformInvoiceRef, CreatePlatformInvoiceVariabl
 
 // The `CreatePlatformInvoice` mutation requires an argument of type `CreatePlatformInvoiceVariables`:
 const createPlatformInvoiceVars: CreatePlatformInvoiceVariables = {
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `createPlatformInvoiceRef()` function to get a reference to the mutation.
@@ -10776,7 +10807,7 @@ import { connectorConfig, updatePlatformInvoice, UpdatePlatformInvoiceVariables 
 
 // The `UpdatePlatformInvoice` mutation requires an argument of type `UpdatePlatformInvoiceVariables`:
 const updatePlatformInvoiceVars: UpdatePlatformInvoiceVariables = {
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `updatePlatformInvoice()` function to execute the mutation.
@@ -10806,7 +10837,7 @@ import { connectorConfig, updatePlatformInvoiceRef, UpdatePlatformInvoiceVariabl
 
 // The `UpdatePlatformInvoice` mutation requires an argument of type `UpdatePlatformInvoiceVariables`:
 const updatePlatformInvoiceVars: UpdatePlatformInvoiceVariables = {
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `updatePlatformInvoiceRef()` function to get a reference to the mutation.
@@ -10887,9 +10918,9 @@ import { connectorConfig, voidPlatformInvoice, VoidPlatformInvoiceVariables } fr
 
 // The `VoidPlatformInvoice` mutation requires an argument of type `VoidPlatformInvoiceVariables`:
 const voidPlatformInvoiceVars: VoidPlatformInvoiceVariables = {
-  invoiceId: ...,
-  reason: ...,
-  expectedVersion: ...,
+  invoiceId: ..., 
+  reason: ..., 
+  expectedVersion: ..., 
 };
 
 // Call the `voidPlatformInvoice()` function to execute the mutation.
@@ -10919,9 +10950,9 @@ import { connectorConfig, voidPlatformInvoiceRef, VoidPlatformInvoiceVariables }
 
 // The `VoidPlatformInvoice` mutation requires an argument of type `VoidPlatformInvoiceVariables`:
 const voidPlatformInvoiceVars: VoidPlatformInvoiceVariables = {
-  invoiceId: ...,
-  reason: ...,
-  expectedVersion: ...,
+  invoiceId: ..., 
+  reason: ..., 
+  expectedVersion: ..., 
 };
 
 // Call the `voidPlatformInvoiceRef()` function to get a reference to the mutation.
@@ -11000,7 +11031,7 @@ import { connectorConfig, settlePlatformInvoice, SettlePlatformInvoiceVariables 
 
 // The `SettlePlatformInvoice` mutation requires an argument of type `SettlePlatformInvoiceVariables`:
 const settlePlatformInvoiceVars: SettlePlatformInvoiceVariables = {
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `settlePlatformInvoice()` function to execute the mutation.
@@ -11030,7 +11061,7 @@ import { connectorConfig, settlePlatformInvoiceRef, SettlePlatformInvoiceVariabl
 
 // The `SettlePlatformInvoice` mutation requires an argument of type `SettlePlatformInvoiceVariables`:
 const settlePlatformInvoiceVars: SettlePlatformInvoiceVariables = {
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `settlePlatformInvoiceRef()` function to get a reference to the mutation.
@@ -11110,8 +11141,8 @@ import { connectorConfig, reversePlatformPayment, ReversePlatformPaymentVariable
 
 // The `ReversePlatformPayment` mutation requires an argument of type `ReversePlatformPaymentVariables`:
 const reversePlatformPaymentVars: ReversePlatformPaymentVariables = {
-  paymentId: ...,
-  reason: ...,
+  paymentId: ..., 
+  reason: ..., 
 };
 
 // Call the `reversePlatformPayment()` function to execute the mutation.
@@ -11141,8 +11172,8 @@ import { connectorConfig, reversePlatformPaymentRef, ReversePlatformPaymentVaria
 
 // The `ReversePlatformPayment` mutation requires an argument of type `ReversePlatformPaymentVariables`:
 const reversePlatformPaymentVars: ReversePlatformPaymentVariables = {
-  paymentId: ...,
-  reason: ...,
+  paymentId: ..., 
+  reason: ..., 
 };
 
 // Call the `reversePlatformPaymentRef()` function to get a reference to the mutation.
@@ -11221,7 +11252,7 @@ import { connectorConfig, postStockAdjustment, PostStockAdjustmentVariables } fr
 
 // The `PostStockAdjustment` mutation requires an argument of type `PostStockAdjustmentVariables`:
 const postStockAdjustmentVars: PostStockAdjustmentVariables = {
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `postStockAdjustment()` function to execute the mutation.
@@ -11251,7 +11282,7 @@ import { connectorConfig, postStockAdjustmentRef, PostStockAdjustmentVariables }
 
 // The `PostStockAdjustment` mutation requires an argument of type `PostStockAdjustmentVariables`:
 const postStockAdjustmentVars: PostStockAdjustmentVariables = {
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `postStockAdjustmentRef()` function to get a reference to the mutation.
@@ -11330,7 +11361,7 @@ import { connectorConfig, postStockTransfer, PostStockTransferVariables } from '
 
 // The `PostStockTransfer` mutation requires an argument of type `PostStockTransferVariables`:
 const postStockTransferVars: PostStockTransferVariables = {
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `postStockTransfer()` function to execute the mutation.
@@ -11360,7 +11391,7 @@ import { connectorConfig, postStockTransferRef, PostStockTransferVariables } fro
 
 // The `PostStockTransfer` mutation requires an argument of type `PostStockTransferVariables`:
 const postStockTransferVars: PostStockTransferVariables = {
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `postStockTransferRef()` function to get a reference to the mutation.
@@ -11439,7 +11470,7 @@ import { connectorConfig, saveStockBatch, SaveStockBatchVariables } from '@insig
 
 // The `SaveStockBatch` mutation requires an argument of type `SaveStockBatchVariables`:
 const saveStockBatchVars: SaveStockBatchVariables = {
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `saveStockBatch()` function to execute the mutation.
@@ -11469,7 +11500,7 @@ import { connectorConfig, saveStockBatchRef, SaveStockBatchVariables } from '@in
 
 // The `SaveStockBatch` mutation requires an argument of type `SaveStockBatchVariables`:
 const saveStockBatchVars: SaveStockBatchVariables = {
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `saveStockBatchRef()` function to get a reference to the mutation.
@@ -11550,9 +11581,9 @@ import { connectorConfig, reverseStockOperation, ReverseStockOperationVariables 
 
 // The `ReverseStockOperation` mutation requires an argument of type `ReverseStockOperationVariables`:
 const reverseStockOperationVars: ReverseStockOperationVariables = {
-  operationId: ...,
-  movementIds: ...,
-  reason: ...,
+  operationId: ..., 
+  movementIds: ..., 
+  reason: ..., 
 };
 
 // Call the `reverseStockOperation()` function to execute the mutation.
@@ -11582,9 +11613,9 @@ import { connectorConfig, reverseStockOperationRef, ReverseStockOperationVariabl
 
 // The `ReverseStockOperation` mutation requires an argument of type `ReverseStockOperationVariables`:
 const reverseStockOperationVars: ReverseStockOperationVariables = {
-  operationId: ...,
-  movementIds: ...,
-  reason: ...,
+  operationId: ..., 
+  movementIds: ..., 
+  reason: ..., 
 };
 
 // Call the `reverseStockOperationRef()` function to get a reference to the mutation.
@@ -11665,9 +11696,9 @@ import { connectorConfig, openCashSession, OpenCashSessionVariables } from '@ins
 
 // The `OpenCashSession` mutation requires an argument of type `OpenCashSessionVariables`:
 const openCashSessionVars: OpenCashSessionVariables = {
-  branchId: ...,
-  openingAmountCents: ...,
-  notes: ...,
+  branchId: ..., 
+  openingAmountCents: ..., 
+  notes: ..., 
 };
 
 // Call the `openCashSession()` function to execute the mutation.
@@ -11697,9 +11728,9 @@ import { connectorConfig, openCashSessionRef, OpenCashSessionVariables } from '@
 
 // The `OpenCashSession` mutation requires an argument of type `OpenCashSessionVariables`:
 const openCashSessionVars: OpenCashSessionVariables = {
-  branchId: ...,
-  openingAmountCents: ...,
-  notes: ...,
+  branchId: ..., 
+  openingAmountCents: ..., 
+  notes: ..., 
 };
 
 // Call the `openCashSessionRef()` function to get a reference to the mutation.
@@ -11782,10 +11813,10 @@ import { connectorConfig, registerCashMovement, RegisterCashMovementVariables } 
 
 // The `RegisterCashMovement` mutation requires an argument of type `RegisterCashMovementVariables`:
 const registerCashMovementVars: RegisterCashMovementVariables = {
-  sessionId: ...,
-  movementType: ...,
-  amountCents: ...,
-  description: ...,
+  sessionId: ..., 
+  movementType: ..., 
+  amountCents: ..., 
+  description: ..., 
   operationId: ..., // optional
 };
 
@@ -11816,10 +11847,10 @@ import { connectorConfig, registerCashMovementRef, RegisterCashMovementVariables
 
 // The `RegisterCashMovement` mutation requires an argument of type `RegisterCashMovementVariables`:
 const registerCashMovementVars: RegisterCashMovementVariables = {
-  sessionId: ...,
-  movementType: ...,
-  amountCents: ...,
-  description: ...,
+  sessionId: ..., 
+  movementType: ..., 
+  amountCents: ..., 
+  description: ..., 
   operationId: ..., // optional
 };
 
@@ -11901,9 +11932,9 @@ import { connectorConfig, claimDeviceSession, ClaimDeviceSessionVariables } from
 
 // The `ClaimDeviceSession` mutation requires an argument of type `ClaimDeviceSessionVariables`:
 const claimDeviceSessionVars: ClaimDeviceSessionVariables = {
-  sessionToken: ...,
-  deviceId: ...,
-  deviceName: ...,
+  sessionToken: ..., 
+  deviceId: ..., 
+  deviceName: ..., 
 };
 
 // Call the `claimDeviceSession()` function to execute the mutation.
@@ -11933,9 +11964,9 @@ import { connectorConfig, claimDeviceSessionRef, ClaimDeviceSessionVariables } f
 
 // The `ClaimDeviceSession` mutation requires an argument of type `ClaimDeviceSessionVariables`:
 const claimDeviceSessionVars: ClaimDeviceSessionVariables = {
-  sessionToken: ...,
-  deviceId: ...,
-  deviceName: ...,
+  sessionToken: ..., 
+  deviceId: ..., 
+  deviceName: ..., 
 };
 
 // Call the `claimDeviceSessionRef()` function to get a reference to the mutation.
@@ -12014,7 +12045,7 @@ import { connectorConfig, touchDeviceSession, TouchDeviceSessionVariables } from
 
 // The `TouchDeviceSession` mutation requires an argument of type `TouchDeviceSessionVariables`:
 const touchDeviceSessionVars: TouchDeviceSessionVariables = {
-  sessionToken: ...,
+  sessionToken: ..., 
 };
 
 // Call the `touchDeviceSession()` function to execute the mutation.
@@ -12044,7 +12075,7 @@ import { connectorConfig, touchDeviceSessionRef, TouchDeviceSessionVariables } f
 
 // The `TouchDeviceSession` mutation requires an argument of type `TouchDeviceSessionVariables`:
 const touchDeviceSessionVars: TouchDeviceSessionVariables = {
-  sessionToken: ...,
+  sessionToken: ..., 
 };
 
 // Call the `touchDeviceSessionRef()` function to get a reference to the mutation.
@@ -12123,7 +12154,7 @@ import { connectorConfig, releaseDeviceSession, ReleaseDeviceSessionVariables } 
 
 // The `ReleaseDeviceSession` mutation requires an argument of type `ReleaseDeviceSessionVariables`:
 const releaseDeviceSessionVars: ReleaseDeviceSessionVariables = {
-  sessionToken: ...,
+  sessionToken: ..., 
 };
 
 // Call the `releaseDeviceSession()` function to execute the mutation.
@@ -12153,7 +12184,7 @@ import { connectorConfig, releaseDeviceSessionRef, ReleaseDeviceSessionVariables
 
 // The `ReleaseDeviceSession` mutation requires an argument of type `ReleaseDeviceSessionVariables`:
 const releaseDeviceSessionVars: ReleaseDeviceSessionVariables = {
-  sessionToken: ...,
+  sessionToken: ..., 
 };
 
 // Call the `releaseDeviceSessionRef()` function to get a reference to the mutation.
@@ -12235,10 +12266,10 @@ import { connectorConfig, createSalesChannelConnection, CreateSalesChannelConnec
 
 // The `CreateSalesChannelConnection` mutation requires an argument of type `CreateSalesChannelConnectionVariables`:
 const createSalesChannelConnectionVars: CreateSalesChannelConnectionVariables = {
-  provider: ...,
-  branchId: ...,
-  displayName: ...,
-  externalStoreId: ...,
+  provider: ..., 
+  branchId: ..., 
+  displayName: ..., 
+  externalStoreId: ..., 
 };
 
 // Call the `createSalesChannelConnection()` function to execute the mutation.
@@ -12268,10 +12299,10 @@ import { connectorConfig, createSalesChannelConnectionRef, CreateSalesChannelCon
 
 // The `CreateSalesChannelConnection` mutation requires an argument of type `CreateSalesChannelConnectionVariables`:
 const createSalesChannelConnectionVars: CreateSalesChannelConnectionVariables = {
-  provider: ...,
-  branchId: ...,
-  displayName: ...,
-  externalStoreId: ...,
+  provider: ..., 
+  branchId: ..., 
+  displayName: ..., 
+  externalStoreId: ..., 
 };
 
 // Call the `createSalesChannelConnectionRef()` function to get a reference to the mutation.
@@ -12353,10 +12384,10 @@ import { connectorConfig, updateSalesChannelConnection, UpdateSalesChannelConnec
 
 // The `UpdateSalesChannelConnection` mutation requires an argument of type `UpdateSalesChannelConnectionVariables`:
 const updateSalesChannelConnectionVars: UpdateSalesChannelConnectionVariables = {
-  id: ...,
-  displayName: ...,
-  externalStoreId: ...,
-  enabled: ...,
+  id: ..., 
+  displayName: ..., 
+  externalStoreId: ..., 
+  enabled: ..., 
 };
 
 // Call the `updateSalesChannelConnection()` function to execute the mutation.
@@ -12386,10 +12417,10 @@ import { connectorConfig, updateSalesChannelConnectionRef, UpdateSalesChannelCon
 
 // The `UpdateSalesChannelConnection` mutation requires an argument of type `UpdateSalesChannelConnectionVariables`:
 const updateSalesChannelConnectionVars: UpdateSalesChannelConnectionVariables = {
-  id: ...,
-  displayName: ...,
-  externalStoreId: ...,
-  enabled: ...,
+  id: ..., 
+  displayName: ..., 
+  externalStoreId: ..., 
+  enabled: ..., 
 };
 
 // Call the `updateSalesChannelConnectionRef()` function to get a reference to the mutation.
@@ -12470,9 +12501,9 @@ import { connectorConfig, connectSalesChannelMerchant, ConnectSalesChannelMercha
 
 // The `ConnectSalesChannelMerchant` mutation requires an argument of type `ConnectSalesChannelMerchantVariables`:
 const connectSalesChannelMerchantVars: ConnectSalesChannelMerchantVariables = {
-  connectionId: ...,
-  merchantId: ...,
-  requestKey: ...,
+  connectionId: ..., 
+  merchantId: ..., 
+  requestKey: ..., 
 };
 
 // Call the `connectSalesChannelMerchant()` function to execute the mutation.
@@ -12502,9 +12533,9 @@ import { connectorConfig, connectSalesChannelMerchantRef, ConnectSalesChannelMer
 
 // The `ConnectSalesChannelMerchant` mutation requires an argument of type `ConnectSalesChannelMerchantVariables`:
 const connectSalesChannelMerchantVars: ConnectSalesChannelMerchantVariables = {
-  connectionId: ...,
-  merchantId: ...,
-  requestKey: ...,
+  connectionId: ..., 
+  merchantId: ..., 
+  requestKey: ..., 
 };
 
 // Call the `connectSalesChannelMerchantRef()` function to get a reference to the mutation.
@@ -12583,7 +12614,7 @@ import { connectorConfig, archiveSalesChannelConnection, ArchiveSalesChannelConn
 
 // The `ArchiveSalesChannelConnection` mutation requires an argument of type `ArchiveSalesChannelConnectionVariables`:
 const archiveSalesChannelConnectionVars: ArchiveSalesChannelConnectionVariables = {
-  id: ...,
+  id: ..., 
 };
 
 // Call the `archiveSalesChannelConnection()` function to execute the mutation.
@@ -12613,7 +12644,7 @@ import { connectorConfig, archiveSalesChannelConnectionRef, ArchiveSalesChannelC
 
 // The `ArchiveSalesChannelConnection` mutation requires an argument of type `ArchiveSalesChannelConnectionVariables`:
 const archiveSalesChannelConnectionVars: ArchiveSalesChannelConnectionVariables = {
-  id: ...,
+  id: ..., 
 };
 
 // Call the `archiveSalesChannelConnectionRef()` function to get a reference to the mutation.
@@ -12700,12 +12731,12 @@ import { connectorConfig, createSalesChannelProductMapping, CreateSalesChannelPr
 
 // The `CreateSalesChannelProductMapping` mutation requires an argument of type `CreateSalesChannelProductMappingVariables`:
 const createSalesChannelProductMappingVars: CreateSalesChannelProductMappingVariables = {
-  connectionId: ...,
-  productId: ...,
-  externalProductId: ...,
-  externalProductName: ...,
-  syncPrice: ...,
-  syncStock: ...,
+  connectionId: ..., 
+  productId: ..., 
+  externalProductId: ..., 
+  externalProductName: ..., 
+  syncPrice: ..., 
+  syncStock: ..., 
   priceMode: ..., // optional
   customPriceCents: ..., // optional
   remoteProductState: ..., // optional
@@ -12738,12 +12769,12 @@ import { connectorConfig, createSalesChannelProductMappingRef, CreateSalesChanne
 
 // The `CreateSalesChannelProductMapping` mutation requires an argument of type `CreateSalesChannelProductMappingVariables`:
 const createSalesChannelProductMappingVars: CreateSalesChannelProductMappingVariables = {
-  connectionId: ...,
-  productId: ...,
-  externalProductId: ...,
-  externalProductName: ...,
-  syncPrice: ...,
-  syncStock: ...,
+  connectionId: ..., 
+  productId: ..., 
+  externalProductId: ..., 
+  externalProductName: ..., 
+  syncPrice: ..., 
+  syncStock: ..., 
   priceMode: ..., // optional
   customPriceCents: ..., // optional
   remoteProductState: ..., // optional
@@ -12833,12 +12864,12 @@ import { connectorConfig, updateSalesChannelProductMapping, UpdateSalesChannelPr
 
 // The `UpdateSalesChannelProductMapping` mutation requires an argument of type `UpdateSalesChannelProductMappingVariables`:
 const updateSalesChannelProductMappingVars: UpdateSalesChannelProductMappingVariables = {
-  id: ...,
-  externalProductId: ...,
-  externalProductName: ...,
-  syncPrice: ...,
-  syncStock: ...,
-  enabled: ...,
+  id: ..., 
+  externalProductId: ..., 
+  externalProductName: ..., 
+  syncPrice: ..., 
+  syncStock: ..., 
+  enabled: ..., 
   priceMode: ..., // optional
   customPriceCents: ..., // optional
   remoteProductState: ..., // optional
@@ -12871,12 +12902,12 @@ import { connectorConfig, updateSalesChannelProductMappingRef, UpdateSalesChanne
 
 // The `UpdateSalesChannelProductMapping` mutation requires an argument of type `UpdateSalesChannelProductMappingVariables`:
 const updateSalesChannelProductMappingVars: UpdateSalesChannelProductMappingVariables = {
-  id: ...,
-  externalProductId: ...,
-  externalProductName: ...,
-  syncPrice: ...,
-  syncStock: ...,
-  enabled: ...,
+  id: ..., 
+  externalProductId: ..., 
+  externalProductName: ..., 
+  syncPrice: ..., 
+  syncStock: ..., 
+  enabled: ..., 
   priceMode: ..., // optional
   customPriceCents: ..., // optional
   remoteProductState: ..., // optional
@@ -12958,7 +12989,7 @@ import { connectorConfig, archiveSalesChannelProductMapping, ArchiveSalesChannel
 
 // The `ArchiveSalesChannelProductMapping` mutation requires an argument of type `ArchiveSalesChannelProductMappingVariables`:
 const archiveSalesChannelProductMappingVars: ArchiveSalesChannelProductMappingVariables = {
-  id: ...,
+  id: ..., 
 };
 
 // Call the `archiveSalesChannelProductMapping()` function to execute the mutation.
@@ -12988,7 +13019,7 @@ import { connectorConfig, archiveSalesChannelProductMappingRef, ArchiveSalesChan
 
 // The `ArchiveSalesChannelProductMapping` mutation requires an argument of type `ArchiveSalesChannelProductMappingVariables`:
 const archiveSalesChannelProductMappingVars: ArchiveSalesChannelProductMappingVariables = {
-  id: ...,
+  id: ..., 
 };
 
 // Call the `archiveSalesChannelProductMappingRef()` function to get a reference to the mutation.
@@ -13074,10 +13105,10 @@ import { connectorConfig, queueSalesChannelOrderAction, QueueSalesChannelOrderAc
 
 // The `QueueSalesChannelOrderAction` mutation requires an argument of type `QueueSalesChannelOrderActionVariables`:
 const queueSalesChannelOrderActionVars: QueueSalesChannelOrderActionVariables = {
-  id: ...,
-  action: ...,
-  reason: ...,
-  expectedVersion: ...,
+  id: ..., 
+  action: ..., 
+  reason: ..., 
+  expectedVersion: ..., 
   cancellationCode: ..., // optional
   itemId: ..., // optional
   ean: ..., // optional
@@ -13111,10 +13142,10 @@ import { connectorConfig, queueSalesChannelOrderActionRef, QueueSalesChannelOrde
 
 // The `QueueSalesChannelOrderAction` mutation requires an argument of type `QueueSalesChannelOrderActionVariables`:
 const queueSalesChannelOrderActionVars: QueueSalesChannelOrderActionVariables = {
-  id: ...,
-  action: ...,
-  reason: ...,
-  expectedVersion: ...,
+  id: ..., 
+  action: ..., 
+  reason: ..., 
+  expectedVersion: ..., 
   cancellationCode: ..., // optional
   itemId: ..., // optional
   ean: ..., // optional
@@ -13197,7 +13228,7 @@ import { connectorConfig, retrySalesChannelCommand, RetrySalesChannelCommandVari
 
 // The `RetrySalesChannelCommand` mutation requires an argument of type `RetrySalesChannelCommandVariables`:
 const retrySalesChannelCommandVars: RetrySalesChannelCommandVariables = {
-  id: ...,
+  id: ..., 
 };
 
 // Call the `retrySalesChannelCommand()` function to execute the mutation.
@@ -13227,7 +13258,7 @@ import { connectorConfig, retrySalesChannelCommandRef, RetrySalesChannelCommandV
 
 // The `RetrySalesChannelCommand` mutation requires an argument of type `RetrySalesChannelCommandVariables`:
 const retrySalesChannelCommandVars: RetrySalesChannelCommandVariables = {
-  id: ...,
+  id: ..., 
 };
 
 // Call the `retrySalesChannelCommandRef()` function to get a reference to the mutation.
@@ -13306,7 +13337,7 @@ import { connectorConfig, retrySalesChannelDecommissioning, RetrySalesChannelDec
 
 // The `RetrySalesChannelDecommissioning` mutation requires an argument of type `RetrySalesChannelDecommissioningVariables`:
 const retrySalesChannelDecommissioningVars: RetrySalesChannelDecommissioningVariables = {
-  id: ...,
+  id: ..., 
 };
 
 // Call the `retrySalesChannelDecommissioning()` function to execute the mutation.
@@ -13336,7 +13367,7 @@ import { connectorConfig, retrySalesChannelDecommissioningRef, RetrySalesChannel
 
 // The `RetrySalesChannelDecommissioning` mutation requires an argument of type `RetrySalesChannelDecommissioningVariables`:
 const retrySalesChannelDecommissioningVars: RetrySalesChannelDecommissioningVariables = {
-  id: ...,
+  id: ..., 
 };
 
 // Call the `retrySalesChannelDecommissioningRef()` function to get a reference to the mutation.
@@ -13416,8 +13447,8 @@ import { connectorConfig, requestSalesChannelOrderReconciliation, RequestSalesCh
 
 // The `RequestSalesChannelOrderReconciliation` mutation requires an argument of type `RequestSalesChannelOrderReconciliationVariables`:
 const requestSalesChannelOrderReconciliationVars: RequestSalesChannelOrderReconciliationVariables = {
-  id: ...,
-  requestKey: ...,
+  id: ..., 
+  requestKey: ..., 
 };
 
 // Call the `requestSalesChannelOrderReconciliation()` function to execute the mutation.
@@ -13447,8 +13478,8 @@ import { connectorConfig, requestSalesChannelOrderReconciliationRef, RequestSale
 
 // The `RequestSalesChannelOrderReconciliation` mutation requires an argument of type `RequestSalesChannelOrderReconciliationVariables`:
 const requestSalesChannelOrderReconciliationVars: RequestSalesChannelOrderReconciliationVariables = {
-  id: ...,
-  requestKey: ...,
+  id: ..., 
+  requestKey: ..., 
 };
 
 // Call the `requestSalesChannelOrderReconciliationRef()` function to get a reference to the mutation.
@@ -13529,9 +13560,9 @@ import { connectorConfig, acknowledgeSalesChannelOrderAlert, AcknowledgeSalesCha
 
 // The `AcknowledgeSalesChannelOrderAlert` mutation requires an argument of type `AcknowledgeSalesChannelOrderAlertVariables`:
 const acknowledgeSalesChannelOrderAlertVars: AcknowledgeSalesChannelOrderAlertVariables = {
-  id: ...,
-  version: ...,
-  alertKind: ...,
+  id: ..., 
+  version: ..., 
+  alertKind: ..., 
 };
 
 // Call the `acknowledgeSalesChannelOrderAlert()` function to execute the mutation.
@@ -13561,9 +13592,9 @@ import { connectorConfig, acknowledgeSalesChannelOrderAlertRef, AcknowledgeSales
 
 // The `AcknowledgeSalesChannelOrderAlert` mutation requires an argument of type `AcknowledgeSalesChannelOrderAlertVariables`:
 const acknowledgeSalesChannelOrderAlertVars: AcknowledgeSalesChannelOrderAlertVariables = {
-  id: ...,
-  version: ...,
-  alertKind: ...,
+  id: ..., 
+  version: ..., 
+  alertKind: ..., 
 };
 
 // Call the `acknowledgeSalesChannelOrderAlertRef()` function to get a reference to the mutation.
@@ -13644,9 +13675,9 @@ import { connectorConfig, mapSalesChannelOrderItem, MapSalesChannelOrderItemVari
 
 // The `MapSalesChannelOrderItem` mutation requires an argument of type `MapSalesChannelOrderItemVariables`:
 const mapSalesChannelOrderItemVars: MapSalesChannelOrderItemVariables = {
-  itemId: ...,
-  productId: ...,
-  requestKey: ...,
+  itemId: ..., 
+  productId: ..., 
+  requestKey: ..., 
 };
 
 // Call the `mapSalesChannelOrderItem()` function to execute the mutation.
@@ -13676,9 +13707,9 @@ import { connectorConfig, mapSalesChannelOrderItemRef, MapSalesChannelOrderItemV
 
 // The `MapSalesChannelOrderItem` mutation requires an argument of type `MapSalesChannelOrderItemVariables`:
 const mapSalesChannelOrderItemVars: MapSalesChannelOrderItemVariables = {
-  itemId: ...,
-  productId: ...,
-  requestKey: ...,
+  itemId: ..., 
+  productId: ..., 
+  requestKey: ..., 
 };
 
 // Call the `mapSalesChannelOrderItemRef()` function to get a reference to the mutation.
@@ -13759,9 +13790,9 @@ import { connectorConfig, requestSalesChannelSync, RequestSalesChannelSyncVariab
 
 // The `RequestSalesChannelSync` mutation requires an argument of type `RequestSalesChannelSyncVariables`:
 const requestSalesChannelSyncVars: RequestSalesChannelSyncVariables = {
-  connectionId: ...,
-  scope: ...,
-  requestKey: ...,
+  connectionId: ..., 
+  scope: ..., 
+  requestKey: ..., 
 };
 
 // Call the `requestSalesChannelSync()` function to execute the mutation.
@@ -13791,9 +13822,9 @@ import { connectorConfig, requestSalesChannelSyncRef, RequestSalesChannelSyncVar
 
 // The `RequestSalesChannelSync` mutation requires an argument of type `RequestSalesChannelSyncVariables`:
 const requestSalesChannelSyncVars: RequestSalesChannelSyncVariables = {
-  connectionId: ...,
-  scope: ...,
-  requestKey: ...,
+  connectionId: ..., 
+  scope: ..., 
+  requestKey: ..., 
 };
 
 // Call the `requestSalesChannelSyncRef()` function to get a reference to the mutation.
@@ -13873,8 +13904,8 @@ import { connectorConfig, requestSalesChannelAuthorization, RequestSalesChannelA
 
 // The `RequestSalesChannelAuthorization` mutation requires an argument of type `RequestSalesChannelAuthorizationVariables`:
 const requestSalesChannelAuthorizationVars: RequestSalesChannelAuthorizationVariables = {
-  connectionId: ...,
-  requestKey: ...,
+  connectionId: ..., 
+  requestKey: ..., 
 };
 
 // Call the `requestSalesChannelAuthorization()` function to execute the mutation.
@@ -13904,8 +13935,8 @@ import { connectorConfig, requestSalesChannelAuthorizationRef, RequestSalesChann
 
 // The `RequestSalesChannelAuthorization` mutation requires an argument of type `RequestSalesChannelAuthorizationVariables`:
 const requestSalesChannelAuthorizationVars: RequestSalesChannelAuthorizationVariables = {
-  connectionId: ...,
-  requestKey: ...,
+  connectionId: ..., 
+  requestKey: ..., 
 };
 
 // Call the `requestSalesChannelAuthorizationRef()` function to get a reference to the mutation.
@@ -13986,9 +14017,9 @@ import { connectorConfig, systemClaimSalesChannelWork, SystemClaimSalesChannelWo
 
 // The `SystemClaimSalesChannelWork` mutation requires an argument of type `SystemClaimSalesChannelWorkVariables`:
 const systemClaimSalesChannelWorkVars: SystemClaimSalesChannelWorkVariables = {
-  provider: ...,
-  workerId: ...,
-  limit: ...,
+  provider: ..., 
+  workerId: ..., 
+  limit: ..., 
 };
 
 // Call the `systemClaimSalesChannelWork()` function to execute the mutation.
@@ -14018,9 +14049,9 @@ import { connectorConfig, systemClaimSalesChannelWorkRef, SystemClaimSalesChanne
 
 // The `SystemClaimSalesChannelWork` mutation requires an argument of type `SystemClaimSalesChannelWorkVariables`:
 const systemClaimSalesChannelWorkVars: SystemClaimSalesChannelWorkVariables = {
-  provider: ...,
-  workerId: ...,
-  limit: ...,
+  provider: ..., 
+  workerId: ..., 
+  limit: ..., 
 };
 
 // Call the `systemClaimSalesChannelWorkRef()` function to get a reference to the mutation.
@@ -14100,8 +14131,8 @@ import { connectorConfig, systemUpdateSalesChannelConnection, SystemUpdateSalesC
 
 // The `SystemUpdateSalesChannelConnection` mutation requires an argument of type `SystemUpdateSalesChannelConnectionVariables`:
 const systemUpdateSalesChannelConnectionVars: SystemUpdateSalesChannelConnectionVariables = {
-  connectionId: ...,
-  payload: ...,
+  connectionId: ..., 
+  payload: ..., 
 };
 
 // Call the `systemUpdateSalesChannelConnection()` function to execute the mutation.
@@ -14131,8 +14162,8 @@ import { connectorConfig, systemUpdateSalesChannelConnectionRef, SystemUpdateSal
 
 // The `SystemUpdateSalesChannelConnection` mutation requires an argument of type `SystemUpdateSalesChannelConnectionVariables`:
 const systemUpdateSalesChannelConnectionVars: SystemUpdateSalesChannelConnectionVariables = {
-  connectionId: ...,
-  payload: ...,
+  connectionId: ..., 
+  payload: ..., 
 };
 
 // Call the `systemUpdateSalesChannelConnectionRef()` function to get a reference to the mutation.
@@ -14212,8 +14243,8 @@ import { connectorConfig, systemRegisterSalesChannelEvent, SystemRegisterSalesCh
 
 // The `SystemRegisterSalesChannelEvent` mutation requires an argument of type `SystemRegisterSalesChannelEventVariables`:
 const systemRegisterSalesChannelEventVars: SystemRegisterSalesChannelEventVariables = {
-  connectionId: ...,
-  payload: ...,
+  connectionId: ..., 
+  payload: ..., 
 };
 
 // Call the `systemRegisterSalesChannelEvent()` function to execute the mutation.
@@ -14243,8 +14274,8 @@ import { connectorConfig, systemRegisterSalesChannelEventRef, SystemRegisterSale
 
 // The `SystemRegisterSalesChannelEvent` mutation requires an argument of type `SystemRegisterSalesChannelEventVariables`:
 const systemRegisterSalesChannelEventVars: SystemRegisterSalesChannelEventVariables = {
-  connectionId: ...,
-  payload: ...,
+  connectionId: ..., 
+  payload: ..., 
 };
 
 // Call the `systemRegisterSalesChannelEventRef()` function to get a reference to the mutation.
@@ -14324,8 +14355,8 @@ import { connectorConfig, systemRegisterSalesChannelEvents, SystemRegisterSalesC
 
 // The `SystemRegisterSalesChannelEvents` mutation requires an argument of type `SystemRegisterSalesChannelEventsVariables`:
 const systemRegisterSalesChannelEventsVars: SystemRegisterSalesChannelEventsVariables = {
-  connectionId: ...,
-  payloads: ...,
+  connectionId: ..., 
+  payloads: ..., 
 };
 
 // Call the `systemRegisterSalesChannelEvents()` function to execute the mutation.
@@ -14355,8 +14386,8 @@ import { connectorConfig, systemRegisterSalesChannelEventsRef, SystemRegisterSal
 
 // The `SystemRegisterSalesChannelEvents` mutation requires an argument of type `SystemRegisterSalesChannelEventsVariables`:
 const systemRegisterSalesChannelEventsVars: SystemRegisterSalesChannelEventsVariables = {
-  connectionId: ...,
-  payloads: ...,
+  connectionId: ..., 
+  payloads: ..., 
 };
 
 // Call the `systemRegisterSalesChannelEventsRef()` function to get a reference to the mutation.
@@ -14436,8 +14467,8 @@ import { connectorConfig, systemMarkSalesChannelWebhookActive, SystemMarkSalesCh
 
 // The `SystemMarkSalesChannelWebhookActive` mutation requires an argument of type `SystemMarkSalesChannelWebhookActiveVariables`:
 const systemMarkSalesChannelWebhookActiveVars: SystemMarkSalesChannelWebhookActiveVariables = {
-  connectionIds: ...,
-  requestId: ...,
+  connectionIds: ..., 
+  requestId: ..., 
 };
 
 // Call the `systemMarkSalesChannelWebhookActive()` function to execute the mutation.
@@ -14467,8 +14498,8 @@ import { connectorConfig, systemMarkSalesChannelWebhookActiveRef, SystemMarkSale
 
 // The `SystemMarkSalesChannelWebhookActive` mutation requires an argument of type `SystemMarkSalesChannelWebhookActiveVariables`:
 const systemMarkSalesChannelWebhookActiveVars: SystemMarkSalesChannelWebhookActiveVariables = {
-  connectionIds: ...,
-  requestId: ...,
+  connectionIds: ..., 
+  requestId: ..., 
 };
 
 // Call the `systemMarkSalesChannelWebhookActiveRef()` function to get a reference to the mutation.
@@ -14549,9 +14580,9 @@ import { connectorConfig, systemRecordSalesChannelEventResult, SystemRecordSales
 
 // The `SystemRecordSalesChannelEventResult` mutation requires an argument of type `SystemRecordSalesChannelEventResultVariables`:
 const systemRecordSalesChannelEventResultVars: SystemRecordSalesChannelEventResultVariables = {
-  eventId: ...,
-  workerId: ...,
-  payload: ...,
+  eventId: ..., 
+  workerId: ..., 
+  payload: ..., 
 };
 
 // Call the `systemRecordSalesChannelEventResult()` function to execute the mutation.
@@ -14581,9 +14612,9 @@ import { connectorConfig, systemRecordSalesChannelEventResultRef, SystemRecordSa
 
 // The `SystemRecordSalesChannelEventResult` mutation requires an argument of type `SystemRecordSalesChannelEventResultVariables`:
 const systemRecordSalesChannelEventResultVars: SystemRecordSalesChannelEventResultVariables = {
-  eventId: ...,
-  workerId: ...,
-  payload: ...,
+  eventId: ..., 
+  workerId: ..., 
+  payload: ..., 
 };
 
 // Call the `systemRecordSalesChannelEventResultRef()` function to get a reference to the mutation.
@@ -14663,8 +14694,8 @@ import { connectorConfig, systemIngestSalesChannelOrder, SystemIngestSalesChanne
 
 // The `SystemIngestSalesChannelOrder` mutation requires an argument of type `SystemIngestSalesChannelOrderVariables`:
 const systemIngestSalesChannelOrderVars: SystemIngestSalesChannelOrderVariables = {
-  connectionId: ...,
-  payload: ...,
+  connectionId: ..., 
+  payload: ..., 
 };
 
 // Call the `systemIngestSalesChannelOrder()` function to execute the mutation.
@@ -14694,8 +14725,8 @@ import { connectorConfig, systemIngestSalesChannelOrderRef, SystemIngestSalesCha
 
 // The `SystemIngestSalesChannelOrder` mutation requires an argument of type `SystemIngestSalesChannelOrderVariables`:
 const systemIngestSalesChannelOrderVars: SystemIngestSalesChannelOrderVariables = {
-  connectionId: ...,
-  payload: ...,
+  connectionId: ..., 
+  payload: ..., 
 };
 
 // Call the `systemIngestSalesChannelOrderRef()` function to get a reference to the mutation.
@@ -14776,9 +14807,9 @@ import { connectorConfig, systemApplySalesChannelOrderEvent, SystemApplySalesCha
 
 // The `SystemApplySalesChannelOrderEvent` mutation requires an argument of type `SystemApplySalesChannelOrderEventVariables`:
 const systemApplySalesChannelOrderEventVars: SystemApplySalesChannelOrderEventVariables = {
-  connectionId: ...,
-  providerOrderId: ...,
-  payload: ...,
+  connectionId: ..., 
+  providerOrderId: ..., 
+  payload: ..., 
 };
 
 // Call the `systemApplySalesChannelOrderEvent()` function to execute the mutation.
@@ -14808,9 +14839,9 @@ import { connectorConfig, systemApplySalesChannelOrderEventRef, SystemApplySales
 
 // The `SystemApplySalesChannelOrderEvent` mutation requires an argument of type `SystemApplySalesChannelOrderEventVariables`:
 const systemApplySalesChannelOrderEventVars: SystemApplySalesChannelOrderEventVariables = {
-  connectionId: ...,
-  providerOrderId: ...,
-  payload: ...,
+  connectionId: ..., 
+  providerOrderId: ..., 
+  payload: ..., 
 };
 
 // Call the `systemApplySalesChannelOrderEventRef()` function to get a reference to the mutation.
@@ -14891,9 +14922,9 @@ import { connectorConfig, systemReconcileSalesChannelCommerce, SystemReconcileSa
 
 // The `SystemReconcileSalesChannelCommerce` mutation requires an argument of type `SystemReconcileSalesChannelCommerceVariables`:
 const systemReconcileSalesChannelCommerceVars: SystemReconcileSalesChannelCommerceVariables = {
-  connectionId: ...,
-  providerOrderId: ...,
-  payload: ...,
+  connectionId: ..., 
+  providerOrderId: ..., 
+  payload: ..., 
 };
 
 // Call the `systemReconcileSalesChannelCommerce()` function to execute the mutation.
@@ -14923,9 +14954,9 @@ import { connectorConfig, systemReconcileSalesChannelCommerceRef, SystemReconcil
 
 // The `SystemReconcileSalesChannelCommerce` mutation requires an argument of type `SystemReconcileSalesChannelCommerceVariables`:
 const systemReconcileSalesChannelCommerceVars: SystemReconcileSalesChannelCommerceVariables = {
-  connectionId: ...,
-  providerOrderId: ...,
-  payload: ...,
+  connectionId: ..., 
+  providerOrderId: ..., 
+  payload: ..., 
 };
 
 // Call the `systemReconcileSalesChannelCommerceRef()` function to get a reference to the mutation.
@@ -15007,10 +15038,10 @@ import { connectorConfig, systemUpsertSalesChannelFinancialEvents, SystemUpsertS
 
 // The `SystemUpsertSalesChannelFinancialEvents` mutation requires an argument of type `SystemUpsertSalesChannelFinancialEventsVariables`:
 const systemUpsertSalesChannelFinancialEventsVars: SystemUpsertSalesChannelFinancialEventsVariables = {
-  connectionId: ...,
-  jobId: ...,
-  workerId: ...,
-  payloads: ...,
+  connectionId: ..., 
+  jobId: ..., 
+  workerId: ..., 
+  payloads: ..., 
 };
 
 // Call the `systemUpsertSalesChannelFinancialEvents()` function to execute the mutation.
@@ -15040,10 +15071,10 @@ import { connectorConfig, systemUpsertSalesChannelFinancialEventsRef, SystemUpse
 
 // The `SystemUpsertSalesChannelFinancialEvents` mutation requires an argument of type `SystemUpsertSalesChannelFinancialEventsVariables`:
 const systemUpsertSalesChannelFinancialEventsVars: SystemUpsertSalesChannelFinancialEventsVariables = {
-  connectionId: ...,
-  jobId: ...,
-  workerId: ...,
-  payloads: ...,
+  connectionId: ..., 
+  jobId: ..., 
+  workerId: ..., 
+  payloads: ..., 
 };
 
 // Call the `systemUpsertSalesChannelFinancialEventsRef()` function to get a reference to the mutation.
@@ -15122,7 +15153,7 @@ import { connectorConfig, systemQueueDueSalesChannelSyncJobs, SystemQueueDueSale
 
 // The `SystemQueueDueSalesChannelSyncJobs` mutation requires an argument of type `SystemQueueDueSalesChannelSyncJobsVariables`:
 const systemQueueDueSalesChannelSyncJobsVars: SystemQueueDueSalesChannelSyncJobsVariables = {
-  requestKey: ...,
+  requestKey: ..., 
 };
 
 // Call the `systemQueueDueSalesChannelSyncJobs()` function to execute the mutation.
@@ -15152,7 +15183,7 @@ import { connectorConfig, systemQueueDueSalesChannelSyncJobsRef, SystemQueueDueS
 
 // The `SystemQueueDueSalesChannelSyncJobs` mutation requires an argument of type `SystemQueueDueSalesChannelSyncJobsVariables`:
 const systemQueueDueSalesChannelSyncJobsVars: SystemQueueDueSalesChannelSyncJobsVariables = {
-  requestKey: ...,
+  requestKey: ..., 
 };
 
 // Call the `systemQueueDueSalesChannelSyncJobsRef()` function to get a reference to the mutation.
@@ -15231,7 +15262,7 @@ import { connectorConfig, systemPurgeExpiredSalesChannelPayloads, SystemPurgeExp
 
 // The `SystemPurgeExpiredSalesChannelPayloads` mutation requires an argument of type `SystemPurgeExpiredSalesChannelPayloadsVariables`:
 const systemPurgeExpiredSalesChannelPayloadsVars: SystemPurgeExpiredSalesChannelPayloadsVariables = {
-  requestKey: ...,
+  requestKey: ..., 
 };
 
 // Call the `systemPurgeExpiredSalesChannelPayloads()` function to execute the mutation.
@@ -15261,7 +15292,7 @@ import { connectorConfig, systemPurgeExpiredSalesChannelPayloadsRef, SystemPurge
 
 // The `SystemPurgeExpiredSalesChannelPayloads` mutation requires an argument of type `SystemPurgeExpiredSalesChannelPayloadsVariables`:
 const systemPurgeExpiredSalesChannelPayloadsVars: SystemPurgeExpiredSalesChannelPayloadsVariables = {
-  requestKey: ...,
+  requestKey: ..., 
 };
 
 // Call the `systemPurgeExpiredSalesChannelPayloadsRef()` function to get a reference to the mutation.
@@ -15342,9 +15373,9 @@ import { connectorConfig, systemRecordSalesChannelCommandResult, SystemRecordSal
 
 // The `SystemRecordSalesChannelCommandResult` mutation requires an argument of type `SystemRecordSalesChannelCommandResultVariables`:
 const systemRecordSalesChannelCommandResultVars: SystemRecordSalesChannelCommandResultVariables = {
-  commandId: ...,
-  workerId: ...,
-  payload: ...,
+  commandId: ..., 
+  workerId: ..., 
+  payload: ..., 
 };
 
 // Call the `systemRecordSalesChannelCommandResult()` function to execute the mutation.
@@ -15374,9 +15405,9 @@ import { connectorConfig, systemRecordSalesChannelCommandResultRef, SystemRecord
 
 // The `SystemRecordSalesChannelCommandResult` mutation requires an argument of type `SystemRecordSalesChannelCommandResultVariables`:
 const systemRecordSalesChannelCommandResultVars: SystemRecordSalesChannelCommandResultVariables = {
-  commandId: ...,
-  workerId: ...,
-  payload: ...,
+  commandId: ..., 
+  workerId: ..., 
+  payload: ..., 
 };
 
 // Call the `systemRecordSalesChannelCommandResultRef()` function to get a reference to the mutation.
@@ -15456,8 +15487,8 @@ import { connectorConfig, systemRefreshSalesChannelOrderAfterPicking, SystemRefr
 
 // The `SystemRefreshSalesChannelOrderAfterPicking` mutation requires an argument of type `SystemRefreshSalesChannelOrderAfterPickingVariables`:
 const systemRefreshSalesChannelOrderAfterPickingVars: SystemRefreshSalesChannelOrderAfterPickingVariables = {
-  commandId: ...,
-  payload: ...,
+  commandId: ..., 
+  payload: ..., 
 };
 
 // Call the `systemRefreshSalesChannelOrderAfterPicking()` function to execute the mutation.
@@ -15487,8 +15518,8 @@ import { connectorConfig, systemRefreshSalesChannelOrderAfterPickingRef, SystemR
 
 // The `SystemRefreshSalesChannelOrderAfterPicking` mutation requires an argument of type `SystemRefreshSalesChannelOrderAfterPickingVariables`:
 const systemRefreshSalesChannelOrderAfterPickingVars: SystemRefreshSalesChannelOrderAfterPickingVariables = {
-  commandId: ...,
-  payload: ...,
+  commandId: ..., 
+  payload: ..., 
 };
 
 // Call the `systemRefreshSalesChannelOrderAfterPickingRef()` function to get a reference to the mutation.
@@ -15569,9 +15600,9 @@ import { connectorConfig, systemRecordSalesChannelSyncResult, SystemRecordSalesC
 
 // The `SystemRecordSalesChannelSyncResult` mutation requires an argument of type `SystemRecordSalesChannelSyncResultVariables`:
 const systemRecordSalesChannelSyncResultVars: SystemRecordSalesChannelSyncResultVariables = {
-  jobId: ...,
-  workerId: ...,
-  payload: ...,
+  jobId: ..., 
+  workerId: ..., 
+  payload: ..., 
 };
 
 // Call the `systemRecordSalesChannelSyncResult()` function to execute the mutation.
@@ -15601,9 +15632,9 @@ import { connectorConfig, systemRecordSalesChannelSyncResultRef, SystemRecordSal
 
 // The `SystemRecordSalesChannelSyncResult` mutation requires an argument of type `SystemRecordSalesChannelSyncResultVariables`:
 const systemRecordSalesChannelSyncResultVars: SystemRecordSalesChannelSyncResultVariables = {
-  jobId: ...,
-  workerId: ...,
-  payload: ...,
+  jobId: ..., 
+  workerId: ..., 
+  payload: ..., 
 };
 
 // Call the `systemRecordSalesChannelSyncResultRef()` function to get a reference to the mutation.
@@ -15683,8 +15714,8 @@ import { connectorConfig, systemRecordSalesChannelMappingResult, SystemRecordSal
 
 // The `SystemRecordSalesChannelMappingResult` mutation requires an argument of type `SystemRecordSalesChannelMappingResultVariables`:
 const systemRecordSalesChannelMappingResultVars: SystemRecordSalesChannelMappingResultVariables = {
-  mappingId: ...,
-  payload: ...,
+  mappingId: ..., 
+  payload: ..., 
 };
 
 // Call the `systemRecordSalesChannelMappingResult()` function to execute the mutation.
@@ -15714,8 +15745,8 @@ import { connectorConfig, systemRecordSalesChannelMappingResultRef, SystemRecord
 
 // The `SystemRecordSalesChannelMappingResult` mutation requires an argument of type `SystemRecordSalesChannelMappingResultVariables`:
 const systemRecordSalesChannelMappingResultVars: SystemRecordSalesChannelMappingResultVariables = {
-  mappingId: ...,
-  payload: ...,
+  mappingId: ..., 
+  payload: ..., 
 };
 
 // Call the `systemRecordSalesChannelMappingResultRef()` function to get a reference to the mutation.
@@ -15797,9 +15828,9 @@ import { connectorConfig, closeCashSession, CloseCashSessionVariables } from '@i
 
 // The `CloseCashSession` mutation requires an argument of type `CloseCashSessionVariables`:
 const closeCashSessionVars: CloseCashSessionVariables = {
-  sessionId: ...,
-  countedAmountCents: ...,
-  notes: ...,
+  sessionId: ..., 
+  countedAmountCents: ..., 
+  notes: ..., 
   operationId: ..., // optional
 };
 
@@ -15830,9 +15861,9 @@ import { connectorConfig, closeCashSessionRef, CloseCashSessionVariables } from 
 
 // The `CloseCashSession` mutation requires an argument of type `CloseCashSessionVariables`:
 const closeCashSessionVars: CloseCashSessionVariables = {
-  sessionId: ...,
-  countedAmountCents: ...,
-  notes: ...,
+  sessionId: ..., 
+  countedAmountCents: ..., 
+  notes: ..., 
   operationId: ..., // optional
 };
 
@@ -15917,10 +15948,10 @@ import { connectorConfig, updatePosPolicy, UpdatePosPolicyVariables } from '@ins
 
 // The `UpdatePosPolicy` mutation requires an argument of type `UpdatePosPolicyVariables`:
 const updatePosPolicyVars: UpdatePosPolicyVariables = {
-  requireOpenSession: ...,
-  operatorDiscountPercent: ...,
-  operatorSurchargePercent: ...,
-  allowOperatorClose: ...,
+  requireOpenSession: ..., 
+  operatorDiscountPercent: ..., 
+  operatorSurchargePercent: ..., 
+  allowOperatorClose: ..., 
   operatorWithdrawalLimitCents: ..., // optional
   operatorCloseDifferenceLimitCents: ..., // optional
 };
@@ -15952,10 +15983,10 @@ import { connectorConfig, updatePosPolicyRef, UpdatePosPolicyVariables } from '@
 
 // The `UpdatePosPolicy` mutation requires an argument of type `UpdatePosPolicyVariables`:
 const updatePosPolicyVars: UpdatePosPolicyVariables = {
-  requireOpenSession: ...,
-  operatorDiscountPercent: ...,
-  operatorSurchargePercent: ...,
-  allowOperatorClose: ...,
+  requireOpenSession: ..., 
+  operatorDiscountPercent: ..., 
+  operatorSurchargePercent: ..., 
+  allowOperatorClose: ..., 
   operatorWithdrawalLimitCents: ..., // optional
   operatorCloseDifferenceLimitCents: ..., // optional
 };
@@ -16036,7 +16067,7 @@ import { connectorConfig, requestPosSaleApproval, RequestPosSaleApprovalVariable
 
 // The `RequestPosSaleApproval` mutation requires an argument of type `RequestPosSaleApprovalVariables`:
 const requestPosSaleApprovalVars: RequestPosSaleApprovalVariables = {
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `requestPosSaleApproval()` function to execute the mutation.
@@ -16066,7 +16097,7 @@ import { connectorConfig, requestPosSaleApprovalRef, RequestPosSaleApprovalVaria
 
 // The `RequestPosSaleApproval` mutation requires an argument of type `RequestPosSaleApprovalVariables`:
 const requestPosSaleApprovalVars: RequestPosSaleApprovalVariables = {
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `requestPosSaleApprovalRef()` function to get a reference to the mutation.
@@ -16146,8 +16177,8 @@ import { connectorConfig, approvePosSale, ApprovePosSaleVariables } from '@insig
 
 // The `ApprovePosSale` mutation requires an argument of type `ApprovePosSaleVariables`:
 const approvePosSaleVars: ApprovePosSaleVariables = {
-  approvalId: ...,
-  approved: ...,
+  approvalId: ..., 
+  approved: ..., 
 };
 
 // Call the `approvePosSale()` function to execute the mutation.
@@ -16177,8 +16208,8 @@ import { connectorConfig, approvePosSaleRef, ApprovePosSaleVariables } from '@in
 
 // The `ApprovePosSale` mutation requires an argument of type `ApprovePosSaleVariables`:
 const approvePosSaleVars: ApprovePosSaleVariables = {
-  approvalId: ...,
-  approved: ...,
+  approvalId: ..., 
+  approved: ..., 
 };
 
 // Call the `approvePosSaleRef()` function to get a reference to the mutation.
@@ -16257,7 +16288,7 @@ import { connectorConfig, requestPosCashApproval, RequestPosCashApprovalVariable
 
 // The `RequestPosCashApproval` mutation requires an argument of type `RequestPosCashApprovalVariables`:
 const requestPosCashApprovalVars: RequestPosCashApprovalVariables = {
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `requestPosCashApproval()` function to execute the mutation.
@@ -16287,7 +16318,7 @@ import { connectorConfig, requestPosCashApprovalRef, RequestPosCashApprovalVaria
 
 // The `RequestPosCashApproval` mutation requires an argument of type `RequestPosCashApprovalVariables`:
 const requestPosCashApprovalVars: RequestPosCashApprovalVariables = {
-  payload: ...,
+  payload: ..., 
 };
 
 // Call the `requestPosCashApprovalRef()` function to get a reference to the mutation.

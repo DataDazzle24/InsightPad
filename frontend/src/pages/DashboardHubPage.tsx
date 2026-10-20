@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from 'react-router-dom';
+import { downloadDashboardCsv,heatmapStyle } from '../utils/dashboardExport';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { executeQuery, getDataConnect, queryRef } from "firebase/data-connect";
 import { connectorConfig } from "@insightpad/dataconnect";
 import { firebaseApp } from "../lib/firebase";
@@ -55,33 +57,34 @@ const dc = getDataConnect(firebaseApp, connectorConfig),
   ];
 export function DashboardHubPage() {
   const [view, setView] = useState<View>("sales");
-  return (
-    <section className="dashboard-hub">
-      <nav className="dashboard-hub__nav" aria-label="Painéis operacionais">
+  const navigation=(      <nav className="dashboard-hub__nav" aria-label="Painéis operacionais">
         {views.map((i) => (
           <button
-            key={i.key}
+            key={i.key} aria-label={i.label} title={i.label} aria-pressed={view===i.key}
             className={view === i.key ? "active" : ""}
             onClick={() => setView(i.key)}
           >
             <span className="material-symbols-rounded">{i.icon}</span>
-            {i.label}
+
           </button>
         ))}
-      </nav>
+      </nav>);
+  return (
+    <section className="dashboard-hub">
+
       <div className="dashboard-hub__content">
         {view === "sales" ? (
-          <DailyProfitDashboardPage />
+          <DailyProfitDashboardPage navigation={navigation}/>
         ) : view === "channels" ? (
-          <ChannelDashboardPage />
+          <ChannelDashboardPage navigation={navigation}/>
         ) : (
-          <Operational view={view} />
+          <Operational key={view} view={view} navigation={navigation}/>
         )}
       </div>
     </section>
   );
 }
-function Operational({ view }: { view: Exclude<View, "sales" | "channels"> }) {
+function Operational({ view,navigation }: { view: Exclude<View, "sales" | "channels">;navigation:ReactNode }) {
   const now = new Date(),
     start = new Date(now.getFullYear(), now.getMonth(), 1),
     [from, setFrom] = useState(iso(start)),
@@ -91,7 +94,9 @@ function Operational({ view }: { view: Exclude<View, "sales" | "channels"> }) {
     [data, setData] = useState<Data | null>(null),
     [busy, setBusy] = useState(true),
     [notice, setNotice] = useState<Notice | null>(null);
+  const sequence=useRef(0);
   const load = useCallback(async () => {
+    const request=++sequence.current;
     setBusy(true);
     try {
       const r = await executeQuery(
@@ -105,15 +110,15 @@ function Operational({ view }: { view: Exclude<View, "sales" | "channels"> }) {
         box = ((r.data as { _select?: Array<{ data?: Data }> })._select ??
           [])[0]?.data;
       if (!box) throw new Error();
-      setData(box);
+      if(request!==sequence.current)return;setData(box);
     } catch (e) {
-      console.error(e);
+      if(request!==sequence.current)return;console.error(e);
       setNotice({
         type: "error",
         text: "Não foi possível calcular este painel.",
       });
     } finally {
-      setBusy(false);
+      if(request===sequence.current)setBusy(false);
     }
   }, [from, to]);
   useEffect(() => {
@@ -125,7 +130,7 @@ function Operational({ view }: { view: Exclude<View, "sales" | "channels"> }) {
       <header className="finance-heading">
         <div>
           <span className="eyebrow">DASHBOARD</span>
-          <h1>
+<h1><Link className="catalog-back" to="/modulos/dashboards" aria-label="Voltar aos dashboards"><span className="material-symbols-rounded">arrow_back</span></Link>
             {view === "stock"
               ? "ESTOQUE"
               : view === "customers"
@@ -137,7 +142,7 @@ function Operational({ view }: { view: Exclude<View, "sales" | "channels"> }) {
             {new Date(`${to}T12:00:00`).toLocaleDateString("pt-BR")}
           </p>
         </div>
-        <button
+        {navigation}<div className="finance-actions"><button disabled={!data||busy} onClick={()=>window.print()}>PDF</button><button onClick={()=>{setFrom(iso(start));setTo(iso(now));setDraft({from:iso(start),to:iso(now)})}}>Limpar filtros</button><button
           className="catalog-primary"
           onClick={() => {
             setDraft({ from, to });
@@ -146,7 +151,7 @@ function Operational({ view }: { view: Exclude<View, "sales" | "channels"> }) {
         >
           <span className="material-symbols-rounded">tune</span>Período
         </button>
-      </header>
+      </div></header>
       <AppToast notice={notice} onClose={() => setNotice(null)} />
       {data && view === "stock" && <StockView data={data.stock} />}{" "}
       {data && view === "customers" && <CustomerView data={data.customers} />}{" "}
@@ -439,7 +444,7 @@ function Table({
         <div>
           <span>{title}</span>
           <strong>{rows.length} registro(s)</strong>
-        </div>
+        </div><button onClick={()=>downloadDashboardCsv(title,headers,rows)}>CSV</button>
       </header>
       <div>
         <table>
@@ -455,7 +460,7 @@ function Table({
               rows.map((r, i) => (
                 <tr key={i}>
                   {r.map((c, n) => (
-                    <td key={n}>{String(c ?? "—")}</td>
+                    <td key={n} style={typeof c==='number'?heatmapStyle(c,rows.map(row=>Number(row[n]))):undefined}>{String(c ?? "—")}</td>
                   ))}
                 </tr>
               ))

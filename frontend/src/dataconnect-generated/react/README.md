@@ -567,8 +567,8 @@ import { useValidateDeviceSession } from '@insightpad/dataconnect/react'
 export default function ValidateDeviceSessionComponent() {
   // The `useValidateDeviceSession` Query hook requires an argument of type `ValidateDeviceSessionVariables`:
   const validateDeviceSessionVars: ValidateDeviceSessionVariables = {
-    sessionToken: ...,
-    requestKey: ...,
+    sessionToken: ..., 
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -650,7 +650,7 @@ import { useSalesChannelOptions } from '@insightpad/dataconnect/react'
 export default function SalesChannelOptionsComponent() {
   // The `useSalesChannelOptions` Query hook requires an argument of type `SalesChannelOptionsVariables`:
   const salesChannelOptionsVars: SalesChannelOptionsVariables = {
-    requestKey: ...,
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -740,15 +740,15 @@ import { useSalesChannelConnectionsV2 } from '@insightpad/dataconnect/react'
 export default function SalesChannelConnectionsV2Component() {
   // The `useSalesChannelConnectionsV2` Query hook requires an argument of type `SalesChannelConnectionsV2Variables`:
   const salesChannelConnectionsV2Vars: SalesChannelConnectionsV2Variables = {
-    term: ...,
-    provider: ...,
-    status: ...,
+    term: ..., 
+    provider: ..., 
+    status: ..., 
     branchId: ..., // optional
-    sortField: ...,
-    sortDirection: ...,
-    limit: ...,
-    offset: ...,
-    requestKey: ...,
+    sortField: ..., 
+    sortDirection: ..., 
+    limit: ..., 
+    offset: ..., 
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -838,15 +838,15 @@ import { useSalesChannelProductMappingsV2 } from '@insightpad/dataconnect/react'
 export default function SalesChannelProductMappingsV2Component() {
   // The `useSalesChannelProductMappingsV2` Query hook requires an argument of type `SalesChannelProductMappingsV2Variables`:
   const salesChannelProductMappingsV2Vars: SalesChannelProductMappingsV2Variables = {
-    term: ...,
-    provider: ...,
+    term: ..., 
+    provider: ..., 
     connectionId: ..., // optional
-    status: ...,
-    sortField: ...,
-    sortDirection: ...,
-    limit: ...,
-    offset: ...,
-    requestKey: ...,
+    status: ..., 
+    sortField: ..., 
+    sortDirection: ..., 
+    limit: ..., 
+    offset: ..., 
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -934,13 +934,13 @@ import { useExportSalesChannelManagement } from '@insightpad/dataconnect/react'
 export default function ExportSalesChannelManagementComponent() {
   // The `useExportSalesChannelManagement` Query hook requires an argument of type `ExportSalesChannelManagementVariables`:
   const exportSalesChannelManagementVars: ExportSalesChannelManagementVariables = {
-    section: ...,
-    term: ...,
-    provider: ...,
-    status: ...,
+    section: ..., 
+    term: ..., 
+    provider: ..., 
+    status: ..., 
     branchId: ..., // optional
     connectionId: ..., // optional
-    requestKey: ...,
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -1026,11 +1026,11 @@ import { useSalesChannelProductOptions } from '@insightpad/dataconnect/react'
 export default function SalesChannelProductOptionsComponent() {
   // The `useSalesChannelProductOptions` Query hook requires an argument of type `SalesChannelProductOptionsVariables`:
   const salesChannelProductOptionsVars: SalesChannelProductOptionsVariables = {
-    term: ...,
+    term: ..., 
     connectionId: ..., // optional
     productId: ..., // optional
-    limit: ...,
-    requestKey: ...,
+    limit: ..., 
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -1116,7 +1116,7 @@ export default function SalesChannelOperationsComponent() {
   const salesChannelOperationsVars: SalesChannelOperationsVariables = {
     connectionId: ..., // optional
     limit: ..., // optional
-    requestKey: ...,
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -1199,8 +1199,8 @@ import { useSystemSalesChannelWorkQueue } from '@insightpad/dataconnect/react'
 export default function SystemSalesChannelWorkQueueComponent() {
   // The `useSystemSalesChannelWorkQueue` Query hook requires an argument of type `SystemSalesChannelWorkQueueVariables`:
   const systemSalesChannelWorkQueueVars: SystemSalesChannelWorkQueueVariables = {
-    workerId: ...,
-    requestKey: ...,
+    workerId: ..., 
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -1282,7 +1282,7 @@ import { useSystemIfoodConnectionsForPolling } from '@insightpad/dataconnect/rea
 export default function SystemIfoodConnectionsForPollingComponent() {
   // The `useSystemIfoodConnectionsForPolling` Query hook requires an argument of type `SystemIfoodConnectionsForPollingVariables`:
   const systemIfoodConnectionsForPollingVars: SystemIfoodConnectionsForPollingVariables = {
-    requestKey: ...,
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -1364,7 +1364,7 @@ import { useSystemSalesChannelHealthMetrics } from '@insightpad/dataconnect/reac
 export default function SystemSalesChannelHealthMetricsComponent() {
   // The `useSystemSalesChannelHealthMetrics` Query hook requires an argument of type `SystemSalesChannelHealthMetricsVariables`:
   const systemSalesChannelHealthMetricsVars: SystemSalesChannelHealthMetricsVariables = {
-    requestKey: ...,
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -1447,8 +1447,8 @@ import { useSystemIfoodConnectionByMerchant } from '@insightpad/dataconnect/reac
 export default function SystemIfoodConnectionByMerchantComponent() {
   // The `useSystemIfoodConnectionByMerchant` Query hook requires an argument of type `SystemIfoodConnectionByMerchantVariables`:
   const systemIfoodConnectionByMerchantVars: SystemIfoodConnectionByMerchantVariables = {
-    merchantId: ...,
-    requestKey: ...,
+    merchantId: ..., 
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -1531,8 +1531,8 @@ import { useSystemIfoodConnectionsByMerchants } from '@insightpad/dataconnect/re
 export default function SystemIfoodConnectionsByMerchantsComponent() {
   // The `useSystemIfoodConnectionsByMerchants` Query hook requires an argument of type `SystemIfoodConnectionsByMerchantsVariables`:
   const systemIfoodConnectionsByMerchantsVars: SystemIfoodConnectionsByMerchantsVariables = {
-    merchantIds: ...,
-    requestKey: ...,
+    merchantIds: ..., 
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -1616,9 +1616,9 @@ import { useSystemSalesChannelMappingsForSync } from '@insightpad/dataconnect/re
 export default function SystemSalesChannelMappingsForSyncComponent() {
   // The `useSystemSalesChannelMappingsForSync` Query hook requires an argument of type `SystemSalesChannelMappingsForSyncVariables`:
   const systemSalesChannelMappingsForSyncVars: SystemSalesChannelMappingsForSyncVariables = {
-    jobId: ...,
-    workerId: ...,
-    requestKey: ...,
+    jobId: ..., 
+    workerId: ..., 
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -1705,12 +1705,12 @@ import { useSalesChannelOrdersV2 } from '@insightpad/dataconnect/react'
 export default function SalesChannelOrdersV2Component() {
   // The `useSalesChannelOrdersV2` Query hook requires an argument of type `SalesChannelOrdersV2Variables`:
   const salesChannelOrdersV2Vars: SalesChannelOrdersV2Variables = {
-    filters: ...,
-    sortField: ...,
-    sortDirection: ...,
-    limit: ...,
-    offset: ...,
-    requestKey: ...,
+    filters: ..., 
+    sortField: ..., 
+    sortDirection: ..., 
+    limit: ..., 
+    offset: ..., 
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -1793,8 +1793,8 @@ import { useSalesChannelOrderDetails } from '@insightpad/dataconnect/react'
 export default function SalesChannelOrderDetailsComponent() {
   // The `useSalesChannelOrderDetails` Query hook requires an argument of type `SalesChannelOrderDetailsVariables`:
   const salesChannelOrderDetailsVars: SalesChannelOrderDetailsVariables = {
-    id: ...,
-    requestKey: ...,
+    id: ..., 
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -1876,7 +1876,7 @@ import { useSalesChannelWorkspace } from '@insightpad/dataconnect/react'
 export default function SalesChannelWorkspaceComponent() {
   // The `useSalesChannelWorkspace` Query hook requires an argument of type `SalesChannelWorkspaceVariables`:
   const salesChannelWorkspaceVars: SalesChannelWorkspaceVariables = {
-    requestKey: ...,
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -1964,13 +1964,13 @@ import { useSalesChannelOrders } from '@insightpad/dataconnect/react'
 export default function SalesChannelOrdersComponent() {
   // The `useSalesChannelOrders` Query hook requires an argument of type `SalesChannelOrdersVariables`:
   const salesChannelOrdersVars: SalesChannelOrdersVariables = {
-    term: ...,
-    status: ...,
-    provider: ...,
+    term: ..., 
+    status: ..., 
+    provider: ..., 
     branchId: ..., // optional
-    limit: ...,
-    offset: ...,
-    requestKey: ...,
+    limit: ..., 
+    offset: ..., 
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -2052,7 +2052,7 @@ import { useLatestPendingSalesChannelOrder } from '@insightpad/dataconnect/react
 export default function LatestPendingSalesChannelOrderComponent() {
   // The `useLatestPendingSalesChannelOrder` Query hook requires an argument of type `LatestPendingSalesChannelOrderVariables`:
   const latestPendingSalesChannelOrderVars: LatestPendingSalesChannelOrderVariables = {
-    requestKey: ...,
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -2136,7 +2136,7 @@ export default function SalesWorkspaceComponent() {
   // The `useSalesWorkspace` Query hook requires an argument of type `SalesWorkspaceVariables`:
   const salesWorkspaceVars: SalesWorkspaceVariables = {
     branchId: ..., // optional
-    requestKey: ...,
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -2221,10 +2221,10 @@ import { useListSales } from '@insightpad/dataconnect/react'
 export default function ListSalesComponent() {
   // The `useListSales` Query hook requires an argument of type `ListSalesVariables`:
   const listSalesVars: ListSalesVariables = {
-    filters: ...,
-    limit: ...,
-    offset: ...,
-    requestKey: ...,
+    filters: ..., 
+    limit: ..., 
+    offset: ..., 
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -2307,8 +2307,8 @@ import { useSaleDetails } from '@insightpad/dataconnect/react'
 export default function SaleDetailsComponent() {
   // The `useSaleDetails` Query hook requires an argument of type `SaleDetailsVariables`:
   const saleDetailsVars: SaleDetailsVariables = {
-    saleId: ...,
-    requestKey: ...,
+    saleId: ..., 
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -2369,6 +2369,7 @@ export interface ListCategoriesVariables {
   limit: number;
   offset: number;
   requestKey?: string | null;
+  filters?: unknown | null;
 }
 ```
 ### Return Type
@@ -2380,6 +2381,7 @@ To access the data returned by a Query, use the `UseQueryResult.data` field. The
 ```javascript
 export interface ListCategoriesData {
   _select?: unknown[] | null;
+  _selectFirst?: unknown | null;
 }
 ```
 
@@ -2395,19 +2397,20 @@ import { useListCategories } from '@insightpad/dataconnect/react'
 export default function ListCategoriesComponent() {
   // The `useListCategories` Query hook requires an argument of type `ListCategoriesVariables`:
   const listCategoriesVars: ListCategoriesVariables = {
-    search: ...,
+    search: ..., 
     sortField: ..., // optional
     sortDirection: ..., // optional
-    limit: ...,
-    offset: ...,
+    limit: ..., 
+    offset: ..., 
     requestKey: ..., // optional
+    filters: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useListCategories(listCategoriesVars);
   // Variables can be defined inline as well.
-  const query = useListCategories({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+  const query = useListCategories({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., filters: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -2434,6 +2437,7 @@ export default function ListCategoriesComponent() {
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
     console.log(query.data._select);
+    console.log(query.data._selectFirst);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
 }
@@ -2462,6 +2466,7 @@ export interface ListSubcategoriesVariables {
   limit: number;
   offset: number;
   requestKey?: string | null;
+  filters?: unknown | null;
 }
 ```
 ### Return Type
@@ -2473,6 +2478,7 @@ To access the data returned by a Query, use the `UseQueryResult.data` field. The
 ```javascript
 export interface ListSubcategoriesData {
   _select?: unknown[] | null;
+  _selectFirst?: unknown | null;
 }
 ```
 
@@ -2488,20 +2494,21 @@ import { useListSubcategories } from '@insightpad/dataconnect/react'
 export default function ListSubcategoriesComponent() {
   // The `useListSubcategories` Query hook requires an argument of type `ListSubcategoriesVariables`:
   const listSubcategoriesVars: ListSubcategoriesVariables = {
-    search: ...,
+    search: ..., 
     categoryId: ..., // optional
     sortField: ..., // optional
     sortDirection: ..., // optional
-    limit: ...,
-    offset: ...,
+    limit: ..., 
+    offset: ..., 
     requestKey: ..., // optional
+    filters: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useListSubcategories(listSubcategoriesVars);
   // Variables can be defined inline as well.
-  const query = useListSubcategories({ search: ..., categoryId: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+  const query = useListSubcategories({ search: ..., categoryId: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., filters: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -2528,6 +2535,7 @@ export default function ListSubcategoriesComponent() {
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
     console.log(query.data._select);
+    console.log(query.data._selectFirst);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
 }
@@ -2669,11 +2677,11 @@ import { useListBranches } from '@insightpad/dataconnect/react'
 export default function ListBranchesComponent() {
   // The `useListBranches` Query hook requires an argument of type `ListBranchesVariables`:
   const listBranchesVars: ListBranchesVariables = {
-    search: ...,
+    search: ..., 
     sortField: ..., // optional
     sortDirection: ..., // optional
-    limit: ...,
-    offset: ...,
+    limit: ..., 
+    offset: ..., 
     requestKey: ..., // optional
   };
 
@@ -2761,11 +2769,11 @@ import { useListSuppliers } from '@insightpad/dataconnect/react'
 export default function ListSuppliersComponent() {
   // The `useListSuppliers` Query hook requires an argument of type `ListSuppliersVariables`:
   const listSuppliersVars: ListSuppliersVariables = {
-    search: ...,
+    search: ..., 
     sortField: ..., // optional
     sortDirection: ..., // optional
-    limit: ...,
-    offset: ...,
+    limit: ..., 
+    offset: ..., 
     requestKey: ..., // optional
   };
 
@@ -2853,11 +2861,11 @@ import { useListCustomers } from '@insightpad/dataconnect/react'
 export default function ListCustomersComponent() {
   // The `useListCustomers` Query hook requires an argument of type `ListCustomersVariables`:
   const listCustomersVars: ListCustomersVariables = {
-    search: ...,
+    search: ..., 
     sortField: ..., // optional
     sortDirection: ..., // optional
-    limit: ...,
-    offset: ...,
+    limit: ..., 
+    offset: ..., 
     requestKey: ..., // optional
   };
 
@@ -2945,11 +2953,11 @@ import { useListProducts } from '@insightpad/dataconnect/react'
 export default function ListProductsComponent() {
   // The `useListProducts` Query hook requires an argument of type `ListProductsVariables`:
   const listProductsVars: ListProductsVariables = {
-    search: ...,
+    search: ..., 
     sortField: ..., // optional
     sortDirection: ..., // optional
-    limit: ...,
-    offset: ...,
+    limit: ..., 
+    offset: ..., 
     requestKey: ..., // optional
   };
 
@@ -3120,7 +3128,7 @@ import { useProductComponents } from '@insightpad/dataconnect/react'
 export default function ProductComponentsComponent() {
   // The `useProductComponents` Query hook requires an argument of type `ProductComponentsVariables`:
   const productComponentsVars: ProductComponentsVariables = {
-    productId: ...,
+    productId: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -3202,7 +3210,7 @@ import { useProductPromotions } from '@insightpad/dataconnect/react'
 export default function ProductPromotionsComponent() {
   // The `useProductPromotions` Query hook requires an argument of type `ProductPromotionsVariables`:
   const productPromotionsVars: ProductPromotionsVariables = {
-    productId: ...,
+    productId: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -3284,7 +3292,7 @@ import { usePlatformAdminWorkspace } from '@insightpad/dataconnect/react'
 export default function PlatformAdminWorkspaceComponent() {
   // The `usePlatformAdminWorkspace` Query hook requires an argument of type `PlatformAdminWorkspaceVariables`:
   const platformAdminWorkspaceVars: PlatformAdminWorkspaceVariables = {
-    requestKey: ...,
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -3373,14 +3381,14 @@ import { usePlatformBillingWorkspace } from '@insightpad/dataconnect/react'
 export default function PlatformBillingWorkspaceComponent() {
   // The `usePlatformBillingWorkspace` Query hook requires an argument of type `PlatformBillingWorkspaceVariables`:
   const platformBillingWorkspaceVars: PlatformBillingWorkspaceVariables = {
-    term: ...,
-    status: ...,
+    term: ..., 
+    status: ..., 
     tenantId: ..., // optional
     dueFrom: ..., // optional
     dueTo: ..., // optional
-    limit: ...,
-    offset: ...,
-    requestKey: ...,
+    limit: ..., 
+    offset: ..., 
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -3471,16 +3479,16 @@ import { usePlatformBillingWorkspaceV2 } from '@insightpad/dataconnect/react'
 export default function PlatformBillingWorkspaceV2Component() {
   // The `usePlatformBillingWorkspaceV2` Query hook requires an argument of type `PlatformBillingWorkspaceV2Variables`:
   const platformBillingWorkspaceV2Vars: PlatformBillingWorkspaceV2Variables = {
-    term: ...,
-    status: ...,
+    term: ..., 
+    status: ..., 
     tenantId: ..., // optional
     dueFrom: ..., // optional
     dueTo: ..., // optional
-    sortKey: ...,
-    sortDirection: ...,
-    limit: ...,
-    offset: ...,
-    requestKey: ...,
+    sortKey: ..., 
+    sortDirection: ..., 
+    limit: ..., 
+    offset: ..., 
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -3536,6 +3544,11 @@ The `StockWorkspace` Query requires an argument of type `StockWorkspaceVariables
 ```javascript
 export interface StockWorkspaceVariables {
   requestKey: string;
+  filters?: unknown | null;
+  limit?: number | null;
+  offset?: number | null;
+  sortField?: string | null;
+  sortDirection?: string | null;
 }
 ```
 ### Return Type
@@ -3562,14 +3575,19 @@ import { useStockWorkspace } from '@insightpad/dataconnect/react'
 export default function StockWorkspaceComponent() {
   // The `useStockWorkspace` Query hook requires an argument of type `StockWorkspaceVariables`:
   const stockWorkspaceVars: StockWorkspaceVariables = {
-    requestKey: ...,
+    requestKey: ..., 
+    filters: ..., // optional
+    limit: ..., // optional
+    offset: ..., // optional
+    sortField: ..., // optional
+    sortDirection: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useStockWorkspace(stockWorkspaceVars);
   // Variables can be defined inline as well.
-  const query = useStockWorkspace({ requestKey: ..., });
+  const query = useStockWorkspace({ requestKey: ..., filters: ..., limit: ..., offset: ..., sortField: ..., sortDirection: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -3647,10 +3665,10 @@ import { useDailyProfitDashboard } from '@insightpad/dataconnect/react'
 export default function DailyProfitDashboardComponent() {
   // The `useDailyProfitDashboard` Query hook requires an argument of type `DailyProfitDashboardVariables`:
   const dailyProfitDashboardVars: DailyProfitDashboardVariables = {
-    from: ...,
-    to: ...,
+    from: ..., 
+    to: ..., 
     branchId: ..., // optional
-    requestKey: ...,
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -3733,8 +3751,8 @@ import { useStockOperationDetails } from '@insightpad/dataconnect/react'
 export default function StockOperationDetailsComponent() {
   // The `useStockOperationDetails` Query hook requires an argument of type `StockOperationDetailsVariables`:
   const stockOperationDetailsVars: StockOperationDetailsVariables = {
-    operationId: ...,
-    requestKey: ...,
+    operationId: ..., 
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -3819,10 +3837,10 @@ import { useFinancialIndicatorsDashboard } from '@insightpad/dataconnect/react'
 export default function FinancialIndicatorsDashboardComponent() {
   // The `useFinancialIndicatorsDashboard` Query hook requires an argument of type `FinancialIndicatorsDashboardVariables`:
   const financialIndicatorsDashboardVars: FinancialIndicatorsDashboardVariables = {
-    from: ...,
-    to: ...,
-    filters: ...,
-    requestKey: ...,
+    from: ..., 
+    to: ..., 
+    filters: ..., 
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -3907,10 +3925,10 @@ import { useSalesChannelAnalyticsDashboard } from '@insightpad/dataconnect/react
 export default function SalesChannelAnalyticsDashboardComponent() {
   // The `useSalesChannelAnalyticsDashboard` Query hook requires an argument of type `SalesChannelAnalyticsDashboardVariables`:
   const salesChannelAnalyticsDashboardVars: SalesChannelAnalyticsDashboardVariables = {
-    from: ...,
-    to: ...,
-    filters: ...,
-    requestKey: ...,
+    from: ..., 
+    to: ..., 
+    filters: ..., 
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -3995,10 +4013,10 @@ import { useOperationalAnalyticsDashboard } from '@insightpad/dataconnect/react'
 export default function OperationalAnalyticsDashboardComponent() {
   // The `useOperationalAnalyticsDashboard` Query hook requires an argument of type `OperationalAnalyticsDashboardVariables`:
   const operationalAnalyticsDashboardVars: OperationalAnalyticsDashboardVariables = {
-    from: ...,
-    to: ...,
-    filters: ...,
-    requestKey: ...,
+    from: ..., 
+    to: ..., 
+    filters: ..., 
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -4081,8 +4099,8 @@ import { useSystemSalesChannelOrderForActor } from '@insightpad/dataconnect/reac
 export default function SystemSalesChannelOrderForActorComponent() {
   // The `useSystemSalesChannelOrderForActor` Query hook requires an argument of type `SystemSalesChannelOrderForActorVariables`:
   const systemSalesChannelOrderForActorVars: SystemSalesChannelOrderForActorVariables = {
-    userId: ...,
-    orderId: ...,
+    userId: ..., 
+    orderId: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -4165,8 +4183,8 @@ import { useSystemSalesChannelConnectionForActor } from '@insightpad/dataconnect
 export default function SystemSalesChannelConnectionForActorComponent() {
   // The `useSystemSalesChannelConnectionForActor` Query hook requires an argument of type `SystemSalesChannelConnectionForActorVariables`:
   const systemSalesChannelConnectionForActorVars: SystemSalesChannelConnectionForActorVariables = {
-    userId: ...,
-    connectionId: ...,
+    userId: ..., 
+    connectionId: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -4252,11 +4270,11 @@ import { useSearchPosProducts } from '@insightpad/dataconnect/react'
 export default function SearchPosProductsComponent() {
   // The `useSearchPosProducts` Query hook requires an argument of type `SearchPosProductsVariables`:
   const searchPosProductsVars: SearchPosProductsVariables = {
-    branchId: ...,
+    branchId: ..., 
     search: ..., // optional
     limit: ..., // optional
     offset: ..., // optional
-    requestKey: ...,
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -4344,7 +4362,7 @@ export default function SearchPosCustomersComponent() {
     search: ..., // optional
     limit: ..., // optional
     offset: ..., // optional
-    requestKey: ...,
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -4427,8 +4445,8 @@ import { usePosProductBranches } from '@insightpad/dataconnect/react'
 export default function PosProductBranchesComponent() {
   // The `usePosProductBranches` Query hook requires an argument of type `PosProductBranchesVariables`:
   const posProductBranchesVars: PosProductBranchesVariables = {
-    productId: ...,
-    requestKey: ...,
+    productId: ..., 
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -4510,7 +4528,7 @@ import { usePendingPosApprovals } from '@insightpad/dataconnect/react'
 export default function PendingPosApprovalsComponent() {
   // The `usePendingPosApprovals` Query hook requires an argument of type `PendingPosApprovalsVariables`:
   const pendingPosApprovalsVars: PendingPosApprovalsVariables = {
-    requestKey: ...,
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -4593,8 +4611,8 @@ import { usePosSaleApprovalStatus } from '@insightpad/dataconnect/react'
 export default function PosSaleApprovalStatusComponent() {
   // The `usePosSaleApprovalStatus` Query hook requires an argument of type `PosSaleApprovalStatusVariables`:
   const posSaleApprovalStatusVars: PosSaleApprovalStatusVariables = {
-    operationId: ...,
-    requestKey: ...,
+    operationId: ..., 
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -4677,8 +4695,8 @@ import { usePosCashApprovalStatus } from '@insightpad/dataconnect/react'
 export default function PosCashApprovalStatusComponent() {
   // The `usePosCashApprovalStatus` Query hook requires an argument of type `PosCashApprovalStatusVariables`:
   const posCashApprovalStatusVars: PosCashApprovalStatusVariables = {
-    operationId: ...,
-    requestKey: ...,
+    operationId: ..., 
+    requestKey: ..., 
   };
 
   // You don't have to do anything to "execute" the Query.
@@ -4809,8 +4827,8 @@ export default function BootstrapSalesChannelsNavigationComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useBootstrapSalesChannelsNavigation` Mutation requires an argument of type `BootstrapSalesChannelsNavigationVariables`:
   const bootstrapSalesChannelsNavigationVars: BootstrapSalesChannelsNavigationVariables = {
-    tenantId: ...,
-    platformAdminRoleId: ...,
+    tenantId: ..., 
+    platformAdminRoleId: ..., 
   };
   mutation.mutate(bootstrapSalesChannelsNavigationVars);
   // Variables can be defined inline as well.
@@ -5016,8 +5034,8 @@ export default function BootstrapNavigationCatalogComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useBootstrapNavigationCatalog` Mutation requires an argument of type `BootstrapNavigationCatalogVariables`:
   const bootstrapNavigationCatalogVars: BootstrapNavigationCatalogVariables = {
-    tenantId: ...,
-    platformAdminRoleId: ...,
+    tenantId: ..., 
+    platformAdminRoleId: ..., 
   };
   mutation.mutate(bootstrapNavigationCatalogVars);
   // Variables can be defined inline as well.
@@ -5138,7 +5156,7 @@ export default function CreateCategoryComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useCreateCategory` Mutation requires an argument of type `CreateCategoryVariables`:
   const createCategoryVars: CreateCategoryVariables = {
-    name: ...,
+    name: ..., 
   };
   mutation.mutate(createCategoryVars);
   // Variables can be defined inline as well.
@@ -5233,8 +5251,8 @@ export default function UpdateCategoryComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useUpdateCategory` Mutation requires an argument of type `UpdateCategoryVariables`:
   const updateCategoryVars: UpdateCategoryVariables = {
-    id: ...,
-    name: ...,
+    id: ..., 
+    name: ..., 
   };
   mutation.mutate(updateCategoryVars);
   // Variables can be defined inline as well.
@@ -5328,7 +5346,7 @@ export default function ArchiveCategoryComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useArchiveCategory` Mutation requires an argument of type `ArchiveCategoryVariables`:
   const archiveCategoryVars: ArchiveCategoryVariables = {
-    id: ...,
+    id: ..., 
   };
   mutation.mutate(archiveCategoryVars);
   // Variables can be defined inline as well.
@@ -5423,8 +5441,8 @@ export default function CreateSubcategoryComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useCreateSubcategory` Mutation requires an argument of type `CreateSubcategoryVariables`:
   const createSubcategoryVars: CreateSubcategoryVariables = {
-    categoryId: ...,
-    name: ...,
+    categoryId: ..., 
+    name: ..., 
   };
   mutation.mutate(createSubcategoryVars);
   // Variables can be defined inline as well.
@@ -5520,9 +5538,9 @@ export default function UpdateSubcategoryComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useUpdateSubcategory` Mutation requires an argument of type `UpdateSubcategoryVariables`:
   const updateSubcategoryVars: UpdateSubcategoryVariables = {
-    id: ...,
-    categoryId: ...,
-    name: ...,
+    id: ..., 
+    categoryId: ..., 
+    name: ..., 
   };
   mutation.mutate(updateSubcategoryVars);
   // Variables can be defined inline as well.
@@ -5616,7 +5634,7 @@ export default function ArchiveSubcategoryComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useArchiveSubcategory` Mutation requires an argument of type `ArchiveSubcategoryVariables`:
   const archiveSubcategoryVars: ArchiveSubcategoryVariables = {
-    id: ...,
+    id: ..., 
   };
   mutation.mutate(archiveSubcategoryVars);
   // Variables can be defined inline as well.
@@ -5710,7 +5728,7 @@ export default function RestoreCategoryComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useRestoreCategory` Mutation requires an argument of type `RestoreCategoryVariables`:
   const restoreCategoryVars: RestoreCategoryVariables = {
-    id: ...,
+    id: ..., 
   };
   mutation.mutate(restoreCategoryVars);
   // Variables can be defined inline as well.
@@ -5804,7 +5822,7 @@ export default function RestoreSubcategoryComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useRestoreSubcategory` Mutation requires an argument of type `RestoreSubcategoryVariables`:
   const restoreSubcategoryVars: RestoreSubcategoryVariables = {
-    id: ...,
+    id: ..., 
   };
   mutation.mutate(restoreSubcategoryVars);
   // Variables can be defined inline as well.
@@ -5898,7 +5916,7 @@ export default function CreateCategoriesBatchComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useCreateCategoriesBatch` Mutation requires an argument of type `CreateCategoriesBatchVariables`:
   const createCategoriesBatchVars: CreateCategoriesBatchVariables = {
-    names: ...,
+    names: ..., 
   };
   mutation.mutate(createCategoriesBatchVars);
   // Variables can be defined inline as well.
@@ -5992,7 +6010,7 @@ export default function CreateSubcategoriesBatchComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useCreateSubcategoriesBatch` Mutation requires an argument of type `CreateSubcategoriesBatchVariables`:
   const createSubcategoriesBatchVars: CreateSubcategoriesBatchVariables = {
-    items: ...,
+    items: ..., 
   };
   mutation.mutate(createSubcategoriesBatchVars);
   // Variables can be defined inline as well.
@@ -6088,7 +6106,7 @@ export default function SaveBranchComponent() {
   // The `useSaveBranch` Mutation requires an argument of type `SaveBranchVariables`:
   const saveBranchVars: SaveBranchVariables = {
     id: ..., // optional
-    payload: ...,
+    payload: ..., 
   };
   mutation.mutate(saveBranchVars);
   // Variables can be defined inline as well.
@@ -6183,8 +6201,8 @@ export default function SetBranchStatusComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSetBranchStatus` Mutation requires an argument of type `SetBranchStatusVariables`:
   const setBranchStatusVars: SetBranchStatusVariables = {
-    id: ...,
-    active: ...,
+    id: ..., 
+    active: ..., 
   };
   mutation.mutate(setBranchStatusVars);
   // Variables can be defined inline as well.
@@ -6280,7 +6298,7 @@ export default function SaveSupplierComponent() {
   // The `useSaveSupplier` Mutation requires an argument of type `SaveSupplierVariables`:
   const saveSupplierVars: SaveSupplierVariables = {
     id: ..., // optional
-    payload: ...,
+    payload: ..., 
   };
   mutation.mutate(saveSupplierVars);
   // Variables can be defined inline as well.
@@ -6375,8 +6393,8 @@ export default function SetSupplierStatusComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSetSupplierStatus` Mutation requires an argument of type `SetSupplierStatusVariables`:
   const setSupplierStatusVars: SetSupplierStatusVariables = {
-    id: ...,
-    active: ...,
+    id: ..., 
+    active: ..., 
   };
   mutation.mutate(setSupplierStatusVars);
   // Variables can be defined inline as well.
@@ -6472,7 +6490,7 @@ export default function SaveCustomerComponent() {
   // The `useSaveCustomer` Mutation requires an argument of type `SaveCustomerVariables`:
   const saveCustomerVars: SaveCustomerVariables = {
     id: ..., // optional
-    payload: ...,
+    payload: ..., 
   };
   mutation.mutate(saveCustomerVars);
   // Variables can be defined inline as well.
@@ -6567,8 +6585,8 @@ export default function SetCustomerStatusComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSetCustomerStatus` Mutation requires an argument of type `SetCustomerStatusVariables`:
   const setCustomerStatusVars: SetCustomerStatusVariables = {
-    id: ...,
-    active: ...,
+    id: ..., 
+    active: ..., 
   };
   mutation.mutate(setCustomerStatusVars);
   // Variables can be defined inline as well.
@@ -6665,7 +6683,7 @@ export default function SaveProductComponent() {
   // The `useSaveProduct` Mutation requires an argument of type `SaveProductVariables`:
   const saveProductVars: SaveProductVariables = {
     id: ..., // optional
-    payload: ...,
+    payload: ..., 
     components: ..., // optional
   };
   mutation.mutate(saveProductVars);
@@ -6761,8 +6779,8 @@ export default function SetProductStatusComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSetProductStatus` Mutation requires an argument of type `SetProductStatusVariables`:
   const setProductStatusVars: SetProductStatusVariables = {
-    id: ...,
-    active: ...,
+    id: ..., 
+    active: ..., 
   };
   mutation.mutate(setProductStatusVars);
   // Variables can be defined inline as well.
@@ -6857,8 +6875,8 @@ export default function SaveProductComponentsComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSaveProductComponents` Mutation requires an argument of type `SaveProductComponentsVariables`:
   const saveProductComponentsVars: SaveProductComponentsVariables = {
-    productId: ...,
-    components: ...,
+    productId: ..., 
+    components: ..., 
   };
   mutation.mutate(saveProductComponentsVars);
   // Variables can be defined inline as well.
@@ -6957,10 +6975,10 @@ export default function SavePromotionComponent() {
   // The `useSavePromotion` Mutation requires an argument of type `SavePromotionVariables`:
   const savePromotionVars: SavePromotionVariables = {
     id: ..., // optional
-    productId: ...,
-    promotionalPriceCents: ...,
-    startsAt: ...,
-    endsAt: ...,
+    productId: ..., 
+    promotionalPriceCents: ..., 
+    startsAt: ..., 
+    endsAt: ..., 
   };
   mutation.mutate(savePromotionVars);
   // Variables can be defined inline as well.
@@ -7055,8 +7073,8 @@ export default function SetPromotionStatusComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSetPromotionStatus` Mutation requires an argument of type `SetPromotionStatusVariables`:
   const setPromotionStatusVars: SetPromotionStatusVariables = {
-    id: ...,
-    active: ...,
+    id: ..., 
+    active: ..., 
   };
   mutation.mutate(setPromotionStatusVars);
   // Variables can be defined inline as well.
@@ -7151,8 +7169,8 @@ export default function SetCategoriesStatusBatchComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSetCategoriesStatusBatch` Mutation requires an argument of type `SetCategoriesStatusBatchVariables`:
   const setCategoriesStatusBatchVars: SetCategoriesStatusBatchVariables = {
-    ids: ...,
-    active: ...,
+    ids: ..., 
+    active: ..., 
   };
   mutation.mutate(setCategoriesStatusBatchVars);
   // Variables can be defined inline as well.
@@ -7247,8 +7265,8 @@ export default function SetSubcategoriesStatusBatchComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSetSubcategoriesStatusBatch` Mutation requires an argument of type `SetSubcategoriesStatusBatchVariables`:
   const setSubcategoriesStatusBatchVars: SetSubcategoriesStatusBatchVariables = {
-    ids: ...,
-    active: ...,
+    ids: ..., 
+    active: ..., 
   };
   mutation.mutate(setSubcategoriesStatusBatchVars);
   // Variables can be defined inline as well.
@@ -7343,8 +7361,8 @@ export default function SetBranchesStatusBatchComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSetBranchesStatusBatch` Mutation requires an argument of type `SetBranchesStatusBatchVariables`:
   const setBranchesStatusBatchVars: SetBranchesStatusBatchVariables = {
-    ids: ...,
-    active: ...,
+    ids: ..., 
+    active: ..., 
   };
   mutation.mutate(setBranchesStatusBatchVars);
   // Variables can be defined inline as well.
@@ -7439,8 +7457,8 @@ export default function SetSuppliersStatusBatchComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSetSuppliersStatusBatch` Mutation requires an argument of type `SetSuppliersStatusBatchVariables`:
   const setSuppliersStatusBatchVars: SetSuppliersStatusBatchVariables = {
-    ids: ...,
-    active: ...,
+    ids: ..., 
+    active: ..., 
   };
   mutation.mutate(setSuppliersStatusBatchVars);
   // Variables can be defined inline as well.
@@ -7535,8 +7553,8 @@ export default function SetCustomersStatusBatchComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSetCustomersStatusBatch` Mutation requires an argument of type `SetCustomersStatusBatchVariables`:
   const setCustomersStatusBatchVars: SetCustomersStatusBatchVariables = {
-    ids: ...,
-    active: ...,
+    ids: ..., 
+    active: ..., 
   };
   mutation.mutate(setCustomersStatusBatchVars);
   // Variables can be defined inline as well.
@@ -7631,8 +7649,8 @@ export default function SetProductsStatusBatchComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSetProductsStatusBatch` Mutation requires an argument of type `SetProductsStatusBatchVariables`:
   const setProductsStatusBatchVars: SetProductsStatusBatchVariables = {
-    ids: ...,
-    active: ...,
+    ids: ..., 
+    active: ..., 
   };
   mutation.mutate(setProductsStatusBatchVars);
   // Variables can be defined inline as well.
@@ -7812,7 +7830,7 @@ export default function PostSaleComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `usePostSale` Mutation requires an argument of type `PostSaleVariables`:
   const postSaleVars: PostSaleVariables = {
-    payload: ...,
+    payload: ..., 
   };
   mutation.mutate(postSaleVars);
   // Variables can be defined inline as well.
@@ -7908,8 +7926,8 @@ export default function CancelSaleComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useCancelSale` Mutation requires an argument of type `CancelSaleVariables`:
   const cancelSaleVars: CancelSaleVariables = {
-    saleId: ...,
-    reason: ...,
+    saleId: ..., 
+    reason: ..., 
   };
   mutation.mutate(cancelSaleVars);
   // Variables can be defined inline as well.
@@ -8003,7 +8021,7 @@ export default function CreatePlatformTenantComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useCreatePlatformTenant` Mutation requires an argument of type `CreatePlatformTenantVariables`:
   const createPlatformTenantVars: CreatePlatformTenantVariables = {
-    payload: ...,
+    payload: ..., 
   };
   mutation.mutate(createPlatformTenantVars);
   // Variables can be defined inline as well.
@@ -8097,7 +8115,7 @@ export default function UpdatePlatformTenantComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useUpdatePlatformTenant` Mutation requires an argument of type `UpdatePlatformTenantVariables`:
   const updatePlatformTenantVars: UpdatePlatformTenantVariables = {
-    payload: ...,
+    payload: ..., 
   };
   mutation.mutate(updatePlatformTenantVars);
   // Variables can be defined inline as well.
@@ -8192,8 +8210,8 @@ export default function SetPlatformTenantStatusComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSetPlatformTenantStatus` Mutation requires an argument of type `SetPlatformTenantStatusVariables`:
   const setPlatformTenantStatusVars: SetPlatformTenantStatusVariables = {
-    tenantId: ...,
-    active: ...,
+    tenantId: ..., 
+    active: ..., 
   };
   mutation.mutate(setPlatformTenantStatusVars);
   // Variables can be defined inline as well.
@@ -8287,7 +8305,7 @@ export default function LinkPlatformUserComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useLinkPlatformUser` Mutation requires an argument of type `LinkPlatformUserVariables`:
   const linkPlatformUserVars: LinkPlatformUserVariables = {
-    payload: ...,
+    payload: ..., 
   };
   mutation.mutate(linkPlatformUserVars);
   // Variables can be defined inline as well.
@@ -8382,8 +8400,8 @@ export default function SetPlatformUserStatusComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSetPlatformUserStatus` Mutation requires an argument of type `SetPlatformUserStatusVariables`:
   const setPlatformUserStatusVars: SetPlatformUserStatusVariables = {
-    userId: ...,
-    active: ...,
+    userId: ..., 
+    active: ..., 
   };
   mutation.mutate(setPlatformUserStatusVars);
   // Variables can be defined inline as well.
@@ -8477,7 +8495,7 @@ export default function SetPlatformRolePermissionComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSetPlatformRolePermission` Mutation requires an argument of type `SetPlatformRolePermissionVariables`:
   const setPlatformRolePermissionVars: SetPlatformRolePermissionVariables = {
-    payload: ...,
+    payload: ..., 
   };
   mutation.mutate(setPlatformRolePermissionVars);
   // Variables can be defined inline as well.
@@ -8571,7 +8589,7 @@ export default function CreatePlatformInvoiceComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useCreatePlatformInvoice` Mutation requires an argument of type `CreatePlatformInvoiceVariables`:
   const createPlatformInvoiceVars: CreatePlatformInvoiceVariables = {
-    payload: ...,
+    payload: ..., 
   };
   mutation.mutate(createPlatformInvoiceVars);
   // Variables can be defined inline as well.
@@ -8665,7 +8683,7 @@ export default function UpdatePlatformInvoiceComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useUpdatePlatformInvoice` Mutation requires an argument of type `UpdatePlatformInvoiceVariables`:
   const updatePlatformInvoiceVars: UpdatePlatformInvoiceVariables = {
-    payload: ...,
+    payload: ..., 
   };
   mutation.mutate(updatePlatformInvoiceVars);
   // Variables can be defined inline as well.
@@ -8761,9 +8779,9 @@ export default function VoidPlatformInvoiceComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useVoidPlatformInvoice` Mutation requires an argument of type `VoidPlatformInvoiceVariables`:
   const voidPlatformInvoiceVars: VoidPlatformInvoiceVariables = {
-    invoiceId: ...,
-    reason: ...,
-    expectedVersion: ...,
+    invoiceId: ..., 
+    reason: ..., 
+    expectedVersion: ..., 
   };
   mutation.mutate(voidPlatformInvoiceVars);
   // Variables can be defined inline as well.
@@ -8857,7 +8875,7 @@ export default function SettlePlatformInvoiceComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSettlePlatformInvoice` Mutation requires an argument of type `SettlePlatformInvoiceVariables`:
   const settlePlatformInvoiceVars: SettlePlatformInvoiceVariables = {
-    payload: ...,
+    payload: ..., 
   };
   mutation.mutate(settlePlatformInvoiceVars);
   // Variables can be defined inline as well.
@@ -8952,8 +8970,8 @@ export default function ReversePlatformPaymentComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useReversePlatformPayment` Mutation requires an argument of type `ReversePlatformPaymentVariables`:
   const reversePlatformPaymentVars: ReversePlatformPaymentVariables = {
-    paymentId: ...,
-    reason: ...,
+    paymentId: ..., 
+    reason: ..., 
   };
   mutation.mutate(reversePlatformPaymentVars);
   // Variables can be defined inline as well.
@@ -9047,7 +9065,7 @@ export default function PostStockAdjustmentComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `usePostStockAdjustment` Mutation requires an argument of type `PostStockAdjustmentVariables`:
   const postStockAdjustmentVars: PostStockAdjustmentVariables = {
-    payload: ...,
+    payload: ..., 
   };
   mutation.mutate(postStockAdjustmentVars);
   // Variables can be defined inline as well.
@@ -9141,7 +9159,7 @@ export default function PostStockTransferComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `usePostStockTransfer` Mutation requires an argument of type `PostStockTransferVariables`:
   const postStockTransferVars: PostStockTransferVariables = {
-    payload: ...,
+    payload: ..., 
   };
   mutation.mutate(postStockTransferVars);
   // Variables can be defined inline as well.
@@ -9235,7 +9253,7 @@ export default function SaveStockBatchComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSaveStockBatch` Mutation requires an argument of type `SaveStockBatchVariables`:
   const saveStockBatchVars: SaveStockBatchVariables = {
-    payload: ...,
+    payload: ..., 
   };
   mutation.mutate(saveStockBatchVars);
   // Variables can be defined inline as well.
@@ -9331,9 +9349,9 @@ export default function ReverseStockOperationComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useReverseStockOperation` Mutation requires an argument of type `ReverseStockOperationVariables`:
   const reverseStockOperationVars: ReverseStockOperationVariables = {
-    operationId: ...,
-    movementIds: ...,
-    reason: ...,
+    operationId: ..., 
+    movementIds: ..., 
+    reason: ..., 
   };
   mutation.mutate(reverseStockOperationVars);
   // Variables can be defined inline as well.
@@ -9429,9 +9447,9 @@ export default function OpenCashSessionComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useOpenCashSession` Mutation requires an argument of type `OpenCashSessionVariables`:
   const openCashSessionVars: OpenCashSessionVariables = {
-    branchId: ...,
-    openingAmountCents: ...,
-    notes: ...,
+    branchId: ..., 
+    openingAmountCents: ..., 
+    notes: ..., 
   };
   mutation.mutate(openCashSessionVars);
   // Variables can be defined inline as well.
@@ -9529,10 +9547,10 @@ export default function RegisterCashMovementComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useRegisterCashMovement` Mutation requires an argument of type `RegisterCashMovementVariables`:
   const registerCashMovementVars: RegisterCashMovementVariables = {
-    sessionId: ...,
-    movementType: ...,
-    amountCents: ...,
-    description: ...,
+    sessionId: ..., 
+    movementType: ..., 
+    amountCents: ..., 
+    description: ..., 
     operationId: ..., // optional
   };
   mutation.mutate(registerCashMovementVars);
@@ -9629,9 +9647,9 @@ export default function ClaimDeviceSessionComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useClaimDeviceSession` Mutation requires an argument of type `ClaimDeviceSessionVariables`:
   const claimDeviceSessionVars: ClaimDeviceSessionVariables = {
-    sessionToken: ...,
-    deviceId: ...,
-    deviceName: ...,
+    sessionToken: ..., 
+    deviceId: ..., 
+    deviceName: ..., 
   };
   mutation.mutate(claimDeviceSessionVars);
   // Variables can be defined inline as well.
@@ -9725,7 +9743,7 @@ export default function TouchDeviceSessionComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useTouchDeviceSession` Mutation requires an argument of type `TouchDeviceSessionVariables`:
   const touchDeviceSessionVars: TouchDeviceSessionVariables = {
-    sessionToken: ...,
+    sessionToken: ..., 
   };
   mutation.mutate(touchDeviceSessionVars);
   // Variables can be defined inline as well.
@@ -9819,7 +9837,7 @@ export default function ReleaseDeviceSessionComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useReleaseDeviceSession` Mutation requires an argument of type `ReleaseDeviceSessionVariables`:
   const releaseDeviceSessionVars: ReleaseDeviceSessionVariables = {
-    sessionToken: ...,
+    sessionToken: ..., 
   };
   mutation.mutate(releaseDeviceSessionVars);
   // Variables can be defined inline as well.
@@ -9916,10 +9934,10 @@ export default function CreateSalesChannelConnectionComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useCreateSalesChannelConnection` Mutation requires an argument of type `CreateSalesChannelConnectionVariables`:
   const createSalesChannelConnectionVars: CreateSalesChannelConnectionVariables = {
-    provider: ...,
-    branchId: ...,
-    displayName: ...,
-    externalStoreId: ...,
+    provider: ..., 
+    branchId: ..., 
+    displayName: ..., 
+    externalStoreId: ..., 
   };
   mutation.mutate(createSalesChannelConnectionVars);
   // Variables can be defined inline as well.
@@ -10016,10 +10034,10 @@ export default function UpdateSalesChannelConnectionComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useUpdateSalesChannelConnection` Mutation requires an argument of type `UpdateSalesChannelConnectionVariables`:
   const updateSalesChannelConnectionVars: UpdateSalesChannelConnectionVariables = {
-    id: ...,
-    displayName: ...,
-    externalStoreId: ...,
-    enabled: ...,
+    id: ..., 
+    displayName: ..., 
+    externalStoreId: ..., 
+    enabled: ..., 
   };
   mutation.mutate(updateSalesChannelConnectionVars);
   // Variables can be defined inline as well.
@@ -10115,9 +10133,9 @@ export default function ConnectSalesChannelMerchantComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useConnectSalesChannelMerchant` Mutation requires an argument of type `ConnectSalesChannelMerchantVariables`:
   const connectSalesChannelMerchantVars: ConnectSalesChannelMerchantVariables = {
-    connectionId: ...,
-    merchantId: ...,
-    requestKey: ...,
+    connectionId: ..., 
+    merchantId: ..., 
+    requestKey: ..., 
   };
   mutation.mutate(connectSalesChannelMerchantVars);
   // Variables can be defined inline as well.
@@ -10211,7 +10229,7 @@ export default function ArchiveSalesChannelConnectionComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useArchiveSalesChannelConnection` Mutation requires an argument of type `ArchiveSalesChannelConnectionVariables`:
   const archiveSalesChannelConnectionVars: ArchiveSalesChannelConnectionVariables = {
-    id: ...,
+    id: ..., 
   };
   mutation.mutate(archiveSalesChannelConnectionVars);
   // Variables can be defined inline as well.
@@ -10313,12 +10331,12 @@ export default function CreateSalesChannelProductMappingComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useCreateSalesChannelProductMapping` Mutation requires an argument of type `CreateSalesChannelProductMappingVariables`:
   const createSalesChannelProductMappingVars: CreateSalesChannelProductMappingVariables = {
-    connectionId: ...,
-    productId: ...,
-    externalProductId: ...,
-    externalProductName: ...,
-    syncPrice: ...,
-    syncStock: ...,
+    connectionId: ..., 
+    productId: ..., 
+    externalProductId: ..., 
+    externalProductName: ..., 
+    syncPrice: ..., 
+    syncStock: ..., 
     priceMode: ..., // optional
     customPriceCents: ..., // optional
     remoteProductState: ..., // optional
@@ -10423,12 +10441,12 @@ export default function UpdateSalesChannelProductMappingComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useUpdateSalesChannelProductMapping` Mutation requires an argument of type `UpdateSalesChannelProductMappingVariables`:
   const updateSalesChannelProductMappingVars: UpdateSalesChannelProductMappingVariables = {
-    id: ...,
-    externalProductId: ...,
-    externalProductName: ...,
-    syncPrice: ...,
-    syncStock: ...,
-    enabled: ...,
+    id: ..., 
+    externalProductId: ..., 
+    externalProductName: ..., 
+    syncPrice: ..., 
+    syncStock: ..., 
+    enabled: ..., 
     priceMode: ..., // optional
     customPriceCents: ..., // optional
     remoteProductState: ..., // optional
@@ -10525,7 +10543,7 @@ export default function ArchiveSalesChannelProductMappingComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useArchiveSalesChannelProductMapping` Mutation requires an argument of type `ArchiveSalesChannelProductMappingVariables`:
   const archiveSalesChannelProductMappingVars: ArchiveSalesChannelProductMappingVariables = {
-    id: ...,
+    id: ..., 
   };
   mutation.mutate(archiveSalesChannelProductMappingVars);
   // Variables can be defined inline as well.
@@ -10626,10 +10644,10 @@ export default function QueueSalesChannelOrderActionComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useQueueSalesChannelOrderAction` Mutation requires an argument of type `QueueSalesChannelOrderActionVariables`:
   const queueSalesChannelOrderActionVars: QueueSalesChannelOrderActionVariables = {
-    id: ...,
-    action: ...,
-    reason: ...,
-    expectedVersion: ...,
+    id: ..., 
+    action: ..., 
+    reason: ..., 
+    expectedVersion: ..., 
     cancellationCode: ..., // optional
     itemId: ..., // optional
     ean: ..., // optional
@@ -10727,7 +10745,7 @@ export default function RetrySalesChannelCommandComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useRetrySalesChannelCommand` Mutation requires an argument of type `RetrySalesChannelCommandVariables`:
   const retrySalesChannelCommandVars: RetrySalesChannelCommandVariables = {
-    id: ...,
+    id: ..., 
   };
   mutation.mutate(retrySalesChannelCommandVars);
   // Variables can be defined inline as well.
@@ -10821,7 +10839,7 @@ export default function RetrySalesChannelDecommissioningComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useRetrySalesChannelDecommissioning` Mutation requires an argument of type `RetrySalesChannelDecommissioningVariables`:
   const retrySalesChannelDecommissioningVars: RetrySalesChannelDecommissioningVariables = {
-    id: ...,
+    id: ..., 
   };
   mutation.mutate(retrySalesChannelDecommissioningVars);
   // Variables can be defined inline as well.
@@ -10916,8 +10934,8 @@ export default function RequestSalesChannelOrderReconciliationComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useRequestSalesChannelOrderReconciliation` Mutation requires an argument of type `RequestSalesChannelOrderReconciliationVariables`:
   const requestSalesChannelOrderReconciliationVars: RequestSalesChannelOrderReconciliationVariables = {
-    id: ...,
-    requestKey: ...,
+    id: ..., 
+    requestKey: ..., 
   };
   mutation.mutate(requestSalesChannelOrderReconciliationVars);
   // Variables can be defined inline as well.
@@ -11013,9 +11031,9 @@ export default function AcknowledgeSalesChannelOrderAlertComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useAcknowledgeSalesChannelOrderAlert` Mutation requires an argument of type `AcknowledgeSalesChannelOrderAlertVariables`:
   const acknowledgeSalesChannelOrderAlertVars: AcknowledgeSalesChannelOrderAlertVariables = {
-    id: ...,
-    version: ...,
-    alertKind: ...,
+    id: ..., 
+    version: ..., 
+    alertKind: ..., 
   };
   mutation.mutate(acknowledgeSalesChannelOrderAlertVars);
   // Variables can be defined inline as well.
@@ -11111,9 +11129,9 @@ export default function MapSalesChannelOrderItemComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useMapSalesChannelOrderItem` Mutation requires an argument of type `MapSalesChannelOrderItemVariables`:
   const mapSalesChannelOrderItemVars: MapSalesChannelOrderItemVariables = {
-    itemId: ...,
-    productId: ...,
-    requestKey: ...,
+    itemId: ..., 
+    productId: ..., 
+    requestKey: ..., 
   };
   mutation.mutate(mapSalesChannelOrderItemVars);
   // Variables can be defined inline as well.
@@ -11209,9 +11227,9 @@ export default function RequestSalesChannelSyncComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useRequestSalesChannelSync` Mutation requires an argument of type `RequestSalesChannelSyncVariables`:
   const requestSalesChannelSyncVars: RequestSalesChannelSyncVariables = {
-    connectionId: ...,
-    scope: ...,
-    requestKey: ...,
+    connectionId: ..., 
+    scope: ..., 
+    requestKey: ..., 
   };
   mutation.mutate(requestSalesChannelSyncVars);
   // Variables can be defined inline as well.
@@ -11306,8 +11324,8 @@ export default function RequestSalesChannelAuthorizationComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useRequestSalesChannelAuthorization` Mutation requires an argument of type `RequestSalesChannelAuthorizationVariables`:
   const requestSalesChannelAuthorizationVars: RequestSalesChannelAuthorizationVariables = {
-    connectionId: ...,
-    requestKey: ...,
+    connectionId: ..., 
+    requestKey: ..., 
   };
   mutation.mutate(requestSalesChannelAuthorizationVars);
   // Variables can be defined inline as well.
@@ -11403,9 +11421,9 @@ export default function SystemClaimSalesChannelWorkComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSystemClaimSalesChannelWork` Mutation requires an argument of type `SystemClaimSalesChannelWorkVariables`:
   const systemClaimSalesChannelWorkVars: SystemClaimSalesChannelWorkVariables = {
-    provider: ...,
-    workerId: ...,
-    limit: ...,
+    provider: ..., 
+    workerId: ..., 
+    limit: ..., 
   };
   mutation.mutate(systemClaimSalesChannelWorkVars);
   // Variables can be defined inline as well.
@@ -11500,8 +11518,8 @@ export default function SystemUpdateSalesChannelConnectionComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSystemUpdateSalesChannelConnection` Mutation requires an argument of type `SystemUpdateSalesChannelConnectionVariables`:
   const systemUpdateSalesChannelConnectionVars: SystemUpdateSalesChannelConnectionVariables = {
-    connectionId: ...,
-    payload: ...,
+    connectionId: ..., 
+    payload: ..., 
   };
   mutation.mutate(systemUpdateSalesChannelConnectionVars);
   // Variables can be defined inline as well.
@@ -11596,8 +11614,8 @@ export default function SystemRegisterSalesChannelEventComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSystemRegisterSalesChannelEvent` Mutation requires an argument of type `SystemRegisterSalesChannelEventVariables`:
   const systemRegisterSalesChannelEventVars: SystemRegisterSalesChannelEventVariables = {
-    connectionId: ...,
-    payload: ...,
+    connectionId: ..., 
+    payload: ..., 
   };
   mutation.mutate(systemRegisterSalesChannelEventVars);
   // Variables can be defined inline as well.
@@ -11692,8 +11710,8 @@ export default function SystemRegisterSalesChannelEventsComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSystemRegisterSalesChannelEvents` Mutation requires an argument of type `SystemRegisterSalesChannelEventsVariables`:
   const systemRegisterSalesChannelEventsVars: SystemRegisterSalesChannelEventsVariables = {
-    connectionId: ...,
-    payloads: ...,
+    connectionId: ..., 
+    payloads: ..., 
   };
   mutation.mutate(systemRegisterSalesChannelEventsVars);
   // Variables can be defined inline as well.
@@ -11788,8 +11806,8 @@ export default function SystemMarkSalesChannelWebhookActiveComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSystemMarkSalesChannelWebhookActive` Mutation requires an argument of type `SystemMarkSalesChannelWebhookActiveVariables`:
   const systemMarkSalesChannelWebhookActiveVars: SystemMarkSalesChannelWebhookActiveVariables = {
-    connectionIds: ...,
-    requestId: ...,
+    connectionIds: ..., 
+    requestId: ..., 
   };
   mutation.mutate(systemMarkSalesChannelWebhookActiveVars);
   // Variables can be defined inline as well.
@@ -11885,9 +11903,9 @@ export default function SystemRecordSalesChannelEventResultComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSystemRecordSalesChannelEventResult` Mutation requires an argument of type `SystemRecordSalesChannelEventResultVariables`:
   const systemRecordSalesChannelEventResultVars: SystemRecordSalesChannelEventResultVariables = {
-    eventId: ...,
-    workerId: ...,
-    payload: ...,
+    eventId: ..., 
+    workerId: ..., 
+    payload: ..., 
   };
   mutation.mutate(systemRecordSalesChannelEventResultVars);
   // Variables can be defined inline as well.
@@ -11982,8 +12000,8 @@ export default function SystemIngestSalesChannelOrderComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSystemIngestSalesChannelOrder` Mutation requires an argument of type `SystemIngestSalesChannelOrderVariables`:
   const systemIngestSalesChannelOrderVars: SystemIngestSalesChannelOrderVariables = {
-    connectionId: ...,
-    payload: ...,
+    connectionId: ..., 
+    payload: ..., 
   };
   mutation.mutate(systemIngestSalesChannelOrderVars);
   // Variables can be defined inline as well.
@@ -12079,9 +12097,9 @@ export default function SystemApplySalesChannelOrderEventComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSystemApplySalesChannelOrderEvent` Mutation requires an argument of type `SystemApplySalesChannelOrderEventVariables`:
   const systemApplySalesChannelOrderEventVars: SystemApplySalesChannelOrderEventVariables = {
-    connectionId: ...,
-    providerOrderId: ...,
-    payload: ...,
+    connectionId: ..., 
+    providerOrderId: ..., 
+    payload: ..., 
   };
   mutation.mutate(systemApplySalesChannelOrderEventVars);
   // Variables can be defined inline as well.
@@ -12177,9 +12195,9 @@ export default function SystemReconcileSalesChannelCommerceComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSystemReconcileSalesChannelCommerce` Mutation requires an argument of type `SystemReconcileSalesChannelCommerceVariables`:
   const systemReconcileSalesChannelCommerceVars: SystemReconcileSalesChannelCommerceVariables = {
-    connectionId: ...,
-    providerOrderId: ...,
-    payload: ...,
+    connectionId: ..., 
+    providerOrderId: ..., 
+    payload: ..., 
   };
   mutation.mutate(systemReconcileSalesChannelCommerceVars);
   // Variables can be defined inline as well.
@@ -12276,10 +12294,10 @@ export default function SystemUpsertSalesChannelFinancialEventsComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSystemUpsertSalesChannelFinancialEvents` Mutation requires an argument of type `SystemUpsertSalesChannelFinancialEventsVariables`:
   const systemUpsertSalesChannelFinancialEventsVars: SystemUpsertSalesChannelFinancialEventsVariables = {
-    connectionId: ...,
-    jobId: ...,
-    workerId: ...,
-    payloads: ...,
+    connectionId: ..., 
+    jobId: ..., 
+    workerId: ..., 
+    payloads: ..., 
   };
   mutation.mutate(systemUpsertSalesChannelFinancialEventsVars);
   // Variables can be defined inline as well.
@@ -12373,7 +12391,7 @@ export default function SystemQueueDueSalesChannelSyncJobsComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSystemQueueDueSalesChannelSyncJobs` Mutation requires an argument of type `SystemQueueDueSalesChannelSyncJobsVariables`:
   const systemQueueDueSalesChannelSyncJobsVars: SystemQueueDueSalesChannelSyncJobsVariables = {
-    requestKey: ...,
+    requestKey: ..., 
   };
   mutation.mutate(systemQueueDueSalesChannelSyncJobsVars);
   // Variables can be defined inline as well.
@@ -12467,7 +12485,7 @@ export default function SystemPurgeExpiredSalesChannelPayloadsComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSystemPurgeExpiredSalesChannelPayloads` Mutation requires an argument of type `SystemPurgeExpiredSalesChannelPayloadsVariables`:
   const systemPurgeExpiredSalesChannelPayloadsVars: SystemPurgeExpiredSalesChannelPayloadsVariables = {
-    requestKey: ...,
+    requestKey: ..., 
   };
   mutation.mutate(systemPurgeExpiredSalesChannelPayloadsVars);
   // Variables can be defined inline as well.
@@ -12563,9 +12581,9 @@ export default function SystemRecordSalesChannelCommandResultComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSystemRecordSalesChannelCommandResult` Mutation requires an argument of type `SystemRecordSalesChannelCommandResultVariables`:
   const systemRecordSalesChannelCommandResultVars: SystemRecordSalesChannelCommandResultVariables = {
-    commandId: ...,
-    workerId: ...,
-    payload: ...,
+    commandId: ..., 
+    workerId: ..., 
+    payload: ..., 
   };
   mutation.mutate(systemRecordSalesChannelCommandResultVars);
   // Variables can be defined inline as well.
@@ -12660,8 +12678,8 @@ export default function SystemRefreshSalesChannelOrderAfterPickingComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSystemRefreshSalesChannelOrderAfterPicking` Mutation requires an argument of type `SystemRefreshSalesChannelOrderAfterPickingVariables`:
   const systemRefreshSalesChannelOrderAfterPickingVars: SystemRefreshSalesChannelOrderAfterPickingVariables = {
-    commandId: ...,
-    payload: ...,
+    commandId: ..., 
+    payload: ..., 
   };
   mutation.mutate(systemRefreshSalesChannelOrderAfterPickingVars);
   // Variables can be defined inline as well.
@@ -12757,9 +12775,9 @@ export default function SystemRecordSalesChannelSyncResultComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSystemRecordSalesChannelSyncResult` Mutation requires an argument of type `SystemRecordSalesChannelSyncResultVariables`:
   const systemRecordSalesChannelSyncResultVars: SystemRecordSalesChannelSyncResultVariables = {
-    jobId: ...,
-    workerId: ...,
-    payload: ...,
+    jobId: ..., 
+    workerId: ..., 
+    payload: ..., 
   };
   mutation.mutate(systemRecordSalesChannelSyncResultVars);
   // Variables can be defined inline as well.
@@ -12854,8 +12872,8 @@ export default function SystemRecordSalesChannelMappingResultComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useSystemRecordSalesChannelMappingResult` Mutation requires an argument of type `SystemRecordSalesChannelMappingResultVariables`:
   const systemRecordSalesChannelMappingResultVars: SystemRecordSalesChannelMappingResultVariables = {
-    mappingId: ...,
-    payload: ...,
+    mappingId: ..., 
+    payload: ..., 
   };
   mutation.mutate(systemRecordSalesChannelMappingResultVars);
   // Variables can be defined inline as well.
@@ -12952,9 +12970,9 @@ export default function CloseCashSessionComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useCloseCashSession` Mutation requires an argument of type `CloseCashSessionVariables`:
   const closeCashSessionVars: CloseCashSessionVariables = {
-    sessionId: ...,
-    countedAmountCents: ...,
-    notes: ...,
+    sessionId: ..., 
+    countedAmountCents: ..., 
+    notes: ..., 
     operationId: ..., // optional
   };
   mutation.mutate(closeCashSessionVars);
@@ -13054,10 +13072,10 @@ export default function UpdatePosPolicyComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useUpdatePosPolicy` Mutation requires an argument of type `UpdatePosPolicyVariables`:
   const updatePosPolicyVars: UpdatePosPolicyVariables = {
-    requireOpenSession: ...,
-    operatorDiscountPercent: ...,
-    operatorSurchargePercent: ...,
-    allowOperatorClose: ...,
+    requireOpenSession: ..., 
+    operatorDiscountPercent: ..., 
+    operatorSurchargePercent: ..., 
+    allowOperatorClose: ..., 
     operatorWithdrawalLimitCents: ..., // optional
     operatorCloseDifferenceLimitCents: ..., // optional
   };
@@ -13153,7 +13171,7 @@ export default function RequestPosSaleApprovalComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useRequestPosSaleApproval` Mutation requires an argument of type `RequestPosSaleApprovalVariables`:
   const requestPosSaleApprovalVars: RequestPosSaleApprovalVariables = {
-    payload: ...,
+    payload: ..., 
   };
   mutation.mutate(requestPosSaleApprovalVars);
   // Variables can be defined inline as well.
@@ -13248,8 +13266,8 @@ export default function ApprovePosSaleComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useApprovePosSale` Mutation requires an argument of type `ApprovePosSaleVariables`:
   const approvePosSaleVars: ApprovePosSaleVariables = {
-    approvalId: ...,
-    approved: ...,
+    approvalId: ..., 
+    approved: ..., 
   };
   mutation.mutate(approvePosSaleVars);
   // Variables can be defined inline as well.
@@ -13343,7 +13361,7 @@ export default function RequestPosCashApprovalComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useRequestPosCashApproval` Mutation requires an argument of type `RequestPosCashApprovalVariables`:
   const requestPosCashApprovalVars: RequestPosCashApprovalVariables = {
-    payload: ...,
+    payload: ..., 
   };
   mutation.mutate(requestPosCashApprovalVars);
   // Variables can be defined inline as well.

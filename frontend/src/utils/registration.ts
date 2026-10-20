@@ -1,6 +1,6 @@
 export const digits=(value:string)=>value.replace(/\D/g,'')
 
-export const csvSafe=(value:string)=>/^[=+\-@]/.test(value)?`'${value}`:value
+export const csvSafe=(value:string)=>/^[\s\uFEFF]*[=+\-@]|^[\t\r\n]/.test(value)?`'${value}`:value
 
 export function isValidCpf(value:unknown){
  const cpf=digits(String(value??''))
@@ -28,3 +28,5 @@ export function maskRegistrationValue(key:string,value:string){
  if(key==='costPriceCents'||key==='salePriceCents')return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(clean||0)/100)
  return value
 }
+
+export const normalizeCatalogName=(value:string)=>value.replace(/\s+/gu,' ').trim().toUpperCase()

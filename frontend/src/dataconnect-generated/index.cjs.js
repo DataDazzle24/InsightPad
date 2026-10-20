@@ -16,7 +16,7 @@ verifySalesChannelOrderConstraintsRef.operationName = 'VerifySalesChannelOrderCo
 exports.verifySalesChannelOrderConstraintsRef = verifySalesChannelOrderConstraintsRef;
 
 exports.verifySalesChannelOrderConstraints = function verifySalesChannelOrderConstraints(dcOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
   return executeQuery(verifySalesChannelOrderConstraintsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1277,7 +1277,7 @@ getCurrentUserRef.operationName = 'GetCurrentUser';
 exports.getCurrentUserRef = getCurrentUserRef;
 
 exports.getCurrentUser = function getCurrentUser(dcOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
   return executeQuery(getCurrentUserRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1292,7 +1292,7 @@ getCurrentUserAccessRef.operationName = 'GetCurrentUserAccess';
 exports.getCurrentUserAccessRef = getCurrentUserAccessRef;
 
 exports.getCurrentUserAccess = function getCurrentUserAccess(dcOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
   return executeQuery(getCurrentUserAccessRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1307,7 +1307,7 @@ validateDeviceSessionRef.operationName = 'ValidateDeviceSession';
 exports.validateDeviceSessionRef = validateDeviceSessionRef;
 
 exports.validateDeviceSession = function validateDeviceSession(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(validateDeviceSessionRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1322,7 +1322,7 @@ salesChannelOptionsRef.operationName = 'SalesChannelOptions';
 exports.salesChannelOptionsRef = salesChannelOptionsRef;
 
 exports.salesChannelOptions = function salesChannelOptions(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(salesChannelOptionsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1337,7 +1337,7 @@ salesChannelConnectionsV2Ref.operationName = 'SalesChannelConnectionsV2';
 exports.salesChannelConnectionsV2Ref = salesChannelConnectionsV2Ref;
 
 exports.salesChannelConnectionsV2 = function salesChannelConnectionsV2(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(salesChannelConnectionsV2Ref(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1352,7 +1352,7 @@ salesChannelProductMappingsV2Ref.operationName = 'SalesChannelProductMappingsV2'
 exports.salesChannelProductMappingsV2Ref = salesChannelProductMappingsV2Ref;
 
 exports.salesChannelProductMappingsV2 = function salesChannelProductMappingsV2(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(salesChannelProductMappingsV2Ref(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1367,7 +1367,7 @@ exportSalesChannelManagementRef.operationName = 'ExportSalesChannelManagement';
 exports.exportSalesChannelManagementRef = exportSalesChannelManagementRef;
 
 exports.exportSalesChannelManagement = function exportSalesChannelManagement(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(exportSalesChannelManagementRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1382,7 +1382,7 @@ salesChannelProductOptionsRef.operationName = 'SalesChannelProductOptions';
 exports.salesChannelProductOptionsRef = salesChannelProductOptionsRef;
 
 exports.salesChannelProductOptions = function salesChannelProductOptions(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(salesChannelProductOptionsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1397,7 +1397,7 @@ salesChannelOperationsRef.operationName = 'SalesChannelOperations';
 exports.salesChannelOperationsRef = salesChannelOperationsRef;
 
 exports.salesChannelOperations = function salesChannelOperations(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(salesChannelOperationsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1412,7 +1412,7 @@ systemSalesChannelWorkQueueRef.operationName = 'SystemSalesChannelWorkQueue';
 exports.systemSalesChannelWorkQueueRef = systemSalesChannelWorkQueueRef;
 
 exports.systemSalesChannelWorkQueue = function systemSalesChannelWorkQueue(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(systemSalesChannelWorkQueueRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1427,7 +1427,7 @@ systemIfoodConnectionsForPollingRef.operationName = 'SystemIfoodConnectionsForPo
 exports.systemIfoodConnectionsForPollingRef = systemIfoodConnectionsForPollingRef;
 
 exports.systemIfoodConnectionsForPolling = function systemIfoodConnectionsForPolling(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(systemIfoodConnectionsForPollingRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1442,7 +1442,7 @@ systemSalesChannelHealthMetricsRef.operationName = 'SystemSalesChannelHealthMetr
 exports.systemSalesChannelHealthMetricsRef = systemSalesChannelHealthMetricsRef;
 
 exports.systemSalesChannelHealthMetrics = function systemSalesChannelHealthMetrics(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(systemSalesChannelHealthMetricsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1457,7 +1457,7 @@ systemIfoodConnectionByMerchantRef.operationName = 'SystemIfoodConnectionByMerch
 exports.systemIfoodConnectionByMerchantRef = systemIfoodConnectionByMerchantRef;
 
 exports.systemIfoodConnectionByMerchant = function systemIfoodConnectionByMerchant(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(systemIfoodConnectionByMerchantRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1472,7 +1472,7 @@ systemIfoodConnectionsByMerchantsRef.operationName = 'SystemIfoodConnectionsByMe
 exports.systemIfoodConnectionsByMerchantsRef = systemIfoodConnectionsByMerchantsRef;
 
 exports.systemIfoodConnectionsByMerchants = function systemIfoodConnectionsByMerchants(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(systemIfoodConnectionsByMerchantsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1487,7 +1487,7 @@ systemSalesChannelMappingsForSyncRef.operationName = 'SystemSalesChannelMappings
 exports.systemSalesChannelMappingsForSyncRef = systemSalesChannelMappingsForSyncRef;
 
 exports.systemSalesChannelMappingsForSync = function systemSalesChannelMappingsForSync(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(systemSalesChannelMappingsForSyncRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1502,7 +1502,7 @@ salesChannelOrdersV2Ref.operationName = 'SalesChannelOrdersV2';
 exports.salesChannelOrdersV2Ref = salesChannelOrdersV2Ref;
 
 exports.salesChannelOrdersV2 = function salesChannelOrdersV2(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(salesChannelOrdersV2Ref(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1517,7 +1517,7 @@ salesChannelOrderDetailsRef.operationName = 'SalesChannelOrderDetails';
 exports.salesChannelOrderDetailsRef = salesChannelOrderDetailsRef;
 
 exports.salesChannelOrderDetails = function salesChannelOrderDetails(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(salesChannelOrderDetailsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1532,7 +1532,7 @@ salesChannelWorkspaceRef.operationName = 'SalesChannelWorkspace';
 exports.salesChannelWorkspaceRef = salesChannelWorkspaceRef;
 
 exports.salesChannelWorkspace = function salesChannelWorkspace(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(salesChannelWorkspaceRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1547,7 +1547,7 @@ salesChannelOrdersRef.operationName = 'SalesChannelOrders';
 exports.salesChannelOrdersRef = salesChannelOrdersRef;
 
 exports.salesChannelOrders = function salesChannelOrders(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(salesChannelOrdersRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1562,7 +1562,7 @@ latestPendingSalesChannelOrderRef.operationName = 'LatestPendingSalesChannelOrde
 exports.latestPendingSalesChannelOrderRef = latestPendingSalesChannelOrderRef;
 
 exports.latestPendingSalesChannelOrder = function latestPendingSalesChannelOrder(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(latestPendingSalesChannelOrderRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1577,7 +1577,7 @@ salesWorkspaceRef.operationName = 'SalesWorkspace';
 exports.salesWorkspaceRef = salesWorkspaceRef;
 
 exports.salesWorkspace = function salesWorkspace(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(salesWorkspaceRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1592,7 +1592,7 @@ listSalesRef.operationName = 'ListSales';
 exports.listSalesRef = listSalesRef;
 
 exports.listSales = function listSales(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(listSalesRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1607,7 +1607,7 @@ saleDetailsRef.operationName = 'SaleDetails';
 exports.saleDetailsRef = saleDetailsRef;
 
 exports.saleDetails = function saleDetails(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(saleDetailsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1622,7 +1622,7 @@ listCategoriesRef.operationName = 'ListCategories';
 exports.listCategoriesRef = listCategoriesRef;
 
 exports.listCategories = function listCategories(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(listCategoriesRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1637,7 +1637,7 @@ listSubcategoriesRef.operationName = 'ListSubcategories';
 exports.listSubcategoriesRef = listSubcategoriesRef;
 
 exports.listSubcategories = function listSubcategories(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(listSubcategoriesRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1652,7 +1652,7 @@ categoryOptionsRef.operationName = 'CategoryOptions';
 exports.categoryOptionsRef = categoryOptionsRef;
 
 exports.categoryOptions = function categoryOptions(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
   return executeQuery(categoryOptionsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1667,7 +1667,7 @@ listBranchesRef.operationName = 'ListBranches';
 exports.listBranchesRef = listBranchesRef;
 
 exports.listBranches = function listBranches(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(listBranchesRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1682,7 +1682,7 @@ listSuppliersRef.operationName = 'ListSuppliers';
 exports.listSuppliersRef = listSuppliersRef;
 
 exports.listSuppliers = function listSuppliers(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(listSuppliersRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1697,7 +1697,7 @@ listCustomersRef.operationName = 'ListCustomers';
 exports.listCustomersRef = listCustomersRef;
 
 exports.listCustomers = function listCustomers(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(listCustomersRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1712,7 +1712,7 @@ listProductsRef.operationName = 'ListProducts';
 exports.listProductsRef = listProductsRef;
 
 exports.listProducts = function listProducts(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(listProductsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1727,7 +1727,7 @@ registrationOptionsRef.operationName = 'RegistrationOptions';
 exports.registrationOptionsRef = registrationOptionsRef;
 
 exports.registrationOptions = function registrationOptions(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, false);
   return executeQuery(registrationOptionsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1742,7 +1742,7 @@ productComponentsRef.operationName = 'ProductComponents';
 exports.productComponentsRef = productComponentsRef;
 
 exports.productComponents = function productComponents(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(productComponentsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1757,7 +1757,7 @@ productPromotionsRef.operationName = 'ProductPromotions';
 exports.productPromotionsRef = productPromotionsRef;
 
 exports.productPromotions = function productPromotions(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(productPromotionsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1772,7 +1772,7 @@ platformAdminWorkspaceRef.operationName = 'PlatformAdminWorkspace';
 exports.platformAdminWorkspaceRef = platformAdminWorkspaceRef;
 
 exports.platformAdminWorkspace = function platformAdminWorkspace(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(platformAdminWorkspaceRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1787,7 +1787,7 @@ platformBillingWorkspaceRef.operationName = 'PlatformBillingWorkspace';
 exports.platformBillingWorkspaceRef = platformBillingWorkspaceRef;
 
 exports.platformBillingWorkspace = function platformBillingWorkspace(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(platformBillingWorkspaceRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1802,7 +1802,7 @@ platformBillingWorkspaceV2Ref.operationName = 'PlatformBillingWorkspaceV2';
 exports.platformBillingWorkspaceV2Ref = platformBillingWorkspaceV2Ref;
 
 exports.platformBillingWorkspaceV2 = function platformBillingWorkspaceV2(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(platformBillingWorkspaceV2Ref(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1817,7 +1817,7 @@ stockWorkspaceRef.operationName = 'StockWorkspace';
 exports.stockWorkspaceRef = stockWorkspaceRef;
 
 exports.stockWorkspace = function stockWorkspace(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(stockWorkspaceRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1832,7 +1832,7 @@ dailyProfitDashboardRef.operationName = 'DailyProfitDashboard';
 exports.dailyProfitDashboardRef = dailyProfitDashboardRef;
 
 exports.dailyProfitDashboard = function dailyProfitDashboard(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(dailyProfitDashboardRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1847,7 +1847,7 @@ stockOperationDetailsRef.operationName = 'StockOperationDetails';
 exports.stockOperationDetailsRef = stockOperationDetailsRef;
 
 exports.stockOperationDetails = function stockOperationDetails(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(stockOperationDetailsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1862,7 +1862,7 @@ financialIndicatorsDashboardRef.operationName = 'FinancialIndicatorsDashboard';
 exports.financialIndicatorsDashboardRef = financialIndicatorsDashboardRef;
 
 exports.financialIndicatorsDashboard = function financialIndicatorsDashboard(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(financialIndicatorsDashboardRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1877,7 +1877,7 @@ salesChannelAnalyticsDashboardRef.operationName = 'SalesChannelAnalyticsDashboar
 exports.salesChannelAnalyticsDashboardRef = salesChannelAnalyticsDashboardRef;
 
 exports.salesChannelAnalyticsDashboard = function salesChannelAnalyticsDashboard(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(salesChannelAnalyticsDashboardRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1892,7 +1892,7 @@ operationalAnalyticsDashboardRef.operationName = 'OperationalAnalyticsDashboard'
 exports.operationalAnalyticsDashboardRef = operationalAnalyticsDashboardRef;
 
 exports.operationalAnalyticsDashboard = function operationalAnalyticsDashboard(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(operationalAnalyticsDashboardRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1907,7 +1907,7 @@ systemSalesChannelOrderForActorRef.operationName = 'SystemSalesChannelOrderForAc
 exports.systemSalesChannelOrderForActorRef = systemSalesChannelOrderForActorRef;
 
 exports.systemSalesChannelOrderForActor = function systemSalesChannelOrderForActor(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(systemSalesChannelOrderForActorRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1922,7 +1922,7 @@ systemSalesChannelConnectionForActorRef.operationName = 'SystemSalesChannelConne
 exports.systemSalesChannelConnectionForActorRef = systemSalesChannelConnectionForActorRef;
 
 exports.systemSalesChannelConnectionForActor = function systemSalesChannelConnectionForActor(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(systemSalesChannelConnectionForActorRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1937,7 +1937,7 @@ searchPosProductsRef.operationName = 'SearchPosProducts';
 exports.searchPosProductsRef = searchPosProductsRef;
 
 exports.searchPosProducts = function searchPosProducts(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(searchPosProductsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1952,7 +1952,7 @@ searchPosCustomersRef.operationName = 'SearchPosCustomers';
 exports.searchPosCustomersRef = searchPosCustomersRef;
 
 exports.searchPosCustomers = function searchPosCustomers(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(searchPosCustomersRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1967,7 +1967,7 @@ posProductBranchesRef.operationName = 'PosProductBranches';
 exports.posProductBranchesRef = posProductBranchesRef;
 
 exports.posProductBranches = function posProductBranches(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(posProductBranchesRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1982,7 +1982,7 @@ pendingPosApprovalsRef.operationName = 'PendingPosApprovals';
 exports.pendingPosApprovalsRef = pendingPosApprovalsRef;
 
 exports.pendingPosApprovals = function pendingPosApprovals(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(pendingPosApprovalsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -1997,7 +1997,7 @@ posSaleApprovalStatusRef.operationName = 'PosSaleApprovalStatus';
 exports.posSaleApprovalStatusRef = posSaleApprovalStatusRef;
 
 exports.posSaleApprovalStatus = function posSaleApprovalStatus(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(posSaleApprovalStatusRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
@@ -2012,7 +2012,7 @@ posCashApprovalStatusRef.operationName = 'PosCashApprovalStatus';
 exports.posCashApprovalStatusRef = posCashApprovalStatusRef;
 
 exports.posCashApprovalStatus = function posCashApprovalStatus(dcOrVars, varsOrOptions, options) {
-
+  
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(posCashApprovalStatusRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }

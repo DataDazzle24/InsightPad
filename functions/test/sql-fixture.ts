@@ -51,7 +51,7 @@ export async function operation(db: PGlite, name: string, params: unknown[]) {
   const start = operations.indexOf(`${name}(`);
   if (start < 0) throw new Error(`Missing operation ${name}`);
   const body = operations.slice(start).split("\n}")[0]!;
-  const statements = [...body.matchAll(/(_execute|_selectFirst|_select)\(sql: """([\s\S]*?)""",params:\[([^\n]*)\]\)([^\n]*)/g)];
+  const statements = [...body.matchAll(/(_execute|_selectFirst|_select)\(\s*sql:\s*"""([\s\S]*?)""",\s*params:\s*\[([^\]]*)\]\s*\)([^\n]*)/g)];
   if (!statements.length) throw new Error(`Missing SQL ${name}`);
   const variables = [...body.split("\n")[0]!.matchAll(/\$(\w+)\s*:/g)].map(match => match[1]!);
   const userScoped = body.includes('level: USER');
@@ -64,7 +64,7 @@ export async function operation(db: PGlite, name: string, params: unknown[]) {
         return value !== null && typeof value === "object" ? JSON.stringify(value) : value;
       });
       const executed = await db.query(statement[2]!, values);
-      if(statement[1] === "_selectFirst" && result) Object.assign(result, {receipt:executed.rows[0]});
+      if(statement[1] === "_selectFirst" && result) Object.assign(result, {receipt:executed.rows[0],meta:executed.rows[0]});
       else result = executed;
       if (statement[4]!.includes('@check') && !result.affectedRows) throw new Error(statement[4]!.includes('POS_BRANCH_DENIED') ? 'POS_BRANCH_DENIED' : 'POS_REJECTED');
     }
