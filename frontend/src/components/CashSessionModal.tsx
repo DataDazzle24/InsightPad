@@ -180,26 +180,27 @@ export function CashSessionModal({
               <strong>{session.movementCount}</strong>
             </article>
             <div className="cash-session-actions">
+              <button className="cash-action--cancel" onClick={onClose}><span className="material-symbols-rounded" aria-hidden="true">close</span>Cancelar</button>
               {canManage && <button onClick={() => setMode("policy")}>Regras da empresa</button>}
               {canManage && (
                 <>
-                  <button
+                  <button className="cash-action--supply"
                     onClick={() => {
                       setMode("supply");
                       setAmount("R$ 0,00");
                       setNotes("");
                     }}
                   >
-                    Suprimento
+                    <span className="material-symbols-rounded" aria-hidden="true">add_circle</span>Suprimento
                   </button>
-                  <button
+                  <button className="cash-action--withdrawal"
                     onClick={() => {
                       setMode("withdrawal");
                       setAmount("R$ 0,00");
                       setNotes("");
                     }}
                   >
-                    Sangria
+                    <span className="material-symbols-rounded" aria-hidden="true">remove_circle</span>Sangria
                   </button>
                   <button
                     disabled={pendingCount > 0}
@@ -214,7 +215,7 @@ export function CashSessionModal({
                   </button>
                 </>
               )}
-              {!canManage && <><button onClick={() => {setMode("withdrawal"); setAmount("R$ 0,00");setNotes("");setWaitingApproval(false)}}>Sangria</button><button disabled={pendingCount>0} className="danger" onClick={() => {setMode("close");setAmount(maskMoney(expected));setNotes("");setWaitingApproval(false)}}>Fechar meu caixa</button></>}
+              {!canManage && <><button className="cash-action--withdrawal" onClick={() => {setMode("withdrawal"); setAmount("R$ 0,00");setNotes("");setWaitingApproval(false)}}><span className="material-symbols-rounded" aria-hidden="true">remove_circle</span>Sangria</button><button disabled={pendingCount>0} className="danger" onClick={() => {setMode("close");setAmount(maskMoney(expected));setNotes("");setWaitingApproval(false)}}>Fechar meu caixa</button></>}
             </div>
             {pendingCount > 0 && <p className="wide" role="status">Há {pendingCount} venda(s) deste caixa aguardando confirmação. Sincronize antes de fechar.</p>}
           </div>

@@ -217,3 +217,14 @@ html[data-theme=light] .pos-page .scan-button,html[data-theme=light] .pos-page .
 .pos-checkout-body, .cash-session-modal fieldset { margin: 0; border: 0; min-width: 0; }
 
 .recovery-modal :is(button,input):focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+.pos-page .pos-topbar--aligned{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:1rem}
+.pos-clock-group{display:flex;align-items:center;gap:1rem;min-width:0}.pos-clock-group .pos-clock{min-width:0}
+.pos-topbar--aligned>.connection{justify-self:center}.pos-topbar--aligned>.sales-header-actions{justify-content:flex-end;flex-wrap:wrap}
+.pos-page .pos-cash-toggle--close{background:#9f1239;color:#fff;border:1px solid #9f1239}.pos-page .pos-cash-toggle--open{background:#166534;color:#fff;border:1px solid #166534}
+.cash-session-actions .cash-action--cancel,.cash-session-actions .cash-action--withdrawal,.cash-session-actions .cash-action--supply{display:inline-flex;align-items:center;justify-content:center;gap:.4rem}
+.pos-page .cash-session-modal .cash-session-actions .cash-action--withdrawal{background:#facc15!important;color:#422006!important;border-color:#a16207!important}
+.pos-page .cash-session-modal .cash-session-actions .cash-action--supply{background:#166534!important;color:#fff!important;border-color:#166534!important}
+html[data-theme=light] .pos-page .pos-cart .pos-quantity-input{color:#132329;background:#f6fafb;border-color:#647b85}
+.pos-page .pos-cart .pos-quantity-input:focus-visible{outline:3px solid #0891b2;outline-offset:2px}.pos-page .pos-cart .pos-quantity-input:invalid{border-color:#be123c}.pos-page .pos-cart .pos-quantity-input:disabled{opacity:.65}
+@media(max-width:1100px){.pos-page .pos-topbar--aligned{grid-template-columns:minmax(0,1fr) auto}.pos-topbar--aligned>.sales-header-actions{grid-column:1/-1;justify-content:flex-start}}
+@media(max-width:520px){.pos-page .pos-topbar--aligned{grid-template-columns:minmax(0,1fr)}.pos-topbar--aligned>.connection{grid-row:2}.pos-clock-group{gap:.5rem}.pos-clock-group .pos-clock span{white-space:normal}.pos-topbar--aligned>.sales-header-actions{grid-column:1;justify-content:center}}

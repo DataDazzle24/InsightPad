@@ -7,7 +7,7 @@ import {
   type FormEvent,
 } from "react";
 import { getDataConnect } from "firebase/data-connect";
-import { Link } from "react-router-dom";
+import { PosHeader } from "../components/PosHeader";
 import {
   connectorConfig,
   ensureSalesDefaults,
@@ -681,37 +681,10 @@ export function PointOfSalePage() {
   }
   return (
     <section className="sales-page pos-page">
-      <header className="pos-topbar">
-        <div className="pos-clock">
-          <span>
-            {clock.toLocaleDateString("pt-BR", {
-              weekday: "long",
-              day: "2-digit",
-              month: "long",
-            })}
-          </span>
-          <strong>{clock.toLocaleTimeString("pt-BR")}</strong>
-        </div>
-        <div className="sales-header-actions">
-          <button onClick={() => setCashControl(true)} disabled={!branchId || busy || loadedBranchId !== branchId}>
-            <span className="material-symbols-rounded">point_of_sale</span>
-            {loadedBranchId !== branchId ? "Carregando caixa..." : workspace.openSession ? "Caixa aberto" : "Abrir caixa"}
-          </button>
-          <span className={`connection ${online ? "online" : "offline"}`}>
-            <i />
-            {online ? "Online" : "Offline"}
-            {pending > 0 && ` · ${pending} pendente(s)`}
-          </span>
-          {pending > 0 && online && (
-            <button disabled={syncing} onClick={() => void sync()}>{syncing ? "Sincronizando..." : "Sincronizar"}</button>
-          )}
-          {pending > 0 && <button onClick={() => setQueueOpen(true)}>Revisar fila ({pendingRows.filter(row => row.blocked).length} bloqueada(s))</button>}
-          {permission?.canManage && <button onClick={() => setApprovalsOpen(true)}>Aprovações</button>}
-          <Link className="catalog-back" to="/modulos/vendas">
-            <span className="material-symbols-rounded">arrow_back</span>Voltar
-          </Link>
-        </div>
-      </header>
+      <PosHeader clock={clock} online={online} pending={pending} blocked={pendingRows.filter(row => row.blocked).length}
+        syncing={syncing} cashReady={loadedBranchId === branchId} cashOpen={!!workspace.openSession}
+        cashDisabled={!branchId || busy || loadedBranchId !== branchId} canManage={!!permission?.canManage} hasCart={cart.length > 0}
+        onCash={() => setCashControl(true)} onSync={() => void sync()} onQueue={() => setQueueOpen(true)} onApprovals={() => setApprovalsOpen(true)} />
       <AppToast notice={toast} onClose={() => setNotice("")} />
       <div className="pos-layout">
         <aside className="pos-entry">
@@ -898,6 +871,7 @@ export function PointOfSalePage() {
                   <label>
                     <span>Qtd.</span>
                     <input
+                      className="pos-quantity-input"
                       type="number"
                       min={item.weightedProduct ? 0.001 : 1}
                       step={item.weightedProduct ? 0.001 : 1}

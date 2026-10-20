@@ -373,49 +373,115 @@
     {
       "id": "AJU-CAT-06",
       "criterion": "Botão com texto exato só para canCreate; subcategoria recebe seu próprio rótulo.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
-      "status": "A fazer",
-      "commits": [],
-      "tests": [],
+      "status": "Em revisão",
+      "commits": [
+        "2b1843d1825bb89f08d90cf19be0697b3101f2dc"
+      ],
+      "tests": [
+        {
+          "file": "frontend/src/pages/CatalogPages.test.tsx",
+          "result": "4 passed (jsdom; revisão e QA real pendentes)",
+          "ci": [
+            "39452787109",
+            "39452800206"
+          ]
+        }
+      ],
       "review": null
     },
     {
       "id": "AJU-CAT-07",
       "criterion": "Título solicitado na criação, ID mantido na edição e aria-labelledby conectado.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
-      "status": "A fazer",
-      "commits": [],
-      "tests": [],
+      "status": "Em revisão",
+      "commits": [
+        "2b1843d1825bb89f08d90cf19be0697b3101f2dc"
+      ],
+      "tests": [
+        {
+          "file": "frontend/src/pages/CatalogPages.test.tsx",
+          "result": "4 passed (jsdom; revisão e QA real pendentes)",
+          "ci": [
+            "39452787109",
+            "39452800206"
+          ]
+        }
+      ],
       "review": null
     },
     {
       "id": "AJU-CAT-08",
       "criterion": "Rótulo exato em cada campo com ID único; leitor de tela diferencia itens do lote.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
-      "status": "A fazer",
-      "commits": [],
-      "tests": [],
+      "status": "Em revisão",
+      "commits": [
+        "2b1843d1825bb89f08d90cf19be0697b3101f2dc"
+      ],
+      "tests": [
+        {
+          "file": "frontend/src/pages/CatalogPages.test.tsx",
+          "result": "4 passed (jsdom; revisão e QA real pendentes)",
+          "ci": [
+            "39452787109",
+            "39452800206"
+          ]
+        }
+      ],
       "review": null
     },
     {
       "id": "AJU-CAT-09",
       "criterion": "Placeholder exato, input inicialmente vazio e envio vazio é recusado.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
-      "status": "A fazer",
-      "commits": [],
-      "tests": [],
+      "status": "Em revisão",
+      "commits": [
+        "2b1843d1825bb89f08d90cf19be0697b3101f2dc"
+      ],
+      "tests": [
+        {
+          "file": "frontend/src/pages/CatalogPages.test.tsx",
+          "result": "4 passed (jsdom; revisão e QA real pendentes)",
+          "ci": [
+            "39452787109",
+            "39452800206"
+          ]
+        }
+      ],
       "review": null
     },
     {
       "id": "AJU-CAT-10",
       "criterion": "Adiciona campo vazio e não grava até CADASTRAR; limite do lote não é burlado.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
-      "status": "A fazer",
-      "commits": [],
-      "tests": [],
+      "status": "Em revisão",
+      "commits": [
+        "2b1843d1825bb89f08d90cf19be0697b3101f2dc"
+      ],
+      "tests": [
+        {
+          "file": "frontend/src/pages/CatalogPages.test.tsx",
+          "result": "4 passed (jsdom; revisão e QA real pendentes)",
+          "ci": [
+            "39452787109",
+            "39452800206"
+          ]
+        }
+      ],
       "review": null
     },
     {
       "id": "AJU-CAT-11",
       "criterion": "Texto exato; duplo clique/Enter durante gravação não duplica; erros preservam formulário.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
-      "status": "A fazer",
-      "commits": [],
-      "tests": [],
+      "status": "Em revisão",
+      "commits": [
+        "2b1843d1825bb89f08d90cf19be0697b3101f2dc"
+      ],
+      "tests": [
+        {
+          "file": "frontend/src/pages/CatalogPages.test.tsx",
+          "result": "4 passed (jsdom; revisão e QA real pendentes)",
+          "ci": [
+            "39452787109",
+            "39452800206"
+          ]
+        }
+      ],
       "review": null
     },
     {
@@ -461,49 +527,115 @@
     {
       "id": "AJU-SUB-03",
       "criterion": "Texto exato e permissão de criação respeitada; categoria não recebe texto errado.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
-      "status": "A fazer",
-      "commits": [],
-      "tests": [],
+      "status": "Em revisão",
+      "commits": [
+        "2b1843d1825bb89f08d90cf19be0697b3101f2dc"
+      ],
+      "tests": [
+        {
+          "file": "frontend/src/pages/CatalogPages.test.tsx",
+          "result": "4 passed (jsdom; revisão e QA real pendentes)",
+          "ci": [
+            "39452787109",
+            "39452800206"
+          ]
+        }
+      ],
       "review": null
     },
     {
       "id": "AJU-SUB-04",
       "criterion": "Título de criação exato; edição não muda ID nem promete criação.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
-      "status": "A fazer",
-      "commits": [],
-      "tests": [],
+      "status": "Em revisão",
+      "commits": [
+        "2b1843d1825bb89f08d90cf19be0697b3101f2dc"
+      ],
+      "tests": [
+        {
+          "file": "frontend/src/pages/CatalogPages.test.tsx",
+          "result": "4 passed (jsdom; revisão e QA real pendentes)",
+          "ci": [
+            "39452787109",
+            "39452800206"
+          ]
+        }
+      ],
       "review": null
     },
     {
       "id": "AJU-SUB-05",
       "criterion": "Rótulo exato e associação acessível; foco no campo correto após erro.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
-      "status": "A fazer",
-      "commits": [],
-      "tests": [],
+      "status": "Em revisão",
+      "commits": [
+        "2b1843d1825bb89f08d90cf19be0697b3101f2dc"
+      ],
+      "tests": [
+        {
+          "file": "frontend/src/pages/CatalogPages.test.tsx",
+          "result": "4 passed (jsdom; revisão e QA real pendentes)",
+          "ci": [
+            "39452787109",
+            "39452800206"
+          ]
+        }
+      ],
       "review": null
     },
     {
       "id": "AJU-SUB-06",
       "criterion": "Placeholder visível só vazio; não é salvo como valor por abertura do modal.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
-      "status": "A fazer",
-      "commits": [],
-      "tests": [],
+      "status": "Em revisão",
+      "commits": [
+        "2b1843d1825bb89f08d90cf19be0697b3101f2dc"
+      ],
+      "tests": [
+        {
+          "file": "frontend/src/pages/CatalogPages.test.tsx",
+          "result": "4 passed (jsdom; revisão e QA real pendentes)",
+          "ci": [
+            "39452787109",
+            "39452800206"
+          ]
+        }
+      ],
       "review": null
     },
     {
       "id": "AJU-SUB-07",
       "criterion": "Texto exato; novo item vazio; limite20 e remoção de item continuam corretos.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
-      "status": "A fazer",
-      "commits": [],
-      "tests": [],
+      "status": "Em revisão",
+      "commits": [
+        "2b1843d1825bb89f08d90cf19be0697b3101f2dc"
+      ],
+      "tests": [
+        {
+          "file": "frontend/src/pages/CatalogPages.test.tsx",
+          "result": "4 passed (jsdom; revisão e QA real pendentes)",
+          "ci": [
+            "39452787109",
+            "39452800206"
+          ]
+        }
+      ],
       "review": null
     },
     {
       "id": "AJU-SUB-08",
       "criterion": "Clique duplo/Enter produz um lote, erro preserva dados e texto de edição continua contextual.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
-      "status": "A fazer",
-      "commits": [],
-      "tests": [],
+      "status": "Em revisão",
+      "commits": [
+        "2b1843d1825bb89f08d90cf19be0697b3101f2dc"
+      ],
+      "tests": [
+        {
+          "file": "frontend/src/pages/CatalogPages.test.tsx",
+          "result": "4 passed (jsdom; revisão e QA real pendentes)",
+          "ci": [
+            "39452787109",
+            "39452800206"
+          ]
+        }
+      ],
       "review": null
     },
     {
@@ -533,9 +665,20 @@
     {
       "id": "AJU-SUB-13",
       "criterion": "Abrir novo não seleciona pai; edição conserva pai real; envio sem escolha falha sem gravar.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
-      "status": "A fazer",
-      "commits": [],
-      "tests": [],
+      "status": "Em revisão",
+      "commits": [
+        "2b1843d1825bb89f08d90cf19be0697b3101f2dc"
+      ],
+      "tests": [
+        {
+          "file": "frontend/src/pages/CatalogPages.test.tsx",
+          "result": "4 passed (jsdom; revisão e QA real pendentes)",
+          "ci": [
+            "39452787109",
+            "39452800206"
+          ]
+        }
+      ],
       "review": null
     },
     {

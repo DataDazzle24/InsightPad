@@ -1104,6 +1104,14 @@
         "SEC-2026-003"
       ],
       "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
+    },
+    "frontend/src/components/PosHeader.tsx": {
+      "ids": [
+        "AJU-PDV-01",
+        "AJU-PDV-02",
+        "AJU-PDV-03"
+      ],
+      "reason": "Cabeçalho extraído do PDV para testar navegação, conexão e encaminhamento ao controle de caixa, sem executar fechamento."
     }
   },
   "bytePreserved": [
