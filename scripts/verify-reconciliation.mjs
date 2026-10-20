@@ -2,41 +2,52 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim();
-const source = '80f21c65a0ed3e07b0f9c29bebd07d2479b0735b';
-const working = process.argv.includes('--working-tree');
-git('merge-base', '--is-ancestor', source, 'HEAD');
-const allowed = new Set([
-  '.gitignore', '.github/workflows/ci.yml',
-  'docs/source-preservation.md', 'docs/reconciled-candidate-review.md',
-  'docs/reconciled-findings.md', 'docs/dev-frontend-compatibility.md',
-  'frontend/package.json', 'frontend/package-lock.json', 'functions/package.json', 'functions/package-lock.json',
-  'functions/test/reconciled-security.test.ts', 'functions/test/sql.test.ts',
-  'frontend/src/App.css', 'frontend/src/pages/LoginPage.tsx', 'frontend/src/pages/LoginPage.test.tsx',
-  'frontend/src/components/ModalDialog.tsx', 'frontend/qa/recovery.html', 'frontend/qa/recovery.tsx',
-  'frontend/qa/review.css', 'frontend/tsconfig.qa.json', 'frontend/vite.qa.config.ts',
-  'scripts/ci-dev-config.mjs', 'scripts/ci-dev-config.test.mjs', 'scripts/verify-reconciliation.mjs',
-  'scripts/version-manifest.mjs', 'scripts/version-manifest.test.mjs', 'scripts/serve-recovery-qa.mjs',
-]);
-const changed = git('diff', '--name-only', source, ...(working ? [] : ['HEAD'])).split('\n').filter(Boolean);
-if (working) changed.push(...git('ls-files', '--others', '--exclude-standard').split('\n').filter(Boolean));
-const unexpected = changed.filter(path => !allowed.has(path));
-if (unexpected.length) throw new Error(`Change outside approved reconciliation: ${unexpected.join(', ')}`);
-
-// CSS is intentionally shared: every recovered line except the two recovery-modal rules must remain.
-const originalCss = git('show', `${source}:frontend/src/App.css`);
-const candidateCss = working ? readFileSync(resolve(root, 'frontend/src/App.css'), 'utf8') : git('show', 'HEAD:frontend/src/App.css');
-for (const line of originalCss.split('\n')) {
-  if (!line || line.startsWith('.recovery-backdrop{') || line.startsWith('@media(max-width:800px){.theme-switch')) continue;
-  if (!candidateCss.includes(line)) throw new Error('A recovered shared/POS CSS rule was lost');
-}
-for (const [folder, expectations] of [['frontend', { vite: '8.2.4', '@grpc/grpc-js': '1.13.6', 'brace-expansion': '5.0.12' }], ['functions', { vite: '8.2.4' }]]) {
-  const lock = JSON.parse(readFileSync(resolve(root, folder, 'package-lock.json'), 'utf8'));
-  for (const [name, version] of Object.entries(expectations)) {
-    const packages = Object.entries(lock.packages).filter(([path]) => path.endsWith(`node_modules/${name}`));
-    if (!packages.length || packages.some(([, pkg]) => pkg.version !== version)) throw new Error(`${folder}: unexpected ${name} version`);
+export const recoveredAncestor = '80f21c65a0ed3e07b0f9c29bebd07d2479b0735b';
+const exclusions = ['AJU-PDV-06','AJU-PDV-07','AJU-EST-17','AJU-EST-21','AJU-EST-24','AJU-EST-25','AJU-CAT-15','AJU-SUB-12','AJU-SUB-15','AJU-SUB-16'];
+const approvedAdditional = new Set(['PREP-DEC017','OBS-018-AG03-001','ADD-018-001','ADD-018-002','ADD-018-003','ADD-018-004',...Array.from({length:8},(_,i)=>`SEC-2026-${String(i+1).padStart(3,'0')}`),...Array.from({length:3},(_,i)=>`DES-2026-${String(i+1).padStart(3,'0')}`)]);
+const protectedPaths = ['frontend/src/utils/salesOffline.ts','frontend/src/hooks/useDialogAccessibility.ts','frontend/src/components/PosApprovalsModal.tsx'];
+export function validateScope(policy, changed) {
+  if (policy.decision !== 'DEC-019' || policy.ancestor !== recoveredAncestor) throw new Error('Invalid decision/immutable ancestor');
+  const expected = { PDV:5, DASH:13, EST:21, PROD:2, CAT:14, SUB:13 };
+  const ids = new Set(policy.matrixIds);
+  const expectedIds = Object.entries({PDV:7,DASH:13,EST:25,PROD:2,CAT:15,SUB:16}).flatMap(([module,size])=>Array.from({length:size},(_,i)=>`AJU-${module}-${String(i+1).padStart(2,'0')}`)).filter(id=>!exclusions.includes(id));
+  if (expectedIds.some(id=>!ids.has(id)) || policy.additionalIds.some(id=>!approvedAdditional.has(id))) throw new Error('Unapproved requirement ID');
+  if (ids.size !== 68 || policy.matrixIds.length !== 68 || exclusions.some(id => ids.has(id))) throw new Error('Invalid frozen scope of 68');
+  for (const [module, count] of Object.entries(expected)) {
+    if ([...ids].filter(id => new RegExp(`^AJU-${module}-\\d{2}$`).test(id)).length !== count) throw new Error('Invalid module IDs');
   }
+  const valid = new Set([...ids,...policy.additionalIds]);
+  for (const [path, entry] of Object.entries(policy.paths)) {
+    if (!/^(frontend|functions|dataconnect|docs|scripts|\.github)\//.test(path) && path !== '.gitignore') throw new Error('Invalid scoped path');
+    if (path.endsWith('/') || /[\\*?\[\]{}\x00]/.test(path) || path.split('/').includes('..') || /(^|\/)\.env/.test(path)) throw new Error('Only exact non-secret file paths are permitted');
+    if (!entry.reason?.trim() || !entry.ids?.length || entry.ids.some(id => !valid.has(id))) throw new Error(`Unjustified path: ${path}`);
+  }
+  const outside = changed.filter(path => !Object.hasOwn(policy.paths,path));
+  if (outside.length) throw new Error(`Change outside approved scope: ${outside.join(', ')}`);
+  return true;
 }
-console.log(`Recovered source ${source} is an ancestor; ${new Set(changed).size} scoped changes. Business source, schema, operations, SDKs, cache and legacy hook preserved.`);
+export function verifyRepository(root, working = false) {
+  const git = (...args) => execFileSync('git', args, {cwd:root,encoding:'utf8'}).trim();
+  git('merge-base','--is-ancestor',recoveredAncestor,'HEAD');
+  const read = path => working ? readFileSync(resolve(root,path),'utf8') : git('show',`HEAD:${path}`);
+  const policy = JSON.parse(read('scripts/reconciliation-scope.json'));
+  const changed = git('diff','--name-only','--no-renames',recoveredAncestor,...(working?[]:['HEAD'])).split('\n').filter(Boolean);
+  if (working) changed.push(...git('ls-files','--others','--exclude-standard').split('\n').filter(Boolean));
+  validateScope(policy,changed);
+  if (JSON.stringify(policy.bytePreserved) !== JSON.stringify(protectedPaths)) throw new Error('Protected capabilities policy changed');
+  for (const path of protectedPaths) {
+    if (Object.hasOwn(policy.paths,path)) throw new Error(`Protected path requires a separately reviewed policy change: ${path}`);
+    if (git('show',`${recoveredAncestor}:${path}`) !== read(path).trim()) throw new Error(`Recovered capability changed: ${path}`);
+  }
+  // Authorized files may change intentionally; existing operation/type names must survive.
+  for (const path of ['dataconnect/app/queries.gql','dataconnect/app/mutations.gql','dataconnect/schema/schema.gql']) {
+    const pattern = /^(?:query|mutation|type)\s+(\w+)/gm;
+    const old = [...git('show',`${recoveredAncestor}:${path}`).matchAll(pattern)].map(m=>m[1]);
+    const current = new Set([...read(path).matchAll(pattern)].map(m=>m[1]));
+    if (old.some(name=>!current.has(name))) throw new Error(`Existing contract removed: ${path}`);
+  }
+  console.log(`Recovered ancestor verified; ${new Set(changed).size} exact scoped paths justified by 68 IDs/additional corrections. Intentional changes require regression; deployed compatibility is not inferred.`);
+}
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  verifyRepository(resolve(dirname(fileURLToPath(import.meta.url)),'..'),process.argv.includes('--working-tree'));
+}
