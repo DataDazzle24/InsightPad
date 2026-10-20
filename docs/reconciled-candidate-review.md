@@ -47,7 +47,7 @@ Data de corte: 20/10/2026. Fonte dos pedidos: BASE CORE, 15_AJUSTES A2:L79; sele
 
 ## Gate de entrada e estado real
 
-A DEC-018 determina: “AG-03/04 revisar esse recorte enquanto AG-02 prepara matriz dos68 IDs e critérios reavaliados na fonte recuperada; implementação sobre candidato tecnicamente revisado.” Na consulta desta preparação, GitHub reviews do PR18 retornou vazio e a CORE não continha pareceres AG-03/04 sobre esse SHA. O CI verde é evidência de build/testes, não parecer independente. Por isso este commit prepara a matriz e não altera aplicação, SQL, schema, SDKs ou dependências. Não declara nenhum dos68 implementado, aprovado ou publicado. A revisão do candidato final também deverá ser independente e no seu SHA exato.
+A DEC-018 determina: “AG-03/04 revisar esse recorte enquanto AG-02 prepara matriz dos68 IDs e critérios reavaliados na fonte recuperada; implementação sobre candidato tecnicamente revisado.” Na consulta desta preparação, GitHub reviews do PR18 retornou vazio e a CORE não continha pareceres AG-03/04 sobre esse SHA. O CI verde é evidência de build/testes, não parecer independente. Esta preparação não altera aplicação, SQL, schema, SDKs ou dependências; inclui somente documentação e a correção de coleta do histórico Git no CI, descrita separadamente em ADD-018-004. Não declara nenhum dos68 implementado, aprovado ou publicado. A revisão do candidato final também deverá ser independente e no seu SHA exato.
 
 ## Distribuição e recortes internos
 
@@ -76,6 +76,7 @@ Ordem técnica proposta após revisão da base: (1) autorização/filial/revoga�
 | ADD-018-001 | Filtros/contagem/exportação devem compartilhar recorte no servidor, ordenação estável e isolamento. CSV neutraliza fórmulas; paginação não oculta históricos. | Planejado, nenhum commit de implementação |
 | ADD-018-002 | Estados carregando/vazio/erro, foco, teclas, busy, diálogos aninhados, mobile/zoom/contraste nas superfícies alteradas. Reutilizar componentes existentes e preservar regras de negócio. | Planejado, QA real pendente |
 | ADD-018-003 | Evitar resposta obsoleta, envio duplo e mudança de contexto durante operações; limparseleção de linhas que não pertencem à página/filial. | Planejado, evidência pendente |
+| ADD-018-004 | O checkout com fetch-depth2 não contém o ancestral80f21c65 após novos commits, impedindo a guarda de preservação. Usar histórico completo sem remover a verificação. | Correção de preparação no workflow; teste local reproduziu falha exit128 com profundidade2 e sucesso exit0 após fetch unshallow; CI remoto deve confirmar |
 
 Os registrosADD são trabalho de suporte aos pedidos; não elevam o total para além de68. Nenhum achado é encerrado por título de commit ou teste de outro caminho.
 
