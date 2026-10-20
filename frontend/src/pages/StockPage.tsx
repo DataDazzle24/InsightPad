@@ -681,6 +681,7 @@ export function StockPage() {
           <button
             className="stock-heading-action stock-heading-action--transfer" disabled={busy||data.branches.length<2||!permission?.canManage}
             onClick={() => {
+              operationKey.current={signature:'',id:''};
               setTransfer({
                 sourceBranchId: data.branches[0]?.id || "",
                 destinationBranchId: "",
