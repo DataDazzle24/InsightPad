@@ -10,7 +10,7 @@ export async function coverage({page,context,output,sha}){
  const go=async(route)=>{await page.goto(base+'?scenario='+String(++navigation)+'#'+route);await wait();await page.locator('.qa-controls summary').evaluate((e,sha)=>{e.textContent='QA · '+sha},sha)};
  const panel=async()=>page.locator('.qa-controls').evaluate(e=>{e.open=true});
  const run=async(name,steps)=>{try{await steps();assert.equal(await page.locator('.fatal-error').count(),0);cases.push({name,result:'executed',capture:await screenshot(name)})}catch(e){cases.push({name,result:'failed',error:String(e.message).slice(0,600),capture:await screenshot(name+'-failed')})}};
- await context.tracing.start({screenshots:true,snapshots:true,sources:true});
+ await context.tracing.start({screenshots:false,snapshots:true,sources:true});
  try{
   const app=readFileSync('frontend/src/App.tsx','utf8'),routes=readFileSync('frontend/src/config/pages.ts','utf8');
   const paths=[...new Set(['/',...routes.matchAll(/route: '([^']+)'/g)].map(x=>typeof x==='string'?x:x[1]).concat([...app.matchAll(/<Route path="([^"*]+)"/g)].map(x=>x[1])))];

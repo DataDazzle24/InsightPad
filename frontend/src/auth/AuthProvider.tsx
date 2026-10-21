@@ -29,6 +29,7 @@ const dataConnect = getDataConnect(firebaseApp, connectorConfig)
 const ACCESS_RECHECK_MS = 30_000
 let pendingSessionClaim = false
 let firebaseExit:Promise<void>|null=null
+let signInAttempt:{generation:number;settled:Promise<void>}|null=null
 let sessionGeneration = 0
 // Revalidation must not compete with an actor whose logout is draining a claim.
 let closingSession: {user:User|null;generation:number}|null = null
@@ -92,6 +93,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     async function validateAccess(user: User | null, blocking = true) {
       if(user&&isClosing(user))return
       const generation=sessionGeneration
+      const attempt=signInAttempt
+      if(user&&attempt){
+        await attempt.settled
+        if(disposed||generation!==sessionGeneration||attempt.generation!==generation||auth.currentUser!==user||isClosing(user))return
+      }
       const version = ++validationVersion.current
 
       if (!user) {
@@ -205,13 +211,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
   )
 
   async function signIn(email: string, password: string) {
-    const generation=++sessionGeneration
+    const generation=++sessionGeneration,previous=signInAttempt
+    let settle!:()=>void
+    const attempt={generation,settled:new Promise<void>(resolve=>{settle=resolve})}
+    signInAttempt=attempt
     validationVersion.current++
     setError(null)
     setStatus('loading')
     try {
       pendingSessionClaim=true
       await setPersistence(auth, browserLocalPersistence)
+      if(previous)await previous.settled
       if(firebaseExit)await firebaseExit
       if(generation!==sessionGeneration)return
       await signInWithEmailAndPassword(auth, email.trim(), password)
@@ -221,12 +231,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setStatus('unauthenticated')
       setError('E-mail ou senha inválidos.')
       throw new Error('E-mail ou senha inválidos.')
+    }finally{
+      settle()
+      if(signInAttempt===attempt)signInAttempt=null
     }
   }
 
   async function signOut() {
     setStatus('loading')
-    const user=auth.currentUser,generation=++sessionGeneration
+    const user=auth.currentUser,attempt=signInAttempt,generation=++sessionGeneration
     closingSession={user,generation}
     setProfile(null);setPermissions({})
     const key=user?sessionKey(user.uid):null,token=key?localStorage.getItem(key):null
@@ -236,10 +249,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     pendingSessionClaim=false;validationVersion.current++
     const validation=sessionValidation
     const pending=validation && validation.uid===user?.uid?validation.promise:null
+    if(attempt)await attempt.settled
     if(pending){try{await pending}catch(cause){console.warn('Não foi possível concluir a liberação da sessão pendente.',cause)}}
     if(user&&token){try{await releaseSession(token)}catch(cause){console.warn('Não foi possível liberar a sessão do dispositivo.',cause)}}
     // A late success or failure must never sign out a newer B authentication.
-    if(generation===sessionGeneration&&auth.currentUser===user)await endFirebaseAuthentication(user,generation)
+    if(generation===sessionGeneration&&(auth.currentUser===user||attempt))await endFirebaseAuthentication(auth.currentUser,generation)
   }
 
   async function resetPassword(email: string) {

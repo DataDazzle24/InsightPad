@@ -115,3 +115,7 @@ record one synthetic request; the nested native-dialog harness is exercised.
 A read-only `window.__insightpadQa.inspect()` snapshot exposes only synthetic
 memory state to prove stock/cash/sale effects. It is absent from the normal build.
 These additions do not complete the full interface inventory or backend gates.
+
+The action trace retains DOM snapshots and sources without a continuous screenshot
+filmstrip; explicit PNGs record each case and important intermediate states. This
+keeps long pending-response evidence bounded without freezing UI animations.
