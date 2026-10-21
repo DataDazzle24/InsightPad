@@ -64,6 +64,22 @@ jobs:
         run: |
           npm --prefix frontend run test:qa
           npm --prefix frontend run build:qa
+      - name: Chromium e servidor QA no mesmo executor
+        run: |
+          npm --prefix scripts/qa-browser ci --ignore-scripts --no-audit --no-fund
+          node scripts/qa-browser/node_modules/playwright/cli.js install --with-deps chromium
+          node scripts/qa-browser/run.mjs
+      - name: Proteger evidências visuais antes de sair do runner
+        if: always()
+        run: |
+          if test -d artifacts/browser-private; then node scripts/qa-browser/seal.mjs; fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: browser-evidence-sealed-${{ env.CANDIDATE_SHA }}
+          path: artifacts/browser-sealed/evidence.enc
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Manifesto de candidato local
         run: node scripts/version-manifest.mjs --project insightpad-dd-dev
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
