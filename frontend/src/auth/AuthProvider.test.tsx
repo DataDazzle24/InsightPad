@@ -47,6 +47,6 @@ it.each([false,true])('restored auth never silently claims a missing/displaced l
 it('does not restore profile or secret when a pending claim completes after logout',async()=>{
  let finish!:(value:unknown)=>void;mocks.mutation.mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve}))
  await act(async()=>context.signIn('actor@example.invalid','password'));await flush();expect(finish).toBeTypeOf('function')
- await act(async()=>context.signOut());await act(async()=>finish({data:{query:{issued:{token:secret}},_execute:1}}));await flush()
- expect(context.status).toBe('unauthenticated');expect(localStorage.getItem(key)).toBeNull();expect(context.profile).toBeNull()
+ let logout!:Promise<void>;await act(async()=>{logout=context.signOut();await Promise.resolve()});await act(async()=>{finish({data:{query:{issued:{token:secret}},_execute:1}});await logout});await flush()
+ expect(context.status).toBe('unauthenticated');expect(localStorage.getItem(key)).toBeNull();expect(context.profile).toBeNull();expect(mocks.mutation).toHaveBeenCalledWith({name:'ReleaseDeviceSession',variables:{sessionToken:secret}});expect(mocks.mutation.mock.invocationCallOrder.at(-1)).toBeLessThan(mocks.signOut.mock.invocationCallOrder[0]!)
 })

@@ -9552,6 +9552,9 @@ export interface PostStockTransferData {
     session?: unknown | null;
   };
   _execute?: number | null;
+  confirmation?: {
+    receipt?: unknown | null;
+  };
 }
 ```
 
@@ -9614,6 +9617,7 @@ export default function PostStockTransferComponent() {
   if (mutation.isSuccess) {
     console.log(mutation.data.query);
     console.log(mutation.data._execute);
+    console.log(mutation.data.confirmation);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
 }
@@ -9652,6 +9656,9 @@ export interface SaveStockBatchData {
     session?: unknown | null;
   };
   _execute?: number | null;
+  confirmation?: {
+    receipt?: unknown | null;
+  };
 }
 ```
 
@@ -9714,6 +9721,7 @@ export default function SaveStockBatchComponent() {
   if (mutation.isSuccess) {
     console.log(mutation.data.query);
     console.log(mutation.data._execute);
+    console.log(mutation.data.confirmation);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
 }

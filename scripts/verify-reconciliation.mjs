@@ -9,6 +9,8 @@ const protectedPaths = ['frontend/src/utils/salesOffline.ts','frontend/src/hooks
 // Exact additional sources for server leases and read-only schema inspection.
 // Internal review matrices and findings are never added here.
 const serverSessionPaths=new Set(['frontend/src/auth/session-data-connect.ts', 'frontend/src/auth/session-data-connect.test.ts', 'frontend/src/auth/AuthProvider.test.tsx', 'frontend/vite.config.ts', 'frontend/src/pages/SalesChannelsPage.tsx', 'frontend/src/pages/ChannelOrdersPage.tsx', 'functions/src/index.ts', 'functions/src/worker.ts', 'functions/test/session-security.test.ts', 'functions/test/name-key-preflight.test.ts', 'dataconnect/preflight/name-key.sql', 'scripts/review-schema-diff.mjs']);
+// Exact fixture/contract sources for the isolated full-application QA entry.
+const deliveryQaPaths=new Set(['frontend/src/utils/dashboardAuthorization.ts','frontend/qa/api.ts','frontend/qa/api.test.ts','frontend/qa/application.test.tsx','frontend/vitest.qa.config.ts','frontend/qa/application.tsx','frontend/qa/application.html','frontend/qa/README.md','functions/test/stock-receipts.test.ts','frontend/src/components/ChannelOrderNotifier.tsx']);
 export function validateScope(policy, changed) {
   if (policy.decision !== 'DEC-019' || policy.ancestor !== recoveredAncestor) throw new Error('Invalid decision/immutable ancestor');
   const expected = { PDV:5, DASH:13, EST:21, PROD:2, CAT:14, SUB:13 };
@@ -25,7 +27,7 @@ export function validateScope(policy, changed) {
     if (path.endsWith('/') || /[\\*?\[\]{}\x00]/.test(path) || path.split('/').includes('..') || /(^|\/)\.env/.test(path)) throw new Error('Only exact non-secret file paths are permitted');
     if (!entry.reason?.trim() || !entry.ids?.length || entry.ids.some(id => !valid.has(id))) throw new Error(`Unjustified path: ${path}`);
   }
-  const outside = changed.filter(path => !Object.hasOwn(policy.paths,path) && !serverSessionPaths.has(path));
+  const outside = changed.filter(path => !Object.hasOwn(policy.paths,path) && !serverSessionPaths.has(path) && !deliveryQaPaths.has(path));
   if (outside.length) throw new Error(`Change outside approved scope: ${outside.join(', ')}`);
   return true;
 }

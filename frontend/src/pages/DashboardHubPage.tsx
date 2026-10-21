@@ -1,3 +1,4 @@
+import { useDashboardExport } from '../utils/dashboardAuthorization';
 import { Link } from 'react-router-dom';
 import { downloadDashboardCsv,heatmapStyle } from '../utils/dashboardExport';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -85,6 +86,7 @@ export function DashboardHubPage() {
   );
 }
 function Operational({ view,navigation }: { view: Exclude<View, "sales" | "channels">;navigation:ReactNode }) {
+  const canExport=useDashboardExport();
   const now = new Date(),
     start = new Date(now.getFullYear(), now.getMonth(), 1),
     [from, setFrom] = useState(iso(start)),
@@ -142,7 +144,7 @@ function Operational({ view,navigation }: { view: Exclude<View, "sales" | "chann
             {new Date(`${to}T12:00:00`).toLocaleDateString("pt-BR")}
           </p>
         </div>
-        {navigation}<div className="finance-actions"><button disabled={!data||busy} onClick={()=>window.print()}>PDF</button><button onClick={()=>{setFrom(iso(start));setTo(iso(now));setDraft({from:iso(start),to:iso(now)})}}>Limpar filtros</button><button
+        {navigation}<div className="finance-actions"><button disabled={!canExport||!data||busy} onClick={()=>{if(canExport&&data&&!busy)window.print()}}>PDF</button><button onClick={()=>{setFrom(iso(start));setTo(iso(now));setDraft({from:iso(start),to:iso(now)})}}>Limpar filtros</button><button
           className="catalog-primary"
           onClick={() => {
             setDraft({ from, to });
@@ -335,14 +337,14 @@ function CustomerView({ data }: { data: Customer }) {
           title="Aniversariantes"
           headers={["Cliente", "Nascimento"]}
           rows={data.birthdays
-            .slice(0, 50)
+
             .map((i) => [i.name, date(i.birthDate)])}
         />
         <Table
           title="Clientes sem comprar"
           headers={["Cliente", "Última compra", "Histórico"]}
           rows={data.dormant
-            .slice(0, 100)
+
             .map((i) => [i.name, date(i.lastPurchase), money(i.revenueCents)])}
         />
       </div>
@@ -438,15 +440,16 @@ function Table({
   headers: string[];
   rows: unknown[][];
 }) {
+  const canExport=useDashboardExport();
   return (
     <article className="finance-table-card analytics-table">
       <header>
         <div>
           <span>{title}</span>
           <strong>{rows.length} registro(s)</strong>
-        </div><button onClick={()=>downloadDashboardCsv(title,headers,rows)}>CSV</button>
+        </div><button disabled={!canExport} onClick={()=>{if(canExport)downloadDashboardCsv(title,headers,rows)}}>CSV</button>
       </header>
-      <div>
+      <div tabIndex={0} role="region" aria-label={`${title}: tabela completa com rolagem horizontal`}>
         <table>
           <thead>
             <tr>

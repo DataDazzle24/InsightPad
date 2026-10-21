@@ -28,12 +28,14 @@ interface AuthProviderProps { children: ReactNode }
 const dataConnect = getDataConnect(firebaseApp, connectorConfig)
 const ACCESS_RECHECK_MS = 30_000
 let pendingSessionClaim = false
+let sessionGeneration = 0
 let sessionValidation: {uid:string;promise:Promise<void>} | null = null
 const deviceId=()=>{const key='insightpad.device.id';let value=localStorage.getItem(key);if(!value){value=`${crypto.randomUUID()}${crypto.randomUUID()}`;localStorage.setItem(key,value)}return value}
 const sessionKey=(uid:string)=>`insightpad.device.session:${uid}`
 const deviceName=()=>`${navigator.platform||'Dispositivo'} · ${navigator.userAgent.slice(0,120)}`
 async function validateExclusiveSession(user:User){
   if(sessionValidation?.uid===user.uid)return sessionValidation.promise
+  const generation=sessionGeneration
   const run=async()=>{
     const key=sessionKey(user.uid),token=localStorage.getItem(key)||''
     if(pendingSessionClaim){
@@ -42,6 +44,8 @@ async function validateExclusiveSession(user:User){
       const issued=(result.data as {query?:{issued?:{token?:unknown}}}).query?.issued?.token
       if(typeof issued!=='string'||!/^[a-f0-9]{64}$/.test(issued))throw new Error('DEVICE_SESSION_REPLACED')
       if(auth.currentUser?.uid!==user.uid)return
+      // Logout waits for this compensation while Firebase still authenticates the actor.
+      if(generation!==sessionGeneration){await executeMutation(mutationRef(dataConnect,'ReleaseDeviceSession',{sessionToken:issued}));return}
       localStorage.setItem(key,issued)
       return
     }
@@ -192,7 +196,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   async function signOut() {
     setStatus('loading')
-    const user=auth.currentUser,token=user?localStorage.getItem(sessionKey(user.uid)):null
+    const user=auth.currentUser
+    sessionGeneration++;pendingSessionClaim=false;validationVersion.current++
+    const validation=sessionValidation
+    const pending=validation && validation.uid===user?.uid?validation.promise:null
+    if(pending){try{await pending}catch(cause){console.warn('Não foi possível concluir a liberação da sessão pendente.',cause)}}
+    const token=user?localStorage.getItem(sessionKey(user.uid)):null
     if(user&&token){try{await executeMutation(mutationRef(dataConnect,'ReleaseDeviceSession',{sessionToken:token}))}catch(cause){console.warn('Não foi possível liberar a sessão do dispositivo.',cause)}localStorage.removeItem(sessionKey(user.uid))}
     await firebaseSignOut(auth)
   }

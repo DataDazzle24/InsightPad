@@ -12112,6 +12112,9 @@ export interface PostStockTransferData {
     session?: unknown | null;
   };
   _execute?: number | null;
+  confirmation?: {
+    receipt?: unknown | null;
+  };
 }
 ```
 ### Using `PostStockTransfer`'s action shortcut function
@@ -12138,12 +12141,14 @@ const { data } = await postStockTransfer(dataConnect, postStockTransferVars);
 
 console.log(data.query);
 console.log(data._execute);
+console.log(data.confirmation);
 
 // Or, you can use the `Promise` API.
 postStockTransfer(postStockTransferVars).then((response) => {
   const data = response.data;
   console.log(data.query);
   console.log(data._execute);
+  console.log(data.confirmation);
 });
 ```
 
@@ -12174,12 +12179,14 @@ const { data } = await executeMutation(ref);
 
 console.log(data.query);
 console.log(data._execute);
+console.log(data.confirmation);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
   console.log(data.query);
   console.log(data._execute);
+  console.log(data.confirmation);
 });
 ```
 
@@ -12231,6 +12238,9 @@ export interface SaveStockBatchData {
     session?: unknown | null;
   };
   _execute?: number | null;
+  confirmation?: {
+    receipt?: unknown | null;
+  };
 }
 ```
 ### Using `SaveStockBatch`'s action shortcut function
@@ -12257,12 +12267,14 @@ const { data } = await saveStockBatch(dataConnect, saveStockBatchVars);
 
 console.log(data.query);
 console.log(data._execute);
+console.log(data.confirmation);
 
 // Or, you can use the `Promise` API.
 saveStockBatch(saveStockBatchVars).then((response) => {
   const data = response.data;
   console.log(data.query);
   console.log(data._execute);
+  console.log(data.confirmation);
 });
 ```
 
@@ -12293,12 +12305,14 @@ const { data } = await executeMutation(ref);
 
 console.log(data.query);
 console.log(data._execute);
+console.log(data.confirmation);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
   console.log(data.query);
   console.log(data._execute);
+  console.log(data.confirmation);
 });
 ```
 

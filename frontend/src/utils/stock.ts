@@ -39,3 +39,10 @@ export function localDateTimeInput(value=new Date()){
  return new Date(value.getTime()-value.getTimezoneOffset()*60000).toISOString().slice(0,16)
 }
 export const stockStatusLabel=(status:string)=>({POSTED:'Registrado',REVERSED:'Estornado',PENDING:'Pendente',COMPLETED:'Concluído',CANCELLED:'Cancelado'}[status]??status)
+
+export function stockConfirmed(data:{_execute?:number|null;confirmation?:{receipt?:unknown}|null},operationId:string,kind:string){
+ if(typeof data._execute==='number' && Number.isInteger(data._execute) && data._execute>0)return true;
+ if(data._execute!==0)return false;
+ const r=data.confirmation?.receipt as {confirmed?:boolean;replay?:boolean;operationId?:string;kind?:string}|undefined;
+ return r?.confirmed===true && r.replay===true && r.operationId===operationId && r.kind===kind;
+}

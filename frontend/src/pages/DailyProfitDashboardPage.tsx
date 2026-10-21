@@ -1,3 +1,4 @@
+import { useDashboardExport } from '../utils/dashboardAuthorization';
 import { Link } from 'react-router-dom';
 import { csvSafe } from '../utils/registration';
 import { heatmapStyle } from '../utils/dashboardExport';
@@ -101,6 +102,7 @@ const dc = getDataConnect(firebaseApp, connectorConfig),
   opts = (items: Option[] = []): SelectOption[] =>
     items.map((i) => ({ value: i.id, label: i.name }));
 export function DailyProfitDashboardPage({navigation}:{navigation?:ReactNode}) {
+  const canExport=useDashboardExport();
   const today = new Date(),
     initial = new Date(today.getFullYear(), today.getMonth(), 1),
     [from, setFrom] = useState(iso(initial)),
@@ -214,6 +216,7 @@ export function DailyProfitDashboardPage({navigation}:{navigation?:ReactNode}) {
     setSelected(true);
   }
   function csv() {
+    if(!canExport||!data||busy)return;
     const rows = [
         [
           "Produto",
@@ -267,11 +270,11 @@ export function DailyProfitDashboardPage({navigation}:{navigation?:ReactNode}) {
           <span className="eyebrow">DASHBOARD</span>
           <h1><Link className="catalog-back" to="/modulos/dashboards" aria-label="Voltar aos dashboards"><span className="material-symbols-rounded">arrow_back</span></Link>INDICADORES FINANCEIROS</h1><p className="dashboard-filter-summary">{from} — {to} · {Object.entries(filters).filter(([,ids])=>ids.length).map(([key,ids])=>ids.map(id=>data?.options[key as keyof Filters]?.find(option=>option.id===id)?.name??id).join(', ')).join(' · ')||'Todos os filtros'} · Gerado em {new Date().toLocaleString('pt-BR')}</p>
         </div>
-        {navigation}<div className="finance-actions"><button onClick={clear}>Limpar filtros</button><button disabled={!data||busy} onClick={()=>window.print()}>PDF</button>
+        {navigation}<div className="finance-actions"><button onClick={clear}>Limpar filtros</button><button disabled={!canExport||!data||busy} onClick={()=>{if(canExport&&data&&!busy)window.print()}}>PDF</button>
           <button onClick={() => setInfo(true)}>
             <span className="material-symbols-rounded">info</span>Fórmulas
           </button>
-          <button onClick={csv}>
+          <button disabled={!canExport||!data||busy} onClick={csv}>
             <span className="material-symbols-rounded">download</span>CSV
           </button>
           <button
@@ -448,9 +451,9 @@ export function DailyProfitDashboardPage({navigation}:{navigation?:ReactNode}) {
                 <span>Análise por produto</span>
                 <strong>Receita, custo e rentabilidade</strong>
               </div>
-<div><small>Clique em um produto para filtrar todo o painel.</small><button onClick={csv}>CSV</button></div><small>Cor: intensidade relativa da coluna; valores negativos em âmbar.</small>
+<div><small>Clique em um produto para filtrar todo o painel.</small><button disabled={!canExport||!data||busy} onClick={csv}>CSV</button></div><small>Cor: intensidade relativa da coluna; valores negativos em âmbar.</small>
             </header>
-            <div>
+            <div tabIndex={0} role="region" aria-label="Produtos: tabela completa com rolagem horizontal">
               <table>
                 <thead>
                   <tr>

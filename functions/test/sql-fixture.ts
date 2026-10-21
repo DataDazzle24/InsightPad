@@ -64,10 +64,15 @@ export async function operation(db: PGlite, name: string, params: unknown[], con
     for (const statement of statements) {
       const values = statement[3]!.split(",").filter(raw=>raw.trim()).map(raw => {
         const variable=raw.trim().slice(1);
-        const value=raw.includes('response.query.issued.token') ? issued : raw.includes('auth.uid') ? params[0] : variable==='sessionToken' && body.includes('session: _selectFirst') ? (context ? context.sessionToken : fixtureSessionToken(String(params[0]))) : params[variables.indexOf(variable)+(userScoped?1:0)];
+        const value=raw.includes('response._execute') ? result?.affectedRows : raw.includes('response.query.issued.token') ? issued : raw.includes('auth.uid') ? params[0] : variable==='sessionToken' && body.includes('session: _selectFirst') ? (context ? context.sessionToken : fixtureSessionToken(String(params[0]))) : params[variables.indexOf(variable)+(userScoped?1:0)];
         return value !== null && typeof value === "object" ? JSON.stringify(value) : value;
       });
       const executed = await db.query(statement[2]!, values);
+      if(statement[4]!.includes('this.confirmed == true')){
+        if(!(executed.rows[0] as {confirmed?:boolean})?.confirmed)throw new Error('STOCK_NOT_CONFIRMED');
+        if(result)Object.assign(result,{receipt:executed.rows[0]});
+        continue;
+      }
       if (statement[4]!.includes('this.valid == true')) {
         if (!(executed.rows[0] as {valid?:boolean})?.valid) throw new Error('SESSION_REQUIRED');
         continue;

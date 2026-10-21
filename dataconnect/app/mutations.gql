@@ -2232,7 +2232,8 @@ mutation PostStockTransfer($payload: Any!, $sessionToken: String) @auth(level: U
  LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
  WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_access,rp.can_access,false) AND EXISTS(SELECT 1 FROM tenants scoped_t WHERE scoped_t.id=u.tenant_id AND scoped_t.active AND scoped_t.deleted_at IS NULL) AND EXISTS(SELECT 1 FROM roles scoped_r WHERE scoped_r.id=u.role_id AND scoped_r.tenant_id=u.tenant_id AND scoped_r.active AND scoped_r.deleted_at IS NULL) AND (u.blocked_until IS NULL OR u.blocked_until<=now())
  AND COALESCE(up.can_access,rp.can_access,false) AND COALESCE(up.can_manage,rp.can_manage,false)),
- locked AS MATERIALIZED(SELECT b.id FROM branches b JOIN actor a ON a.tenant_id=b.tenant_id WHERE b.id IN(($2::jsonb->>'sourceBranchId')::uuid,($2::jsonb->>'destinationBranchId')::uuid) ORDER BY b.id FOR UPDATE OF b)
+ operation_lock AS MATERIALIZED(SELECT pg_advisory_xact_lock(hashtextextended(a.tenant_id::text||':STOCK:'||btrim($2::jsonb->>'clientOperationId'),0)) FROM actor a),
+ locked AS MATERIALIZED(SELECT b.id FROM branches b JOIN actor a ON a.tenant_id=b.tenant_id CROSS JOIN operation_lock WHERE b.id IN(($2::jsonb->>'sourceBranchId')::uuid,($2::jsonb->>'destinationBranchId')::uuid) ORDER BY b.id FOR UPDATE OF b)
  UPDATE branches b SET updated_at=b.updated_at FROM locked l WHERE b.id=l.id
  """,params:[{_expr:"auth.uid"},$payload]) @redact
   _execute(sql: """
@@ -2244,8 +2245,23 @@ mutation PostStockTransfer($payload: Any!, $sessionToken: String) @auth(level: U
     selected_types AS (SELECT id,tenant_id,code,direction FROM type_upsert UNION ALL SELECT mt.id,mt.tenant_id,mt.code,mt.direction FROM stock_movement_types mt JOIN transfer t ON t.tenant_id=mt.tenant_id WHERE mt.code IN ('TRANSFER_OUT','TRANSFER_IN')),
     movements AS (INSERT INTO stock_movements(id,tenant_id,branch_id,product_id,movement_type_id,client_operation_id,quantity,unit_gross_cents,unit_cost_cents,occurred_at,status,created_by_uid,created_at) SELECT gen_random_uuid(),t.tenant_id,CASE WHEN mt.direction='OUT' THEN t.source_branch_id ELSE t.destination_branch_id END,i.product_id,mt.id,t.client_operation_id,i.quantity,0,COALESCE((SELECT sb.average_cost_cents FROM stock_balances sb WHERE sb.tenant_id=t.tenant_id AND sb.branch_id=t.source_branch_id AND sb.product_id=i.product_id),p.cost_price_cents),now(),'POSTED',t.created_by_uid,now() FROM transfer t JOIN transfer_items i ON i.transfer_id=t.id JOIN products p ON p.id=i.product_id JOIN selected_types mt ON mt.tenant_id=t.tenant_id RETURNING *),
     balances AS (INSERT INTO stock_balances(tenant_id,branch_id,product_id,quantity,average_cost_cents,version,updated_at) SELECT m.tenant_id,m.branch_id,m.product_id,CASE WHEN mt.direction='OUT' THEN -m.quantity ELSE m.quantity END,CASE WHEN mt.direction='IN' THEN m.unit_cost_cents ELSE 0 END,1,now() FROM movements m JOIN selected_types mt ON mt.id=m.movement_type_id ON CONFLICT(branch_id,product_id) DO UPDATE SET quantity=stock_balances.quantity+EXCLUDED.quantity,average_cost_cents=CASE WHEN EXCLUDED.quantity>0 AND stock_balances.quantity+EXCLUDED.quantity>0 THEN GREATEST(round((stock_balances.quantity*stock_balances.average_cost_cents+EXCLUDED.quantity*EXCLUDED.average_cost_cents)/(stock_balances.quantity+EXCLUDED.quantity)),0)::bigint ELSE stock_balances.average_cost_cents END,version=stock_balances.version+1,updated_at=now() RETURNING product_id)
-    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at) SELECT tenant_id,created_by_uid,'Estoque','ESTOQUE','TRANSFER','StockTransfer',id::text,'Transferência de estoque concluída',true,'SQL_CONNECT',jsonb_build_object('sourceBranchId',source_branch_id,'destinationBranchId',destination_branch_id,'operationId',client_operation_id),now() FROM transfer
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at) SELECT tenant_id,created_by_uid,'Estoque','ESTOQUE','TRANSFER','StockTransfer',id::text,'Transferência de estoque concluída',true,'SQL_CONNECT',jsonb_build_object('payloadHash',encode(sha256(convert_to($2::jsonb::text,'UTF8')),'hex'),'sourceBranchId',source_branch_id,'destinationBranchId',destination_branch_id,'operationId',client_operation_id),now() FROM transfer
   """,params:[{_expr:"auth.uid"},$payload])
+  confirmation: query {
+    receipt: _selectFirst(sql: """
+    WITH actor AS (SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN app_pages pg ON pg.page_key='ESTOQUE' AND pg.active LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_access,rp.can_access,false) AND EXISTS(SELECT 1 FROM tenants scoped_t WHERE scoped_t.id=u.tenant_id AND scoped_t.active AND scoped_t.deleted_at IS NULL) AND EXISTS(SELECT 1 FROM roles scoped_r WHERE scoped_r.id=u.role_id AND scoped_r.tenant_id=u.tenant_id AND scoped_r.active AND scoped_r.deleted_at IS NULL) AND (u.blocked_until IS NULL OR u.blocked_until<=now()) AND COALESCE(up.can_manage,rp.can_manage,false))
+    SELECT true AS confirmed,($3::int=0) AS replay,btrim($2::jsonb->>'clientOperationId') AS "operationId",'STOCK_TRANSFER' AS kind
+    FROM actor a JOIN audit_logs l ON l.tenant_id=a.tenant_id AND l.user_id=a.id
+    WHERE l.module='Estoque' AND l.page_key='ESTOQUE' AND l.success AND l.origin='SQL_CONNECT'
+      AND l.after_data->>'payloadHash'=encode(sha256(convert_to($2::jsonb::text,'UTF8')),'hex')
+      AND l.entity_name='StockTransfer' AND l.action='TRANSFER' AND l.after_data->>'operationId'=btrim($2::jsonb->>'clientOperationId')
+      AND EXISTS(SELECT 1 FROM stock_transfers tr WHERE tr.id::text=l.entity_id AND tr.tenant_id=a.tenant_id AND tr.created_by_uid=a.id AND tr.status='COMPLETED')
+      AND 2=(SELECT count(*) FROM branches b WHERE b.id IN(($2::jsonb->>'sourceBranchId')::uuid,($2::jsonb->>'destinationBranchId')::uuid) AND b.tenant_id=a.tenant_id AND b.active AND b.deleted_at IS NULL
+        AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=a.id) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=a.id AND ub.tenant_id=a.tenant_id AND ub.branch_id=b.id AND ub.active)))
+    ORDER BY l.created_at DESC LIMIT 1
+    """,params:[{_expr:"auth.uid"},$payload,{_expr:"response._execute"}]) @check(expr:"this != null && this.confirmed == true", message:"STOCK_NOT_CONFIRMED")
+  }
+
 }
 
 mutation SaveStockBatch($payload: Any!, $sessionToken: String) @auth(level: USER) @transaction {
@@ -2273,7 +2289,8 @@ mutation SaveStockBatch($payload: Any!, $sessionToken: String) @auth(level: USER
  LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
  WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now()) AND COALESCE(up.can_access,rp.can_access,false) AND EXISTS(SELECT 1 FROM tenants scoped_t WHERE scoped_t.id=u.tenant_id AND scoped_t.active AND scoped_t.deleted_at IS NULL) AND EXISTS(SELECT 1 FROM roles scoped_r WHERE scoped_r.id=u.role_id AND scoped_r.tenant_id=u.tenant_id AND scoped_r.active AND scoped_r.deleted_at IS NULL) AND (u.blocked_until IS NULL OR u.blocked_until<=now())
  AND COALESCE(up.can_access,rp.can_access,false) AND COALESCE(up.can_access,rp.can_access,false)),
- locked AS MATERIALIZED(SELECT b.id FROM branches b JOIN actor a ON a.tenant_id=b.tenant_id WHERE (b.id=($2::jsonb->>'branchId')::uuid OR b.id IN(SELECT m.branch_id FROM stock_movements m WHERE m.tenant_id=a.tenant_id AND m.client_operation_id=$2::jsonb->>'replacesOperationId')) ORDER BY b.id FOR UPDATE OF b)
+ operation_lock AS MATERIALIZED(SELECT pg_advisory_xact_lock(hashtextextended(a.tenant_id::text||':STOCK:'||btrim($2::jsonb->>'clientOperationId'),0)) FROM actor a),
+ locked AS MATERIALIZED(SELECT b.id FROM branches b JOIN actor a ON a.tenant_id=b.tenant_id CROSS JOIN operation_lock WHERE (b.id=($2::jsonb->>'branchId')::uuid OR b.id IN(SELECT m.branch_id FROM stock_movements m WHERE m.tenant_id=a.tenant_id AND m.client_operation_id=$2::jsonb->>'replacesOperationId')) ORDER BY b.id FOR UPDATE OF b)
  UPDATE branches b SET updated_at=b.updated_at FROM locked l WHERE b.id=l.id
  """,params:[{_expr:"auth.uid"},$payload]) @redact
   _execute(sql: """
@@ -2285,8 +2302,24 @@ mutation SaveStockBatch($payload: Any!, $sessionToken: String) @auth(level: USER
  CASE WHEN COALESCE(previous.quantity,0)+x.delta>0 AND EXISTS(SELECT 1 FROM valid WHERE direction='IN') THEN GREATEST(round((COALESCE(previous.quantity*previous.average_cost_cents,0)+x.value_delta)/(COALESCE(previous.quantity,0)+x.delta)),0)::bigint ELSE COALESCE(previous.average_cost_cents,0) END,1,now()
  FROM totals x LEFT JOIN stock_balances previous ON previous.tenant_id=x.tenant_id AND previous.branch_id=x.branch_id AND previous.product_id=x.product_id
  ON CONFLICT(branch_id,product_id) DO UPDATE SET quantity=EXCLUDED.quantity,average_cost_cents=EXCLUDED.average_cost_cents,version=stock_balances.version+1,updated_at=now() RETURNING product_id),product_cost AS (UPDATE products p SET cost_price_cents=i.unit_cost_cents,updated_at=now() FROM items i JOIN valid v ON v.operation_id=i.operation_id WHERE v.direction='IN' AND i.replace_cost AND p.id=i.product_id AND p.tenant_id=i.tenant_id RETURNING p.id)
-    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at) SELECT v.tenant_id,v.id,'Estoque','ESTOQUE',CASE WHEN v.replaces_operation_id IS NULL THEN 'CREATE' ELSE 'CORRECT' END,'StockOperation',v.operation_id,'Movimentação de estoque processada',true,'SQL_CONNECT',jsonb_build_object('branchId',v.branch_id,'direction',v.direction,'items',(SELECT count(*) FROM movement),'replacesOperationId',v.replaces_operation_id),now() FROM valid v WHERE EXISTS(SELECT 1 FROM movement)
+    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at) SELECT v.tenant_id,v.id,'Estoque','ESTOQUE',CASE WHEN v.replaces_operation_id IS NULL THEN 'CREATE' ELSE 'CORRECT' END,'StockOperation',v.operation_id,'Movimentação de estoque processada',true,'SQL_CONNECT',jsonb_build_object('payloadHash',encode(sha256(convert_to($2::jsonb::text,'UTF8')),'hex'),'branchId',v.branch_id,'direction',v.direction,'items',(SELECT count(*) FROM movement),'replacesOperationId',v.replaces_operation_id),now() FROM valid v WHERE EXISTS(SELECT 1 FROM movement)
   """,params:[{_expr:"auth.uid"},$payload])
+  confirmation: query {
+    receipt: _selectFirst(sql: """
+    WITH actor AS (SELECT u.id,u.tenant_id,COALESCE(up.can_create,rp.can_create,false) can_create,COALESCE(up.can_update,rp.can_update,false) can_update FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN app_pages pg ON pg.page_key='ESTOQUE' AND pg.active LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now()) AND COALESCE(up.can_access,rp.can_access,false) AND EXISTS(SELECT 1 FROM tenants scoped_t WHERE scoped_t.id=u.tenant_id AND scoped_t.active AND scoped_t.deleted_at IS NULL) AND EXISTS(SELECT 1 FROM roles scoped_r WHERE scoped_r.id=u.role_id AND scoped_r.tenant_id=u.tenant_id AND scoped_r.active AND scoped_r.deleted_at IS NULL))
+    SELECT true AS confirmed,($3::int=0) AS replay,btrim($2::jsonb->>'clientOperationId') AS "operationId",'STOCK_BATCH' AS kind
+    FROM actor a JOIN audit_logs l ON l.tenant_id=a.tenant_id AND l.user_id=a.id
+    WHERE l.module='Estoque' AND l.page_key='ESTOQUE' AND l.success AND l.origin='SQL_CONNECT'
+      AND l.after_data->>'payloadHash'=encode(sha256(convert_to($2::jsonb::text,'UTF8')),'hex')
+      AND l.entity_name='StockOperation' AND l.entity_id=btrim($2::jsonb->>'clientOperationId')
+      AND l.action IN('CREATE','CORRECT')
+      AND ((NULLIF(btrim($2::jsonb->>'replacesOperationId'),'') IS NULL AND a.can_create) OR (NULLIF(btrim($2::jsonb->>'replacesOperationId'),'') IS NOT NULL AND a.can_update))
+      AND EXISTS(SELECT 1 FROM branches b WHERE b.id=($2::jsonb->>'branchId')::uuid AND b.tenant_id=a.tenant_id AND b.active AND b.deleted_at IS NULL
+        AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=a.id) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=a.id AND ub.tenant_id=a.tenant_id AND ub.branch_id=b.id AND ub.active)))
+    ORDER BY l.created_at DESC LIMIT 1
+    """,params:[{_expr:"auth.uid"},$payload,{_expr:"response._execute"}]) @check(expr:"this != null && this.confirmed == true", message:"STOCK_NOT_CONFIRMED")
+  }
+
 }
 
 mutation ReverseStockOperation($operationId: String!, $movementIds: Any!, $reason: String!, $sessionToken: String) @auth(level: USER) @transaction {

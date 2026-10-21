@@ -17,6 +17,7 @@ export default defineConfig(({ command, mode }) => {
     }
   }
   return {
+    test:{exclude:['**/node_modules/**','**/.git/**','qa/application.test.tsx']},
     plugins: [react()],
     resolve: { alias: [{ find: /^firebase\/data-connect$/, replacement: fileURLToPath(new URL('./src/auth/session-data-connect.ts', import.meta.url)) }] },
     build: {

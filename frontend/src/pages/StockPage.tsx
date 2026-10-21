@@ -17,7 +17,7 @@ import {
   SearchableMultiSelect,
   type Notice,
 } from "../components/SalesUi";
-import { allocateInvoiceCosts, maskMoney, parseMoney } from "../utils/stock";
+import { allocateInvoiceCosts, maskMoney, parseMoney, stockConfirmed } from "../utils/stock";
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
 import { SortableTableHeader } from '../components/SortableTableHeader';
@@ -453,13 +453,14 @@ export function StockPage() {
             : v,
         ]),
       );
+      const operationId=keyFor(JSON.stringify({form,editing}));
       const result = await saveStockBatch(dc, {
         payload: {
           direction: form.direction,
           branchId: form.branchId,
           occurredAt: new Date(form.occurredAt).toISOString(),
           notes: form.notes,
-          clientOperationId: keyFor(JSON.stringify({form,editing})),
+          clientOperationId: operationId,
           replacesOperationId: editing || null,
           fiscalEnabled: form.fiscalEnabled&&form.direction==='IN',
           fiscal:form.fiscalEnabled&&form.direction==='IN'?fiscal:null,
@@ -478,7 +479,7 @@ export function StockPage() {
           })),
         },
       });
-      if (!result.data._execute) throw new Error();
+      if (!stockConfirmed(result.data,operationId,'STOCK_BATCH')) throw new Error();
       setOperationOpen(false);
       setSelected(null);setSelectedIds([]);
       setNotice({
@@ -514,19 +515,20 @@ export function StockPage() {
     if (!validItems(transfer.items)) return;
     inFlight.current=true;setBusy(true);
     try {
+      const operationId=keyFor(JSON.stringify(transfer));
       const result = await postStockTransfer(dc, {
         payload: {
           sourceBranchId: transfer.sourceBranchId,
           destinationBranchId: transfer.destinationBranchId,
           notes: transfer.notes,
-          clientOperationId: keyFor(JSON.stringify(transfer)),
+          clientOperationId: operationId,
           items: transfer.items.map((i) => ({
             product_id: i.productId,
             quantity: parseQuantityDraft(i.quantity,!!data.products.find(p=>p.id===i.productId)?.weightedProduct),
           })),
         },
       });
-      if (!result.data._execute) throw new Error();
+      if (!stockConfirmed(result.data,operationId,'STOCK_TRANSFER')) throw new Error();
       setTransferOpen(false);
       setNotice({
         type: "success",

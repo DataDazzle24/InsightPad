@@ -49,3 +49,8 @@ test('accepts exact session and read-only preflight sources, rejects siblings',(
  assert.throws(()=>validateScope(policy,['functions/src/unguarded-session.ts']),/outside approved scope/);
  assert.throws(()=>validateScope(policy,['dataconnect/preflight/execute-migration.sql']),/outside approved scope/);
 });
+
+test('accepts exact isolated application QA sources and rejects adjacent unauthorized code',()=>{
+ assert.equal(validateScope(policy,['frontend/qa/application.tsx','frontend/qa/api.ts','functions/test/stock-receipts.test.ts']),true);
+ assert.throws(()=>validateScope(policy,['frontend/qa/network-proxy.ts']),/outside approved scope/);
+});

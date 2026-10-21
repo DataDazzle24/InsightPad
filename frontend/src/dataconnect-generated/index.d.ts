@@ -812,6 +812,9 @@ export interface PostStockTransferData {
     session?: unknown | null;
   };
   _execute?: number | null;
+  confirmation?: {
+    receipt?: unknown | null;
+  };
 }
 
 export interface PostStockTransferVariables {
@@ -1373,6 +1376,9 @@ export interface SaveStockBatchData {
     session?: unknown | null;
   };
   _execute?: number | null;
+  confirmation?: {
+    receipt?: unknown | null;
+  };
 }
 
 export interface SaveStockBatchVariables {

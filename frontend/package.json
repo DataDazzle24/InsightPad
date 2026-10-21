@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:qa": "vitest run --config vitest.qa.config.ts",
     "build:qa": "tsc -p tsconfig.qa.json && vite build --config vite.qa.config.ts"
   },
   "dependencies": {

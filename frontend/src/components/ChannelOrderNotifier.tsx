@@ -1,3 +1,4 @@
+import { currentSessionToken } from '../auth/session-data-connect';
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { executeMutation, executeQuery, getDataConnect, mutationRef, queryRef } from "firebase/data-connect";
@@ -27,7 +28,7 @@ function cleanupExpiredSoundLeases() {
   } catch { /* Storage can be unavailable in private mode. */ }
 }
 type CancellationReason = { code: string; label: string };
-const fetchCancellationReasons = httpsCallable<{ orderId: string }, { reasons: CancellationReason[] }>(getFunctions(firebaseApp, "southamerica-east1"), "ifoodCancellationReasons");
+const fetchCancellationReasons = httpsCallable<{ orderId: string; sessionToken:string }, { reasons: CancellationReason[] }>(getFunctions(firebaseApp, "southamerica-east1"), "ifoodCancellationReasons");
 type PendingItem = { name: string; quantity: number; observation?: string | null; productId?: string | null; productName?: string | null; productUsable?: boolean; allowNegativeStock?: boolean; availableStock?: string | number };
 type PendingOrder = { id: string; alertKind: "RECEPTION" | "PREPARATION"; displayCode: string; provider: SalesChannelProvider; catalogProfile: "UNVERIFIED" | "RESTAURANT" | "GROCERY"; authorizationStatus: string; branchName: string; customerName?: string | null; totalCents: string; receivedAt: string; scheduledAt?: string | null; preparationStartAt?: string | null; version: number; items: PendingItem[] };
 const money = (value: string) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(value) / 100);
@@ -244,7 +245,7 @@ export function ChannelOrderNotifier() {
     if (order.provider !== "IFOOD") return;
     setLoadingReasons(true);
     try {
-      const result = await fetchCancellationReasons({ orderId: order.id });
+      const result = await fetchCancellationReasons({ orderId: order.id,sessionToken:currentSessionToken() });
       setReasons(result.data.reasons);
       if (!result.data.reasons.length) setError("O iFood não permite recusar este pedido no momento.");
     } catch (caught) {
