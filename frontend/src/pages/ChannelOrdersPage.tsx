@@ -1,3 +1,4 @@
+import { currentSessionToken } from '../auth/session-data-connect'
 import { Fragment, useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { executeMutation, executeQuery, getDataConnect, mutationRef, queryRef } from "firebase/data-connect";
@@ -13,7 +14,7 @@ import { SALES_CHANNEL_PROVIDERS, buildSalesChannelCsv, countActiveFilters, down
 const dc = getDataConnect(firebaseApp, connectorConfig);
 const PAGE_SIZE = 50;
 type CancellationReason = { code: string; label: string };
-const fetchCancellationReasons = httpsCallable<{ orderId: string }, { reasons: CancellationReason[] }>(getFunctions(firebaseApp, "southamerica-east1"), "ifoodCancellationReasons");
+const fetchCancellationReasons = httpsCallable<{ sessionToken: string; orderId: string }, { reasons: CancellationReason[] }>(getFunctions(firebaseApp, "southamerica-east1"), "ifoodCancellationReasons");
 type OrderStatus = "PENDING" | "ACCEPTED" | "REJECTED" | "COMPLETED" | "CANCELLED";
 type Branch = { id: string; name: string };
 type ProductOption = { id: string; name: string; internalCode: string; ean?: string | null; scaleCode?: string | null; salePriceCents?: string | number; weightedProduct?: boolean; bundleProduct?: boolean; componentCount?: number; physicalStock?: string | number; reservedStock?: string | number; availableStock?: string | number };
@@ -294,7 +295,7 @@ function ActionDialog({ action, order, busy, onClose, onConfirm }: { action: Act
   useEffect(() => {
     let cancelled = false;
     if (!needsIfoodReasons) return;
-    void fetchCancellationReasons({ orderId: order.id }).then(({ data }) => {
+    void fetchCancellationReasons({ sessionToken: currentSessionToken(), orderId: order.id }).then(({ data }) => {
       if (!cancelled) setReasons(data.reasons);
     }).catch(() => {
       if (!cancelled) setError("Não foi possível consultar os motivos disponíveis no iFood.");

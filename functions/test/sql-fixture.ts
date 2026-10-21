@@ -1,4 +1,6 @@
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+export const fixtureSessionToken=(user:string)=>createHash("sha256").update(`fixture-session-${user}`).digest("hex");
 import { PGlite } from "@electric-sql/pglite";
 
 const root = new URL("../../dataconnect/", import.meta.url);
@@ -47,7 +49,7 @@ export async function database() {
   return db;
 }
 
-export async function operation(db: PGlite, name: string, params: unknown[]) {
+export async function operation(db: PGlite, name: string, params: unknown[], context?: { sessionToken: string | null }) {
   const start = operations.indexOf(`${name}(`);
   if (start < 0) throw new Error(`Missing operation ${name}`);
   const body = operations.slice(start).split("\n}")[0]!;
@@ -56,19 +58,27 @@ export async function operation(db: PGlite, name: string, params: unknown[]) {
   const variables = [...body.split("\n")[0]!.matchAll(/\$(\w+)\s*:/g)].map(match => match[1]!);
   const userScoped = body.includes('level: USER');
   let result;
+  let issued: unknown;
   await db.exec("SAVEPOINT operation_fields");
   try {
     for (const statement of statements) {
-      const values = statement[3]!.split(",").map(raw => {
-        const value = raw.includes('auth.uid') ? params[0] : params[variables.indexOf(raw.trim().slice(1)) + (userScoped ? 1 : 0)];
+      const values = statement[3]!.split(",").filter(raw=>raw.trim()).map(raw => {
+        const variable=raw.trim().slice(1);
+        const value=raw.includes('response.query.issued.token') ? issued : raw.includes('auth.uid') ? params[0] : variable==='sessionToken' && body.includes('session: _selectFirst') ? (context ? context.sessionToken : fixtureSessionToken(String(params[0]))) : params[variables.indexOf(variable)+(userScoped?1:0)];
         return value !== null && typeof value === "object" ? JSON.stringify(value) : value;
       });
       const executed = await db.query(statement[2]!, values);
+      if (statement[4]!.includes('this.valid == true')) {
+        if (!(executed.rows[0] as {valid?:boolean})?.valid) throw new Error('SESSION_REQUIRED');
+        continue;
+      }
+      if(statement[2]!.includes('AS token')) {issued=(executed.rows[0] as {token:string}).token;continue;}
       if(statement[1] === "_selectFirst" && result) Object.assign(result, {receipt:executed.rows[0],meta:executed.rows[0]});
       else result = executed;
-      if (statement[4]!.includes('@check') && !result.affectedRows) throw new Error(statement[4]!.includes('POS_BRANCH_DENIED') ? 'POS_BRANCH_DENIED' : 'POS_REJECTED');
+      if (statement[4]!.includes('@check') && !result.affectedRows) throw new Error(statement[4]!.includes('SESSION_REQUIRED') ? 'SESSION_REQUIRED' : statement[4]!.includes('POS_BRANCH_DENIED') ? 'POS_BRANCH_DENIED' : 'POS_REJECTED');
     }
     await db.exec("RELEASE SAVEPOINT operation_fields");
+    if(issued && result)Object.assign(result,{query:{issued:{token:issued}}});
     return result!;
   } catch (error) {
     await db.exec("ROLLBACK TO SAVEPOINT operation_fields; RELEASE SAVEPOINT operation_fields");
@@ -92,6 +102,7 @@ export async function seed(db: PGlite) {
   await db.query("INSERT INTO branches(id,tenant_id) VALUES ($1,$3),($2,$3)", [ids.branch,ids.otherBranch,ids.tenant]);
   await db.query("INSERT INTO roles(id,tenant_id,name,system_role) VALUES ($1,$3,'Administrador da Plataforma',true),($2,$3,'Operador',false)", [ids.role,ids.operatorRole,ids.tenant]);
   await db.query("INSERT INTO users(id,tenant_id,role_id) VALUES ('actor',$1,$2),('operator',$1,$3),('other',$4,$2)", [ids.tenant,ids.role,ids.operatorRole,ids.otherTenant]);
+  await db.exec("INSERT INTO user_device_sessions(user_id,tenant_id,session_token,device_id) SELECT id,tenant_id,encode(sha256(convert_to(encode(sha256(convert_to('fixture-session-'||id,'UTF8')),'hex'),'UTF8')),'hex'),'fixture-device-123456' FROM users");
   await db.query("INSERT INTO app_pages(id,page_key) VALUES ($1,'CANAIS_VENDA')",[ids.page]);
   await db.query("INSERT INTO role_page_permissions(role_id,page_id,tenant_id,can_access,can_update,can_manage,can_create,can_delete) VALUES ($1,$3,$4,true,true,true,true,true),($2,$3,$4,true,true,true,true,true)",[ids.role,ids.operatorRole,ids.page,ids.tenant]);
   await db.query("INSERT INTO sales_channel_connections(id,tenant_id,branch_id,provider,external_store_id,status,authorization_status,catalog_profile) VALUES ($1,$2,$3,'IFOOD','merchant-1','ACTIVE','AUTHORIZED','RESTAURANT')",[ids.connection,ids.tenant,ids.branch]);

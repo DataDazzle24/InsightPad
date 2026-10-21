@@ -592,8 +592,8 @@ import { connectorConfig, validateDeviceSession, ValidateDeviceSessionVariables 
 
 // The `ValidateDeviceSession` query requires an argument of type `ValidateDeviceSessionVariables`:
 const validateDeviceSessionVars: ValidateDeviceSessionVariables = {
-  sessionToken: ..., 
-  requestKey: ..., 
+  sessionToken: ...,
+  requestKey: ...,
 };
 
 // Call the `validateDeviceSession()` function to execute the query.
@@ -623,8 +623,8 @@ import { connectorConfig, validateDeviceSessionRef, ValidateDeviceSessionVariabl
 
 // The `ValidateDeviceSession` query requires an argument of type `ValidateDeviceSessionVariables`:
 const validateDeviceSessionVars: ValidateDeviceSessionVariables = {
-  sessionToken: ..., 
-  requestKey: ..., 
+  sessionToken: ...,
+  requestKey: ...,
 };
 
 // Call the `validateDeviceSessionRef()` function to get a reference to the query.
@@ -684,6 +684,7 @@ The `SalesChannelOptions` query requires an argument of type `SalesChannelOption
 ```typescript
 export interface SalesChannelOptionsVariables {
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -692,6 +693,7 @@ Recall that executing the `SalesChannelOptions` query returns a `QueryPromise` t
 The `data` property is an object of type `SalesChannelOptionsData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SalesChannelOptionsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -703,24 +705,27 @@ import { connectorConfig, salesChannelOptions, SalesChannelOptionsVariables } fr
 
 // The `SalesChannelOptions` query requires an argument of type `SalesChannelOptionsVariables`:
 const salesChannelOptionsVars: SalesChannelOptionsVariables = {
-  requestKey: ..., 
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `salesChannelOptions()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await salesChannelOptions(salesChannelOptionsVars);
 // Variables can be defined inline as well.
-const { data } = await salesChannelOptions({ requestKey: ..., });
+const { data } = await salesChannelOptions({ requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await salesChannelOptions(dataConnect, salesChannelOptionsVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 salesChannelOptions(salesChannelOptionsVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -733,13 +738,14 @@ import { connectorConfig, salesChannelOptionsRef, SalesChannelOptionsVariables }
 
 // The `SalesChannelOptions` query requires an argument of type `SalesChannelOptionsVariables`:
 const salesChannelOptionsVars: SalesChannelOptionsVariables = {
-  requestKey: ..., 
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `salesChannelOptionsRef()` function to get a reference to the query.
 const ref = salesChannelOptionsRef(salesChannelOptionsVars);
 // Variables can be defined inline as well.
-const ref = salesChannelOptionsRef({ requestKey: ..., });
+const ref = salesChannelOptionsRef({ requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -749,11 +755,13 @@ const ref = salesChannelOptionsRef(dataConnect, salesChannelOptionsVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -801,6 +809,7 @@ export interface SalesChannelConnectionsV2Variables {
   limit: number;
   offset: number;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -809,6 +818,7 @@ Recall that executing the `SalesChannelConnectionsV2` query returns a `QueryProm
 The `data` property is an object of type `SalesChannelConnectionsV2Data`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SalesChannelConnectionsV2Data {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -820,32 +830,35 @@ import { connectorConfig, salesChannelConnectionsV2, SalesChannelConnectionsV2Va
 
 // The `SalesChannelConnectionsV2` query requires an argument of type `SalesChannelConnectionsV2Variables`:
 const salesChannelConnectionsV2Vars: SalesChannelConnectionsV2Variables = {
-  term: ..., 
-  provider: ..., 
-  status: ..., 
+  term: ...,
+  provider: ...,
+  status: ...,
   branchId: ..., // optional
-  sortField: ..., 
-  sortDirection: ..., 
-  limit: ..., 
-  offset: ..., 
-  requestKey: ..., 
+  sortField: ...,
+  sortDirection: ...,
+  limit: ...,
+  offset: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `salesChannelConnectionsV2()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await salesChannelConnectionsV2(salesChannelConnectionsV2Vars);
 // Variables can be defined inline as well.
-const { data } = await salesChannelConnectionsV2({ term: ..., provider: ..., status: ..., branchId: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+const { data } = await salesChannelConnectionsV2({ term: ..., provider: ..., status: ..., branchId: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await salesChannelConnectionsV2(dataConnect, salesChannelConnectionsV2Vars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 salesChannelConnectionsV2(salesChannelConnectionsV2Vars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -858,21 +871,22 @@ import { connectorConfig, salesChannelConnectionsV2Ref, SalesChannelConnectionsV
 
 // The `SalesChannelConnectionsV2` query requires an argument of type `SalesChannelConnectionsV2Variables`:
 const salesChannelConnectionsV2Vars: SalesChannelConnectionsV2Variables = {
-  term: ..., 
-  provider: ..., 
-  status: ..., 
+  term: ...,
+  provider: ...,
+  status: ...,
   branchId: ..., // optional
-  sortField: ..., 
-  sortDirection: ..., 
-  limit: ..., 
-  offset: ..., 
-  requestKey: ..., 
+  sortField: ...,
+  sortDirection: ...,
+  limit: ...,
+  offset: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `salesChannelConnectionsV2Ref()` function to get a reference to the query.
 const ref = salesChannelConnectionsV2Ref(salesChannelConnectionsV2Vars);
 // Variables can be defined inline as well.
-const ref = salesChannelConnectionsV2Ref({ term: ..., provider: ..., status: ..., branchId: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+const ref = salesChannelConnectionsV2Ref({ term: ..., provider: ..., status: ..., branchId: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -882,11 +896,13 @@ const ref = salesChannelConnectionsV2Ref(dataConnect, salesChannelConnectionsV2V
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -934,6 +950,7 @@ export interface SalesChannelProductMappingsV2Variables {
   limit: number;
   offset: number;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -942,6 +959,7 @@ Recall that executing the `SalesChannelProductMappingsV2` query returns a `Query
 The `data` property is an object of type `SalesChannelProductMappingsV2Data`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SalesChannelProductMappingsV2Data {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -953,32 +971,35 @@ import { connectorConfig, salesChannelProductMappingsV2, SalesChannelProductMapp
 
 // The `SalesChannelProductMappingsV2` query requires an argument of type `SalesChannelProductMappingsV2Variables`:
 const salesChannelProductMappingsV2Vars: SalesChannelProductMappingsV2Variables = {
-  term: ..., 
-  provider: ..., 
+  term: ...,
+  provider: ...,
   connectionId: ..., // optional
-  status: ..., 
-  sortField: ..., 
-  sortDirection: ..., 
-  limit: ..., 
-  offset: ..., 
-  requestKey: ..., 
+  status: ...,
+  sortField: ...,
+  sortDirection: ...,
+  limit: ...,
+  offset: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `salesChannelProductMappingsV2()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await salesChannelProductMappingsV2(salesChannelProductMappingsV2Vars);
 // Variables can be defined inline as well.
-const { data } = await salesChannelProductMappingsV2({ term: ..., provider: ..., connectionId: ..., status: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+const { data } = await salesChannelProductMappingsV2({ term: ..., provider: ..., connectionId: ..., status: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await salesChannelProductMappingsV2(dataConnect, salesChannelProductMappingsV2Vars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 salesChannelProductMappingsV2(salesChannelProductMappingsV2Vars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -991,21 +1012,22 @@ import { connectorConfig, salesChannelProductMappingsV2Ref, SalesChannelProductM
 
 // The `SalesChannelProductMappingsV2` query requires an argument of type `SalesChannelProductMappingsV2Variables`:
 const salesChannelProductMappingsV2Vars: SalesChannelProductMappingsV2Variables = {
-  term: ..., 
-  provider: ..., 
+  term: ...,
+  provider: ...,
   connectionId: ..., // optional
-  status: ..., 
-  sortField: ..., 
-  sortDirection: ..., 
-  limit: ..., 
-  offset: ..., 
-  requestKey: ..., 
+  status: ...,
+  sortField: ...,
+  sortDirection: ...,
+  limit: ...,
+  offset: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `salesChannelProductMappingsV2Ref()` function to get a reference to the query.
 const ref = salesChannelProductMappingsV2Ref(salesChannelProductMappingsV2Vars);
 // Variables can be defined inline as well.
-const ref = salesChannelProductMappingsV2Ref({ term: ..., provider: ..., connectionId: ..., status: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+const ref = salesChannelProductMappingsV2Ref({ term: ..., provider: ..., connectionId: ..., status: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -1015,11 +1037,13 @@ const ref = salesChannelProductMappingsV2Ref(dataConnect, salesChannelProductMap
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -1065,6 +1089,7 @@ export interface ExportSalesChannelManagementVariables {
   branchId?: UUIDString | null;
   connectionId?: UUIDString | null;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -1073,6 +1098,7 @@ Recall that executing the `ExportSalesChannelManagement` query returns a `QueryP
 The `data` property is an object of type `ExportSalesChannelManagementData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface ExportSalesChannelManagementData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -1084,30 +1110,33 @@ import { connectorConfig, exportSalesChannelManagement, ExportSalesChannelManage
 
 // The `ExportSalesChannelManagement` query requires an argument of type `ExportSalesChannelManagementVariables`:
 const exportSalesChannelManagementVars: ExportSalesChannelManagementVariables = {
-  section: ..., 
-  term: ..., 
-  provider: ..., 
-  status: ..., 
+  section: ...,
+  term: ...,
+  provider: ...,
+  status: ...,
   branchId: ..., // optional
   connectionId: ..., // optional
-  requestKey: ..., 
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `exportSalesChannelManagement()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await exportSalesChannelManagement(exportSalesChannelManagementVars);
 // Variables can be defined inline as well.
-const { data } = await exportSalesChannelManagement({ section: ..., term: ..., provider: ..., status: ..., branchId: ..., connectionId: ..., requestKey: ..., });
+const { data } = await exportSalesChannelManagement({ section: ..., term: ..., provider: ..., status: ..., branchId: ..., connectionId: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await exportSalesChannelManagement(dataConnect, exportSalesChannelManagementVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 exportSalesChannelManagement(exportSalesChannelManagementVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -1120,19 +1149,20 @@ import { connectorConfig, exportSalesChannelManagementRef, ExportSalesChannelMan
 
 // The `ExportSalesChannelManagement` query requires an argument of type `ExportSalesChannelManagementVariables`:
 const exportSalesChannelManagementVars: ExportSalesChannelManagementVariables = {
-  section: ..., 
-  term: ..., 
-  provider: ..., 
-  status: ..., 
+  section: ...,
+  term: ...,
+  provider: ...,
+  status: ...,
   branchId: ..., // optional
   connectionId: ..., // optional
-  requestKey: ..., 
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `exportSalesChannelManagementRef()` function to get a reference to the query.
 const ref = exportSalesChannelManagementRef(exportSalesChannelManagementVars);
 // Variables can be defined inline as well.
-const ref = exportSalesChannelManagementRef({ section: ..., term: ..., provider: ..., status: ..., branchId: ..., connectionId: ..., requestKey: ..., });
+const ref = exportSalesChannelManagementRef({ section: ..., term: ..., provider: ..., status: ..., branchId: ..., connectionId: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -1142,11 +1172,13 @@ const ref = exportSalesChannelManagementRef(dataConnect, exportSalesChannelManag
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -1190,6 +1222,7 @@ export interface SalesChannelProductOptionsVariables {
   productId?: UUIDString | null;
   limit: number;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -1198,6 +1231,7 @@ Recall that executing the `SalesChannelProductOptions` query returns a `QueryPro
 The `data` property is an object of type `SalesChannelProductOptionsData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SalesChannelProductOptionsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -1209,28 +1243,31 @@ import { connectorConfig, salesChannelProductOptions, SalesChannelProductOptions
 
 // The `SalesChannelProductOptions` query requires an argument of type `SalesChannelProductOptionsVariables`:
 const salesChannelProductOptionsVars: SalesChannelProductOptionsVariables = {
-  term: ..., 
+  term: ...,
   connectionId: ..., // optional
   productId: ..., // optional
-  limit: ..., 
-  requestKey: ..., 
+  limit: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `salesChannelProductOptions()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await salesChannelProductOptions(salesChannelProductOptionsVars);
 // Variables can be defined inline as well.
-const { data } = await salesChannelProductOptions({ term: ..., connectionId: ..., productId: ..., limit: ..., requestKey: ..., });
+const { data } = await salesChannelProductOptions({ term: ..., connectionId: ..., productId: ..., limit: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await salesChannelProductOptions(dataConnect, salesChannelProductOptionsVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 salesChannelProductOptions(salesChannelProductOptionsVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -1243,17 +1280,18 @@ import { connectorConfig, salesChannelProductOptionsRef, SalesChannelProductOpti
 
 // The `SalesChannelProductOptions` query requires an argument of type `SalesChannelProductOptionsVariables`:
 const salesChannelProductOptionsVars: SalesChannelProductOptionsVariables = {
-  term: ..., 
+  term: ...,
   connectionId: ..., // optional
   productId: ..., // optional
-  limit: ..., 
-  requestKey: ..., 
+  limit: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `salesChannelProductOptionsRef()` function to get a reference to the query.
 const ref = salesChannelProductOptionsRef(salesChannelProductOptionsVars);
 // Variables can be defined inline as well.
-const ref = salesChannelProductOptionsRef({ term: ..., connectionId: ..., productId: ..., limit: ..., requestKey: ..., });
+const ref = salesChannelProductOptionsRef({ term: ..., connectionId: ..., productId: ..., limit: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -1263,11 +1301,13 @@ const ref = salesChannelProductOptionsRef(dataConnect, salesChannelProductOption
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -1309,6 +1349,7 @@ export interface SalesChannelOperationsVariables {
   connectionId?: UUIDString | null;
   limit?: number;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -1317,6 +1358,7 @@ Recall that executing the `SalesChannelOperations` query returns a `QueryPromise
 The `data` property is an object of type `SalesChannelOperationsData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SalesChannelOperationsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -1330,24 +1372,27 @@ import { connectorConfig, salesChannelOperations, SalesChannelOperationsVariable
 const salesChannelOperationsVars: SalesChannelOperationsVariables = {
   connectionId: ..., // optional
   limit: ..., // optional
-  requestKey: ..., 
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `salesChannelOperations()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await salesChannelOperations(salesChannelOperationsVars);
 // Variables can be defined inline as well.
-const { data } = await salesChannelOperations({ connectionId: ..., limit: ..., requestKey: ..., });
+const { data } = await salesChannelOperations({ connectionId: ..., limit: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await salesChannelOperations(dataConnect, salesChannelOperationsVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 salesChannelOperations(salesChannelOperationsVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -1362,13 +1407,14 @@ import { connectorConfig, salesChannelOperationsRef, SalesChannelOperationsVaria
 const salesChannelOperationsVars: SalesChannelOperationsVariables = {
   connectionId: ..., // optional
   limit: ..., // optional
-  requestKey: ..., 
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `salesChannelOperationsRef()` function to get a reference to the query.
 const ref = salesChannelOperationsRef(salesChannelOperationsVars);
 // Variables can be defined inline as well.
-const ref = salesChannelOperationsRef({ connectionId: ..., limit: ..., requestKey: ..., });
+const ref = salesChannelOperationsRef({ connectionId: ..., limit: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -1378,11 +1424,13 @@ const ref = salesChannelOperationsRef(dataConnect, salesChannelOperationsVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -1442,8 +1490,8 @@ import { connectorConfig, systemSalesChannelWorkQueue, SystemSalesChannelWorkQue
 
 // The `SystemSalesChannelWorkQueue` query requires an argument of type `SystemSalesChannelWorkQueueVariables`:
 const systemSalesChannelWorkQueueVars: SystemSalesChannelWorkQueueVariables = {
-  workerId: ..., 
-  requestKey: ..., 
+  workerId: ...,
+  requestKey: ...,
 };
 
 // Call the `systemSalesChannelWorkQueue()` function to execute the query.
@@ -1473,8 +1521,8 @@ import { connectorConfig, systemSalesChannelWorkQueueRef, SystemSalesChannelWork
 
 // The `SystemSalesChannelWorkQueue` query requires an argument of type `SystemSalesChannelWorkQueueVariables`:
 const systemSalesChannelWorkQueueVars: SystemSalesChannelWorkQueueVariables = {
-  workerId: ..., 
-  requestKey: ..., 
+  workerId: ...,
+  requestKey: ...,
 };
 
 // Call the `systemSalesChannelWorkQueueRef()` function to get a reference to the query.
@@ -1553,7 +1601,7 @@ import { connectorConfig, systemIfoodConnectionsForPolling, SystemIfoodConnectio
 
 // The `SystemIfoodConnectionsForPolling` query requires an argument of type `SystemIfoodConnectionsForPollingVariables`:
 const systemIfoodConnectionsForPollingVars: SystemIfoodConnectionsForPollingVariables = {
-  requestKey: ..., 
+  requestKey: ...,
 };
 
 // Call the `systemIfoodConnectionsForPolling()` function to execute the query.
@@ -1583,7 +1631,7 @@ import { connectorConfig, systemIfoodConnectionsForPollingRef, SystemIfoodConnec
 
 // The `SystemIfoodConnectionsForPolling` query requires an argument of type `SystemIfoodConnectionsForPollingVariables`:
 const systemIfoodConnectionsForPollingVars: SystemIfoodConnectionsForPollingVariables = {
-  requestKey: ..., 
+  requestKey: ...,
 };
 
 // Call the `systemIfoodConnectionsForPollingRef()` function to get a reference to the query.
@@ -1662,7 +1710,7 @@ import { connectorConfig, systemSalesChannelHealthMetrics, SystemSalesChannelHea
 
 // The `SystemSalesChannelHealthMetrics` query requires an argument of type `SystemSalesChannelHealthMetricsVariables`:
 const systemSalesChannelHealthMetricsVars: SystemSalesChannelHealthMetricsVariables = {
-  requestKey: ..., 
+  requestKey: ...,
 };
 
 // Call the `systemSalesChannelHealthMetrics()` function to execute the query.
@@ -1692,7 +1740,7 @@ import { connectorConfig, systemSalesChannelHealthMetricsRef, SystemSalesChannel
 
 // The `SystemSalesChannelHealthMetrics` query requires an argument of type `SystemSalesChannelHealthMetricsVariables`:
 const systemSalesChannelHealthMetricsVars: SystemSalesChannelHealthMetricsVariables = {
-  requestKey: ..., 
+  requestKey: ...,
 };
 
 // Call the `systemSalesChannelHealthMetricsRef()` function to get a reference to the query.
@@ -1772,8 +1820,8 @@ import { connectorConfig, systemIfoodConnectionByMerchant, SystemIfoodConnection
 
 // The `SystemIfoodConnectionByMerchant` query requires an argument of type `SystemIfoodConnectionByMerchantVariables`:
 const systemIfoodConnectionByMerchantVars: SystemIfoodConnectionByMerchantVariables = {
-  merchantId: ..., 
-  requestKey: ..., 
+  merchantId: ...,
+  requestKey: ...,
 };
 
 // Call the `systemIfoodConnectionByMerchant()` function to execute the query.
@@ -1803,8 +1851,8 @@ import { connectorConfig, systemIfoodConnectionByMerchantRef, SystemIfoodConnect
 
 // The `SystemIfoodConnectionByMerchant` query requires an argument of type `SystemIfoodConnectionByMerchantVariables`:
 const systemIfoodConnectionByMerchantVars: SystemIfoodConnectionByMerchantVariables = {
-  merchantId: ..., 
-  requestKey: ..., 
+  merchantId: ...,
+  requestKey: ...,
 };
 
 // Call the `systemIfoodConnectionByMerchantRef()` function to get a reference to the query.
@@ -1884,8 +1932,8 @@ import { connectorConfig, systemIfoodConnectionsByMerchants, SystemIfoodConnecti
 
 // The `SystemIfoodConnectionsByMerchants` query requires an argument of type `SystemIfoodConnectionsByMerchantsVariables`:
 const systemIfoodConnectionsByMerchantsVars: SystemIfoodConnectionsByMerchantsVariables = {
-  merchantIds: ..., 
-  requestKey: ..., 
+  merchantIds: ...,
+  requestKey: ...,
 };
 
 // Call the `systemIfoodConnectionsByMerchants()` function to execute the query.
@@ -1915,8 +1963,8 @@ import { connectorConfig, systemIfoodConnectionsByMerchantsRef, SystemIfoodConne
 
 // The `SystemIfoodConnectionsByMerchants` query requires an argument of type `SystemIfoodConnectionsByMerchantsVariables`:
 const systemIfoodConnectionsByMerchantsVars: SystemIfoodConnectionsByMerchantsVariables = {
-  merchantIds: ..., 
-  requestKey: ..., 
+  merchantIds: ...,
+  requestKey: ...,
 };
 
 // Call the `systemIfoodConnectionsByMerchantsRef()` function to get a reference to the query.
@@ -1997,9 +2045,9 @@ import { connectorConfig, systemSalesChannelMappingsForSync, SystemSalesChannelM
 
 // The `SystemSalesChannelMappingsForSync` query requires an argument of type `SystemSalesChannelMappingsForSyncVariables`:
 const systemSalesChannelMappingsForSyncVars: SystemSalesChannelMappingsForSyncVariables = {
-  jobId: ..., 
-  workerId: ..., 
-  requestKey: ..., 
+  jobId: ...,
+  workerId: ...,
+  requestKey: ...,
 };
 
 // Call the `systemSalesChannelMappingsForSync()` function to execute the query.
@@ -2029,9 +2077,9 @@ import { connectorConfig, systemSalesChannelMappingsForSyncRef, SystemSalesChann
 
 // The `SystemSalesChannelMappingsForSync` query requires an argument of type `SystemSalesChannelMappingsForSyncVariables`:
 const systemSalesChannelMappingsForSyncVars: SystemSalesChannelMappingsForSyncVariables = {
-  jobId: ..., 
-  workerId: ..., 
-  requestKey: ..., 
+  jobId: ...,
+  workerId: ...,
+  requestKey: ...,
 };
 
 // Call the `systemSalesChannelMappingsForSyncRef()` function to get a reference to the query.
@@ -2096,6 +2144,7 @@ export interface SalesChannelOrdersV2Variables {
   limit: number;
   offset: number;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -2104,6 +2153,7 @@ Recall that executing the `SalesChannelOrdersV2` query returns a `QueryPromise` 
 The `data` property is an object of type `SalesChannelOrdersV2Data`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SalesChannelOrdersV2Data {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -2115,29 +2165,32 @@ import { connectorConfig, salesChannelOrdersV2, SalesChannelOrdersV2Variables } 
 
 // The `SalesChannelOrdersV2` query requires an argument of type `SalesChannelOrdersV2Variables`:
 const salesChannelOrdersV2Vars: SalesChannelOrdersV2Variables = {
-  filters: ..., 
-  sortField: ..., 
-  sortDirection: ..., 
-  limit: ..., 
-  offset: ..., 
-  requestKey: ..., 
+  filters: ...,
+  sortField: ...,
+  sortDirection: ...,
+  limit: ...,
+  offset: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `salesChannelOrdersV2()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await salesChannelOrdersV2(salesChannelOrdersV2Vars);
 // Variables can be defined inline as well.
-const { data } = await salesChannelOrdersV2({ filters: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+const { data } = await salesChannelOrdersV2({ filters: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await salesChannelOrdersV2(dataConnect, salesChannelOrdersV2Vars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 salesChannelOrdersV2(salesChannelOrdersV2Vars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -2150,18 +2203,19 @@ import { connectorConfig, salesChannelOrdersV2Ref, SalesChannelOrdersV2Variables
 
 // The `SalesChannelOrdersV2` query requires an argument of type `SalesChannelOrdersV2Variables`:
 const salesChannelOrdersV2Vars: SalesChannelOrdersV2Variables = {
-  filters: ..., 
-  sortField: ..., 
-  sortDirection: ..., 
-  limit: ..., 
-  offset: ..., 
-  requestKey: ..., 
+  filters: ...,
+  sortField: ...,
+  sortDirection: ...,
+  limit: ...,
+  offset: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `salesChannelOrdersV2Ref()` function to get a reference to the query.
 const ref = salesChannelOrdersV2Ref(salesChannelOrdersV2Vars);
 // Variables can be defined inline as well.
-const ref = salesChannelOrdersV2Ref({ filters: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+const ref = salesChannelOrdersV2Ref({ filters: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -2171,11 +2225,13 @@ const ref = salesChannelOrdersV2Ref(dataConnect, salesChannelOrdersV2Vars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -2216,6 +2272,7 @@ The `SalesChannelOrderDetails` query requires an argument of type `SalesChannelO
 export interface SalesChannelOrderDetailsVariables {
   id: UUIDString;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -2224,6 +2281,7 @@ Recall that executing the `SalesChannelOrderDetails` query returns a `QueryPromi
 The `data` property is an object of type `SalesChannelOrderDetailsData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SalesChannelOrderDetailsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -2235,25 +2293,28 @@ import { connectorConfig, salesChannelOrderDetails, SalesChannelOrderDetailsVari
 
 // The `SalesChannelOrderDetails` query requires an argument of type `SalesChannelOrderDetailsVariables`:
 const salesChannelOrderDetailsVars: SalesChannelOrderDetailsVariables = {
-  id: ..., 
-  requestKey: ..., 
+  id: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `salesChannelOrderDetails()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await salesChannelOrderDetails(salesChannelOrderDetailsVars);
 // Variables can be defined inline as well.
-const { data } = await salesChannelOrderDetails({ id: ..., requestKey: ..., });
+const { data } = await salesChannelOrderDetails({ id: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await salesChannelOrderDetails(dataConnect, salesChannelOrderDetailsVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 salesChannelOrderDetails(salesChannelOrderDetailsVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -2266,14 +2327,15 @@ import { connectorConfig, salesChannelOrderDetailsRef, SalesChannelOrderDetailsV
 
 // The `SalesChannelOrderDetails` query requires an argument of type `SalesChannelOrderDetailsVariables`:
 const salesChannelOrderDetailsVars: SalesChannelOrderDetailsVariables = {
-  id: ..., 
-  requestKey: ..., 
+  id: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `salesChannelOrderDetailsRef()` function to get a reference to the query.
 const ref = salesChannelOrderDetailsRef(salesChannelOrderDetailsVars);
 // Variables can be defined inline as well.
-const ref = salesChannelOrderDetailsRef({ id: ..., requestKey: ..., });
+const ref = salesChannelOrderDetailsRef({ id: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -2283,11 +2345,13 @@ const ref = salesChannelOrderDetailsRef(dataConnect, salesChannelOrderDetailsVar
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -2327,6 +2391,7 @@ The `SalesChannelWorkspace` query requires an argument of type `SalesChannelWork
 ```typescript
 export interface SalesChannelWorkspaceVariables {
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -2335,6 +2400,7 @@ Recall that executing the `SalesChannelWorkspace` query returns a `QueryPromise`
 The `data` property is an object of type `SalesChannelWorkspaceData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SalesChannelWorkspaceData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -2346,24 +2412,27 @@ import { connectorConfig, salesChannelWorkspace, SalesChannelWorkspaceVariables 
 
 // The `SalesChannelWorkspace` query requires an argument of type `SalesChannelWorkspaceVariables`:
 const salesChannelWorkspaceVars: SalesChannelWorkspaceVariables = {
-  requestKey: ..., 
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `salesChannelWorkspace()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await salesChannelWorkspace(salesChannelWorkspaceVars);
 // Variables can be defined inline as well.
-const { data } = await salesChannelWorkspace({ requestKey: ..., });
+const { data } = await salesChannelWorkspace({ requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await salesChannelWorkspace(dataConnect, salesChannelWorkspaceVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 salesChannelWorkspace(salesChannelWorkspaceVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -2376,13 +2445,14 @@ import { connectorConfig, salesChannelWorkspaceRef, SalesChannelWorkspaceVariabl
 
 // The `SalesChannelWorkspace` query requires an argument of type `SalesChannelWorkspaceVariables`:
 const salesChannelWorkspaceVars: SalesChannelWorkspaceVariables = {
-  requestKey: ..., 
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `salesChannelWorkspaceRef()` function to get a reference to the query.
 const ref = salesChannelWorkspaceRef(salesChannelWorkspaceVars);
 // Variables can be defined inline as well.
-const ref = salesChannelWorkspaceRef({ requestKey: ..., });
+const ref = salesChannelWorkspaceRef({ requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -2392,11 +2462,13 @@ const ref = salesChannelWorkspaceRef(dataConnect, salesChannelWorkspaceVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -2442,6 +2514,7 @@ export interface SalesChannelOrdersVariables {
   limit: number;
   offset: number;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -2450,6 +2523,7 @@ Recall that executing the `SalesChannelOrders` query returns a `QueryPromise` th
 The `data` property is an object of type `SalesChannelOrdersData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SalesChannelOrdersData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -2461,30 +2535,33 @@ import { connectorConfig, salesChannelOrders, SalesChannelOrdersVariables } from
 
 // The `SalesChannelOrders` query requires an argument of type `SalesChannelOrdersVariables`:
 const salesChannelOrdersVars: SalesChannelOrdersVariables = {
-  term: ..., 
-  status: ..., 
-  provider: ..., 
+  term: ...,
+  status: ...,
+  provider: ...,
   branchId: ..., // optional
-  limit: ..., 
-  offset: ..., 
-  requestKey: ..., 
+  limit: ...,
+  offset: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `salesChannelOrders()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await salesChannelOrders(salesChannelOrdersVars);
 // Variables can be defined inline as well.
-const { data } = await salesChannelOrders({ term: ..., status: ..., provider: ..., branchId: ..., limit: ..., offset: ..., requestKey: ..., });
+const { data } = await salesChannelOrders({ term: ..., status: ..., provider: ..., branchId: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await salesChannelOrders(dataConnect, salesChannelOrdersVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 salesChannelOrders(salesChannelOrdersVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -2497,19 +2574,20 @@ import { connectorConfig, salesChannelOrdersRef, SalesChannelOrdersVariables } f
 
 // The `SalesChannelOrders` query requires an argument of type `SalesChannelOrdersVariables`:
 const salesChannelOrdersVars: SalesChannelOrdersVariables = {
-  term: ..., 
-  status: ..., 
-  provider: ..., 
+  term: ...,
+  status: ...,
+  provider: ...,
   branchId: ..., // optional
-  limit: ..., 
-  offset: ..., 
-  requestKey: ..., 
+  limit: ...,
+  offset: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `salesChannelOrdersRef()` function to get a reference to the query.
 const ref = salesChannelOrdersRef(salesChannelOrdersVars);
 // Variables can be defined inline as well.
-const ref = salesChannelOrdersRef({ term: ..., status: ..., provider: ..., branchId: ..., limit: ..., offset: ..., requestKey: ..., });
+const ref = salesChannelOrdersRef({ term: ..., status: ..., provider: ..., branchId: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -2519,11 +2597,13 @@ const ref = salesChannelOrdersRef(dataConnect, salesChannelOrdersVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -2563,6 +2643,7 @@ The `LatestPendingSalesChannelOrder` query requires an argument of type `LatestP
 ```typescript
 export interface LatestPendingSalesChannelOrderVariables {
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -2571,6 +2652,7 @@ Recall that executing the `LatestPendingSalesChannelOrder` query returns a `Quer
 The `data` property is an object of type `LatestPendingSalesChannelOrderData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface LatestPendingSalesChannelOrderData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -2582,24 +2664,27 @@ import { connectorConfig, latestPendingSalesChannelOrder, LatestPendingSalesChan
 
 // The `LatestPendingSalesChannelOrder` query requires an argument of type `LatestPendingSalesChannelOrderVariables`:
 const latestPendingSalesChannelOrderVars: LatestPendingSalesChannelOrderVariables = {
-  requestKey: ..., 
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `latestPendingSalesChannelOrder()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await latestPendingSalesChannelOrder(latestPendingSalesChannelOrderVars);
 // Variables can be defined inline as well.
-const { data } = await latestPendingSalesChannelOrder({ requestKey: ..., });
+const { data } = await latestPendingSalesChannelOrder({ requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await latestPendingSalesChannelOrder(dataConnect, latestPendingSalesChannelOrderVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 latestPendingSalesChannelOrder(latestPendingSalesChannelOrderVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -2612,13 +2697,14 @@ import { connectorConfig, latestPendingSalesChannelOrderRef, LatestPendingSalesC
 
 // The `LatestPendingSalesChannelOrder` query requires an argument of type `LatestPendingSalesChannelOrderVariables`:
 const latestPendingSalesChannelOrderVars: LatestPendingSalesChannelOrderVariables = {
-  requestKey: ..., 
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `latestPendingSalesChannelOrderRef()` function to get a reference to the query.
 const ref = latestPendingSalesChannelOrderRef(latestPendingSalesChannelOrderVars);
 // Variables can be defined inline as well.
-const ref = latestPendingSalesChannelOrderRef({ requestKey: ..., });
+const ref = latestPendingSalesChannelOrderRef({ requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -2628,11 +2714,13 @@ const ref = latestPendingSalesChannelOrderRef(dataConnect, latestPendingSalesCha
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -2673,6 +2761,7 @@ The `SalesWorkspace` query requires an argument of type `SalesWorkspaceVariables
 export interface SalesWorkspaceVariables {
   branchId?: UUIDString | null;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -2681,6 +2770,7 @@ Recall that executing the `SalesWorkspace` query returns a `QueryPromise` that r
 The `data` property is an object of type `SalesWorkspaceData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SalesWorkspaceData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -2693,24 +2783,27 @@ import { connectorConfig, salesWorkspace, SalesWorkspaceVariables } from '@insig
 // The `SalesWorkspace` query requires an argument of type `SalesWorkspaceVariables`:
 const salesWorkspaceVars: SalesWorkspaceVariables = {
   branchId: ..., // optional
-  requestKey: ..., 
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `salesWorkspace()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await salesWorkspace(salesWorkspaceVars);
 // Variables can be defined inline as well.
-const { data } = await salesWorkspace({ branchId: ..., requestKey: ..., });
+const { data } = await salesWorkspace({ branchId: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await salesWorkspace(dataConnect, salesWorkspaceVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 salesWorkspace(salesWorkspaceVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -2724,13 +2817,14 @@ import { connectorConfig, salesWorkspaceRef, SalesWorkspaceVariables } from '@in
 // The `SalesWorkspace` query requires an argument of type `SalesWorkspaceVariables`:
 const salesWorkspaceVars: SalesWorkspaceVariables = {
   branchId: ..., // optional
-  requestKey: ..., 
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `salesWorkspaceRef()` function to get a reference to the query.
 const ref = salesWorkspaceRef(salesWorkspaceVars);
 // Variables can be defined inline as well.
-const ref = salesWorkspaceRef({ branchId: ..., requestKey: ..., });
+const ref = salesWorkspaceRef({ branchId: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -2740,11 +2834,13 @@ const ref = salesWorkspaceRef(dataConnect, salesWorkspaceVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -2787,6 +2883,7 @@ export interface ListSalesVariables {
   limit: number;
   offset: number;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -2795,6 +2892,7 @@ Recall that executing the `ListSales` query returns a `QueryPromise` that resolv
 The `data` property is an object of type `ListSalesData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface ListSalesData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -2806,27 +2904,30 @@ import { connectorConfig, listSales, ListSalesVariables } from '@insightpad/data
 
 // The `ListSales` query requires an argument of type `ListSalesVariables`:
 const listSalesVars: ListSalesVariables = {
-  filters: ..., 
-  limit: ..., 
-  offset: ..., 
-  requestKey: ..., 
+  filters: ...,
+  limit: ...,
+  offset: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `listSales()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await listSales(listSalesVars);
 // Variables can be defined inline as well.
-const { data } = await listSales({ filters: ..., limit: ..., offset: ..., requestKey: ..., });
+const { data } = await listSales({ filters: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await listSales(dataConnect, listSalesVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 listSales(listSalesVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -2839,16 +2940,17 @@ import { connectorConfig, listSalesRef, ListSalesVariables } from '@insightpad/d
 
 // The `ListSales` query requires an argument of type `ListSalesVariables`:
 const listSalesVars: ListSalesVariables = {
-  filters: ..., 
-  limit: ..., 
-  offset: ..., 
-  requestKey: ..., 
+  filters: ...,
+  limit: ...,
+  offset: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `listSalesRef()` function to get a reference to the query.
 const ref = listSalesRef(listSalesVars);
 // Variables can be defined inline as well.
-const ref = listSalesRef({ filters: ..., limit: ..., offset: ..., requestKey: ..., });
+const ref = listSalesRef({ filters: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -2858,11 +2960,13 @@ const ref = listSalesRef(dataConnect, listSalesVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -2903,6 +3007,7 @@ The `SaleDetails` query requires an argument of type `SaleDetailsVariables`, whi
 export interface SaleDetailsVariables {
   saleId: UUIDString;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -2911,6 +3016,7 @@ Recall that executing the `SaleDetails` query returns a `QueryPromise` that reso
 The `data` property is an object of type `SaleDetailsData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SaleDetailsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -2922,25 +3028,28 @@ import { connectorConfig, saleDetails, SaleDetailsVariables } from '@insightpad/
 
 // The `SaleDetails` query requires an argument of type `SaleDetailsVariables`:
 const saleDetailsVars: SaleDetailsVariables = {
-  saleId: ..., 
-  requestKey: ..., 
+  saleId: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `saleDetails()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await saleDetails(saleDetailsVars);
 // Variables can be defined inline as well.
-const { data } = await saleDetails({ saleId: ..., requestKey: ..., });
+const { data } = await saleDetails({ saleId: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await saleDetails(dataConnect, saleDetailsVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 saleDetails(saleDetailsVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -2953,14 +3062,15 @@ import { connectorConfig, saleDetailsRef, SaleDetailsVariables } from '@insightp
 
 // The `SaleDetails` query requires an argument of type `SaleDetailsVariables`:
 const saleDetailsVars: SaleDetailsVariables = {
-  saleId: ..., 
-  requestKey: ..., 
+  saleId: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `saleDetailsRef()` function to get a reference to the query.
 const ref = saleDetailsRef(saleDetailsVars);
 // Variables can be defined inline as well.
-const ref = saleDetailsRef({ saleId: ..., requestKey: ..., });
+const ref = saleDetailsRef({ saleId: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -2970,11 +3080,13 @@ const ref = saleDetailsRef(dataConnect, saleDetailsVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -3020,6 +3132,7 @@ export interface ListCategoriesVariables {
   offset: number;
   requestKey?: string | null;
   filters?: unknown | null;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -3028,6 +3141,7 @@ Recall that executing the `ListCategories` query returns a `QueryPromise` that r
 The `data` property is an object of type `ListCategoriesData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface ListCategoriesData {
+  session?: unknown | null;
   _select?: unknown[] | null;
   _selectFirst?: unknown | null;
 }
@@ -3040,31 +3154,34 @@ import { connectorConfig, listCategories, ListCategoriesVariables } from '@insig
 
 // The `ListCategories` query requires an argument of type `ListCategoriesVariables`:
 const listCategoriesVars: ListCategoriesVariables = {
-  search: ..., 
+  search: ...,
   sortField: ..., // optional
   sortDirection: ..., // optional
-  limit: ..., 
-  offset: ..., 
+  limit: ...,
+  offset: ...,
   requestKey: ..., // optional
   filters: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `listCategories()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await listCategories(listCategoriesVars);
 // Variables can be defined inline as well.
-const { data } = await listCategories({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., filters: ..., });
+const { data } = await listCategories({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., filters: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await listCategories(dataConnect, listCategoriesVars);
 
+console.log(data.session);
 console.log(data._select);
 console.log(data._selectFirst);
 
 // Or, you can use the `Promise` API.
 listCategories(listCategoriesVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
   console.log(data._selectFirst);
 });
@@ -3078,19 +3195,20 @@ import { connectorConfig, listCategoriesRef, ListCategoriesVariables } from '@in
 
 // The `ListCategories` query requires an argument of type `ListCategoriesVariables`:
 const listCategoriesVars: ListCategoriesVariables = {
-  search: ..., 
+  search: ...,
   sortField: ..., // optional
   sortDirection: ..., // optional
-  limit: ..., 
-  offset: ..., 
+  limit: ...,
+  offset: ...,
   requestKey: ..., // optional
   filters: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `listCategoriesRef()` function to get a reference to the query.
 const ref = listCategoriesRef(listCategoriesVars);
 // Variables can be defined inline as well.
-const ref = listCategoriesRef({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., filters: ..., });
+const ref = listCategoriesRef({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., filters: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -3100,12 +3218,14 @@ const ref = listCategoriesRef(dataConnect, listCategoriesVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 console.log(data._selectFirst);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
   console.log(data._selectFirst);
 });
@@ -3153,6 +3273,7 @@ export interface ListSubcategoriesVariables {
   offset: number;
   requestKey?: string | null;
   filters?: unknown | null;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -3161,6 +3282,7 @@ Recall that executing the `ListSubcategories` query returns a `QueryPromise` tha
 The `data` property is an object of type `ListSubcategoriesData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface ListSubcategoriesData {
+  session?: unknown | null;
   _select?: unknown[] | null;
   _selectFirst?: unknown | null;
 }
@@ -3173,32 +3295,35 @@ import { connectorConfig, listSubcategories, ListSubcategoriesVariables } from '
 
 // The `ListSubcategories` query requires an argument of type `ListSubcategoriesVariables`:
 const listSubcategoriesVars: ListSubcategoriesVariables = {
-  search: ..., 
+  search: ...,
   categoryId: ..., // optional
   sortField: ..., // optional
   sortDirection: ..., // optional
-  limit: ..., 
-  offset: ..., 
+  limit: ...,
+  offset: ...,
   requestKey: ..., // optional
   filters: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `listSubcategories()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await listSubcategories(listSubcategoriesVars);
 // Variables can be defined inline as well.
-const { data } = await listSubcategories({ search: ..., categoryId: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., filters: ..., });
+const { data } = await listSubcategories({ search: ..., categoryId: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., filters: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await listSubcategories(dataConnect, listSubcategoriesVars);
 
+console.log(data.session);
 console.log(data._select);
 console.log(data._selectFirst);
 
 // Or, you can use the `Promise` API.
 listSubcategories(listSubcategoriesVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
   console.log(data._selectFirst);
 });
@@ -3212,20 +3337,21 @@ import { connectorConfig, listSubcategoriesRef, ListSubcategoriesVariables } fro
 
 // The `ListSubcategories` query requires an argument of type `ListSubcategoriesVariables`:
 const listSubcategoriesVars: ListSubcategoriesVariables = {
-  search: ..., 
+  search: ...,
   categoryId: ..., // optional
   sortField: ..., // optional
   sortDirection: ..., // optional
-  limit: ..., 
-  offset: ..., 
+  limit: ...,
+  offset: ...,
   requestKey: ..., // optional
   filters: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `listSubcategoriesRef()` function to get a reference to the query.
 const ref = listSubcategoriesRef(listSubcategoriesVars);
 // Variables can be defined inline as well.
-const ref = listSubcategoriesRef({ search: ..., categoryId: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., filters: ..., });
+const ref = listSubcategoriesRef({ search: ..., categoryId: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., filters: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -3235,12 +3361,14 @@ const ref = listSubcategoriesRef(dataConnect, listSubcategoriesVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 console.log(data._selectFirst);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
   console.log(data._selectFirst);
 });
@@ -3281,6 +3409,7 @@ The `CategoryOptions` query has an optional argument of type `CategoryOptionsVar
 ```typescript
 export interface CategoryOptionsVariables {
   requestKey?: string | null;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -3289,6 +3418,7 @@ Recall that executing the `CategoryOptions` query returns a `QueryPromise` that 
 The `data` property is an object of type `CategoryOptionsData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface CategoryOptionsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -3301,13 +3431,14 @@ import { connectorConfig, categoryOptions, CategoryOptionsVariables } from '@ins
 // The `CategoryOptions` query has an optional argument of type `CategoryOptionsVariables`:
 const categoryOptionsVars: CategoryOptionsVariables = {
   requestKey: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `categoryOptions()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await categoryOptions(categoryOptionsVars);
 // Variables can be defined inline as well.
-const { data } = await categoryOptions({ requestKey: ..., });
+const { data } = await categoryOptions({ requestKey: ..., sessionToken: ..., });
 // Since all variables are optional for this query, you can omit the `CategoryOptionsVariables` argument.
 const { data } = await categoryOptions();
 
@@ -3315,11 +3446,13 @@ const { data } = await categoryOptions();
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await categoryOptions(dataConnect, categoryOptionsVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 categoryOptions(categoryOptionsVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -3333,12 +3466,13 @@ import { connectorConfig, categoryOptionsRef, CategoryOptionsVariables } from '@
 // The `CategoryOptions` query has an optional argument of type `CategoryOptionsVariables`:
 const categoryOptionsVars: CategoryOptionsVariables = {
   requestKey: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `categoryOptionsRef()` function to get a reference to the query.
 const ref = categoryOptionsRef(categoryOptionsVars);
 // Variables can be defined inline as well.
-const ref = categoryOptionsRef({ requestKey: ..., });
+const ref = categoryOptionsRef({ requestKey: ..., sessionToken: ..., });
 // Since all variables are optional for this query, you can omit the `CategoryOptionsVariables` argument.
 const ref = categoryOptionsRef();
 
@@ -3350,11 +3484,13 @@ const ref = categoryOptionsRef(dataConnect, categoryOptionsVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -3399,6 +3535,7 @@ export interface ListBranchesVariables {
   limit: number;
   offset: number;
   requestKey?: string | null;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -3407,6 +3544,7 @@ Recall that executing the `ListBranches` query returns a `QueryPromise` that res
 The `data` property is an object of type `ListBranchesData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface ListBranchesData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -3418,29 +3556,32 @@ import { connectorConfig, listBranches, ListBranchesVariables } from '@insightpa
 
 // The `ListBranches` query requires an argument of type `ListBranchesVariables`:
 const listBranchesVars: ListBranchesVariables = {
-  search: ..., 
+  search: ...,
   sortField: ..., // optional
   sortDirection: ..., // optional
-  limit: ..., 
-  offset: ..., 
+  limit: ...,
+  offset: ...,
   requestKey: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `listBranches()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await listBranches(listBranchesVars);
 // Variables can be defined inline as well.
-const { data } = await listBranches({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+const { data } = await listBranches({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await listBranches(dataConnect, listBranchesVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 listBranches(listBranchesVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -3453,18 +3594,19 @@ import { connectorConfig, listBranchesRef, ListBranchesVariables } from '@insigh
 
 // The `ListBranches` query requires an argument of type `ListBranchesVariables`:
 const listBranchesVars: ListBranchesVariables = {
-  search: ..., 
+  search: ...,
   sortField: ..., // optional
   sortDirection: ..., // optional
-  limit: ..., 
-  offset: ..., 
+  limit: ...,
+  offset: ...,
   requestKey: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `listBranchesRef()` function to get a reference to the query.
 const ref = listBranchesRef(listBranchesVars);
 // Variables can be defined inline as well.
-const ref = listBranchesRef({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+const ref = listBranchesRef({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -3474,11 +3616,13 @@ const ref = listBranchesRef(dataConnect, listBranchesVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -3523,6 +3667,7 @@ export interface ListSuppliersVariables {
   limit: number;
   offset: number;
   requestKey?: string | null;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -3531,6 +3676,7 @@ Recall that executing the `ListSuppliers` query returns a `QueryPromise` that re
 The `data` property is an object of type `ListSuppliersData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface ListSuppliersData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -3542,29 +3688,32 @@ import { connectorConfig, listSuppliers, ListSuppliersVariables } from '@insight
 
 // The `ListSuppliers` query requires an argument of type `ListSuppliersVariables`:
 const listSuppliersVars: ListSuppliersVariables = {
-  search: ..., 
+  search: ...,
   sortField: ..., // optional
   sortDirection: ..., // optional
-  limit: ..., 
-  offset: ..., 
+  limit: ...,
+  offset: ...,
   requestKey: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `listSuppliers()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await listSuppliers(listSuppliersVars);
 // Variables can be defined inline as well.
-const { data } = await listSuppliers({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+const { data } = await listSuppliers({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await listSuppliers(dataConnect, listSuppliersVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 listSuppliers(listSuppliersVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -3577,18 +3726,19 @@ import { connectorConfig, listSuppliersRef, ListSuppliersVariables } from '@insi
 
 // The `ListSuppliers` query requires an argument of type `ListSuppliersVariables`:
 const listSuppliersVars: ListSuppliersVariables = {
-  search: ..., 
+  search: ...,
   sortField: ..., // optional
   sortDirection: ..., // optional
-  limit: ..., 
-  offset: ..., 
+  limit: ...,
+  offset: ...,
   requestKey: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `listSuppliersRef()` function to get a reference to the query.
 const ref = listSuppliersRef(listSuppliersVars);
 // Variables can be defined inline as well.
-const ref = listSuppliersRef({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+const ref = listSuppliersRef({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -3598,11 +3748,13 @@ const ref = listSuppliersRef(dataConnect, listSuppliersVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -3647,6 +3799,7 @@ export interface ListCustomersVariables {
   limit: number;
   offset: number;
   requestKey?: string | null;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -3655,6 +3808,7 @@ Recall that executing the `ListCustomers` query returns a `QueryPromise` that re
 The `data` property is an object of type `ListCustomersData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface ListCustomersData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -3666,29 +3820,32 @@ import { connectorConfig, listCustomers, ListCustomersVariables } from '@insight
 
 // The `ListCustomers` query requires an argument of type `ListCustomersVariables`:
 const listCustomersVars: ListCustomersVariables = {
-  search: ..., 
+  search: ...,
   sortField: ..., // optional
   sortDirection: ..., // optional
-  limit: ..., 
-  offset: ..., 
+  limit: ...,
+  offset: ...,
   requestKey: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `listCustomers()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await listCustomers(listCustomersVars);
 // Variables can be defined inline as well.
-const { data } = await listCustomers({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+const { data } = await listCustomers({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await listCustomers(dataConnect, listCustomersVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 listCustomers(listCustomersVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -3701,18 +3858,19 @@ import { connectorConfig, listCustomersRef, ListCustomersVariables } from '@insi
 
 // The `ListCustomers` query requires an argument of type `ListCustomersVariables`:
 const listCustomersVars: ListCustomersVariables = {
-  search: ..., 
+  search: ...,
   sortField: ..., // optional
   sortDirection: ..., // optional
-  limit: ..., 
-  offset: ..., 
+  limit: ...,
+  offset: ...,
   requestKey: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `listCustomersRef()` function to get a reference to the query.
 const ref = listCustomersRef(listCustomersVars);
 // Variables can be defined inline as well.
-const ref = listCustomersRef({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+const ref = listCustomersRef({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -3722,11 +3880,13 @@ const ref = listCustomersRef(dataConnect, listCustomersVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -3771,6 +3931,7 @@ export interface ListProductsVariables {
   limit: number;
   offset: number;
   requestKey?: string | null;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -3779,6 +3940,7 @@ Recall that executing the `ListProducts` query returns a `QueryPromise` that res
 The `data` property is an object of type `ListProductsData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface ListProductsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -3790,29 +3952,32 @@ import { connectorConfig, listProducts, ListProductsVariables } from '@insightpa
 
 // The `ListProducts` query requires an argument of type `ListProductsVariables`:
 const listProductsVars: ListProductsVariables = {
-  search: ..., 
+  search: ...,
   sortField: ..., // optional
   sortDirection: ..., // optional
-  limit: ..., 
-  offset: ..., 
+  limit: ...,
+  offset: ...,
   requestKey: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `listProducts()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await listProducts(listProductsVars);
 // Variables can be defined inline as well.
-const { data } = await listProducts({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+const { data } = await listProducts({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await listProducts(dataConnect, listProductsVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 listProducts(listProductsVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -3825,18 +3990,19 @@ import { connectorConfig, listProductsRef, ListProductsVariables } from '@insigh
 
 // The `ListProducts` query requires an argument of type `ListProductsVariables`:
 const listProductsVars: ListProductsVariables = {
-  search: ..., 
+  search: ...,
   sortField: ..., // optional
   sortDirection: ..., // optional
-  limit: ..., 
-  offset: ..., 
+  limit: ...,
+  offset: ...,
   requestKey: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `listProductsRef()` function to get a reference to the query.
 const ref = listProductsRef(listProductsVars);
 // Variables can be defined inline as well.
-const ref = listProductsRef({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+const ref = listProductsRef({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -3846,11 +4012,13 @@ const ref = listProductsRef(dataConnect, listProductsVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -3890,6 +4058,7 @@ The `RegistrationOptions` query has an optional argument of type `RegistrationOp
 ```typescript
 export interface RegistrationOptionsVariables {
   requestKey?: string | null;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -3898,6 +4067,7 @@ Recall that executing the `RegistrationOptions` query returns a `QueryPromise` t
 The `data` property is an object of type `RegistrationOptionsData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface RegistrationOptionsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -3910,13 +4080,14 @@ import { connectorConfig, registrationOptions, RegistrationOptionsVariables } fr
 // The `RegistrationOptions` query has an optional argument of type `RegistrationOptionsVariables`:
 const registrationOptionsVars: RegistrationOptionsVariables = {
   requestKey: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `registrationOptions()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await registrationOptions(registrationOptionsVars);
 // Variables can be defined inline as well.
-const { data } = await registrationOptions({ requestKey: ..., });
+const { data } = await registrationOptions({ requestKey: ..., sessionToken: ..., });
 // Since all variables are optional for this query, you can omit the `RegistrationOptionsVariables` argument.
 const { data } = await registrationOptions();
 
@@ -3924,11 +4095,13 @@ const { data } = await registrationOptions();
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await registrationOptions(dataConnect, registrationOptionsVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 registrationOptions(registrationOptionsVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -3942,12 +4115,13 @@ import { connectorConfig, registrationOptionsRef, RegistrationOptionsVariables }
 // The `RegistrationOptions` query has an optional argument of type `RegistrationOptionsVariables`:
 const registrationOptionsVars: RegistrationOptionsVariables = {
   requestKey: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `registrationOptionsRef()` function to get a reference to the query.
 const ref = registrationOptionsRef(registrationOptionsVars);
 // Variables can be defined inline as well.
-const ref = registrationOptionsRef({ requestKey: ..., });
+const ref = registrationOptionsRef({ requestKey: ..., sessionToken: ..., });
 // Since all variables are optional for this query, you can omit the `RegistrationOptionsVariables` argument.
 const ref = registrationOptionsRef();
 
@@ -3959,11 +4133,13 @@ const ref = registrationOptionsRef(dataConnect, registrationOptionsVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -4003,6 +4179,7 @@ The `ProductComponents` query requires an argument of type `ProductComponentsVar
 ```typescript
 export interface ProductComponentsVariables {
   productId: UUIDString;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -4011,6 +4188,7 @@ Recall that executing the `ProductComponents` query returns a `QueryPromise` tha
 The `data` property is an object of type `ProductComponentsData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface ProductComponentsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -4022,24 +4200,27 @@ import { connectorConfig, productComponents, ProductComponentsVariables } from '
 
 // The `ProductComponents` query requires an argument of type `ProductComponentsVariables`:
 const productComponentsVars: ProductComponentsVariables = {
-  productId: ..., 
+  productId: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `productComponents()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await productComponents(productComponentsVars);
 // Variables can be defined inline as well.
-const { data } = await productComponents({ productId: ..., });
+const { data } = await productComponents({ productId: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await productComponents(dataConnect, productComponentsVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 productComponents(productComponentsVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -4052,13 +4233,14 @@ import { connectorConfig, productComponentsRef, ProductComponentsVariables } fro
 
 // The `ProductComponents` query requires an argument of type `ProductComponentsVariables`:
 const productComponentsVars: ProductComponentsVariables = {
-  productId: ..., 
+  productId: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `productComponentsRef()` function to get a reference to the query.
 const ref = productComponentsRef(productComponentsVars);
 // Variables can be defined inline as well.
-const ref = productComponentsRef({ productId: ..., });
+const ref = productComponentsRef({ productId: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -4068,11 +4250,13 @@ const ref = productComponentsRef(dataConnect, productComponentsVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -4112,6 +4296,7 @@ The `ProductPromotions` query requires an argument of type `ProductPromotionsVar
 ```typescript
 export interface ProductPromotionsVariables {
   productId: UUIDString;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -4120,6 +4305,7 @@ Recall that executing the `ProductPromotions` query returns a `QueryPromise` tha
 The `data` property is an object of type `ProductPromotionsData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface ProductPromotionsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -4131,24 +4317,27 @@ import { connectorConfig, productPromotions, ProductPromotionsVariables } from '
 
 // The `ProductPromotions` query requires an argument of type `ProductPromotionsVariables`:
 const productPromotionsVars: ProductPromotionsVariables = {
-  productId: ..., 
+  productId: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `productPromotions()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await productPromotions(productPromotionsVars);
 // Variables can be defined inline as well.
-const { data } = await productPromotions({ productId: ..., });
+const { data } = await productPromotions({ productId: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await productPromotions(dataConnect, productPromotionsVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 productPromotions(productPromotionsVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -4161,13 +4350,14 @@ import { connectorConfig, productPromotionsRef, ProductPromotionsVariables } fro
 
 // The `ProductPromotions` query requires an argument of type `ProductPromotionsVariables`:
 const productPromotionsVars: ProductPromotionsVariables = {
-  productId: ..., 
+  productId: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `productPromotionsRef()` function to get a reference to the query.
 const ref = productPromotionsRef(productPromotionsVars);
 // Variables can be defined inline as well.
-const ref = productPromotionsRef({ productId: ..., });
+const ref = productPromotionsRef({ productId: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -4177,11 +4367,13 @@ const ref = productPromotionsRef(dataConnect, productPromotionsVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -4221,6 +4413,7 @@ The `PlatformAdminWorkspace` query requires an argument of type `PlatformAdminWo
 ```typescript
 export interface PlatformAdminWorkspaceVariables {
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -4229,6 +4422,7 @@ Recall that executing the `PlatformAdminWorkspace` query returns a `QueryPromise
 The `data` property is an object of type `PlatformAdminWorkspaceData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface PlatformAdminWorkspaceData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -4240,24 +4434,27 @@ import { connectorConfig, platformAdminWorkspace, PlatformAdminWorkspaceVariable
 
 // The `PlatformAdminWorkspace` query requires an argument of type `PlatformAdminWorkspaceVariables`:
 const platformAdminWorkspaceVars: PlatformAdminWorkspaceVariables = {
-  requestKey: ..., 
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `platformAdminWorkspace()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await platformAdminWorkspace(platformAdminWorkspaceVars);
 // Variables can be defined inline as well.
-const { data } = await platformAdminWorkspace({ requestKey: ..., });
+const { data } = await platformAdminWorkspace({ requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await platformAdminWorkspace(dataConnect, platformAdminWorkspaceVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 platformAdminWorkspace(platformAdminWorkspaceVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -4270,13 +4467,14 @@ import { connectorConfig, platformAdminWorkspaceRef, PlatformAdminWorkspaceVaria
 
 // The `PlatformAdminWorkspace` query requires an argument of type `PlatformAdminWorkspaceVariables`:
 const platformAdminWorkspaceVars: PlatformAdminWorkspaceVariables = {
-  requestKey: ..., 
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `platformAdminWorkspaceRef()` function to get a reference to the query.
 const ref = platformAdminWorkspaceRef(platformAdminWorkspaceVars);
 // Variables can be defined inline as well.
-const ref = platformAdminWorkspaceRef({ requestKey: ..., });
+const ref = platformAdminWorkspaceRef({ requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -4286,11 +4484,13 @@ const ref = platformAdminWorkspaceRef(dataConnect, platformAdminWorkspaceVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -4337,6 +4537,7 @@ export interface PlatformBillingWorkspaceVariables {
   limit: number;
   offset: number;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -4345,6 +4546,7 @@ Recall that executing the `PlatformBillingWorkspace` query returns a `QueryPromi
 The `data` property is an object of type `PlatformBillingWorkspaceData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface PlatformBillingWorkspaceData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -4356,31 +4558,34 @@ import { connectorConfig, platformBillingWorkspace, PlatformBillingWorkspaceVari
 
 // The `PlatformBillingWorkspace` query requires an argument of type `PlatformBillingWorkspaceVariables`:
 const platformBillingWorkspaceVars: PlatformBillingWorkspaceVariables = {
-  term: ..., 
-  status: ..., 
+  term: ...,
+  status: ...,
   tenantId: ..., // optional
   dueFrom: ..., // optional
   dueTo: ..., // optional
-  limit: ..., 
-  offset: ..., 
-  requestKey: ..., 
+  limit: ...,
+  offset: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `platformBillingWorkspace()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await platformBillingWorkspace(platformBillingWorkspaceVars);
 // Variables can be defined inline as well.
-const { data } = await platformBillingWorkspace({ term: ..., status: ..., tenantId: ..., dueFrom: ..., dueTo: ..., limit: ..., offset: ..., requestKey: ..., });
+const { data } = await platformBillingWorkspace({ term: ..., status: ..., tenantId: ..., dueFrom: ..., dueTo: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await platformBillingWorkspace(dataConnect, platformBillingWorkspaceVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 platformBillingWorkspace(platformBillingWorkspaceVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -4393,20 +4598,21 @@ import { connectorConfig, platformBillingWorkspaceRef, PlatformBillingWorkspaceV
 
 // The `PlatformBillingWorkspace` query requires an argument of type `PlatformBillingWorkspaceVariables`:
 const platformBillingWorkspaceVars: PlatformBillingWorkspaceVariables = {
-  term: ..., 
-  status: ..., 
+  term: ...,
+  status: ...,
   tenantId: ..., // optional
   dueFrom: ..., // optional
   dueTo: ..., // optional
-  limit: ..., 
-  offset: ..., 
-  requestKey: ..., 
+  limit: ...,
+  offset: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `platformBillingWorkspaceRef()` function to get a reference to the query.
 const ref = platformBillingWorkspaceRef(platformBillingWorkspaceVars);
 // Variables can be defined inline as well.
-const ref = platformBillingWorkspaceRef({ term: ..., status: ..., tenantId: ..., dueFrom: ..., dueTo: ..., limit: ..., offset: ..., requestKey: ..., });
+const ref = platformBillingWorkspaceRef({ term: ..., status: ..., tenantId: ..., dueFrom: ..., dueTo: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -4416,11 +4622,13 @@ const ref = platformBillingWorkspaceRef(dataConnect, platformBillingWorkspaceVar
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -4469,6 +4677,7 @@ export interface PlatformBillingWorkspaceV2Variables {
   limit: number;
   offset: number;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -4477,6 +4686,7 @@ Recall that executing the `PlatformBillingWorkspaceV2` query returns a `QueryPro
 The `data` property is an object of type `PlatformBillingWorkspaceV2Data`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface PlatformBillingWorkspaceV2Data {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -4488,33 +4698,36 @@ import { connectorConfig, platformBillingWorkspaceV2, PlatformBillingWorkspaceV2
 
 // The `PlatformBillingWorkspaceV2` query requires an argument of type `PlatformBillingWorkspaceV2Variables`:
 const platformBillingWorkspaceV2Vars: PlatformBillingWorkspaceV2Variables = {
-  term: ..., 
-  status: ..., 
+  term: ...,
+  status: ...,
   tenantId: ..., // optional
   dueFrom: ..., // optional
   dueTo: ..., // optional
-  sortKey: ..., 
-  sortDirection: ..., 
-  limit: ..., 
-  offset: ..., 
-  requestKey: ..., 
+  sortKey: ...,
+  sortDirection: ...,
+  limit: ...,
+  offset: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `platformBillingWorkspaceV2()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await platformBillingWorkspaceV2(platformBillingWorkspaceV2Vars);
 // Variables can be defined inline as well.
-const { data } = await platformBillingWorkspaceV2({ term: ..., status: ..., tenantId: ..., dueFrom: ..., dueTo: ..., sortKey: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+const { data } = await platformBillingWorkspaceV2({ term: ..., status: ..., tenantId: ..., dueFrom: ..., dueTo: ..., sortKey: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await platformBillingWorkspaceV2(dataConnect, platformBillingWorkspaceV2Vars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 platformBillingWorkspaceV2(platformBillingWorkspaceV2Vars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -4527,22 +4740,23 @@ import { connectorConfig, platformBillingWorkspaceV2Ref, PlatformBillingWorkspac
 
 // The `PlatformBillingWorkspaceV2` query requires an argument of type `PlatformBillingWorkspaceV2Variables`:
 const platformBillingWorkspaceV2Vars: PlatformBillingWorkspaceV2Variables = {
-  term: ..., 
-  status: ..., 
+  term: ...,
+  status: ...,
   tenantId: ..., // optional
   dueFrom: ..., // optional
   dueTo: ..., // optional
-  sortKey: ..., 
-  sortDirection: ..., 
-  limit: ..., 
-  offset: ..., 
-  requestKey: ..., 
+  sortKey: ...,
+  sortDirection: ...,
+  limit: ...,
+  offset: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `platformBillingWorkspaceV2Ref()` function to get a reference to the query.
 const ref = platformBillingWorkspaceV2Ref(platformBillingWorkspaceV2Vars);
 // Variables can be defined inline as well.
-const ref = platformBillingWorkspaceV2Ref({ term: ..., status: ..., tenantId: ..., dueFrom: ..., dueTo: ..., sortKey: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+const ref = platformBillingWorkspaceV2Ref({ term: ..., status: ..., tenantId: ..., dueFrom: ..., dueTo: ..., sortKey: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -4552,11 +4766,13 @@ const ref = platformBillingWorkspaceV2Ref(dataConnect, platformBillingWorkspaceV
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -4601,6 +4817,7 @@ export interface StockWorkspaceVariables {
   offset?: number | null;
   sortField?: string | null;
   sortDirection?: string | null;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -4609,6 +4826,7 @@ Recall that executing the `StockWorkspace` query returns a `QueryPromise` that r
 The `data` property is an object of type `StockWorkspaceData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface StockWorkspaceData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -4620,29 +4838,32 @@ import { connectorConfig, stockWorkspace, StockWorkspaceVariables } from '@insig
 
 // The `StockWorkspace` query requires an argument of type `StockWorkspaceVariables`:
 const stockWorkspaceVars: StockWorkspaceVariables = {
-  requestKey: ..., 
+  requestKey: ...,
   filters: ..., // optional
   limit: ..., // optional
   offset: ..., // optional
   sortField: ..., // optional
   sortDirection: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `stockWorkspace()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await stockWorkspace(stockWorkspaceVars);
 // Variables can be defined inline as well.
-const { data } = await stockWorkspace({ requestKey: ..., filters: ..., limit: ..., offset: ..., sortField: ..., sortDirection: ..., });
+const { data } = await stockWorkspace({ requestKey: ..., filters: ..., limit: ..., offset: ..., sortField: ..., sortDirection: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await stockWorkspace(dataConnect, stockWorkspaceVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 stockWorkspace(stockWorkspaceVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -4655,18 +4876,19 @@ import { connectorConfig, stockWorkspaceRef, StockWorkspaceVariables } from '@in
 
 // The `StockWorkspace` query requires an argument of type `StockWorkspaceVariables`:
 const stockWorkspaceVars: StockWorkspaceVariables = {
-  requestKey: ..., 
+  requestKey: ...,
   filters: ..., // optional
   limit: ..., // optional
   offset: ..., // optional
   sortField: ..., // optional
   sortDirection: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `stockWorkspaceRef()` function to get a reference to the query.
 const ref = stockWorkspaceRef(stockWorkspaceVars);
 // Variables can be defined inline as well.
-const ref = stockWorkspaceRef({ requestKey: ..., filters: ..., limit: ..., offset: ..., sortField: ..., sortDirection: ..., });
+const ref = stockWorkspaceRef({ requestKey: ..., filters: ..., limit: ..., offset: ..., sortField: ..., sortDirection: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -4676,11 +4898,13 @@ const ref = stockWorkspaceRef(dataConnect, stockWorkspaceVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -4723,6 +4947,7 @@ export interface DailyProfitDashboardVariables {
   to: DateString;
   branchId?: UUIDString | null;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -4731,6 +4956,7 @@ Recall that executing the `DailyProfitDashboard` query returns a `QueryPromise` 
 The `data` property is an object of type `DailyProfitDashboardData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface DailyProfitDashboardData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -4742,27 +4968,30 @@ import { connectorConfig, dailyProfitDashboard, DailyProfitDashboardVariables } 
 
 // The `DailyProfitDashboard` query requires an argument of type `DailyProfitDashboardVariables`:
 const dailyProfitDashboardVars: DailyProfitDashboardVariables = {
-  from: ..., 
-  to: ..., 
+  from: ...,
+  to: ...,
   branchId: ..., // optional
-  requestKey: ..., 
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `dailyProfitDashboard()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await dailyProfitDashboard(dailyProfitDashboardVars);
 // Variables can be defined inline as well.
-const { data } = await dailyProfitDashboard({ from: ..., to: ..., branchId: ..., requestKey: ..., });
+const { data } = await dailyProfitDashboard({ from: ..., to: ..., branchId: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await dailyProfitDashboard(dataConnect, dailyProfitDashboardVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 dailyProfitDashboard(dailyProfitDashboardVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -4775,16 +5004,17 @@ import { connectorConfig, dailyProfitDashboardRef, DailyProfitDashboardVariables
 
 // The `DailyProfitDashboard` query requires an argument of type `DailyProfitDashboardVariables`:
 const dailyProfitDashboardVars: DailyProfitDashboardVariables = {
-  from: ..., 
-  to: ..., 
+  from: ...,
+  to: ...,
   branchId: ..., // optional
-  requestKey: ..., 
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `dailyProfitDashboardRef()` function to get a reference to the query.
 const ref = dailyProfitDashboardRef(dailyProfitDashboardVars);
 // Variables can be defined inline as well.
-const ref = dailyProfitDashboardRef({ from: ..., to: ..., branchId: ..., requestKey: ..., });
+const ref = dailyProfitDashboardRef({ from: ..., to: ..., branchId: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -4794,11 +5024,13 @@ const ref = dailyProfitDashboardRef(dataConnect, dailyProfitDashboardVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -4839,6 +5071,7 @@ The `StockOperationDetails` query requires an argument of type `StockOperationDe
 export interface StockOperationDetailsVariables {
   operationId: string;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -4847,6 +5080,7 @@ Recall that executing the `StockOperationDetails` query returns a `QueryPromise`
 The `data` property is an object of type `StockOperationDetailsData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface StockOperationDetailsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -4858,25 +5092,28 @@ import { connectorConfig, stockOperationDetails, StockOperationDetailsVariables 
 
 // The `StockOperationDetails` query requires an argument of type `StockOperationDetailsVariables`:
 const stockOperationDetailsVars: StockOperationDetailsVariables = {
-  operationId: ..., 
-  requestKey: ..., 
+  operationId: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `stockOperationDetails()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await stockOperationDetails(stockOperationDetailsVars);
 // Variables can be defined inline as well.
-const { data } = await stockOperationDetails({ operationId: ..., requestKey: ..., });
+const { data } = await stockOperationDetails({ operationId: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await stockOperationDetails(dataConnect, stockOperationDetailsVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 stockOperationDetails(stockOperationDetailsVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -4889,14 +5126,15 @@ import { connectorConfig, stockOperationDetailsRef, StockOperationDetailsVariabl
 
 // The `StockOperationDetails` query requires an argument of type `StockOperationDetailsVariables`:
 const stockOperationDetailsVars: StockOperationDetailsVariables = {
-  operationId: ..., 
-  requestKey: ..., 
+  operationId: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `stockOperationDetailsRef()` function to get a reference to the query.
 const ref = stockOperationDetailsRef(stockOperationDetailsVars);
 // Variables can be defined inline as well.
-const ref = stockOperationDetailsRef({ operationId: ..., requestKey: ..., });
+const ref = stockOperationDetailsRef({ operationId: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -4906,11 +5144,13 @@ const ref = stockOperationDetailsRef(dataConnect, stockOperationDetailsVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -4953,6 +5193,7 @@ export interface FinancialIndicatorsDashboardVariables {
   to: DateString;
   filters: unknown;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -4961,6 +5202,7 @@ Recall that executing the `FinancialIndicatorsDashboard` query returns a `QueryP
 The `data` property is an object of type `FinancialIndicatorsDashboardData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface FinancialIndicatorsDashboardData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -4972,27 +5214,30 @@ import { connectorConfig, financialIndicatorsDashboard, FinancialIndicatorsDashb
 
 // The `FinancialIndicatorsDashboard` query requires an argument of type `FinancialIndicatorsDashboardVariables`:
 const financialIndicatorsDashboardVars: FinancialIndicatorsDashboardVariables = {
-  from: ..., 
-  to: ..., 
-  filters: ..., 
-  requestKey: ..., 
+  from: ...,
+  to: ...,
+  filters: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `financialIndicatorsDashboard()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await financialIndicatorsDashboard(financialIndicatorsDashboardVars);
 // Variables can be defined inline as well.
-const { data } = await financialIndicatorsDashboard({ from: ..., to: ..., filters: ..., requestKey: ..., });
+const { data } = await financialIndicatorsDashboard({ from: ..., to: ..., filters: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await financialIndicatorsDashboard(dataConnect, financialIndicatorsDashboardVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 financialIndicatorsDashboard(financialIndicatorsDashboardVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -5005,16 +5250,17 @@ import { connectorConfig, financialIndicatorsDashboardRef, FinancialIndicatorsDa
 
 // The `FinancialIndicatorsDashboard` query requires an argument of type `FinancialIndicatorsDashboardVariables`:
 const financialIndicatorsDashboardVars: FinancialIndicatorsDashboardVariables = {
-  from: ..., 
-  to: ..., 
-  filters: ..., 
-  requestKey: ..., 
+  from: ...,
+  to: ...,
+  filters: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `financialIndicatorsDashboardRef()` function to get a reference to the query.
 const ref = financialIndicatorsDashboardRef(financialIndicatorsDashboardVars);
 // Variables can be defined inline as well.
-const ref = financialIndicatorsDashboardRef({ from: ..., to: ..., filters: ..., requestKey: ..., });
+const ref = financialIndicatorsDashboardRef({ from: ..., to: ..., filters: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -5024,11 +5270,13 @@ const ref = financialIndicatorsDashboardRef(dataConnect, financialIndicatorsDash
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -5071,6 +5319,7 @@ export interface SalesChannelAnalyticsDashboardVariables {
   to: DateString;
   filters: unknown;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -5079,6 +5328,7 @@ Recall that executing the `SalesChannelAnalyticsDashboard` query returns a `Quer
 The `data` property is an object of type `SalesChannelAnalyticsDashboardData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SalesChannelAnalyticsDashboardData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -5090,27 +5340,30 @@ import { connectorConfig, salesChannelAnalyticsDashboard, SalesChannelAnalyticsD
 
 // The `SalesChannelAnalyticsDashboard` query requires an argument of type `SalesChannelAnalyticsDashboardVariables`:
 const salesChannelAnalyticsDashboardVars: SalesChannelAnalyticsDashboardVariables = {
-  from: ..., 
-  to: ..., 
-  filters: ..., 
-  requestKey: ..., 
+  from: ...,
+  to: ...,
+  filters: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `salesChannelAnalyticsDashboard()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await salesChannelAnalyticsDashboard(salesChannelAnalyticsDashboardVars);
 // Variables can be defined inline as well.
-const { data } = await salesChannelAnalyticsDashboard({ from: ..., to: ..., filters: ..., requestKey: ..., });
+const { data } = await salesChannelAnalyticsDashboard({ from: ..., to: ..., filters: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await salesChannelAnalyticsDashboard(dataConnect, salesChannelAnalyticsDashboardVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 salesChannelAnalyticsDashboard(salesChannelAnalyticsDashboardVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -5123,16 +5376,17 @@ import { connectorConfig, salesChannelAnalyticsDashboardRef, SalesChannelAnalyti
 
 // The `SalesChannelAnalyticsDashboard` query requires an argument of type `SalesChannelAnalyticsDashboardVariables`:
 const salesChannelAnalyticsDashboardVars: SalesChannelAnalyticsDashboardVariables = {
-  from: ..., 
-  to: ..., 
-  filters: ..., 
-  requestKey: ..., 
+  from: ...,
+  to: ...,
+  filters: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `salesChannelAnalyticsDashboardRef()` function to get a reference to the query.
 const ref = salesChannelAnalyticsDashboardRef(salesChannelAnalyticsDashboardVars);
 // Variables can be defined inline as well.
-const ref = salesChannelAnalyticsDashboardRef({ from: ..., to: ..., filters: ..., requestKey: ..., });
+const ref = salesChannelAnalyticsDashboardRef({ from: ..., to: ..., filters: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -5142,11 +5396,13 @@ const ref = salesChannelAnalyticsDashboardRef(dataConnect, salesChannelAnalytics
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -5189,6 +5445,7 @@ export interface OperationalAnalyticsDashboardVariables {
   to: DateString;
   filters: unknown;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -5197,6 +5454,7 @@ Recall that executing the `OperationalAnalyticsDashboard` query returns a `Query
 The `data` property is an object of type `OperationalAnalyticsDashboardData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface OperationalAnalyticsDashboardData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -5208,27 +5466,30 @@ import { connectorConfig, operationalAnalyticsDashboard, OperationalAnalyticsDas
 
 // The `OperationalAnalyticsDashboard` query requires an argument of type `OperationalAnalyticsDashboardVariables`:
 const operationalAnalyticsDashboardVars: OperationalAnalyticsDashboardVariables = {
-  from: ..., 
-  to: ..., 
-  filters: ..., 
-  requestKey: ..., 
+  from: ...,
+  to: ...,
+  filters: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `operationalAnalyticsDashboard()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await operationalAnalyticsDashboard(operationalAnalyticsDashboardVars);
 // Variables can be defined inline as well.
-const { data } = await operationalAnalyticsDashboard({ from: ..., to: ..., filters: ..., requestKey: ..., });
+const { data } = await operationalAnalyticsDashboard({ from: ..., to: ..., filters: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await operationalAnalyticsDashboard(dataConnect, operationalAnalyticsDashboardVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 operationalAnalyticsDashboard(operationalAnalyticsDashboardVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -5241,16 +5502,17 @@ import { connectorConfig, operationalAnalyticsDashboardRef, OperationalAnalytics
 
 // The `OperationalAnalyticsDashboard` query requires an argument of type `OperationalAnalyticsDashboardVariables`:
 const operationalAnalyticsDashboardVars: OperationalAnalyticsDashboardVariables = {
-  from: ..., 
-  to: ..., 
-  filters: ..., 
-  requestKey: ..., 
+  from: ...,
+  to: ...,
+  filters: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `operationalAnalyticsDashboardRef()` function to get a reference to the query.
 const ref = operationalAnalyticsDashboardRef(operationalAnalyticsDashboardVars);
 // Variables can be defined inline as well.
-const ref = operationalAnalyticsDashboardRef({ from: ..., to: ..., filters: ..., requestKey: ..., });
+const ref = operationalAnalyticsDashboardRef({ from: ..., to: ..., filters: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -5260,11 +5522,13 @@ const ref = operationalAnalyticsDashboardRef(dataConnect, operationalAnalyticsDa
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -5305,6 +5569,7 @@ The `SystemSalesChannelOrderForActor` query requires an argument of type `System
 export interface SystemSalesChannelOrderForActorVariables {
   userId: string;
   orderId: UUIDString;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -5324,15 +5589,16 @@ import { connectorConfig, systemSalesChannelOrderForActor, SystemSalesChannelOrd
 
 // The `SystemSalesChannelOrderForActor` query requires an argument of type `SystemSalesChannelOrderForActorVariables`:
 const systemSalesChannelOrderForActorVars: SystemSalesChannelOrderForActorVariables = {
-  userId: ..., 
-  orderId: ..., 
+  userId: ...,
+  orderId: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `systemSalesChannelOrderForActor()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await systemSalesChannelOrderForActor(systemSalesChannelOrderForActorVars);
 // Variables can be defined inline as well.
-const { data } = await systemSalesChannelOrderForActor({ userId: ..., orderId: ..., });
+const { data } = await systemSalesChannelOrderForActor({ userId: ..., orderId: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -5355,14 +5621,15 @@ import { connectorConfig, systemSalesChannelOrderForActorRef, SystemSalesChannel
 
 // The `SystemSalesChannelOrderForActor` query requires an argument of type `SystemSalesChannelOrderForActorVariables`:
 const systemSalesChannelOrderForActorVars: SystemSalesChannelOrderForActorVariables = {
-  userId: ..., 
-  orderId: ..., 
+  userId: ...,
+  orderId: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `systemSalesChannelOrderForActorRef()` function to get a reference to the query.
 const ref = systemSalesChannelOrderForActorRef(systemSalesChannelOrderForActorVars);
 // Variables can be defined inline as well.
-const ref = systemSalesChannelOrderForActorRef({ userId: ..., orderId: ..., });
+const ref = systemSalesChannelOrderForActorRef({ userId: ..., orderId: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -5417,6 +5684,7 @@ The `SystemSalesChannelConnectionForActor` query requires an argument of type `S
 export interface SystemSalesChannelConnectionForActorVariables {
   userId: string;
   connectionId: UUIDString;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -5436,15 +5704,16 @@ import { connectorConfig, systemSalesChannelConnectionForActor, SystemSalesChann
 
 // The `SystemSalesChannelConnectionForActor` query requires an argument of type `SystemSalesChannelConnectionForActorVariables`:
 const systemSalesChannelConnectionForActorVars: SystemSalesChannelConnectionForActorVariables = {
-  userId: ..., 
-  connectionId: ..., 
+  userId: ...,
+  connectionId: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `systemSalesChannelConnectionForActor()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await systemSalesChannelConnectionForActor(systemSalesChannelConnectionForActorVars);
 // Variables can be defined inline as well.
-const { data } = await systemSalesChannelConnectionForActor({ userId: ..., connectionId: ..., });
+const { data } = await systemSalesChannelConnectionForActor({ userId: ..., connectionId: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -5467,14 +5736,15 @@ import { connectorConfig, systemSalesChannelConnectionForActorRef, SystemSalesCh
 
 // The `SystemSalesChannelConnectionForActor` query requires an argument of type `SystemSalesChannelConnectionForActorVariables`:
 const systemSalesChannelConnectionForActorVars: SystemSalesChannelConnectionForActorVariables = {
-  userId: ..., 
-  connectionId: ..., 
+  userId: ...,
+  connectionId: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `systemSalesChannelConnectionForActorRef()` function to get a reference to the query.
 const ref = systemSalesChannelConnectionForActorRef(systemSalesChannelConnectionForActorVars);
 // Variables can be defined inline as well.
-const ref = systemSalesChannelConnectionForActorRef({ userId: ..., connectionId: ..., });
+const ref = systemSalesChannelConnectionForActorRef({ userId: ..., connectionId: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -5532,6 +5802,7 @@ export interface SearchPosProductsVariables {
   limit?: number | null;
   offset?: number | null;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -5540,6 +5811,7 @@ Recall that executing the `SearchPosProducts` query returns a `QueryPromise` tha
 The `data` property is an object of type `SearchPosProductsData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SearchPosProductsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -5551,28 +5823,31 @@ import { connectorConfig, searchPosProducts, SearchPosProductsVariables } from '
 
 // The `SearchPosProducts` query requires an argument of type `SearchPosProductsVariables`:
 const searchPosProductsVars: SearchPosProductsVariables = {
-  branchId: ..., 
+  branchId: ...,
   search: ..., // optional
   limit: ..., // optional
   offset: ..., // optional
-  requestKey: ..., 
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `searchPosProducts()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await searchPosProducts(searchPosProductsVars);
 // Variables can be defined inline as well.
-const { data } = await searchPosProducts({ branchId: ..., search: ..., limit: ..., offset: ..., requestKey: ..., });
+const { data } = await searchPosProducts({ branchId: ..., search: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await searchPosProducts(dataConnect, searchPosProductsVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 searchPosProducts(searchPosProductsVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -5585,17 +5860,18 @@ import { connectorConfig, searchPosProductsRef, SearchPosProductsVariables } fro
 
 // The `SearchPosProducts` query requires an argument of type `SearchPosProductsVariables`:
 const searchPosProductsVars: SearchPosProductsVariables = {
-  branchId: ..., 
+  branchId: ...,
   search: ..., // optional
   limit: ..., // optional
   offset: ..., // optional
-  requestKey: ..., 
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `searchPosProductsRef()` function to get a reference to the query.
 const ref = searchPosProductsRef(searchPosProductsVars);
 // Variables can be defined inline as well.
-const ref = searchPosProductsRef({ branchId: ..., search: ..., limit: ..., offset: ..., requestKey: ..., });
+const ref = searchPosProductsRef({ branchId: ..., search: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -5605,11 +5881,13 @@ const ref = searchPosProductsRef(dataConnect, searchPosProductsVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -5652,6 +5930,7 @@ export interface SearchPosCustomersVariables {
   limit?: number | null;
   offset?: number | null;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -5660,6 +5939,7 @@ Recall that executing the `SearchPosCustomers` query returns a `QueryPromise` th
 The `data` property is an object of type `SearchPosCustomersData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SearchPosCustomersData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -5674,24 +5954,27 @@ const searchPosCustomersVars: SearchPosCustomersVariables = {
   search: ..., // optional
   limit: ..., // optional
   offset: ..., // optional
-  requestKey: ..., 
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `searchPosCustomers()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await searchPosCustomers(searchPosCustomersVars);
 // Variables can be defined inline as well.
-const { data } = await searchPosCustomers({ search: ..., limit: ..., offset: ..., requestKey: ..., });
+const { data } = await searchPosCustomers({ search: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await searchPosCustomers(dataConnect, searchPosCustomersVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 searchPosCustomers(searchPosCustomersVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -5707,13 +5990,14 @@ const searchPosCustomersVars: SearchPosCustomersVariables = {
   search: ..., // optional
   limit: ..., // optional
   offset: ..., // optional
-  requestKey: ..., 
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `searchPosCustomersRef()` function to get a reference to the query.
 const ref = searchPosCustomersRef(searchPosCustomersVars);
 // Variables can be defined inline as well.
-const ref = searchPosCustomersRef({ search: ..., limit: ..., offset: ..., requestKey: ..., });
+const ref = searchPosCustomersRef({ search: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -5723,11 +6007,13 @@ const ref = searchPosCustomersRef(dataConnect, searchPosCustomersVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -5768,6 +6054,7 @@ The `PosProductBranches` query requires an argument of type `PosProductBranchesV
 export interface PosProductBranchesVariables {
   productId: UUIDString;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -5776,6 +6063,7 @@ Recall that executing the `PosProductBranches` query returns a `QueryPromise` th
 The `data` property is an object of type `PosProductBranchesData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface PosProductBranchesData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -5787,25 +6075,28 @@ import { connectorConfig, posProductBranches, PosProductBranchesVariables } from
 
 // The `PosProductBranches` query requires an argument of type `PosProductBranchesVariables`:
 const posProductBranchesVars: PosProductBranchesVariables = {
-  productId: ..., 
-  requestKey: ..., 
+  productId: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `posProductBranches()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await posProductBranches(posProductBranchesVars);
 // Variables can be defined inline as well.
-const { data } = await posProductBranches({ productId: ..., requestKey: ..., });
+const { data } = await posProductBranches({ productId: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await posProductBranches(dataConnect, posProductBranchesVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 posProductBranches(posProductBranchesVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -5818,14 +6109,15 @@ import { connectorConfig, posProductBranchesRef, PosProductBranchesVariables } f
 
 // The `PosProductBranches` query requires an argument of type `PosProductBranchesVariables`:
 const posProductBranchesVars: PosProductBranchesVariables = {
-  productId: ..., 
-  requestKey: ..., 
+  productId: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `posProductBranchesRef()` function to get a reference to the query.
 const ref = posProductBranchesRef(posProductBranchesVars);
 // Variables can be defined inline as well.
-const ref = posProductBranchesRef({ productId: ..., requestKey: ..., });
+const ref = posProductBranchesRef({ productId: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -5835,11 +6127,13 @@ const ref = posProductBranchesRef(dataConnect, posProductBranchesVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -5879,6 +6173,7 @@ The `PendingPosApprovals` query requires an argument of type `PendingPosApproval
 ```typescript
 export interface PendingPosApprovalsVariables {
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -5887,6 +6182,7 @@ Recall that executing the `PendingPosApprovals` query returns a `QueryPromise` t
 The `data` property is an object of type `PendingPosApprovalsData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface PendingPosApprovalsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -5898,24 +6194,27 @@ import { connectorConfig, pendingPosApprovals, PendingPosApprovalsVariables } fr
 
 // The `PendingPosApprovals` query requires an argument of type `PendingPosApprovalsVariables`:
 const pendingPosApprovalsVars: PendingPosApprovalsVariables = {
-  requestKey: ..., 
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `pendingPosApprovals()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await pendingPosApprovals(pendingPosApprovalsVars);
 // Variables can be defined inline as well.
-const { data } = await pendingPosApprovals({ requestKey: ..., });
+const { data } = await pendingPosApprovals({ requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await pendingPosApprovals(dataConnect, pendingPosApprovalsVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 pendingPosApprovals(pendingPosApprovalsVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -5928,13 +6227,14 @@ import { connectorConfig, pendingPosApprovalsRef, PendingPosApprovalsVariables }
 
 // The `PendingPosApprovals` query requires an argument of type `PendingPosApprovalsVariables`:
 const pendingPosApprovalsVars: PendingPosApprovalsVariables = {
-  requestKey: ..., 
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `pendingPosApprovalsRef()` function to get a reference to the query.
 const ref = pendingPosApprovalsRef(pendingPosApprovalsVars);
 // Variables can be defined inline as well.
-const ref = pendingPosApprovalsRef({ requestKey: ..., });
+const ref = pendingPosApprovalsRef({ requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -5944,11 +6244,13 @@ const ref = pendingPosApprovalsRef(dataConnect, pendingPosApprovalsVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -5989,6 +6291,7 @@ The `PosSaleApprovalStatus` query requires an argument of type `PosSaleApprovalS
 export interface PosSaleApprovalStatusVariables {
   operationId: string;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -5997,6 +6300,7 @@ Recall that executing the `PosSaleApprovalStatus` query returns a `QueryPromise`
 The `data` property is an object of type `PosSaleApprovalStatusData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface PosSaleApprovalStatusData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -6008,25 +6312,28 @@ import { connectorConfig, posSaleApprovalStatus, PosSaleApprovalStatusVariables 
 
 // The `PosSaleApprovalStatus` query requires an argument of type `PosSaleApprovalStatusVariables`:
 const posSaleApprovalStatusVars: PosSaleApprovalStatusVariables = {
-  operationId: ..., 
-  requestKey: ..., 
+  operationId: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `posSaleApprovalStatus()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await posSaleApprovalStatus(posSaleApprovalStatusVars);
 // Variables can be defined inline as well.
-const { data } = await posSaleApprovalStatus({ operationId: ..., requestKey: ..., });
+const { data } = await posSaleApprovalStatus({ operationId: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await posSaleApprovalStatus(dataConnect, posSaleApprovalStatusVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 posSaleApprovalStatus(posSaleApprovalStatusVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -6039,14 +6346,15 @@ import { connectorConfig, posSaleApprovalStatusRef, PosSaleApprovalStatusVariabl
 
 // The `PosSaleApprovalStatus` query requires an argument of type `PosSaleApprovalStatusVariables`:
 const posSaleApprovalStatusVars: PosSaleApprovalStatusVariables = {
-  operationId: ..., 
-  requestKey: ..., 
+  operationId: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `posSaleApprovalStatusRef()` function to get a reference to the query.
 const ref = posSaleApprovalStatusRef(posSaleApprovalStatusVars);
 // Variables can be defined inline as well.
-const ref = posSaleApprovalStatusRef({ operationId: ..., requestKey: ..., });
+const ref = posSaleApprovalStatusRef({ operationId: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -6056,11 +6364,13 @@ const ref = posSaleApprovalStatusRef(dataConnect, posSaleApprovalStatusVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -6101,6 +6411,7 @@ The `PosCashApprovalStatus` query requires an argument of type `PosCashApprovalS
 export interface PosCashApprovalStatusVariables {
   operationId: string;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -6109,6 +6420,7 @@ Recall that executing the `PosCashApprovalStatus` query returns a `QueryPromise`
 The `data` property is an object of type `PosCashApprovalStatusData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface PosCashApprovalStatusData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -6120,25 +6432,28 @@ import { connectorConfig, posCashApprovalStatus, PosCashApprovalStatusVariables 
 
 // The `PosCashApprovalStatus` query requires an argument of type `PosCashApprovalStatusVariables`:
 const posCashApprovalStatusVars: PosCashApprovalStatusVariables = {
-  operationId: ..., 
-  requestKey: ..., 
+  operationId: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `posCashApprovalStatus()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await posCashApprovalStatus(posCashApprovalStatusVars);
 // Variables can be defined inline as well.
-const { data } = await posCashApprovalStatus({ operationId: ..., requestKey: ..., });
+const { data } = await posCashApprovalStatus({ operationId: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await posCashApprovalStatus(dataConnect, posCashApprovalStatusVars);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 posCashApprovalStatus(posCashApprovalStatusVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -6151,14 +6466,15 @@ import { connectorConfig, posCashApprovalStatusRef, PosCashApprovalStatusVariabl
 
 // The `PosCashApprovalStatus` query requires an argument of type `PosCashApprovalStatusVariables`:
 const posCashApprovalStatusVars: PosCashApprovalStatusVariables = {
-  operationId: ..., 
-  requestKey: ..., 
+  operationId: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `posCashApprovalStatusRef()` function to get a reference to the query.
 const ref = posCashApprovalStatusRef(posCashApprovalStatusVars);
 // Variables can be defined inline as well.
-const ref = posCashApprovalStatusRef({ operationId: ..., requestKey: ..., });
+const ref = posCashApprovalStatusRef({ operationId: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -6168,11 +6484,13 @@ const ref = posCashApprovalStatusRef(dataConnect, posCashApprovalStatusVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data._select);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data._select);
 });
 ```
@@ -6248,8 +6566,8 @@ import { connectorConfig, bootstrapSalesChannelsNavigation, BootstrapSalesChanne
 
 // The `BootstrapSalesChannelsNavigation` mutation requires an argument of type `BootstrapSalesChannelsNavigationVariables`:
 const bootstrapSalesChannelsNavigationVars: BootstrapSalesChannelsNavigationVariables = {
-  tenantId: ..., 
-  platformAdminRoleId: ..., 
+  tenantId: ...,
+  platformAdminRoleId: ...,
 };
 
 // Call the `bootstrapSalesChannelsNavigation()` function to execute the mutation.
@@ -6281,8 +6599,8 @@ import { connectorConfig, bootstrapSalesChannelsNavigationRef, BootstrapSalesCha
 
 // The `BootstrapSalesChannelsNavigation` mutation requires an argument of type `BootstrapSalesChannelsNavigationVariables`:
 const bootstrapSalesChannelsNavigationVars: BootstrapSalesChannelsNavigationVariables = {
-  tenantId: ..., 
-  platformAdminRoleId: ..., 
+  tenantId: ...,
+  platformAdminRoleId: ...,
 };
 
 // Call the `bootstrapSalesChannelsNavigationRef()` function to get a reference to the mutation.
@@ -6482,8 +6800,8 @@ import { connectorConfig, bootstrapNavigationCatalog, BootstrapNavigationCatalog
 
 // The `BootstrapNavigationCatalog` mutation requires an argument of type `BootstrapNavigationCatalogVariables`:
 const bootstrapNavigationCatalogVars: BootstrapNavigationCatalogVariables = {
-  tenantId: ..., 
-  platformAdminRoleId: ..., 
+  tenantId: ...,
+  platformAdminRoleId: ...,
 };
 
 // Call the `bootstrapNavigationCatalog()` function to execute the mutation.
@@ -6567,8 +6885,8 @@ import { connectorConfig, bootstrapNavigationCatalogRef, BootstrapNavigationCata
 
 // The `BootstrapNavigationCatalog` mutation requires an argument of type `BootstrapNavigationCatalogVariables`:
 const bootstrapNavigationCatalogVars: BootstrapNavigationCatalogVariables = {
-  tenantId: ..., 
-  platformAdminRoleId: ..., 
+  tenantId: ...,
+  platformAdminRoleId: ...,
 };
 
 // Call the `bootstrapNavigationCatalogRef()` function to get a reference to the mutation.
@@ -6682,6 +7000,7 @@ The `CreateCategory` mutation requires an argument of type `CreateCategoryVariab
 ```typescript
 export interface CreateCategoryVariables {
   name: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -6690,6 +7009,9 @@ Recall that executing the `CreateCategory` mutation returns a `MutationPromise` 
 The `data` property is an object of type `CreateCategoryData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface CreateCategoryData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -6701,24 +7023,27 @@ import { connectorConfig, createCategory, CreateCategoryVariables } from '@insig
 
 // The `CreateCategory` mutation requires an argument of type `CreateCategoryVariables`:
 const createCategoryVars: CreateCategoryVariables = {
-  name: ..., 
+  name: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `createCategory()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await createCategory(createCategoryVars);
 // Variables can be defined inline as well.
-const { data } = await createCategory({ name: ..., });
+const { data } = await createCategory({ name: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await createCategory(dataConnect, createCategoryVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 createCategory(createCategoryVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -6731,13 +7056,14 @@ import { connectorConfig, createCategoryRef, CreateCategoryVariables } from '@in
 
 // The `CreateCategory` mutation requires an argument of type `CreateCategoryVariables`:
 const createCategoryVars: CreateCategoryVariables = {
-  name: ..., 
+  name: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `createCategoryRef()` function to get a reference to the mutation.
 const ref = createCategoryRef(createCategoryVars);
 // Variables can be defined inline as well.
-const ref = createCategoryRef({ name: ..., });
+const ref = createCategoryRef({ name: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -6747,11 +7073,13 @@ const ref = createCategoryRef(dataConnect, createCategoryVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -6792,6 +7120,7 @@ The `UpdateCategory` mutation requires an argument of type `UpdateCategoryVariab
 export interface UpdateCategoryVariables {
   id: UUIDString;
   name: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -6800,6 +7129,9 @@ Recall that executing the `UpdateCategory` mutation returns a `MutationPromise` 
 The `data` property is an object of type `UpdateCategoryData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface UpdateCategoryData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -6811,25 +7143,28 @@ import { connectorConfig, updateCategory, UpdateCategoryVariables } from '@insig
 
 // The `UpdateCategory` mutation requires an argument of type `UpdateCategoryVariables`:
 const updateCategoryVars: UpdateCategoryVariables = {
-  id: ..., 
-  name: ..., 
+  id: ...,
+  name: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `updateCategory()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await updateCategory(updateCategoryVars);
 // Variables can be defined inline as well.
-const { data } = await updateCategory({ id: ..., name: ..., });
+const { data } = await updateCategory({ id: ..., name: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await updateCategory(dataConnect, updateCategoryVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 updateCategory(updateCategoryVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -6842,14 +7177,15 @@ import { connectorConfig, updateCategoryRef, UpdateCategoryVariables } from '@in
 
 // The `UpdateCategory` mutation requires an argument of type `UpdateCategoryVariables`:
 const updateCategoryVars: UpdateCategoryVariables = {
-  id: ..., 
-  name: ..., 
+  id: ...,
+  name: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `updateCategoryRef()` function to get a reference to the mutation.
 const ref = updateCategoryRef(updateCategoryVars);
 // Variables can be defined inline as well.
-const ref = updateCategoryRef({ id: ..., name: ..., });
+const ref = updateCategoryRef({ id: ..., name: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -6859,11 +7195,13 @@ const ref = updateCategoryRef(dataConnect, updateCategoryVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -6903,6 +7241,7 @@ The `ArchiveCategory` mutation requires an argument of type `ArchiveCategoryVari
 ```typescript
 export interface ArchiveCategoryVariables {
   id: UUIDString;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -6911,6 +7250,9 @@ Recall that executing the `ArchiveCategory` mutation returns a `MutationPromise`
 The `data` property is an object of type `ArchiveCategoryData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface ArchiveCategoryData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -6922,24 +7264,27 @@ import { connectorConfig, archiveCategory, ArchiveCategoryVariables } from '@ins
 
 // The `ArchiveCategory` mutation requires an argument of type `ArchiveCategoryVariables`:
 const archiveCategoryVars: ArchiveCategoryVariables = {
-  id: ..., 
+  id: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `archiveCategory()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await archiveCategory(archiveCategoryVars);
 // Variables can be defined inline as well.
-const { data } = await archiveCategory({ id: ..., });
+const { data } = await archiveCategory({ id: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await archiveCategory(dataConnect, archiveCategoryVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 archiveCategory(archiveCategoryVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -6952,13 +7297,14 @@ import { connectorConfig, archiveCategoryRef, ArchiveCategoryVariables } from '@
 
 // The `ArchiveCategory` mutation requires an argument of type `ArchiveCategoryVariables`:
 const archiveCategoryVars: ArchiveCategoryVariables = {
-  id: ..., 
+  id: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `archiveCategoryRef()` function to get a reference to the mutation.
 const ref = archiveCategoryRef(archiveCategoryVars);
 // Variables can be defined inline as well.
-const ref = archiveCategoryRef({ id: ..., });
+const ref = archiveCategoryRef({ id: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -6968,11 +7314,13 @@ const ref = archiveCategoryRef(dataConnect, archiveCategoryVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -7013,6 +7361,7 @@ The `CreateSubcategory` mutation requires an argument of type `CreateSubcategory
 export interface CreateSubcategoryVariables {
   categoryId: UUIDString;
   name: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -7021,6 +7370,9 @@ Recall that executing the `CreateSubcategory` mutation returns a `MutationPromis
 The `data` property is an object of type `CreateSubcategoryData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface CreateSubcategoryData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -7032,25 +7384,28 @@ import { connectorConfig, createSubcategory, CreateSubcategoryVariables } from '
 
 // The `CreateSubcategory` mutation requires an argument of type `CreateSubcategoryVariables`:
 const createSubcategoryVars: CreateSubcategoryVariables = {
-  categoryId: ..., 
-  name: ..., 
+  categoryId: ...,
+  name: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `createSubcategory()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await createSubcategory(createSubcategoryVars);
 // Variables can be defined inline as well.
-const { data } = await createSubcategory({ categoryId: ..., name: ..., });
+const { data } = await createSubcategory({ categoryId: ..., name: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await createSubcategory(dataConnect, createSubcategoryVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 createSubcategory(createSubcategoryVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -7063,14 +7418,15 @@ import { connectorConfig, createSubcategoryRef, CreateSubcategoryVariables } fro
 
 // The `CreateSubcategory` mutation requires an argument of type `CreateSubcategoryVariables`:
 const createSubcategoryVars: CreateSubcategoryVariables = {
-  categoryId: ..., 
-  name: ..., 
+  categoryId: ...,
+  name: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `createSubcategoryRef()` function to get a reference to the mutation.
 const ref = createSubcategoryRef(createSubcategoryVars);
 // Variables can be defined inline as well.
-const ref = createSubcategoryRef({ categoryId: ..., name: ..., });
+const ref = createSubcategoryRef({ categoryId: ..., name: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -7080,11 +7436,13 @@ const ref = createSubcategoryRef(dataConnect, createSubcategoryVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -7126,6 +7484,7 @@ export interface UpdateSubcategoryVariables {
   id: UUIDString;
   categoryId: UUIDString;
   name: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -7134,6 +7493,9 @@ Recall that executing the `UpdateSubcategory` mutation returns a `MutationPromis
 The `data` property is an object of type `UpdateSubcategoryData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface UpdateSubcategoryData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -7145,26 +7507,29 @@ import { connectorConfig, updateSubcategory, UpdateSubcategoryVariables } from '
 
 // The `UpdateSubcategory` mutation requires an argument of type `UpdateSubcategoryVariables`:
 const updateSubcategoryVars: UpdateSubcategoryVariables = {
-  id: ..., 
-  categoryId: ..., 
-  name: ..., 
+  id: ...,
+  categoryId: ...,
+  name: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `updateSubcategory()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await updateSubcategory(updateSubcategoryVars);
 // Variables can be defined inline as well.
-const { data } = await updateSubcategory({ id: ..., categoryId: ..., name: ..., });
+const { data } = await updateSubcategory({ id: ..., categoryId: ..., name: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await updateSubcategory(dataConnect, updateSubcategoryVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 updateSubcategory(updateSubcategoryVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -7177,15 +7542,16 @@ import { connectorConfig, updateSubcategoryRef, UpdateSubcategoryVariables } fro
 
 // The `UpdateSubcategory` mutation requires an argument of type `UpdateSubcategoryVariables`:
 const updateSubcategoryVars: UpdateSubcategoryVariables = {
-  id: ..., 
-  categoryId: ..., 
-  name: ..., 
+  id: ...,
+  categoryId: ...,
+  name: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `updateSubcategoryRef()` function to get a reference to the mutation.
 const ref = updateSubcategoryRef(updateSubcategoryVars);
 // Variables can be defined inline as well.
-const ref = updateSubcategoryRef({ id: ..., categoryId: ..., name: ..., });
+const ref = updateSubcategoryRef({ id: ..., categoryId: ..., name: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -7195,11 +7561,13 @@ const ref = updateSubcategoryRef(dataConnect, updateSubcategoryVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -7239,6 +7607,7 @@ The `ArchiveSubcategory` mutation requires an argument of type `ArchiveSubcatego
 ```typescript
 export interface ArchiveSubcategoryVariables {
   id: UUIDString;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -7247,6 +7616,9 @@ Recall that executing the `ArchiveSubcategory` mutation returns a `MutationPromi
 The `data` property is an object of type `ArchiveSubcategoryData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface ArchiveSubcategoryData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -7258,24 +7630,27 @@ import { connectorConfig, archiveSubcategory, ArchiveSubcategoryVariables } from
 
 // The `ArchiveSubcategory` mutation requires an argument of type `ArchiveSubcategoryVariables`:
 const archiveSubcategoryVars: ArchiveSubcategoryVariables = {
-  id: ..., 
+  id: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `archiveSubcategory()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await archiveSubcategory(archiveSubcategoryVars);
 // Variables can be defined inline as well.
-const { data } = await archiveSubcategory({ id: ..., });
+const { data } = await archiveSubcategory({ id: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await archiveSubcategory(dataConnect, archiveSubcategoryVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 archiveSubcategory(archiveSubcategoryVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -7288,13 +7663,14 @@ import { connectorConfig, archiveSubcategoryRef, ArchiveSubcategoryVariables } f
 
 // The `ArchiveSubcategory` mutation requires an argument of type `ArchiveSubcategoryVariables`:
 const archiveSubcategoryVars: ArchiveSubcategoryVariables = {
-  id: ..., 
+  id: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `archiveSubcategoryRef()` function to get a reference to the mutation.
 const ref = archiveSubcategoryRef(archiveSubcategoryVars);
 // Variables can be defined inline as well.
-const ref = archiveSubcategoryRef({ id: ..., });
+const ref = archiveSubcategoryRef({ id: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -7304,11 +7680,13 @@ const ref = archiveSubcategoryRef(dataConnect, archiveSubcategoryVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -7348,6 +7726,7 @@ The `RestoreCategory` mutation requires an argument of type `RestoreCategoryVari
 ```typescript
 export interface RestoreCategoryVariables {
   id: UUIDString;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -7356,6 +7735,9 @@ Recall that executing the `RestoreCategory` mutation returns a `MutationPromise`
 The `data` property is an object of type `RestoreCategoryData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface RestoreCategoryData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -7367,24 +7749,27 @@ import { connectorConfig, restoreCategory, RestoreCategoryVariables } from '@ins
 
 // The `RestoreCategory` mutation requires an argument of type `RestoreCategoryVariables`:
 const restoreCategoryVars: RestoreCategoryVariables = {
-  id: ..., 
+  id: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `restoreCategory()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await restoreCategory(restoreCategoryVars);
 // Variables can be defined inline as well.
-const { data } = await restoreCategory({ id: ..., });
+const { data } = await restoreCategory({ id: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await restoreCategory(dataConnect, restoreCategoryVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 restoreCategory(restoreCategoryVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -7397,13 +7782,14 @@ import { connectorConfig, restoreCategoryRef, RestoreCategoryVariables } from '@
 
 // The `RestoreCategory` mutation requires an argument of type `RestoreCategoryVariables`:
 const restoreCategoryVars: RestoreCategoryVariables = {
-  id: ..., 
+  id: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `restoreCategoryRef()` function to get a reference to the mutation.
 const ref = restoreCategoryRef(restoreCategoryVars);
 // Variables can be defined inline as well.
-const ref = restoreCategoryRef({ id: ..., });
+const ref = restoreCategoryRef({ id: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -7413,11 +7799,13 @@ const ref = restoreCategoryRef(dataConnect, restoreCategoryVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -7457,6 +7845,7 @@ The `RestoreSubcategory` mutation requires an argument of type `RestoreSubcatego
 ```typescript
 export interface RestoreSubcategoryVariables {
   id: UUIDString;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -7465,6 +7854,9 @@ Recall that executing the `RestoreSubcategory` mutation returns a `MutationPromi
 The `data` property is an object of type `RestoreSubcategoryData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface RestoreSubcategoryData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -7476,24 +7868,27 @@ import { connectorConfig, restoreSubcategory, RestoreSubcategoryVariables } from
 
 // The `RestoreSubcategory` mutation requires an argument of type `RestoreSubcategoryVariables`:
 const restoreSubcategoryVars: RestoreSubcategoryVariables = {
-  id: ..., 
+  id: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `restoreSubcategory()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await restoreSubcategory(restoreSubcategoryVars);
 // Variables can be defined inline as well.
-const { data } = await restoreSubcategory({ id: ..., });
+const { data } = await restoreSubcategory({ id: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await restoreSubcategory(dataConnect, restoreSubcategoryVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 restoreSubcategory(restoreSubcategoryVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -7506,13 +7901,14 @@ import { connectorConfig, restoreSubcategoryRef, RestoreSubcategoryVariables } f
 
 // The `RestoreSubcategory` mutation requires an argument of type `RestoreSubcategoryVariables`:
 const restoreSubcategoryVars: RestoreSubcategoryVariables = {
-  id: ..., 
+  id: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `restoreSubcategoryRef()` function to get a reference to the mutation.
 const ref = restoreSubcategoryRef(restoreSubcategoryVars);
 // Variables can be defined inline as well.
-const ref = restoreSubcategoryRef({ id: ..., });
+const ref = restoreSubcategoryRef({ id: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -7522,11 +7918,13 @@ const ref = restoreSubcategoryRef(dataConnect, restoreSubcategoryVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -7566,6 +7964,7 @@ The `CreateCategoriesBatch` mutation requires an argument of type `CreateCategor
 ```typescript
 export interface CreateCategoriesBatchVariables {
   names: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -7574,6 +7973,9 @@ Recall that executing the `CreateCategoriesBatch` mutation returns a `MutationPr
 The `data` property is an object of type `CreateCategoriesBatchData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface CreateCategoriesBatchData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -7585,24 +7987,27 @@ import { connectorConfig, createCategoriesBatch, CreateCategoriesBatchVariables 
 
 // The `CreateCategoriesBatch` mutation requires an argument of type `CreateCategoriesBatchVariables`:
 const createCategoriesBatchVars: CreateCategoriesBatchVariables = {
-  names: ..., 
+  names: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `createCategoriesBatch()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await createCategoriesBatch(createCategoriesBatchVars);
 // Variables can be defined inline as well.
-const { data } = await createCategoriesBatch({ names: ..., });
+const { data } = await createCategoriesBatch({ names: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await createCategoriesBatch(dataConnect, createCategoriesBatchVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 createCategoriesBatch(createCategoriesBatchVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -7615,13 +8020,14 @@ import { connectorConfig, createCategoriesBatchRef, CreateCategoriesBatchVariabl
 
 // The `CreateCategoriesBatch` mutation requires an argument of type `CreateCategoriesBatchVariables`:
 const createCategoriesBatchVars: CreateCategoriesBatchVariables = {
-  names: ..., 
+  names: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `createCategoriesBatchRef()` function to get a reference to the mutation.
 const ref = createCategoriesBatchRef(createCategoriesBatchVars);
 // Variables can be defined inline as well.
-const ref = createCategoriesBatchRef({ names: ..., });
+const ref = createCategoriesBatchRef({ names: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -7631,11 +8037,13 @@ const ref = createCategoriesBatchRef(dataConnect, createCategoriesBatchVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -7675,6 +8083,7 @@ The `CreateSubcategoriesBatch` mutation requires an argument of type `CreateSubc
 ```typescript
 export interface CreateSubcategoriesBatchVariables {
   items: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -7683,6 +8092,9 @@ Recall that executing the `CreateSubcategoriesBatch` mutation returns a `Mutatio
 The `data` property is an object of type `CreateSubcategoriesBatchData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface CreateSubcategoriesBatchData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -7694,24 +8106,27 @@ import { connectorConfig, createSubcategoriesBatch, CreateSubcategoriesBatchVari
 
 // The `CreateSubcategoriesBatch` mutation requires an argument of type `CreateSubcategoriesBatchVariables`:
 const createSubcategoriesBatchVars: CreateSubcategoriesBatchVariables = {
-  items: ..., 
+  items: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `createSubcategoriesBatch()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await createSubcategoriesBatch(createSubcategoriesBatchVars);
 // Variables can be defined inline as well.
-const { data } = await createSubcategoriesBatch({ items: ..., });
+const { data } = await createSubcategoriesBatch({ items: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await createSubcategoriesBatch(dataConnect, createSubcategoriesBatchVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 createSubcategoriesBatch(createSubcategoriesBatchVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -7724,13 +8139,14 @@ import { connectorConfig, createSubcategoriesBatchRef, CreateSubcategoriesBatchV
 
 // The `CreateSubcategoriesBatch` mutation requires an argument of type `CreateSubcategoriesBatchVariables`:
 const createSubcategoriesBatchVars: CreateSubcategoriesBatchVariables = {
-  items: ..., 
+  items: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `createSubcategoriesBatchRef()` function to get a reference to the mutation.
 const ref = createSubcategoriesBatchRef(createSubcategoriesBatchVars);
 // Variables can be defined inline as well.
-const ref = createSubcategoriesBatchRef({ items: ..., });
+const ref = createSubcategoriesBatchRef({ items: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -7740,11 +8156,13 @@ const ref = createSubcategoriesBatchRef(dataConnect, createSubcategoriesBatchVar
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -7785,6 +8203,7 @@ The `SaveBranch` mutation requires an argument of type `SaveBranchVariables`, wh
 export interface SaveBranchVariables {
   id?: UUIDString | null;
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -7793,6 +8212,9 @@ Recall that executing the `SaveBranch` mutation returns a `MutationPromise` that
 The `data` property is an object of type `SaveBranchData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SaveBranchData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -7805,24 +8227,27 @@ import { connectorConfig, saveBranch, SaveBranchVariables } from '@insightpad/da
 // The `SaveBranch` mutation requires an argument of type `SaveBranchVariables`:
 const saveBranchVars: SaveBranchVariables = {
   id: ..., // optional
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `saveBranch()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await saveBranch(saveBranchVars);
 // Variables can be defined inline as well.
-const { data } = await saveBranch({ id: ..., payload: ..., });
+const { data } = await saveBranch({ id: ..., payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await saveBranch(dataConnect, saveBranchVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 saveBranch(saveBranchVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -7836,13 +8261,14 @@ import { connectorConfig, saveBranchRef, SaveBranchVariables } from '@insightpad
 // The `SaveBranch` mutation requires an argument of type `SaveBranchVariables`:
 const saveBranchVars: SaveBranchVariables = {
   id: ..., // optional
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `saveBranchRef()` function to get a reference to the mutation.
 const ref = saveBranchRef(saveBranchVars);
 // Variables can be defined inline as well.
-const ref = saveBranchRef({ id: ..., payload: ..., });
+const ref = saveBranchRef({ id: ..., payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -7852,11 +8278,13 @@ const ref = saveBranchRef(dataConnect, saveBranchVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -7897,6 +8325,7 @@ The `SetBranchStatus` mutation requires an argument of type `SetBranchStatusVari
 export interface SetBranchStatusVariables {
   id: UUIDString;
   active: boolean;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -7905,6 +8334,9 @@ Recall that executing the `SetBranchStatus` mutation returns a `MutationPromise`
 The `data` property is an object of type `SetBranchStatusData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SetBranchStatusData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -7916,25 +8348,28 @@ import { connectorConfig, setBranchStatus, SetBranchStatusVariables } from '@ins
 
 // The `SetBranchStatus` mutation requires an argument of type `SetBranchStatusVariables`:
 const setBranchStatusVars: SetBranchStatusVariables = {
-  id: ..., 
-  active: ..., 
+  id: ...,
+  active: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `setBranchStatus()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await setBranchStatus(setBranchStatusVars);
 // Variables can be defined inline as well.
-const { data } = await setBranchStatus({ id: ..., active: ..., });
+const { data } = await setBranchStatus({ id: ..., active: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await setBranchStatus(dataConnect, setBranchStatusVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 setBranchStatus(setBranchStatusVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -7947,14 +8382,15 @@ import { connectorConfig, setBranchStatusRef, SetBranchStatusVariables } from '@
 
 // The `SetBranchStatus` mutation requires an argument of type `SetBranchStatusVariables`:
 const setBranchStatusVars: SetBranchStatusVariables = {
-  id: ..., 
-  active: ..., 
+  id: ...,
+  active: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `setBranchStatusRef()` function to get a reference to the mutation.
 const ref = setBranchStatusRef(setBranchStatusVars);
 // Variables can be defined inline as well.
-const ref = setBranchStatusRef({ id: ..., active: ..., });
+const ref = setBranchStatusRef({ id: ..., active: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -7964,11 +8400,13 @@ const ref = setBranchStatusRef(dataConnect, setBranchStatusVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -8009,6 +8447,7 @@ The `SaveSupplier` mutation requires an argument of type `SaveSupplierVariables`
 export interface SaveSupplierVariables {
   id?: UUIDString | null;
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -8017,6 +8456,9 @@ Recall that executing the `SaveSupplier` mutation returns a `MutationPromise` th
 The `data` property is an object of type `SaveSupplierData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SaveSupplierData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -8029,24 +8471,27 @@ import { connectorConfig, saveSupplier, SaveSupplierVariables } from '@insightpa
 // The `SaveSupplier` mutation requires an argument of type `SaveSupplierVariables`:
 const saveSupplierVars: SaveSupplierVariables = {
   id: ..., // optional
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `saveSupplier()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await saveSupplier(saveSupplierVars);
 // Variables can be defined inline as well.
-const { data } = await saveSupplier({ id: ..., payload: ..., });
+const { data } = await saveSupplier({ id: ..., payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await saveSupplier(dataConnect, saveSupplierVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 saveSupplier(saveSupplierVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -8060,13 +8505,14 @@ import { connectorConfig, saveSupplierRef, SaveSupplierVariables } from '@insigh
 // The `SaveSupplier` mutation requires an argument of type `SaveSupplierVariables`:
 const saveSupplierVars: SaveSupplierVariables = {
   id: ..., // optional
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `saveSupplierRef()` function to get a reference to the mutation.
 const ref = saveSupplierRef(saveSupplierVars);
 // Variables can be defined inline as well.
-const ref = saveSupplierRef({ id: ..., payload: ..., });
+const ref = saveSupplierRef({ id: ..., payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -8076,11 +8522,13 @@ const ref = saveSupplierRef(dataConnect, saveSupplierVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -8121,6 +8569,7 @@ The `SetSupplierStatus` mutation requires an argument of type `SetSupplierStatus
 export interface SetSupplierStatusVariables {
   id: UUIDString;
   active: boolean;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -8129,6 +8578,9 @@ Recall that executing the `SetSupplierStatus` mutation returns a `MutationPromis
 The `data` property is an object of type `SetSupplierStatusData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SetSupplierStatusData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -8140,25 +8592,28 @@ import { connectorConfig, setSupplierStatus, SetSupplierStatusVariables } from '
 
 // The `SetSupplierStatus` mutation requires an argument of type `SetSupplierStatusVariables`:
 const setSupplierStatusVars: SetSupplierStatusVariables = {
-  id: ..., 
-  active: ..., 
+  id: ...,
+  active: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `setSupplierStatus()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await setSupplierStatus(setSupplierStatusVars);
 // Variables can be defined inline as well.
-const { data } = await setSupplierStatus({ id: ..., active: ..., });
+const { data } = await setSupplierStatus({ id: ..., active: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await setSupplierStatus(dataConnect, setSupplierStatusVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 setSupplierStatus(setSupplierStatusVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -8171,14 +8626,15 @@ import { connectorConfig, setSupplierStatusRef, SetSupplierStatusVariables } fro
 
 // The `SetSupplierStatus` mutation requires an argument of type `SetSupplierStatusVariables`:
 const setSupplierStatusVars: SetSupplierStatusVariables = {
-  id: ..., 
-  active: ..., 
+  id: ...,
+  active: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `setSupplierStatusRef()` function to get a reference to the mutation.
 const ref = setSupplierStatusRef(setSupplierStatusVars);
 // Variables can be defined inline as well.
-const ref = setSupplierStatusRef({ id: ..., active: ..., });
+const ref = setSupplierStatusRef({ id: ..., active: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -8188,11 +8644,13 @@ const ref = setSupplierStatusRef(dataConnect, setSupplierStatusVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -8233,6 +8691,7 @@ The `SaveCustomer` mutation requires an argument of type `SaveCustomerVariables`
 export interface SaveCustomerVariables {
   id?: UUIDString | null;
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -8241,6 +8700,9 @@ Recall that executing the `SaveCustomer` mutation returns a `MutationPromise` th
 The `data` property is an object of type `SaveCustomerData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SaveCustomerData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -8253,24 +8715,27 @@ import { connectorConfig, saveCustomer, SaveCustomerVariables } from '@insightpa
 // The `SaveCustomer` mutation requires an argument of type `SaveCustomerVariables`:
 const saveCustomerVars: SaveCustomerVariables = {
   id: ..., // optional
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `saveCustomer()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await saveCustomer(saveCustomerVars);
 // Variables can be defined inline as well.
-const { data } = await saveCustomer({ id: ..., payload: ..., });
+const { data } = await saveCustomer({ id: ..., payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await saveCustomer(dataConnect, saveCustomerVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 saveCustomer(saveCustomerVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -8284,13 +8749,14 @@ import { connectorConfig, saveCustomerRef, SaveCustomerVariables } from '@insigh
 // The `SaveCustomer` mutation requires an argument of type `SaveCustomerVariables`:
 const saveCustomerVars: SaveCustomerVariables = {
   id: ..., // optional
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `saveCustomerRef()` function to get a reference to the mutation.
 const ref = saveCustomerRef(saveCustomerVars);
 // Variables can be defined inline as well.
-const ref = saveCustomerRef({ id: ..., payload: ..., });
+const ref = saveCustomerRef({ id: ..., payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -8300,11 +8766,13 @@ const ref = saveCustomerRef(dataConnect, saveCustomerVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -8345,6 +8813,7 @@ The `SetCustomerStatus` mutation requires an argument of type `SetCustomerStatus
 export interface SetCustomerStatusVariables {
   id: UUIDString;
   active: boolean;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -8353,6 +8822,9 @@ Recall that executing the `SetCustomerStatus` mutation returns a `MutationPromis
 The `data` property is an object of type `SetCustomerStatusData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SetCustomerStatusData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -8364,25 +8836,28 @@ import { connectorConfig, setCustomerStatus, SetCustomerStatusVariables } from '
 
 // The `SetCustomerStatus` mutation requires an argument of type `SetCustomerStatusVariables`:
 const setCustomerStatusVars: SetCustomerStatusVariables = {
-  id: ..., 
-  active: ..., 
+  id: ...,
+  active: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `setCustomerStatus()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await setCustomerStatus(setCustomerStatusVars);
 // Variables can be defined inline as well.
-const { data } = await setCustomerStatus({ id: ..., active: ..., });
+const { data } = await setCustomerStatus({ id: ..., active: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await setCustomerStatus(dataConnect, setCustomerStatusVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 setCustomerStatus(setCustomerStatusVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -8395,14 +8870,15 @@ import { connectorConfig, setCustomerStatusRef, SetCustomerStatusVariables } fro
 
 // The `SetCustomerStatus` mutation requires an argument of type `SetCustomerStatusVariables`:
 const setCustomerStatusVars: SetCustomerStatusVariables = {
-  id: ..., 
-  active: ..., 
+  id: ...,
+  active: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `setCustomerStatusRef()` function to get a reference to the mutation.
 const ref = setCustomerStatusRef(setCustomerStatusVars);
 // Variables can be defined inline as well.
-const ref = setCustomerStatusRef({ id: ..., active: ..., });
+const ref = setCustomerStatusRef({ id: ..., active: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -8412,11 +8888,13 @@ const ref = setCustomerStatusRef(dataConnect, setCustomerStatusVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -8458,6 +8936,7 @@ export interface SaveProductVariables {
   id?: UUIDString | null;
   payload: unknown;
   components?: unknown | null;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -8466,6 +8945,9 @@ Recall that executing the `SaveProduct` mutation returns a `MutationPromise` tha
 The `data` property is an object of type `SaveProductData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SaveProductData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -8478,25 +8960,28 @@ import { connectorConfig, saveProduct, SaveProductVariables } from '@insightpad/
 // The `SaveProduct` mutation requires an argument of type `SaveProductVariables`:
 const saveProductVars: SaveProductVariables = {
   id: ..., // optional
-  payload: ..., 
+  payload: ...,
   components: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `saveProduct()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await saveProduct(saveProductVars);
 // Variables can be defined inline as well.
-const { data } = await saveProduct({ id: ..., payload: ..., components: ..., });
+const { data } = await saveProduct({ id: ..., payload: ..., components: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await saveProduct(dataConnect, saveProductVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 saveProduct(saveProductVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -8510,14 +8995,15 @@ import { connectorConfig, saveProductRef, SaveProductVariables } from '@insightp
 // The `SaveProduct` mutation requires an argument of type `SaveProductVariables`:
 const saveProductVars: SaveProductVariables = {
   id: ..., // optional
-  payload: ..., 
+  payload: ...,
   components: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `saveProductRef()` function to get a reference to the mutation.
 const ref = saveProductRef(saveProductVars);
 // Variables can be defined inline as well.
-const ref = saveProductRef({ id: ..., payload: ..., components: ..., });
+const ref = saveProductRef({ id: ..., payload: ..., components: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -8527,11 +9013,13 @@ const ref = saveProductRef(dataConnect, saveProductVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -8572,6 +9060,7 @@ The `SetProductStatus` mutation requires an argument of type `SetProductStatusVa
 export interface SetProductStatusVariables {
   id: UUIDString;
   active: boolean;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -8580,6 +9069,9 @@ Recall that executing the `SetProductStatus` mutation returns a `MutationPromise
 The `data` property is an object of type `SetProductStatusData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SetProductStatusData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -8591,25 +9083,28 @@ import { connectorConfig, setProductStatus, SetProductStatusVariables } from '@i
 
 // The `SetProductStatus` mutation requires an argument of type `SetProductStatusVariables`:
 const setProductStatusVars: SetProductStatusVariables = {
-  id: ..., 
-  active: ..., 
+  id: ...,
+  active: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `setProductStatus()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await setProductStatus(setProductStatusVars);
 // Variables can be defined inline as well.
-const { data } = await setProductStatus({ id: ..., active: ..., });
+const { data } = await setProductStatus({ id: ..., active: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await setProductStatus(dataConnect, setProductStatusVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 setProductStatus(setProductStatusVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -8622,14 +9117,15 @@ import { connectorConfig, setProductStatusRef, SetProductStatusVariables } from 
 
 // The `SetProductStatus` mutation requires an argument of type `SetProductStatusVariables`:
 const setProductStatusVars: SetProductStatusVariables = {
-  id: ..., 
-  active: ..., 
+  id: ...,
+  active: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `setProductStatusRef()` function to get a reference to the mutation.
 const ref = setProductStatusRef(setProductStatusVars);
 // Variables can be defined inline as well.
-const ref = setProductStatusRef({ id: ..., active: ..., });
+const ref = setProductStatusRef({ id: ..., active: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -8639,11 +9135,13 @@ const ref = setProductStatusRef(dataConnect, setProductStatusVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -8684,6 +9182,7 @@ The `SaveProductComponents` mutation requires an argument of type `SaveProductCo
 export interface SaveProductComponentsVariables {
   productId: UUIDString;
   components: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -8692,6 +9191,9 @@ Recall that executing the `SaveProductComponents` mutation returns a `MutationPr
 The `data` property is an object of type `SaveProductComponentsData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SaveProductComponentsData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -8703,25 +9205,28 @@ import { connectorConfig, saveProductComponents, SaveProductComponentsVariables 
 
 // The `SaveProductComponents` mutation requires an argument of type `SaveProductComponentsVariables`:
 const saveProductComponentsVars: SaveProductComponentsVariables = {
-  productId: ..., 
-  components: ..., 
+  productId: ...,
+  components: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `saveProductComponents()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await saveProductComponents(saveProductComponentsVars);
 // Variables can be defined inline as well.
-const { data } = await saveProductComponents({ productId: ..., components: ..., });
+const { data } = await saveProductComponents({ productId: ..., components: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await saveProductComponents(dataConnect, saveProductComponentsVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 saveProductComponents(saveProductComponentsVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -8734,14 +9239,15 @@ import { connectorConfig, saveProductComponentsRef, SaveProductComponentsVariabl
 
 // The `SaveProductComponents` mutation requires an argument of type `SaveProductComponentsVariables`:
 const saveProductComponentsVars: SaveProductComponentsVariables = {
-  productId: ..., 
-  components: ..., 
+  productId: ...,
+  components: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `saveProductComponentsRef()` function to get a reference to the mutation.
 const ref = saveProductComponentsRef(saveProductComponentsVars);
 // Variables can be defined inline as well.
-const ref = saveProductComponentsRef({ productId: ..., components: ..., });
+const ref = saveProductComponentsRef({ productId: ..., components: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -8751,11 +9257,13 @@ const ref = saveProductComponentsRef(dataConnect, saveProductComponentsVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -8799,6 +9307,7 @@ export interface SavePromotionVariables {
   promotionalPriceCents: Int64String;
   startsAt: TimestampString;
   endsAt: TimestampString;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -8807,6 +9316,9 @@ Recall that executing the `SavePromotion` mutation returns a `MutationPromise` t
 The `data` property is an object of type `SavePromotionData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SavePromotionData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -8819,27 +9331,30 @@ import { connectorConfig, savePromotion, SavePromotionVariables } from '@insight
 // The `SavePromotion` mutation requires an argument of type `SavePromotionVariables`:
 const savePromotionVars: SavePromotionVariables = {
   id: ..., // optional
-  productId: ..., 
-  promotionalPriceCents: ..., 
-  startsAt: ..., 
-  endsAt: ..., 
+  productId: ...,
+  promotionalPriceCents: ...,
+  startsAt: ...,
+  endsAt: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `savePromotion()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await savePromotion(savePromotionVars);
 // Variables can be defined inline as well.
-const { data } = await savePromotion({ id: ..., productId: ..., promotionalPriceCents: ..., startsAt: ..., endsAt: ..., });
+const { data } = await savePromotion({ id: ..., productId: ..., promotionalPriceCents: ..., startsAt: ..., endsAt: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await savePromotion(dataConnect, savePromotionVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 savePromotion(savePromotionVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -8853,16 +9368,17 @@ import { connectorConfig, savePromotionRef, SavePromotionVariables } from '@insi
 // The `SavePromotion` mutation requires an argument of type `SavePromotionVariables`:
 const savePromotionVars: SavePromotionVariables = {
   id: ..., // optional
-  productId: ..., 
-  promotionalPriceCents: ..., 
-  startsAt: ..., 
-  endsAt: ..., 
+  productId: ...,
+  promotionalPriceCents: ...,
+  startsAt: ...,
+  endsAt: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `savePromotionRef()` function to get a reference to the mutation.
 const ref = savePromotionRef(savePromotionVars);
 // Variables can be defined inline as well.
-const ref = savePromotionRef({ id: ..., productId: ..., promotionalPriceCents: ..., startsAt: ..., endsAt: ..., });
+const ref = savePromotionRef({ id: ..., productId: ..., promotionalPriceCents: ..., startsAt: ..., endsAt: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -8872,11 +9388,13 @@ const ref = savePromotionRef(dataConnect, savePromotionVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -8917,6 +9435,7 @@ The `SetPromotionStatus` mutation requires an argument of type `SetPromotionStat
 export interface SetPromotionStatusVariables {
   id: UUIDString;
   active: boolean;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -8925,6 +9444,9 @@ Recall that executing the `SetPromotionStatus` mutation returns a `MutationPromi
 The `data` property is an object of type `SetPromotionStatusData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SetPromotionStatusData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -8936,25 +9458,28 @@ import { connectorConfig, setPromotionStatus, SetPromotionStatusVariables } from
 
 // The `SetPromotionStatus` mutation requires an argument of type `SetPromotionStatusVariables`:
 const setPromotionStatusVars: SetPromotionStatusVariables = {
-  id: ..., 
-  active: ..., 
+  id: ...,
+  active: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `setPromotionStatus()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await setPromotionStatus(setPromotionStatusVars);
 // Variables can be defined inline as well.
-const { data } = await setPromotionStatus({ id: ..., active: ..., });
+const { data } = await setPromotionStatus({ id: ..., active: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await setPromotionStatus(dataConnect, setPromotionStatusVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 setPromotionStatus(setPromotionStatusVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -8967,14 +9492,15 @@ import { connectorConfig, setPromotionStatusRef, SetPromotionStatusVariables } f
 
 // The `SetPromotionStatus` mutation requires an argument of type `SetPromotionStatusVariables`:
 const setPromotionStatusVars: SetPromotionStatusVariables = {
-  id: ..., 
-  active: ..., 
+  id: ...,
+  active: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `setPromotionStatusRef()` function to get a reference to the mutation.
 const ref = setPromotionStatusRef(setPromotionStatusVars);
 // Variables can be defined inline as well.
-const ref = setPromotionStatusRef({ id: ..., active: ..., });
+const ref = setPromotionStatusRef({ id: ..., active: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -8984,11 +9510,13 @@ const ref = setPromotionStatusRef(dataConnect, setPromotionStatusVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -9029,6 +9557,7 @@ The `SetCategoriesStatusBatch` mutation requires an argument of type `SetCategor
 export interface SetCategoriesStatusBatchVariables {
   ids: unknown;
   active: boolean;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -9037,6 +9566,9 @@ Recall that executing the `SetCategoriesStatusBatch` mutation returns a `Mutatio
 The `data` property is an object of type `SetCategoriesStatusBatchData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SetCategoriesStatusBatchData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -9048,25 +9580,28 @@ import { connectorConfig, setCategoriesStatusBatch, SetCategoriesStatusBatchVari
 
 // The `SetCategoriesStatusBatch` mutation requires an argument of type `SetCategoriesStatusBatchVariables`:
 const setCategoriesStatusBatchVars: SetCategoriesStatusBatchVariables = {
-  ids: ..., 
-  active: ..., 
+  ids: ...,
+  active: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `setCategoriesStatusBatch()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await setCategoriesStatusBatch(setCategoriesStatusBatchVars);
 // Variables can be defined inline as well.
-const { data } = await setCategoriesStatusBatch({ ids: ..., active: ..., });
+const { data } = await setCategoriesStatusBatch({ ids: ..., active: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await setCategoriesStatusBatch(dataConnect, setCategoriesStatusBatchVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 setCategoriesStatusBatch(setCategoriesStatusBatchVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -9079,14 +9614,15 @@ import { connectorConfig, setCategoriesStatusBatchRef, SetCategoriesStatusBatchV
 
 // The `SetCategoriesStatusBatch` mutation requires an argument of type `SetCategoriesStatusBatchVariables`:
 const setCategoriesStatusBatchVars: SetCategoriesStatusBatchVariables = {
-  ids: ..., 
-  active: ..., 
+  ids: ...,
+  active: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `setCategoriesStatusBatchRef()` function to get a reference to the mutation.
 const ref = setCategoriesStatusBatchRef(setCategoriesStatusBatchVars);
 // Variables can be defined inline as well.
-const ref = setCategoriesStatusBatchRef({ ids: ..., active: ..., });
+const ref = setCategoriesStatusBatchRef({ ids: ..., active: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -9096,11 +9632,13 @@ const ref = setCategoriesStatusBatchRef(dataConnect, setCategoriesStatusBatchVar
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -9141,6 +9679,7 @@ The `SetSubcategoriesStatusBatch` mutation requires an argument of type `SetSubc
 export interface SetSubcategoriesStatusBatchVariables {
   ids: unknown;
   active: boolean;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -9149,6 +9688,9 @@ Recall that executing the `SetSubcategoriesStatusBatch` mutation returns a `Muta
 The `data` property is an object of type `SetSubcategoriesStatusBatchData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SetSubcategoriesStatusBatchData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -9160,25 +9702,28 @@ import { connectorConfig, setSubcategoriesStatusBatch, SetSubcategoriesStatusBat
 
 // The `SetSubcategoriesStatusBatch` mutation requires an argument of type `SetSubcategoriesStatusBatchVariables`:
 const setSubcategoriesStatusBatchVars: SetSubcategoriesStatusBatchVariables = {
-  ids: ..., 
-  active: ..., 
+  ids: ...,
+  active: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `setSubcategoriesStatusBatch()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await setSubcategoriesStatusBatch(setSubcategoriesStatusBatchVars);
 // Variables can be defined inline as well.
-const { data } = await setSubcategoriesStatusBatch({ ids: ..., active: ..., });
+const { data } = await setSubcategoriesStatusBatch({ ids: ..., active: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await setSubcategoriesStatusBatch(dataConnect, setSubcategoriesStatusBatchVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 setSubcategoriesStatusBatch(setSubcategoriesStatusBatchVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -9191,14 +9736,15 @@ import { connectorConfig, setSubcategoriesStatusBatchRef, SetSubcategoriesStatus
 
 // The `SetSubcategoriesStatusBatch` mutation requires an argument of type `SetSubcategoriesStatusBatchVariables`:
 const setSubcategoriesStatusBatchVars: SetSubcategoriesStatusBatchVariables = {
-  ids: ..., 
-  active: ..., 
+  ids: ...,
+  active: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `setSubcategoriesStatusBatchRef()` function to get a reference to the mutation.
 const ref = setSubcategoriesStatusBatchRef(setSubcategoriesStatusBatchVars);
 // Variables can be defined inline as well.
-const ref = setSubcategoriesStatusBatchRef({ ids: ..., active: ..., });
+const ref = setSubcategoriesStatusBatchRef({ ids: ..., active: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -9208,11 +9754,13 @@ const ref = setSubcategoriesStatusBatchRef(dataConnect, setSubcategoriesStatusBa
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -9253,6 +9801,7 @@ The `SetBranchesStatusBatch` mutation requires an argument of type `SetBranchesS
 export interface SetBranchesStatusBatchVariables {
   ids: unknown;
   active: boolean;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -9261,6 +9810,9 @@ Recall that executing the `SetBranchesStatusBatch` mutation returns a `MutationP
 The `data` property is an object of type `SetBranchesStatusBatchData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SetBranchesStatusBatchData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -9272,25 +9824,28 @@ import { connectorConfig, setBranchesStatusBatch, SetBranchesStatusBatchVariable
 
 // The `SetBranchesStatusBatch` mutation requires an argument of type `SetBranchesStatusBatchVariables`:
 const setBranchesStatusBatchVars: SetBranchesStatusBatchVariables = {
-  ids: ..., 
-  active: ..., 
+  ids: ...,
+  active: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `setBranchesStatusBatch()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await setBranchesStatusBatch(setBranchesStatusBatchVars);
 // Variables can be defined inline as well.
-const { data } = await setBranchesStatusBatch({ ids: ..., active: ..., });
+const { data } = await setBranchesStatusBatch({ ids: ..., active: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await setBranchesStatusBatch(dataConnect, setBranchesStatusBatchVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 setBranchesStatusBatch(setBranchesStatusBatchVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -9303,14 +9858,15 @@ import { connectorConfig, setBranchesStatusBatchRef, SetBranchesStatusBatchVaria
 
 // The `SetBranchesStatusBatch` mutation requires an argument of type `SetBranchesStatusBatchVariables`:
 const setBranchesStatusBatchVars: SetBranchesStatusBatchVariables = {
-  ids: ..., 
-  active: ..., 
+  ids: ...,
+  active: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `setBranchesStatusBatchRef()` function to get a reference to the mutation.
 const ref = setBranchesStatusBatchRef(setBranchesStatusBatchVars);
 // Variables can be defined inline as well.
-const ref = setBranchesStatusBatchRef({ ids: ..., active: ..., });
+const ref = setBranchesStatusBatchRef({ ids: ..., active: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -9320,11 +9876,13 @@ const ref = setBranchesStatusBatchRef(dataConnect, setBranchesStatusBatchVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -9365,6 +9923,7 @@ The `SetSuppliersStatusBatch` mutation requires an argument of type `SetSupplier
 export interface SetSuppliersStatusBatchVariables {
   ids: unknown;
   active: boolean;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -9373,6 +9932,9 @@ Recall that executing the `SetSuppliersStatusBatch` mutation returns a `Mutation
 The `data` property is an object of type `SetSuppliersStatusBatchData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SetSuppliersStatusBatchData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -9384,25 +9946,28 @@ import { connectorConfig, setSuppliersStatusBatch, SetSuppliersStatusBatchVariab
 
 // The `SetSuppliersStatusBatch` mutation requires an argument of type `SetSuppliersStatusBatchVariables`:
 const setSuppliersStatusBatchVars: SetSuppliersStatusBatchVariables = {
-  ids: ..., 
-  active: ..., 
+  ids: ...,
+  active: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `setSuppliersStatusBatch()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await setSuppliersStatusBatch(setSuppliersStatusBatchVars);
 // Variables can be defined inline as well.
-const { data } = await setSuppliersStatusBatch({ ids: ..., active: ..., });
+const { data } = await setSuppliersStatusBatch({ ids: ..., active: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await setSuppliersStatusBatch(dataConnect, setSuppliersStatusBatchVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 setSuppliersStatusBatch(setSuppliersStatusBatchVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -9415,14 +9980,15 @@ import { connectorConfig, setSuppliersStatusBatchRef, SetSuppliersStatusBatchVar
 
 // The `SetSuppliersStatusBatch` mutation requires an argument of type `SetSuppliersStatusBatchVariables`:
 const setSuppliersStatusBatchVars: SetSuppliersStatusBatchVariables = {
-  ids: ..., 
-  active: ..., 
+  ids: ...,
+  active: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `setSuppliersStatusBatchRef()` function to get a reference to the mutation.
 const ref = setSuppliersStatusBatchRef(setSuppliersStatusBatchVars);
 // Variables can be defined inline as well.
-const ref = setSuppliersStatusBatchRef({ ids: ..., active: ..., });
+const ref = setSuppliersStatusBatchRef({ ids: ..., active: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -9432,11 +9998,13 @@ const ref = setSuppliersStatusBatchRef(dataConnect, setSuppliersStatusBatchVars)
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -9477,6 +10045,7 @@ The `SetCustomersStatusBatch` mutation requires an argument of type `SetCustomer
 export interface SetCustomersStatusBatchVariables {
   ids: unknown;
   active: boolean;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -9485,6 +10054,9 @@ Recall that executing the `SetCustomersStatusBatch` mutation returns a `Mutation
 The `data` property is an object of type `SetCustomersStatusBatchData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SetCustomersStatusBatchData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -9496,25 +10068,28 @@ import { connectorConfig, setCustomersStatusBatch, SetCustomersStatusBatchVariab
 
 // The `SetCustomersStatusBatch` mutation requires an argument of type `SetCustomersStatusBatchVariables`:
 const setCustomersStatusBatchVars: SetCustomersStatusBatchVariables = {
-  ids: ..., 
-  active: ..., 
+  ids: ...,
+  active: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `setCustomersStatusBatch()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await setCustomersStatusBatch(setCustomersStatusBatchVars);
 // Variables can be defined inline as well.
-const { data } = await setCustomersStatusBatch({ ids: ..., active: ..., });
+const { data } = await setCustomersStatusBatch({ ids: ..., active: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await setCustomersStatusBatch(dataConnect, setCustomersStatusBatchVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 setCustomersStatusBatch(setCustomersStatusBatchVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -9527,14 +10102,15 @@ import { connectorConfig, setCustomersStatusBatchRef, SetCustomersStatusBatchVar
 
 // The `SetCustomersStatusBatch` mutation requires an argument of type `SetCustomersStatusBatchVariables`:
 const setCustomersStatusBatchVars: SetCustomersStatusBatchVariables = {
-  ids: ..., 
-  active: ..., 
+  ids: ...,
+  active: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `setCustomersStatusBatchRef()` function to get a reference to the mutation.
 const ref = setCustomersStatusBatchRef(setCustomersStatusBatchVars);
 // Variables can be defined inline as well.
-const ref = setCustomersStatusBatchRef({ ids: ..., active: ..., });
+const ref = setCustomersStatusBatchRef({ ids: ..., active: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -9544,11 +10120,13 @@ const ref = setCustomersStatusBatchRef(dataConnect, setCustomersStatusBatchVars)
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -9589,6 +10167,7 @@ The `SetProductsStatusBatch` mutation requires an argument of type `SetProductsS
 export interface SetProductsStatusBatchVariables {
   ids: unknown;
   active: boolean;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -9597,6 +10176,9 @@ Recall that executing the `SetProductsStatusBatch` mutation returns a `MutationP
 The `data` property is an object of type `SetProductsStatusBatchData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SetProductsStatusBatchData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -9608,25 +10190,28 @@ import { connectorConfig, setProductsStatusBatch, SetProductsStatusBatchVariable
 
 // The `SetProductsStatusBatch` mutation requires an argument of type `SetProductsStatusBatchVariables`:
 const setProductsStatusBatchVars: SetProductsStatusBatchVariables = {
-  ids: ..., 
-  active: ..., 
+  ids: ...,
+  active: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `setProductsStatusBatch()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await setProductsStatusBatch(setProductsStatusBatchVars);
 // Variables can be defined inline as well.
-const { data } = await setProductsStatusBatch({ ids: ..., active: ..., });
+const { data } = await setProductsStatusBatch({ ids: ..., active: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await setProductsStatusBatch(dataConnect, setProductsStatusBatchVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 setProductsStatusBatch(setProductsStatusBatchVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -9639,14 +10224,15 @@ import { connectorConfig, setProductsStatusBatchRef, SetProductsStatusBatchVaria
 
 // The `SetProductsStatusBatch` mutation requires an argument of type `SetProductsStatusBatchVariables`:
 const setProductsStatusBatchVars: SetProductsStatusBatchVariables = {
-  ids: ..., 
-  active: ..., 
+  ids: ...,
+  active: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `setProductsStatusBatchRef()` function to get a reference to the mutation.
 const ref = setProductsStatusBatchRef(setProductsStatusBatchVars);
 // Variables can be defined inline as well.
-const ref = setProductsStatusBatchRef({ ids: ..., active: ..., });
+const ref = setProductsStatusBatchRef({ ids: ..., active: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -9656,11 +10242,13 @@ const ref = setProductsStatusBatchRef(dataConnect, setProductsStatusBatchVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -9668,22 +10256,22 @@ executeMutation(ref).then((response) => {
 ## EnsureSalesDefaults
 You can execute the `EnsureSalesDefaults` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
 ```typescript
-ensureSalesDefaults(): MutationPromise<EnsureSalesDefaultsData, undefined>;
+ensureSalesDefaults(vars?: EnsureSalesDefaultsVariables): MutationPromise<EnsureSalesDefaultsData, EnsureSalesDefaultsVariables>;
 
 interface EnsureSalesDefaultsRef {
   ...
   /* Allow users to create refs without passing in DataConnect */
-  (): MutationRef<EnsureSalesDefaultsData, undefined>;
+  (vars?: EnsureSalesDefaultsVariables): MutationRef<EnsureSalesDefaultsData, EnsureSalesDefaultsVariables>;
 }
 export const ensureSalesDefaultsRef: EnsureSalesDefaultsRef;
 ```
 You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
 ```typescript
-ensureSalesDefaults(dc: DataConnect): MutationPromise<EnsureSalesDefaultsData, undefined>;
+ensureSalesDefaults(dc: DataConnect, vars?: EnsureSalesDefaultsVariables): MutationPromise<EnsureSalesDefaultsData, EnsureSalesDefaultsVariables>;
 
 interface EnsureSalesDefaultsRef {
   ...
-  (dc: DataConnect): MutationRef<EnsureSalesDefaultsData, undefined>;
+  (dc: DataConnect, vars?: EnsureSalesDefaultsVariables): MutationRef<EnsureSalesDefaultsData, EnsureSalesDefaultsVariables>;
 }
 export const ensureSalesDefaultsRef: EnsureSalesDefaultsRef;
 ```
@@ -9695,13 +10283,22 @@ console.log(name);
 ```
 
 ### Variables
-The `EnsureSalesDefaults` mutation has no variables.
+The `EnsureSalesDefaults` mutation has an optional argument of type `EnsureSalesDefaultsVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface EnsureSalesDefaultsVariables {
+  sessionToken?: string | null;
+}
+```
 ### Return Type
 Recall that executing the `EnsureSalesDefaults` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
 
 The `data` property is an object of type `EnsureSalesDefaultsData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface EnsureSalesDefaultsData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -9709,22 +10306,32 @@ export interface EnsureSalesDefaultsData {
 
 ```typescript
 import { getDataConnect } from 'firebase/data-connect';
-import { connectorConfig, ensureSalesDefaults } from '@insightpad/dataconnect';
+import { connectorConfig, ensureSalesDefaults, EnsureSalesDefaultsVariables } from '@insightpad/dataconnect';
 
+// The `EnsureSalesDefaults` mutation has an optional argument of type `EnsureSalesDefaultsVariables`:
+const ensureSalesDefaultsVars: EnsureSalesDefaultsVariables = {
+  sessionToken: ..., // optional
+};
 
 // Call the `ensureSalesDefaults()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await ensureSalesDefaults(ensureSalesDefaultsVars);
+// Variables can be defined inline as well.
+const { data } = await ensureSalesDefaults({ sessionToken: ..., });
+// Since all variables are optional for this mutation, you can omit the `EnsureSalesDefaultsVariables` argument.
 const { data } = await ensureSalesDefaults();
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
-const { data } = await ensureSalesDefaults(dataConnect);
+const { data } = await ensureSalesDefaults(dataConnect, ensureSalesDefaultsVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
-ensureSalesDefaults().then((response) => {
+ensureSalesDefaults(ensureSalesDefaultsVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -9733,25 +10340,35 @@ ensureSalesDefaults().then((response) => {
 
 ```typescript
 import { getDataConnect, executeMutation } from 'firebase/data-connect';
-import { connectorConfig, ensureSalesDefaultsRef } from '@insightpad/dataconnect';
+import { connectorConfig, ensureSalesDefaultsRef, EnsureSalesDefaultsVariables } from '@insightpad/dataconnect';
 
+// The `EnsureSalesDefaults` mutation has an optional argument of type `EnsureSalesDefaultsVariables`:
+const ensureSalesDefaultsVars: EnsureSalesDefaultsVariables = {
+  sessionToken: ..., // optional
+};
 
 // Call the `ensureSalesDefaultsRef()` function to get a reference to the mutation.
+const ref = ensureSalesDefaultsRef(ensureSalesDefaultsVars);
+// Variables can be defined inline as well.
+const ref = ensureSalesDefaultsRef({ sessionToken: ..., });
+// Since all variables are optional for this mutation, you can omit the `EnsureSalesDefaultsVariables` argument.
 const ref = ensureSalesDefaultsRef();
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
-const ref = ensureSalesDefaultsRef(dataConnect);
+const ref = ensureSalesDefaultsRef(dataConnect, ensureSalesDefaultsVars);
 
 // Call `executeMutation()` on the reference to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -9791,6 +10408,7 @@ The `PostSale` mutation requires an argument of type `PostSaleVariables`, which 
 ```typescript
 export interface PostSaleVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -9799,6 +10417,9 @@ Recall that executing the `PostSale` mutation returns a `MutationPromise` that r
 The `data` property is an object of type `PostSaleData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface PostSaleData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
   result?: {
     receipt?: unknown | null;
@@ -9813,25 +10434,28 @@ import { connectorConfig, postSale, PostSaleVariables } from '@insightpad/dataco
 
 // The `PostSale` mutation requires an argument of type `PostSaleVariables`:
 const postSaleVars: PostSaleVariables = {
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `postSale()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await postSale(postSaleVars);
 // Variables can be defined inline as well.
-const { data } = await postSale({ payload: ..., });
+const { data } = await postSale({ payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await postSale(dataConnect, postSaleVars);
 
+console.log(data.query);
 console.log(data._execute);
 console.log(data.result);
 
 // Or, you can use the `Promise` API.
 postSale(postSaleVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
   console.log(data.result);
 });
@@ -9845,13 +10469,14 @@ import { connectorConfig, postSaleRef, PostSaleVariables } from '@insightpad/dat
 
 // The `PostSale` mutation requires an argument of type `PostSaleVariables`:
 const postSaleVars: PostSaleVariables = {
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `postSaleRef()` function to get a reference to the mutation.
 const ref = postSaleRef(postSaleVars);
 // Variables can be defined inline as well.
-const ref = postSaleRef({ payload: ..., });
+const ref = postSaleRef({ payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -9861,12 +10486,14 @@ const ref = postSaleRef(dataConnect, postSaleVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 console.log(data.result);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
   console.log(data.result);
 });
@@ -9908,6 +10535,7 @@ The `CancelSale` mutation requires an argument of type `CancelSaleVariables`, wh
 export interface CancelSaleVariables {
   saleId: UUIDString;
   reason: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -9916,6 +10544,9 @@ Recall that executing the `CancelSale` mutation returns a `MutationPromise` that
 The `data` property is an object of type `CancelSaleData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface CancelSaleData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -9927,25 +10558,28 @@ import { connectorConfig, cancelSale, CancelSaleVariables } from '@insightpad/da
 
 // The `CancelSale` mutation requires an argument of type `CancelSaleVariables`:
 const cancelSaleVars: CancelSaleVariables = {
-  saleId: ..., 
-  reason: ..., 
+  saleId: ...,
+  reason: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `cancelSale()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await cancelSale(cancelSaleVars);
 // Variables can be defined inline as well.
-const { data } = await cancelSale({ saleId: ..., reason: ..., });
+const { data } = await cancelSale({ saleId: ..., reason: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await cancelSale(dataConnect, cancelSaleVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 cancelSale(cancelSaleVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -9958,14 +10592,15 @@ import { connectorConfig, cancelSaleRef, CancelSaleVariables } from '@insightpad
 
 // The `CancelSale` mutation requires an argument of type `CancelSaleVariables`:
 const cancelSaleVars: CancelSaleVariables = {
-  saleId: ..., 
-  reason: ..., 
+  saleId: ...,
+  reason: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `cancelSaleRef()` function to get a reference to the mutation.
 const ref = cancelSaleRef(cancelSaleVars);
 // Variables can be defined inline as well.
-const ref = cancelSaleRef({ saleId: ..., reason: ..., });
+const ref = cancelSaleRef({ saleId: ..., reason: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -9975,11 +10610,13 @@ const ref = cancelSaleRef(dataConnect, cancelSaleVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -10019,6 +10656,7 @@ The `CreatePlatformTenant` mutation requires an argument of type `CreatePlatform
 ```typescript
 export interface CreatePlatformTenantVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -10027,6 +10665,9 @@ Recall that executing the `CreatePlatformTenant` mutation returns a `MutationPro
 The `data` property is an object of type `CreatePlatformTenantData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface CreatePlatformTenantData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -10038,24 +10679,27 @@ import { connectorConfig, createPlatformTenant, CreatePlatformTenantVariables } 
 
 // The `CreatePlatformTenant` mutation requires an argument of type `CreatePlatformTenantVariables`:
 const createPlatformTenantVars: CreatePlatformTenantVariables = {
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `createPlatformTenant()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await createPlatformTenant(createPlatformTenantVars);
 // Variables can be defined inline as well.
-const { data } = await createPlatformTenant({ payload: ..., });
+const { data } = await createPlatformTenant({ payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await createPlatformTenant(dataConnect, createPlatformTenantVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 createPlatformTenant(createPlatformTenantVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -10068,13 +10712,14 @@ import { connectorConfig, createPlatformTenantRef, CreatePlatformTenantVariables
 
 // The `CreatePlatformTenant` mutation requires an argument of type `CreatePlatformTenantVariables`:
 const createPlatformTenantVars: CreatePlatformTenantVariables = {
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `createPlatformTenantRef()` function to get a reference to the mutation.
 const ref = createPlatformTenantRef(createPlatformTenantVars);
 // Variables can be defined inline as well.
-const ref = createPlatformTenantRef({ payload: ..., });
+const ref = createPlatformTenantRef({ payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -10084,11 +10729,13 @@ const ref = createPlatformTenantRef(dataConnect, createPlatformTenantVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -10128,6 +10775,7 @@ The `UpdatePlatformTenant` mutation requires an argument of type `UpdatePlatform
 ```typescript
 export interface UpdatePlatformTenantVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -10136,6 +10784,9 @@ Recall that executing the `UpdatePlatformTenant` mutation returns a `MutationPro
 The `data` property is an object of type `UpdatePlatformTenantData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface UpdatePlatformTenantData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -10147,24 +10798,27 @@ import { connectorConfig, updatePlatformTenant, UpdatePlatformTenantVariables } 
 
 // The `UpdatePlatformTenant` mutation requires an argument of type `UpdatePlatformTenantVariables`:
 const updatePlatformTenantVars: UpdatePlatformTenantVariables = {
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `updatePlatformTenant()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await updatePlatformTenant(updatePlatformTenantVars);
 // Variables can be defined inline as well.
-const { data } = await updatePlatformTenant({ payload: ..., });
+const { data } = await updatePlatformTenant({ payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await updatePlatformTenant(dataConnect, updatePlatformTenantVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 updatePlatformTenant(updatePlatformTenantVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -10177,13 +10831,14 @@ import { connectorConfig, updatePlatformTenantRef, UpdatePlatformTenantVariables
 
 // The `UpdatePlatformTenant` mutation requires an argument of type `UpdatePlatformTenantVariables`:
 const updatePlatformTenantVars: UpdatePlatformTenantVariables = {
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `updatePlatformTenantRef()` function to get a reference to the mutation.
 const ref = updatePlatformTenantRef(updatePlatformTenantVars);
 // Variables can be defined inline as well.
-const ref = updatePlatformTenantRef({ payload: ..., });
+const ref = updatePlatformTenantRef({ payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -10193,11 +10848,13 @@ const ref = updatePlatformTenantRef(dataConnect, updatePlatformTenantVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -10238,6 +10895,7 @@ The `SetPlatformTenantStatus` mutation requires an argument of type `SetPlatform
 export interface SetPlatformTenantStatusVariables {
   tenantId: UUIDString;
   active: boolean;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -10246,6 +10904,9 @@ Recall that executing the `SetPlatformTenantStatus` mutation returns a `Mutation
 The `data` property is an object of type `SetPlatformTenantStatusData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SetPlatformTenantStatusData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -10257,25 +10918,28 @@ import { connectorConfig, setPlatformTenantStatus, SetPlatformTenantStatusVariab
 
 // The `SetPlatformTenantStatus` mutation requires an argument of type `SetPlatformTenantStatusVariables`:
 const setPlatformTenantStatusVars: SetPlatformTenantStatusVariables = {
-  tenantId: ..., 
-  active: ..., 
+  tenantId: ...,
+  active: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `setPlatformTenantStatus()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await setPlatformTenantStatus(setPlatformTenantStatusVars);
 // Variables can be defined inline as well.
-const { data } = await setPlatformTenantStatus({ tenantId: ..., active: ..., });
+const { data } = await setPlatformTenantStatus({ tenantId: ..., active: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await setPlatformTenantStatus(dataConnect, setPlatformTenantStatusVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 setPlatformTenantStatus(setPlatformTenantStatusVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -10288,14 +10952,15 @@ import { connectorConfig, setPlatformTenantStatusRef, SetPlatformTenantStatusVar
 
 // The `SetPlatformTenantStatus` mutation requires an argument of type `SetPlatformTenantStatusVariables`:
 const setPlatformTenantStatusVars: SetPlatformTenantStatusVariables = {
-  tenantId: ..., 
-  active: ..., 
+  tenantId: ...,
+  active: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `setPlatformTenantStatusRef()` function to get a reference to the mutation.
 const ref = setPlatformTenantStatusRef(setPlatformTenantStatusVars);
 // Variables can be defined inline as well.
-const ref = setPlatformTenantStatusRef({ tenantId: ..., active: ..., });
+const ref = setPlatformTenantStatusRef({ tenantId: ..., active: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -10305,11 +10970,13 @@ const ref = setPlatformTenantStatusRef(dataConnect, setPlatformTenantStatusVars)
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -10349,6 +11016,7 @@ The `LinkPlatformUser` mutation requires an argument of type `LinkPlatformUserVa
 ```typescript
 export interface LinkPlatformUserVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -10357,6 +11025,9 @@ Recall that executing the `LinkPlatformUser` mutation returns a `MutationPromise
 The `data` property is an object of type `LinkPlatformUserData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface LinkPlatformUserData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -10368,24 +11039,27 @@ import { connectorConfig, linkPlatformUser, LinkPlatformUserVariables } from '@i
 
 // The `LinkPlatformUser` mutation requires an argument of type `LinkPlatformUserVariables`:
 const linkPlatformUserVars: LinkPlatformUserVariables = {
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `linkPlatformUser()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await linkPlatformUser(linkPlatformUserVars);
 // Variables can be defined inline as well.
-const { data } = await linkPlatformUser({ payload: ..., });
+const { data } = await linkPlatformUser({ payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await linkPlatformUser(dataConnect, linkPlatformUserVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 linkPlatformUser(linkPlatformUserVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -10398,13 +11072,14 @@ import { connectorConfig, linkPlatformUserRef, LinkPlatformUserVariables } from 
 
 // The `LinkPlatformUser` mutation requires an argument of type `LinkPlatformUserVariables`:
 const linkPlatformUserVars: LinkPlatformUserVariables = {
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `linkPlatformUserRef()` function to get a reference to the mutation.
 const ref = linkPlatformUserRef(linkPlatformUserVars);
 // Variables can be defined inline as well.
-const ref = linkPlatformUserRef({ payload: ..., });
+const ref = linkPlatformUserRef({ payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -10414,11 +11089,13 @@ const ref = linkPlatformUserRef(dataConnect, linkPlatformUserVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -10459,6 +11136,7 @@ The `SetPlatformUserStatus` mutation requires an argument of type `SetPlatformUs
 export interface SetPlatformUserStatusVariables {
   userId: string;
   active: boolean;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -10467,6 +11145,9 @@ Recall that executing the `SetPlatformUserStatus` mutation returns a `MutationPr
 The `data` property is an object of type `SetPlatformUserStatusData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SetPlatformUserStatusData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -10478,25 +11159,28 @@ import { connectorConfig, setPlatformUserStatus, SetPlatformUserStatusVariables 
 
 // The `SetPlatformUserStatus` mutation requires an argument of type `SetPlatformUserStatusVariables`:
 const setPlatformUserStatusVars: SetPlatformUserStatusVariables = {
-  userId: ..., 
-  active: ..., 
+  userId: ...,
+  active: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `setPlatformUserStatus()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await setPlatformUserStatus(setPlatformUserStatusVars);
 // Variables can be defined inline as well.
-const { data } = await setPlatformUserStatus({ userId: ..., active: ..., });
+const { data } = await setPlatformUserStatus({ userId: ..., active: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await setPlatformUserStatus(dataConnect, setPlatformUserStatusVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 setPlatformUserStatus(setPlatformUserStatusVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -10509,14 +11193,15 @@ import { connectorConfig, setPlatformUserStatusRef, SetPlatformUserStatusVariabl
 
 // The `SetPlatformUserStatus` mutation requires an argument of type `SetPlatformUserStatusVariables`:
 const setPlatformUserStatusVars: SetPlatformUserStatusVariables = {
-  userId: ..., 
-  active: ..., 
+  userId: ...,
+  active: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `setPlatformUserStatusRef()` function to get a reference to the mutation.
 const ref = setPlatformUserStatusRef(setPlatformUserStatusVars);
 // Variables can be defined inline as well.
-const ref = setPlatformUserStatusRef({ userId: ..., active: ..., });
+const ref = setPlatformUserStatusRef({ userId: ..., active: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -10526,11 +11211,13 @@ const ref = setPlatformUserStatusRef(dataConnect, setPlatformUserStatusVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -10570,6 +11257,7 @@ The `SetPlatformRolePermission` mutation requires an argument of type `SetPlatfo
 ```typescript
 export interface SetPlatformRolePermissionVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -10578,6 +11266,9 @@ Recall that executing the `SetPlatformRolePermission` mutation returns a `Mutati
 The `data` property is an object of type `SetPlatformRolePermissionData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SetPlatformRolePermissionData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -10589,24 +11280,27 @@ import { connectorConfig, setPlatformRolePermission, SetPlatformRolePermissionVa
 
 // The `SetPlatformRolePermission` mutation requires an argument of type `SetPlatformRolePermissionVariables`:
 const setPlatformRolePermissionVars: SetPlatformRolePermissionVariables = {
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `setPlatformRolePermission()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await setPlatformRolePermission(setPlatformRolePermissionVars);
 // Variables can be defined inline as well.
-const { data } = await setPlatformRolePermission({ payload: ..., });
+const { data } = await setPlatformRolePermission({ payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await setPlatformRolePermission(dataConnect, setPlatformRolePermissionVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 setPlatformRolePermission(setPlatformRolePermissionVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -10619,13 +11313,14 @@ import { connectorConfig, setPlatformRolePermissionRef, SetPlatformRolePermissio
 
 // The `SetPlatformRolePermission` mutation requires an argument of type `SetPlatformRolePermissionVariables`:
 const setPlatformRolePermissionVars: SetPlatformRolePermissionVariables = {
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `setPlatformRolePermissionRef()` function to get a reference to the mutation.
 const ref = setPlatformRolePermissionRef(setPlatformRolePermissionVars);
 // Variables can be defined inline as well.
-const ref = setPlatformRolePermissionRef({ payload: ..., });
+const ref = setPlatformRolePermissionRef({ payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -10635,11 +11330,13 @@ const ref = setPlatformRolePermissionRef(dataConnect, setPlatformRolePermissionV
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -10679,6 +11376,7 @@ The `CreatePlatformInvoice` mutation requires an argument of type `CreatePlatfor
 ```typescript
 export interface CreatePlatformInvoiceVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -10687,6 +11385,9 @@ Recall that executing the `CreatePlatformInvoice` mutation returns a `MutationPr
 The `data` property is an object of type `CreatePlatformInvoiceData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface CreatePlatformInvoiceData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -10698,24 +11399,27 @@ import { connectorConfig, createPlatformInvoice, CreatePlatformInvoiceVariables 
 
 // The `CreatePlatformInvoice` mutation requires an argument of type `CreatePlatformInvoiceVariables`:
 const createPlatformInvoiceVars: CreatePlatformInvoiceVariables = {
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `createPlatformInvoice()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await createPlatformInvoice(createPlatformInvoiceVars);
 // Variables can be defined inline as well.
-const { data } = await createPlatformInvoice({ payload: ..., });
+const { data } = await createPlatformInvoice({ payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await createPlatformInvoice(dataConnect, createPlatformInvoiceVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 createPlatformInvoice(createPlatformInvoiceVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -10728,13 +11432,14 @@ import { connectorConfig, createPlatformInvoiceRef, CreatePlatformInvoiceVariabl
 
 // The `CreatePlatformInvoice` mutation requires an argument of type `CreatePlatformInvoiceVariables`:
 const createPlatformInvoiceVars: CreatePlatformInvoiceVariables = {
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `createPlatformInvoiceRef()` function to get a reference to the mutation.
 const ref = createPlatformInvoiceRef(createPlatformInvoiceVars);
 // Variables can be defined inline as well.
-const ref = createPlatformInvoiceRef({ payload: ..., });
+const ref = createPlatformInvoiceRef({ payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -10744,11 +11449,13 @@ const ref = createPlatformInvoiceRef(dataConnect, createPlatformInvoiceVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -10788,6 +11495,7 @@ The `UpdatePlatformInvoice` mutation requires an argument of type `UpdatePlatfor
 ```typescript
 export interface UpdatePlatformInvoiceVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -10796,6 +11504,9 @@ Recall that executing the `UpdatePlatformInvoice` mutation returns a `MutationPr
 The `data` property is an object of type `UpdatePlatformInvoiceData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface UpdatePlatformInvoiceData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -10807,24 +11518,27 @@ import { connectorConfig, updatePlatformInvoice, UpdatePlatformInvoiceVariables 
 
 // The `UpdatePlatformInvoice` mutation requires an argument of type `UpdatePlatformInvoiceVariables`:
 const updatePlatformInvoiceVars: UpdatePlatformInvoiceVariables = {
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `updatePlatformInvoice()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await updatePlatformInvoice(updatePlatformInvoiceVars);
 // Variables can be defined inline as well.
-const { data } = await updatePlatformInvoice({ payload: ..., });
+const { data } = await updatePlatformInvoice({ payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await updatePlatformInvoice(dataConnect, updatePlatformInvoiceVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 updatePlatformInvoice(updatePlatformInvoiceVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -10837,13 +11551,14 @@ import { connectorConfig, updatePlatformInvoiceRef, UpdatePlatformInvoiceVariabl
 
 // The `UpdatePlatformInvoice` mutation requires an argument of type `UpdatePlatformInvoiceVariables`:
 const updatePlatformInvoiceVars: UpdatePlatformInvoiceVariables = {
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `updatePlatformInvoiceRef()` function to get a reference to the mutation.
 const ref = updatePlatformInvoiceRef(updatePlatformInvoiceVars);
 // Variables can be defined inline as well.
-const ref = updatePlatformInvoiceRef({ payload: ..., });
+const ref = updatePlatformInvoiceRef({ payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -10853,11 +11568,13 @@ const ref = updatePlatformInvoiceRef(dataConnect, updatePlatformInvoiceVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -10899,6 +11616,7 @@ export interface VoidPlatformInvoiceVariables {
   invoiceId: UUIDString;
   reason: string;
   expectedVersion: Int64String;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -10907,6 +11625,9 @@ Recall that executing the `VoidPlatformInvoice` mutation returns a `MutationProm
 The `data` property is an object of type `VoidPlatformInvoiceData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface VoidPlatformInvoiceData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -10918,26 +11639,29 @@ import { connectorConfig, voidPlatformInvoice, VoidPlatformInvoiceVariables } fr
 
 // The `VoidPlatformInvoice` mutation requires an argument of type `VoidPlatformInvoiceVariables`:
 const voidPlatformInvoiceVars: VoidPlatformInvoiceVariables = {
-  invoiceId: ..., 
-  reason: ..., 
-  expectedVersion: ..., 
+  invoiceId: ...,
+  reason: ...,
+  expectedVersion: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `voidPlatformInvoice()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await voidPlatformInvoice(voidPlatformInvoiceVars);
 // Variables can be defined inline as well.
-const { data } = await voidPlatformInvoice({ invoiceId: ..., reason: ..., expectedVersion: ..., });
+const { data } = await voidPlatformInvoice({ invoiceId: ..., reason: ..., expectedVersion: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await voidPlatformInvoice(dataConnect, voidPlatformInvoiceVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 voidPlatformInvoice(voidPlatformInvoiceVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -10950,15 +11674,16 @@ import { connectorConfig, voidPlatformInvoiceRef, VoidPlatformInvoiceVariables }
 
 // The `VoidPlatformInvoice` mutation requires an argument of type `VoidPlatformInvoiceVariables`:
 const voidPlatformInvoiceVars: VoidPlatformInvoiceVariables = {
-  invoiceId: ..., 
-  reason: ..., 
-  expectedVersion: ..., 
+  invoiceId: ...,
+  reason: ...,
+  expectedVersion: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `voidPlatformInvoiceRef()` function to get a reference to the mutation.
 const ref = voidPlatformInvoiceRef(voidPlatformInvoiceVars);
 // Variables can be defined inline as well.
-const ref = voidPlatformInvoiceRef({ invoiceId: ..., reason: ..., expectedVersion: ..., });
+const ref = voidPlatformInvoiceRef({ invoiceId: ..., reason: ..., expectedVersion: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -10968,11 +11693,13 @@ const ref = voidPlatformInvoiceRef(dataConnect, voidPlatformInvoiceVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -11012,6 +11739,7 @@ The `SettlePlatformInvoice` mutation requires an argument of type `SettlePlatfor
 ```typescript
 export interface SettlePlatformInvoiceVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -11020,6 +11748,9 @@ Recall that executing the `SettlePlatformInvoice` mutation returns a `MutationPr
 The `data` property is an object of type `SettlePlatformInvoiceData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SettlePlatformInvoiceData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -11031,24 +11762,27 @@ import { connectorConfig, settlePlatformInvoice, SettlePlatformInvoiceVariables 
 
 // The `SettlePlatformInvoice` mutation requires an argument of type `SettlePlatformInvoiceVariables`:
 const settlePlatformInvoiceVars: SettlePlatformInvoiceVariables = {
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `settlePlatformInvoice()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await settlePlatformInvoice(settlePlatformInvoiceVars);
 // Variables can be defined inline as well.
-const { data } = await settlePlatformInvoice({ payload: ..., });
+const { data } = await settlePlatformInvoice({ payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await settlePlatformInvoice(dataConnect, settlePlatformInvoiceVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 settlePlatformInvoice(settlePlatformInvoiceVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -11061,13 +11795,14 @@ import { connectorConfig, settlePlatformInvoiceRef, SettlePlatformInvoiceVariabl
 
 // The `SettlePlatformInvoice` mutation requires an argument of type `SettlePlatformInvoiceVariables`:
 const settlePlatformInvoiceVars: SettlePlatformInvoiceVariables = {
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `settlePlatformInvoiceRef()` function to get a reference to the mutation.
 const ref = settlePlatformInvoiceRef(settlePlatformInvoiceVars);
 // Variables can be defined inline as well.
-const ref = settlePlatformInvoiceRef({ payload: ..., });
+const ref = settlePlatformInvoiceRef({ payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -11077,11 +11812,13 @@ const ref = settlePlatformInvoiceRef(dataConnect, settlePlatformInvoiceVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -11122,6 +11859,7 @@ The `ReversePlatformPayment` mutation requires an argument of type `ReversePlatf
 export interface ReversePlatformPaymentVariables {
   paymentId: UUIDString;
   reason: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -11130,6 +11868,9 @@ Recall that executing the `ReversePlatformPayment` mutation returns a `MutationP
 The `data` property is an object of type `ReversePlatformPaymentData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface ReversePlatformPaymentData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -11141,25 +11882,28 @@ import { connectorConfig, reversePlatformPayment, ReversePlatformPaymentVariable
 
 // The `ReversePlatformPayment` mutation requires an argument of type `ReversePlatformPaymentVariables`:
 const reversePlatformPaymentVars: ReversePlatformPaymentVariables = {
-  paymentId: ..., 
-  reason: ..., 
+  paymentId: ...,
+  reason: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `reversePlatformPayment()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await reversePlatformPayment(reversePlatformPaymentVars);
 // Variables can be defined inline as well.
-const { data } = await reversePlatformPayment({ paymentId: ..., reason: ..., });
+const { data } = await reversePlatformPayment({ paymentId: ..., reason: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await reversePlatformPayment(dataConnect, reversePlatformPaymentVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 reversePlatformPayment(reversePlatformPaymentVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -11172,14 +11916,15 @@ import { connectorConfig, reversePlatformPaymentRef, ReversePlatformPaymentVaria
 
 // The `ReversePlatformPayment` mutation requires an argument of type `ReversePlatformPaymentVariables`:
 const reversePlatformPaymentVars: ReversePlatformPaymentVariables = {
-  paymentId: ..., 
-  reason: ..., 
+  paymentId: ...,
+  reason: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `reversePlatformPaymentRef()` function to get a reference to the mutation.
 const ref = reversePlatformPaymentRef(reversePlatformPaymentVars);
 // Variables can be defined inline as well.
-const ref = reversePlatformPaymentRef({ paymentId: ..., reason: ..., });
+const ref = reversePlatformPaymentRef({ paymentId: ..., reason: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -11189,11 +11934,13 @@ const ref = reversePlatformPaymentRef(dataConnect, reversePlatformPaymentVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -11233,6 +11980,7 @@ The `PostStockAdjustment` mutation requires an argument of type `PostStockAdjust
 ```typescript
 export interface PostStockAdjustmentVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -11241,6 +11989,9 @@ Recall that executing the `PostStockAdjustment` mutation returns a `MutationProm
 The `data` property is an object of type `PostStockAdjustmentData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface PostStockAdjustmentData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -11252,24 +12003,27 @@ import { connectorConfig, postStockAdjustment, PostStockAdjustmentVariables } fr
 
 // The `PostStockAdjustment` mutation requires an argument of type `PostStockAdjustmentVariables`:
 const postStockAdjustmentVars: PostStockAdjustmentVariables = {
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `postStockAdjustment()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await postStockAdjustment(postStockAdjustmentVars);
 // Variables can be defined inline as well.
-const { data } = await postStockAdjustment({ payload: ..., });
+const { data } = await postStockAdjustment({ payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await postStockAdjustment(dataConnect, postStockAdjustmentVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 postStockAdjustment(postStockAdjustmentVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -11282,13 +12036,14 @@ import { connectorConfig, postStockAdjustmentRef, PostStockAdjustmentVariables }
 
 // The `PostStockAdjustment` mutation requires an argument of type `PostStockAdjustmentVariables`:
 const postStockAdjustmentVars: PostStockAdjustmentVariables = {
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `postStockAdjustmentRef()` function to get a reference to the mutation.
 const ref = postStockAdjustmentRef(postStockAdjustmentVars);
 // Variables can be defined inline as well.
-const ref = postStockAdjustmentRef({ payload: ..., });
+const ref = postStockAdjustmentRef({ payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -11298,11 +12053,13 @@ const ref = postStockAdjustmentRef(dataConnect, postStockAdjustmentVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -11342,6 +12099,7 @@ The `PostStockTransfer` mutation requires an argument of type `PostStockTransfer
 ```typescript
 export interface PostStockTransferVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -11350,6 +12108,9 @@ Recall that executing the `PostStockTransfer` mutation returns a `MutationPromis
 The `data` property is an object of type `PostStockTransferData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface PostStockTransferData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -11361,24 +12122,27 @@ import { connectorConfig, postStockTransfer, PostStockTransferVariables } from '
 
 // The `PostStockTransfer` mutation requires an argument of type `PostStockTransferVariables`:
 const postStockTransferVars: PostStockTransferVariables = {
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `postStockTransfer()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await postStockTransfer(postStockTransferVars);
 // Variables can be defined inline as well.
-const { data } = await postStockTransfer({ payload: ..., });
+const { data } = await postStockTransfer({ payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await postStockTransfer(dataConnect, postStockTransferVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 postStockTransfer(postStockTransferVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -11391,13 +12155,14 @@ import { connectorConfig, postStockTransferRef, PostStockTransferVariables } fro
 
 // The `PostStockTransfer` mutation requires an argument of type `PostStockTransferVariables`:
 const postStockTransferVars: PostStockTransferVariables = {
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `postStockTransferRef()` function to get a reference to the mutation.
 const ref = postStockTransferRef(postStockTransferVars);
 // Variables can be defined inline as well.
-const ref = postStockTransferRef({ payload: ..., });
+const ref = postStockTransferRef({ payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -11407,11 +12172,13 @@ const ref = postStockTransferRef(dataConnect, postStockTransferVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -11451,6 +12218,7 @@ The `SaveStockBatch` mutation requires an argument of type `SaveStockBatchVariab
 ```typescript
 export interface SaveStockBatchVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -11459,6 +12227,9 @@ Recall that executing the `SaveStockBatch` mutation returns a `MutationPromise` 
 The `data` property is an object of type `SaveStockBatchData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface SaveStockBatchData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -11470,24 +12241,27 @@ import { connectorConfig, saveStockBatch, SaveStockBatchVariables } from '@insig
 
 // The `SaveStockBatch` mutation requires an argument of type `SaveStockBatchVariables`:
 const saveStockBatchVars: SaveStockBatchVariables = {
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `saveStockBatch()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await saveStockBatch(saveStockBatchVars);
 // Variables can be defined inline as well.
-const { data } = await saveStockBatch({ payload: ..., });
+const { data } = await saveStockBatch({ payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await saveStockBatch(dataConnect, saveStockBatchVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 saveStockBatch(saveStockBatchVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -11500,13 +12274,14 @@ import { connectorConfig, saveStockBatchRef, SaveStockBatchVariables } from '@in
 
 // The `SaveStockBatch` mutation requires an argument of type `SaveStockBatchVariables`:
 const saveStockBatchVars: SaveStockBatchVariables = {
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `saveStockBatchRef()` function to get a reference to the mutation.
 const ref = saveStockBatchRef(saveStockBatchVars);
 // Variables can be defined inline as well.
-const ref = saveStockBatchRef({ payload: ..., });
+const ref = saveStockBatchRef({ payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -11516,11 +12291,13 @@ const ref = saveStockBatchRef(dataConnect, saveStockBatchVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -11562,6 +12339,7 @@ export interface ReverseStockOperationVariables {
   operationId: string;
   movementIds: unknown;
   reason: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -11570,6 +12348,9 @@ Recall that executing the `ReverseStockOperation` mutation returns a `MutationPr
 The `data` property is an object of type `ReverseStockOperationData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface ReverseStockOperationData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -11581,26 +12362,29 @@ import { connectorConfig, reverseStockOperation, ReverseStockOperationVariables 
 
 // The `ReverseStockOperation` mutation requires an argument of type `ReverseStockOperationVariables`:
 const reverseStockOperationVars: ReverseStockOperationVariables = {
-  operationId: ..., 
-  movementIds: ..., 
-  reason: ..., 
+  operationId: ...,
+  movementIds: ...,
+  reason: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `reverseStockOperation()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await reverseStockOperation(reverseStockOperationVars);
 // Variables can be defined inline as well.
-const { data } = await reverseStockOperation({ operationId: ..., movementIds: ..., reason: ..., });
+const { data } = await reverseStockOperation({ operationId: ..., movementIds: ..., reason: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await reverseStockOperation(dataConnect, reverseStockOperationVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 reverseStockOperation(reverseStockOperationVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -11613,15 +12397,16 @@ import { connectorConfig, reverseStockOperationRef, ReverseStockOperationVariabl
 
 // The `ReverseStockOperation` mutation requires an argument of type `ReverseStockOperationVariables`:
 const reverseStockOperationVars: ReverseStockOperationVariables = {
-  operationId: ..., 
-  movementIds: ..., 
-  reason: ..., 
+  operationId: ...,
+  movementIds: ...,
+  reason: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `reverseStockOperationRef()` function to get a reference to the mutation.
 const ref = reverseStockOperationRef(reverseStockOperationVars);
 // Variables can be defined inline as well.
-const ref = reverseStockOperationRef({ operationId: ..., movementIds: ..., reason: ..., });
+const ref = reverseStockOperationRef({ operationId: ..., movementIds: ..., reason: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -11631,11 +12416,13 @@ const ref = reverseStockOperationRef(dataConnect, reverseStockOperationVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -11677,6 +12464,7 @@ export interface OpenCashSessionVariables {
   branchId: UUIDString;
   openingAmountCents: Int64String;
   notes: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -11685,6 +12473,9 @@ Recall that executing the `OpenCashSession` mutation returns a `MutationPromise`
 The `data` property is an object of type `OpenCashSessionData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface OpenCashSessionData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -11696,26 +12487,29 @@ import { connectorConfig, openCashSession, OpenCashSessionVariables } from '@ins
 
 // The `OpenCashSession` mutation requires an argument of type `OpenCashSessionVariables`:
 const openCashSessionVars: OpenCashSessionVariables = {
-  branchId: ..., 
-  openingAmountCents: ..., 
-  notes: ..., 
+  branchId: ...,
+  openingAmountCents: ...,
+  notes: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `openCashSession()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await openCashSession(openCashSessionVars);
 // Variables can be defined inline as well.
-const { data } = await openCashSession({ branchId: ..., openingAmountCents: ..., notes: ..., });
+const { data } = await openCashSession({ branchId: ..., openingAmountCents: ..., notes: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await openCashSession(dataConnect, openCashSessionVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 openCashSession(openCashSessionVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -11728,15 +12522,16 @@ import { connectorConfig, openCashSessionRef, OpenCashSessionVariables } from '@
 
 // The `OpenCashSession` mutation requires an argument of type `OpenCashSessionVariables`:
 const openCashSessionVars: OpenCashSessionVariables = {
-  branchId: ..., 
-  openingAmountCents: ..., 
-  notes: ..., 
+  branchId: ...,
+  openingAmountCents: ...,
+  notes: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `openCashSessionRef()` function to get a reference to the mutation.
 const ref = openCashSessionRef(openCashSessionVars);
 // Variables can be defined inline as well.
-const ref = openCashSessionRef({ branchId: ..., openingAmountCents: ..., notes: ..., });
+const ref = openCashSessionRef({ branchId: ..., openingAmountCents: ..., notes: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -11746,11 +12541,13 @@ const ref = openCashSessionRef(dataConnect, openCashSessionVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -11794,6 +12591,7 @@ export interface RegisterCashMovementVariables {
   amountCents: Int64String;
   description: string;
   operationId?: string | null;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -11802,6 +12600,9 @@ Recall that executing the `RegisterCashMovement` mutation returns a `MutationPro
 The `data` property is an object of type `RegisterCashMovementData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface RegisterCashMovementData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -11813,28 +12614,31 @@ import { connectorConfig, registerCashMovement, RegisterCashMovementVariables } 
 
 // The `RegisterCashMovement` mutation requires an argument of type `RegisterCashMovementVariables`:
 const registerCashMovementVars: RegisterCashMovementVariables = {
-  sessionId: ..., 
-  movementType: ..., 
-  amountCents: ..., 
-  description: ..., 
+  sessionId: ...,
+  movementType: ...,
+  amountCents: ...,
+  description: ...,
   operationId: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `registerCashMovement()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await registerCashMovement(registerCashMovementVars);
 // Variables can be defined inline as well.
-const { data } = await registerCashMovement({ sessionId: ..., movementType: ..., amountCents: ..., description: ..., operationId: ..., });
+const { data } = await registerCashMovement({ sessionId: ..., movementType: ..., amountCents: ..., description: ..., operationId: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await registerCashMovement(dataConnect, registerCashMovementVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 registerCashMovement(registerCashMovementVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -11847,17 +12651,18 @@ import { connectorConfig, registerCashMovementRef, RegisterCashMovementVariables
 
 // The `RegisterCashMovement` mutation requires an argument of type `RegisterCashMovementVariables`:
 const registerCashMovementVars: RegisterCashMovementVariables = {
-  sessionId: ..., 
-  movementType: ..., 
-  amountCents: ..., 
-  description: ..., 
+  sessionId: ...,
+  movementType: ...,
+  amountCents: ...,
+  description: ...,
   operationId: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `registerCashMovementRef()` function to get a reference to the mutation.
 const ref = registerCashMovementRef(registerCashMovementVars);
 // Variables can be defined inline as well.
-const ref = registerCashMovementRef({ sessionId: ..., movementType: ..., amountCents: ..., description: ..., operationId: ..., });
+const ref = registerCashMovementRef({ sessionId: ..., movementType: ..., amountCents: ..., description: ..., operationId: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -11867,11 +12672,13 @@ const ref = registerCashMovementRef(dataConnect, registerCashMovementVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -11910,7 +12717,6 @@ The `ClaimDeviceSession` mutation requires an argument of type `ClaimDeviceSessi
 
 ```typescript
 export interface ClaimDeviceSessionVariables {
-  sessionToken: string;
   deviceId: string;
   deviceName: string;
 }
@@ -11921,6 +12727,9 @@ Recall that executing the `ClaimDeviceSession` mutation returns a `MutationPromi
 The `data` property is an object of type `ClaimDeviceSessionData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface ClaimDeviceSessionData {
+  query?: {
+    issued?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -11932,26 +12741,27 @@ import { connectorConfig, claimDeviceSession, ClaimDeviceSessionVariables } from
 
 // The `ClaimDeviceSession` mutation requires an argument of type `ClaimDeviceSessionVariables`:
 const claimDeviceSessionVars: ClaimDeviceSessionVariables = {
-  sessionToken: ..., 
-  deviceId: ..., 
-  deviceName: ..., 
+  deviceId: ...,
+  deviceName: ...,
 };
 
 // Call the `claimDeviceSession()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await claimDeviceSession(claimDeviceSessionVars);
 // Variables can be defined inline as well.
-const { data } = await claimDeviceSession({ sessionToken: ..., deviceId: ..., deviceName: ..., });
+const { data } = await claimDeviceSession({ deviceId: ..., deviceName: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await claimDeviceSession(dataConnect, claimDeviceSessionVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 claimDeviceSession(claimDeviceSessionVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -11964,15 +12774,14 @@ import { connectorConfig, claimDeviceSessionRef, ClaimDeviceSessionVariables } f
 
 // The `ClaimDeviceSession` mutation requires an argument of type `ClaimDeviceSessionVariables`:
 const claimDeviceSessionVars: ClaimDeviceSessionVariables = {
-  sessionToken: ..., 
-  deviceId: ..., 
-  deviceName: ..., 
+  deviceId: ...,
+  deviceName: ...,
 };
 
 // Call the `claimDeviceSessionRef()` function to get a reference to the mutation.
 const ref = claimDeviceSessionRef(claimDeviceSessionVars);
 // Variables can be defined inline as well.
-const ref = claimDeviceSessionRef({ sessionToken: ..., deviceId: ..., deviceName: ..., });
+const ref = claimDeviceSessionRef({ deviceId: ..., deviceName: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -11982,11 +12791,13 @@ const ref = claimDeviceSessionRef(dataConnect, claimDeviceSessionVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -12034,6 +12845,9 @@ Recall that executing the `TouchDeviceSession` mutation returns a `MutationPromi
 The `data` property is an object of type `TouchDeviceSessionData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface TouchDeviceSessionData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -12045,7 +12859,7 @@ import { connectorConfig, touchDeviceSession, TouchDeviceSessionVariables } from
 
 // The `TouchDeviceSession` mutation requires an argument of type `TouchDeviceSessionVariables`:
 const touchDeviceSessionVars: TouchDeviceSessionVariables = {
-  sessionToken: ..., 
+  sessionToken: ...,
 };
 
 // Call the `touchDeviceSession()` function to execute the mutation.
@@ -12058,11 +12872,13 @@ const { data } = await touchDeviceSession({ sessionToken: ..., });
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await touchDeviceSession(dataConnect, touchDeviceSessionVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 touchDeviceSession(touchDeviceSessionVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -12075,7 +12891,7 @@ import { connectorConfig, touchDeviceSessionRef, TouchDeviceSessionVariables } f
 
 // The `TouchDeviceSession` mutation requires an argument of type `TouchDeviceSessionVariables`:
 const touchDeviceSessionVars: TouchDeviceSessionVariables = {
-  sessionToken: ..., 
+  sessionToken: ...,
 };
 
 // Call the `touchDeviceSessionRef()` function to get a reference to the mutation.
@@ -12091,11 +12907,13 @@ const ref = touchDeviceSessionRef(dataConnect, touchDeviceSessionVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -12154,7 +12972,7 @@ import { connectorConfig, releaseDeviceSession, ReleaseDeviceSessionVariables } 
 
 // The `ReleaseDeviceSession` mutation requires an argument of type `ReleaseDeviceSessionVariables`:
 const releaseDeviceSessionVars: ReleaseDeviceSessionVariables = {
-  sessionToken: ..., 
+  sessionToken: ...,
 };
 
 // Call the `releaseDeviceSession()` function to execute the mutation.
@@ -12184,7 +13002,7 @@ import { connectorConfig, releaseDeviceSessionRef, ReleaseDeviceSessionVariables
 
 // The `ReleaseDeviceSession` mutation requires an argument of type `ReleaseDeviceSessionVariables`:
 const releaseDeviceSessionVars: ReleaseDeviceSessionVariables = {
-  sessionToken: ..., 
+  sessionToken: ...,
 };
 
 // Call the `releaseDeviceSessionRef()` function to get a reference to the mutation.
@@ -12247,6 +13065,7 @@ export interface CreateSalesChannelConnectionVariables {
   branchId: UUIDString;
   displayName: string;
   externalStoreId: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -12255,6 +13074,9 @@ Recall that executing the `CreateSalesChannelConnection` mutation returns a `Mut
 The `data` property is an object of type `CreateSalesChannelConnectionData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface CreateSalesChannelConnectionData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -12266,27 +13088,30 @@ import { connectorConfig, createSalesChannelConnection, CreateSalesChannelConnec
 
 // The `CreateSalesChannelConnection` mutation requires an argument of type `CreateSalesChannelConnectionVariables`:
 const createSalesChannelConnectionVars: CreateSalesChannelConnectionVariables = {
-  provider: ..., 
-  branchId: ..., 
-  displayName: ..., 
-  externalStoreId: ..., 
+  provider: ...,
+  branchId: ...,
+  displayName: ...,
+  externalStoreId: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `createSalesChannelConnection()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await createSalesChannelConnection(createSalesChannelConnectionVars);
 // Variables can be defined inline as well.
-const { data } = await createSalesChannelConnection({ provider: ..., branchId: ..., displayName: ..., externalStoreId: ..., });
+const { data } = await createSalesChannelConnection({ provider: ..., branchId: ..., displayName: ..., externalStoreId: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await createSalesChannelConnection(dataConnect, createSalesChannelConnectionVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 createSalesChannelConnection(createSalesChannelConnectionVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -12299,16 +13124,17 @@ import { connectorConfig, createSalesChannelConnectionRef, CreateSalesChannelCon
 
 // The `CreateSalesChannelConnection` mutation requires an argument of type `CreateSalesChannelConnectionVariables`:
 const createSalesChannelConnectionVars: CreateSalesChannelConnectionVariables = {
-  provider: ..., 
-  branchId: ..., 
-  displayName: ..., 
-  externalStoreId: ..., 
+  provider: ...,
+  branchId: ...,
+  displayName: ...,
+  externalStoreId: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `createSalesChannelConnectionRef()` function to get a reference to the mutation.
 const ref = createSalesChannelConnectionRef(createSalesChannelConnectionVars);
 // Variables can be defined inline as well.
-const ref = createSalesChannelConnectionRef({ provider: ..., branchId: ..., displayName: ..., externalStoreId: ..., });
+const ref = createSalesChannelConnectionRef({ provider: ..., branchId: ..., displayName: ..., externalStoreId: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -12318,11 +13144,13 @@ const ref = createSalesChannelConnectionRef(dataConnect, createSalesChannelConne
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -12365,6 +13193,7 @@ export interface UpdateSalesChannelConnectionVariables {
   displayName: string;
   externalStoreId: string;
   enabled: boolean;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -12373,6 +13202,9 @@ Recall that executing the `UpdateSalesChannelConnection` mutation returns a `Mut
 The `data` property is an object of type `UpdateSalesChannelConnectionData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface UpdateSalesChannelConnectionData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -12384,27 +13216,30 @@ import { connectorConfig, updateSalesChannelConnection, UpdateSalesChannelConnec
 
 // The `UpdateSalesChannelConnection` mutation requires an argument of type `UpdateSalesChannelConnectionVariables`:
 const updateSalesChannelConnectionVars: UpdateSalesChannelConnectionVariables = {
-  id: ..., 
-  displayName: ..., 
-  externalStoreId: ..., 
-  enabled: ..., 
+  id: ...,
+  displayName: ...,
+  externalStoreId: ...,
+  enabled: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `updateSalesChannelConnection()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await updateSalesChannelConnection(updateSalesChannelConnectionVars);
 // Variables can be defined inline as well.
-const { data } = await updateSalesChannelConnection({ id: ..., displayName: ..., externalStoreId: ..., enabled: ..., });
+const { data } = await updateSalesChannelConnection({ id: ..., displayName: ..., externalStoreId: ..., enabled: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await updateSalesChannelConnection(dataConnect, updateSalesChannelConnectionVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 updateSalesChannelConnection(updateSalesChannelConnectionVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -12417,16 +13252,17 @@ import { connectorConfig, updateSalesChannelConnectionRef, UpdateSalesChannelCon
 
 // The `UpdateSalesChannelConnection` mutation requires an argument of type `UpdateSalesChannelConnectionVariables`:
 const updateSalesChannelConnectionVars: UpdateSalesChannelConnectionVariables = {
-  id: ..., 
-  displayName: ..., 
-  externalStoreId: ..., 
-  enabled: ..., 
+  id: ...,
+  displayName: ...,
+  externalStoreId: ...,
+  enabled: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `updateSalesChannelConnectionRef()` function to get a reference to the mutation.
 const ref = updateSalesChannelConnectionRef(updateSalesChannelConnectionVars);
 // Variables can be defined inline as well.
-const ref = updateSalesChannelConnectionRef({ id: ..., displayName: ..., externalStoreId: ..., enabled: ..., });
+const ref = updateSalesChannelConnectionRef({ id: ..., displayName: ..., externalStoreId: ..., enabled: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -12436,11 +13272,13 @@ const ref = updateSalesChannelConnectionRef(dataConnect, updateSalesChannelConne
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -12482,6 +13320,7 @@ export interface ConnectSalesChannelMerchantVariables {
   connectionId: UUIDString;
   merchantId: string;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -12490,6 +13329,9 @@ Recall that executing the `ConnectSalesChannelMerchant` mutation returns a `Muta
 The `data` property is an object of type `ConnectSalesChannelMerchantData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface ConnectSalesChannelMerchantData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -12501,26 +13343,29 @@ import { connectorConfig, connectSalesChannelMerchant, ConnectSalesChannelMercha
 
 // The `ConnectSalesChannelMerchant` mutation requires an argument of type `ConnectSalesChannelMerchantVariables`:
 const connectSalesChannelMerchantVars: ConnectSalesChannelMerchantVariables = {
-  connectionId: ..., 
-  merchantId: ..., 
-  requestKey: ..., 
+  connectionId: ...,
+  merchantId: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `connectSalesChannelMerchant()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await connectSalesChannelMerchant(connectSalesChannelMerchantVars);
 // Variables can be defined inline as well.
-const { data } = await connectSalesChannelMerchant({ connectionId: ..., merchantId: ..., requestKey: ..., });
+const { data } = await connectSalesChannelMerchant({ connectionId: ..., merchantId: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await connectSalesChannelMerchant(dataConnect, connectSalesChannelMerchantVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 connectSalesChannelMerchant(connectSalesChannelMerchantVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -12533,15 +13378,16 @@ import { connectorConfig, connectSalesChannelMerchantRef, ConnectSalesChannelMer
 
 // The `ConnectSalesChannelMerchant` mutation requires an argument of type `ConnectSalesChannelMerchantVariables`:
 const connectSalesChannelMerchantVars: ConnectSalesChannelMerchantVariables = {
-  connectionId: ..., 
-  merchantId: ..., 
-  requestKey: ..., 
+  connectionId: ...,
+  merchantId: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `connectSalesChannelMerchantRef()` function to get a reference to the mutation.
 const ref = connectSalesChannelMerchantRef(connectSalesChannelMerchantVars);
 // Variables can be defined inline as well.
-const ref = connectSalesChannelMerchantRef({ connectionId: ..., merchantId: ..., requestKey: ..., });
+const ref = connectSalesChannelMerchantRef({ connectionId: ..., merchantId: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -12551,11 +13397,13 @@ const ref = connectSalesChannelMerchantRef(dataConnect, connectSalesChannelMerch
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -12595,6 +13443,7 @@ The `ArchiveSalesChannelConnection` mutation requires an argument of type `Archi
 ```typescript
 export interface ArchiveSalesChannelConnectionVariables {
   id: UUIDString;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -12603,6 +13452,9 @@ Recall that executing the `ArchiveSalesChannelConnection` mutation returns a `Mu
 The `data` property is an object of type `ArchiveSalesChannelConnectionData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface ArchiveSalesChannelConnectionData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -12614,24 +13466,27 @@ import { connectorConfig, archiveSalesChannelConnection, ArchiveSalesChannelConn
 
 // The `ArchiveSalesChannelConnection` mutation requires an argument of type `ArchiveSalesChannelConnectionVariables`:
 const archiveSalesChannelConnectionVars: ArchiveSalesChannelConnectionVariables = {
-  id: ..., 
+  id: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `archiveSalesChannelConnection()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await archiveSalesChannelConnection(archiveSalesChannelConnectionVars);
 // Variables can be defined inline as well.
-const { data } = await archiveSalesChannelConnection({ id: ..., });
+const { data } = await archiveSalesChannelConnection({ id: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await archiveSalesChannelConnection(dataConnect, archiveSalesChannelConnectionVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 archiveSalesChannelConnection(archiveSalesChannelConnectionVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -12644,13 +13499,14 @@ import { connectorConfig, archiveSalesChannelConnectionRef, ArchiveSalesChannelC
 
 // The `ArchiveSalesChannelConnection` mutation requires an argument of type `ArchiveSalesChannelConnectionVariables`:
 const archiveSalesChannelConnectionVars: ArchiveSalesChannelConnectionVariables = {
-  id: ..., 
+  id: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `archiveSalesChannelConnectionRef()` function to get a reference to the mutation.
 const ref = archiveSalesChannelConnectionRef(archiveSalesChannelConnectionVars);
 // Variables can be defined inline as well.
-const ref = archiveSalesChannelConnectionRef({ id: ..., });
+const ref = archiveSalesChannelConnectionRef({ id: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -12660,11 +13516,13 @@ const ref = archiveSalesChannelConnectionRef(dataConnect, archiveSalesChannelCon
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -12712,6 +13570,7 @@ export interface CreateSalesChannelProductMappingVariables {
   priceMode?: string;
   customPriceCents?: Int64String | null;
   remoteProductState?: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -12720,6 +13579,9 @@ Recall that executing the `CreateSalesChannelProductMapping` mutation returns a 
 The `data` property is an object of type `CreateSalesChannelProductMappingData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface CreateSalesChannelProductMappingData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -12731,32 +13593,35 @@ import { connectorConfig, createSalesChannelProductMapping, CreateSalesChannelPr
 
 // The `CreateSalesChannelProductMapping` mutation requires an argument of type `CreateSalesChannelProductMappingVariables`:
 const createSalesChannelProductMappingVars: CreateSalesChannelProductMappingVariables = {
-  connectionId: ..., 
-  productId: ..., 
-  externalProductId: ..., 
-  externalProductName: ..., 
-  syncPrice: ..., 
-  syncStock: ..., 
+  connectionId: ...,
+  productId: ...,
+  externalProductId: ...,
+  externalProductName: ...,
+  syncPrice: ...,
+  syncStock: ...,
   priceMode: ..., // optional
   customPriceCents: ..., // optional
   remoteProductState: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `createSalesChannelProductMapping()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await createSalesChannelProductMapping(createSalesChannelProductMappingVars);
 // Variables can be defined inline as well.
-const { data } = await createSalesChannelProductMapping({ connectionId: ..., productId: ..., externalProductId: ..., externalProductName: ..., syncPrice: ..., syncStock: ..., priceMode: ..., customPriceCents: ..., remoteProductState: ..., });
+const { data } = await createSalesChannelProductMapping({ connectionId: ..., productId: ..., externalProductId: ..., externalProductName: ..., syncPrice: ..., syncStock: ..., priceMode: ..., customPriceCents: ..., remoteProductState: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await createSalesChannelProductMapping(dataConnect, createSalesChannelProductMappingVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 createSalesChannelProductMapping(createSalesChannelProductMappingVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -12769,21 +13634,22 @@ import { connectorConfig, createSalesChannelProductMappingRef, CreateSalesChanne
 
 // The `CreateSalesChannelProductMapping` mutation requires an argument of type `CreateSalesChannelProductMappingVariables`:
 const createSalesChannelProductMappingVars: CreateSalesChannelProductMappingVariables = {
-  connectionId: ..., 
-  productId: ..., 
-  externalProductId: ..., 
-  externalProductName: ..., 
-  syncPrice: ..., 
-  syncStock: ..., 
+  connectionId: ...,
+  productId: ...,
+  externalProductId: ...,
+  externalProductName: ...,
+  syncPrice: ...,
+  syncStock: ...,
   priceMode: ..., // optional
   customPriceCents: ..., // optional
   remoteProductState: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `createSalesChannelProductMappingRef()` function to get a reference to the mutation.
 const ref = createSalesChannelProductMappingRef(createSalesChannelProductMappingVars);
 // Variables can be defined inline as well.
-const ref = createSalesChannelProductMappingRef({ connectionId: ..., productId: ..., externalProductId: ..., externalProductName: ..., syncPrice: ..., syncStock: ..., priceMode: ..., customPriceCents: ..., remoteProductState: ..., });
+const ref = createSalesChannelProductMappingRef({ connectionId: ..., productId: ..., externalProductId: ..., externalProductName: ..., syncPrice: ..., syncStock: ..., priceMode: ..., customPriceCents: ..., remoteProductState: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -12793,11 +13659,13 @@ const ref = createSalesChannelProductMappingRef(dataConnect, createSalesChannelP
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -12845,6 +13713,7 @@ export interface UpdateSalesChannelProductMappingVariables {
   priceMode?: string;
   customPriceCents?: Int64String | null;
   remoteProductState?: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -12853,6 +13722,9 @@ Recall that executing the `UpdateSalesChannelProductMapping` mutation returns a 
 The `data` property is an object of type `UpdateSalesChannelProductMappingData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface UpdateSalesChannelProductMappingData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -12864,32 +13736,35 @@ import { connectorConfig, updateSalesChannelProductMapping, UpdateSalesChannelPr
 
 // The `UpdateSalesChannelProductMapping` mutation requires an argument of type `UpdateSalesChannelProductMappingVariables`:
 const updateSalesChannelProductMappingVars: UpdateSalesChannelProductMappingVariables = {
-  id: ..., 
-  externalProductId: ..., 
-  externalProductName: ..., 
-  syncPrice: ..., 
-  syncStock: ..., 
-  enabled: ..., 
+  id: ...,
+  externalProductId: ...,
+  externalProductName: ...,
+  syncPrice: ...,
+  syncStock: ...,
+  enabled: ...,
   priceMode: ..., // optional
   customPriceCents: ..., // optional
   remoteProductState: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `updateSalesChannelProductMapping()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await updateSalesChannelProductMapping(updateSalesChannelProductMappingVars);
 // Variables can be defined inline as well.
-const { data } = await updateSalesChannelProductMapping({ id: ..., externalProductId: ..., externalProductName: ..., syncPrice: ..., syncStock: ..., enabled: ..., priceMode: ..., customPriceCents: ..., remoteProductState: ..., });
+const { data } = await updateSalesChannelProductMapping({ id: ..., externalProductId: ..., externalProductName: ..., syncPrice: ..., syncStock: ..., enabled: ..., priceMode: ..., customPriceCents: ..., remoteProductState: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await updateSalesChannelProductMapping(dataConnect, updateSalesChannelProductMappingVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 updateSalesChannelProductMapping(updateSalesChannelProductMappingVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -12902,21 +13777,22 @@ import { connectorConfig, updateSalesChannelProductMappingRef, UpdateSalesChanne
 
 // The `UpdateSalesChannelProductMapping` mutation requires an argument of type `UpdateSalesChannelProductMappingVariables`:
 const updateSalesChannelProductMappingVars: UpdateSalesChannelProductMappingVariables = {
-  id: ..., 
-  externalProductId: ..., 
-  externalProductName: ..., 
-  syncPrice: ..., 
-  syncStock: ..., 
-  enabled: ..., 
+  id: ...,
+  externalProductId: ...,
+  externalProductName: ...,
+  syncPrice: ...,
+  syncStock: ...,
+  enabled: ...,
   priceMode: ..., // optional
   customPriceCents: ..., // optional
   remoteProductState: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `updateSalesChannelProductMappingRef()` function to get a reference to the mutation.
 const ref = updateSalesChannelProductMappingRef(updateSalesChannelProductMappingVars);
 // Variables can be defined inline as well.
-const ref = updateSalesChannelProductMappingRef({ id: ..., externalProductId: ..., externalProductName: ..., syncPrice: ..., syncStock: ..., enabled: ..., priceMode: ..., customPriceCents: ..., remoteProductState: ..., });
+const ref = updateSalesChannelProductMappingRef({ id: ..., externalProductId: ..., externalProductName: ..., syncPrice: ..., syncStock: ..., enabled: ..., priceMode: ..., customPriceCents: ..., remoteProductState: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -12926,11 +13802,13 @@ const ref = updateSalesChannelProductMappingRef(dataConnect, updateSalesChannelP
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -12970,6 +13848,7 @@ The `ArchiveSalesChannelProductMapping` mutation requires an argument of type `A
 ```typescript
 export interface ArchiveSalesChannelProductMappingVariables {
   id: UUIDString;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -12978,6 +13857,9 @@ Recall that executing the `ArchiveSalesChannelProductMapping` mutation returns a
 The `data` property is an object of type `ArchiveSalesChannelProductMappingData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface ArchiveSalesChannelProductMappingData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -12989,24 +13871,27 @@ import { connectorConfig, archiveSalesChannelProductMapping, ArchiveSalesChannel
 
 // The `ArchiveSalesChannelProductMapping` mutation requires an argument of type `ArchiveSalesChannelProductMappingVariables`:
 const archiveSalesChannelProductMappingVars: ArchiveSalesChannelProductMappingVariables = {
-  id: ..., 
+  id: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `archiveSalesChannelProductMapping()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await archiveSalesChannelProductMapping(archiveSalesChannelProductMappingVars);
 // Variables can be defined inline as well.
-const { data } = await archiveSalesChannelProductMapping({ id: ..., });
+const { data } = await archiveSalesChannelProductMapping({ id: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await archiveSalesChannelProductMapping(dataConnect, archiveSalesChannelProductMappingVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 archiveSalesChannelProductMapping(archiveSalesChannelProductMappingVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -13019,13 +13904,14 @@ import { connectorConfig, archiveSalesChannelProductMappingRef, ArchiveSalesChan
 
 // The `ArchiveSalesChannelProductMapping` mutation requires an argument of type `ArchiveSalesChannelProductMappingVariables`:
 const archiveSalesChannelProductMappingVars: ArchiveSalesChannelProductMappingVariables = {
-  id: ..., 
+  id: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `archiveSalesChannelProductMappingRef()` function to get a reference to the mutation.
 const ref = archiveSalesChannelProductMappingRef(archiveSalesChannelProductMappingVars);
 // Variables can be defined inline as well.
-const ref = archiveSalesChannelProductMappingRef({ id: ..., });
+const ref = archiveSalesChannelProductMappingRef({ id: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -13035,11 +13921,13 @@ const ref = archiveSalesChannelProductMappingRef(dataConnect, archiveSalesChanne
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -13086,6 +13974,7 @@ export interface QueueSalesChannelOrderActionVariables {
   itemId?: UUIDString | null;
   ean?: string | null;
   quantity?: number | null;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -13094,6 +13983,9 @@ Recall that executing the `QueueSalesChannelOrderAction` mutation returns a `Mut
 The `data` property is an object of type `QueueSalesChannelOrderActionData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface QueueSalesChannelOrderActionData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -13105,31 +13997,34 @@ import { connectorConfig, queueSalesChannelOrderAction, QueueSalesChannelOrderAc
 
 // The `QueueSalesChannelOrderAction` mutation requires an argument of type `QueueSalesChannelOrderActionVariables`:
 const queueSalesChannelOrderActionVars: QueueSalesChannelOrderActionVariables = {
-  id: ..., 
-  action: ..., 
-  reason: ..., 
-  expectedVersion: ..., 
+  id: ...,
+  action: ...,
+  reason: ...,
+  expectedVersion: ...,
   cancellationCode: ..., // optional
   itemId: ..., // optional
   ean: ..., // optional
   quantity: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `queueSalesChannelOrderAction()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await queueSalesChannelOrderAction(queueSalesChannelOrderActionVars);
 // Variables can be defined inline as well.
-const { data } = await queueSalesChannelOrderAction({ id: ..., action: ..., reason: ..., expectedVersion: ..., cancellationCode: ..., itemId: ..., ean: ..., quantity: ..., });
+const { data } = await queueSalesChannelOrderAction({ id: ..., action: ..., reason: ..., expectedVersion: ..., cancellationCode: ..., itemId: ..., ean: ..., quantity: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await queueSalesChannelOrderAction(dataConnect, queueSalesChannelOrderActionVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 queueSalesChannelOrderAction(queueSalesChannelOrderActionVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -13142,20 +14037,21 @@ import { connectorConfig, queueSalesChannelOrderActionRef, QueueSalesChannelOrde
 
 // The `QueueSalesChannelOrderAction` mutation requires an argument of type `QueueSalesChannelOrderActionVariables`:
 const queueSalesChannelOrderActionVars: QueueSalesChannelOrderActionVariables = {
-  id: ..., 
-  action: ..., 
-  reason: ..., 
-  expectedVersion: ..., 
+  id: ...,
+  action: ...,
+  reason: ...,
+  expectedVersion: ...,
   cancellationCode: ..., // optional
   itemId: ..., // optional
   ean: ..., // optional
   quantity: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `queueSalesChannelOrderActionRef()` function to get a reference to the mutation.
 const ref = queueSalesChannelOrderActionRef(queueSalesChannelOrderActionVars);
 // Variables can be defined inline as well.
-const ref = queueSalesChannelOrderActionRef({ id: ..., action: ..., reason: ..., expectedVersion: ..., cancellationCode: ..., itemId: ..., ean: ..., quantity: ..., });
+const ref = queueSalesChannelOrderActionRef({ id: ..., action: ..., reason: ..., expectedVersion: ..., cancellationCode: ..., itemId: ..., ean: ..., quantity: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -13165,11 +14061,13 @@ const ref = queueSalesChannelOrderActionRef(dataConnect, queueSalesChannelOrderA
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -13209,6 +14107,7 @@ The `RetrySalesChannelCommand` mutation requires an argument of type `RetrySales
 ```typescript
 export interface RetrySalesChannelCommandVariables {
   id: UUIDString;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -13217,6 +14116,9 @@ Recall that executing the `RetrySalesChannelCommand` mutation returns a `Mutatio
 The `data` property is an object of type `RetrySalesChannelCommandData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface RetrySalesChannelCommandData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -13228,24 +14130,27 @@ import { connectorConfig, retrySalesChannelCommand, RetrySalesChannelCommandVari
 
 // The `RetrySalesChannelCommand` mutation requires an argument of type `RetrySalesChannelCommandVariables`:
 const retrySalesChannelCommandVars: RetrySalesChannelCommandVariables = {
-  id: ..., 
+  id: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `retrySalesChannelCommand()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await retrySalesChannelCommand(retrySalesChannelCommandVars);
 // Variables can be defined inline as well.
-const { data } = await retrySalesChannelCommand({ id: ..., });
+const { data } = await retrySalesChannelCommand({ id: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await retrySalesChannelCommand(dataConnect, retrySalesChannelCommandVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 retrySalesChannelCommand(retrySalesChannelCommandVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -13258,13 +14163,14 @@ import { connectorConfig, retrySalesChannelCommandRef, RetrySalesChannelCommandV
 
 // The `RetrySalesChannelCommand` mutation requires an argument of type `RetrySalesChannelCommandVariables`:
 const retrySalesChannelCommandVars: RetrySalesChannelCommandVariables = {
-  id: ..., 
+  id: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `retrySalesChannelCommandRef()` function to get a reference to the mutation.
 const ref = retrySalesChannelCommandRef(retrySalesChannelCommandVars);
 // Variables can be defined inline as well.
-const ref = retrySalesChannelCommandRef({ id: ..., });
+const ref = retrySalesChannelCommandRef({ id: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -13274,11 +14180,13 @@ const ref = retrySalesChannelCommandRef(dataConnect, retrySalesChannelCommandVar
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -13318,6 +14226,7 @@ The `RetrySalesChannelDecommissioning` mutation requires an argument of type `Re
 ```typescript
 export interface RetrySalesChannelDecommissioningVariables {
   id: UUIDString;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -13326,6 +14235,9 @@ Recall that executing the `RetrySalesChannelDecommissioning` mutation returns a 
 The `data` property is an object of type `RetrySalesChannelDecommissioningData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface RetrySalesChannelDecommissioningData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -13337,24 +14249,27 @@ import { connectorConfig, retrySalesChannelDecommissioning, RetrySalesChannelDec
 
 // The `RetrySalesChannelDecommissioning` mutation requires an argument of type `RetrySalesChannelDecommissioningVariables`:
 const retrySalesChannelDecommissioningVars: RetrySalesChannelDecommissioningVariables = {
-  id: ..., 
+  id: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `retrySalesChannelDecommissioning()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await retrySalesChannelDecommissioning(retrySalesChannelDecommissioningVars);
 // Variables can be defined inline as well.
-const { data } = await retrySalesChannelDecommissioning({ id: ..., });
+const { data } = await retrySalesChannelDecommissioning({ id: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await retrySalesChannelDecommissioning(dataConnect, retrySalesChannelDecommissioningVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 retrySalesChannelDecommissioning(retrySalesChannelDecommissioningVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -13367,13 +14282,14 @@ import { connectorConfig, retrySalesChannelDecommissioningRef, RetrySalesChannel
 
 // The `RetrySalesChannelDecommissioning` mutation requires an argument of type `RetrySalesChannelDecommissioningVariables`:
 const retrySalesChannelDecommissioningVars: RetrySalesChannelDecommissioningVariables = {
-  id: ..., 
+  id: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `retrySalesChannelDecommissioningRef()` function to get a reference to the mutation.
 const ref = retrySalesChannelDecommissioningRef(retrySalesChannelDecommissioningVars);
 // Variables can be defined inline as well.
-const ref = retrySalesChannelDecommissioningRef({ id: ..., });
+const ref = retrySalesChannelDecommissioningRef({ id: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -13383,11 +14299,13 @@ const ref = retrySalesChannelDecommissioningRef(dataConnect, retrySalesChannelDe
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -13428,6 +14346,7 @@ The `RequestSalesChannelOrderReconciliation` mutation requires an argument of ty
 export interface RequestSalesChannelOrderReconciliationVariables {
   id: UUIDString;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -13436,6 +14355,9 @@ Recall that executing the `RequestSalesChannelOrderReconciliation` mutation retu
 The `data` property is an object of type `RequestSalesChannelOrderReconciliationData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface RequestSalesChannelOrderReconciliationData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -13447,25 +14369,28 @@ import { connectorConfig, requestSalesChannelOrderReconciliation, RequestSalesCh
 
 // The `RequestSalesChannelOrderReconciliation` mutation requires an argument of type `RequestSalesChannelOrderReconciliationVariables`:
 const requestSalesChannelOrderReconciliationVars: RequestSalesChannelOrderReconciliationVariables = {
-  id: ..., 
-  requestKey: ..., 
+  id: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `requestSalesChannelOrderReconciliation()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await requestSalesChannelOrderReconciliation(requestSalesChannelOrderReconciliationVars);
 // Variables can be defined inline as well.
-const { data } = await requestSalesChannelOrderReconciliation({ id: ..., requestKey: ..., });
+const { data } = await requestSalesChannelOrderReconciliation({ id: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await requestSalesChannelOrderReconciliation(dataConnect, requestSalesChannelOrderReconciliationVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 requestSalesChannelOrderReconciliation(requestSalesChannelOrderReconciliationVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -13478,14 +14403,15 @@ import { connectorConfig, requestSalesChannelOrderReconciliationRef, RequestSale
 
 // The `RequestSalesChannelOrderReconciliation` mutation requires an argument of type `RequestSalesChannelOrderReconciliationVariables`:
 const requestSalesChannelOrderReconciliationVars: RequestSalesChannelOrderReconciliationVariables = {
-  id: ..., 
-  requestKey: ..., 
+  id: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `requestSalesChannelOrderReconciliationRef()` function to get a reference to the mutation.
 const ref = requestSalesChannelOrderReconciliationRef(requestSalesChannelOrderReconciliationVars);
 // Variables can be defined inline as well.
-const ref = requestSalesChannelOrderReconciliationRef({ id: ..., requestKey: ..., });
+const ref = requestSalesChannelOrderReconciliationRef({ id: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -13495,11 +14421,13 @@ const ref = requestSalesChannelOrderReconciliationRef(dataConnect, requestSalesC
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -13541,6 +14469,7 @@ export interface AcknowledgeSalesChannelOrderAlertVariables {
   id: UUIDString;
   version: number;
   alertKind: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -13549,6 +14478,9 @@ Recall that executing the `AcknowledgeSalesChannelOrderAlert` mutation returns a
 The `data` property is an object of type `AcknowledgeSalesChannelOrderAlertData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface AcknowledgeSalesChannelOrderAlertData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -13560,26 +14492,29 @@ import { connectorConfig, acknowledgeSalesChannelOrderAlert, AcknowledgeSalesCha
 
 // The `AcknowledgeSalesChannelOrderAlert` mutation requires an argument of type `AcknowledgeSalesChannelOrderAlertVariables`:
 const acknowledgeSalesChannelOrderAlertVars: AcknowledgeSalesChannelOrderAlertVariables = {
-  id: ..., 
-  version: ..., 
-  alertKind: ..., 
+  id: ...,
+  version: ...,
+  alertKind: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `acknowledgeSalesChannelOrderAlert()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await acknowledgeSalesChannelOrderAlert(acknowledgeSalesChannelOrderAlertVars);
 // Variables can be defined inline as well.
-const { data } = await acknowledgeSalesChannelOrderAlert({ id: ..., version: ..., alertKind: ..., });
+const { data } = await acknowledgeSalesChannelOrderAlert({ id: ..., version: ..., alertKind: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await acknowledgeSalesChannelOrderAlert(dataConnect, acknowledgeSalesChannelOrderAlertVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 acknowledgeSalesChannelOrderAlert(acknowledgeSalesChannelOrderAlertVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -13592,15 +14527,16 @@ import { connectorConfig, acknowledgeSalesChannelOrderAlertRef, AcknowledgeSales
 
 // The `AcknowledgeSalesChannelOrderAlert` mutation requires an argument of type `AcknowledgeSalesChannelOrderAlertVariables`:
 const acknowledgeSalesChannelOrderAlertVars: AcknowledgeSalesChannelOrderAlertVariables = {
-  id: ..., 
-  version: ..., 
-  alertKind: ..., 
+  id: ...,
+  version: ...,
+  alertKind: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `acknowledgeSalesChannelOrderAlertRef()` function to get a reference to the mutation.
 const ref = acknowledgeSalesChannelOrderAlertRef(acknowledgeSalesChannelOrderAlertVars);
 // Variables can be defined inline as well.
-const ref = acknowledgeSalesChannelOrderAlertRef({ id: ..., version: ..., alertKind: ..., });
+const ref = acknowledgeSalesChannelOrderAlertRef({ id: ..., version: ..., alertKind: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -13610,11 +14546,13 @@ const ref = acknowledgeSalesChannelOrderAlertRef(dataConnect, acknowledgeSalesCh
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -13656,6 +14594,7 @@ export interface MapSalesChannelOrderItemVariables {
   itemId: UUIDString;
   productId: UUIDString;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -13664,6 +14603,9 @@ Recall that executing the `MapSalesChannelOrderItem` mutation returns a `Mutatio
 The `data` property is an object of type `MapSalesChannelOrderItemData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface MapSalesChannelOrderItemData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -13675,26 +14617,29 @@ import { connectorConfig, mapSalesChannelOrderItem, MapSalesChannelOrderItemVari
 
 // The `MapSalesChannelOrderItem` mutation requires an argument of type `MapSalesChannelOrderItemVariables`:
 const mapSalesChannelOrderItemVars: MapSalesChannelOrderItemVariables = {
-  itemId: ..., 
-  productId: ..., 
-  requestKey: ..., 
+  itemId: ...,
+  productId: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `mapSalesChannelOrderItem()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await mapSalesChannelOrderItem(mapSalesChannelOrderItemVars);
 // Variables can be defined inline as well.
-const { data } = await mapSalesChannelOrderItem({ itemId: ..., productId: ..., requestKey: ..., });
+const { data } = await mapSalesChannelOrderItem({ itemId: ..., productId: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await mapSalesChannelOrderItem(dataConnect, mapSalesChannelOrderItemVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 mapSalesChannelOrderItem(mapSalesChannelOrderItemVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -13707,15 +14652,16 @@ import { connectorConfig, mapSalesChannelOrderItemRef, MapSalesChannelOrderItemV
 
 // The `MapSalesChannelOrderItem` mutation requires an argument of type `MapSalesChannelOrderItemVariables`:
 const mapSalesChannelOrderItemVars: MapSalesChannelOrderItemVariables = {
-  itemId: ..., 
-  productId: ..., 
-  requestKey: ..., 
+  itemId: ...,
+  productId: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `mapSalesChannelOrderItemRef()` function to get a reference to the mutation.
 const ref = mapSalesChannelOrderItemRef(mapSalesChannelOrderItemVars);
 // Variables can be defined inline as well.
-const ref = mapSalesChannelOrderItemRef({ itemId: ..., productId: ..., requestKey: ..., });
+const ref = mapSalesChannelOrderItemRef({ itemId: ..., productId: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -13725,11 +14671,13 @@ const ref = mapSalesChannelOrderItemRef(dataConnect, mapSalesChannelOrderItemVar
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -13771,6 +14719,7 @@ export interface RequestSalesChannelSyncVariables {
   connectionId: UUIDString;
   scope: string;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -13779,6 +14728,9 @@ Recall that executing the `RequestSalesChannelSync` mutation returns a `Mutation
 The `data` property is an object of type `RequestSalesChannelSyncData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface RequestSalesChannelSyncData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -13790,26 +14742,29 @@ import { connectorConfig, requestSalesChannelSync, RequestSalesChannelSyncVariab
 
 // The `RequestSalesChannelSync` mutation requires an argument of type `RequestSalesChannelSyncVariables`:
 const requestSalesChannelSyncVars: RequestSalesChannelSyncVariables = {
-  connectionId: ..., 
-  scope: ..., 
-  requestKey: ..., 
+  connectionId: ...,
+  scope: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `requestSalesChannelSync()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await requestSalesChannelSync(requestSalesChannelSyncVars);
 // Variables can be defined inline as well.
-const { data } = await requestSalesChannelSync({ connectionId: ..., scope: ..., requestKey: ..., });
+const { data } = await requestSalesChannelSync({ connectionId: ..., scope: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await requestSalesChannelSync(dataConnect, requestSalesChannelSyncVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 requestSalesChannelSync(requestSalesChannelSyncVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -13822,15 +14777,16 @@ import { connectorConfig, requestSalesChannelSyncRef, RequestSalesChannelSyncVar
 
 // The `RequestSalesChannelSync` mutation requires an argument of type `RequestSalesChannelSyncVariables`:
 const requestSalesChannelSyncVars: RequestSalesChannelSyncVariables = {
-  connectionId: ..., 
-  scope: ..., 
-  requestKey: ..., 
+  connectionId: ...,
+  scope: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `requestSalesChannelSyncRef()` function to get a reference to the mutation.
 const ref = requestSalesChannelSyncRef(requestSalesChannelSyncVars);
 // Variables can be defined inline as well.
-const ref = requestSalesChannelSyncRef({ connectionId: ..., scope: ..., requestKey: ..., });
+const ref = requestSalesChannelSyncRef({ connectionId: ..., scope: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -13840,11 +14796,13 @@ const ref = requestSalesChannelSyncRef(dataConnect, requestSalesChannelSyncVars)
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -13885,6 +14843,7 @@ The `RequestSalesChannelAuthorization` mutation requires an argument of type `Re
 export interface RequestSalesChannelAuthorizationVariables {
   connectionId: UUIDString;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -13893,6 +14852,9 @@ Recall that executing the `RequestSalesChannelAuthorization` mutation returns a 
 The `data` property is an object of type `RequestSalesChannelAuthorizationData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface RequestSalesChannelAuthorizationData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -13904,25 +14866,28 @@ import { connectorConfig, requestSalesChannelAuthorization, RequestSalesChannelA
 
 // The `RequestSalesChannelAuthorization` mutation requires an argument of type `RequestSalesChannelAuthorizationVariables`:
 const requestSalesChannelAuthorizationVars: RequestSalesChannelAuthorizationVariables = {
-  connectionId: ..., 
-  requestKey: ..., 
+  connectionId: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `requestSalesChannelAuthorization()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await requestSalesChannelAuthorization(requestSalesChannelAuthorizationVars);
 // Variables can be defined inline as well.
-const { data } = await requestSalesChannelAuthorization({ connectionId: ..., requestKey: ..., });
+const { data } = await requestSalesChannelAuthorization({ connectionId: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await requestSalesChannelAuthorization(dataConnect, requestSalesChannelAuthorizationVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 requestSalesChannelAuthorization(requestSalesChannelAuthorizationVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -13935,14 +14900,15 @@ import { connectorConfig, requestSalesChannelAuthorizationRef, RequestSalesChann
 
 // The `RequestSalesChannelAuthorization` mutation requires an argument of type `RequestSalesChannelAuthorizationVariables`:
 const requestSalesChannelAuthorizationVars: RequestSalesChannelAuthorizationVariables = {
-  connectionId: ..., 
-  requestKey: ..., 
+  connectionId: ...,
+  requestKey: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `requestSalesChannelAuthorizationRef()` function to get a reference to the mutation.
 const ref = requestSalesChannelAuthorizationRef(requestSalesChannelAuthorizationVars);
 // Variables can be defined inline as well.
-const ref = requestSalesChannelAuthorizationRef({ connectionId: ..., requestKey: ..., });
+const ref = requestSalesChannelAuthorizationRef({ connectionId: ..., requestKey: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -13952,11 +14918,13 @@ const ref = requestSalesChannelAuthorizationRef(dataConnect, requestSalesChannel
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -14017,9 +14985,9 @@ import { connectorConfig, systemClaimSalesChannelWork, SystemClaimSalesChannelWo
 
 // The `SystemClaimSalesChannelWork` mutation requires an argument of type `SystemClaimSalesChannelWorkVariables`:
 const systemClaimSalesChannelWorkVars: SystemClaimSalesChannelWorkVariables = {
-  provider: ..., 
-  workerId: ..., 
-  limit: ..., 
+  provider: ...,
+  workerId: ...,
+  limit: ...,
 };
 
 // Call the `systemClaimSalesChannelWork()` function to execute the mutation.
@@ -14049,9 +15017,9 @@ import { connectorConfig, systemClaimSalesChannelWorkRef, SystemClaimSalesChanne
 
 // The `SystemClaimSalesChannelWork` mutation requires an argument of type `SystemClaimSalesChannelWorkVariables`:
 const systemClaimSalesChannelWorkVars: SystemClaimSalesChannelWorkVariables = {
-  provider: ..., 
-  workerId: ..., 
-  limit: ..., 
+  provider: ...,
+  workerId: ...,
+  limit: ...,
 };
 
 // Call the `systemClaimSalesChannelWorkRef()` function to get a reference to the mutation.
@@ -14131,8 +15099,8 @@ import { connectorConfig, systemUpdateSalesChannelConnection, SystemUpdateSalesC
 
 // The `SystemUpdateSalesChannelConnection` mutation requires an argument of type `SystemUpdateSalesChannelConnectionVariables`:
 const systemUpdateSalesChannelConnectionVars: SystemUpdateSalesChannelConnectionVariables = {
-  connectionId: ..., 
-  payload: ..., 
+  connectionId: ...,
+  payload: ...,
 };
 
 // Call the `systemUpdateSalesChannelConnection()` function to execute the mutation.
@@ -14162,8 +15130,8 @@ import { connectorConfig, systemUpdateSalesChannelConnectionRef, SystemUpdateSal
 
 // The `SystemUpdateSalesChannelConnection` mutation requires an argument of type `SystemUpdateSalesChannelConnectionVariables`:
 const systemUpdateSalesChannelConnectionVars: SystemUpdateSalesChannelConnectionVariables = {
-  connectionId: ..., 
-  payload: ..., 
+  connectionId: ...,
+  payload: ...,
 };
 
 // Call the `systemUpdateSalesChannelConnectionRef()` function to get a reference to the mutation.
@@ -14243,8 +15211,8 @@ import { connectorConfig, systemRegisterSalesChannelEvent, SystemRegisterSalesCh
 
 // The `SystemRegisterSalesChannelEvent` mutation requires an argument of type `SystemRegisterSalesChannelEventVariables`:
 const systemRegisterSalesChannelEventVars: SystemRegisterSalesChannelEventVariables = {
-  connectionId: ..., 
-  payload: ..., 
+  connectionId: ...,
+  payload: ...,
 };
 
 // Call the `systemRegisterSalesChannelEvent()` function to execute the mutation.
@@ -14274,8 +15242,8 @@ import { connectorConfig, systemRegisterSalesChannelEventRef, SystemRegisterSale
 
 // The `SystemRegisterSalesChannelEvent` mutation requires an argument of type `SystemRegisterSalesChannelEventVariables`:
 const systemRegisterSalesChannelEventVars: SystemRegisterSalesChannelEventVariables = {
-  connectionId: ..., 
-  payload: ..., 
+  connectionId: ...,
+  payload: ...,
 };
 
 // Call the `systemRegisterSalesChannelEventRef()` function to get a reference to the mutation.
@@ -14355,8 +15323,8 @@ import { connectorConfig, systemRegisterSalesChannelEvents, SystemRegisterSalesC
 
 // The `SystemRegisterSalesChannelEvents` mutation requires an argument of type `SystemRegisterSalesChannelEventsVariables`:
 const systemRegisterSalesChannelEventsVars: SystemRegisterSalesChannelEventsVariables = {
-  connectionId: ..., 
-  payloads: ..., 
+  connectionId: ...,
+  payloads: ...,
 };
 
 // Call the `systemRegisterSalesChannelEvents()` function to execute the mutation.
@@ -14386,8 +15354,8 @@ import { connectorConfig, systemRegisterSalesChannelEventsRef, SystemRegisterSal
 
 // The `SystemRegisterSalesChannelEvents` mutation requires an argument of type `SystemRegisterSalesChannelEventsVariables`:
 const systemRegisterSalesChannelEventsVars: SystemRegisterSalesChannelEventsVariables = {
-  connectionId: ..., 
-  payloads: ..., 
+  connectionId: ...,
+  payloads: ...,
 };
 
 // Call the `systemRegisterSalesChannelEventsRef()` function to get a reference to the mutation.
@@ -14467,8 +15435,8 @@ import { connectorConfig, systemMarkSalesChannelWebhookActive, SystemMarkSalesCh
 
 // The `SystemMarkSalesChannelWebhookActive` mutation requires an argument of type `SystemMarkSalesChannelWebhookActiveVariables`:
 const systemMarkSalesChannelWebhookActiveVars: SystemMarkSalesChannelWebhookActiveVariables = {
-  connectionIds: ..., 
-  requestId: ..., 
+  connectionIds: ...,
+  requestId: ...,
 };
 
 // Call the `systemMarkSalesChannelWebhookActive()` function to execute the mutation.
@@ -14498,8 +15466,8 @@ import { connectorConfig, systemMarkSalesChannelWebhookActiveRef, SystemMarkSale
 
 // The `SystemMarkSalesChannelWebhookActive` mutation requires an argument of type `SystemMarkSalesChannelWebhookActiveVariables`:
 const systemMarkSalesChannelWebhookActiveVars: SystemMarkSalesChannelWebhookActiveVariables = {
-  connectionIds: ..., 
-  requestId: ..., 
+  connectionIds: ...,
+  requestId: ...,
 };
 
 // Call the `systemMarkSalesChannelWebhookActiveRef()` function to get a reference to the mutation.
@@ -14580,9 +15548,9 @@ import { connectorConfig, systemRecordSalesChannelEventResult, SystemRecordSales
 
 // The `SystemRecordSalesChannelEventResult` mutation requires an argument of type `SystemRecordSalesChannelEventResultVariables`:
 const systemRecordSalesChannelEventResultVars: SystemRecordSalesChannelEventResultVariables = {
-  eventId: ..., 
-  workerId: ..., 
-  payload: ..., 
+  eventId: ...,
+  workerId: ...,
+  payload: ...,
 };
 
 // Call the `systemRecordSalesChannelEventResult()` function to execute the mutation.
@@ -14612,9 +15580,9 @@ import { connectorConfig, systemRecordSalesChannelEventResultRef, SystemRecordSa
 
 // The `SystemRecordSalesChannelEventResult` mutation requires an argument of type `SystemRecordSalesChannelEventResultVariables`:
 const systemRecordSalesChannelEventResultVars: SystemRecordSalesChannelEventResultVariables = {
-  eventId: ..., 
-  workerId: ..., 
-  payload: ..., 
+  eventId: ...,
+  workerId: ...,
+  payload: ...,
 };
 
 // Call the `systemRecordSalesChannelEventResultRef()` function to get a reference to the mutation.
@@ -14694,8 +15662,8 @@ import { connectorConfig, systemIngestSalesChannelOrder, SystemIngestSalesChanne
 
 // The `SystemIngestSalesChannelOrder` mutation requires an argument of type `SystemIngestSalesChannelOrderVariables`:
 const systemIngestSalesChannelOrderVars: SystemIngestSalesChannelOrderVariables = {
-  connectionId: ..., 
-  payload: ..., 
+  connectionId: ...,
+  payload: ...,
 };
 
 // Call the `systemIngestSalesChannelOrder()` function to execute the mutation.
@@ -14725,8 +15693,8 @@ import { connectorConfig, systemIngestSalesChannelOrderRef, SystemIngestSalesCha
 
 // The `SystemIngestSalesChannelOrder` mutation requires an argument of type `SystemIngestSalesChannelOrderVariables`:
 const systemIngestSalesChannelOrderVars: SystemIngestSalesChannelOrderVariables = {
-  connectionId: ..., 
-  payload: ..., 
+  connectionId: ...,
+  payload: ...,
 };
 
 // Call the `systemIngestSalesChannelOrderRef()` function to get a reference to the mutation.
@@ -14807,9 +15775,9 @@ import { connectorConfig, systemApplySalesChannelOrderEvent, SystemApplySalesCha
 
 // The `SystemApplySalesChannelOrderEvent` mutation requires an argument of type `SystemApplySalesChannelOrderEventVariables`:
 const systemApplySalesChannelOrderEventVars: SystemApplySalesChannelOrderEventVariables = {
-  connectionId: ..., 
-  providerOrderId: ..., 
-  payload: ..., 
+  connectionId: ...,
+  providerOrderId: ...,
+  payload: ...,
 };
 
 // Call the `systemApplySalesChannelOrderEvent()` function to execute the mutation.
@@ -14839,9 +15807,9 @@ import { connectorConfig, systemApplySalesChannelOrderEventRef, SystemApplySales
 
 // The `SystemApplySalesChannelOrderEvent` mutation requires an argument of type `SystemApplySalesChannelOrderEventVariables`:
 const systemApplySalesChannelOrderEventVars: SystemApplySalesChannelOrderEventVariables = {
-  connectionId: ..., 
-  providerOrderId: ..., 
-  payload: ..., 
+  connectionId: ...,
+  providerOrderId: ...,
+  payload: ...,
 };
 
 // Call the `systemApplySalesChannelOrderEventRef()` function to get a reference to the mutation.
@@ -14922,9 +15890,9 @@ import { connectorConfig, systemReconcileSalesChannelCommerce, SystemReconcileSa
 
 // The `SystemReconcileSalesChannelCommerce` mutation requires an argument of type `SystemReconcileSalesChannelCommerceVariables`:
 const systemReconcileSalesChannelCommerceVars: SystemReconcileSalesChannelCommerceVariables = {
-  connectionId: ..., 
-  providerOrderId: ..., 
-  payload: ..., 
+  connectionId: ...,
+  providerOrderId: ...,
+  payload: ...,
 };
 
 // Call the `systemReconcileSalesChannelCommerce()` function to execute the mutation.
@@ -14954,9 +15922,9 @@ import { connectorConfig, systemReconcileSalesChannelCommerceRef, SystemReconcil
 
 // The `SystemReconcileSalesChannelCommerce` mutation requires an argument of type `SystemReconcileSalesChannelCommerceVariables`:
 const systemReconcileSalesChannelCommerceVars: SystemReconcileSalesChannelCommerceVariables = {
-  connectionId: ..., 
-  providerOrderId: ..., 
-  payload: ..., 
+  connectionId: ...,
+  providerOrderId: ...,
+  payload: ...,
 };
 
 // Call the `systemReconcileSalesChannelCommerceRef()` function to get a reference to the mutation.
@@ -15038,10 +16006,10 @@ import { connectorConfig, systemUpsertSalesChannelFinancialEvents, SystemUpsertS
 
 // The `SystemUpsertSalesChannelFinancialEvents` mutation requires an argument of type `SystemUpsertSalesChannelFinancialEventsVariables`:
 const systemUpsertSalesChannelFinancialEventsVars: SystemUpsertSalesChannelFinancialEventsVariables = {
-  connectionId: ..., 
-  jobId: ..., 
-  workerId: ..., 
-  payloads: ..., 
+  connectionId: ...,
+  jobId: ...,
+  workerId: ...,
+  payloads: ...,
 };
 
 // Call the `systemUpsertSalesChannelFinancialEvents()` function to execute the mutation.
@@ -15071,10 +16039,10 @@ import { connectorConfig, systemUpsertSalesChannelFinancialEventsRef, SystemUpse
 
 // The `SystemUpsertSalesChannelFinancialEvents` mutation requires an argument of type `SystemUpsertSalesChannelFinancialEventsVariables`:
 const systemUpsertSalesChannelFinancialEventsVars: SystemUpsertSalesChannelFinancialEventsVariables = {
-  connectionId: ..., 
-  jobId: ..., 
-  workerId: ..., 
-  payloads: ..., 
+  connectionId: ...,
+  jobId: ...,
+  workerId: ...,
+  payloads: ...,
 };
 
 // Call the `systemUpsertSalesChannelFinancialEventsRef()` function to get a reference to the mutation.
@@ -15153,7 +16121,7 @@ import { connectorConfig, systemQueueDueSalesChannelSyncJobs, SystemQueueDueSale
 
 // The `SystemQueueDueSalesChannelSyncJobs` mutation requires an argument of type `SystemQueueDueSalesChannelSyncJobsVariables`:
 const systemQueueDueSalesChannelSyncJobsVars: SystemQueueDueSalesChannelSyncJobsVariables = {
-  requestKey: ..., 
+  requestKey: ...,
 };
 
 // Call the `systemQueueDueSalesChannelSyncJobs()` function to execute the mutation.
@@ -15183,7 +16151,7 @@ import { connectorConfig, systemQueueDueSalesChannelSyncJobsRef, SystemQueueDueS
 
 // The `SystemQueueDueSalesChannelSyncJobs` mutation requires an argument of type `SystemQueueDueSalesChannelSyncJobsVariables`:
 const systemQueueDueSalesChannelSyncJobsVars: SystemQueueDueSalesChannelSyncJobsVariables = {
-  requestKey: ..., 
+  requestKey: ...,
 };
 
 // Call the `systemQueueDueSalesChannelSyncJobsRef()` function to get a reference to the mutation.
@@ -15262,7 +16230,7 @@ import { connectorConfig, systemPurgeExpiredSalesChannelPayloads, SystemPurgeExp
 
 // The `SystemPurgeExpiredSalesChannelPayloads` mutation requires an argument of type `SystemPurgeExpiredSalesChannelPayloadsVariables`:
 const systemPurgeExpiredSalesChannelPayloadsVars: SystemPurgeExpiredSalesChannelPayloadsVariables = {
-  requestKey: ..., 
+  requestKey: ...,
 };
 
 // Call the `systemPurgeExpiredSalesChannelPayloads()` function to execute the mutation.
@@ -15292,7 +16260,7 @@ import { connectorConfig, systemPurgeExpiredSalesChannelPayloadsRef, SystemPurge
 
 // The `SystemPurgeExpiredSalesChannelPayloads` mutation requires an argument of type `SystemPurgeExpiredSalesChannelPayloadsVariables`:
 const systemPurgeExpiredSalesChannelPayloadsVars: SystemPurgeExpiredSalesChannelPayloadsVariables = {
-  requestKey: ..., 
+  requestKey: ...,
 };
 
 // Call the `systemPurgeExpiredSalesChannelPayloadsRef()` function to get a reference to the mutation.
@@ -15373,9 +16341,9 @@ import { connectorConfig, systemRecordSalesChannelCommandResult, SystemRecordSal
 
 // The `SystemRecordSalesChannelCommandResult` mutation requires an argument of type `SystemRecordSalesChannelCommandResultVariables`:
 const systemRecordSalesChannelCommandResultVars: SystemRecordSalesChannelCommandResultVariables = {
-  commandId: ..., 
-  workerId: ..., 
-  payload: ..., 
+  commandId: ...,
+  workerId: ...,
+  payload: ...,
 };
 
 // Call the `systemRecordSalesChannelCommandResult()` function to execute the mutation.
@@ -15405,9 +16373,9 @@ import { connectorConfig, systemRecordSalesChannelCommandResultRef, SystemRecord
 
 // The `SystemRecordSalesChannelCommandResult` mutation requires an argument of type `SystemRecordSalesChannelCommandResultVariables`:
 const systemRecordSalesChannelCommandResultVars: SystemRecordSalesChannelCommandResultVariables = {
-  commandId: ..., 
-  workerId: ..., 
-  payload: ..., 
+  commandId: ...,
+  workerId: ...,
+  payload: ...,
 };
 
 // Call the `systemRecordSalesChannelCommandResultRef()` function to get a reference to the mutation.
@@ -15487,8 +16455,8 @@ import { connectorConfig, systemRefreshSalesChannelOrderAfterPicking, SystemRefr
 
 // The `SystemRefreshSalesChannelOrderAfterPicking` mutation requires an argument of type `SystemRefreshSalesChannelOrderAfterPickingVariables`:
 const systemRefreshSalesChannelOrderAfterPickingVars: SystemRefreshSalesChannelOrderAfterPickingVariables = {
-  commandId: ..., 
-  payload: ..., 
+  commandId: ...,
+  payload: ...,
 };
 
 // Call the `systemRefreshSalesChannelOrderAfterPicking()` function to execute the mutation.
@@ -15518,8 +16486,8 @@ import { connectorConfig, systemRefreshSalesChannelOrderAfterPickingRef, SystemR
 
 // The `SystemRefreshSalesChannelOrderAfterPicking` mutation requires an argument of type `SystemRefreshSalesChannelOrderAfterPickingVariables`:
 const systemRefreshSalesChannelOrderAfterPickingVars: SystemRefreshSalesChannelOrderAfterPickingVariables = {
-  commandId: ..., 
-  payload: ..., 
+  commandId: ...,
+  payload: ...,
 };
 
 // Call the `systemRefreshSalesChannelOrderAfterPickingRef()` function to get a reference to the mutation.
@@ -15600,9 +16568,9 @@ import { connectorConfig, systemRecordSalesChannelSyncResult, SystemRecordSalesC
 
 // The `SystemRecordSalesChannelSyncResult` mutation requires an argument of type `SystemRecordSalesChannelSyncResultVariables`:
 const systemRecordSalesChannelSyncResultVars: SystemRecordSalesChannelSyncResultVariables = {
-  jobId: ..., 
-  workerId: ..., 
-  payload: ..., 
+  jobId: ...,
+  workerId: ...,
+  payload: ...,
 };
 
 // Call the `systemRecordSalesChannelSyncResult()` function to execute the mutation.
@@ -15632,9 +16600,9 @@ import { connectorConfig, systemRecordSalesChannelSyncResultRef, SystemRecordSal
 
 // The `SystemRecordSalesChannelSyncResult` mutation requires an argument of type `SystemRecordSalesChannelSyncResultVariables`:
 const systemRecordSalesChannelSyncResultVars: SystemRecordSalesChannelSyncResultVariables = {
-  jobId: ..., 
-  workerId: ..., 
-  payload: ..., 
+  jobId: ...,
+  workerId: ...,
+  payload: ...,
 };
 
 // Call the `systemRecordSalesChannelSyncResultRef()` function to get a reference to the mutation.
@@ -15714,8 +16682,8 @@ import { connectorConfig, systemRecordSalesChannelMappingResult, SystemRecordSal
 
 // The `SystemRecordSalesChannelMappingResult` mutation requires an argument of type `SystemRecordSalesChannelMappingResultVariables`:
 const systemRecordSalesChannelMappingResultVars: SystemRecordSalesChannelMappingResultVariables = {
-  mappingId: ..., 
-  payload: ..., 
+  mappingId: ...,
+  payload: ...,
 };
 
 // Call the `systemRecordSalesChannelMappingResult()` function to execute the mutation.
@@ -15745,8 +16713,8 @@ import { connectorConfig, systemRecordSalesChannelMappingResultRef, SystemRecord
 
 // The `SystemRecordSalesChannelMappingResult` mutation requires an argument of type `SystemRecordSalesChannelMappingResultVariables`:
 const systemRecordSalesChannelMappingResultVars: SystemRecordSalesChannelMappingResultVariables = {
-  mappingId: ..., 
-  payload: ..., 
+  mappingId: ...,
+  payload: ...,
 };
 
 // Call the `systemRecordSalesChannelMappingResultRef()` function to get a reference to the mutation.
@@ -15809,6 +16777,7 @@ export interface CloseCashSessionVariables {
   countedAmountCents: Int64String;
   notes: string;
   operationId?: string | null;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -15817,6 +16786,9 @@ Recall that executing the `CloseCashSession` mutation returns a `MutationPromise
 The `data` property is an object of type `CloseCashSessionData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface CloseCashSessionData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -15828,27 +16800,30 @@ import { connectorConfig, closeCashSession, CloseCashSessionVariables } from '@i
 
 // The `CloseCashSession` mutation requires an argument of type `CloseCashSessionVariables`:
 const closeCashSessionVars: CloseCashSessionVariables = {
-  sessionId: ..., 
-  countedAmountCents: ..., 
-  notes: ..., 
+  sessionId: ...,
+  countedAmountCents: ...,
+  notes: ...,
   operationId: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `closeCashSession()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await closeCashSession(closeCashSessionVars);
 // Variables can be defined inline as well.
-const { data } = await closeCashSession({ sessionId: ..., countedAmountCents: ..., notes: ..., operationId: ..., });
+const { data } = await closeCashSession({ sessionId: ..., countedAmountCents: ..., notes: ..., operationId: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await closeCashSession(dataConnect, closeCashSessionVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 closeCashSession(closeCashSessionVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -15861,16 +16836,17 @@ import { connectorConfig, closeCashSessionRef, CloseCashSessionVariables } from 
 
 // The `CloseCashSession` mutation requires an argument of type `CloseCashSessionVariables`:
 const closeCashSessionVars: CloseCashSessionVariables = {
-  sessionId: ..., 
-  countedAmountCents: ..., 
-  notes: ..., 
+  sessionId: ...,
+  countedAmountCents: ...,
+  notes: ...,
   operationId: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `closeCashSessionRef()` function to get a reference to the mutation.
 const ref = closeCashSessionRef(closeCashSessionVars);
 // Variables can be defined inline as well.
-const ref = closeCashSessionRef({ sessionId: ..., countedAmountCents: ..., notes: ..., operationId: ..., });
+const ref = closeCashSessionRef({ sessionId: ..., countedAmountCents: ..., notes: ..., operationId: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -15880,11 +16856,13 @@ const ref = closeCashSessionRef(dataConnect, closeCashSessionVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -15929,6 +16907,7 @@ export interface UpdatePosPolicyVariables {
   allowOperatorClose: boolean;
   operatorWithdrawalLimitCents?: Int64String | null;
   operatorCloseDifferenceLimitCents?: Int64String | null;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -15937,6 +16916,9 @@ Recall that executing the `UpdatePosPolicy` mutation returns a `MutationPromise`
 The `data` property is an object of type `UpdatePosPolicyData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface UpdatePosPolicyData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -15948,29 +16930,32 @@ import { connectorConfig, updatePosPolicy, UpdatePosPolicyVariables } from '@ins
 
 // The `UpdatePosPolicy` mutation requires an argument of type `UpdatePosPolicyVariables`:
 const updatePosPolicyVars: UpdatePosPolicyVariables = {
-  requireOpenSession: ..., 
-  operatorDiscountPercent: ..., 
-  operatorSurchargePercent: ..., 
-  allowOperatorClose: ..., 
+  requireOpenSession: ...,
+  operatorDiscountPercent: ...,
+  operatorSurchargePercent: ...,
+  allowOperatorClose: ...,
   operatorWithdrawalLimitCents: ..., // optional
   operatorCloseDifferenceLimitCents: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `updatePosPolicy()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await updatePosPolicy(updatePosPolicyVars);
 // Variables can be defined inline as well.
-const { data } = await updatePosPolicy({ requireOpenSession: ..., operatorDiscountPercent: ..., operatorSurchargePercent: ..., allowOperatorClose: ..., operatorWithdrawalLimitCents: ..., operatorCloseDifferenceLimitCents: ..., });
+const { data } = await updatePosPolicy({ requireOpenSession: ..., operatorDiscountPercent: ..., operatorSurchargePercent: ..., allowOperatorClose: ..., operatorWithdrawalLimitCents: ..., operatorCloseDifferenceLimitCents: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await updatePosPolicy(dataConnect, updatePosPolicyVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 updatePosPolicy(updatePosPolicyVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -15983,18 +16968,19 @@ import { connectorConfig, updatePosPolicyRef, UpdatePosPolicyVariables } from '@
 
 // The `UpdatePosPolicy` mutation requires an argument of type `UpdatePosPolicyVariables`:
 const updatePosPolicyVars: UpdatePosPolicyVariables = {
-  requireOpenSession: ..., 
-  operatorDiscountPercent: ..., 
-  operatorSurchargePercent: ..., 
-  allowOperatorClose: ..., 
+  requireOpenSession: ...,
+  operatorDiscountPercent: ...,
+  operatorSurchargePercent: ...,
+  allowOperatorClose: ...,
   operatorWithdrawalLimitCents: ..., // optional
   operatorCloseDifferenceLimitCents: ..., // optional
+  sessionToken: ..., // optional
 };
 
 // Call the `updatePosPolicyRef()` function to get a reference to the mutation.
 const ref = updatePosPolicyRef(updatePosPolicyVars);
 // Variables can be defined inline as well.
-const ref = updatePosPolicyRef({ requireOpenSession: ..., operatorDiscountPercent: ..., operatorSurchargePercent: ..., allowOperatorClose: ..., operatorWithdrawalLimitCents: ..., operatorCloseDifferenceLimitCents: ..., });
+const ref = updatePosPolicyRef({ requireOpenSession: ..., operatorDiscountPercent: ..., operatorSurchargePercent: ..., allowOperatorClose: ..., operatorWithdrawalLimitCents: ..., operatorCloseDifferenceLimitCents: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -16004,11 +16990,13 @@ const ref = updatePosPolicyRef(dataConnect, updatePosPolicyVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -16048,6 +17036,7 @@ The `RequestPosSaleApproval` mutation requires an argument of type `RequestPosSa
 ```typescript
 export interface RequestPosSaleApprovalVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -16056,6 +17045,9 @@ Recall that executing the `RequestPosSaleApproval` mutation returns a `MutationP
 The `data` property is an object of type `RequestPosSaleApprovalData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface RequestPosSaleApprovalData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -16067,24 +17059,27 @@ import { connectorConfig, requestPosSaleApproval, RequestPosSaleApprovalVariable
 
 // The `RequestPosSaleApproval` mutation requires an argument of type `RequestPosSaleApprovalVariables`:
 const requestPosSaleApprovalVars: RequestPosSaleApprovalVariables = {
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `requestPosSaleApproval()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await requestPosSaleApproval(requestPosSaleApprovalVars);
 // Variables can be defined inline as well.
-const { data } = await requestPosSaleApproval({ payload: ..., });
+const { data } = await requestPosSaleApproval({ payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await requestPosSaleApproval(dataConnect, requestPosSaleApprovalVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 requestPosSaleApproval(requestPosSaleApprovalVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -16097,13 +17092,14 @@ import { connectorConfig, requestPosSaleApprovalRef, RequestPosSaleApprovalVaria
 
 // The `RequestPosSaleApproval` mutation requires an argument of type `RequestPosSaleApprovalVariables`:
 const requestPosSaleApprovalVars: RequestPosSaleApprovalVariables = {
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `requestPosSaleApprovalRef()` function to get a reference to the mutation.
 const ref = requestPosSaleApprovalRef(requestPosSaleApprovalVars);
 // Variables can be defined inline as well.
-const ref = requestPosSaleApprovalRef({ payload: ..., });
+const ref = requestPosSaleApprovalRef({ payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -16113,11 +17109,13 @@ const ref = requestPosSaleApprovalRef(dataConnect, requestPosSaleApprovalVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -16158,6 +17156,7 @@ The `ApprovePosSale` mutation requires an argument of type `ApprovePosSaleVariab
 export interface ApprovePosSaleVariables {
   approvalId: UUIDString;
   approved: boolean;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -16166,6 +17165,9 @@ Recall that executing the `ApprovePosSale` mutation returns a `MutationPromise` 
 The `data` property is an object of type `ApprovePosSaleData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface ApprovePosSaleData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -16177,25 +17179,28 @@ import { connectorConfig, approvePosSale, ApprovePosSaleVariables } from '@insig
 
 // The `ApprovePosSale` mutation requires an argument of type `ApprovePosSaleVariables`:
 const approvePosSaleVars: ApprovePosSaleVariables = {
-  approvalId: ..., 
-  approved: ..., 
+  approvalId: ...,
+  approved: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `approvePosSale()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await approvePosSale(approvePosSaleVars);
 // Variables can be defined inline as well.
-const { data } = await approvePosSale({ approvalId: ..., approved: ..., });
+const { data } = await approvePosSale({ approvalId: ..., approved: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await approvePosSale(dataConnect, approvePosSaleVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 approvePosSale(approvePosSaleVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -16208,14 +17213,15 @@ import { connectorConfig, approvePosSaleRef, ApprovePosSaleVariables } from '@in
 
 // The `ApprovePosSale` mutation requires an argument of type `ApprovePosSaleVariables`:
 const approvePosSaleVars: ApprovePosSaleVariables = {
-  approvalId: ..., 
-  approved: ..., 
+  approvalId: ...,
+  approved: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `approvePosSaleRef()` function to get a reference to the mutation.
 const ref = approvePosSaleRef(approvePosSaleVars);
 // Variables can be defined inline as well.
-const ref = approvePosSaleRef({ approvalId: ..., approved: ..., });
+const ref = approvePosSaleRef({ approvalId: ..., approved: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -16225,11 +17231,13 @@ const ref = approvePosSaleRef(dataConnect, approvePosSaleVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -16269,6 +17277,7 @@ The `RequestPosCashApproval` mutation requires an argument of type `RequestPosCa
 ```typescript
 export interface RequestPosCashApprovalVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -16277,6 +17286,9 @@ Recall that executing the `RequestPosCashApproval` mutation returns a `MutationP
 The `data` property is an object of type `RequestPosCashApprovalData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface RequestPosCashApprovalData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -16288,24 +17300,27 @@ import { connectorConfig, requestPosCashApproval, RequestPosCashApprovalVariable
 
 // The `RequestPosCashApproval` mutation requires an argument of type `RequestPosCashApprovalVariables`:
 const requestPosCashApprovalVars: RequestPosCashApprovalVariables = {
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `requestPosCashApproval()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await requestPosCashApproval(requestPosCashApprovalVars);
 // Variables can be defined inline as well.
-const { data } = await requestPosCashApproval({ payload: ..., });
+const { data } = await requestPosCashApproval({ payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await requestPosCashApproval(dataConnect, requestPosCashApprovalVars);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 requestPosCashApproval(requestPosCashApprovalVars).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```
@@ -16318,13 +17333,14 @@ import { connectorConfig, requestPosCashApprovalRef, RequestPosCashApprovalVaria
 
 // The `RequestPosCashApproval` mutation requires an argument of type `RequestPosCashApprovalVariables`:
 const requestPosCashApprovalVars: RequestPosCashApprovalVariables = {
-  payload: ..., 
+  payload: ...,
+  sessionToken: ..., // optional
 };
 
 // Call the `requestPosCashApprovalRef()` function to get a reference to the mutation.
 const ref = requestPosCashApprovalRef(requestPosCashApprovalVars);
 // Variables can be defined inline as well.
-const ref = requestPosCashApprovalRef({ payload: ..., });
+const ref = requestPosCashApprovalRef({ payload: ..., sessionToken: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -16334,11 +17350,13 @@ const ref = requestPosCashApprovalRef(dataConnect, requestPosCashApprovalVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
+console.log(data.query);
 console.log(data._execute);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.query);
   console.log(data._execute);
 });
 ```

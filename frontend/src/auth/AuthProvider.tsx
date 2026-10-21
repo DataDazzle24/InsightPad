@@ -27,32 +27,32 @@ interface AuthProviderProps { children: ReactNode }
 
 const dataConnect = getDataConnect(firebaseApp, connectorConfig)
 const ACCESS_RECHECK_MS = 30_000
-let pendingSessionToken = ''
+let pendingSessionClaim = false
+let sessionValidation: {uid:string;promise:Promise<void>} | null = null
 const deviceId=()=>{const key='insightpad.device.id';let value=localStorage.getItem(key);if(!value){value=`${crypto.randomUUID()}${crypto.randomUUID()}`;localStorage.setItem(key,value)}return value}
 const sessionKey=(uid:string)=>`insightpad.device.session:${uid}`
 const deviceName=()=>`${navigator.platform||'Dispositivo'} · ${navigator.userAgent.slice(0,120)}`
-async function sessionTokenHash(value:string){const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value));return Array.from(new Uint8Array(bytes),byte=>byte.toString(16).padStart(2,'0')).join('')}
-
 async function validateExclusiveSession(user:User){
-  const key=sessionKey(user.uid)
-  let token=pendingSessionToken||localStorage.getItem(key)||''
-  const mustClaim=Boolean(pendingSessionToken)||!token
-  if(!token)token=`${crypto.randomUUID()}${crypto.randomUUID()}`
-  const tokenHash=await sessionTokenHash(token)
-  if(mustClaim){
-    localStorage.setItem(key,token)
-    await executeMutation(mutationRef(dataConnect,'ClaimDeviceSession',{sessionToken:tokenHash,deviceId:deviceId(),deviceName:deviceName()}))
-    pendingSessionToken=''
-    return
+  if(sessionValidation?.uid===user.uid)return sessionValidation.promise
+  const run=async()=>{
+    const key=sessionKey(user.uid),token=localStorage.getItem(key)||''
+    if(pendingSessionClaim){
+      pendingSessionClaim=false
+      const result=await executeMutation(mutationRef(dataConnect,'ClaimDeviceSession',{deviceId:deviceId(),deviceName:deviceName()}))
+      const issued=(result.data as {query?:{issued?:{token?:unknown}}}).query?.issued?.token
+      if(typeof issued!=='string'||!/^[a-f0-9]{64}$/.test(issued))throw new Error('DEVICE_SESSION_REPLACED')
+      if(auth.currentUser?.uid!==user.uid)return
+      localStorage.setItem(key,issued)
+      return
+    }
+    // Restore/focus never reclaims a missing, legacy or displaced session.
+    if(!/^[a-f0-9]{64}$/.test(token))throw new Error('DEVICE_SESSION_REPLACED')
+    const result=await executeQuery(queryRef(dataConnect,'ValidateDeviceSession',{sessionToken:token,requestKey:crypto.randomUUID()}))
+    if(!((result.data as {_select?:Array<{valid?:boolean}>})._select??[])[0]?.valid)throw new Error('DEVICE_SESSION_REPLACED')
+    await executeMutation(mutationRef(dataConnect,'TouchDeviceSession',{sessionToken:token}))
   }
-  const validate=async(value:string)=>{const result=await executeQuery(queryRef(dataConnect,'ValidateDeviceSession',{sessionToken:value,requestKey:crypto.randomUUID()}));return Boolean(((result.data as{_select?:Array<{valid?:boolean}>})._select??[])[0]?.valid)}
-  let valid=await validate(tokenHash)
-  if(!valid&&await validate(token)){
-    await executeMutation(mutationRef(dataConnect,'ClaimDeviceSession',{sessionToken:tokenHash,deviceId:deviceId(),deviceName:deviceName()}))
-    valid=true
-  }
-  if(!valid)throw new Error('DEVICE_SESSION_REPLACED')
-  await executeMutation(mutationRef(dataConnect,'TouchDeviceSession',{sessionToken:tokenHash}))
+  const promise=run();sessionValidation={uid:user.uid,promise}
+  try{await promise}finally{if(sessionValidation?.promise===promise)sessionValidation=null}
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
@@ -122,6 +122,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
 
         await validateExclusiveSession(user)
+        if(disposed || version!==validationVersion.current || auth.currentUser?.uid!==user.uid)return
 
         setProfile(currentProfile)
         setPermissions(resolvePermissions(accessUser!))
@@ -138,7 +139,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setProfile(null)
         setPermissions({})
         setStatus('unauthorized')
-        setError(cause instanceof Error&&cause.message==='DEVICE_SESSION_REPLACED'?'Esta conta foi acessada em outro dispositivo. Esta sessão foi encerrada.':'Não foi possível validar o perfil do usuário.')
+        setError(cause instanceof Error&&cause.message==='DEVICE_SESSION_REPLACED'?'Sua sessão expirou ou foi encerrada. Entre novamente.':'Não foi possível validar o perfil do usuário.')
         await firebaseSignOut(auth)
       }
     }
@@ -178,11 +179,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setError(null)
     setStatus('loading')
     try {
-      pendingSessionToken=`${crypto.randomUUID()}${crypto.randomUUID()}`
+      pendingSessionClaim=true
       await setPersistence(auth, browserLocalPersistence)
       await signInWithEmailAndPassword(auth, email.trim(), password)
     } catch {
-      pendingSessionToken=''
+      pendingSessionClaim=false
       setStatus('unauthenticated')
       setError('E-mail ou senha inválidos.')
       throw new Error('E-mail ou senha inválidos.')
@@ -192,7 +193,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   async function signOut() {
     setStatus('loading')
     const user=auth.currentUser,token=user?localStorage.getItem(sessionKey(user.uid)):null
-    if(user&&token){try{await executeMutation(mutationRef(dataConnect,'ReleaseDeviceSession',{sessionToken:await sessionTokenHash(token)}))}catch(cause){console.warn('Não foi possível liberar a sessão do dispositivo.',cause)}localStorage.removeItem(sessionKey(user.uid))}
+    if(user&&token){try{await executeMutation(mutationRef(dataConnect,'ReleaseDeviceSession',{sessionToken:token}))}catch(cause){console.warn('Não foi possível liberar a sessão do dispositivo.',cause)}localStorage.removeItem(sessionKey(user.uid))}
     await firebaseSignOut(auth)
   }
 

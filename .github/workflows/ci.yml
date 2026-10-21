@@ -39,6 +39,11 @@ jobs:
         run: |
           npm --prefix frontend ci --no-audit --no-fund
           npm --prefix functions ci --no-audit --no-fund
+      - name: Compilar contratos e conferir SDKs gerados
+        run: |
+          npx --yes firebase-tools@15.34.0 dataconnect:sdk:generate --project insightpad-dd-dev --non-interactive
+          node scripts/normalize-dataconnect-sdk.mjs
+          git diff --exit-code -- frontend/src/dataconnect-generated functions/src/dataconnect-admin-generated
       - name: Testar manifesto
         run: node --test scripts/version-manifest.test.mjs scripts/ci-dev-config.test.mjs scripts/verify-reconciliation.test.mjs
       - name: Conferir preservação da fonte recuperada

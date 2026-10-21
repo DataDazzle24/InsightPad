@@ -43,10 +43,10 @@ it('counts avoid join multiplication and paging/filter totals cover all 300 rows
 });
 it('revoked role and blocked user cannot read or write the catalog',async()=>{
  await db.query('UPDATE roles SET active=false WHERE id=$1',[ids.role]);
- expect((await run('ListCategories','','','',100,0,'test',{})).rows).toHaveLength(0);
- expect((await run('CreateCategory','NEGADA')).affectedRows).toBe(0);
+ await expect(run('ListCategories','','','',100,0,'test',{})).rejects.toThrow('SESSION_REQUIRED');
+ await expect(run('CreateCategory','NEGADA')).rejects.toThrow('SESSION_REQUIRED');
  await db.query('UPDATE roles SET active=true WHERE id=$1',[ids.role]);await db.exec("UPDATE users SET blocked_until=now()+interval '1 hour' WHERE id='actor'");
- expect((await run('CreateCategory','NEGADA')).affectedRows).toBe(0);
+ await expect(run('CreateCategory','NEGADA')).rejects.toThrow('SESSION_REQUIRED');
  await db.exec("UPDATE users SET blocked_until=NULL WHERE id='actor'; UPDATE role_page_permissions SET can_access=false");expect((await run('CreateCategory','SEM ACESSO')).affectedRows).toBe(0);
 });
 it('subcategory counts remain scoped to tenant and parent, with server filters and numeric sorting',async()=>{

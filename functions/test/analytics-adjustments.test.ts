@@ -14,5 +14,5 @@ it('financial totals are branch-authorized and revoked roles cannot read dashboa
  await db.query("INSERT INTO sale_items(tenant_id,sale_id,product_id,status,quantity,unit_cost_cents,total_cents) VALUES($1,$2,$3,'ACTIVE',1,100,1000)",[ids.tenant,sale.id,ids.product]);}
  await db.query("INSERT INTO user_branches(user_id,tenant_id,branch_id,active) VALUES('actor',$1,$2,true)",[ids.tenant,ids.branch]);
  const data=(await run('FinancialIndicatorsDashboard')).rows[0] as {data:{cards:{volume:number;revenueCents:string}}};expect(data.data.cards.volume).toBe(1);expect(Number(data.data.cards.revenueCents)).toBe(1000);
- await db.query('UPDATE roles SET active=false WHERE id=$1',[ids.role]);expect((await run('FinancialIndicatorsDashboard')).rows).toEqual([]);expect((await run('OperationalAnalyticsDashboard')).rows).toEqual([]);
+ await db.query('UPDATE roles SET active=false WHERE id=$1',[ids.role]);await expect(run('FinancialIndicatorsDashboard')).rejects.toThrow('SESSION_REQUIRED');await expect(run('OperationalAnalyticsDashboard')).rejects.toThrow('SESSION_REQUIRED');
 });

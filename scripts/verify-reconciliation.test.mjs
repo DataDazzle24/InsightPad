@@ -43,3 +43,9 @@ test('Git-discovered authorized source edit passes and an unrelated source edit 
     assert.throws(()=>verifyRepository(root,true),/outside approved scope/);
   } finally {rmSync(scratch,{recursive:true,force:true});}
 });
+
+test('accepts exact session and read-only preflight sources, rejects siblings',()=>{
+ assert.equal(validateScope(policy,['frontend/src/auth/session-data-connect.ts','functions/src/worker.ts','dataconnect/preflight/name-key.sql']),true);
+ assert.throws(()=>validateScope(policy,['functions/src/unguarded-session.ts']),/outside approved scope/);
+ assert.throws(()=>validateScope(policy,['dataconnect/preflight/execute-migration.sql']),/outside approved scope/);
+});

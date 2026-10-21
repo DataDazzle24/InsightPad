@@ -320,7 +320,22 @@ mutation BootstrapNavigationCatalog(
 
 # Phase 1 catalog mutations.
 # Authorization and tenant scope are resolved in the database from auth.uid.
-mutation CreateCategory($name: String!) @auth(level: USER) @transaction {
+mutation CreateCategory($name: String!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
 WITH actor AS (SELECT u.id,u.tenant_id FROM users u
  JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -333,7 +348,22 @@ INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,enti
   """,params:[{_expr:"auth.uid"},$name])
 }
 
-mutation UpdateCategory($id: UUID!, $name: String!) @auth(level: USER) @transaction {
+mutation UpdateCategory($id: UUID!, $name: String!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
 WITH actor AS (SELECT u.id,u.tenant_id FROM users u
  JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -346,7 +376,22 @@ INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,enti
   """,params:[{_expr:"auth.uid"},$id,$name])
 }
 
-mutation ArchiveCategory($id: UUID!) @auth(level: USER) @transaction {
+mutation ArchiveCategory($id: UUID!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
 WITH actor AS (SELECT u.id,u.tenant_id FROM users u
  JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -361,7 +406,22 @@ INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,enti
   """,params:[{_expr:"auth.uid"},$id])
 }
 
-mutation CreateSubcategory($categoryId: UUID!, $name: String!) @auth(level: USER) @transaction {
+mutation CreateSubcategory($categoryId: UUID!, $name: String!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
 WITH actor AS (SELECT u.id,u.tenant_id FROM users u
  JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -374,7 +434,22 @@ INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,enti
   """,params:[{_expr:"auth.uid"},$categoryId,$name])
 }
 
-mutation UpdateSubcategory($id: UUID!, $categoryId: UUID!, $name: String!) @auth(level: USER) @transaction {
+mutation UpdateSubcategory($id: UUID!, $categoryId: UUID!, $name: String!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
 WITH actor AS (SELECT u.id,u.tenant_id FROM users u
  JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -387,7 +462,22 @@ INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,enti
   """,params:[{_expr:"auth.uid"},$id,$categoryId,$name])
 }
 
-mutation ArchiveSubcategory($id: UUID!) @auth(level: USER) @transaction {
+mutation ArchiveSubcategory($id: UUID!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
 WITH actor AS (SELECT u.id,u.tenant_id FROM users u
  JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -403,7 +493,22 @@ INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,enti
 }
 
 
-mutation RestoreCategory($id: UUID!) @auth(level: USER) @transaction {
+mutation RestoreCategory($id: UUID!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
 WITH actor AS (SELECT u.id,u.tenant_id FROM users u
  JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -418,7 +523,22 @@ INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,enti
   """,params:[{_expr:"auth.uid"},$id])
 }
 
-mutation RestoreSubcategory($id: UUID!) @auth(level: USER) @transaction {
+mutation RestoreSubcategory($id: UUID!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
 WITH actor AS (SELECT u.id,u.tenant_id FROM users u
  JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -435,7 +555,22 @@ INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,enti
 
 
 
-mutation CreateCategoriesBatch($names: Any!) @auth(level: USER) @transaction {
+mutation CreateCategoriesBatch($names: Any!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
 WITH actor AS (SELECT u.id,u.tenant_id FROM users u
  JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -448,7 +583,22 @@ INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,enti
   """,params:[{_expr:"auth.uid"},$names])
 }
 
-mutation CreateSubcategoriesBatch($items: Any!) @auth(level: USER) @transaction {
+mutation CreateSubcategoriesBatch($items: Any!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
 WITH actor AS (SELECT u.id,u.tenant_id FROM users u
  JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -461,7 +611,22 @@ INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,enti
   """,params:[{_expr:"auth.uid"},$items])
 }
 
-mutation SaveBranch($id: UUID, $payload: Any!) @auth(level: USER) @transaction {
+mutation SaveBranch($id: UUID, $payload: Any!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN roles r ON r.id=u.role_id AND r.active
@@ -491,7 +656,22 @@ mutation SaveBranch($id: UUID, $payload: Any!) @auth(level: USER) @transaction {
   """,params:[{_expr:"auth.uid"},$id,$payload])
 }
 
-mutation SetBranchStatus($id: UUID!, $active: Boolean!) @auth(level: USER) @transaction {
+mutation SetBranchStatus($id: UUID!, $active: Boolean!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages pg ON pg.page_key='CAD_FILIAL' AND pg.active
@@ -509,7 +689,22 @@ mutation SetBranchStatus($id: UUID!, $active: Boolean!) @auth(level: USER) @tran
 }
 
 
-mutation SaveSupplier($id: UUID, $payload: Any!) @auth(level: USER) @transaction {
+mutation SaveSupplier($id: UUID, $payload: Any!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages pg ON pg.page_key='CAD_FORNECEDOR' AND pg.active
@@ -548,7 +743,22 @@ mutation SaveSupplier($id: UUID, $payload: Any!) @auth(level: USER) @transaction
   """,params:[{_expr:"auth.uid"},$id,$payload])
 }
 
-mutation SetSupplierStatus($id: UUID!, $active: Boolean!) @auth(level: USER) @transaction {
+mutation SetSupplierStatus($id: UUID!, $active: Boolean!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages pg ON pg.page_key='CAD_FORNECEDOR' AND pg.active
       LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
@@ -562,7 +772,22 @@ mutation SetSupplierStatus($id: UUID!, $active: Boolean!) @auth(level: USER) @tr
   """,params:[{_expr:"auth.uid"},$id,$active])
 }
 
-mutation SaveCustomer($id: UUID, $payload: Any!) @auth(level: USER) @transaction {
+mutation SaveCustomer($id: UUID, $payload: Any!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages pg ON pg.page_key='CAD_CLIENTE' AND pg.active
@@ -601,7 +826,22 @@ mutation SaveCustomer($id: UUID, $payload: Any!) @auth(level: USER) @transaction
   """,params:[{_expr:"auth.uid"},$id,$payload])
 }
 
-mutation SetCustomerStatus($id: UUID!, $active: Boolean!) @auth(level: USER) @transaction {
+mutation SetCustomerStatus($id: UUID!, $active: Boolean!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages pg ON pg.page_key='CAD_CLIENTE' AND pg.active
       LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
@@ -615,7 +855,22 @@ mutation SetCustomerStatus($id: UUID!, $active: Boolean!) @auth(level: USER) @tr
 }
 
 
-mutation SaveProduct($id: UUID, $payload: Any!, $components: Any) @auth(level: USER) @transaction {
+mutation SaveProduct($id: UUID, $payload: Any!, $components: Any, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages pg ON pg.page_key='CAD_PRODUTO' AND pg.active
@@ -729,7 +984,22 @@ mutation SaveProduct($id: UUID, $payload: Any!, $components: Any) @auth(level: U
   """,params:[{_expr:"auth.uid"},$id,$payload,$components])
 }
 
-mutation SetProductStatus($id: UUID!, $active: Boolean!) @auth(level: USER) @transaction {
+mutation SetProductStatus($id: UUID!, $active: Boolean!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages pg ON pg.page_key='CAD_PRODUTO' AND pg.active
       LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=pg.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=pg.id AND rp.tenant_id=u.tenant_id
@@ -754,7 +1024,22 @@ mutation SetProductStatus($id: UUID!, $active: Boolean!) @auth(level: USER) @tra
   """,params:[{_expr:"auth.uid"},$id,$active])
 }
 
-mutation SaveProductComponents($productId: UUID!, $components: Any!) @auth(level: USER) @transaction {
+mutation SaveProductComponents($productId: UUID!, $components: Any!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages pg ON pg.page_key='CAD_PRODUTO' AND pg.active
@@ -804,7 +1089,22 @@ mutation SaveProductComponents($productId: UUID!, $components: Any!) @auth(level
   """,params:[{_expr:"auth.uid"},$productId,$components])
 }
 
-mutation SavePromotion($id: UUID, $productId: UUID!, $promotionalPriceCents: Int64!, $startsAt: Timestamp!, $endsAt: Timestamp!) @auth(level: USER) @transaction {
+mutation SavePromotion($id: UUID, $productId: UUID!, $promotionalPriceCents: Int64!, $startsAt: Timestamp!, $endsAt: Timestamp!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages pg ON pg.page_key='CAD_PRODUTO' AND pg.active
@@ -823,7 +1123,22 @@ mutation SavePromotion($id: UUID, $productId: UUID!, $promotionalPriceCents: Int
   """,params:[{_expr:"auth.uid"},$id,$productId,$promotionalPriceCents,$startsAt,$endsAt])
 }
 
-mutation SetPromotionStatus($id: UUID!, $active: Boolean!) @auth(level: USER) @transaction {
+mutation SetPromotionStatus($id: UUID!, $active: Boolean!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages pg ON pg.page_key='CAD_PRODUTO' AND pg.active
@@ -851,7 +1166,22 @@ mutation SetPromotionStatus($id: UUID!, $active: Boolean!) @auth(level: USER) @t
 
 
 # Atomic status changes. Every requested record must be eligible or the whole batch is rejected.
-mutation SetCategoriesStatusBatch($ids: Any!, $active: Boolean!) @auth(level: USER) @transaction {
+mutation SetCategoriesStatusBatch($ids: Any!, $active: Boolean!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
 WITH actor AS (SELECT u.id,u.tenant_id FROM users u
  JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -866,7 +1196,22 @@ INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,enti
   """,params:[{_expr:"auth.uid"},$ids,$active])
 }
 
-mutation SetSubcategoriesStatusBatch($ids: Any!, $active: Boolean!) @auth(level: USER) @transaction {
+mutation SetSubcategoriesStatusBatch($ids: Any!, $active: Boolean!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
 WITH actor AS (SELECT u.id,u.tenant_id FROM users u
  JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -881,7 +1226,22 @@ INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,enti
   """,params:[{_expr:"auth.uid"},$ids,$active])
 }
 
-mutation SetBranchesStatusBatch($ids: Any!, $active: Boolean!) @auth(level: USER) @transaction {
+mutation SetBranchesStatusBatch($ids: Any!, $active: Boolean!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u
@@ -910,7 +1270,22 @@ mutation SetBranchesStatusBatch($ids: Any!, $active: Boolean!) @auth(level: USER
   """,params:[{_expr:"auth.uid"},$ids,$active])
 }
 
-mutation SetSuppliersStatusBatch($ids: Any!, $active: Boolean!) @auth(level: USER) @transaction {
+mutation SetSuppliersStatusBatch($ids: Any!, $active: Boolean!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u
@@ -939,7 +1314,22 @@ mutation SetSuppliersStatusBatch($ids: Any!, $active: Boolean!) @auth(level: USE
   """,params:[{_expr:"auth.uid"},$ids,$active])
 }
 
-mutation SetCustomersStatusBatch($ids: Any!, $active: Boolean!) @auth(level: USER) @transaction {
+mutation SetCustomersStatusBatch($ids: Any!, $active: Boolean!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u
@@ -967,7 +1357,22 @@ mutation SetCustomersStatusBatch($ids: Any!, $active: Boolean!) @auth(level: USE
   """,params:[{_expr:"auth.uid"},$ids,$active])
 }
 
-mutation SetProductsStatusBatch($ids: Any!, $active: Boolean!) @auth(level: USER) @transaction {
+mutation SetProductsStatusBatch($ids: Any!, $active: Boolean!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u
@@ -1009,7 +1414,22 @@ mutation SetProductsStatusBatch($ids: Any!, $active: Boolean!) @auth(level: USER
 
 # Atomic and idempotent sale posting. Monetary values and stock requirements are
 # recalculated in PostgreSQL; the browser never defines tenant, cost or final totals.
-mutation EnsureSalesDefaults @auth(level: USER) @transaction {
+mutation EnsureSalesDefaults($sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -1024,7 +1444,22 @@ mutation EnsureSalesDefaults @auth(level: USER) @transaction {
   """,params:[{_expr:"auth.uid"}])
 }
 
-mutation PostSale($payload: Any!) @auth(level: USER) @transaction {
+mutation PostSale($payload: Any!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   lockedBranch: _execute(sql: """
 WITH actor AS (SELECT u.id,u.tenant_id,COALESCE(up.can_manage,rp.can_manage,false) can_manage
  FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -1189,7 +1624,22 @@ SELECT u.id,u.tenant_id,COALESCE(up.can_manage,rp.can_manage,false) can_manage
 
 }
 
-mutation CancelSale($saleId: UUID!, $reason: String!) @auth(level: USER) @transaction {
+mutation CancelSale($saleId: UUID!, $reason: String!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   lockedBranch: _execute(sql: """
 WITH actor AS (SELECT u.id,u.tenant_id,COALESCE(up.can_manage,rp.can_manage,false) can_manage
  FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -1225,7 +1675,22 @@ SELECT u.id,u.tenant_id,COALESCE(up.can_manage,rp.can_manage,false) can_manage
   """,params:[{_expr:"auth.uid"},$saleId,$reason]) @check(expr: "this > 0", message: "POS_REJECTED: confira filial, estoque, pagamentos, limites e caixa do operador")
 }
 
-mutation CreatePlatformTenant($payload: Any!) @auth(level: USER) @transaction {
+mutation CreatePlatformTenant($payload: Any!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (
       SELECT u.id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -1288,7 +1753,22 @@ mutation CreatePlatformTenant($payload: Any!) @auth(level: USER) @transaction {
   """,params:[{_expr:"auth.uid"},$payload])
 }
 
-mutation UpdatePlatformTenant($payload: Any!) @auth(level: USER) @transaction {
+mutation UpdatePlatformTenant($payload: Any!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (
       SELECT u.id FROM users u JOIN tenants own_tenant ON own_tenant.id=u.tenant_id AND own_tenant.active AND own_tenant.deleted_at IS NULL
@@ -1358,12 +1838,28 @@ mutation UpdatePlatformTenant($payload: Any!) @auth(level: USER) @transaction {
   """,params:[{_expr:"auth.uid"},$payload])
 }
 
-mutation SetPlatformTenantStatus($tenantId: UUID!, $active: Boolean!) @auth(level: USER) @transaction {
+mutation SetPlatformTenantStatus($tenantId: UUID!, $active: Boolean!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
       JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
       AND r.active AND r.deleted_at IS NULL AND r.system_role AND r.name='Administrador da Plataforma'),
-    changed AS (UPDATE tenants t SET active=$3,updated_at=now() FROM actor a WHERE t.id=$2 AND t.id<>a.tenant_id AND t.deleted_at IS NULL RETURNING t.id,t.active)
+    changed AS (UPDATE tenants t SET active=$3,updated_at=now() FROM actor a WHERE t.id=$2 AND t.id<>a.tenant_id AND t.deleted_at IS NULL RETURNING t.id,t.active),
+    revoked AS (DELETE FROM user_device_sessions lease USING changed c WHERE lease.tenant_id=c.id AND NOT c.active RETURNING lease.user_id)
     INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
     SELECT c.id,a.id,'Plataforma','PLATFORM_ADMIN',CASE WHEN c.active THEN 'ACTIVATE' ELSE 'DEACTIVATE' END,'Tenant',c.id::text,
       CASE WHEN c.active THEN 'Ambiente ativado' ELSE 'Ambiente inativado' END,true,'SQL_CONNECT',jsonb_build_object('active',c.active),now()
@@ -1371,7 +1867,22 @@ mutation SetPlatformTenantStatus($tenantId: UUID!, $active: Boolean!) @auth(leve
   """,params:[{_expr:"auth.uid"},$tenantId,$active])
 }
 
-mutation LinkPlatformUser($payload: Any!) @auth(level: USER) @transaction {
+mutation LinkPlatformUser($payload: Any!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (SELECT u.id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
       JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
@@ -1384,19 +1895,36 @@ mutation LinkPlatformUser($payload: Any!) @auth(level: USER) @transaction {
     changed AS (INSERT INTO users(id,tenant_id,role_id,name,email,onboarding_pending,failed_login_attempts,active,created_at,updated_at)
       SELECT btrim(j->>'uid'),tenant_id,role_id,left(btrim(j->>'name'),160),lower(left(btrim(j->>'email'),254)),true,0,true,now(),now() FROM valid
       ON CONFLICT(id) DO UPDATE SET tenant_id=EXCLUDED.tenant_id,role_id=EXCLUDED.role_id,name=EXCLUDED.name,email=EXCLUDED.email,
-        active=true,deleted_at=NULL,updated_at=now() RETURNING id,tenant_id,role_id,name,email)
+        active=true,deleted_at=NULL,updated_at=now() RETURNING id,tenant_id,role_id,name,email),
+    revoked AS (DELETE FROM user_device_sessions lease USING changed c WHERE lease.user_id=c.id RETURNING lease.user_id)
     INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
     SELECT c.tenant_id,v.actor_id,'Plataforma','PLATFORM_ADMIN','UPSERT','User',c.id,'Vínculo de usuário atualizado',true,'SQL_CONNECT',
       jsonb_build_object('tenantId',c.tenant_id,'roleId',c.role_id,'name',c.name,'email',c.email),now() FROM changed c CROSS JOIN valid v
   """,params:[{_expr:"auth.uid"},$payload])
 }
 
-mutation SetPlatformUserStatus($userId: String!, $active: Boolean!) @auth(level: USER) @transaction {
+mutation SetPlatformUserStatus($userId: String!, $active: Boolean!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (SELECT u.id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
       JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
       AND r.active AND r.deleted_at IS NULL AND r.system_role AND r.name='Administrador da Plataforma'),
-    changed AS (UPDATE users target SET active=$3,updated_at=now() FROM actor WHERE target.id=$2 AND target.id<>actor.id AND target.deleted_at IS NULL RETURNING target.id,target.tenant_id,target.active)
+    changed AS (UPDATE users target SET active=$3,updated_at=now() FROM actor WHERE target.id=$2 AND target.id<>actor.id AND target.deleted_at IS NULL RETURNING target.id,target.tenant_id,target.active),
+    revoked AS (DELETE FROM user_device_sessions lease USING changed c WHERE lease.user_id=c.id AND NOT c.active RETURNING lease.user_id)
     INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
     SELECT c.tenant_id,a.id,'Plataforma','PLATFORM_ADMIN',CASE WHEN c.active THEN 'ACTIVATE' ELSE 'DEACTIVATE' END,'User',c.id,
       CASE WHEN c.active THEN 'Usuário ativado' ELSE 'Usuário inativado' END,true,'SQL_CONNECT',jsonb_build_object('active',c.active),now()
@@ -1404,7 +1932,22 @@ mutation SetPlatformUserStatus($userId: String!, $active: Boolean!) @auth(level:
   """,params:[{_expr:"auth.uid"},$userId,$active])
 }
 
-mutation SetPlatformRolePermission($payload: Any!) @auth(level: USER) @transaction {
+mutation SetPlatformRolePermission($payload: Any!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (SELECT u.id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
       JOIN roles own_role ON own_role.id=u.role_id AND own_role.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
@@ -1426,7 +1969,22 @@ mutation SetPlatformRolePermission($payload: Any!) @auth(level: USER) @transacti
   """,params:[{_expr:"auth.uid"},$payload])
 }
 
-mutation CreatePlatformInvoice($payload: Any!) @auth(level: USER) @transaction {
+mutation CreatePlatformInvoice($payload: Any!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (SELECT u.id FROM users u JOIN tenants own_tenant ON own_tenant.id=u.tenant_id AND own_tenant.active AND own_tenant.deleted_at IS NULL
       JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
@@ -1453,7 +2011,22 @@ mutation CreatePlatformInvoice($payload: Any!) @auth(level: USER) @transaction {
   """,params:[{_expr:"auth.uid"},$payload])
 }
 
-mutation UpdatePlatformInvoice($payload: Any!) @auth(level: USER) @transaction {
+mutation UpdatePlatformInvoice($payload: Any!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (SELECT u.id FROM users u JOIN tenants own_tenant ON own_tenant.id=u.tenant_id AND own_tenant.active AND own_tenant.deleted_at IS NULL
       JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
@@ -1482,7 +2055,22 @@ mutation UpdatePlatformInvoice($payload: Any!) @auth(level: USER) @transaction {
   """,params:[{_expr:"auth.uid"},$payload])
 }
 
-mutation VoidPlatformInvoice($invoiceId: UUID!, $reason: String!, $expectedVersion: Int64!) @auth(level: USER) @transaction {
+mutation VoidPlatformInvoice($invoiceId: UUID!, $reason: String!, $expectedVersion: Int64!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (SELECT u.id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
       JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
@@ -1496,7 +2084,22 @@ mutation VoidPlatformInvoice($invoiceId: UUID!, $reason: String!, $expectedVersi
   """,params:[{_expr:"auth.uid"},$invoiceId,$reason,$expectedVersion])
 }
 
-mutation SettlePlatformInvoice($payload: Any!) @auth(level: USER) @transaction {
+mutation SettlePlatformInvoice($payload: Any!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (SELECT u.id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
       JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
@@ -1529,7 +2132,22 @@ mutation SettlePlatformInvoice($payload: Any!) @auth(level: USER) @transaction {
   """,params:[{_expr:"auth.uid"},$payload])
 }
 
-mutation ReversePlatformPayment($paymentId: UUID!, $reason: String!) @auth(level: USER) @transaction {
+mutation ReversePlatformPayment($paymentId: UUID!, $reason: String!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (SELECT u.id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
       JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
@@ -1549,7 +2167,22 @@ mutation ReversePlatformPayment($paymentId: UUID!, $reason: String!) @auth(level
   """,params:[{_expr:"auth.uid"},$paymentId,$reason])
 }
 
-mutation PostStockAdjustment($payload: Any!) @auth(level: USER) @transaction {
+mutation PostStockAdjustment($payload: Any!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   stockMutex: _execute(sql: """
  WITH actor AS (SELECT u.id,u.tenant_id FROM users u
  JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -1574,7 +2207,22 @@ mutation PostStockAdjustment($payload: Any!) @auth(level: USER) @transaction {
   """,params:[{_expr:"auth.uid"},$payload])
 }
 
-mutation PostStockTransfer($payload: Any!) @auth(level: USER) @transaction {
+mutation PostStockTransfer($payload: Any!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   stockMutex: _execute(sql: """
  WITH actor AS (SELECT u.id,u.tenant_id FROM users u
  JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -1600,7 +2248,22 @@ mutation PostStockTransfer($payload: Any!) @auth(level: USER) @transaction {
   """,params:[{_expr:"auth.uid"},$payload])
 }
 
-mutation SaveStockBatch($payload: Any!) @auth(level: USER) @transaction {
+mutation SaveStockBatch($payload: Any!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   stockMutex: _execute(sql: """
  WITH actor AS (SELECT u.id,u.tenant_id FROM users u
  JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -1626,7 +2289,22 @@ mutation SaveStockBatch($payload: Any!) @auth(level: USER) @transaction {
   """,params:[{_expr:"auth.uid"},$payload])
 }
 
-mutation ReverseStockOperation($operationId: String!, $movementIds: Any!, $reason: String!) @auth(level: USER) @transaction {
+mutation ReverseStockOperation($operationId: String!, $movementIds: Any!, $reason: String!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   stockMutex: _execute(sql: """
  WITH actor AS (SELECT u.id,u.tenant_id FROM users u
  JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -1656,7 +2334,22 @@ mutation ReverseStockOperation($operationId: String!, $movementIds: Any!, $reaso
   """,params:[{_expr:"auth.uid"},$operationId,$movementIds,$reason])
 }
 
-mutation OpenCashSession($branchId: UUID!, $openingAmountCents: Int64!, $notes: String!) @auth(level: USER) @transaction {
+mutation OpenCashSession($branchId: UUID!, $openingAmountCents: Int64!, $notes: String!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   lockedBranch: _execute(sql: """
 WITH actor AS (SELECT u.id,u.tenant_id,COALESCE(up.can_manage,rp.can_manage,false) can_manage
  FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -1698,7 +2391,22 @@ SELECT u.id,u.tenant_id,COALESCE(up.can_manage,rp.can_manage,false) can_manage
   """,params:[{_expr:"auth.uid"},$branchId,$openingAmountCents,$notes]) @check(expr: "this > 0", message: "POS_REJECTED: confira filial, estoque, pagamentos, limites e caixa do operador")
 }
 
-mutation RegisterCashMovement($sessionId: UUID!, $movementType: String!, $amountCents: Int64!, $description: String!, $operationId: String) @auth(level: USER) @transaction {
+mutation RegisterCashMovement($sessionId: UUID!, $movementType: String!, $amountCents: Int64!, $description: String!, $operationId: String, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   lockedBranch: _execute(sql: """
 WITH actor AS (SELECT u.id,u.tenant_id,COALESCE(up.can_manage,rp.can_manage,false) can_manage
  FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -1741,29 +2449,69 @@ SELECT u.id,u.tenant_id,COALESCE(up.can_manage,rp.can_manage,false) can_manage
   """,params:[{_expr:"auth.uid"},$sessionId,$movementType,$amountCents,$description,$operationId]) @check(expr: "this > 0", message: "POS_REJECTED: confira filial, estoque, pagamentos, limites e caixa do operador")
 }
 
-mutation ClaimDeviceSession($sessionToken: String!, $deviceId: String!, $deviceName: String!) @auth(level: USER) {
+# Server-issued secrets are returned once and only their SHA256 is persisted.
+# Refresh cannot silently replace a lease or resurrect an expired heartbeat.
+mutation ClaimDeviceSession($deviceId: String!, $deviceName: String!) @auth(level: USER) @transaction {
+  query {
+    issued: _selectFirst(sql: """
+      SELECT replace(gen_random_uuid()::text,'-','')||replace(gen_random_uuid()::text,'-','') AS token
+    """,params:[])
+  }
   _execute(sql: """
     INSERT INTO user_device_sessions(user_id,tenant_id,session_token,device_id,device_name,claimed_at,last_seen_at)
-    SELECT u.id,u.tenant_id,left($2,128),left($3,128),left($4,180),now(),now()
+    SELECT u.id,u.tenant_id,encode(sha256(convert_to($4::text,'UTF8')),'hex'),left($2,128),left($3,180),now(),now()
     FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
-    WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND length($2)>=32 AND length($3)>=16
+    JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL
+    WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now()) AND length($2) BETWEEN 16 AND 128
     ON CONFLICT(user_id) DO UPDATE SET tenant_id=EXCLUDED.tenant_id,session_token=EXCLUDED.session_token,device_id=EXCLUDED.device_id,device_name=EXCLUDED.device_name,claimed_at=now(),last_seen_at=now()
-  """,params:[{_expr:"auth.uid"},$sessionToken,$deviceId,$deviceName])
+  """,params:[{_expr:"auth.uid"},$deviceId,$deviceName,{_expr:"response.query.issued.token"}]) @check(expr: "this > 0", message: "SESSION_REQUIRED")
 }
 
-mutation TouchDeviceSession($sessionToken: String!) @auth(level: USER) {
+mutation TouchDeviceSession($sessionToken: String!) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR UPDATE OF s FOR SHARE OF u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
-    UPDATE user_device_sessions SET last_seen_at=now() WHERE user_id=$1 AND session_token=$2
-  """,params:[{_expr:"auth.uid"},$sessionToken])
+    UPDATE user_device_sessions SET last_seen_at=now()
+    WHERE user_id=$1 AND session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+      AND last_seen_at>now()-interval '15 minutes' AND claimed_at>now()-interval '12 hours'
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this > 0", message: "SESSION_REQUIRED")
 }
 
 mutation ReleaseDeviceSession($sessionToken: String!) @auth(level: USER) {
   _execute(sql: """
-    DELETE FROM user_device_sessions WHERE user_id=$1 AND session_token=$2
+    DELETE FROM user_device_sessions WHERE user_id=$1 AND session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
   """,params:[{_expr:"auth.uid"},$sessionToken])
 }
 
-mutation CreateSalesChannelConnection($provider: String!, $branchId: UUID!, $displayName: String!, $externalStoreId: String!, $catalogProfile: String @retired) @auth(level: USER) @transaction {
+mutation CreateSalesChannelConnection($provider: String!, $branchId: UUID!, $displayName: String!, $externalStoreId: String!, $catalogProfile: String @retired, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u
@@ -1791,7 +2539,22 @@ mutation CreateSalesChannelConnection($provider: String!, $branchId: UUID!, $dis
   """,params:[{_expr:"auth.uid"},$provider,$branchId,$displayName,$externalStoreId])
 }
 
-mutation UpdateSalesChannelConnection($id: UUID!, $displayName: String!, $externalStoreId: String!, $enabled: Boolean!, $catalogProfile: String @retired) @auth(level: USER) @transaction {
+mutation UpdateSalesChannelConnection($id: UUID!, $displayName: String!, $externalStoreId: String!, $enabled: Boolean!, $catalogProfile: String @retired, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages p ON p.page_key='CANAIS_VENDA' AND p.active LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=p.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=p.id AND rp.tenant_id=u.tenant_id WHERE u.id=$1 AND (u.blocked_until IS NULL OR u.blocked_until<=now()) AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_update,rp.can_update,false)
@@ -1822,7 +2585,22 @@ mutation UpdateSalesChannelConnection($id: UUID!, $displayName: String!, $extern
 # Selects an iFood merchant and queues its server-side validation atomically.
 # This is an operational management action: it must not depend on the separate
 # permission used to edit the connection's display settings.
-mutation ConnectSalesChannelMerchant($connectionId: UUID!, $merchantId: String!, $requestKey: String!) @auth(level: USER) @transaction {
+mutation ConnectSalesChannelMerchant($connectionId: UUID!, $merchantId: String!, $requestKey: String!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u
@@ -1890,7 +2668,22 @@ mutation ConnectSalesChannelMerchant($connectionId: UUID!, $merchantId: String!,
   """,params:[{_expr:"auth.uid"},$connectionId,$merchantId,$requestKey])
 }
 
-mutation ArchiveSalesChannelConnection($id: UUID!) @auth(level: USER) @transaction {
+mutation ArchiveSalesChannelConnection($id: UUID!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages p ON p.page_key='CANAIS_VENDA' AND p.active LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=p.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=p.id AND rp.tenant_id=u.tenant_id WHERE u.id=$1 AND (u.blocked_until IS NULL OR u.blocked_until<=now()) AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_delete,rp.can_delete,false)
@@ -1933,7 +2726,22 @@ mutation ArchiveSalesChannelConnection($id: UUID!) @auth(level: USER) @transacti
   """,params:[{_expr:"auth.uid"},$id])
 }
 
-mutation CreateSalesChannelProductMapping($connectionId: UUID!, $productId: UUID!, $externalProductId: String!, $externalProductName: String!, $syncPrice: Boolean!, $syncStock: Boolean!, $priceMode: String! = "PRODUCT", $customPriceCents: Int64, $remoteProductState: String! = "NEW") @auth(level: USER) @transaction {
+mutation CreateSalesChannelProductMapping($connectionId: UUID!, $productId: UUID!, $externalProductId: String!, $externalProductName: String!, $syncPrice: Boolean!, $syncStock: Boolean!, $priceMode: String! = "PRODUCT", $customPriceCents: Int64, $remoteProductState: String! = "NEW", $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -1979,7 +2787,22 @@ mutation CreateSalesChannelProductMapping($connectionId: UUID!, $productId: UUID
   """,params:[{_expr:"auth.uid"},$connectionId,$productId,$externalProductId,$externalProductName,$syncPrice,$syncStock,$priceMode,$customPriceCents,$remoteProductState])
 }
 
-mutation UpdateSalesChannelProductMapping($id: UUID!, $externalProductId: String!, $externalProductName: String!, $syncPrice: Boolean!, $syncStock: Boolean!, $enabled: Boolean!, $priceMode: String! = "PRODUCT", $customPriceCents: Int64, $remoteProductState: String! = "NEW") @auth(level: USER) @transaction {
+mutation UpdateSalesChannelProductMapping($id: UUID!, $externalProductId: String!, $externalProductName: String!, $syncPrice: Boolean!, $syncStock: Boolean!, $enabled: Boolean!, $priceMode: String! = "PRODUCT", $customPriceCents: Int64, $remoteProductState: String! = "NEW", $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -2035,7 +2858,22 @@ mutation UpdateSalesChannelProductMapping($id: UUID!, $externalProductId: String
   """,params:[{_expr:"auth.uid"},$id,$externalProductId,$externalProductName,$syncPrice,$syncStock,$enabled,$priceMode,$customPriceCents,$remoteProductState])
 }
 
-mutation ArchiveSalesChannelProductMapping($id: UUID!) @auth(level: USER) @transaction {
+mutation ArchiveSalesChannelProductMapping($id: UUID!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id AND r.active AND r.deleted_at IS NULL JOIN app_pages p ON p.page_key='CANAIS_VENDA' AND p.active LEFT JOIN user_page_permissions up ON up.user_id=u.id AND up.page_id=p.id AND up.tenant_id=u.tenant_id LEFT JOIN role_page_permissions rp ON rp.role_id=u.role_id AND rp.page_id=p.id AND rp.tenant_id=u.tenant_id WHERE u.id=$1 AND (u.blocked_until IS NULL OR u.blocked_until<=now()) AND u.active AND u.deleted_at IS NULL AND COALESCE(up.can_manage,rp.can_manage,false)), archived AS (
       UPDATE sales_channel_product_mappings m SET mapping_key=concat(m.mapping_key,':archived:',m.id),external_mapping_key=concat(m.external_mapping_key,':archived:',m.id),active=false,enabled=false,status='ARCHIVED',sync_status='CANCELLED',deleted_at=now(),updated_at=now()
@@ -2050,7 +2888,22 @@ mutation ArchiveSalesChannelProductMapping($id: UUID!) @auth(level: USER) @trans
   """,params:[{_expr:"auth.uid"},$id])
 }
 
-mutation TransitionSalesChannelOrder($id: UUID!, $action: String!, $reason: String!, $expectedVersion: Int!) @auth(level: USER) @retired @transaction {
+mutation TransitionSalesChannelOrder($id: UUID!, $action: String!, $reason: String!, $expectedVersion: Int!, $sessionToken: String) @auth(level: USER) @retired @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u
@@ -2091,7 +2944,22 @@ mutation TransitionSalesChannelOrder($id: UUID!, $action: String!, $reason: Stri
 
 # Customer actions are written to a durable outbox. The visible order only
 # reaches its final state after the trusted partner worker confirms the API call.
-mutation QueueSalesChannelOrderAction($id: UUID!, $action: String!, $reason: String!, $expectedVersion: Int!, $cancellationCode: String = "", $itemId: UUID, $ean: String = "", $quantity: Float = 0) @auth(level: USER) @transaction {
+mutation QueueSalesChannelOrderAction($id: UUID!, $action: String!, $reason: String!, $expectedVersion: Int!, $cancellationCode: String = "", $itemId: UUID, $ean: String = "", $quantity: Float = 0, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   stockMutex: _execute(sql: """
  UPDATE branches b SET updated_at=b.updated_at WHERE b.id IN (SELECT o.branch_id FROM sales_channel_orders o JOIN users u ON u.tenant_id=o.tenant_id WHERE o.id=$2 AND u.id=$1 AND u.active AND u.deleted_at IS NULL)
   """,params:[{_expr:"auth.uid"},$id]) @redact
@@ -2204,7 +3072,22 @@ mutation QueueSalesChannelOrderAction($id: UUID!, $action: String!, $reason: Str
   """,params:[{_expr:"auth.uid"},$id,$action,$reason,$expectedVersion,$cancellationCode,$itemId,$ean,$quantity])
 }
 
-mutation RetrySalesChannelCommand($id: UUID!) @auth(level: USER) @transaction {
+mutation RetrySalesChannelCommand($id: UUID!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -2231,7 +3114,22 @@ mutation RetrySalesChannelCommand($id: UUID!) @auth(level: USER) @transaction {
 # A catalog deactivation is idempotent. This explicit recovery path prevents a
 # connection from remaining indefinitely in DECOMMISSIONING after the partner
 # rejected or temporarily failed one of its product updates.
-mutation RetrySalesChannelDecommissioning($id: UUID!) @auth(level: USER) @transaction {
+mutation RetrySalesChannelDecommissioning($id: UUID!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -2254,7 +3152,22 @@ mutation RetrySalesChannelDecommissioning($id: UUID!) @auth(level: USER) @transa
   """,params:[{_expr:"auth.uid"},$id])
 }
 
-mutation RequestSalesChannelOrderReconciliation($id: UUID!, $requestKey: String!) @auth(level: USER) @transaction {
+mutation RequestSalesChannelOrderReconciliation($id: UUID!, $requestKey: String!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -2282,7 +3195,22 @@ mutation RequestSalesChannelOrderReconciliation($id: UUID!, $requestKey: String!
   """,params:[{_expr:"auth.uid"},$id,$requestKey])
 }
 
-mutation AcknowledgeSalesChannelOrderAlert($id: UUID!, $version: Int!, $alertKind: String!) @auth(level: USER) @transaction {
+mutation AcknowledgeSalesChannelOrderAlert($id: UUID!, $version: Int!, $alertKind: String!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u
@@ -2309,7 +3237,22 @@ mutation AcknowledgeSalesChannelOrderAlert($id: UUID!, $version: Int!, $alertKin
   """,params:[{_expr:"auth.uid"},$id,$version,$alertKind])
 }
 
-mutation MapSalesChannelOrderItem($itemId: UUID!, $productId: UUID!, $requestKey: String!) @auth(level: USER) @transaction {
+mutation MapSalesChannelOrderItem($itemId: UUID!, $productId: UUID!, $requestKey: String!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   stockMutex: _execute(sql: """
  WITH actor AS (SELECT u.id,u.tenant_id FROM users u
  JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -2387,7 +3330,22 @@ mutation MapSalesChannelOrderItem($itemId: UUID!, $productId: UUID!, $requestKey
   """,params:[{_expr:"auth.uid"},$itemId,$productId,$requestKey])
 }
 
-mutation RequestSalesChannelSync($connectionId: UUID!, $scope: String!, $requestKey: String!) @auth(level: USER) @transaction {
+mutation RequestSalesChannelSync($connectionId: UUID!, $scope: String!, $requestKey: String!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -2417,7 +3375,22 @@ mutation RequestSalesChannelSync($connectionId: UUID!, $scope: String!, $request
 # Starts a server-side credential and merchant ownership check. No credential is
 # accepted from the browser; the adapter reads the environment-specific iFood
 # application secret directly from Secret Manager.
-mutation RequestSalesChannelAuthorization($connectionId: UUID!, $requestKey: String!) @auth(level: USER) @transaction {
+mutation RequestSalesChannelAuthorization($connectionId: UUID!, $requestKey: String!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   _execute(sql: """
     WITH actor AS (
       SELECT u.id,u.tenant_id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -3285,7 +4258,22 @@ mutation SystemRecordSalesChannelMappingResult($mappingId: UUID!, $payload: Any!
   """,params:[$mappingId,$payload])
 }
 
-mutation CloseCashSession($sessionId: UUID!, $countedAmountCents: Int64!, $notes: String!, $operationId: String) @auth(level: USER) @transaction {
+mutation CloseCashSession($sessionId: UUID!, $countedAmountCents: Int64!, $notes: String!, $operationId: String, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
   lockedBranch: _execute(sql: """
 WITH actor AS (SELECT u.id,u.tenant_id,COALESCE(up.can_manage,rp.can_manage,false) can_manage
  FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -3325,7 +4313,22 @@ SELECT u.id,u.tenant_id,COALESCE(up.can_manage,rp.can_manage,false) can_manage
   """,params:[{_expr:"auth.uid"},$sessionId,$countedAmountCents,$notes,$operationId]) @check(expr: "this > 0", message: "POS_REJECTED: confira filial, estoque, pagamentos, limites e caixa do operador")
 }
 
-mutation UpdatePosPolicy($requireOpenSession: Boolean!, $operatorDiscountPercent: Int!, $operatorSurchargePercent: Int!, $allowOperatorClose: Boolean!, $operatorWithdrawalLimitCents: Int64 = 0, $operatorCloseDifferenceLimitCents: Int64 = 0) @auth(level: USER) @transaction {
+mutation UpdatePosPolicy($requireOpenSession: Boolean!, $operatorDiscountPercent: Int!, $operatorSurchargePercent: Int!, $allowOperatorClose: Boolean!, $operatorWithdrawalLimitCents: Int64 = 0, $operatorCloseDifferenceLimitCents: Int64 = 0, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
  _execute(sql: """
  WITH actor AS (SELECT u.id,u.tenant_id,COALESCE(up.can_manage,rp.can_manage,false) can_manage
  FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -3343,7 +4346,22 @@ mutation UpdatePosPolicy($requireOpenSession: Boolean!, $operatorDiscountPercent
  """,params:[{_expr:"auth.uid"},$requireOpenSession,$operatorDiscountPercent,$operatorSurchargePercent,$allowOperatorClose,$operatorWithdrawalLimitCents,$operatorCloseDifferenceLimitCents]) @check(expr: "this > 0", message: "POS_POLICY_DENIED")
 }
 
-mutation RequestPosSaleApproval($payload: Any!) @auth(level: USER) @transaction {
+mutation RequestPosSaleApproval($payload: Any!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
  _execute(sql: """
     WITH actor AS (
 SELECT u.id,u.tenant_id,COALESCE(up.can_manage,rp.can_manage,false) can_manage
@@ -3384,7 +4402,22 @@ SELECT u.id,u.tenant_id,COALESCE(up.can_manage,rp.can_manage,false) can_manage
  ON CONFLICT(operation_key) DO UPDATE SET operation_key=EXCLUDED.operation_key WHERE pos_approvals.payload_hash=EXCLUDED.payload_hash AND pos_approvals.requested_by_uid=EXCLUDED.requested_by_uid
  """,params:[{_expr:"auth.uid"},$payload]) @check(expr: "this > 0", message: "POS_APPROVAL_DENIED")
 }
-mutation ApprovePosSale($approvalId: UUID!, $approved: Boolean!) @auth(level: USER) @transaction {
+mutation ApprovePosSale($approvalId: UUID!, $approved: Boolean!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
  _execute(sql: """
  WITH actor AS (SELECT u.id,u.tenant_id,COALESCE(up.can_manage,rp.can_manage,false) can_manage
  FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
@@ -3402,7 +4435,22 @@ mutation ApprovePosSale($approvalId: UUID!, $approved: Boolean!) @auth(level: US
  """,params:[{_expr:"auth.uid"},$approvalId,$approved]) @check(expr: "this > 0", message: "POS_APPROVAL_DENIED")
 }
 
-mutation RequestPosCashApproval($payload: Any!) @auth(level: USER) @transaction {
+mutation RequestPosCashApproval($payload: Any!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
+  }
  _execute(sql: """
  WITH actor AS (SELECT u.id,u.tenant_id,COALESCE(up.can_manage,rp.can_manage,false) can_manage
  FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
