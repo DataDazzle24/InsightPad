@@ -6,17 +6,22 @@ export async function residual({page,output,sha,run,go,panel,wait,screenshot}){
  const focused=locator=>locator.evaluate(e=>e.contains(document.activeElement));
  const cycle=async dialog=>{
   const controls=dialog.locator('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex="0"]').filter({visible:true});
-  const first=controls.first(),last=controls.last();await first.focus();await page.keyboard.press('Shift+Tab');assert.equal(await last.evaluate(e=>e===document.activeElement),true);
+  const first=controls.first(),last=controls.last();await first.focus();await page.keyboard.press('Shift+Tab');assert.equal(await last.evaluate(e=>e===document.activeElement),true,JSON.stringify(await dialog.evaluate(e=>({active:document.activeElement?.outerHTML,controls:[...e.querySelectorAll('button,input,select')].map(n=>({text:n.textContent,disabled:n.disabled}))}))));
   await page.keyboard.press('Tab');assert.equal(await first.evaluate(e=>e===document.activeElement),true);
   for(let i=0;i<await controls.count()+2;i++){await page.keyboard.press('Tab');assert.equal(await focused(dialog),true)}
  };
  const inspect=()=>page.evaluate(()=>window.__insightpadQa.inspect());
  const measure=async(locator,label)=>{
-  const colors=await locator.evaluate(e=>{const s=getComputedStyle(e);return {text:s.color,background:s.backgroundColor,disabled:e.disabled,outline:s.outlineColor,opacity:s.opacity}});
-  const rgb=value=>value.match(/[\d.]+/g).slice(0,3).map(Number);
-  const luminance=value=>rgb(value).map(x=>{x/=255;return x<=.04045?x/12.92:((x+.055)/1.055)**2.4}).reduce((n,x,i)=>n+x*[.2126,.7152,.0722][i],0);
-  const a=luminance(colors.text),b=luminance(colors.background),ratio=(Math.max(a,b)+.05)/(Math.min(a,b)+.05);
-  measurements.push({label,...colors,ratio,method:'computed opaque sRGB foreground/background; WCAG relative luminance',sha});assert.ok(ratio>=4.5,label+' contrast '+ratio);
+  const colors=await locator.evaluate(e=>{
+   const parse=v=>{const a=v.match(/[\d.]+/g).map(Number);return [a[0],a[1],a[2],a[3]??1]};
+   const blend=(front,back)=>front.slice(0,3).map((v,i)=>v*front[3]+back[i]*(1-front[3]));
+   const chain=[];for(let node=e;node;node=node.parentElement)chain.unshift(node);
+   let background=[255,255,255];for(const node of chain)background=blend(parse(getComputedStyle(node).backgroundColor),background);
+   const s=getComputedStyle(e);return {text:s.color,background:s.backgroundColor,effectiveBackground:background,effectiveText:blend(parse(s.color),background),disabled:e.disabled,outline:s.outlineColor,opacity:s.opacity};
+  });
+  const luminance=value=>value.map(x=>{x/=255;return x<=.04045?x/12.92:((x+.055)/1.055)**2.4}).reduce((n,x,i)=>n+x*[.2126,.7152,.0722][i],0);
+  const a=luminance(colors.effectiveText),b=luminance(colors.effectiveBackground),ratio=(Math.max(a,b)+.05)/(Math.min(a,b)+.05);
+  measurements.push({label,...colors,ratio,method:'computed sRGB with alpha composited through ancestor backgrounds; WCAG relative luminance',sha});assert.ok(ratio>=4.5,label+' contrast '+ratio);
  };
  // The previous sale scenario leaves the real receipt prompt open.
  await run('receipt-contrast-two-themes',async()=>{
@@ -52,21 +57,39 @@ export async function residual({page,output,sha,run,go,panel,wait,screenshot}){
   await panel();await page.getByLabel('Dados vazios',{exact:true}).check();await empty.waitFor();assert.match(await empty.innerText(),/Cadastre/);await screenshot('empty-guidance-'+noun);await page.getByLabel('Permissões',{exact:true}).selectOption('read');await empty.waitFor();assert.match(await empty.innerText(),/responsável/);assert.equal(await empty.getByRole('button').count(),0);
  });
  await run('channel-contracts-and-error',async()=>{
-  for(const route of ['/integracoes/canais/conexoes','/integracoes/canais/pedidos']){await go(route);assert.doesNotMatch(await page.locator('body').innerText(),/NaN|undefined/);assert.match(await page.locator('body').innerText(),/Página 1 de 1/);await screenshot(route.endsWith('pedidos')?'orders-empty-contract':'connections-empty-contract')}
-  await panel();await page.getByLabel('Falha sintética de API',{exact:true}).check();await page.getByRole('alert').first().waitFor();assert.doesNotMatch(await page.locator('body').innerText(),/NaN/);
+  for(const route of ['/integracoes/canais/conexoes','/integracoes/canais/pedidos']){await go(route);assert.doesNotMatch(await page.locator('body').innerText(),/NaN|undefined/i);assert.match(await page.locator('body').innerText(),/Página 1 de 1/i);await screenshot(route.endsWith('pedidos')?'orders-empty-contract':'connections-empty-contract')}
+  await panel();await page.getByLabel('Falha sintética de API',{exact:true}).check();await page.getByRole('alert').first().waitFor();assert.doesNotMatch(await page.locator('body').innerText(),/NaN/i);
  });
  await run('product-price-supplier-contract',async()=>{
   await go('/cadastros/produtos');const row=page.getByRole('row').filter({hasText:'PRODUTO QA 002'});assert.match(await row.innerText(),/12,00/);await screenshot('product-current-price');await go('/cadastros/fornecedores');await page.getByText('FORNECEDOR FICTÍCIO QA 1',{exact:true}).waitFor();await screenshot('supplier-legal-name');
  });
  const fillStock=async transfer=>{
-  if(transfer){await page.getByRole('button',{name:/^.*Transferir$/}).click();const d=page.getByRole('dialog');await d.getByLabel('Origem',{exact:true}).selectOption({label:'MATRIZ QA'});await d.getByLabel('Destino',{exact:true}).selectOption({label:'FILIAL QA'});await d.getByLabel('Produto',{exact:true}).selectOption({label:'PRODUTO QA 002'});await d.getByLabel('Quantidade',{exact:true}).fill('1');return d}
-  await page.getByRole('button',{name:/Nova movimentação/i}).click();const d=page.getByRole('dialog');await d.getByLabel('Filial',{exact:true}).selectOption({label:'MATRIZ QA'});await d.getByRole('button',{name:'Próxima',exact:true}).click();await d.getByLabel('Produto',{exact:true}).selectOption({label:'PRODUTO QA 002'});await d.getByLabel('Quantidade',{exact:true}).fill('1');await d.getByRole('button',{name:'Próxima',exact:true}).click();await d.getByRole('button',{name:'Não',exact:true}).click();await d.getByRole('button',{name:'Próxima',exact:true}).click();return d;
+  if(transfer){await page.getByRole('button',{name:/^.*Transferir$/}).click();const d=page.getByRole('dialog');await d.getByLabel(/^Origem/).selectOption({label:'MATRIZ QA'});await d.getByLabel(/^Destino/).selectOption({label:'FILIAL QA'});await d.getByLabel(/^Produto/).selectOption({label:'PRODUTO QA 002'});await d.getByLabel('Quantidade',{exact:true}).fill('1');return d}
+  await page.getByRole('button',{name:/Nova movimentação/i}).click();const d=page.getByRole('dialog');await d.getByLabel(/^Filial/).selectOption({label:'MATRIZ QA'});await d.getByRole('button',{name:'Próxima',exact:true}).click();await d.getByLabel(/^Produto/).selectOption({label:'PRODUTO QA 002'});await d.getByLabel('Quantidade',{exact:true}).fill('1');await d.getByRole('button',{name:'Próxima',exact:true}).click();await d.getByRole('button',{name:'Não',exact:true}).click();await d.getByRole('button',{name:'Próxima',exact:true}).click();return d;
  };
  for(const transfer of [false,true])await run('stock-ack-replay-'+(transfer?'transfer':'entry'),async()=>{
   await go('/estoque');const before=await inspect();await page.evaluate(()=>window.__insightpadQa.state.ackLoss=true);const d=await fillStock(transfer);const submit=d.getByRole('button',{name:transfer?'Concluir transferência':'Concluir',exact:true});await submit.click();await page.locator('[role="alert"]').filter({hasText:transfer?'Transferência recusada':'Operação recusada'}).waitFor();await screenshot('ack-lost-'+transfer);const persisted=await inspect();assert.equal(persisted.movements.length,before.movements.length+1);
   await submit.click();await d.waitFor({state:'hidden'});const after=await inspect();assert.equal(after.movements.length,persisted.movements.length);assert.equal(after.transfers.length,before.transfers.length+(transfer?1:0));
   const a=after.products.find(p=>p.name==='PRODUTO QA 002'),b=before.products.find(p=>p.id===a.id);assert.equal(a.balances[0].quantity,b.balances[0].quantity+(transfer?-1:1));if(transfer)assert.equal(a.balances[1].quantity,b.balances[1].quantity+1);
   writeFileSync(output+'/ack-'+transfer+'.json',JSON.stringify({sha,operation:transfer?'transfer':'entry',beforeCount:before.movements.length,persistedCount:persisted.movements.length,retryCount:after.movements.length,product:a},null,2));
+ });
+ await run('export-handlers-denied',async()=>{
+  await go('/dashboards/operacional');await page.getByRole('button',{name:'Clientes',exact:true}).click();await page.getByText('SEM COMPRAR QA 1201',{exact:true}).waitFor();await panel();await page.getByLabel('Permissões',{exact:true}).selectOption('noexport');await wait();
+  const result=await page.evaluate(async()=>{
+   let blobs=0,prints=0,handlers=0;const create=URL.createObjectURL,print=window.print;URL.createObjectURL=()=>{blobs++;return 'blob:qa-denied'};window.print=()=>prints++;
+   try{for(const b of document.querySelectorAll('button'))if(/^(CSV|PDF)$/.test(b.textContent.trim())){const key=Object.keys(b).find(k=>k.startsWith('__reactProps'));const handler=key&&b[key]?.onClick;if(handler){handlers++;await handler({preventDefault(){}})}}return {blobs,prints,handlers}}finally{URL.createObjectURL=create;window.print=print}
+  });assert.ok(result.handlers>=3);assert.equal(result.blobs,0);assert.equal(result.prints,0);writeFileSync(output+'/denied-handlers.json',JSON.stringify({sha,...result,method:'invoke current React click callbacks despite disabled controls in isolated QA only'},null,2));
+ });
+ await run('stock-pending-duplicate',async()=>{
+  await go('/estoque');const before=await inspect(),dialog=await fillStock(false);await page.evaluate(()=>window.__insightpadQa.state.delay=1500);
+  await dialog.getByRole('button',{name:'Concluir',exact:true}).evaluate(e=>{const key=Object.keys(e).find(k=>k.startsWith('__reactProps'));e[key].onClick();e[key].onClick()});await page.keyboard.press('Enter');await screenshot('stock-pending');await dialog.waitFor({state:'hidden'});const after=await inspect();assert.equal(after.movements.length,before.movements.length+1);assert.equal(await page.evaluate(()=>window.__insightpadQa.state.logs.filter(n=>n==='SaveStockBatch').length),1);
+ });
+ await run('cash-supply-withdrawal',async()=>{
+  await go('/vendas/frente-de-caixa');await page.getByLabel(/^Filial/).selectOption({label:'MATRIZ QA'});const before=await inspect();await page.getByRole('button',{name:'Fechar caixa',exact:true}).click();const dialog=page.getByRole('dialog',{name:'Controle de caixa'});
+  for(const [action,reason,message]of [['Suprimento','Motivo do suprimento','Suprimento registrado.'],['Sangria','Motivo da sangria','Sangria registrada.']]){
+   await dialog.getByRole('button',{name:action,exact:true}).click();await dialog.getByLabel('Valor',{exact:true}).fill('500');await dialog.getByLabel(reason,{exact:true}).fill('MOTIVO SINTÉTICO QA');await dialog.getByRole('button',{name:'Registrar',exact:true}).click();await page.locator('[role="alert"]').filter({hasText:message}).waitFor();
+  }
+  const after=await inspect();assert.equal(after.cashMovements.length,before.cashMovements.length+2);assert.equal(after.sessions[0].expectedAmountCents,before.sessions[0].expectedAmountCents);await screenshot('cash-movements');
  });
  // Native dialog harness uses real elapsed timers, never a mocked clock.
  for(const [delay,outcome]of [[15,'success'],[60,'failure']])await run('recovery-pending-'+delay+'-'+outcome,async()=>{

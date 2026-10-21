@@ -123,3 +123,25 @@ it.each(['success','zero','error'])('late release %s preserves B and only report
  await act(async()=>{if(outcome==='error')fail(Error('network'));else finish({data:{_execute:outcome==='zero'?0:1}});await logout});await flush();
  expect(context.status).toBe('authenticated');expect(localStorage.getItem(key)).toBe('b'.repeat(64));expect(mocks.signOut).not.toHaveBeenCalled();expect(warning.mock.calls.length>0).toBe(outcome!=='success');
 });
+it('waits for an already-started Firebase exit before starting the next login',async()=>{
+ await act(async()=>context.signIn('a@example.invalid','password'));await flush();let finish!:()=>void;
+ mocks.signOut.mockImplementationOnce(()=>new Promise<void>(resolve=>{finish=()=>{mocks.auth.currentUser=null;mocks.listener?.(null);resolve()}}));
+ let logout!:Promise<void>;await act(async()=>{logout=context.signOut();await Promise.resolve()});await flush();expect(finish).toBeTypeOf('function');
+ mocks.mutation.mockResolvedValue({data:{query:{issued:{token:'b'.repeat(64)}},_execute:1}});let login!:Promise<void>;
+ await act(async()=>{login=context.signIn('b@example.invalid','password');await Promise.resolve()});expect(localStorage.getItem(key)).toBeNull();
+ await act(async()=>{finish();await logout;await login});await flush();expect(context.status).toBe('authenticated');expect(localStorage.getItem(key)).toBe('b'.repeat(64));
+});
+it.each(['profile','token','touch'].flatMap(stage=>['success','zero','error'].map(outcome=>[stage,outcome])))('discards late %s/%s after a new login without ending B',async(stage,outcome)=>{
+ await act(async()=>context.signIn('a@example.invalid','password'));await flush();let finish!:(v:unknown)=>void,fail!:(e:Error)=>void;
+ const pending=new Promise((resolve,reject)=>{finish=resolve;fail=reject});
+ if(stage==='profile')mocks.profile.mockImplementationOnce(()=>pending);
+ if(stage==='token')mocks.auth.currentUser!.getIdToken=(()=>pending) as ()=>Promise<string>;
+ if(stage==='touch')mocks.mutation.mockImplementationOnce(()=>pending);
+ const warning=vi.spyOn(console,'warn').mockImplementation(()=>{});
+ await act(async()=>window.dispatchEvent(new Event('focus')));await flush();let logout!:Promise<void>;await act(async()=>{logout=context.signOut();await Promise.resolve()});
+ mocks.mutation.mockResolvedValue({data:{query:{issued:{token:'b'.repeat(64)}},_execute:1}});
+ await act(async()=>context.signIn('b@example.invalid','password'));await flush();
+ const before=mocks.signOut.mock.calls.length;
+ await act(async()=>{if(outcome==='error')fail(Error('network'));else finish(stage==='token'?'':{data:stage==='profile'?{user:outcome==='zero'?null:{id:'actor',active:true,tenant:{active:true},role:{active:true}}}:{_execute:outcome==='zero'?0:1}});await logout});await flush();
+ expect(context.status).toBe('authenticated');expect(localStorage.getItem(key)).toBe('b'.repeat(64));expect(mocks.signOut).toHaveBeenCalledTimes(before);warning.mockRestore();
+});

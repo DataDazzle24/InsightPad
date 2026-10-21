@@ -10,7 +10,7 @@ type Props = {
 };
 
 // Mount only while open. The native modal top layer owns background inertness,
-// Tab navigation and nested-dialog isolation; each instance has an explicit ref.
+// nested-dialog isolation; explicit Tab wrapping keeps focus within the document.
 export function ModalDialog({ children, className, labelledBy, initialFocusRef, busy = false, onRequestClose }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const openerRef = useRef<HTMLElement | null>(null);
@@ -39,6 +39,15 @@ export function ModalDialog({ children, className, labelledBy, initialFocusRef, 
       aria-labelledby={labelledBy}
       aria-modal="true"
       aria-busy={busy || undefined}
+      onKeyDown={(event)=>{
+        const dialog=dialogRef.current
+        if(event.key!=='Tab'||!dialog||dialog!==[...document.querySelectorAll('dialog[open]')].at(-1))return
+        const controls=[...dialog.querySelectorAll<HTMLElement>('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex="0"]')].filter(e=>e.offsetParent!==null&&e.closest('dialog')===dialog)
+        const first=controls[0],last=controls.at(-1)
+        if(!first||!last){event.preventDefault();dialog.focus();return}
+        if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}
+        else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}
+      }}
       onCancel={(event) => {
         event.preventDefault();
         event.stopPropagation();
