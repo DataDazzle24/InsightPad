@@ -260,3 +260,18 @@ html[data-theme=light] .pos-page .pos-cart .pos-quantity-input{color:#132329;bac
 
 @media print{.finance-table-card th button{display:inline!important;border:0!important;padding:0!important;color:inherit!important}.finance-table-card th button .material-symbols-rounded{display:none!important}}
 @media print{html{color-scheme:light!important}}
+
+/* Confirmations share theme tokens and explicit interactive states. */
+.catalog-confirm footer button{color:var(--text);background:var(--panel);border-color:var(--line)}
+.catalog-confirm footer button:not(:disabled):hover{background:var(--cyan-soft);border-color:var(--cyan)}
+.catalog-confirm footer button:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+.catalog-confirm footer button:disabled{opacity:.55;cursor:not-allowed}
+.catalog-confirm footer .catalog-primary{background:#1268a7;color:#fff;border-color:#1268a7}
+.catalog-confirm footer .confirm-danger{background:#b82f46;color:#fff;border-color:#ff526d}
+.catalog-confirm footer .catalog-primary:not(:disabled):hover{background:#0e568b}
+.catalog-empty{padding:2rem;text-align:center;color:var(--text)}
+.catalog-empty p{color:var(--muted)}
+.catalog-empty button{border:1px solid var(--line);padding:.75rem;color:var(--text);background:var(--panel)}
+.stock-heading__actions .stock-heading-action--transfer:not(:disabled),.stock-heading__actions .stock-heading-action--create:not(:disabled){background:#1268a7;color:#fff;border-color:#1268a7}
+.stock-heading__actions .stock-heading-action--transfer:not(:disabled):hover,.stock-heading__actions .stock-heading-action--create:not(:disabled):hover{background:#0e568b;border-color:#0e568b}
+.stock-heading__actions .stock-heading-action:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}

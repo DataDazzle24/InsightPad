@@ -104,3 +104,14 @@ native interactive browser zoom. Chromium's PDF renderer uses the application's
 print CSS after its PDF handler is invoked; interactive print-dialog behavior,
 physical mobile, camera/scanner, native zoom and real backend integration
 remain separate assisted cases for Quality.
+
+The full runner also executes a residual interaction suite. It records actual
+Tab/Shift+Tab cycles, background focus rejection and nested confirmation return,
+one submission while busy (Enter/Escape), stock entry and transfer replay after
+a lost acknowledgment, settled catalog empty guidance, channel totals and
+supplier/product contracts, receipt/action colors in both themes and computed
+sRGB text contrast. Recovery runs use real elapsed15/60second responses and
+record one synthetic request; the nested native-dialog harness is exercised.
+A read-only `window.__insightpadQa.inspect()` snapshot exposes only synthetic
+memory state to prove stock/cash/sale effects. It is absent from the normal build.
+These additions do not complete the full interface inventory or backend gates.

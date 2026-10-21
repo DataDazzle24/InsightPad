@@ -37,3 +37,19 @@ it('enforces fixture read permissions and branch scopes, updates stock once and 
  const w=(await qaOperation('StockWorkspace',{limit:1000})).data as {_select:Array<{data:{products:Array<{id:string;balances:Array<{quantity:number}>}>;movements:Array<{operationId:string}>}}>} ;expect(w._select[0]!.data.products.find(x=>x.id===uuid(101))!.balances).toEqual([expect.objectContaining({quantity:23})]);expect(w._select[0]!.data.movements.filter(m=>m.operationId===p.clientOperationId)).toHaveLength(1);
  await expect(qaOperation('SaveStockBatch',{payload:{...p,clientOperationId:'stock-denied',branchId:uuid(2)}})).rejects.toThrow('filial');qaState.allowedBranches=[];resetFixtures();
 })
+
+it('matches channel contracts exactly with finite empty counters, totals and operations',async()=>{
+ const contracts={SalesChannelConnectionsV2:['total','authorized','preparing','attention'],SalesChannelProductMappingsV2:['total','automatic','pending','errors'],SalesChannelOrdersV2:['pending','accepted','completed','attention']};
+ for(const [operation,keys]of Object.entries(contracts)){
+  const r=(await qaOperation(operation)).data as {_select:Array<{data:{rows:unknown[];total:number;summary:Record<string,number>}}>};const data=r._select[0]!.data;
+  expect(data.rows).toEqual([]);expect(Number.isFinite(data.total)).toBe(true);expect(data.total).toBe(0);expect(Object.keys(data.summary).sort()).toEqual(keys.sort());expect(Object.values(data.summary).every(Number.isFinite)).toBe(true);
+ }
+ expect((await qaOperation('SalesChannelOperations')).data).toMatchObject({_select:[{data:{events:[],commands:[],jobs:[],summary:{eventFailures:0,queuedCommands:0,syncFailures:0}}}]});
+});
+it('uses identical current product prices in list and POS after editing, and supplier legal identities',async()=>{
+ const price='1799',name='PRODUTO QA CONTRATO';await qaOperation('SaveProduct',{id:uuid(101),payload:{name,salePriceCents:price}});
+ expect((await qaOperation('ListProducts',{search:name})).data).toMatchObject({_select:[{id:uuid(101),name,salePriceCents:price,effectivePriceCents:price,listPriceCents:price}]});
+ expect((await qaOperation('SearchPosProducts',{branchId:uuid(1),search:name})).data).toMatchObject({_select:[{id:uuid(101),name,salePriceCents:price,effectivePriceCents:price,listPriceCents:price}]});
+ expect((await qaOperation('ListSuppliers',{limit:1})).data).toMatchObject({_select:[{id:uuid(4000),legalName:'FORNECEDOR FICTÍCIO QA 1'}],_selectFirst:{totalCount:101}});
+ await expect(qaOperation('SaveProduct',{id:uuid(101),payload:{name,salePriceCents:'NaN'}})).rejects.toThrow('monetário');
+});

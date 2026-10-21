@@ -9,7 +9,7 @@ export const qaState={fail:false,delay:0,ackLoss:false,logs:[] as string[],unsup
 export const uuid=(n:number)=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`
 const when='2026-10-21T12:00:00Z'
 export const branches=[{id:uuid(1),name:'MATRIZ QA'},{id:uuid(2),name:'FILIAL QA'}]
-const initialProducts=()=>Array.from({length:65},(_,i)=>({id:uuid(100+i),name:`PRODUTO QA ${String(i+1).padStart(3,'0')}`,internalCode:`QA${i+1}`,ean:`789000000${String(i).padStart(4,'0')}`,categoryId:uuid(300),subcategoryId:uuid(800),categoryName:'CATEGORIA QA 001',subcategoryName:'SUBCATEGORIA QA 001',minimumStock:5,maximumStock:30,allowNegativeStock:false,bundleProduct:false,weightedProduct:i%3===0,costPriceCents:'800',salePriceCents:'1200',salePrice:1200,priceCents:'1200',unit:'UN',active:true,createdAt:when,updatedAt:when,balances:branches.map(b=>({branchId:b.id,branchName:b.name,quantity:i%7===0?2:20,reservedQuantity:0,availableQuantity:i%7===0?2:20,averageCostCents:'800'}))}))
+const initialProducts=()=>Array.from({length:65},(_,i)=>({id:uuid(100+i),name:`PRODUTO QA ${String(i+1).padStart(3,'0')}`,internalCode:`QA${i+1}`,ean:`789000000${String(i).padStart(4,'0')}`,categoryId:uuid(300),subcategoryId:uuid(800),categoryName:'CATEGORIA QA 001',subcategoryName:'SUBCATEGORIA QA 001',minimumStock:5,maximumStock:30,allowNegativeStock:false,bundleProduct:false,weightedProduct:i%3===0,costPriceCents:'800',salePriceCents:'1200',unit:'UN',active:true,createdAt:when,updatedAt:when,balances:branches.map(b=>({branchId:b.id,branchName:b.name,quantity:i%7===0?2:20,reservedQuantity:0,availableQuantity:i%7===0?2:20,averageCostCents:'800'}))}))
 export let products=initialProducts()
 let categories:Row[],subcategories:Row[],movements:Row[],transfers:Row[],sessions:Row[],cashMovements:Row[],sales:Row[]
 let nextId=13000,policy:Row
@@ -70,9 +70,10 @@ export async function qaOperation(name:string,variables:unknown={}){
  case 'ListSubcategories':return page(qaState.empty?[]:subcategories,v)
  case 'CategoryOptions':return {data:{_select:categories.filter(c=>c.active)}}
  case 'RegistrationOptions':return box({branches,categories,subcategories,suppliers:[{id:uuid(20),name:'FORNECEDOR QA'}],products,paymentMethods:[],options:{}})
- case 'ListProducts':return page(qaState.empty?[]:products,v)
+ case 'ListProducts':return page(qaState.empty?[]:products.map(p=>({...p,effectivePriceCents:p.salePriceCents,listPriceCents:p.salePriceCents})),v)
  case 'ListBranches':return page(branches.map(b=>({...b,active:true,createdAt:when,updatedAt:when})),v)
- case 'ListSuppliers':case 'ListCustomers':return page(Array.from({length:101},(_,i)=>({id:uuid(4000+i),name:`PESSOA FICTÍCIA QA ${i}`,active:true,createdAt:when,updatedAt:when})),v)
+ case 'ListSuppliers':return page(qaState.empty?[]:Array.from({length:101},(_,i)=>({id:uuid(4000+i),legalName:`FORNECEDOR FICTÍCIO QA ${i+1}`,tradeName:`FORNECEDOR QA ${i+1}`,name:`FORNECEDOR FICTÍCIO QA ${i+1}`,active:true,createdAt:when,updatedAt:when})),v)
+ case 'ListCustomers':return page(Array.from({length:101},(_,i)=>({id:uuid(4000+i),name:`PESSOA FICTÍCIA QA ${i}`,active:true,createdAt:when,updatedAt:when})),v)
  case 'ProductComponents':case 'ProductPromotions':case 'PendingPosApprovals':return {data:{_select:[]}}
  case 'StockWorkspace':return box(stockWorkspace(v))
  case 'SaveStockBatch':case 'PostStockTransfer':{
@@ -136,8 +137,10 @@ export async function qaOperation(name:string,variables:unknown={}){
  case 'SalesChannelOptions':return box({branches,connections:[]})
  case 'LatestPendingSalesChannelOrder':return box({orders:[]})
  case 'ListSales':return page(sales.map(s=>({...s,clientOperationId:s.id,source:'POS',soldAt:s.date,createdByUid:'qa-user',branchId:s.branchId,branchName:(s.branch as Row).name,customerName:s.customer,name:s.customer,itemCount:(s.items as unknown[]).length,paymentMethods:'DINHEIRO'})),{...v,search:(v.filters as Row|undefined)?.search??''})
- case 'SalesChannelConnectionsV2':case 'SalesChannelProductMappingsV2':case 'SalesChannelOrdersV2':return box({rows:[],totalCount:0,summary:{}})
- case 'SalesChannelOperations':return box({events:[],commands:[],syncs:[],summary:{}})
+ case 'SalesChannelConnectionsV2':return box({rows:[],total:0,summary:{total:0,authorized:0,preparing:0,attention:0}})
+ case 'SalesChannelProductMappingsV2':return box({rows:[],total:0,summary:{total:0,automatic:0,pending:0,errors:0}})
+ case 'SalesChannelOrdersV2':return box({rows:[],total:0,summary:{pending:0,accepted:0,completed:0,attention:0}})
+ case 'SalesChannelOperations':return box({events:[],commands:[],jobs:[],summary:{eventFailures:0,queuedCommands:0,syncFailures:0}})
  case 'EnsureSalesDefaults':return {data:{_execute:1}}
  }
  // In-memory catalog writes are useful for forms and status flows. Unknown
@@ -159,3 +162,5 @@ export const mutationRef=queryRef
 export const executeQuery=(ref:ReturnType<typeof queryRef>)=>qaOperation(ref.name,ref.variables)
 export const executeMutation=executeQuery
 export const httpsCallable=(_functions:unknown,name:string)=>async()=>{throw new Error('QA: chamada externa mockada e desativada: '+name)}
+// Read-only diagnostic snapshot for browser assertions; synthetic QA build only.
+export const inspectFixtures=()=>structuredClone({products,movements,transfers,sessions,sales,cashMovements})
