@@ -275,3 +275,5 @@ html[data-theme=light] .pos-page .pos-cart .pos-quantity-input{color:#132329;bac
 .stock-heading__actions .stock-heading-action--transfer:not(:disabled),.stock-heading__actions .stock-heading-action--create:not(:disabled){background:#1268a7;color:#fff;border-color:#1268a7}
 .stock-heading__actions .stock-heading-action--transfer:not(:disabled):hover,.stock-heading__actions .stock-heading-action--create:not(:disabled):hover{background:#0e568b;border-color:#0e568b}
 .stock-heading__actions .stock-heading-action:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+/* Keyboard focus must remain distinguishable against the light surrounding panel. */
+html[data-theme=light] .catalog-confirm footer button:focus-visible,html[data-theme=light] .stock-heading__actions .stock-heading-action:focus-visible{outline-color:#1268a7}

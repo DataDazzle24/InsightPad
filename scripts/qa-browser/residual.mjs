@@ -12,30 +12,33 @@ export async function residual({page,output,sha,run,go,panel,wait,screenshot}){
  };
  const inspect=()=>page.evaluate(()=>window.__insightpadQa.inspect());
  const measure=async(locator,label)=>{
+  await locator.evaluate(async e=>{await Promise.all(e.getAnimations().filter(a=>a.effect?.getComputedTiming().iterations!==Infinity).map(a=>a.finished.catch(()=>{})))})
   const colors=await locator.evaluate(e=>{
    const parse=v=>{const a=v.match(/[\d.]+/g).map(Number);return [a[0],a[1],a[2],a[3]??1]};
    const blend=(front,back)=>front.slice(0,3).map((v,i)=>v*front[3]+back[i]*(1-front[3]));
    const chain=[];for(let node=e;node;node=node.parentElement)chain.unshift(node);
-   let background=[255,255,255];for(const node of chain)background=blend(parse(getComputedStyle(node).backgroundColor),background);
-   const s=getComputedStyle(e);return {text:s.color,background:s.backgroundColor,effectiveBackground:background,effectiveText:blend(parse(s.color),background),disabled:e.disabled,outline:s.outlineColor,opacity:s.opacity};
+   let background=[255,255,255],surrounding=[255,255,255];for(const node of chain){if(node===e)surrounding=[...background];background=blend(parse(getComputedStyle(node).backgroundColor),background)}
+   const s=getComputedStyle(e);return {text:s.color,background:s.backgroundColor,effectiveBackground:background,effectiveText:blend(parse(s.color),background),disabled:e.disabled,outline:s.outlineColor,outlineStyle:s.outlineStyle,outlineWidth:parseFloat(s.outlineWidth),focusVisible:e.matches(':focus-visible'),surroundingBackground:surrounding,effectiveOutline:blend(parse(s.outlineColor),surrounding),opacity:s.opacity};
   });
   const luminance=value=>value.map(x=>{x/=255;return x<=.04045?x/12.92:((x+.055)/1.055)**2.4}).reduce((n,x,i)=>n+x*[.2126,.7152,.0722][i],0);
   const a=luminance(colors.effectiveText),b=luminance(colors.effectiveBackground),ratio=(Math.max(a,b)+.05)/(Math.min(a,b)+.05);
-  measurements.push({label,...colors,ratio,method:'computed sRGB with alpha composited through ancestor backgrounds; WCAG relative luminance',sha});assert.ok(ratio>=4.5,label+' contrast '+ratio);
+  const foreground=luminance(colors.effectiveOutline),surrounding=luminance(colors.surroundingBackground),outlineRatio=(Math.max(foreground,surrounding)+.05)/(Math.min(foreground,surrounding)+.05);
+  if(label.endsWith(' focus')){assert.ok(colors.focusVisible&&colors.outlineStyle!=='none'&&colors.outlineWidth>=2,label+' keyboard indicator');assert.ok(outlineRatio>=3,label+' outline contrast '+outlineRatio)}
+  measurements.push({label,...colors,ratio,outlineRatio,method:'computed sRGB with alpha composited through ancestor backgrounds; WCAG relative luminance',sha});assert.ok(ratio>=4.5,label+' contrast '+ratio);
  };
  // The previous sale scenario leaves the real receipt prompt open.
  await run('receipt-contrast-two-themes',async()=>{
   const dialog=page.getByRole('dialog').filter({hasText:/Venda concluída/i});await dialog.waitFor();
   for(const mode of ['light','dark']){await theme(mode);for(const name of ['Não imprimir','Imprimir']){
    const b=dialog.getByRole('button',{name:name==='Imprimir'?/Imprimir$/:name,exact:name!=='Imprimir'});assert.equal(await b.isEnabled(),true);
-   await page.mouse.move(0,0);await measure(b,mode+' '+name+' normal');await b.hover();await measure(b,mode+' '+name+' hover');await b.focus();await measure(b,mode+' '+name+' focus');
+   await page.mouse.move(0,0);await measure(b,mode+' '+name+' normal');await b.hover();await measure(b,mode+' '+name+' hover');await b.focus();await page.keyboard.press('Shift+Tab');await page.keyboard.press('Tab');await measure(b,mode+' '+name+' focus');
   }await screenshot('receipt-'+mode)}
   await dialog.getByRole('button',{name:'Não imprimir',exact:true}).click();
  });
  await run('stock-action-colors',async()=>{
   await go('/estoque');for(const mode of ['light','dark']){await theme(mode);for(const name of ['Transferir','Nova movimentação']){
    const b=page.getByRole('button',{name:new RegExp(name,'i')});await b.waitFor();assert.equal(await b.isEnabled(),true);
-   const background=await b.evaluate(e=>getComputedStyle(e).backgroundColor);assert.equal(background,'rgb(18, 104, 167)');await measure(b,mode+' '+name);await b.hover();await measure(b,mode+' '+name+' hover');await b.focus();await measure(b,mode+' '+name+' focus');await page.mouse.move(0,0);
+   const background=await b.evaluate(e=>getComputedStyle(e).backgroundColor);assert.equal(background,'rgb(18, 104, 167)');await measure(b,mode+' '+name);await b.hover();await measure(b,mode+' '+name+' hover');await b.focus();await page.keyboard.press('Shift+Tab');await page.keyboard.press('Tab');await measure(b,mode+' '+name+' focus');await page.mouse.move(0,0);
   }await screenshot('stock-actions-'+mode)}
   await panel();await page.getByLabel('Permissões',{exact:true}).selectOption('read');await wait();for(const b of await page.locator('.stock-heading__actions button').all())assert.equal(await b.isDisabled(),true);await screenshot('stock-actions-disabled');
  });
@@ -99,5 +102,5 @@ export async function residual({page,output,sha,run,go,panel,wait,screenshot}){
  await run('native-nested-dialogs',async()=>{
   await page.goto('http://127.0.0.1:4174/qa/recovery.html');await wait();const opener=page.getByRole('button',{name:'Ensaiar diálogos aninhados'});await opener.click();const outer=page.getByRole('dialog',{name:'Diálogo externo de QA'});await cycle(outer);await outer.getByRole('button',{name:'Abrir diálogo interno'}).click();const inner=page.getByRole('dialog',{name:'Diálogo interno de QA'});await cycle(inner);await page.keyboard.press('Escape');assert.equal(await inner.count(),0);assert.equal(await focused(outer),true);await page.keyboard.press('Escape');assert.equal(await opener.evaluate(e=>e===document.activeElement),true);
  });
- writeFileSync(output+'/contrast.json',JSON.stringify({sha,measurements,limits:['Disabled controls measured only when the application actually disables them; no fabricated receipt-disabled state','Focus outlines and the rest of the interface still need independent visual review']},null,2));
+ writeFileSync(output+'/contrast.json',JSON.stringify({sha,measurements,limits:['Disabled controls measured only when the application actually disables them; no fabricated receipt-disabled state','Text and keyboard outline ratios measured only on the recorded enabled controls; remaining interface still needs independent review']},null,2));
 }
