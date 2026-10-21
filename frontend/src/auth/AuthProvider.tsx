@@ -91,6 +91,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     let disposed = false
 
     async function validateAccess(user: User | null, blocking = true) {
+      // An observer notification may be queued before a later login completes.
+      if(user!==auth.currentUser)return
       if(user&&isClosing(user))return
       const generation=sessionGeneration
       const attempt=signInAttempt

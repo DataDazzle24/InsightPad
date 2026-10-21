@@ -172,3 +172,11 @@ it('serializes concurrent Firebase logins and discards the earlier auth callback
  await act(async()=>{loginA=context.signIn('a@example.invalid','password');await Promise.resolve()});await act(async()=>{loginB=context.signIn('b@example.invalid','password');await Promise.resolve()});expect(mocks.signIn).toHaveBeenCalledTimes(1);
  await act(async()=>{finish();await loginA;await loginB});await flush();expect(context.status).toBe('authenticated');expect(localStorage.getItem(key)).toBe('b'.repeat(64));expect(mocks.mutation.mock.calls.filter(c=>c[0].name==='ClaimDeviceSession')).toHaveLength(1);expect(mocks.signOut).not.toHaveBeenCalled();
 });
+it('ignores a queued null auth event when the current Firebase actor is already B',async()=>{
+ await act(async()=>context.signIn('b@example.invalid','password'));await flush();const user=mocks.auth.currentUser;
+ await act(async()=>mocks.listener?.(null));await flush();expect(mocks.auth.currentUser).toBe(user);expect(context.status).toBe('authenticated');expect(context.profile?.id).toBe('actor');expect(localStorage.getItem(key)).toBe(secret);expect(mocks.signOut).not.toHaveBeenCalled();
+});
+it.each(['actor','former'])('ignores a queued old auth actor (%s) after B is active',async(uid)=>{
+ await act(async()=>context.signIn('b@example.invalid','password'));await flush();const user=mocks.auth.currentUser;
+ await act(async()=>mocks.listener?.({uid,getIdToken:async()=>''}));await flush();expect(mocks.auth.currentUser).toBe(user);expect(context.status).toBe('authenticated');expect(context.profile?.id).toBe('actor');expect(localStorage.getItem(key)).toBe(secret);expect(mocks.signOut).not.toHaveBeenCalled();
+});
