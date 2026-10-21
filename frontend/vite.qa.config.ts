@@ -10,6 +10,7 @@ const sourceSha = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repository, 
 export default defineConfig({
   plugins: [react(), {
     name:'qa-fixture-boundary',enforce:'pre',
+    transform(code,id){if(id.endsWith('/src/index.css'))return code.replace(/^@import.*fonts\.googleapis.*$/m,'')},
     resolveId(source){
       if(source==='@insightpad/dataconnect')return '\0qa-sdk';
       if(['firebase/data-connect','@firebase/data-connect','firebase/functions'].includes(source)||/(?:^|\/)lib\/firebase$|(?:^|\/)auth\/session-data-connect$/.test(source))return fileURLToPath(new URL('./qa/api.ts',import.meta.url));
@@ -27,6 +28,7 @@ export default defineConfig({
         const forbidden = Object.keys(item.modules).filter(path => /[/\\](?:firebase|@firebase)[/\\]|[/\\]src[/\\](?:lib[/\\]firebase|auth[/\\]AuthProvider)/.test(path));
         if (forbidden.length) this.error(`QA must not load real Firebase/AuthProvider: ${forbidden.join(', ')}`);
       }
+      this.emitFile({type:'asset',fileName:'font-licenses.txt',source:['@fontsource-variable/inter','@fontsource/ibm-plex-mono','@fontsource-variable/material-symbols-rounded'].map(p=>p+'\n'+readFileSync(new URL('./node_modules/'+p+'/LICENSE',import.meta.url),'utf8')).join('\n\n')});
       this.emitFile({ type: 'asset', fileName: 'qa-source.json', source: JSON.stringify({ kind: 'review-harness', entries:['qa/recovery.html','qa/application.html'], commit: sourceSha, auth: 'mock', api:'in-memory fixtures; no real backend', deployApproval: null }, null, 2) });
     },
   }],

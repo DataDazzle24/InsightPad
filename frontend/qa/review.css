@@ -1,3 +1,4 @@
+@import './fonts.css';
 .qa-controls{position:fixed;z-index:200;left:.5rem;bottom:.5rem;width:min(25rem,calc(100vw - 1rem));max-height:42dvh;overflow:auto;padding:.65rem;border:1px solid #65838a;border-radius:.4rem;background:var(--panel,#13232a);color:var(--text,#eef6f8);font:12px/1.45 system-ui}
 .qa-controls summary{cursor:pointer;font-weight:700}.qa-controls p{margin:.45rem 0}.qa-controls code{overflow-wrap:anywhere}.qa-controls label{display:block;margin:.4rem 0}.qa-controls select,.qa-controls button,.qa-nested button{margin:.2rem;padding:.45rem;border:1px solid #65838a;border-radius:.3rem;background:#edf5f7;color:#102e38}.qa-controls :is(select,button,summary):focus-visible{outline:2px solid #42dcfa;outline-offset:2px}.qa-nested{padding:1.5rem}
 html[data-theme=light] .qa-controls{background:#fff;color:#193039}

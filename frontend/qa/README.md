@@ -36,3 +36,70 @@ Reset fixtures between cases. Record browser/version, source SHA, route,
 scenario, expected/actual result and actual artifacts. A build, synthetic
 receipt or modal-only test does not validate the integrated deployed backend.
 The entry prepares independent QA; no acceptance is implied.
+
+## Reproducible browser executor
+
+Use Node22 and the lockfiles. No cloud credentials, Firebase service, preview,
+new paid service or real data are needed. Browser and HTTP server must run on
+this same machine; a remote browser cannot use this machine's loopback URL.
+
+```bash
+npm --prefix frontend ci --no-audit --no-fund
+npm --prefix frontend run build:qa
+npm --prefix scripts/qa-browser ci --ignore-scripts --no-audit --no-fund
+node scripts/qa-browser/node_modules/playwright/cli.js install --with-deps chromium
+node scripts/qa-browser/run.mjs
+# After inspecting the first route proof:
+node scripts/qa-browser/run.mjs --full
+```
+
+The runner starts/stops its own server, binds127.0.0.1, blocks foreign requests,
+and checks the artifact SHA against Git HEAD before opening the app. QA fonts
+(Inter, IBM Plex Mono and Material Symbols Rounded, OFL licenses included in
+font-licenses.txt) are local and only affect this alternative build.
+
+The first command produces route.png and proof.json in
+artifacts/browser-private. Full mode adds a route inventory read from App.tsx
+and pages.ts, viewport captures, modal/keyboard/loading/empty/error/permission
+cases, interactions, actual CSV downloads, a Chromium print-rendered PDF,
+geometry and a trace. coverage.json records each route, redirect, unsupported
+operation and case result. These are observations for independent review,
+not automatic visual acceptance. Inspect captures, CSV row counts/contents,
+PDF pagination/last row, trace interactions and all failures.
+
+The repository is public. CI NEVER uploads plaintext captures, traces, browser
+reports or a private key. It seals the private directory with AES-256-GCM and
+RSA-OAEP-SHA256 using evidence-public.pem and uploads only evidence.enc. The
+matching private key is held separately in private project storage. In a
+private workspace, obtain that key through the project owner and decrypt:
+
+```bash
+node scripts/qa-browser/decrypt.mjs PRIVATE.pem evidence.enc evidence.tar.gz
+mkdir -p private-review
+tar --no-same-owner -xzf evidence.tar.gz -C private-review
+```
+
+For a local run, inspect the private output directly. For a different review
+recipient, generate their own RSA pair, keep its private key private and set
+QA_EVIDENCE_PUBLIC_KEY to the public PEM path when running seal.mjs. Do not
+put private evidence in public issues, PR bodies, logs or git. The default CI
+retention is7days. Unencrypted application build/manifest artifacts continue
+to contain only public source-derived code and synthetic fixtures.
+
+Supported memory behavior: product create/edit/status, cash open/supply/
+withdrawal/close/policy, sale with validated cash payment/change/stock and
+matching retry receipt, catalog writes and simple stock entries/transfers.
+Writes survive route navigation in the same loaded app; reload/reset restores
+fixtures deterministically. Unknown or unmodeled operations (including stock
+reversal, promotions, external calls) throw explicitly. Empty/error/latency,
+no-export/read/denied modes are controlled by the QA panel. The fixture
+permission/branch checks are synthetic, not backend authorization evidence.
+
+Inventory includes current tenant routes, module menus, placeholders,
+redirects and platform routes. Platform identity restrictions and unsupported
+API scenarios must be marked inaccessible/unsupported rather than accepted.
+Viewport320/375 and CSS zoom200/400 are emulation, not a physical device or
+native interactive browser zoom. Chromium's PDF renderer uses the application's
+print CSS after its PDF handler is invoked; interactive print-dialog behavior,
+physical mobile, camera/scanner, native zoom and real backend integration
+remain separate assisted cases for Quality.

@@ -29,12 +29,12 @@ const dataConnect = getDataConnect(firebaseApp, connectorConfig)
 const ACCESS_RECHECK_MS = 30_000
 let pendingSessionClaim = false
 let sessionGeneration = 0
-let sessionValidation: {uid:string;promise:Promise<void>} | null = null
+let sessionValidation: {uid:string;generation:number;promise:Promise<void>} | null = null
 const deviceId=()=>{const key='insightpad.device.id';let value=localStorage.getItem(key);if(!value){value=`${crypto.randomUUID()}${crypto.randomUUID()}`;localStorage.setItem(key,value)}return value}
 const sessionKey=(uid:string)=>`insightpad.device.session:${uid}`
 const deviceName=()=>`${navigator.platform||'Dispositivo'} · ${navigator.userAgent.slice(0,120)}`
 async function validateExclusiveSession(user:User){
-  if(sessionValidation?.uid===user.uid)return sessionValidation.promise
+  if(sessionValidation?.uid===user.uid&&sessionValidation.generation===sessionGeneration)return sessionValidation.promise
   const generation=sessionGeneration
   const run=async()=>{
     const key=sessionKey(user.uid),token=localStorage.getItem(key)||''
@@ -55,7 +55,7 @@ async function validateExclusiveSession(user:User){
     if(!((result.data as {_select?:Array<{valid?:boolean}>})._select??[])[0]?.valid)throw new Error('DEVICE_SESSION_REPLACED')
     await executeMutation(mutationRef(dataConnect,'TouchDeviceSession',{sessionToken:token}))
   }
-  const promise=run();sessionValidation={uid:user.uid,promise}
+  const promise=run();sessionValidation={uid:user.uid,generation,promise}
   try{await promise}finally{if(sessionValidation?.promise===promise)sessionValidation=null}
 }
 
@@ -180,13 +180,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
   )
 
   async function signIn(email: string, password: string) {
+    const generation=++sessionGeneration
+    validationVersion.current++
     setError(null)
     setStatus('loading')
     try {
       pendingSessionClaim=true
       await setPersistence(auth, browserLocalPersistence)
+      if(generation!==sessionGeneration)return
       await signInWithEmailAndPassword(auth, email.trim(), password)
     } catch {
+      if(generation!==sessionGeneration)return
       pendingSessionClaim=false
       setStatus('unauthenticated')
       setError('E-mail ou senha inválidos.')
@@ -196,14 +200,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   async function signOut() {
     setStatus('loading')
-    const user=auth.currentUser
-    sessionGeneration++;pendingSessionClaim=false;validationVersion.current++
+    const user=auth.currentUser,generation=++sessionGeneration
+    const key=user?sessionKey(user.uid):null,token=key?localStorage.getItem(key):null
+    // Snapshot and remove only A's credential before any asynchronous work.
+    // B can claim/store a new credential while A's remote release is in flight.
+    if(key&&localStorage.getItem(key)===token)localStorage.removeItem(key)
+    pendingSessionClaim=false;validationVersion.current++
     const validation=sessionValidation
     const pending=validation && validation.uid===user?.uid?validation.promise:null
     if(pending){try{await pending}catch(cause){console.warn('Não foi possível concluir a liberação da sessão pendente.',cause)}}
-    const token=user?localStorage.getItem(sessionKey(user.uid)):null
-    if(user&&token){try{await executeMutation(mutationRef(dataConnect,'ReleaseDeviceSession',{sessionToken:token}))}catch(cause){console.warn('Não foi possível liberar a sessão do dispositivo.',cause)}localStorage.removeItem(sessionKey(user.uid))}
-    await firebaseSignOut(auth)
+    if(user&&token){try{await executeMutation(mutationRef(dataConnect,'ReleaseDeviceSession',{sessionToken:token}))}catch(cause){console.warn('Não foi possível liberar a sessão do dispositivo.',cause)}}
+    // A late success or failure must never sign out a newer B authentication.
+    if(generation===sessionGeneration&&auth.currentUser===user)await firebaseSignOut(auth)
   }
 
   async function resetPassword(email: string) {
