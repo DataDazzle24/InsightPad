@@ -12,7 +12,7 @@ try{
  await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('QA server startup timeout')),15000);server.stdout.once('data',()=>{clearTimeout(timer);resolve()});server.once('exit',()=>reject(Error('QA server exited')))});
  browser=await chromium.launch({headless:true});const context=await browser.newContext({viewport:{width:1440,height:1000},locale:'pt-BR'});
  await context.route('**/*',route=>new URL(route.request().url()).origin==='http://127.0.0.1:4174'?route.continue():route.abort());
- const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ const page=await context.newPage(),errors=[];page.setDefaultTimeout(8000);page.setDefaultNavigationTimeout(15000);page.on('pageerror',e=>errors.push(e.message));
  const response=await page.goto('http://127.0.0.1:4174/qa/application.html#/cadastros/categorias');assert.equal(response.status(),200);assert.match(response.headers()['content-security-policy'],/connect-src 'none'/);
  await page.evaluate(()=>document.fonts.ready);
  await page.getByText('CATEGORIA QA 001',{exact:true}).first().waitFor();

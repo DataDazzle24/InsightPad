@@ -9,7 +9,7 @@ export const qaState={fail:false,delay:0,ackLoss:false,logs:[] as string[],unsup
 export const uuid=(n:number)=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`
 const when='2026-10-21T12:00:00Z'
 export const branches=[{id:uuid(1),name:'MATRIZ QA'},{id:uuid(2),name:'FILIAL QA'}]
-const initialProducts=()=>Array.from({length:65},(_,i)=>({id:uuid(100+i),name:`PRODUTO QA ${String(i+1).padStart(3,'0')}`,internalCode:`QA${i+1}`,ean:`789000000${String(i).padStart(4,'0')}`,categoryId:uuid(300),subcategoryId:uuid(800),categoryName:'CATEGORIA QA 001',subcategoryName:'SUBCATEGORIA QA 001',minimumStock:5,maximumStock:30,allowNegativeStock:false,weightedProduct:i%3===0,costPriceCents:'800',salePriceCents:'1200',salePrice:1200,priceCents:'1200',unit:'UN',active:true,createdAt:when,updatedAt:when,balances:branches.map(b=>({branchId:b.id,branchName:b.name,quantity:i%7===0?2:20,reservedQuantity:0,availableQuantity:i%7===0?2:20,averageCostCents:'800'}))}))
+const initialProducts=()=>Array.from({length:65},(_,i)=>({id:uuid(100+i),name:`PRODUTO QA ${String(i+1).padStart(3,'0')}`,internalCode:`QA${i+1}`,ean:`789000000${String(i).padStart(4,'0')}`,categoryId:uuid(300),subcategoryId:uuid(800),categoryName:'CATEGORIA QA 001',subcategoryName:'SUBCATEGORIA QA 001',minimumStock:5,maximumStock:30,allowNegativeStock:false,bundleProduct:false,weightedProduct:i%3===0,costPriceCents:'800',salePriceCents:'1200',salePrice:1200,priceCents:'1200',unit:'UN',active:true,createdAt:when,updatedAt:when,balances:branches.map(b=>({branchId:b.id,branchName:b.name,quantity:i%7===0?2:20,reservedQuantity:0,availableQuantity:i%7===0?2:20,averageCostCents:'800'}))}))
 export let products=initialProducts()
 let categories:Row[],subcategories:Row[],movements:Row[],transfers:Row[],sessions:Row[],cashMovements:Row[],sales:Row[]
 let nextId=13000,policy:Row
@@ -76,8 +76,9 @@ export async function qaOperation(name:string,variables:unknown={}){
  case 'ProductComponents':case 'ProductPromotions':case 'PendingPosApprovals':return {data:{_select:[]}}
  case 'StockWorkspace':return box(stockWorkspace(v))
  case 'SaveStockBatch':case 'PostStockTransfer':{
+  if(p.replacesOperationId||p.fiscalEnabled)throw Error('QA: correção/fiscal ainda sem fixture')
   const key=String(p.clientOperationId),hash=JSON.stringify(p),kind=name==='SaveStockBatch'?'STOCK_BATCH':'STOCK_TRANSFER',old=receipts.get(key)
-  if(old&&old.hash!==hash)throw new Error('STOCK_NOT_CONFIRMED')
+  if(old&&(old.hash!==hash||old.kind!==kind))throw new Error('STOCK_NOT_CONFIRMED')
   if(!old){
    const lines=p.items as Row[];if(!Array.isArray(lines)||!lines.length)throw Error('QA: itens obrigatórios');
    const source=name==='SaveStockBatch'?p.branchId:p.sourceBranchId,destination=p.destinationBranchId;
@@ -108,7 +109,7 @@ export async function qaOperation(name:string,variables:unknown={}){
   if(current)Object.assign(current,row);else products.push({...row,balances:branches.map(b=>({branchId:b.id,branchName:b.name,quantity:0,reservedQuantity:0,availableQuantity:0,averageCostCents:row.costPriceCents}))});return {data:{_execute:1}}
  }
  case 'SetProductsStatusBatch':{
-  const ids=(v.ids??[]) as string[];if(!ids.length||ids.some(id=>!products.some(p=>p.id===id)))throw Error('QA: produtos inválidos');for(const p of products)if(ids.includes(p.id))p.active=v.active===true;return {data:{_execute:ids.length}}
+  const ids=(v.ids??[]) as string[];if(typeof v.active!=='boolean')throw Error('QA: estado inválido');if(!ids.length||ids.some(id=>!products.some(p=>p.id===id)))throw Error('QA: produtos inválidos');for(const p of products)if(ids.includes(p.id))p.active=v.active===true;return {data:{_execute:ids.length}}
  }
  case 'OpenCashSession':{
   if(!branchAllowed(v.branchId)||cashSession(v.branchId))throw Error('QA: filial inválida ou caixa já aberto');const amount=integer(v.openingAmountCents);sessions.push({id:uuid(nextId++),branchId:v.branchId,status:'OPEN',openedAt:when,openingAmountCents:String(amount),expectedAmountCents:String(amount),movementCount:0});return {data:{_execute:1}}
@@ -120,9 +121,10 @@ export async function qaOperation(name:string,variables:unknown={}){
  }) as {_execute:number}}
  case 'UpdatePosPolicy':policy={...policy,...v};return {data:{_execute:1}}
  case 'PostSale':return {data:mutateOnce(name,p.clientOperationId,p,()=>{
+  if(p.replacesSaleId)throw Error('POS_CORRECTION_UNSUPPORTED');
   const session=cashSession(p.branchId);if(!branchAllowed(p.branchId)||!session||session.id!==p.cashSessionId)throw Error('POS_SESSION_REQUIRED');
   const lines=p.items as Row[],payments=p.payments as Row[];if(!Array.isArray(lines)||!lines.length||!Array.isArray(payments)||!payments.length)throw Error('POS_INVALID');
-  const items=lines.map(line=>{const product=products.find(x=>x.id===line.product_id&&x.active),quantity=Number(line.quantity);if(!product||!Number.isFinite(quantity)||quantity<=0||!product.weightedProduct&&!Number.isInteger(quantity))throw Error('POS_INVALID');
+  const items=lines.map(line=>{const product=products.find(x=>x.id===line.product_id&&x.active),quantity=Number(line.quantity);if(!product||product.bundleProduct||!Number.isFinite(quantity)||quantity<=0||!product.weightedProduct&&!Number.isInteger(quantity))throw Error('POS_INVALID');
    const balance=product.balances.find(b=>b.branchId===p.branchId);if(!balance||!product.allowNegativeStock&&balance.availableQuantity<quantity)throw Error('POS_STOCK_INSUFFICIENT');const price=integer(line.requested_price);if(price!==Number(product.salePriceCents))throw Error('POS_PRICE_UNSUPPORTED');return {productId:product.id,name:product.name,quantity,unitPriceCents:price,listPriceCents:price,costPriceCents:Number(product.costPriceCents),weightedProduct:product.weightedProduct,bundleProduct:false,stock:balance.availableQuantity,allowNegativeStock:product.allowNegativeStock}
   });if(new Set(items.map(x=>x.productId)).size!==items.length)throw Error('POS_INVALID');
   const subtotal=items.reduce((n,x)=>n+Math.round(x.quantity*x.unitPriceCents),0),discount=integer(p.discountCents??0),surcharge=integer(p.surchargeCents??0),total=subtotal-discount+surcharge;if(total<0)throw Error('POS_INVALID');
@@ -140,13 +142,13 @@ export async function qaOperation(name:string,variables:unknown={}){
  }
  // In-memory catalog writes are useful for forms and status flows. Unknown
  // operations fail explicitly; they never pretend to validate a real backend.
- const sub=name.includes('Subcategor'),cat=/^(Create|Update|Archive|Restore|Set)(Categories|Category|Subcategories|Subcategory)(Batch)?$/.test(name)
+ const sub=name.includes('Subcategor'),cat=['CreateCategory','UpdateCategory','ArchiveCategory','RestoreCategory','CreateCategoriesBatch','SetCategoriesStatusBatch','CreateSubcategory','UpdateSubcategory','ArchiveSubcategory','RestoreSubcategory','CreateSubcategoriesBatch','SetSubcategoriesStatusBatch'].includes(name)
  if(cat){
   const list=sub?subcategories:categories,rows=(v.names??v.items??[v.name??'NOVA CATEGORIA QA']) as unknown[]
   if(/^(Create|Update)/.test(name)){
-   if(v.id){const row=list.find(x=>x.id===v.id);if(row)Object.assign(row,{name:v.name,categoryId:v.categoryId??row.categoryId})}
+   if(v.id){const row=list.find(x=>x.id===v.id);if(!row)throw Error('QA: registro inexistente');Object.assign(row,{name:String(v.name??'').trim().toUpperCase(),categoryId:v.categoryId??row.categoryId})}
    else for(const value of rows){const x=typeof value==='object'&&value?value as Row:{name:value};list.push({id:uuid(12000+list.length),name:String(x.name??value).trim().toUpperCase(),categoryId:x.categoryId??uuid(300),categoryName:'CATEGORIA QA 001',active:true,createdAt:when,updatedAt:when,productCount:0,subcategoryCount:0})}
-  }else{const ids=(v.ids??[v.id]) as string[];for(const row of list)if(ids.includes(String(row.id)))row.active=v.active??/^Restore/.test(name)}
+  }else{const ids=(v.ids??[v.id]) as string[];if(!ids.length||ids.some(id=>!list.some(row=>row.id===id)))throw Error('QA: registros inexistentes');for(const row of list)if(ids.includes(String(row.id)))row.active=v.active??/^Restore/.test(name)}
   return {data:{_execute:(v.ids as unknown[]|undefined)?.length??rows.length}}
  }
  qaState.unsupported.push(name)
