@@ -20,7 +20,7 @@ it('persists product changes and cash state and supports a real synthetic sale w
  const w=(await qaOperation('SalesWorkspace',{branchId:uuid(1)})).data as {_select:Array<{data:{openSession:{id:string}}}>};
  const sale={clientOperationId:'sale-qa-1',branchId:uuid(1),cashSessionId:w._select[0]!.data.openSession.id,items:[{product_id:uuid(101),quantity:2,requested_price:1500}],payments:[{payment_method_id:uuid(50),amount_cents:3500,sequence:1}],discountCents:0,surchargeCents:0};
  expect((await qaOperation('PostSale',{payload:sale})).data).toMatchObject({_execute:1,result:{receipt:{data:{totalCents:3000,changeCents:500,status:'COMPLETED'}}}});
- expect((await qaOperation('PostSale',{payload:sale})).data).toMatchObject({_execute:1});
+ expect((await qaOperation('PostSale',{payload:sale})).data).toMatchObject({_execute:1});expect((await qaOperation('ListSales',{})).data).toMatchObject({_select:[{id:'sale-qa-1',soldAt:expect.any(String),branchName:'MATRIZ QA',createdByUid:'qa-user'}],_selectFirst:{totalCount:1}});
  const after=(await qaOperation('SalesWorkspace',{branchId:uuid(1)})).data;expect(after).toMatchObject({_select:[{data:{openSession:{expectedAmountCents:'8000',movementCount:1}}}]});
  await expect(qaOperation('PostSale',{payload:{...sale,discountCents:1}})).rejects.toThrow();
  resetFixtures();expect((await qaOperation('ListProducts',{search:'EDITADO'})).data).toMatchObject({_select:[]});

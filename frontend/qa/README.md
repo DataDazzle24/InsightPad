@@ -48,6 +48,7 @@ npm --prefix frontend ci --no-audit --no-fund
 npm --prefix frontend run build:qa
 npm --prefix scripts/qa-browser ci --ignore-scripts --no-audit --no-fund
 node scripts/qa-browser/node_modules/playwright/cli.js install --with-deps chromium
+# Full PDF checks also need Poppler (pdftotext/pdfinfo), e.g. apt-get install poppler-utils.
 node scripts/qa-browser/run.mjs
 # After inspecting the first route proof:
 node scripts/qa-browser/run.mjs --full
@@ -65,7 +66,7 @@ cases, interactions, actual CSV downloads, a Chromium print-rendered PDF,
 geometry and a trace. coverage.json records each route, redirect, unsupported
 operation and case result. These are observations for independent review,
 not automatic visual acceptance. Inspect captures, CSV row counts/contents,
-PDF pagination/last row, trace interactions and all failures.
+PDF pagination/all51birthday and1201dormant rows, trace interactions and all failures.
 
 The repository is public. CI NEVER uploads plaintext captures, traces, browser
 reports or a private key. It seals the private directory with AES-256-GCM and

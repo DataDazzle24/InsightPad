@@ -242,3 +242,18 @@ html[data-theme=light] .pos-page .pos-cart .pos-quantity-input{color:#132329;bac
 @media(max-width:700px){.finance-heading{align-items:stretch;flex-wrap:wrap}.finance-actions{flex-wrap:wrap}.finance-table-card>header{flex-wrap:wrap}.finance-table-card table{width:max-content;min-width:100%;table-layout:auto}.finance-table-card th,.finance-table-card td{min-width:7rem;overflow-wrap:anywhere}}
 
 @media print{.finance-table-card table{width:100%!important;table-layout:auto!important}.finance-table-card th,.finance-table-card td{min-width:0!important;white-space:normal!important;overflow-wrap:anywhere}}
+
+/* Print the full application flow, including tables beyond the screen viewport. */
+@media print{
+ html,body,#root,.app-frame,.app-stage{height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;position:static!important;width:auto!important;background:#fff!important;color:#000!important}
+ .app-frame>.app-stage{padding:0!important}
+ .app-frame>:not(.app-stage){display:none!important}
+ .dashboard-hub,.dashboard-hub__content,.finance-dashboard,.analytics-page,.finance-workspace{display:block!important;height:auto!important;min-height:0!important;overflow:visible!important}
+ .analytics-grid,.channel-dashboard__grid{display:block!important}
+ .finance-table-card{display:block!important;break-inside:auto!important;overflow:visible!important;margin-bottom:8mm}
+ .finance-table-card>div{display:block!important;height:auto!important;max-height:none!important;overflow:visible!important}
+ .finance-kpis article,.finance-table-card,.finance-table-card>header,.finance-table-card th,.finance-table-card td{background:#fff!important;color:#000!important}
+ .finance-table-card>header{break-after:avoid;border-color:#888}
+ .finance-table-card th{border-bottom:1px solid #888}
+ .finance-table-card td{border-bottom:1px solid #ddd}
+}
