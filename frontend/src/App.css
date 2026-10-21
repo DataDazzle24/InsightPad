@@ -257,3 +257,6 @@ html[data-theme=light] .pos-page .pos-cart .pos-quantity-input{color:#132329;bac
  .finance-table-card th{border-bottom:1px solid #888}
  .finance-table-card td{border-bottom:1px solid #ddd}
 }
+
+@media print{.finance-table-card th button{display:inline!important;border:0!important;padding:0!important;color:inherit!important}.finance-table-card th button .material-symbols-rounded{display:none!important}}
+@media print{html{color-scheme:light!important}}
