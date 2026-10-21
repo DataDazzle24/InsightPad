@@ -28,11 +28,24 @@ interface AuthProviderProps { children: ReactNode }
 const dataConnect = getDataConnect(firebaseApp, connectorConfig)
 const ACCESS_RECHECK_MS = 30_000
 let pendingSessionClaim = false
+let firebaseExit:Promise<void>|null=null
 let sessionGeneration = 0
+// Revalidation must not compete with an actor whose logout is draining a claim.
+let closingSession: {user:User|null;generation:number}|null = null
+const isClosing=(user:User)=>closingSession?.generation===sessionGeneration&&closingSession.user===user
 let sessionValidation: {uid:string;generation:number;promise:Promise<void>} | null = null
 const deviceId=()=>{const key='insightpad.device.id';let value=localStorage.getItem(key);if(!value){value=`${crypto.randomUUID()}${crypto.randomUUID()}`;localStorage.setItem(key,value)}return value}
 const sessionKey=(uid:string)=>`insightpad.device.session:${uid}`
 const deviceName=()=>`${navigator.platform||'Dispositivo'} · ${navigator.userAgent.slice(0,120)}`
+async function endFirebaseAuthentication(user:User|null,generation:number){
+  if(generation!==sessionGeneration||auth.currentUser!==user)return
+  const task=firebaseSignOut(auth);firebaseExit=task
+  try{await task}finally{if(firebaseExit===task)firebaseExit=null}
+}
+async function releaseSession(token:string){
+  const result=await executeMutation(mutationRef(dataConnect,'ReleaseDeviceSession',{sessionToken:token}))
+  if((result.data as {_execute?:number})._execute!==1)throw new Error('Liberação remota não confirmada.')
+}
 async function validateExclusiveSession(user:User){
   if(sessionValidation?.uid===user.uid&&sessionValidation.generation===sessionGeneration)return sessionValidation.promise
   const generation=sessionGeneration
@@ -42,17 +55,23 @@ async function validateExclusiveSession(user:User){
       pendingSessionClaim=false
       const result=await executeMutation(mutationRef(dataConnect,'ClaimDeviceSession',{deviceId:deviceId(),deviceName:deviceName()}))
       const issued=(result.data as {query?:{issued?:{token?:unknown}}}).query?.issued?.token
-      if(typeof issued!=='string'||!/^[a-f0-9]{64}$/.test(issued))throw new Error('DEVICE_SESSION_REPLACED')
-      if(auth.currentUser?.uid!==user.uid)return
+      if(typeof issued!=='string'||!/^[a-f0-9]{64}$/.test(issued))throw new Error('DEVICE_SESSION_UNCONFIRMED')
+      if(auth.currentUser?.uid!==user.uid){
+        // A different actor cannot release this actor's lease. Its remote state is unknown.
+        console.warn('Liberação da sessão emitida não confirmada: identidade alterada.')
+        return
+      }
       // Logout waits for this compensation while Firebase still authenticates the actor.
-      if(generation!==sessionGeneration){await executeMutation(mutationRef(dataConnect,'ReleaseDeviceSession',{sessionToken:issued}));return}
+      if(generation!==sessionGeneration){await releaseSession(issued);return}
       localStorage.setItem(key,issued)
       return
     }
     // Restore/focus never reclaims a missing, legacy or displaced session.
     if(!/^[a-f0-9]{64}$/.test(token))throw new Error('DEVICE_SESSION_REPLACED')
     const result=await executeQuery(queryRef(dataConnect,'ValidateDeviceSession',{sessionToken:token,requestKey:crypto.randomUUID()}))
-    if(!((result.data as {_select?:Array<{valid?:boolean}>})._select??[])[0]?.valid)throw new Error('DEVICE_SESSION_REPLACED')
+    const valid=(result.data as {_select?:Array<{valid?:boolean}>})._select?.[0]?.valid
+    if(valid!==true)throw new Error(valid===false?'DEVICE_SESSION_REPLACED':'DEVICE_SESSION_UNCONFIRMED')
+    if(generation!==sessionGeneration||auth.currentUser!==user||isClosing(user))return
     await executeMutation(mutationRef(dataConnect,'TouchDeviceSession',{sessionToken:token}))
   }
   const promise=run();sessionValidation={uid:user.uid,generation,promise}
@@ -71,6 +90,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     let disposed = false
 
     async function validateAccess(user: User | null, blocking = true) {
+      if(user&&isClosing(user))return
+      const generation=sessionGeneration
       const version = ++validationVersion.current
 
       if (!user) {
@@ -102,6 +123,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (
           disposed ||
           version !== validationVersion.current ||
+          generation !== sessionGeneration ||
+          isClosing(user) ||
           auth.currentUser?.uid !== user.uid
         ) return
 
@@ -121,12 +144,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setPermissions({})
           setStatus('unauthorized')
           setError('Seu acesso ao Insight Pad foi inativado.')
-          await firebaseSignOut(auth)
+          await endFirebaseAuthentication(user,generation)
           return
         }
 
         await validateExclusiveSession(user)
-        if(disposed || version!==validationVersion.current || auth.currentUser?.uid!==user.uid)return
+        if(disposed || version!==validationVersion.current || generation!==sessionGeneration || isClosing(user) || auth.currentUser!==user)return
 
         setProfile(currentProfile)
         setPermissions(resolvePermissions(accessUser!))
@@ -136,6 +159,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (
           disposed ||
           version !== validationVersion.current ||
+          generation !== sessionGeneration ||
+          isClosing(user) ||
           auth.currentUser?.uid !== user.uid
         ) return
 
@@ -144,7 +169,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setPermissions({})
         setStatus('unauthorized')
         setError(cause instanceof Error&&cause.message==='DEVICE_SESSION_REPLACED'?'Sua sessão expirou ou foi encerrada. Entre novamente.':'Não foi possível validar o perfil do usuário.')
-        await firebaseSignOut(auth)
+        await endFirebaseAuthentication(user,generation)
       }
     }
 
@@ -187,6 +212,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       pendingSessionClaim=true
       await setPersistence(auth, browserLocalPersistence)
+      if(firebaseExit)await firebaseExit
       if(generation!==sessionGeneration)return
       await signInWithEmailAndPassword(auth, email.trim(), password)
     } catch {
@@ -201,6 +227,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   async function signOut() {
     setStatus('loading')
     const user=auth.currentUser,generation=++sessionGeneration
+    closingSession={user,generation}
+    setProfile(null);setPermissions({})
     const key=user?sessionKey(user.uid):null,token=key?localStorage.getItem(key):null
     // Snapshot and remove only A's credential before any asynchronous work.
     // B can claim/store a new credential while A's remote release is in flight.
@@ -209,9 +237,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const validation=sessionValidation
     const pending=validation && validation.uid===user?.uid?validation.promise:null
     if(pending){try{await pending}catch(cause){console.warn('Não foi possível concluir a liberação da sessão pendente.',cause)}}
-    if(user&&token){try{await executeMutation(mutationRef(dataConnect,'ReleaseDeviceSession',{sessionToken:token}))}catch(cause){console.warn('Não foi possível liberar a sessão do dispositivo.',cause)}}
+    if(user&&token){try{await releaseSession(token)}catch(cause){console.warn('Não foi possível liberar a sessão do dispositivo.',cause)}}
     // A late success or failure must never sign out a newer B authentication.
-    if(generation===sessionGeneration&&auth.currentUser===user)await firebaseSignOut(auth)
+    if(generation===sessionGeneration&&auth.currentUser===user)await endFirebaseAuthentication(user,generation)
   }
 
   async function resetPassword(email: string) {

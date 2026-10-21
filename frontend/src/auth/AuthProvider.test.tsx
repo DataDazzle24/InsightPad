@@ -23,10 +23,10 @@ beforeEach(async()=>{
  mocks.mutation.mockImplementation(async(ref:{name:string})=>({data:ref.name==='ClaimDeviceSession'?{query:{issued:{token:secret}},_execute:1}:{_execute:1}}))
  mocks.query.mockResolvedValue({data:{_select:[{valid:true}]}})
  mocks.signOut.mockImplementation(async()=>{mocks.auth.currentUser=null;mocks.listener?.(null)})
- container=document.createElement('div');document.body.append(container);root=createRoot(container)
+ vi.spyOn(window,'setInterval');container=document.createElement('div');document.body.append(container);root=createRoot(container)
  await act(async()=>root.render(<AuthProvider><Probe/></AuthProvider>))
 })
-afterEach(async()=>{await act(async()=>root.unmount());container.remove()})
+afterEach(async()=>{await act(async()=>root.unmount());container.remove();vi.restoreAllMocks()})
 it('claims once on login and heartbeats on focus without reclaiming; logout releases the same secret',async()=>{
  await act(async()=>context.signIn('actor@example.invalid','password'));await flush()
  expect(context.status).toBe('authenticated');expect(localStorage.getItem(key)).toBe(secret)
@@ -81,3 +81,45 @@ it('a delayed logout for one UID cannot sign out a different UID or remove its c
  await act(async()=>mocks.listener?.(second));await flush();await act(async()=>{done({data:{_execute:1}});await logout});await flush();
  expect(mocks.auth.currentUser).toBe(second);expect(localStorage.getItem('insightpad.device.session:second')).toBe('b'.repeat(64));expect(context.status).toBe('authenticated');expect(mocks.signOut).not.toHaveBeenCalled();
 })
+
+it.each(['focus','visibilitychange','heartbeat'])('waits for a pending claim before signing out despite %s revalidation',async(event)=>{
+ let finish!:(value:unknown)=>void;mocks.mutation.mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve}));
+ await act(async()=>context.signIn('actor@example.invalid','password'));await flush();
+ let logout!:Promise<void>;await act(async()=>{logout=context.signOut();await Promise.resolve()});
+ if(event==='heartbeat')await act(async()=>{const callback=vi.mocked(window.setInterval).mock.calls[0]![0] as ()=>void;callback()})
+ else await act(async()=>{if(event==='focus')window.dispatchEvent(new Event('focus'));else document.dispatchEvent(new Event('visibilitychange'))});
+ await flush();expect(mocks.signOut).not.toHaveBeenCalled();
+ await act(async()=>{finish({data:{query:{issued:{token:secret}},_execute:1}});await logout});await flush();
+ expect(mocks.mutation).toHaveBeenCalledWith({name:'ReleaseDeviceSession',variables:{sessionToken:secret}});
+ expect(context.status).toBe('unauthenticated');expect(localStorage.getItem(key)).toBeNull();
+});
+
+it.each(['zero','error'])('logout drains an unsuccessful claim (%s) without inventing a credential',async(outcome)=>{
+ let finish!:(v:unknown)=>void,fail!:(e:Error)=>void;mocks.mutation.mockImplementationOnce(()=>new Promise((resolve,reject)=>{finish=resolve;fail=reject}));
+ const warning=vi.spyOn(console,'warn').mockImplementation(()=>{});
+ await act(async()=>context.signIn('a@example.invalid','password'));await flush();let logout!:Promise<void>;
+ await act(async()=>{logout=context.signOut();window.dispatchEvent(new Event('focus'))});await flush();expect(mocks.signOut).not.toHaveBeenCalled();
+ await act(async()=>{if(outcome==='error')fail(Error('network'));else finish({data:{_execute:0}});await logout});await flush();
+ expect(mocks.mutation.mock.calls.filter(c=>c[0].name==='ReleaseDeviceSession')).toHaveLength(0);expect(warning).toHaveBeenCalled();expect(context.status).toBe('unauthenticated');expect(localStorage.getItem(key)).toBeNull();
+});
+it.each(['valid','zero','error'])('a late validation %s cannot touch the old lease or end a new login',async(outcome)=>{
+ await act(async()=>context.signIn('a@example.invalid','password'));await flush();let finish!:(v:unknown)=>void,fail!:(e:Error)=>void;
+ mocks.query.mockImplementationOnce(()=>new Promise((resolve,reject)=>{finish=resolve;fail=reject}));
+ await act(async()=>window.dispatchEvent(new Event('focus')));await flush();
+ let logout!:Promise<void>;await act(async()=>{logout=context.signOut();await Promise.resolve()});
+ mocks.mutation.mockImplementation(async()=>({data:{query:{issued:{token:'b'.repeat(64)}},_execute:1}}));
+ await act(async()=>context.signIn('a@example.invalid','password'));await flush();
+ const warning=vi.spyOn(console,'warn').mockImplementation(()=>{});
+ await act(async()=>{if(outcome==='error')fail(Error('network'));else finish({data:{_select:outcome==='valid'?[{valid:true}]:[]}});await logout});await flush();
+ expect(localStorage.getItem(key)).toBe('b'.repeat(64));expect(context.status).toBe('authenticated');expect(mocks.signOut).not.toHaveBeenCalled();
+ expect(mocks.mutation.mock.calls.filter(c=>c[0].name==='TouchDeviceSession')).toHaveLength(0);warning.mockRestore();
+});
+it.each(['success','zero','error'])('late release %s preserves B and only reports proven remote completion',async(outcome)=>{
+ await act(async()=>context.signIn('a@example.invalid','password'));await flush();let finish!:(v:unknown)=>void,fail!:(e:Error)=>void;
+ const warning=vi.spyOn(console,'warn').mockImplementation(()=>{});
+ mocks.mutation.mockImplementationOnce(()=>new Promise((resolve,reject)=>{finish=resolve;fail=reject}));let logout!:Promise<void>;
+ await act(async()=>{logout=context.signOut();await Promise.resolve()});mocks.mutation.mockResolvedValue({data:{query:{issued:{token:'b'.repeat(64)}},_execute:1}});
+ await act(async()=>context.signIn('b@example.invalid','password'));await flush();
+ await act(async()=>{if(outcome==='error')fail(Error('network'));else finish({data:{_execute:outcome==='zero'?0:1}});await logout});await flush();
+ expect(context.status).toBe('authenticated');expect(localStorage.getItem(key)).toBe('b'.repeat(64));expect(mocks.signOut).not.toHaveBeenCalled();expect(warning.mock.calls.length>0).toBe(outcome!=='success');
+});
