@@ -493,7 +493,7 @@ export function StockPage() {
       console.error(error);
       setNotice({
         type: "error",
-        text: "Operação recusada. Verifique permissões, saldo e dados informados.",
+        text: `Confirmação da movimentação incerta. Ela pode já ter sido registrada. Consulte o histórico antes de repetir. Para tentar novamente, use este formulário sem alterar os dados; não inicie outra operação. Referência: ${operationKey.current.id}.`,
       });
     } finally {
       inFlight.current=false;setBusy(false);
@@ -539,7 +539,7 @@ export function StockPage() {
       console.error(error);
       setNotice({
         type: "error",
-        text: "Transferência recusada. Verifique saldos e permissões.",
+        text: `Confirmação da transferência incerta. Ela pode já ter sido registrada. Consulte o histórico antes de repetir. Para tentar novamente, use este formulário sem alterar os dados; não inicie outra operação. Referência: ${operationKey.current.id}.`,
       });
     } finally {
       inFlight.current=false;setBusy(false);
