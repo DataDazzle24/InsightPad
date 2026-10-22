@@ -378,15 +378,15 @@ export function setProductsStatusBatch(dcOrVars, vars) {
   return executeMutation(setProductsStatusBatchRef(dcInstance, inputVars));
 }
 
-export const ensureSalesDefaultsRef = (dc) => {
-  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+export const ensureSalesDefaultsRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars);
   dcInstance._useGeneratedSdk();
-  return mutationRef(dcInstance, 'EnsureSalesDefaults');
+  return mutationRef(dcInstance, 'EnsureSalesDefaults', inputVars);
 }
 ensureSalesDefaultsRef.operationName = 'EnsureSalesDefaults';
 
-export function ensureSalesDefaults(dc) {
-  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dc, undefined);
+export function ensureSalesDefaults(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars);
   return executeMutation(ensureSalesDefaultsRef(dcInstance, inputVars));
 }
 

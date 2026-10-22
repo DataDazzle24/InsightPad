@@ -1,0 +1,1122 @@
+{
+  "decision": "DEC-019",
+  "ancestor": "80f21c65a0ed3e07b0f9c29bebd07d2479b0735b",
+  "matrixIds": [
+    "AJU-PDV-01",
+    "AJU-PDV-02",
+    "AJU-PDV-03",
+    "AJU-PDV-04",
+    "AJU-PDV-05",
+    "AJU-DASH-01",
+    "AJU-DASH-02",
+    "AJU-DASH-03",
+    "AJU-DASH-04",
+    "AJU-DASH-05",
+    "AJU-DASH-06",
+    "AJU-DASH-07",
+    "AJU-DASH-08",
+    "AJU-DASH-09",
+    "AJU-DASH-10",
+    "AJU-DASH-11",
+    "AJU-DASH-12",
+    "AJU-DASH-13",
+    "AJU-EST-01",
+    "AJU-EST-02",
+    "AJU-EST-03",
+    "AJU-EST-04",
+    "AJU-EST-05",
+    "AJU-EST-06",
+    "AJU-EST-07",
+    "AJU-EST-08",
+    "AJU-EST-09",
+    "AJU-EST-10",
+    "AJU-EST-11",
+    "AJU-EST-12",
+    "AJU-EST-13",
+    "AJU-EST-14",
+    "AJU-EST-15",
+    "AJU-EST-16",
+    "AJU-EST-18",
+    "AJU-EST-19",
+    "AJU-EST-20",
+    "AJU-EST-22",
+    "AJU-EST-23",
+    "AJU-PROD-01",
+    "AJU-PROD-02",
+    "AJU-CAT-01",
+    "AJU-CAT-02",
+    "AJU-CAT-03",
+    "AJU-CAT-04",
+    "AJU-CAT-05",
+    "AJU-CAT-06",
+    "AJU-CAT-07",
+    "AJU-CAT-08",
+    "AJU-CAT-09",
+    "AJU-CAT-10",
+    "AJU-CAT-11",
+    "AJU-CAT-12",
+    "AJU-CAT-13",
+    "AJU-CAT-14",
+    "AJU-SUB-01",
+    "AJU-SUB-02",
+    "AJU-SUB-03",
+    "AJU-SUB-04",
+    "AJU-SUB-05",
+    "AJU-SUB-06",
+    "AJU-SUB-07",
+    "AJU-SUB-08",
+    "AJU-SUB-09",
+    "AJU-SUB-10",
+    "AJU-SUB-11",
+    "AJU-SUB-13",
+    "AJU-SUB-14"
+  ],
+  "additionalIds": [
+    "PREP-DEC017",
+    "OBS-018-AG03-001",
+    "ADD-018-001",
+    "ADD-018-002",
+    "ADD-018-003",
+    "ADD-018-004",
+    "SEC-2026-001",
+    "SEC-2026-002",
+    "SEC-2026-003",
+    "SEC-2026-004",
+    "SEC-2026-005",
+    "SEC-2026-006",
+    "SEC-2026-007",
+    "SEC-2026-008",
+    "DES-2026-001",
+    "DES-2026-002",
+    "DES-2026-003"
+  ],
+  "paths": {
+    ".gitignore": {
+      "ids": [
+        "PREP-DEC017"
+      ],
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
+    },
+    ".github/workflows/ci.yml": {
+      "ids": [
+        "PREP-DEC017",
+        "OBS-018-AG03-001"
+      ],
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
+    },
+    "docs/source-preservation.md": {
+      "ids": [
+        "PREP-DEC017"
+      ],
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
+    },
+    "docs/reconciled-candidate-review.md": {
+      "ids": [
+        "PREP-DEC017"
+      ],
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
+    },
+    "docs/reconciled-findings.md": {
+      "ids": [
+        "PREP-DEC017",
+        "SEC-2026-007",
+        "SEC-2026-008"
+      ],
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
+    },
+    "docs/dev-frontend-compatibility.md": {
+      "ids": [
+        "PREP-DEC017"
+      ],
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
+    },
+    "frontend/package.json": {
+      "ids": [
+        "PREP-DEC017",
+        "SEC-2026-007",
+        "SEC-2026-008"
+      ],
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
+    },
+    "frontend/package-lock.json": {
+      "ids": [
+        "PREP-DEC017",
+        "SEC-2026-007",
+        "SEC-2026-008"
+      ],
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
+    },
+    "functions/package.json": {
+      "ids": [
+        "PREP-DEC017",
+        "SEC-2026-007",
+        "SEC-2026-008"
+      ],
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
+    },
+    "functions/package-lock.json": {
+      "ids": [
+        "PREP-DEC017",
+        "SEC-2026-007",
+        "SEC-2026-008"
+      ],
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
+    },
+    "functions/test/reconciled-security.test.ts": {
+      "ids": [
+        "PREP-DEC017"
+      ],
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
+    },
+    "functions/test/sql.test.ts": {
+      "ids": [
+        "PREP-DEC017"
+      ],
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
+    },
+    "frontend/src/App.css": {
+      "ids": [
+        "PREP-DEC017",
+        "AJU-PDV-01",
+        "AJU-PDV-02",
+        "AJU-PDV-03",
+        "AJU-PDV-04",
+        "AJU-PDV-05",
+        "AJU-DASH-01",
+        "AJU-DASH-02",
+        "AJU-DASH-03",
+        "AJU-DASH-04",
+        "AJU-DASH-05",
+        "AJU-DASH-06",
+        "AJU-DASH-07",
+        "AJU-DASH-08",
+        "AJU-DASH-09",
+        "AJU-DASH-10",
+        "AJU-DASH-11",
+        "AJU-DASH-12",
+        "AJU-DASH-13"
+      ],
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
+    },
+    "frontend/src/pages/LoginPage.tsx": {
+      "ids": [
+        "PREP-DEC017"
+      ],
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
+    },
+    "frontend/src/pages/LoginPage.test.tsx": {
+      "ids": [
+        "PREP-DEC017"
+      ],
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
+    },
+    "frontend/src/components/ModalDialog.tsx": {
+      "ids": [
+        "PREP-DEC017"
+      ],
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
+    },
+    "frontend/qa/recovery.html": {
+      "ids": [
+        "PREP-DEC017"
+      ],
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
+    },
+    "frontend/qa/recovery.tsx": {
+      "ids": [
+        "PREP-DEC017"
+      ],
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
+    },
+    "frontend/qa/review.css": {
+      "ids": [
+        "PREP-DEC017"
+      ],
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
+    },
+    "frontend/tsconfig.qa.json": {
+      "ids": [
+        "PREP-DEC017"
+      ],
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
+    },
+    "frontend/vite.qa.config.ts": {
+      "ids": [
+        "PREP-DEC017"
+      ],
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
+    },
+    "scripts/ci-dev-config.mjs": {
+      "ids": [
+        "PREP-DEC017"
+      ],
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
+    },
+    "scripts/ci-dev-config.test.mjs": {
+      "ids": [
+        "PREP-DEC017"
+      ],
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
+    },
+    "scripts/verify-reconciliation.mjs": {
+      "ids": [
+        "PREP-DEC017",
+        "OBS-018-AG03-001"
+      ],
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
+    },
+    "scripts/version-manifest.mjs": {
+      "ids": [
+        "PREP-DEC017"
+      ],
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
+    },
+    "scripts/version-manifest.test.mjs": {
+      "ids": [
+        "PREP-DEC017"
+      ],
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
+    },
+    "scripts/serve-recovery-qa.mjs": {
+      "ids": [
+        "PREP-DEC017"
+      ],
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
+    },
+    "frontend/src/pages/PointOfSalePage.tsx": {
+      "ids": [
+        "AJU-PDV-01",
+        "AJU-PDV-02",
+        "AJU-PDV-03",
+        "AJU-PDV-04",
+        "AJU-PDV-05"
+      ],
+      "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão."
+    },
+    "frontend/src/components/CashSessionModal.tsx": {
+      "ids": [
+        "AJU-PDV-01",
+        "AJU-PDV-02",
+        "AJU-PDV-03",
+        "AJU-PDV-04",
+        "AJU-PDV-05"
+      ],
+      "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão."
+    },
+    "frontend/src/pages/DashboardHubPage.tsx": {
+      "ids": [
+        "AJU-DASH-01",
+        "AJU-DASH-02",
+        "AJU-DASH-03",
+        "AJU-DASH-04",
+        "AJU-DASH-05",
+        "AJU-DASH-06",
+        "AJU-DASH-07",
+        "AJU-DASH-08",
+        "AJU-DASH-09",
+        "AJU-DASH-10",
+        "AJU-DASH-11",
+        "AJU-DASH-12",
+        "AJU-DASH-13"
+      ],
+      "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão."
+    },
+    "frontend/src/pages/DailyProfitDashboardPage.tsx": {
+      "ids": [
+        "AJU-DASH-01",
+        "AJU-DASH-02",
+        "AJU-DASH-03",
+        "AJU-DASH-04",
+        "AJU-DASH-05",
+        "AJU-DASH-06",
+        "AJU-DASH-07",
+        "AJU-DASH-08",
+        "AJU-DASH-09",
+        "AJU-DASH-10",
+        "AJU-DASH-11",
+        "AJU-DASH-12",
+        "AJU-DASH-13"
+      ],
+      "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão."
+    },
+    "frontend/src/pages/ChannelDashboardPage.tsx": {
+      "ids": [
+        "AJU-DASH-01",
+        "AJU-DASH-02",
+        "AJU-DASH-03",
+        "AJU-DASH-04",
+        "AJU-DASH-05",
+        "AJU-DASH-06",
+        "AJU-DASH-07",
+        "AJU-DASH-08",
+        "AJU-DASH-09",
+        "AJU-DASH-10",
+        "AJU-DASH-11",
+        "AJU-DASH-12",
+        "AJU-DASH-13"
+      ],
+      "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão."
+    },
+    "dataconnect/app/queries.gql": {
+      "ids": [
+        "AJU-DASH-01",
+        "AJU-DASH-02",
+        "AJU-DASH-03",
+        "AJU-DASH-04",
+        "AJU-DASH-05",
+        "AJU-DASH-06",
+        "AJU-DASH-07",
+        "AJU-DASH-08",
+        "AJU-DASH-09",
+        "AJU-DASH-10",
+        "AJU-DASH-11",
+        "AJU-DASH-12",
+        "AJU-DASH-13",
+        "AJU-EST-01",
+        "AJU-EST-02",
+        "AJU-EST-03",
+        "AJU-EST-04",
+        "AJU-EST-05",
+        "AJU-EST-06",
+        "AJU-EST-07",
+        "AJU-EST-08",
+        "AJU-EST-09",
+        "AJU-EST-10",
+        "AJU-EST-11",
+        "AJU-EST-12",
+        "AJU-EST-13",
+        "AJU-EST-14",
+        "AJU-EST-15",
+        "AJU-EST-16",
+        "AJU-EST-18",
+        "AJU-EST-19",
+        "AJU-EST-20",
+        "AJU-EST-22",
+        "AJU-EST-23",
+        "AJU-CAT-01",
+        "AJU-CAT-02",
+        "AJU-CAT-03",
+        "AJU-CAT-04",
+        "AJU-CAT-05",
+        "AJU-CAT-06",
+        "AJU-CAT-07",
+        "AJU-CAT-08",
+        "AJU-CAT-09",
+        "AJU-CAT-10",
+        "AJU-CAT-11",
+        "AJU-CAT-12",
+        "AJU-CAT-13",
+        "AJU-CAT-14",
+        "AJU-SUB-01",
+        "AJU-SUB-02",
+        "AJU-SUB-03",
+        "AJU-SUB-04",
+        "AJU-SUB-05",
+        "AJU-SUB-06",
+        "AJU-SUB-07",
+        "AJU-SUB-08",
+        "AJU-SUB-09",
+        "AJU-SUB-10",
+        "AJU-SUB-11",
+        "AJU-SUB-13",
+        "AJU-SUB-14"
+      ],
+      "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão."
+    },
+    "frontend/src/pages/StockPage.tsx": {
+      "ids": [
+        "AJU-EST-01",
+        "AJU-EST-02",
+        "AJU-EST-03",
+        "AJU-EST-04",
+        "AJU-EST-05",
+        "AJU-EST-06",
+        "AJU-EST-07",
+        "AJU-EST-08",
+        "AJU-EST-09",
+        "AJU-EST-10",
+        "AJU-EST-11",
+        "AJU-EST-12",
+        "AJU-EST-13",
+        "AJU-EST-14",
+        "AJU-EST-15",
+        "AJU-EST-16",
+        "AJU-EST-18",
+        "AJU-EST-19",
+        "AJU-EST-20",
+        "AJU-EST-22",
+        "AJU-EST-23"
+      ],
+      "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão."
+    },
+    "frontend/src/utils/stock.ts": {
+      "ids": [
+        "AJU-EST-01",
+        "AJU-EST-02",
+        "AJU-EST-03",
+        "AJU-EST-04",
+        "AJU-EST-05",
+        "AJU-EST-06",
+        "AJU-EST-07",
+        "AJU-EST-08",
+        "AJU-EST-09",
+        "AJU-EST-10",
+        "AJU-EST-11",
+        "AJU-EST-12",
+        "AJU-EST-13",
+        "AJU-EST-14",
+        "AJU-EST-15",
+        "AJU-EST-16",
+        "AJU-EST-18",
+        "AJU-EST-19",
+        "AJU-EST-20",
+        "AJU-EST-22",
+        "AJU-EST-23"
+      ],
+      "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão."
+    },
+    "dataconnect/app/mutations.gql": {
+      "ids": [
+        "AJU-EST-01",
+        "AJU-EST-02",
+        "AJU-EST-03",
+        "AJU-EST-04",
+        "AJU-EST-05",
+        "AJU-EST-06",
+        "AJU-EST-07",
+        "AJU-EST-08",
+        "AJU-EST-09",
+        "AJU-EST-10",
+        "AJU-EST-11",
+        "AJU-EST-12",
+        "AJU-EST-13",
+        "AJU-EST-14",
+        "AJU-EST-15",
+        "AJU-EST-16",
+        "AJU-EST-18",
+        "AJU-EST-19",
+        "AJU-EST-20",
+        "AJU-EST-22",
+        "AJU-EST-23",
+        "AJU-PROD-01",
+        "AJU-PROD-02",
+        "AJU-CAT-01",
+        "AJU-CAT-02",
+        "AJU-CAT-03",
+        "AJU-CAT-04",
+        "AJU-CAT-05",
+        "AJU-CAT-06",
+        "AJU-CAT-07",
+        "AJU-CAT-08",
+        "AJU-CAT-09",
+        "AJU-CAT-10",
+        "AJU-CAT-11",
+        "AJU-CAT-12",
+        "AJU-CAT-13",
+        "AJU-CAT-14",
+        "AJU-SUB-01",
+        "AJU-SUB-02",
+        "AJU-SUB-03",
+        "AJU-SUB-04",
+        "AJU-SUB-05",
+        "AJU-SUB-06",
+        "AJU-SUB-07",
+        "AJU-SUB-08",
+        "AJU-SUB-09",
+        "AJU-SUB-10",
+        "AJU-SUB-11",
+        "AJU-SUB-13",
+        "AJU-SUB-14"
+      ],
+      "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão."
+    },
+    "frontend/src/pages/MasterDataPage.tsx": {
+      "ids": [
+        "AJU-PROD-01",
+        "AJU-PROD-02"
+      ],
+      "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão."
+    },
+    "frontend/src/pages/ProductExtras.tsx": {
+      "ids": [
+        "AJU-PROD-01",
+        "AJU-PROD-02"
+      ],
+      "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão."
+    },
+    "frontend/src/pages/CatalogPages.tsx": {
+      "ids": [
+        "AJU-CAT-01",
+        "AJU-CAT-02",
+        "AJU-CAT-03",
+        "AJU-CAT-04",
+        "AJU-CAT-05",
+        "AJU-CAT-06",
+        "AJU-CAT-07",
+        "AJU-CAT-08",
+        "AJU-CAT-09",
+        "AJU-CAT-10",
+        "AJU-CAT-11",
+        "AJU-CAT-12",
+        "AJU-CAT-13",
+        "AJU-CAT-14",
+        "AJU-SUB-01",
+        "AJU-SUB-02",
+        "AJU-SUB-03",
+        "AJU-SUB-04",
+        "AJU-SUB-05",
+        "AJU-SUB-06",
+        "AJU-SUB-07",
+        "AJU-SUB-08",
+        "AJU-SUB-09",
+        "AJU-SUB-10",
+        "AJU-SUB-11",
+        "AJU-SUB-13",
+        "AJU-SUB-14"
+      ],
+      "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão."
+    },
+    "dataconnect/schema/schema.gql": {
+      "ids": [
+        "AJU-SUB-01",
+        "AJU-SUB-02",
+        "AJU-SUB-03",
+        "AJU-SUB-04",
+        "AJU-SUB-05",
+        "AJU-SUB-06",
+        "AJU-SUB-07",
+        "AJU-SUB-08",
+        "AJU-SUB-09",
+        "AJU-SUB-10",
+        "AJU-SUB-11",
+        "AJU-SUB-13",
+        "AJU-SUB-14"
+      ],
+      "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão."
+    },
+    "scripts/verify-reconciliation.test.mjs": {
+      "ids": [
+        "OBS-018-AG03-001"
+      ],
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
+    },
+    "scripts/reconciliation-scope.json": {
+      "ids": [
+        "OBS-018-AG03-001"
+      ],
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
+    },
+    "docs/dec019-progress.json": {
+      "ids": [
+        "OBS-018-AG03-001"
+      ],
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
+    },
+    "frontend/src/utils/registration.ts": {
+      "ids": [
+        "AJU-CAT-01",
+        "AJU-CAT-02",
+        "AJU-CAT-03",
+        "AJU-CAT-04",
+        "AJU-CAT-05",
+        "AJU-CAT-06",
+        "AJU-CAT-07",
+        "AJU-CAT-08",
+        "AJU-CAT-09",
+        "AJU-CAT-10",
+        "AJU-CAT-11",
+        "AJU-CAT-12",
+        "AJU-CAT-13",
+        "AJU-CAT-14",
+        "AJU-SUB-01",
+        "AJU-SUB-02",
+        "AJU-SUB-03",
+        "AJU-SUB-04",
+        "AJU-SUB-05",
+        "AJU-SUB-06",
+        "AJU-SUB-07",
+        "AJU-SUB-08",
+        "AJU-SUB-09",
+        "AJU-SUB-10",
+        "AJU-SUB-11",
+        "AJU-SUB-13",
+        "AJU-SUB-14",
+        "AJU-DASH-11"
+      ],
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
+    },
+    "frontend/src/utils/registration.test.ts": {
+      "ids": [
+        "AJU-CAT-12",
+        "AJU-CAT-13",
+        "AJU-CAT-14",
+        "AJU-SUB-09",
+        "AJU-SUB-10",
+        "AJU-SUB-11",
+        "AJU-DASH-11"
+      ],
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
+    },
+    "frontend/src/utils/stock.test.ts": {
+      "ids": [
+        "AJU-DASH-05",
+        "AJU-EST-13",
+        "AJU-EST-16",
+        "AJU-EST-20",
+        "AJU-EST-22"
+      ],
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
+    },
+    "frontend/src/utils/decimalInput.ts": {
+      "ids": [
+        "AJU-EST-20",
+        "AJU-PROD-01"
+      ],
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
+    },
+    "frontend/src/utils/decimalInput.test.ts": {
+      "ids": [
+        "AJU-EST-20",
+        "AJU-PROD-01"
+      ],
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
+    },
+    "frontend/src/utils/dashboardExport.ts": {
+      "ids": [
+        "AJU-DASH-08",
+        "AJU-DASH-11",
+        "AJU-DASH-12"
+      ],
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
+    },
+    "frontend/src/utils/dashboardExport.test.ts": {
+      "ids": [
+        "AJU-DASH-08",
+        "AJU-DASH-11",
+        "AJU-DASH-12"
+      ],
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
+    },
+    "frontend/src/pages/CatalogPages.test.tsx": {
+      "ids": [
+        "AJU-CAT-01",
+        "AJU-CAT-02",
+        "AJU-CAT-03",
+        "AJU-CAT-04",
+        "AJU-CAT-05",
+        "AJU-CAT-06",
+        "AJU-CAT-07",
+        "AJU-CAT-08",
+        "AJU-CAT-09",
+        "AJU-CAT-10",
+        "AJU-CAT-11",
+        "AJU-CAT-12",
+        "AJU-CAT-13",
+        "AJU-CAT-14",
+        "AJU-SUB-01",
+        "AJU-SUB-02",
+        "AJU-SUB-03",
+        "AJU-SUB-04",
+        "AJU-SUB-05",
+        "AJU-SUB-06",
+        "AJU-SUB-07",
+        "AJU-SUB-08",
+        "AJU-SUB-09",
+        "AJU-SUB-10",
+        "AJU-SUB-11",
+        "AJU-SUB-13",
+        "AJU-SUB-14"
+      ],
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
+    },
+    "frontend/src/pages/StockPage.test.tsx": {
+      "ids": [
+        "AJU-EST-01",
+        "AJU-EST-02",
+        "AJU-EST-03",
+        "AJU-EST-04",
+        "AJU-EST-05",
+        "AJU-EST-06",
+        "AJU-EST-07",
+        "AJU-EST-08",
+        "AJU-EST-09",
+        "AJU-EST-10",
+        "AJU-EST-11",
+        "AJU-EST-12",
+        "AJU-EST-13",
+        "AJU-EST-14",
+        "AJU-EST-15",
+        "AJU-EST-16",
+        "AJU-EST-18",
+        "AJU-EST-19",
+        "AJU-EST-20",
+        "AJU-EST-22",
+        "AJU-EST-23"
+      ],
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
+    },
+    "frontend/src/pages/PointOfSalePage.test.tsx": {
+      "ids": [
+        "AJU-PDV-01",
+        "AJU-PDV-02",
+        "AJU-PDV-03",
+        "AJU-PDV-04",
+        "AJU-PDV-05"
+      ],
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
+    },
+    "frontend/src/pages/DashboardHubPage.test.tsx": {
+      "ids": [
+        "AJU-DASH-01",
+        "AJU-DASH-02",
+        "AJU-DASH-03",
+        "AJU-DASH-04",
+        "AJU-DASH-05",
+        "AJU-DASH-06",
+        "AJU-DASH-07",
+        "AJU-DASH-08",
+        "AJU-DASH-09",
+        "AJU-DASH-10",
+        "AJU-DASH-11",
+        "AJU-DASH-12",
+        "AJU-DASH-13"
+      ],
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
+    },
+    "frontend/src/pages/MasterDataPage.test.tsx": {
+      "ids": [
+        "AJU-PROD-01",
+        "AJU-PROD-02"
+      ],
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
+    },
+    "frontend/src/components/SalesUi.tsx": {
+      "ids": [
+        "ADD-018-002",
+        "AJU-CAT-05"
+      ],
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
+    },
+    "frontend/src/components/SortableTableHeader.tsx": {
+      "ids": [
+        "AJU-EST-06"
+      ],
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
+    },
+    "frontend/src/components/Pagination.tsx": {
+      "ids": [
+        "AJU-CAT-05",
+        "AJU-EST-05"
+      ],
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
+    },
+    "frontend/src/components/Pagination.test.tsx": {
+      "ids": [
+        "AJU-CAT-05",
+        "AJU-EST-05"
+      ],
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
+    },
+    "functions/test/catalog-adjustments.test.ts": {
+      "ids": [
+        "AJU-CAT-01",
+        "AJU-CAT-02",
+        "AJU-CAT-03",
+        "AJU-CAT-04",
+        "AJU-CAT-05",
+        "AJU-CAT-06",
+        "AJU-CAT-07",
+        "AJU-CAT-08",
+        "AJU-CAT-09",
+        "AJU-CAT-10",
+        "AJU-CAT-11",
+        "AJU-CAT-12",
+        "AJU-CAT-13",
+        "AJU-CAT-14",
+        "AJU-SUB-01",
+        "AJU-SUB-02",
+        "AJU-SUB-03",
+        "AJU-SUB-04",
+        "AJU-SUB-05",
+        "AJU-SUB-06",
+        "AJU-SUB-07",
+        "AJU-SUB-08",
+        "AJU-SUB-09",
+        "AJU-SUB-10",
+        "AJU-SUB-11",
+        "AJU-SUB-13",
+        "AJU-SUB-14",
+        "SEC-2026-001",
+        "SEC-2026-002"
+      ],
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
+    },
+    "functions/test/stock-adjustments.test.ts": {
+      "ids": [
+        "AJU-EST-01",
+        "AJU-EST-02",
+        "AJU-EST-03",
+        "AJU-EST-04",
+        "AJU-EST-05",
+        "AJU-EST-06",
+        "AJU-EST-07",
+        "AJU-EST-08",
+        "AJU-EST-09",
+        "AJU-EST-10",
+        "AJU-EST-11",
+        "AJU-EST-12",
+        "AJU-EST-13",
+        "AJU-EST-14",
+        "AJU-EST-15",
+        "AJU-EST-16",
+        "AJU-EST-18",
+        "AJU-EST-19",
+        "AJU-EST-20",
+        "AJU-EST-22",
+        "AJU-EST-23",
+        "SEC-2026-001",
+        "SEC-2026-002"
+      ],
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
+    },
+    "functions/test/analytics-adjustments.test.ts": {
+      "ids": [
+        "AJU-DASH-01",
+        "AJU-DASH-02",
+        "AJU-DASH-03",
+        "AJU-DASH-04",
+        "AJU-DASH-05",
+        "AJU-DASH-06",
+        "AJU-DASH-07",
+        "AJU-DASH-08",
+        "AJU-DASH-09",
+        "AJU-DASH-10",
+        "AJU-DASH-11",
+        "AJU-DASH-12",
+        "AJU-DASH-13"
+      ],
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
+    },
+    "functions/test/dependency-security.test.ts": {
+      "ids": [
+        "SEC-2026-007",
+        "SEC-2026-008"
+      ],
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
+    },
+    "frontend/src/auth/AuthProvider.tsx": {
+      "ids": [
+        "SEC-2026-002",
+        "SEC-2026-003"
+      ],
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
+    },
+    "frontend/src/auth/AuthContext.ts": {
+      "ids": [
+        "SEC-2026-003"
+      ],
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
+    },
+    "functions/test/sql-fixture.ts": {
+      "ids": [
+        "SEC-2026-001",
+        "SEC-2026-002",
+        "AJU-SUB-14"
+      ],
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
+    },
+    "frontend/src/dataconnect-generated/.guides/config.json": {
+      "ids": [
+        "ADD-018-001",
+        "SEC-2026-001",
+        "SEC-2026-002",
+        "SEC-2026-003"
+      ],
+      "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
+    },
+    "frontend/src/dataconnect-generated/.guides/setup.md": {
+      "ids": [
+        "ADD-018-001",
+        "SEC-2026-001",
+        "SEC-2026-002",
+        "SEC-2026-003"
+      ],
+      "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
+    },
+    "frontend/src/dataconnect-generated/.guides/usage.md": {
+      "ids": [
+        "ADD-018-001",
+        "SEC-2026-001",
+        "SEC-2026-002",
+        "SEC-2026-003"
+      ],
+      "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
+    },
+    "frontend/src/dataconnect-generated/README.md": {
+      "ids": [
+        "ADD-018-001",
+        "SEC-2026-001",
+        "SEC-2026-002",
+        "SEC-2026-003"
+      ],
+      "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
+    },
+    "frontend/src/dataconnect-generated/esm/index.esm.js": {
+      "ids": [
+        "ADD-018-001",
+        "SEC-2026-001",
+        "SEC-2026-002",
+        "SEC-2026-003"
+      ],
+      "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
+    },
+    "frontend/src/dataconnect-generated/esm/package.json": {
+      "ids": [
+        "ADD-018-001",
+        "SEC-2026-001",
+        "SEC-2026-002",
+        "SEC-2026-003"
+      ],
+      "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
+    },
+    "frontend/src/dataconnect-generated/index.cjs.js": {
+      "ids": [
+        "ADD-018-001",
+        "SEC-2026-001",
+        "SEC-2026-002",
+        "SEC-2026-003"
+      ],
+      "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
+    },
+    "frontend/src/dataconnect-generated/index.d.ts": {
+      "ids": [
+        "ADD-018-001",
+        "SEC-2026-001",
+        "SEC-2026-002",
+        "SEC-2026-003"
+      ],
+      "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
+    },
+    "frontend/src/dataconnect-generated/package.json": {
+      "ids": [
+        "ADD-018-001",
+        "SEC-2026-001",
+        "SEC-2026-002",
+        "SEC-2026-003"
+      ],
+      "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
+    },
+    "frontend/src/dataconnect-generated/react/README.md": {
+      "ids": [
+        "ADD-018-001",
+        "SEC-2026-001",
+        "SEC-2026-002",
+        "SEC-2026-003"
+      ],
+      "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
+    },
+    "frontend/src/dataconnect-generated/react/esm/index.esm.js": {
+      "ids": [
+        "ADD-018-001",
+        "SEC-2026-001",
+        "SEC-2026-002",
+        "SEC-2026-003"
+      ],
+      "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
+    },
+    "frontend/src/dataconnect-generated/react/esm/package.json": {
+      "ids": [
+        "ADD-018-001",
+        "SEC-2026-001",
+        "SEC-2026-002",
+        "SEC-2026-003"
+      ],
+      "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
+    },
+    "frontend/src/dataconnect-generated/react/index.cjs.js": {
+      "ids": [
+        "ADD-018-001",
+        "SEC-2026-001",
+        "SEC-2026-002",
+        "SEC-2026-003"
+      ],
+      "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
+    },
+    "frontend/src/dataconnect-generated/react/index.d.ts": {
+      "ids": [
+        "ADD-018-001",
+        "SEC-2026-001",
+        "SEC-2026-002",
+        "SEC-2026-003"
+      ],
+      "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
+    },
+    "frontend/src/dataconnect-generated/react/package.json": {
+      "ids": [
+        "ADD-018-001",
+        "SEC-2026-001",
+        "SEC-2026-002",
+        "SEC-2026-003"
+      ],
+      "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
+    },
+    "functions/src/dataconnect-admin-generated/esm/index.esm.js": {
+      "ids": [
+        "ADD-018-001",
+        "SEC-2026-001",
+        "SEC-2026-002",
+        "SEC-2026-003"
+      ],
+      "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
+    },
+    "functions/src/dataconnect-admin-generated/esm/package.json": {
+      "ids": [
+        "ADD-018-001",
+        "SEC-2026-001",
+        "SEC-2026-002",
+        "SEC-2026-003"
+      ],
+      "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
+    },
+    "functions/src/dataconnect-admin-generated/index.cjs.js": {
+      "ids": [
+        "ADD-018-001",
+        "SEC-2026-001",
+        "SEC-2026-002",
+        "SEC-2026-003"
+      ],
+      "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
+    },
+    "functions/src/dataconnect-admin-generated/index.d.ts": {
+      "ids": [
+        "ADD-018-001",
+        "SEC-2026-001",
+        "SEC-2026-002",
+        "SEC-2026-003"
+      ],
+      "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
+    },
+    "functions/src/dataconnect-admin-generated/package.json": {
+      "ids": [
+        "ADD-018-001",
+        "SEC-2026-001",
+        "SEC-2026-002",
+        "SEC-2026-003"
+      ],
+      "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
+    },
+    "frontend/src/components/PosHeader.tsx": {
+      "ids": [
+        "AJU-PDV-01",
+        "AJU-PDV-02",
+        "AJU-PDV-03"
+      ],
+      "reason": "Cabeçalho extraído do PDV para testar navegação, conexão e encaminhamento ao controle de caixa, sem executar fechamento."
+    }
+  },
+  "bytePreserved": [
+    "frontend/src/utils/salesOffline.ts",
+    "frontend/src/hooks/useDialogAccessibility.ts",
+    "frontend/src/components/PosApprovalsModal.tsx"
+  ]
+}

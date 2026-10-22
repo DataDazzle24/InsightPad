@@ -624,6 +624,7 @@ The `SalesChannelOptions` Query requires an argument of type `SalesChannelOption
 ```javascript
 export interface SalesChannelOptionsVariables {
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -634,6 +635,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `SalesChannelOptions` Query is of type `SalesChannelOptionsData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SalesChannelOptionsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -651,13 +653,14 @@ export default function SalesChannelOptionsComponent() {
   // The `useSalesChannelOptions` Query hook requires an argument of type `SalesChannelOptionsVariables`:
   const salesChannelOptionsVars: SalesChannelOptionsVariables = {
     requestKey: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useSalesChannelOptions(salesChannelOptionsVars);
   // Variables can be defined inline as well.
-  const query = useSalesChannelOptions({ requestKey: ..., });
+  const query = useSalesChannelOptions({ requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -683,6 +686,7 @@ export default function SalesChannelOptionsComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -714,6 +718,7 @@ export interface SalesChannelConnectionsV2Variables {
   limit: number;
   offset: number;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -724,6 +729,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `SalesChannelConnectionsV2` Query is of type `SalesChannelConnectionsV2Data`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SalesChannelConnectionsV2Data {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -749,13 +755,14 @@ export default function SalesChannelConnectionsV2Component() {
     limit: ...,
     offset: ...,
     requestKey: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useSalesChannelConnectionsV2(salesChannelConnectionsV2Vars);
   // Variables can be defined inline as well.
-  const query = useSalesChannelConnectionsV2({ term: ..., provider: ..., status: ..., branchId: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+  const query = useSalesChannelConnectionsV2({ term: ..., provider: ..., status: ..., branchId: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -781,6 +788,7 @@ export default function SalesChannelConnectionsV2Component() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -812,6 +820,7 @@ export interface SalesChannelProductMappingsV2Variables {
   limit: number;
   offset: number;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -822,6 +831,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `SalesChannelProductMappingsV2` Query is of type `SalesChannelProductMappingsV2Data`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SalesChannelProductMappingsV2Data {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -847,13 +857,14 @@ export default function SalesChannelProductMappingsV2Component() {
     limit: ...,
     offset: ...,
     requestKey: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useSalesChannelProductMappingsV2(salesChannelProductMappingsV2Vars);
   // Variables can be defined inline as well.
-  const query = useSalesChannelProductMappingsV2({ term: ..., provider: ..., connectionId: ..., status: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+  const query = useSalesChannelProductMappingsV2({ term: ..., provider: ..., connectionId: ..., status: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -879,6 +890,7 @@ export default function SalesChannelProductMappingsV2Component() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -908,6 +920,7 @@ export interface ExportSalesChannelManagementVariables {
   branchId?: UUIDString | null;
   connectionId?: UUIDString | null;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -918,6 +931,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `ExportSalesChannelManagement` Query is of type `ExportSalesChannelManagementData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface ExportSalesChannelManagementData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -941,13 +955,14 @@ export default function ExportSalesChannelManagementComponent() {
     branchId: ..., // optional
     connectionId: ..., // optional
     requestKey: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useExportSalesChannelManagement(exportSalesChannelManagementVars);
   // Variables can be defined inline as well.
-  const query = useExportSalesChannelManagement({ section: ..., term: ..., provider: ..., status: ..., branchId: ..., connectionId: ..., requestKey: ..., });
+  const query = useExportSalesChannelManagement({ section: ..., term: ..., provider: ..., status: ..., branchId: ..., connectionId: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -973,6 +988,7 @@ export default function ExportSalesChannelManagementComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -1000,6 +1016,7 @@ export interface SalesChannelProductOptionsVariables {
   productId?: UUIDString | null;
   limit: number;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -1010,6 +1027,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `SalesChannelProductOptions` Query is of type `SalesChannelProductOptionsData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SalesChannelProductOptionsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -1031,13 +1049,14 @@ export default function SalesChannelProductOptionsComponent() {
     productId: ..., // optional
     limit: ...,
     requestKey: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useSalesChannelProductOptions(salesChannelProductOptionsVars);
   // Variables can be defined inline as well.
-  const query = useSalesChannelProductOptions({ term: ..., connectionId: ..., productId: ..., limit: ..., requestKey: ..., });
+  const query = useSalesChannelProductOptions({ term: ..., connectionId: ..., productId: ..., limit: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -1063,6 +1082,7 @@ export default function SalesChannelProductOptionsComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -1088,6 +1108,7 @@ export interface SalesChannelOperationsVariables {
   connectionId?: UUIDString | null;
   limit?: number;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -1098,6 +1119,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `SalesChannelOperations` Query is of type `SalesChannelOperationsData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SalesChannelOperationsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -1117,13 +1139,14 @@ export default function SalesChannelOperationsComponent() {
     connectionId: ..., // optional
     limit: ..., // optional
     requestKey: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useSalesChannelOperations(salesChannelOperationsVars);
   // Variables can be defined inline as well.
-  const query = useSalesChannelOperations({ connectionId: ..., limit: ..., requestKey: ..., });
+  const query = useSalesChannelOperations({ connectionId: ..., limit: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -1149,6 +1172,7 @@ export default function SalesChannelOperationsComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -1679,6 +1703,7 @@ export interface SalesChannelOrdersV2Variables {
   limit: number;
   offset: number;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -1689,6 +1714,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `SalesChannelOrdersV2` Query is of type `SalesChannelOrdersV2Data`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SalesChannelOrdersV2Data {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -1711,13 +1737,14 @@ export default function SalesChannelOrdersV2Component() {
     limit: ...,
     offset: ...,
     requestKey: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useSalesChannelOrdersV2(salesChannelOrdersV2Vars);
   // Variables can be defined inline as well.
-  const query = useSalesChannelOrdersV2({ filters: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+  const query = useSalesChannelOrdersV2({ filters: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -1743,6 +1770,7 @@ export default function SalesChannelOrdersV2Component() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -1767,6 +1795,7 @@ The `SalesChannelOrderDetails` Query requires an argument of type `SalesChannelO
 export interface SalesChannelOrderDetailsVariables {
   id: UUIDString;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -1777,6 +1806,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `SalesChannelOrderDetails` Query is of type `SalesChannelOrderDetailsData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SalesChannelOrderDetailsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -1795,13 +1825,14 @@ export default function SalesChannelOrderDetailsComponent() {
   const salesChannelOrderDetailsVars: SalesChannelOrderDetailsVariables = {
     id: ...,
     requestKey: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useSalesChannelOrderDetails(salesChannelOrderDetailsVars);
   // Variables can be defined inline as well.
-  const query = useSalesChannelOrderDetails({ id: ..., requestKey: ..., });
+  const query = useSalesChannelOrderDetails({ id: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -1827,6 +1858,7 @@ export default function SalesChannelOrderDetailsComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -1850,6 +1882,7 @@ The `SalesChannelWorkspace` Query requires an argument of type `SalesChannelWork
 ```javascript
 export interface SalesChannelWorkspaceVariables {
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -1860,6 +1893,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `SalesChannelWorkspace` Query is of type `SalesChannelWorkspaceData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SalesChannelWorkspaceData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -1877,13 +1911,14 @@ export default function SalesChannelWorkspaceComponent() {
   // The `useSalesChannelWorkspace` Query hook requires an argument of type `SalesChannelWorkspaceVariables`:
   const salesChannelWorkspaceVars: SalesChannelWorkspaceVariables = {
     requestKey: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useSalesChannelWorkspace(salesChannelWorkspaceVars);
   // Variables can be defined inline as well.
-  const query = useSalesChannelWorkspace({ requestKey: ..., });
+  const query = useSalesChannelWorkspace({ requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -1909,6 +1944,7 @@ export default function SalesChannelWorkspaceComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -1938,6 +1974,7 @@ export interface SalesChannelOrdersVariables {
   limit: number;
   offset: number;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -1948,6 +1985,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `SalesChannelOrders` Query is of type `SalesChannelOrdersData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SalesChannelOrdersData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -1971,13 +2009,14 @@ export default function SalesChannelOrdersComponent() {
     limit: ...,
     offset: ...,
     requestKey: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useSalesChannelOrders(salesChannelOrdersVars);
   // Variables can be defined inline as well.
-  const query = useSalesChannelOrders({ term: ..., status: ..., provider: ..., branchId: ..., limit: ..., offset: ..., requestKey: ..., });
+  const query = useSalesChannelOrders({ term: ..., status: ..., provider: ..., branchId: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -2003,6 +2042,7 @@ export default function SalesChannelOrdersComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -2026,6 +2066,7 @@ The `LatestPendingSalesChannelOrder` Query requires an argument of type `LatestP
 ```javascript
 export interface LatestPendingSalesChannelOrderVariables {
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -2036,6 +2077,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `LatestPendingSalesChannelOrder` Query is of type `LatestPendingSalesChannelOrderData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface LatestPendingSalesChannelOrderData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -2053,13 +2095,14 @@ export default function LatestPendingSalesChannelOrderComponent() {
   // The `useLatestPendingSalesChannelOrder` Query hook requires an argument of type `LatestPendingSalesChannelOrderVariables`:
   const latestPendingSalesChannelOrderVars: LatestPendingSalesChannelOrderVariables = {
     requestKey: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useLatestPendingSalesChannelOrder(latestPendingSalesChannelOrderVars);
   // Variables can be defined inline as well.
-  const query = useLatestPendingSalesChannelOrder({ requestKey: ..., });
+  const query = useLatestPendingSalesChannelOrder({ requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -2085,6 +2128,7 @@ export default function LatestPendingSalesChannelOrderComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -2109,6 +2153,7 @@ The `SalesWorkspace` Query requires an argument of type `SalesWorkspaceVariables
 export interface SalesWorkspaceVariables {
   branchId?: UUIDString | null;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -2119,6 +2164,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `SalesWorkspace` Query is of type `SalesWorkspaceData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SalesWorkspaceData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -2137,13 +2183,14 @@ export default function SalesWorkspaceComponent() {
   const salesWorkspaceVars: SalesWorkspaceVariables = {
     branchId: ..., // optional
     requestKey: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useSalesWorkspace(salesWorkspaceVars);
   // Variables can be defined inline as well.
-  const query = useSalesWorkspace({ branchId: ..., requestKey: ..., });
+  const query = useSalesWorkspace({ branchId: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -2169,6 +2216,7 @@ export default function SalesWorkspaceComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -2195,6 +2243,7 @@ export interface ListSalesVariables {
   limit: number;
   offset: number;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -2205,6 +2254,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `ListSales` Query is of type `ListSalesData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface ListSalesData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -2225,13 +2275,14 @@ export default function ListSalesComponent() {
     limit: ...,
     offset: ...,
     requestKey: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useListSales(listSalesVars);
   // Variables can be defined inline as well.
-  const query = useListSales({ filters: ..., limit: ..., offset: ..., requestKey: ..., });
+  const query = useListSales({ filters: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -2257,6 +2308,7 @@ export default function ListSalesComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -2281,6 +2333,7 @@ The `SaleDetails` Query requires an argument of type `SaleDetailsVariables`, whi
 export interface SaleDetailsVariables {
   saleId: UUIDString;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -2291,6 +2344,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `SaleDetails` Query is of type `SaleDetailsData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SaleDetailsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -2309,13 +2363,14 @@ export default function SaleDetailsComponent() {
   const saleDetailsVars: SaleDetailsVariables = {
     saleId: ...,
     requestKey: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useSaleDetails(saleDetailsVars);
   // Variables can be defined inline as well.
-  const query = useSaleDetails({ saleId: ..., requestKey: ..., });
+  const query = useSaleDetails({ saleId: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -2341,6 +2396,7 @@ export default function SaleDetailsComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -2369,6 +2425,8 @@ export interface ListCategoriesVariables {
   limit: number;
   offset: number;
   requestKey?: string | null;
+  filters?: unknown | null;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -2379,7 +2437,9 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `ListCategories` Query is of type `ListCategoriesData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface ListCategoriesData {
+  session?: unknown | null;
   _select?: unknown[] | null;
+  _selectFirst?: unknown | null;
 }
 ```
 
@@ -2401,13 +2461,15 @@ export default function ListCategoriesComponent() {
     limit: ...,
     offset: ...,
     requestKey: ..., // optional
+    filters: ..., // optional
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useListCategories(listCategoriesVars);
   // Variables can be defined inline as well.
-  const query = useListCategories({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+  const query = useListCategories({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., filters: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -2433,7 +2495,9 @@ export default function ListCategoriesComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
+    console.log(query.data._selectFirst);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
 }
@@ -2462,6 +2526,8 @@ export interface ListSubcategoriesVariables {
   limit: number;
   offset: number;
   requestKey?: string | null;
+  filters?: unknown | null;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -2472,7 +2538,9 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `ListSubcategories` Query is of type `ListSubcategoriesData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface ListSubcategoriesData {
+  session?: unknown | null;
   _select?: unknown[] | null;
+  _selectFirst?: unknown | null;
 }
 ```
 
@@ -2495,13 +2563,15 @@ export default function ListSubcategoriesComponent() {
     limit: ...,
     offset: ...,
     requestKey: ..., // optional
+    filters: ..., // optional
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useListSubcategories(listSubcategoriesVars);
   // Variables can be defined inline as well.
-  const query = useListSubcategories({ search: ..., categoryId: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+  const query = useListSubcategories({ search: ..., categoryId: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., filters: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -2527,7 +2597,9 @@ export default function ListSubcategoriesComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
+    console.log(query.data._selectFirst);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
 }
@@ -2550,6 +2622,7 @@ The `CategoryOptions` Query has an optional argument of type `CategoryOptionsVar
 ```javascript
 export interface CategoryOptionsVariables {
   requestKey?: string | null;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -2560,6 +2633,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `CategoryOptions` Query is of type `CategoryOptionsData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface CategoryOptionsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -2577,13 +2651,14 @@ export default function CategoryOptionsComponent() {
   // The `useCategoryOptions` Query hook has an optional argument of type `CategoryOptionsVariables`:
   const categoryOptionsVars: CategoryOptionsVariables = {
     requestKey: ..., // optional
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useCategoryOptions(categoryOptionsVars);
   // Variables can be defined inline as well.
-  const query = useCategoryOptions({ requestKey: ..., });
+  const query = useCategoryOptions({ requestKey: ..., sessionToken: ..., });
   // Since all variables are optional for this Query, you can omit the `CategoryOptionsVariables` argument.
   // (as long as you don't want to provide any `options`!)
   const query = useCategoryOptions();
@@ -2615,6 +2690,7 @@ export default function CategoryOptionsComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -2643,6 +2719,7 @@ export interface ListBranchesVariables {
   limit: number;
   offset: number;
   requestKey?: string | null;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -2653,6 +2730,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `ListBranches` Query is of type `ListBranchesData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface ListBranchesData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -2675,13 +2753,14 @@ export default function ListBranchesComponent() {
     limit: ...,
     offset: ...,
     requestKey: ..., // optional
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useListBranches(listBranchesVars);
   // Variables can be defined inline as well.
-  const query = useListBranches({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+  const query = useListBranches({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -2707,6 +2786,7 @@ export default function ListBranchesComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -2735,6 +2815,7 @@ export interface ListSuppliersVariables {
   limit: number;
   offset: number;
   requestKey?: string | null;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -2745,6 +2826,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `ListSuppliers` Query is of type `ListSuppliersData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface ListSuppliersData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -2767,13 +2849,14 @@ export default function ListSuppliersComponent() {
     limit: ...,
     offset: ...,
     requestKey: ..., // optional
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useListSuppliers(listSuppliersVars);
   // Variables can be defined inline as well.
-  const query = useListSuppliers({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+  const query = useListSuppliers({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -2799,6 +2882,7 @@ export default function ListSuppliersComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -2827,6 +2911,7 @@ export interface ListCustomersVariables {
   limit: number;
   offset: number;
   requestKey?: string | null;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -2837,6 +2922,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `ListCustomers` Query is of type `ListCustomersData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface ListCustomersData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -2859,13 +2945,14 @@ export default function ListCustomersComponent() {
     limit: ...,
     offset: ...,
     requestKey: ..., // optional
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useListCustomers(listCustomersVars);
   // Variables can be defined inline as well.
-  const query = useListCustomers({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+  const query = useListCustomers({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -2891,6 +2978,7 @@ export default function ListCustomersComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -2919,6 +3007,7 @@ export interface ListProductsVariables {
   limit: number;
   offset: number;
   requestKey?: string | null;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -2929,6 +3018,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `ListProducts` Query is of type `ListProductsData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface ListProductsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -2951,13 +3041,14 @@ export default function ListProductsComponent() {
     limit: ...,
     offset: ...,
     requestKey: ..., // optional
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useListProducts(listProductsVars);
   // Variables can be defined inline as well.
-  const query = useListProducts({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+  const query = useListProducts({ search: ..., sortField: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -2983,6 +3074,7 @@ export default function ListProductsComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -3006,6 +3098,7 @@ The `RegistrationOptions` Query has an optional argument of type `RegistrationOp
 ```javascript
 export interface RegistrationOptionsVariables {
   requestKey?: string | null;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -3016,6 +3109,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `RegistrationOptions` Query is of type `RegistrationOptionsData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface RegistrationOptionsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -3033,13 +3127,14 @@ export default function RegistrationOptionsComponent() {
   // The `useRegistrationOptions` Query hook has an optional argument of type `RegistrationOptionsVariables`:
   const registrationOptionsVars: RegistrationOptionsVariables = {
     requestKey: ..., // optional
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useRegistrationOptions(registrationOptionsVars);
   // Variables can be defined inline as well.
-  const query = useRegistrationOptions({ requestKey: ..., });
+  const query = useRegistrationOptions({ requestKey: ..., sessionToken: ..., });
   // Since all variables are optional for this Query, you can omit the `RegistrationOptionsVariables` argument.
   // (as long as you don't want to provide any `options`!)
   const query = useRegistrationOptions();
@@ -3071,6 +3166,7 @@ export default function RegistrationOptionsComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -3094,6 +3190,7 @@ The `ProductComponents` Query requires an argument of type `ProductComponentsVar
 ```javascript
 export interface ProductComponentsVariables {
   productId: UUIDString;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -3104,6 +3201,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `ProductComponents` Query is of type `ProductComponentsData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface ProductComponentsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -3121,13 +3219,14 @@ export default function ProductComponentsComponent() {
   // The `useProductComponents` Query hook requires an argument of type `ProductComponentsVariables`:
   const productComponentsVars: ProductComponentsVariables = {
     productId: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useProductComponents(productComponentsVars);
   // Variables can be defined inline as well.
-  const query = useProductComponents({ productId: ..., });
+  const query = useProductComponents({ productId: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -3153,6 +3252,7 @@ export default function ProductComponentsComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -3176,6 +3276,7 @@ The `ProductPromotions` Query requires an argument of type `ProductPromotionsVar
 ```javascript
 export interface ProductPromotionsVariables {
   productId: UUIDString;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -3186,6 +3287,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `ProductPromotions` Query is of type `ProductPromotionsData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface ProductPromotionsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -3203,13 +3305,14 @@ export default function ProductPromotionsComponent() {
   // The `useProductPromotions` Query hook requires an argument of type `ProductPromotionsVariables`:
   const productPromotionsVars: ProductPromotionsVariables = {
     productId: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useProductPromotions(productPromotionsVars);
   // Variables can be defined inline as well.
-  const query = useProductPromotions({ productId: ..., });
+  const query = useProductPromotions({ productId: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -3235,6 +3338,7 @@ export default function ProductPromotionsComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -3258,6 +3362,7 @@ The `PlatformAdminWorkspace` Query requires an argument of type `PlatformAdminWo
 ```javascript
 export interface PlatformAdminWorkspaceVariables {
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -3268,6 +3373,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `PlatformAdminWorkspace` Query is of type `PlatformAdminWorkspaceData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface PlatformAdminWorkspaceData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -3285,13 +3391,14 @@ export default function PlatformAdminWorkspaceComponent() {
   // The `usePlatformAdminWorkspace` Query hook requires an argument of type `PlatformAdminWorkspaceVariables`:
   const platformAdminWorkspaceVars: PlatformAdminWorkspaceVariables = {
     requestKey: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = usePlatformAdminWorkspace(platformAdminWorkspaceVars);
   // Variables can be defined inline as well.
-  const query = usePlatformAdminWorkspace({ requestKey: ..., });
+  const query = usePlatformAdminWorkspace({ requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -3317,6 +3424,7 @@ export default function PlatformAdminWorkspaceComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -3347,6 +3455,7 @@ export interface PlatformBillingWorkspaceVariables {
   limit: number;
   offset: number;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -3357,6 +3466,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `PlatformBillingWorkspace` Query is of type `PlatformBillingWorkspaceData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface PlatformBillingWorkspaceData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -3381,13 +3491,14 @@ export default function PlatformBillingWorkspaceComponent() {
     limit: ...,
     offset: ...,
     requestKey: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = usePlatformBillingWorkspace(platformBillingWorkspaceVars);
   // Variables can be defined inline as well.
-  const query = usePlatformBillingWorkspace({ term: ..., status: ..., tenantId: ..., dueFrom: ..., dueTo: ..., limit: ..., offset: ..., requestKey: ..., });
+  const query = usePlatformBillingWorkspace({ term: ..., status: ..., tenantId: ..., dueFrom: ..., dueTo: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -3413,6 +3524,7 @@ export default function PlatformBillingWorkspaceComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -3445,6 +3557,7 @@ export interface PlatformBillingWorkspaceV2Variables {
   limit: number;
   offset: number;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -3455,6 +3568,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `PlatformBillingWorkspaceV2` Query is of type `PlatformBillingWorkspaceV2Data`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface PlatformBillingWorkspaceV2Data {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -3481,13 +3595,14 @@ export default function PlatformBillingWorkspaceV2Component() {
     limit: ...,
     offset: ...,
     requestKey: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = usePlatformBillingWorkspaceV2(platformBillingWorkspaceV2Vars);
   // Variables can be defined inline as well.
-  const query = usePlatformBillingWorkspaceV2({ term: ..., status: ..., tenantId: ..., dueFrom: ..., dueTo: ..., sortKey: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., });
+  const query = usePlatformBillingWorkspaceV2({ term: ..., status: ..., tenantId: ..., dueFrom: ..., dueTo: ..., sortKey: ..., sortDirection: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -3513,6 +3628,7 @@ export default function PlatformBillingWorkspaceV2Component() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -3536,6 +3652,12 @@ The `StockWorkspace` Query requires an argument of type `StockWorkspaceVariables
 ```javascript
 export interface StockWorkspaceVariables {
   requestKey: string;
+  filters?: unknown | null;
+  limit?: number | null;
+  offset?: number | null;
+  sortField?: string | null;
+  sortDirection?: string | null;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -3546,6 +3668,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `StockWorkspace` Query is of type `StockWorkspaceData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface StockWorkspaceData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -3563,13 +3686,19 @@ export default function StockWorkspaceComponent() {
   // The `useStockWorkspace` Query hook requires an argument of type `StockWorkspaceVariables`:
   const stockWorkspaceVars: StockWorkspaceVariables = {
     requestKey: ...,
+    filters: ..., // optional
+    limit: ..., // optional
+    offset: ..., // optional
+    sortField: ..., // optional
+    sortDirection: ..., // optional
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useStockWorkspace(stockWorkspaceVars);
   // Variables can be defined inline as well.
-  const query = useStockWorkspace({ requestKey: ..., });
+  const query = useStockWorkspace({ requestKey: ..., filters: ..., limit: ..., offset: ..., sortField: ..., sortDirection: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -3595,6 +3724,7 @@ export default function StockWorkspaceComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -3621,6 +3751,7 @@ export interface DailyProfitDashboardVariables {
   to: DateString;
   branchId?: UUIDString | null;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -3631,6 +3762,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `DailyProfitDashboard` Query is of type `DailyProfitDashboardData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface DailyProfitDashboardData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -3651,13 +3783,14 @@ export default function DailyProfitDashboardComponent() {
     to: ...,
     branchId: ..., // optional
     requestKey: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useDailyProfitDashboard(dailyProfitDashboardVars);
   // Variables can be defined inline as well.
-  const query = useDailyProfitDashboard({ from: ..., to: ..., branchId: ..., requestKey: ..., });
+  const query = useDailyProfitDashboard({ from: ..., to: ..., branchId: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -3683,6 +3816,7 @@ export default function DailyProfitDashboardComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -3707,6 +3841,7 @@ The `StockOperationDetails` Query requires an argument of type `StockOperationDe
 export interface StockOperationDetailsVariables {
   operationId: string;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -3717,6 +3852,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `StockOperationDetails` Query is of type `StockOperationDetailsData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface StockOperationDetailsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -3735,13 +3871,14 @@ export default function StockOperationDetailsComponent() {
   const stockOperationDetailsVars: StockOperationDetailsVariables = {
     operationId: ...,
     requestKey: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useStockOperationDetails(stockOperationDetailsVars);
   // Variables can be defined inline as well.
-  const query = useStockOperationDetails({ operationId: ..., requestKey: ..., });
+  const query = useStockOperationDetails({ operationId: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -3767,6 +3904,7 @@ export default function StockOperationDetailsComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -3793,6 +3931,7 @@ export interface FinancialIndicatorsDashboardVariables {
   to: DateString;
   filters: unknown;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -3803,6 +3942,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `FinancialIndicatorsDashboard` Query is of type `FinancialIndicatorsDashboardData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface FinancialIndicatorsDashboardData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -3823,13 +3963,14 @@ export default function FinancialIndicatorsDashboardComponent() {
     to: ...,
     filters: ...,
     requestKey: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useFinancialIndicatorsDashboard(financialIndicatorsDashboardVars);
   // Variables can be defined inline as well.
-  const query = useFinancialIndicatorsDashboard({ from: ..., to: ..., filters: ..., requestKey: ..., });
+  const query = useFinancialIndicatorsDashboard({ from: ..., to: ..., filters: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -3855,6 +3996,7 @@ export default function FinancialIndicatorsDashboardComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -3881,6 +4023,7 @@ export interface SalesChannelAnalyticsDashboardVariables {
   to: DateString;
   filters: unknown;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -3891,6 +4034,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `SalesChannelAnalyticsDashboard` Query is of type `SalesChannelAnalyticsDashboardData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SalesChannelAnalyticsDashboardData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -3911,13 +4055,14 @@ export default function SalesChannelAnalyticsDashboardComponent() {
     to: ...,
     filters: ...,
     requestKey: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useSalesChannelAnalyticsDashboard(salesChannelAnalyticsDashboardVars);
   // Variables can be defined inline as well.
-  const query = useSalesChannelAnalyticsDashboard({ from: ..., to: ..., filters: ..., requestKey: ..., });
+  const query = useSalesChannelAnalyticsDashboard({ from: ..., to: ..., filters: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -3943,6 +4088,7 @@ export default function SalesChannelAnalyticsDashboardComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -3969,6 +4115,7 @@ export interface OperationalAnalyticsDashboardVariables {
   to: DateString;
   filters: unknown;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -3979,6 +4126,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `OperationalAnalyticsDashboard` Query is of type `OperationalAnalyticsDashboardData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface OperationalAnalyticsDashboardData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -3999,13 +4147,14 @@ export default function OperationalAnalyticsDashboardComponent() {
     to: ...,
     filters: ...,
     requestKey: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useOperationalAnalyticsDashboard(operationalAnalyticsDashboardVars);
   // Variables can be defined inline as well.
-  const query = useOperationalAnalyticsDashboard({ from: ..., to: ..., filters: ..., requestKey: ..., });
+  const query = useOperationalAnalyticsDashboard({ from: ..., to: ..., filters: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -4031,6 +4180,7 @@ export default function OperationalAnalyticsDashboardComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -4055,6 +4205,7 @@ The `SystemSalesChannelOrderForActor` Query requires an argument of type `System
 export interface SystemSalesChannelOrderForActorVariables {
   userId: string;
   orderId: UUIDString;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -4083,13 +4234,14 @@ export default function SystemSalesChannelOrderForActorComponent() {
   const systemSalesChannelOrderForActorVars: SystemSalesChannelOrderForActorVariables = {
     userId: ...,
     orderId: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useSystemSalesChannelOrderForActor(systemSalesChannelOrderForActorVars);
   // Variables can be defined inline as well.
-  const query = useSystemSalesChannelOrderForActor({ userId: ..., orderId: ..., });
+  const query = useSystemSalesChannelOrderForActor({ userId: ..., orderId: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -4139,6 +4291,7 @@ The `SystemSalesChannelConnectionForActor` Query requires an argument of type `S
 export interface SystemSalesChannelConnectionForActorVariables {
   userId: string;
   connectionId: UUIDString;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -4167,13 +4320,14 @@ export default function SystemSalesChannelConnectionForActorComponent() {
   const systemSalesChannelConnectionForActorVars: SystemSalesChannelConnectionForActorVariables = {
     userId: ...,
     connectionId: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useSystemSalesChannelConnectionForActor(systemSalesChannelConnectionForActorVars);
   // Variables can be defined inline as well.
-  const query = useSystemSalesChannelConnectionForActor({ userId: ..., connectionId: ..., });
+  const query = useSystemSalesChannelConnectionForActor({ userId: ..., connectionId: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -4226,6 +4380,7 @@ export interface SearchPosProductsVariables {
   limit?: number | null;
   offset?: number | null;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -4236,6 +4391,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `SearchPosProducts` Query is of type `SearchPosProductsData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SearchPosProductsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -4257,13 +4413,14 @@ export default function SearchPosProductsComponent() {
     limit: ..., // optional
     offset: ..., // optional
     requestKey: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useSearchPosProducts(searchPosProductsVars);
   // Variables can be defined inline as well.
-  const query = useSearchPosProducts({ branchId: ..., search: ..., limit: ..., offset: ..., requestKey: ..., });
+  const query = useSearchPosProducts({ branchId: ..., search: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -4289,6 +4446,7 @@ export default function SearchPosProductsComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -4315,6 +4473,7 @@ export interface SearchPosCustomersVariables {
   limit?: number | null;
   offset?: number | null;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -4325,6 +4484,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `SearchPosCustomers` Query is of type `SearchPosCustomersData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SearchPosCustomersData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -4345,13 +4505,14 @@ export default function SearchPosCustomersComponent() {
     limit: ..., // optional
     offset: ..., // optional
     requestKey: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = useSearchPosCustomers(searchPosCustomersVars);
   // Variables can be defined inline as well.
-  const query = useSearchPosCustomers({ search: ..., limit: ..., offset: ..., requestKey: ..., });
+  const query = useSearchPosCustomers({ search: ..., limit: ..., offset: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -4377,6 +4538,7 @@ export default function SearchPosCustomersComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -4401,6 +4563,7 @@ The `PosProductBranches` Query requires an argument of type `PosProductBranchesV
 export interface PosProductBranchesVariables {
   productId: UUIDString;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -4411,6 +4574,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `PosProductBranches` Query is of type `PosProductBranchesData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface PosProductBranchesData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -4429,13 +4593,14 @@ export default function PosProductBranchesComponent() {
   const posProductBranchesVars: PosProductBranchesVariables = {
     productId: ...,
     requestKey: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = usePosProductBranches(posProductBranchesVars);
   // Variables can be defined inline as well.
-  const query = usePosProductBranches({ productId: ..., requestKey: ..., });
+  const query = usePosProductBranches({ productId: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -4461,6 +4626,7 @@ export default function PosProductBranchesComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -4484,6 +4650,7 @@ The `PendingPosApprovals` Query requires an argument of type `PendingPosApproval
 ```javascript
 export interface PendingPosApprovalsVariables {
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -4494,6 +4661,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `PendingPosApprovals` Query is of type `PendingPosApprovalsData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface PendingPosApprovalsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -4511,13 +4679,14 @@ export default function PendingPosApprovalsComponent() {
   // The `usePendingPosApprovals` Query hook requires an argument of type `PendingPosApprovalsVariables`:
   const pendingPosApprovalsVars: PendingPosApprovalsVariables = {
     requestKey: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = usePendingPosApprovals(pendingPosApprovalsVars);
   // Variables can be defined inline as well.
-  const query = usePendingPosApprovals({ requestKey: ..., });
+  const query = usePendingPosApprovals({ requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -4543,6 +4712,7 @@ export default function PendingPosApprovalsComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -4567,6 +4737,7 @@ The `PosSaleApprovalStatus` Query requires an argument of type `PosSaleApprovalS
 export interface PosSaleApprovalStatusVariables {
   operationId: string;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -4577,6 +4748,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `PosSaleApprovalStatus` Query is of type `PosSaleApprovalStatusData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface PosSaleApprovalStatusData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -4595,13 +4767,14 @@ export default function PosSaleApprovalStatusComponent() {
   const posSaleApprovalStatusVars: PosSaleApprovalStatusVariables = {
     operationId: ...,
     requestKey: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = usePosSaleApprovalStatus(posSaleApprovalStatusVars);
   // Variables can be defined inline as well.
-  const query = usePosSaleApprovalStatus({ operationId: ..., requestKey: ..., });
+  const query = usePosSaleApprovalStatus({ operationId: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -4627,6 +4800,7 @@ export default function PosSaleApprovalStatusComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -4651,6 +4825,7 @@ The `PosCashApprovalStatus` Query requires an argument of type `PosCashApprovalS
 export interface PosCashApprovalStatusVariables {
   operationId: string;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -4661,6 +4836,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `PosCashApprovalStatus` Query is of type `PosCashApprovalStatusData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface PosCashApprovalStatusData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 ```
@@ -4679,13 +4855,14 @@ export default function PosCashApprovalStatusComponent() {
   const posCashApprovalStatusVars: PosCashApprovalStatusVariables = {
     operationId: ...,
     requestKey: ...,
+    sessionToken: ..., // optional
   };
 
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
   const query = usePosCashApprovalStatus(posCashApprovalStatusVars);
   // Variables can be defined inline as well.
-  const query = usePosCashApprovalStatus({ operationId: ..., requestKey: ..., });
+  const query = usePosCashApprovalStatus({ operationId: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
@@ -4711,6 +4888,7 @@ export default function PosCashApprovalStatusComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data._select);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -5089,6 +5267,7 @@ The `CreateCategory` Mutation requires an argument of type `CreateCategoryVariab
 ```javascript
 export interface CreateCategoryVariables {
   name: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -5101,6 +5280,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `CreateCategory` Mutation is of type `CreateCategoryData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface CreateCategoryData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -5139,10 +5321,11 @@ export default function CreateCategoryComponent() {
   // The `useCreateCategory` Mutation requires an argument of type `CreateCategoryVariables`:
   const createCategoryVars: CreateCategoryVariables = {
     name: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(createCategoryVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ name: ..., });
+  mutation.mutate({ name: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -5161,6 +5344,7 @@ export default function CreateCategoryComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -5184,6 +5368,7 @@ The `UpdateCategory` Mutation requires an argument of type `UpdateCategoryVariab
 export interface UpdateCategoryVariables {
   id: UUIDString;
   name: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -5196,6 +5381,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `UpdateCategory` Mutation is of type `UpdateCategoryData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface UpdateCategoryData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -5235,10 +5423,11 @@ export default function UpdateCategoryComponent() {
   const updateCategoryVars: UpdateCategoryVariables = {
     id: ...,
     name: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(updateCategoryVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ id: ..., name: ..., });
+  mutation.mutate({ id: ..., name: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -5257,6 +5446,7 @@ export default function UpdateCategoryComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -5279,6 +5469,7 @@ The `ArchiveCategory` Mutation requires an argument of type `ArchiveCategoryVari
 ```javascript
 export interface ArchiveCategoryVariables {
   id: UUIDString;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -5291,6 +5482,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `ArchiveCategory` Mutation is of type `ArchiveCategoryData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface ArchiveCategoryData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -5329,10 +5523,11 @@ export default function ArchiveCategoryComponent() {
   // The `useArchiveCategory` Mutation requires an argument of type `ArchiveCategoryVariables`:
   const archiveCategoryVars: ArchiveCategoryVariables = {
     id: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(archiveCategoryVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ id: ..., });
+  mutation.mutate({ id: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -5351,6 +5546,7 @@ export default function ArchiveCategoryComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -5374,6 +5570,7 @@ The `CreateSubcategory` Mutation requires an argument of type `CreateSubcategory
 export interface CreateSubcategoryVariables {
   categoryId: UUIDString;
   name: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -5386,6 +5583,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `CreateSubcategory` Mutation is of type `CreateSubcategoryData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface CreateSubcategoryData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -5425,10 +5625,11 @@ export default function CreateSubcategoryComponent() {
   const createSubcategoryVars: CreateSubcategoryVariables = {
     categoryId: ...,
     name: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(createSubcategoryVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ categoryId: ..., name: ..., });
+  mutation.mutate({ categoryId: ..., name: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -5447,6 +5648,7 @@ export default function CreateSubcategoryComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -5471,6 +5673,7 @@ export interface UpdateSubcategoryVariables {
   id: UUIDString;
   categoryId: UUIDString;
   name: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -5483,6 +5686,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `UpdateSubcategory` Mutation is of type `UpdateSubcategoryData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface UpdateSubcategoryData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -5523,10 +5729,11 @@ export default function UpdateSubcategoryComponent() {
     id: ...,
     categoryId: ...,
     name: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(updateSubcategoryVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ id: ..., categoryId: ..., name: ..., });
+  mutation.mutate({ id: ..., categoryId: ..., name: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -5545,6 +5752,7 @@ export default function UpdateSubcategoryComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -5567,6 +5775,7 @@ The `ArchiveSubcategory` Mutation requires an argument of type `ArchiveSubcatego
 ```javascript
 export interface ArchiveSubcategoryVariables {
   id: UUIDString;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -5579,6 +5788,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `ArchiveSubcategory` Mutation is of type `ArchiveSubcategoryData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface ArchiveSubcategoryData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -5617,10 +5829,11 @@ export default function ArchiveSubcategoryComponent() {
   // The `useArchiveSubcategory` Mutation requires an argument of type `ArchiveSubcategoryVariables`:
   const archiveSubcategoryVars: ArchiveSubcategoryVariables = {
     id: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(archiveSubcategoryVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ id: ..., });
+  mutation.mutate({ id: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -5639,6 +5852,7 @@ export default function ArchiveSubcategoryComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -5661,6 +5875,7 @@ The `RestoreCategory` Mutation requires an argument of type `RestoreCategoryVari
 ```javascript
 export interface RestoreCategoryVariables {
   id: UUIDString;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -5673,6 +5888,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `RestoreCategory` Mutation is of type `RestoreCategoryData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface RestoreCategoryData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -5711,10 +5929,11 @@ export default function RestoreCategoryComponent() {
   // The `useRestoreCategory` Mutation requires an argument of type `RestoreCategoryVariables`:
   const restoreCategoryVars: RestoreCategoryVariables = {
     id: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(restoreCategoryVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ id: ..., });
+  mutation.mutate({ id: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -5733,6 +5952,7 @@ export default function RestoreCategoryComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -5755,6 +5975,7 @@ The `RestoreSubcategory` Mutation requires an argument of type `RestoreSubcatego
 ```javascript
 export interface RestoreSubcategoryVariables {
   id: UUIDString;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -5767,6 +5988,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `RestoreSubcategory` Mutation is of type `RestoreSubcategoryData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface RestoreSubcategoryData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -5805,10 +6029,11 @@ export default function RestoreSubcategoryComponent() {
   // The `useRestoreSubcategory` Mutation requires an argument of type `RestoreSubcategoryVariables`:
   const restoreSubcategoryVars: RestoreSubcategoryVariables = {
     id: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(restoreSubcategoryVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ id: ..., });
+  mutation.mutate({ id: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -5827,6 +6052,7 @@ export default function RestoreSubcategoryComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -5849,6 +6075,7 @@ The `CreateCategoriesBatch` Mutation requires an argument of type `CreateCategor
 ```javascript
 export interface CreateCategoriesBatchVariables {
   names: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -5861,6 +6088,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `CreateCategoriesBatch` Mutation is of type `CreateCategoriesBatchData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface CreateCategoriesBatchData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -5899,10 +6129,11 @@ export default function CreateCategoriesBatchComponent() {
   // The `useCreateCategoriesBatch` Mutation requires an argument of type `CreateCategoriesBatchVariables`:
   const createCategoriesBatchVars: CreateCategoriesBatchVariables = {
     names: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(createCategoriesBatchVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ names: ..., });
+  mutation.mutate({ names: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -5921,6 +6152,7 @@ export default function CreateCategoriesBatchComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -5943,6 +6175,7 @@ The `CreateSubcategoriesBatch` Mutation requires an argument of type `CreateSubc
 ```javascript
 export interface CreateSubcategoriesBatchVariables {
   items: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -5955,6 +6188,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `CreateSubcategoriesBatch` Mutation is of type `CreateSubcategoriesBatchData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface CreateSubcategoriesBatchData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -5993,10 +6229,11 @@ export default function CreateSubcategoriesBatchComponent() {
   // The `useCreateSubcategoriesBatch` Mutation requires an argument of type `CreateSubcategoriesBatchVariables`:
   const createSubcategoriesBatchVars: CreateSubcategoriesBatchVariables = {
     items: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(createSubcategoriesBatchVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ items: ..., });
+  mutation.mutate({ items: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -6015,6 +6252,7 @@ export default function CreateSubcategoriesBatchComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -6038,6 +6276,7 @@ The `SaveBranch` Mutation requires an argument of type `SaveBranchVariables`, wh
 export interface SaveBranchVariables {
   id?: UUIDString | null;
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -6050,6 +6289,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `SaveBranch` Mutation is of type `SaveBranchData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SaveBranchData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -6089,10 +6331,11 @@ export default function SaveBranchComponent() {
   const saveBranchVars: SaveBranchVariables = {
     id: ..., // optional
     payload: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(saveBranchVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ id: ..., payload: ..., });
+  mutation.mutate({ id: ..., payload: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -6111,6 +6354,7 @@ export default function SaveBranchComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -6134,6 +6378,7 @@ The `SetBranchStatus` Mutation requires an argument of type `SetBranchStatusVari
 export interface SetBranchStatusVariables {
   id: UUIDString;
   active: boolean;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -6146,6 +6391,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `SetBranchStatus` Mutation is of type `SetBranchStatusData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SetBranchStatusData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -6185,10 +6433,11 @@ export default function SetBranchStatusComponent() {
   const setBranchStatusVars: SetBranchStatusVariables = {
     id: ...,
     active: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(setBranchStatusVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ id: ..., active: ..., });
+  mutation.mutate({ id: ..., active: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -6207,6 +6456,7 @@ export default function SetBranchStatusComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -6230,6 +6480,7 @@ The `SaveSupplier` Mutation requires an argument of type `SaveSupplierVariables`
 export interface SaveSupplierVariables {
   id?: UUIDString | null;
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -6242,6 +6493,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `SaveSupplier` Mutation is of type `SaveSupplierData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SaveSupplierData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -6281,10 +6535,11 @@ export default function SaveSupplierComponent() {
   const saveSupplierVars: SaveSupplierVariables = {
     id: ..., // optional
     payload: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(saveSupplierVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ id: ..., payload: ..., });
+  mutation.mutate({ id: ..., payload: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -6303,6 +6558,7 @@ export default function SaveSupplierComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -6326,6 +6582,7 @@ The `SetSupplierStatus` Mutation requires an argument of type `SetSupplierStatus
 export interface SetSupplierStatusVariables {
   id: UUIDString;
   active: boolean;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -6338,6 +6595,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `SetSupplierStatus` Mutation is of type `SetSupplierStatusData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SetSupplierStatusData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -6377,10 +6637,11 @@ export default function SetSupplierStatusComponent() {
   const setSupplierStatusVars: SetSupplierStatusVariables = {
     id: ...,
     active: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(setSupplierStatusVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ id: ..., active: ..., });
+  mutation.mutate({ id: ..., active: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -6399,6 +6660,7 @@ export default function SetSupplierStatusComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -6422,6 +6684,7 @@ The `SaveCustomer` Mutation requires an argument of type `SaveCustomerVariables`
 export interface SaveCustomerVariables {
   id?: UUIDString | null;
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -6434,6 +6697,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `SaveCustomer` Mutation is of type `SaveCustomerData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SaveCustomerData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -6473,10 +6739,11 @@ export default function SaveCustomerComponent() {
   const saveCustomerVars: SaveCustomerVariables = {
     id: ..., // optional
     payload: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(saveCustomerVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ id: ..., payload: ..., });
+  mutation.mutate({ id: ..., payload: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -6495,6 +6762,7 @@ export default function SaveCustomerComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -6518,6 +6786,7 @@ The `SetCustomerStatus` Mutation requires an argument of type `SetCustomerStatus
 export interface SetCustomerStatusVariables {
   id: UUIDString;
   active: boolean;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -6530,6 +6799,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `SetCustomerStatus` Mutation is of type `SetCustomerStatusData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SetCustomerStatusData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -6569,10 +6841,11 @@ export default function SetCustomerStatusComponent() {
   const setCustomerStatusVars: SetCustomerStatusVariables = {
     id: ...,
     active: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(setCustomerStatusVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ id: ..., active: ..., });
+  mutation.mutate({ id: ..., active: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -6591,6 +6864,7 @@ export default function SetCustomerStatusComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -6615,6 +6889,7 @@ export interface SaveProductVariables {
   id?: UUIDString | null;
   payload: unknown;
   components?: unknown | null;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -6627,6 +6902,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `SaveProduct` Mutation is of type `SaveProductData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SaveProductData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -6667,10 +6945,11 @@ export default function SaveProductComponent() {
     id: ..., // optional
     payload: ...,
     components: ..., // optional
+    sessionToken: ..., // optional
   };
   mutation.mutate(saveProductVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ id: ..., payload: ..., components: ..., });
+  mutation.mutate({ id: ..., payload: ..., components: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -6689,6 +6968,7 @@ export default function SaveProductComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -6712,6 +6992,7 @@ The `SetProductStatus` Mutation requires an argument of type `SetProductStatusVa
 export interface SetProductStatusVariables {
   id: UUIDString;
   active: boolean;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -6724,6 +7005,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `SetProductStatus` Mutation is of type `SetProductStatusData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SetProductStatusData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -6763,10 +7047,11 @@ export default function SetProductStatusComponent() {
   const setProductStatusVars: SetProductStatusVariables = {
     id: ...,
     active: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(setProductStatusVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ id: ..., active: ..., });
+  mutation.mutate({ id: ..., active: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -6785,6 +7070,7 @@ export default function SetProductStatusComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -6808,6 +7094,7 @@ The `SaveProductComponents` Mutation requires an argument of type `SaveProductCo
 export interface SaveProductComponentsVariables {
   productId: UUIDString;
   components: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -6820,6 +7107,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `SaveProductComponents` Mutation is of type `SaveProductComponentsData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SaveProductComponentsData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -6859,10 +7149,11 @@ export default function SaveProductComponentsComponent() {
   const saveProductComponentsVars: SaveProductComponentsVariables = {
     productId: ...,
     components: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(saveProductComponentsVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ productId: ..., components: ..., });
+  mutation.mutate({ productId: ..., components: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -6881,6 +7172,7 @@ export default function SaveProductComponentsComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -6907,6 +7199,7 @@ export interface SavePromotionVariables {
   promotionalPriceCents: Int64String;
   startsAt: TimestampString;
   endsAt: TimestampString;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -6919,6 +7212,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `SavePromotion` Mutation is of type `SavePromotionData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SavePromotionData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -6961,10 +7257,11 @@ export default function SavePromotionComponent() {
     promotionalPriceCents: ...,
     startsAt: ...,
     endsAt: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(savePromotionVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ id: ..., productId: ..., promotionalPriceCents: ..., startsAt: ..., endsAt: ..., });
+  mutation.mutate({ id: ..., productId: ..., promotionalPriceCents: ..., startsAt: ..., endsAt: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -6983,6 +7280,7 @@ export default function SavePromotionComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -7006,6 +7304,7 @@ The `SetPromotionStatus` Mutation requires an argument of type `SetPromotionStat
 export interface SetPromotionStatusVariables {
   id: UUIDString;
   active: boolean;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -7018,6 +7317,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `SetPromotionStatus` Mutation is of type `SetPromotionStatusData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SetPromotionStatusData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -7057,10 +7359,11 @@ export default function SetPromotionStatusComponent() {
   const setPromotionStatusVars: SetPromotionStatusVariables = {
     id: ...,
     active: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(setPromotionStatusVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ id: ..., active: ..., });
+  mutation.mutate({ id: ..., active: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -7079,6 +7382,7 @@ export default function SetPromotionStatusComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -7102,6 +7406,7 @@ The `SetCategoriesStatusBatch` Mutation requires an argument of type `SetCategor
 export interface SetCategoriesStatusBatchVariables {
   ids: unknown;
   active: boolean;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -7114,6 +7419,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `SetCategoriesStatusBatch` Mutation is of type `SetCategoriesStatusBatchData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SetCategoriesStatusBatchData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -7153,10 +7461,11 @@ export default function SetCategoriesStatusBatchComponent() {
   const setCategoriesStatusBatchVars: SetCategoriesStatusBatchVariables = {
     ids: ...,
     active: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(setCategoriesStatusBatchVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ ids: ..., active: ..., });
+  mutation.mutate({ ids: ..., active: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -7175,6 +7484,7 @@ export default function SetCategoriesStatusBatchComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -7198,6 +7508,7 @@ The `SetSubcategoriesStatusBatch` Mutation requires an argument of type `SetSubc
 export interface SetSubcategoriesStatusBatchVariables {
   ids: unknown;
   active: boolean;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -7210,6 +7521,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `SetSubcategoriesStatusBatch` Mutation is of type `SetSubcategoriesStatusBatchData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SetSubcategoriesStatusBatchData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -7249,10 +7563,11 @@ export default function SetSubcategoriesStatusBatchComponent() {
   const setSubcategoriesStatusBatchVars: SetSubcategoriesStatusBatchVariables = {
     ids: ...,
     active: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(setSubcategoriesStatusBatchVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ ids: ..., active: ..., });
+  mutation.mutate({ ids: ..., active: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -7271,6 +7586,7 @@ export default function SetSubcategoriesStatusBatchComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -7294,6 +7610,7 @@ The `SetBranchesStatusBatch` Mutation requires an argument of type `SetBranchesS
 export interface SetBranchesStatusBatchVariables {
   ids: unknown;
   active: boolean;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -7306,6 +7623,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `SetBranchesStatusBatch` Mutation is of type `SetBranchesStatusBatchData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SetBranchesStatusBatchData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -7345,10 +7665,11 @@ export default function SetBranchesStatusBatchComponent() {
   const setBranchesStatusBatchVars: SetBranchesStatusBatchVariables = {
     ids: ...,
     active: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(setBranchesStatusBatchVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ ids: ..., active: ..., });
+  mutation.mutate({ ids: ..., active: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -7367,6 +7688,7 @@ export default function SetBranchesStatusBatchComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -7390,6 +7712,7 @@ The `SetSuppliersStatusBatch` Mutation requires an argument of type `SetSupplier
 export interface SetSuppliersStatusBatchVariables {
   ids: unknown;
   active: boolean;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -7402,6 +7725,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `SetSuppliersStatusBatch` Mutation is of type `SetSuppliersStatusBatchData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SetSuppliersStatusBatchData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -7441,10 +7767,11 @@ export default function SetSuppliersStatusBatchComponent() {
   const setSuppliersStatusBatchVars: SetSuppliersStatusBatchVariables = {
     ids: ...,
     active: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(setSuppliersStatusBatchVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ ids: ..., active: ..., });
+  mutation.mutate({ ids: ..., active: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -7463,6 +7790,7 @@ export default function SetSuppliersStatusBatchComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -7486,6 +7814,7 @@ The `SetCustomersStatusBatch` Mutation requires an argument of type `SetCustomer
 export interface SetCustomersStatusBatchVariables {
   ids: unknown;
   active: boolean;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -7498,6 +7827,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `SetCustomersStatusBatch` Mutation is of type `SetCustomersStatusBatchData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SetCustomersStatusBatchData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -7537,10 +7869,11 @@ export default function SetCustomersStatusBatchComponent() {
   const setCustomersStatusBatchVars: SetCustomersStatusBatchVariables = {
     ids: ...,
     active: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(setCustomersStatusBatchVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ ids: ..., active: ..., });
+  mutation.mutate({ ids: ..., active: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -7559,6 +7892,7 @@ export default function SetCustomersStatusBatchComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -7582,6 +7916,7 @@ The `SetProductsStatusBatch` Mutation requires an argument of type `SetProductsS
 export interface SetProductsStatusBatchVariables {
   ids: unknown;
   active: boolean;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -7594,6 +7929,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `SetProductsStatusBatch` Mutation is of type `SetProductsStatusBatchData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SetProductsStatusBatchData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -7633,10 +7971,11 @@ export default function SetProductsStatusBatchComponent() {
   const setProductsStatusBatchVars: SetProductsStatusBatchVariables = {
     ids: ...,
     active: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(setProductsStatusBatchVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ ids: ..., active: ..., });
+  mutation.mutate({ ids: ..., active: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -7655,6 +7994,7 @@ export default function SetProductsStatusBatchComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -7664,15 +8004,21 @@ export default function SetProductsStatusBatchComponent() {
 ## EnsureSalesDefaults
 You can execute the `EnsureSalesDefaults` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
 ```javascript
-useEnsureSalesDefaults(options?: useDataConnectMutationOptions<EnsureSalesDefaultsData, FirebaseError, void>): UseDataConnectMutationResult<EnsureSalesDefaultsData, undefined>;
+useEnsureSalesDefaults(options?: useDataConnectMutationOptions<EnsureSalesDefaultsData, FirebaseError, EnsureSalesDefaultsVariables | void>): UseDataConnectMutationResult<EnsureSalesDefaultsData, EnsureSalesDefaultsVariables>;
 ```
 You can also pass in a `DataConnect` instance to the Mutation hook function.
 ```javascript
-useEnsureSalesDefaults(dc: DataConnect, options?: useDataConnectMutationOptions<EnsureSalesDefaultsData, FirebaseError, void>): UseDataConnectMutationResult<EnsureSalesDefaultsData, undefined>;
+useEnsureSalesDefaults(dc: DataConnect, options?: useDataConnectMutationOptions<EnsureSalesDefaultsData, FirebaseError, EnsureSalesDefaultsVariables | void>): UseDataConnectMutationResult<EnsureSalesDefaultsData, EnsureSalesDefaultsVariables>;
 ```
 
 ### Variables
-The `EnsureSalesDefaults` Mutation has no variables.
+The `EnsureSalesDefaults` Mutation has an optional argument of type `EnsureSalesDefaultsVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface EnsureSalesDefaultsVariables {
+  sessionToken?: string | null;
+}
+```
 ### Return Type
 Recall that calling the `EnsureSalesDefaults` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
 
@@ -7683,6 +8029,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `EnsureSalesDefaults` Mutation is of type `EnsureSalesDefaultsData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface EnsureSalesDefaultsData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -7693,7 +8042,7 @@ To learn more about the `UseMutationResult` object, see the [TanStack React Quer
 
 ```javascript
 import { getDataConnect } from 'firebase/data-connect';
-import { connectorConfig } from '@insightpad/dataconnect';
+import { connectorConfig, EnsureSalesDefaultsVariables } from '@insightpad/dataconnect';
 import { useEnsureSalesDefaults } from '@insightpad/dataconnect/react'
 
 export default function EnsureSalesDefaultsComponent() {
@@ -7718,14 +8067,23 @@ export default function EnsureSalesDefaultsComponent() {
   const mutation = useEnsureSalesDefaults(dataConnect, options);
 
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useEnsureSalesDefaults` Mutation has an optional argument of type `EnsureSalesDefaultsVariables`:
+  const ensureSalesDefaultsVars: EnsureSalesDefaultsVariables = {
+    sessionToken: ..., // optional
+  };
+  mutation.mutate(ensureSalesDefaultsVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ sessionToken: ..., });
+  // Since all variables are optional for this Mutation, you can omit the `EnsureSalesDefaultsVariables` argument.
   mutation.mutate();
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
-  // Since this Mutation accepts no variables, you must pass `undefined` where you would normally pass the variables.
+  // Since all variables are optional for this Mutation, you can provide options without providing any variables.
+  // To do so, you must pass `undefined` where you would normally pass the variables.
   const options = {
     onSuccess: () => { console.log('Mutation succeeded!'); }
   };
-  mutation.mutate(undefined, options);
+  mutation.mutate(ensureSalesDefaultsVars /** or undefined */, options);
 
   // Then, you can render your component dynamically based on the status of the Mutation.
   if (mutation.isPending) {
@@ -7738,6 +8096,7 @@ export default function EnsureSalesDefaultsComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -7760,6 +8119,7 @@ The `PostSale` Mutation requires an argument of type `PostSaleVariables`, which 
 ```javascript
 export interface PostSaleVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -7772,6 +8132,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `PostSale` Mutation is of type `PostSaleData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface PostSaleData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
   result?: {
     receipt?: unknown | null;
@@ -7813,10 +8176,11 @@ export default function PostSaleComponent() {
   // The `usePostSale` Mutation requires an argument of type `PostSaleVariables`:
   const postSaleVars: PostSaleVariables = {
     payload: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(postSaleVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ payload: ..., });
+  mutation.mutate({ payload: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -7835,6 +8199,7 @@ export default function PostSaleComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
     console.log(mutation.data.result);
   }
@@ -7859,6 +8224,7 @@ The `CancelSale` Mutation requires an argument of type `CancelSaleVariables`, wh
 export interface CancelSaleVariables {
   saleId: UUIDString;
   reason: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -7871,6 +8237,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `CancelSale` Mutation is of type `CancelSaleData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface CancelSaleData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -7910,10 +8279,11 @@ export default function CancelSaleComponent() {
   const cancelSaleVars: CancelSaleVariables = {
     saleId: ...,
     reason: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(cancelSaleVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ saleId: ..., reason: ..., });
+  mutation.mutate({ saleId: ..., reason: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -7932,6 +8302,7 @@ export default function CancelSaleComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -7954,6 +8325,7 @@ The `CreatePlatformTenant` Mutation requires an argument of type `CreatePlatform
 ```javascript
 export interface CreatePlatformTenantVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -7966,6 +8338,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `CreatePlatformTenant` Mutation is of type `CreatePlatformTenantData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface CreatePlatformTenantData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -8004,10 +8379,11 @@ export default function CreatePlatformTenantComponent() {
   // The `useCreatePlatformTenant` Mutation requires an argument of type `CreatePlatformTenantVariables`:
   const createPlatformTenantVars: CreatePlatformTenantVariables = {
     payload: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(createPlatformTenantVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ payload: ..., });
+  mutation.mutate({ payload: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -8026,6 +8402,7 @@ export default function CreatePlatformTenantComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -8048,6 +8425,7 @@ The `UpdatePlatformTenant` Mutation requires an argument of type `UpdatePlatform
 ```javascript
 export interface UpdatePlatformTenantVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -8060,6 +8438,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `UpdatePlatformTenant` Mutation is of type `UpdatePlatformTenantData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface UpdatePlatformTenantData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -8098,10 +8479,11 @@ export default function UpdatePlatformTenantComponent() {
   // The `useUpdatePlatformTenant` Mutation requires an argument of type `UpdatePlatformTenantVariables`:
   const updatePlatformTenantVars: UpdatePlatformTenantVariables = {
     payload: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(updatePlatformTenantVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ payload: ..., });
+  mutation.mutate({ payload: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -8120,6 +8502,7 @@ export default function UpdatePlatformTenantComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -8143,6 +8526,7 @@ The `SetPlatformTenantStatus` Mutation requires an argument of type `SetPlatform
 export interface SetPlatformTenantStatusVariables {
   tenantId: UUIDString;
   active: boolean;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -8155,6 +8539,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `SetPlatformTenantStatus` Mutation is of type `SetPlatformTenantStatusData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SetPlatformTenantStatusData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -8194,10 +8581,11 @@ export default function SetPlatformTenantStatusComponent() {
   const setPlatformTenantStatusVars: SetPlatformTenantStatusVariables = {
     tenantId: ...,
     active: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(setPlatformTenantStatusVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ tenantId: ..., active: ..., });
+  mutation.mutate({ tenantId: ..., active: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -8216,6 +8604,7 @@ export default function SetPlatformTenantStatusComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -8238,6 +8627,7 @@ The `LinkPlatformUser` Mutation requires an argument of type `LinkPlatformUserVa
 ```javascript
 export interface LinkPlatformUserVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -8250,6 +8640,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `LinkPlatformUser` Mutation is of type `LinkPlatformUserData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface LinkPlatformUserData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -8288,10 +8681,11 @@ export default function LinkPlatformUserComponent() {
   // The `useLinkPlatformUser` Mutation requires an argument of type `LinkPlatformUserVariables`:
   const linkPlatformUserVars: LinkPlatformUserVariables = {
     payload: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(linkPlatformUserVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ payload: ..., });
+  mutation.mutate({ payload: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -8310,6 +8704,7 @@ export default function LinkPlatformUserComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -8333,6 +8728,7 @@ The `SetPlatformUserStatus` Mutation requires an argument of type `SetPlatformUs
 export interface SetPlatformUserStatusVariables {
   userId: string;
   active: boolean;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -8345,6 +8741,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `SetPlatformUserStatus` Mutation is of type `SetPlatformUserStatusData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SetPlatformUserStatusData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -8384,10 +8783,11 @@ export default function SetPlatformUserStatusComponent() {
   const setPlatformUserStatusVars: SetPlatformUserStatusVariables = {
     userId: ...,
     active: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(setPlatformUserStatusVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ userId: ..., active: ..., });
+  mutation.mutate({ userId: ..., active: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -8406,6 +8806,7 @@ export default function SetPlatformUserStatusComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -8428,6 +8829,7 @@ The `SetPlatformRolePermission` Mutation requires an argument of type `SetPlatfo
 ```javascript
 export interface SetPlatformRolePermissionVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -8440,6 +8842,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `SetPlatformRolePermission` Mutation is of type `SetPlatformRolePermissionData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SetPlatformRolePermissionData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -8478,10 +8883,11 @@ export default function SetPlatformRolePermissionComponent() {
   // The `useSetPlatformRolePermission` Mutation requires an argument of type `SetPlatformRolePermissionVariables`:
   const setPlatformRolePermissionVars: SetPlatformRolePermissionVariables = {
     payload: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(setPlatformRolePermissionVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ payload: ..., });
+  mutation.mutate({ payload: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -8500,6 +8906,7 @@ export default function SetPlatformRolePermissionComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -8522,6 +8929,7 @@ The `CreatePlatformInvoice` Mutation requires an argument of type `CreatePlatfor
 ```javascript
 export interface CreatePlatformInvoiceVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -8534,6 +8942,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `CreatePlatformInvoice` Mutation is of type `CreatePlatformInvoiceData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface CreatePlatformInvoiceData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -8572,10 +8983,11 @@ export default function CreatePlatformInvoiceComponent() {
   // The `useCreatePlatformInvoice` Mutation requires an argument of type `CreatePlatformInvoiceVariables`:
   const createPlatformInvoiceVars: CreatePlatformInvoiceVariables = {
     payload: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(createPlatformInvoiceVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ payload: ..., });
+  mutation.mutate({ payload: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -8594,6 +9006,7 @@ export default function CreatePlatformInvoiceComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -8616,6 +9029,7 @@ The `UpdatePlatformInvoice` Mutation requires an argument of type `UpdatePlatfor
 ```javascript
 export interface UpdatePlatformInvoiceVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -8628,6 +9042,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `UpdatePlatformInvoice` Mutation is of type `UpdatePlatformInvoiceData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface UpdatePlatformInvoiceData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -8666,10 +9083,11 @@ export default function UpdatePlatformInvoiceComponent() {
   // The `useUpdatePlatformInvoice` Mutation requires an argument of type `UpdatePlatformInvoiceVariables`:
   const updatePlatformInvoiceVars: UpdatePlatformInvoiceVariables = {
     payload: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(updatePlatformInvoiceVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ payload: ..., });
+  mutation.mutate({ payload: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -8688,6 +9106,7 @@ export default function UpdatePlatformInvoiceComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -8712,6 +9131,7 @@ export interface VoidPlatformInvoiceVariables {
   invoiceId: UUIDString;
   reason: string;
   expectedVersion: Int64String;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -8724,6 +9144,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `VoidPlatformInvoice` Mutation is of type `VoidPlatformInvoiceData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface VoidPlatformInvoiceData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -8764,10 +9187,11 @@ export default function VoidPlatformInvoiceComponent() {
     invoiceId: ...,
     reason: ...,
     expectedVersion: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(voidPlatformInvoiceVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ invoiceId: ..., reason: ..., expectedVersion: ..., });
+  mutation.mutate({ invoiceId: ..., reason: ..., expectedVersion: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -8786,6 +9210,7 @@ export default function VoidPlatformInvoiceComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -8808,6 +9233,7 @@ The `SettlePlatformInvoice` Mutation requires an argument of type `SettlePlatfor
 ```javascript
 export interface SettlePlatformInvoiceVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -8820,6 +9246,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `SettlePlatformInvoice` Mutation is of type `SettlePlatformInvoiceData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SettlePlatformInvoiceData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -8858,10 +9287,11 @@ export default function SettlePlatformInvoiceComponent() {
   // The `useSettlePlatformInvoice` Mutation requires an argument of type `SettlePlatformInvoiceVariables`:
   const settlePlatformInvoiceVars: SettlePlatformInvoiceVariables = {
     payload: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(settlePlatformInvoiceVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ payload: ..., });
+  mutation.mutate({ payload: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -8880,6 +9310,7 @@ export default function SettlePlatformInvoiceComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -8903,6 +9334,7 @@ The `ReversePlatformPayment` Mutation requires an argument of type `ReversePlatf
 export interface ReversePlatformPaymentVariables {
   paymentId: UUIDString;
   reason: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -8915,6 +9347,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `ReversePlatformPayment` Mutation is of type `ReversePlatformPaymentData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface ReversePlatformPaymentData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -8954,10 +9389,11 @@ export default function ReversePlatformPaymentComponent() {
   const reversePlatformPaymentVars: ReversePlatformPaymentVariables = {
     paymentId: ...,
     reason: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(reversePlatformPaymentVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ paymentId: ..., reason: ..., });
+  mutation.mutate({ paymentId: ..., reason: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -8976,6 +9412,7 @@ export default function ReversePlatformPaymentComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -8998,6 +9435,7 @@ The `PostStockAdjustment` Mutation requires an argument of type `PostStockAdjust
 ```javascript
 export interface PostStockAdjustmentVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -9010,6 +9448,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `PostStockAdjustment` Mutation is of type `PostStockAdjustmentData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface PostStockAdjustmentData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -9048,10 +9489,11 @@ export default function PostStockAdjustmentComponent() {
   // The `usePostStockAdjustment` Mutation requires an argument of type `PostStockAdjustmentVariables`:
   const postStockAdjustmentVars: PostStockAdjustmentVariables = {
     payload: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(postStockAdjustmentVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ payload: ..., });
+  mutation.mutate({ payload: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -9070,6 +9512,7 @@ export default function PostStockAdjustmentComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -9092,6 +9535,7 @@ The `PostStockTransfer` Mutation requires an argument of type `PostStockTransfer
 ```javascript
 export interface PostStockTransferVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -9104,7 +9548,13 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `PostStockTransfer` Mutation is of type `PostStockTransferData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface PostStockTransferData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
+  confirmation?: {
+    receipt?: unknown | null;
+  };
 }
 ```
 
@@ -9142,10 +9592,11 @@ export default function PostStockTransferComponent() {
   // The `usePostStockTransfer` Mutation requires an argument of type `PostStockTransferVariables`:
   const postStockTransferVars: PostStockTransferVariables = {
     payload: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(postStockTransferVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ payload: ..., });
+  mutation.mutate({ payload: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -9164,7 +9615,9 @@ export default function PostStockTransferComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
+    console.log(mutation.data.confirmation);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
 }
@@ -9186,6 +9639,7 @@ The `SaveStockBatch` Mutation requires an argument of type `SaveStockBatchVariab
 ```javascript
 export interface SaveStockBatchVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -9198,7 +9652,13 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `SaveStockBatch` Mutation is of type `SaveStockBatchData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface SaveStockBatchData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
+  confirmation?: {
+    receipt?: unknown | null;
+  };
 }
 ```
 
@@ -9236,10 +9696,11 @@ export default function SaveStockBatchComponent() {
   // The `useSaveStockBatch` Mutation requires an argument of type `SaveStockBatchVariables`:
   const saveStockBatchVars: SaveStockBatchVariables = {
     payload: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(saveStockBatchVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ payload: ..., });
+  mutation.mutate({ payload: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -9258,7 +9719,9 @@ export default function SaveStockBatchComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
+    console.log(mutation.data.confirmation);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
 }
@@ -9282,6 +9745,7 @@ export interface ReverseStockOperationVariables {
   operationId: string;
   movementIds: unknown;
   reason: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -9294,6 +9758,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `ReverseStockOperation` Mutation is of type `ReverseStockOperationData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface ReverseStockOperationData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -9334,10 +9801,11 @@ export default function ReverseStockOperationComponent() {
     operationId: ...,
     movementIds: ...,
     reason: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(reverseStockOperationVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ operationId: ..., movementIds: ..., reason: ..., });
+  mutation.mutate({ operationId: ..., movementIds: ..., reason: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -9356,6 +9824,7 @@ export default function ReverseStockOperationComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -9380,6 +9849,7 @@ export interface OpenCashSessionVariables {
   branchId: UUIDString;
   openingAmountCents: Int64String;
   notes: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -9392,6 +9862,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `OpenCashSession` Mutation is of type `OpenCashSessionData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface OpenCashSessionData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -9432,10 +9905,11 @@ export default function OpenCashSessionComponent() {
     branchId: ...,
     openingAmountCents: ...,
     notes: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(openCashSessionVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ branchId: ..., openingAmountCents: ..., notes: ..., });
+  mutation.mutate({ branchId: ..., openingAmountCents: ..., notes: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -9454,6 +9928,7 @@ export default function OpenCashSessionComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -9480,6 +9955,7 @@ export interface RegisterCashMovementVariables {
   amountCents: Int64String;
   description: string;
   operationId?: string | null;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -9492,6 +9968,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `RegisterCashMovement` Mutation is of type `RegisterCashMovementData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface RegisterCashMovementData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -9534,10 +10013,11 @@ export default function RegisterCashMovementComponent() {
     amountCents: ...,
     description: ...,
     operationId: ..., // optional
+    sessionToken: ..., // optional
   };
   mutation.mutate(registerCashMovementVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ sessionId: ..., movementType: ..., amountCents: ..., description: ..., operationId: ..., });
+  mutation.mutate({ sessionId: ..., movementType: ..., amountCents: ..., description: ..., operationId: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -9556,6 +10036,7 @@ export default function RegisterCashMovementComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -9577,7 +10058,6 @@ The `ClaimDeviceSession` Mutation requires an argument of type `ClaimDeviceSessi
 
 ```javascript
 export interface ClaimDeviceSessionVariables {
-  sessionToken: string;
   deviceId: string;
   deviceName: string;
 }
@@ -9592,6 +10072,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `ClaimDeviceSession` Mutation is of type `ClaimDeviceSessionData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface ClaimDeviceSessionData {
+  query?: {
+    issued?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -9629,13 +10112,12 @@ export default function ClaimDeviceSessionComponent() {
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
   // The `useClaimDeviceSession` Mutation requires an argument of type `ClaimDeviceSessionVariables`:
   const claimDeviceSessionVars: ClaimDeviceSessionVariables = {
-    sessionToken: ...,
     deviceId: ...,
     deviceName: ...,
   };
   mutation.mutate(claimDeviceSessionVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ sessionToken: ..., deviceId: ..., deviceName: ..., });
+  mutation.mutate({ deviceId: ..., deviceName: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -9654,6 +10136,7 @@ export default function ClaimDeviceSessionComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -9688,6 +10171,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `TouchDeviceSession` Mutation is of type `TouchDeviceSessionData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface TouchDeviceSessionData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -9748,6 +10234,7 @@ export default function TouchDeviceSessionComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -9867,6 +10354,7 @@ export interface CreateSalesChannelConnectionVariables {
   branchId: UUIDString;
   displayName: string;
   externalStoreId: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -9879,6 +10367,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `CreateSalesChannelConnection` Mutation is of type `CreateSalesChannelConnectionData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface CreateSalesChannelConnectionData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -9920,10 +10411,11 @@ export default function CreateSalesChannelConnectionComponent() {
     branchId: ...,
     displayName: ...,
     externalStoreId: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(createSalesChannelConnectionVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ provider: ..., branchId: ..., displayName: ..., externalStoreId: ..., });
+  mutation.mutate({ provider: ..., branchId: ..., displayName: ..., externalStoreId: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -9942,6 +10434,7 @@ export default function CreateSalesChannelConnectionComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -9967,6 +10460,7 @@ export interface UpdateSalesChannelConnectionVariables {
   displayName: string;
   externalStoreId: string;
   enabled: boolean;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -9979,6 +10473,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `UpdateSalesChannelConnection` Mutation is of type `UpdateSalesChannelConnectionData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface UpdateSalesChannelConnectionData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -10020,10 +10517,11 @@ export default function UpdateSalesChannelConnectionComponent() {
     displayName: ...,
     externalStoreId: ...,
     enabled: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(updateSalesChannelConnectionVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ id: ..., displayName: ..., externalStoreId: ..., enabled: ..., });
+  mutation.mutate({ id: ..., displayName: ..., externalStoreId: ..., enabled: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -10042,6 +10540,7 @@ export default function UpdateSalesChannelConnectionComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -10066,6 +10565,7 @@ export interface ConnectSalesChannelMerchantVariables {
   connectionId: UUIDString;
   merchantId: string;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -10078,6 +10578,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `ConnectSalesChannelMerchant` Mutation is of type `ConnectSalesChannelMerchantData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface ConnectSalesChannelMerchantData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -10118,10 +10621,11 @@ export default function ConnectSalesChannelMerchantComponent() {
     connectionId: ...,
     merchantId: ...,
     requestKey: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(connectSalesChannelMerchantVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ connectionId: ..., merchantId: ..., requestKey: ..., });
+  mutation.mutate({ connectionId: ..., merchantId: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -10140,6 +10644,7 @@ export default function ConnectSalesChannelMerchantComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -10162,6 +10667,7 @@ The `ArchiveSalesChannelConnection` Mutation requires an argument of type `Archi
 ```javascript
 export interface ArchiveSalesChannelConnectionVariables {
   id: UUIDString;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -10174,6 +10680,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `ArchiveSalesChannelConnection` Mutation is of type `ArchiveSalesChannelConnectionData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface ArchiveSalesChannelConnectionData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -10212,10 +10721,11 @@ export default function ArchiveSalesChannelConnectionComponent() {
   // The `useArchiveSalesChannelConnection` Mutation requires an argument of type `ArchiveSalesChannelConnectionVariables`:
   const archiveSalesChannelConnectionVars: ArchiveSalesChannelConnectionVariables = {
     id: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(archiveSalesChannelConnectionVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ id: ..., });
+  mutation.mutate({ id: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -10234,6 +10744,7 @@ export default function ArchiveSalesChannelConnectionComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -10264,6 +10775,7 @@ export interface CreateSalesChannelProductMappingVariables {
   priceMode?: string;
   customPriceCents?: Int64String | null;
   remoteProductState?: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -10276,6 +10788,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `CreateSalesChannelProductMapping` Mutation is of type `CreateSalesChannelProductMappingData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface CreateSalesChannelProductMappingData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -10322,10 +10837,11 @@ export default function CreateSalesChannelProductMappingComponent() {
     priceMode: ..., // optional
     customPriceCents: ..., // optional
     remoteProductState: ..., // optional
+    sessionToken: ..., // optional
   };
   mutation.mutate(createSalesChannelProductMappingVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ connectionId: ..., productId: ..., externalProductId: ..., externalProductName: ..., syncPrice: ..., syncStock: ..., priceMode: ..., customPriceCents: ..., remoteProductState: ..., });
+  mutation.mutate({ connectionId: ..., productId: ..., externalProductId: ..., externalProductName: ..., syncPrice: ..., syncStock: ..., priceMode: ..., customPriceCents: ..., remoteProductState: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -10344,6 +10860,7 @@ export default function CreateSalesChannelProductMappingComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -10374,6 +10891,7 @@ export interface UpdateSalesChannelProductMappingVariables {
   priceMode?: string;
   customPriceCents?: Int64String | null;
   remoteProductState?: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -10386,6 +10904,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `UpdateSalesChannelProductMapping` Mutation is of type `UpdateSalesChannelProductMappingData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface UpdateSalesChannelProductMappingData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -10432,10 +10953,11 @@ export default function UpdateSalesChannelProductMappingComponent() {
     priceMode: ..., // optional
     customPriceCents: ..., // optional
     remoteProductState: ..., // optional
+    sessionToken: ..., // optional
   };
   mutation.mutate(updateSalesChannelProductMappingVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ id: ..., externalProductId: ..., externalProductName: ..., syncPrice: ..., syncStock: ..., enabled: ..., priceMode: ..., customPriceCents: ..., remoteProductState: ..., });
+  mutation.mutate({ id: ..., externalProductId: ..., externalProductName: ..., syncPrice: ..., syncStock: ..., enabled: ..., priceMode: ..., customPriceCents: ..., remoteProductState: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -10454,6 +10976,7 @@ export default function UpdateSalesChannelProductMappingComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -10476,6 +10999,7 @@ The `ArchiveSalesChannelProductMapping` Mutation requires an argument of type `A
 ```javascript
 export interface ArchiveSalesChannelProductMappingVariables {
   id: UUIDString;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -10488,6 +11012,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `ArchiveSalesChannelProductMapping` Mutation is of type `ArchiveSalesChannelProductMappingData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface ArchiveSalesChannelProductMappingData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -10526,10 +11053,11 @@ export default function ArchiveSalesChannelProductMappingComponent() {
   // The `useArchiveSalesChannelProductMapping` Mutation requires an argument of type `ArchiveSalesChannelProductMappingVariables`:
   const archiveSalesChannelProductMappingVars: ArchiveSalesChannelProductMappingVariables = {
     id: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(archiveSalesChannelProductMappingVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ id: ..., });
+  mutation.mutate({ id: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -10548,6 +11076,7 @@ export default function ArchiveSalesChannelProductMappingComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -10577,6 +11106,7 @@ export interface QueueSalesChannelOrderActionVariables {
   itemId?: UUIDString | null;
   ean?: string | null;
   quantity?: number | null;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -10589,6 +11119,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `QueueSalesChannelOrderAction` Mutation is of type `QueueSalesChannelOrderActionData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface QueueSalesChannelOrderActionData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -10634,10 +11167,11 @@ export default function QueueSalesChannelOrderActionComponent() {
     itemId: ..., // optional
     ean: ..., // optional
     quantity: ..., // optional
+    sessionToken: ..., // optional
   };
   mutation.mutate(queueSalesChannelOrderActionVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ id: ..., action: ..., reason: ..., expectedVersion: ..., cancellationCode: ..., itemId: ..., ean: ..., quantity: ..., });
+  mutation.mutate({ id: ..., action: ..., reason: ..., expectedVersion: ..., cancellationCode: ..., itemId: ..., ean: ..., quantity: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -10656,6 +11190,7 @@ export default function QueueSalesChannelOrderActionComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -10678,6 +11213,7 @@ The `RetrySalesChannelCommand` Mutation requires an argument of type `RetrySales
 ```javascript
 export interface RetrySalesChannelCommandVariables {
   id: UUIDString;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -10690,6 +11226,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `RetrySalesChannelCommand` Mutation is of type `RetrySalesChannelCommandData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface RetrySalesChannelCommandData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -10728,10 +11267,11 @@ export default function RetrySalesChannelCommandComponent() {
   // The `useRetrySalesChannelCommand` Mutation requires an argument of type `RetrySalesChannelCommandVariables`:
   const retrySalesChannelCommandVars: RetrySalesChannelCommandVariables = {
     id: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(retrySalesChannelCommandVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ id: ..., });
+  mutation.mutate({ id: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -10750,6 +11290,7 @@ export default function RetrySalesChannelCommandComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -10772,6 +11313,7 @@ The `RetrySalesChannelDecommissioning` Mutation requires an argument of type `Re
 ```javascript
 export interface RetrySalesChannelDecommissioningVariables {
   id: UUIDString;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -10784,6 +11326,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `RetrySalesChannelDecommissioning` Mutation is of type `RetrySalesChannelDecommissioningData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface RetrySalesChannelDecommissioningData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -10822,10 +11367,11 @@ export default function RetrySalesChannelDecommissioningComponent() {
   // The `useRetrySalesChannelDecommissioning` Mutation requires an argument of type `RetrySalesChannelDecommissioningVariables`:
   const retrySalesChannelDecommissioningVars: RetrySalesChannelDecommissioningVariables = {
     id: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(retrySalesChannelDecommissioningVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ id: ..., });
+  mutation.mutate({ id: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -10844,6 +11390,7 @@ export default function RetrySalesChannelDecommissioningComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -10867,6 +11414,7 @@ The `RequestSalesChannelOrderReconciliation` Mutation requires an argument of ty
 export interface RequestSalesChannelOrderReconciliationVariables {
   id: UUIDString;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -10879,6 +11427,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `RequestSalesChannelOrderReconciliation` Mutation is of type `RequestSalesChannelOrderReconciliationData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface RequestSalesChannelOrderReconciliationData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -10918,10 +11469,11 @@ export default function RequestSalesChannelOrderReconciliationComponent() {
   const requestSalesChannelOrderReconciliationVars: RequestSalesChannelOrderReconciliationVariables = {
     id: ...,
     requestKey: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(requestSalesChannelOrderReconciliationVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ id: ..., requestKey: ..., });
+  mutation.mutate({ id: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -10940,6 +11492,7 @@ export default function RequestSalesChannelOrderReconciliationComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -10964,6 +11517,7 @@ export interface AcknowledgeSalesChannelOrderAlertVariables {
   id: UUIDString;
   version: number;
   alertKind: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -10976,6 +11530,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `AcknowledgeSalesChannelOrderAlert` Mutation is of type `AcknowledgeSalesChannelOrderAlertData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface AcknowledgeSalesChannelOrderAlertData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -11016,10 +11573,11 @@ export default function AcknowledgeSalesChannelOrderAlertComponent() {
     id: ...,
     version: ...,
     alertKind: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(acknowledgeSalesChannelOrderAlertVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ id: ..., version: ..., alertKind: ..., });
+  mutation.mutate({ id: ..., version: ..., alertKind: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -11038,6 +11596,7 @@ export default function AcknowledgeSalesChannelOrderAlertComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -11062,6 +11621,7 @@ export interface MapSalesChannelOrderItemVariables {
   itemId: UUIDString;
   productId: UUIDString;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -11074,6 +11634,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `MapSalesChannelOrderItem` Mutation is of type `MapSalesChannelOrderItemData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface MapSalesChannelOrderItemData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -11114,10 +11677,11 @@ export default function MapSalesChannelOrderItemComponent() {
     itemId: ...,
     productId: ...,
     requestKey: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(mapSalesChannelOrderItemVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ itemId: ..., productId: ..., requestKey: ..., });
+  mutation.mutate({ itemId: ..., productId: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -11136,6 +11700,7 @@ export default function MapSalesChannelOrderItemComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -11160,6 +11725,7 @@ export interface RequestSalesChannelSyncVariables {
   connectionId: UUIDString;
   scope: string;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -11172,6 +11738,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `RequestSalesChannelSync` Mutation is of type `RequestSalesChannelSyncData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface RequestSalesChannelSyncData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -11212,10 +11781,11 @@ export default function RequestSalesChannelSyncComponent() {
     connectionId: ...,
     scope: ...,
     requestKey: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(requestSalesChannelSyncVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ connectionId: ..., scope: ..., requestKey: ..., });
+  mutation.mutate({ connectionId: ..., scope: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -11234,6 +11804,7 @@ export default function RequestSalesChannelSyncComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -11257,6 +11828,7 @@ The `RequestSalesChannelAuthorization` Mutation requires an argument of type `Re
 export interface RequestSalesChannelAuthorizationVariables {
   connectionId: UUIDString;
   requestKey: string;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -11269,6 +11841,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `RequestSalesChannelAuthorization` Mutation is of type `RequestSalesChannelAuthorizationData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface RequestSalesChannelAuthorizationData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -11308,10 +11883,11 @@ export default function RequestSalesChannelAuthorizationComponent() {
   const requestSalesChannelAuthorizationVars: RequestSalesChannelAuthorizationVariables = {
     connectionId: ...,
     requestKey: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(requestSalesChannelAuthorizationVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ connectionId: ..., requestKey: ..., });
+  mutation.mutate({ connectionId: ..., requestKey: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -11330,6 +11906,7 @@ export default function RequestSalesChannelAuthorizationComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -12903,6 +13480,7 @@ export interface CloseCashSessionVariables {
   countedAmountCents: Int64String;
   notes: string;
   operationId?: string | null;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -12915,6 +13493,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `CloseCashSession` Mutation is of type `CloseCashSessionData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface CloseCashSessionData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -12956,10 +13537,11 @@ export default function CloseCashSessionComponent() {
     countedAmountCents: ...,
     notes: ...,
     operationId: ..., // optional
+    sessionToken: ..., // optional
   };
   mutation.mutate(closeCashSessionVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ sessionId: ..., countedAmountCents: ..., notes: ..., operationId: ..., });
+  mutation.mutate({ sessionId: ..., countedAmountCents: ..., notes: ..., operationId: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -12978,6 +13560,7 @@ export default function CloseCashSessionComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -13005,6 +13588,7 @@ export interface UpdatePosPolicyVariables {
   allowOperatorClose: boolean;
   operatorWithdrawalLimitCents?: Int64String | null;
   operatorCloseDifferenceLimitCents?: Int64String | null;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -13017,6 +13601,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `UpdatePosPolicy` Mutation is of type `UpdatePosPolicyData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface UpdatePosPolicyData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -13060,10 +13647,11 @@ export default function UpdatePosPolicyComponent() {
     allowOperatorClose: ...,
     operatorWithdrawalLimitCents: ..., // optional
     operatorCloseDifferenceLimitCents: ..., // optional
+    sessionToken: ..., // optional
   };
   mutation.mutate(updatePosPolicyVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ requireOpenSession: ..., operatorDiscountPercent: ..., operatorSurchargePercent: ..., allowOperatorClose: ..., operatorWithdrawalLimitCents: ..., operatorCloseDifferenceLimitCents: ..., });
+  mutation.mutate({ requireOpenSession: ..., operatorDiscountPercent: ..., operatorSurchargePercent: ..., allowOperatorClose: ..., operatorWithdrawalLimitCents: ..., operatorCloseDifferenceLimitCents: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -13082,6 +13670,7 @@ export default function UpdatePosPolicyComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -13104,6 +13693,7 @@ The `RequestPosSaleApproval` Mutation requires an argument of type `RequestPosSa
 ```javascript
 export interface RequestPosSaleApprovalVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -13116,6 +13706,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `RequestPosSaleApproval` Mutation is of type `RequestPosSaleApprovalData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface RequestPosSaleApprovalData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -13154,10 +13747,11 @@ export default function RequestPosSaleApprovalComponent() {
   // The `useRequestPosSaleApproval` Mutation requires an argument of type `RequestPosSaleApprovalVariables`:
   const requestPosSaleApprovalVars: RequestPosSaleApprovalVariables = {
     payload: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(requestPosSaleApprovalVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ payload: ..., });
+  mutation.mutate({ payload: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -13176,6 +13770,7 @@ export default function RequestPosSaleApprovalComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -13199,6 +13794,7 @@ The `ApprovePosSale` Mutation requires an argument of type `ApprovePosSaleVariab
 export interface ApprovePosSaleVariables {
   approvalId: UUIDString;
   approved: boolean;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -13211,6 +13807,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `ApprovePosSale` Mutation is of type `ApprovePosSaleData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface ApprovePosSaleData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -13250,10 +13849,11 @@ export default function ApprovePosSaleComponent() {
   const approvePosSaleVars: ApprovePosSaleVariables = {
     approvalId: ...,
     approved: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(approvePosSaleVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ approvalId: ..., approved: ..., });
+  mutation.mutate({ approvalId: ..., approved: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -13272,6 +13872,7 @@ export default function ApprovePosSaleComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -13294,6 +13895,7 @@ The `RequestPosCashApproval` Mutation requires an argument of type `RequestPosCa
 ```javascript
 export interface RequestPosCashApprovalVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 ```
 ### Return Type
@@ -13306,6 +13908,9 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `RequestPosCashApproval` Mutation is of type `RequestPosCashApprovalData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface RequestPosCashApprovalData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 ```
@@ -13344,10 +13949,11 @@ export default function RequestPosCashApprovalComponent() {
   // The `useRequestPosCashApproval` Mutation requires an argument of type `RequestPosCashApprovalVariables`:
   const requestPosCashApprovalVars: RequestPosCashApprovalVariables = {
     payload: ...,
+    sessionToken: ..., // optional
   };
   mutation.mutate(requestPosCashApprovalVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ payload: ..., });
+  mutation.mutate({ payload: ..., sessionToken: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -13366,6 +13972,7 @@ export default function RequestPosCashApprovalComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
+    console.log(mutation.data.query);
     console.log(mutation.data._execute);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;

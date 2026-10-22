@@ -224,10 +224,10 @@ function setProductsStatusBatch(dcOrVarsOrOptions, varsOrOptions, options) {
 }
 exports.setProductsStatusBatch = setProductsStatusBatch;
 
-function ensureSalesDefaults(dcOrOptions, options) {
-  const { dc: dcInstance, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrOptions, options, undefined);
+function ensureSalesDefaults(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, false);
   dcInstance.useGen(true);
-  return dcInstance.executeMutation('EnsureSalesDefaults', undefined, inputOpts);
+  return dcInstance.executeMutation('EnsureSalesDefaults', inputVars, inputOpts);
 }
 exports.ensureSalesDefaults = ensureSalesDefaults;
 

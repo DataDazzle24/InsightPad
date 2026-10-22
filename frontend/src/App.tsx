@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react'
+import {useModalIsolation} from './hooks/useModalIsolation'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppErrorBoundary } from './components/AppErrorBoundary'
 import { AppLayout } from './layout/AppLayout'
@@ -28,6 +29,7 @@ const SalesChannelsPage = lazy(() => import('./pages/SalesChannelsPage').then((m
 const ChannelOrdersPage = lazy(() => import('./pages/ChannelOrdersPage').then((module) => ({ default: module.ChannelOrdersPage })))
 
 export default function App() {
+  useModalIsolation()
   return (
    <AppErrorBoundary>
     <Suspense fallback={<div className="session-loader"><div className="brand-mark"><span>Insight Pad</span></div><p>Carregando módulo...</p></div>}>

@@ -1,0 +1,8 @@
+/* QA-only, local OFL fonts; no network font request is needed. */
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/500.css';
+@import '@fontsource/ibm-plex-mono/600.css';
+@import '@fontsource/ibm-plex-mono/700.css';
+@font-face{font-family:Inter;font-style:normal;font-display:swap;font-weight:100 900;src:url('@fontsource-variable/inter/files/inter-latin-wght-normal.woff2') format('woff2')}
+@font-face{font-family:'Material Symbols Rounded';font-style:normal;font-display:swap;font-weight:100 700;src:url('@fontsource-variable/material-symbols-rounded/files/material-symbols-rounded-latin-full-normal.woff2') format('woff2')}
+.material-symbols-rounded{font-family:'Material Symbols Rounded';font-weight:normal;font-style:normal;font-size:24px;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;white-space:nowrap;word-wrap:normal;direction:ltr;font-feature-settings:'liga';-webkit-font-smoothing:antialiased}

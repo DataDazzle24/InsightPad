@@ -192,10 +192,10 @@ export function setProductsStatusBatch(dcOrVarsOrOptions, varsOrOptions, options
   return dcInstance.executeMutation('SetProductsStatusBatch', inputVars, inputOpts);
 }
 
-export function ensureSalesDefaults(dcOrOptions, options) {
-  const { dc: dcInstance, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrOptions, options, undefined);
+export function ensureSalesDefaults(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, false);
   dcInstance.useGen(true);
-  return dcInstance.executeMutation('EnsureSalesDefaults', undefined, inputOpts);
+  return dcInstance.executeMutation('EnsureSalesDefaults', inputVars, inputOpts);
 }
 
 export function postSale(dcOrVarsOrOptions, varsOrOptions, options) {

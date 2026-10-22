@@ -250,8 +250,8 @@ exports.useSetProductsStatusBatch = function useSetProductsStatusBatch(dcOrOptio
 
 exports.useEnsureSalesDefaults = function useEnsureSalesDefaults(dcOrOptions, options) {
   const { dc: dcInstance, vars: inputOpts } = validateArgs(connectorConfig, dcOrOptions, options);
-  function refFactory() {
-    return ensureSalesDefaultsRef(dcInstance);
+  function refFactory(vars) {
+    return ensureSalesDefaultsRef(dcInstance, vars);
   }
   return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
 }
