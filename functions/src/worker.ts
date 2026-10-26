@@ -999,8 +999,8 @@ export async function queueDueIfoodSynchronizations(): Promise<void> {
 export async function purgeExpiredPayloads(): Promise<void> {
   await systemPurgeExpiredSalesChannelPayloads(dc, { requestKey: randomUUID() });
 }
-export async function cancellationReasonsForUser(client: IfoodClient, userId: string, orderId: string): Promise<Array<{ code: string; label: string }>> {
-  const selected = rows(await systemSalesChannelOrderForActor(dc, { userId, orderId }))[0];
+export async function cancellationReasonsForUser(client: IfoodClient, userId: string, orderId: string, sessionToken: string): Promise<Array<{ code: string; label: string }>> {
+  const selected = rows(await systemSalesChannelOrderForActor(dc, { userId, orderId, sessionToken }))[0];
   if (!selected) throw new Error("ORDER_ACCESS_DENIED");
   const target = asRecord(selected);
   const providerOrderId = firstString(target, "orderId");
@@ -1017,16 +1017,16 @@ export async function cancellationReasonsForUser(client: IfoodClient, userId: st
   return [...unique].map(([code, label]) => ({ code, label }));
 }
 
-async function connectionForActor(userId: string, connectionId: string, manage = false): Promise<JsonRecord> {
-  const selected = rows(await systemSalesChannelConnectionForActor(dc, { userId, connectionId }))[0];
+async function connectionForActor(userId: string, connectionId: string, sessionToken: string, manage = false): Promise<JsonRecord> {
+  const selected = rows(await systemSalesChannelConnectionForActor(dc, { userId, connectionId, sessionToken }))[0];
   if (!selected) throw new Error("CONNECTION_ACCESS_DENIED");
   const connection = asRecord(selected);
   if (!(manage ? connection.canManage : connection.canAccess)) throw new Error("CONNECTION_ACCESS_DENIED");
   return connection;
 }
 
-export async function availableMerchantsForUser(client: IfoodClient, userId: string, connectionId: string): Promise<Array<{ id: string; name: string; type: string; catalogProfile: string }>> {
-  await connectionForActor(userId, connectionId, true);
+export async function availableMerchantsForUser(client: IfoodClient, userId: string, connectionId: string, sessionToken: string): Promise<Array<{ id: string; name: string; type: string; catalogProfile: string }>> {
+  await connectionForActor(userId, connectionId, sessionToken, true);
   const merchants = await client.merchants();
   return merchants.flatMap((merchant) => {
     const id = merchantId(merchant);
@@ -1040,8 +1040,8 @@ export async function availableMerchantsForUser(client: IfoodClient, userId: str
   });
 }
 
-export async function merchantOperationForUser(client: IfoodClient, userId: string, connectionId: string, action: string, payload: unknown): Promise<unknown> {
-  const connection = await connectionForActor(userId, connectionId, action !== "READ");
+export async function merchantOperationForUser(client: IfoodClient, userId: string, connectionId: string, action: string, payload: unknown, sessionToken: string): Promise<unknown> {
+  const connection = await connectionForActor(userId, connectionId, sessionToken, action !== "READ");
   const merchant = firstString(connection, "merchantId");
   if (!merchant || connection.authorizationStatus !== "AUTHORIZED" || connection.status !== "ACTIVE") throw new Error("CONNECTION_NOT_READY");
   if (action === "READ") {

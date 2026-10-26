@@ -15,13 +15,20 @@ concurrency:
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
+    # Pin the supported distro; ubuntu-latest moved to a newer APT package set.
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
+    env:
+      CANDIDATE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
-          fetch-depth: 2
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          # Reconciliation verifies an immutable ancestor across all development commits.
+          fetch-depth: 0
+      - name: Conferir SHA do candidato
+        run: test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '22'
@@ -33,8 +40,13 @@ jobs:
         run: |
           npm --prefix frontend ci --no-audit --no-fund
           npm --prefix functions ci --no-audit --no-fund
+      - name: Compilar contratos e conferir SDKs gerados
+        run: |
+          npx --yes firebase-tools@15.34.0 dataconnect:sdk:generate --project insightpad-dd-dev --non-interactive
+          node scripts/normalize-dataconnect-sdk.mjs
+          git diff --exit-code -- frontend/src/dataconnect-generated functions/src/dataconnect-admin-generated
       - name: Testar manifesto
-        run: node --test scripts/version-manifest.test.mjs scripts/ci-dev-config.test.mjs
+        run: node --test scripts/version-manifest.test.mjs scripts/ci-dev-config.test.mjs scripts/verify-reconciliation.test.mjs scripts/qa-browser/evidence.test.mjs
       - name: Conferir preservação da fonte recuperada
         run: node scripts/verify-reconciliation.mjs
       - name: Configuração pública de cliente DEV (somente leitura)
@@ -49,19 +61,44 @@ jobs:
           npm --prefix functions run lint
           npm --prefix functions test
           npm --prefix functions run build
-      - name: Preparar revisão do modal com Auth mockado
-        run: npm --prefix frontend run build:qa
+      - name: Aplicação QA com Auth e API mockados
+        run: |
+          npm --prefix frontend run test:qa
+          npm --prefix frontend run build:qa
+      - name: Chromium e servidor QA no mesmo executor
+        run: |
+          npm --prefix scripts/qa-browser ci --ignore-scripts --no-audit --no-fund
+          timeout 240s node scripts/qa-browser/node_modules/playwright/cli.js install --with-deps chromium
+          sudo apt-get install -y poppler-utils
+          node scripts/qa-browser/run.mjs --full
+      - name: Proteger evidências visuais antes de sair do runner
+        if: always()
+        run: |
+          if test -d artifacts/browser-private; then node scripts/qa-browser/seal.mjs; fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: browser-evidence-sealed-${{ env.CANDIDATE_SHA }}
+          path: artifacts/browser-sealed/evidence.enc
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Manifesto de candidato local
         run: node scripts/version-manifest.mjs --project insightpad-dd-dev
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: candidate-manifest-${{ github.sha }}
+          name: candidate-manifest-${{ env.CANDIDATE_SHA }}
           path: artifacts/version-manifest.json
           if-no-files-found: error
           retention-days: 14
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: recovery-qa-${{ github.sha }}
+          name: recovery-qa-${{ env.CANDIDATE_SHA }}
           path: artifacts/recovery-qa
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: frontend-dev-${{ env.CANDIDATE_SHA }}
+          path: frontend/dist
           if-no-files-found: error
           retention-days: 14

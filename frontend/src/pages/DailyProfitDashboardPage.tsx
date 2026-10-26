@@ -1,5 +1,9 @@
+import { useDashboardExport } from '../utils/dashboardAuthorization';
+import { Link } from 'react-router-dom';
+import { csvSafe } from '../utils/registration';
+import { heatmapStyle } from '../utils/dashboardExport';
 /* eslint-disable react-hooks/preserve-manual-memoization */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState,type ReactNode } from "react";
 import { getDataConnect } from "firebase/data-connect";
 import {
   connectorConfig,
@@ -97,7 +101,8 @@ const dc = getDataConnect(firebaseApp, connectorConfig),
   },
   opts = (items: Option[] = []): SelectOption[] =>
     items.map((i) => ({ value: i.id, label: i.name }));
-export function DailyProfitDashboardPage() {
+export function DailyProfitDashboardPage({navigation}:{navigation?:ReactNode}) {
+  const canExport=useDashboardExport();
   const today = new Date(),
     initial = new Date(today.getFullYear(), today.getMonth(), 1),
     [from, setFrom] = useState(iso(initial)),
@@ -110,14 +115,16 @@ export function DailyProfitDashboardPage() {
     [notice, setNotice] = useState<Notice | null>(null),
     [filterOpen, setFilterOpen] = useState(false),
     [info, setInfo] = useState(false),
-    [group, setGroup] = useState<"day" | "month">("day"),
+    [group, setGroup] = useState<"day" | "month" | "year">("day"),
     [metrics, setMetrics] = useState<Array<"volume" | "revenue" | "profit">>([
       "revenue",
       "profit",
     ]),
     [sort, setSort] = useState<keyof Product>("revenueCents"),
     [selected, setSelected] = useState(false);
+  const sequence=useRef(0);
   const load = useCallback(async () => {
+    const request=++sequence.current;
     setBusy(true);
     try {
       const result = await financialIndicatorsDashboard(dc, {
@@ -129,15 +136,15 @@ export function DailyProfitDashboardPage() {
         box = ((result.data._select ?? [])[0] as { data?: Data } | undefined)
           ?.data;
       if (!box) throw new Error();
-      setData(box);
+      if(request!==sequence.current)return;setData(box);
     } catch (error) {
-      console.error(error);
+      if(request!==sequence.current)return;console.error(error);
       setNotice({
         type: "error",
         text: "Não foi possível calcular os indicadores financeiros.",
       });
     } finally {
-      setBusy(false);
+      if(request===sequence.current)setBusy(false);
     }
   }, [from, to, filters]);
   useEffect(() => {
@@ -197,18 +204,19 @@ export function DailyProfitDashboardPage() {
       end =
         group === "day"
           ? day.date
-          : iso(
+          : group==='year'?`${day.date.slice(0,4)}-12-31`:iso(
               new Date(
                 Number(day.date.slice(0, 4)),
                 Number(day.date.slice(5, 7)),
                 0,
               ),
             );
-    setFrom(start);
-    setTo(end);
+    setFrom(start<from?from:start);
+    setTo(end>to?to:end);
     setSelected(true);
   }
   function csv() {
+    if(!canExport||!data||busy)return;
     const rows = [
         [
           "Produto",
@@ -240,7 +248,7 @@ export function DailyProfitDashboardPage() {
           "\uFEFF" +
             rows
               .map((r) =>
-                r.map((v) => `"${String(v).replaceAll('"', '""')}"`).join(";"),
+                r.map((v) => `"${csvSafe(String(v)).replaceAll('"', '""')}"`).join(";"),
               )
               .join("\n"),
         ],
@@ -260,13 +268,13 @@ export function DailyProfitDashboardPage() {
       <header className="finance-heading">
         <div>
           <span className="eyebrow">DASHBOARD</span>
-          <h1>INDICADORES FINANCEIROS</h1>
+          <h1><Link className="catalog-back" to="/modulos/dashboards" aria-label="Voltar aos dashboards"><span className="material-symbols-rounded">arrow_back</span></Link>INDICADORES FINANCEIROS</h1><p className="dashboard-filter-summary">{from} — {to} · {Object.entries(filters).filter(([,ids])=>ids.length).map(([key,ids])=>ids.map(id=>data?.options[key as keyof Filters]?.find(option=>option.id===id)?.name??id).join(', ')).join(' · ')||'Todos os filtros'} · Gerado em {new Date().toLocaleString('pt-BR')}</p>
         </div>
-        <div className="finance-actions">
+        {navigation}<div className="finance-actions"><button onClick={clear}>Limpar filtros</button><button disabled={!canExport||!data||busy} onClick={()=>{if(canExport&&data&&!busy)window.print()}}>PDF</button>
           <button onClick={() => setInfo(true)}>
             <span className="material-symbols-rounded">info</span>Fórmulas
           </button>
-          <button onClick={csv}>
+          <button disabled={!canExport||!data||busy} onClick={csv}>
             <span className="material-symbols-rounded">download</span>CSV
           </button>
           <button
@@ -334,6 +342,7 @@ export function DailyProfitDashboardPage() {
               <strong>{money(c.ticketCents)}</strong>
               <small>Faturamento ÷ vendas</small>
             </article>
+          </div><div className="finance-comparisons">
             <article className="finance-comparison">
               <span>Último mês fechado · volume</span>
               <strong>{num(m.lastVolume)}</strong>
@@ -353,15 +362,15 @@ export function DailyProfitDashboardPage() {
               </small>
             </article>
           </div>
-          <article className="finance-chart-card">
+          <div className="finance-workspace"><article className="finance-chart-card">
             <header>
               <div>
                 <span>Evolução financeira</span>
                 <strong>
-                  {group === "day" ? "Visão diária" : "Visão mensal"}
+                  {group === "day" ? "Visão diária" :group==='year'?'Visão anual': "Visão mensal"}
                 </strong>
               </div>
-              <div className="chart-controls">
+              <div className="chart-controls"><div role="group" aria-label="Agrupar período">
                 <button
                   className={group === "day" ? "active" : ""}
                   onClick={() => setGroup("day")}
@@ -374,7 +383,7 @@ export function DailyProfitDashboardPage() {
                 >
                   Mês
                 </button>
-                {(["volume", "revenue", "profit"] as const).map((metric) => (
+<button className={group==='year'?'active':''} onClick={()=>setGroup('year')}>Ano</button></div><div role="group" aria-label="Métricas do gráfico">{(["volume", "revenue", "profit"] as const).map((metric) => (
                   <button
                     key={metric}
                     className={
@@ -388,7 +397,7 @@ export function DailyProfitDashboardPage() {
                         ? "Faturamento"
                         : "Lucro"}
                   </button>
-                ))}
+                ))}</div>
               </div>
             </header>
             <div className="finance-chart">
@@ -442,9 +451,9 @@ export function DailyProfitDashboardPage() {
                 <span>Análise por produto</span>
                 <strong>Receita, custo e rentabilidade</strong>
               </div>
-              <small>Clique em um produto para filtrar todo o painel.</small>
+<div><small>Clique em um produto para filtrar todo o painel.</small><button disabled={!canExport||!data||busy} onClick={csv}>CSV</button></div><small>Cor: intensidade relativa da coluna; valores negativos em âmbar.</small>
             </header>
-            <div>
+            <div tabIndex={0} role="region" aria-label="Produtos: tabela completa com rolagem horizontal">
               <table>
                 <thead>
                   <tr>
@@ -486,21 +495,20 @@ export function DailyProfitDashboardPage() {
                       </td>
                       <td>{item.category || "—"}</td>
                       <td>{item.subcategory || "—"}</td>
-                      <td>{num(item.quantity)}</td>
-                      <td>{money(item.revenueCents)}</td>
-                      <td>{money(item.providerFeeCents)}</td>
-                      <td>{money(item.netRevenueCents)}</td>
-                      <td>{money(item.costCents)}</td>
+                      <td style={heatmapStyle(Number(item.quantity),products.map(p=>Number(p.quantity)))}>{num(item.quantity)}</td>
+                      <td style={heatmapStyle(Number(item.revenueCents),products.map(p=>Number(p.revenueCents)))}>{money(item.revenueCents)}</td>
+                      <td style={heatmapStyle(Number(item.providerFeeCents),products.map(p=>Number(p.providerFeeCents)))}>{money(item.providerFeeCents)}</td>
+                      <td style={heatmapStyle(Number(item.netRevenueCents),products.map(p=>Number(p.netRevenueCents)))}>{money(item.netRevenueCents)}</td>
+                      <td style={heatmapStyle(Number(item.costCents),products.map(p=>Number(p.costCents)))}>{money(item.costCents)}</td>
                       <td
                         className={
                           Number(item.profitCents) >= 0
                             ? "positive"
                             : "negative"
-                        }
-                      >
+                        } style={heatmapStyle(Number(item.profitCents),products.map(p=>Number(p.profitCents)))}>
                         {money(item.profitCents)}
                       </td>
-                      <td>{num(item.marginPercent)}%</td>
+                      <td style={heatmapStyle(Number(item.marginPercent),products.map(p=>Number(p.marginPercent)))}>{num(item.marginPercent)}%</td>
                     </tr>
                   ))}
                 </tbody>
@@ -551,7 +559,7 @@ export function DailyProfitDashboardPage() {
                 </tfoot>
               </table>
             </div>
-          </article>
+          </article></div>
         </>
       )}
       {filterOpen && (

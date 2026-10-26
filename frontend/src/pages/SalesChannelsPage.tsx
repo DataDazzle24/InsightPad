@@ -1,3 +1,4 @@
+import { currentSessionToken } from '../auth/session-data-connect'
 import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { executeMutation, executeQuery, getDataConnect, mutationRef, queryRef } from "firebase/data-connect";
@@ -27,8 +28,8 @@ import {
 
 const dc = getDataConnect(firebaseApp, connectorConfig);
 const functions = getFunctions(firebaseApp, "southamerica-east1");
-const fetchAvailableMerchants = httpsCallable<{ connectionId: string }, { merchants: MerchantOption[] }>(functions, "ifoodAvailableMerchants");
-const runMerchantOperation = httpsCallable<{ connectionId: string; action: string; payload?: unknown }, { data: unknown }>(functions, "ifoodMerchantOperations");
+const fetchAvailableMerchants = httpsCallable<{ sessionToken: string; connectionId: string }, { merchants: MerchantOption[] }>(functions, "ifoodAvailableMerchants");
+const runMerchantOperation = httpsCallable<{ sessionToken: string; connectionId: string; action: string; payload?: unknown }, { data: unknown }>(functions, "ifoodMerchantOperations");
 const PAGE_SIZE = 50;
 type Section = "connections" | "products" | "operations";
 type Notice = { type: "success" | "error"; text: string };
@@ -430,7 +431,7 @@ function AuthorizationWizard({ connection, busy, onClose, onAuthorize }: { conne
   useDialogAccessibility(true, onClose);
   useEffect(() => {
     let active = true;
-    void fetchAvailableMerchants({ connectionId: connection.id }).then(({ data }) => {
+    void fetchAvailableMerchants({ sessionToken: currentSessionToken(), connectionId: connection.id }).then(({ data }) => {
       if (!active) return;
       setMerchants(data.merchants);
       if (data.merchants.length === 1) setSelected((current) => current || data.merchants[0]?.id || "");
@@ -463,7 +464,7 @@ function StoreOperations({ connection, canManage, onNotice, onClose }: { connect
   const reload = useCallback(async ({ announceSuccess = false, afterMutation = false } = {}) => {
     setBusy("READ");
     try {
-      const result = await runMerchantOperation({ connectionId: connection.id, action: "READ" });
+      const result = await runMerchantOperation({ sessionToken: currentSessionToken(), connectionId: connection.id, action: "READ" });
       const next = (result.data.data as typeof data) ?? {};
       setData(next);
       const parsed = parseStoreShifts(next.openingHours);
@@ -485,7 +486,7 @@ function StoreOperations({ connection, canManage, onNotice, onClose }: { connect
     }
     setBusy(name);
     try {
-      await runMerchantOperation({ connectionId: connection.id, action: name, payload });
+      await runMerchantOperation({ sessionToken: currentSessionToken(), connectionId: connection.id, action: name, payload });
       if (name === "CREATE_INTERRUPTION") setPause({ description: "Pausa operacional", start: "", end: "" });
       const refreshed = await reload({ afterMutation: true });
       if (refreshed) onNotice({ type: "success", text: storeOperationSuccess[name] });

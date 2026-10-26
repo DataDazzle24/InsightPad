@@ -1,5 +1,5 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { database, ids, operation, seed } from "./sql-fixture.js";
+import { database, ids, operation, seed, fixtureSessionToken } from "./sql-fixture.js";
 import type { PGlite } from "@electric-sql/pglite";
 
 let db: PGlite;
@@ -78,10 +78,10 @@ describe("PostgreSQL: lifecycle and scope", () => {
     expect((await order()).status).toBe("ACCEPTED");
   });
   it("rejects cross-tenant users and enforces branch assignments", async () => {
-    expect((await operation(db,"SystemSalesChannelOrderForActor",["actor",ids.order])).rows).toHaveLength(1);
-    expect((await operation(db,"SystemSalesChannelOrderForActor",["other",ids.order])).rows).toHaveLength(0);
+    expect((await operation(db,"SystemSalesChannelOrderForActor",["actor",ids.order,fixtureSessionToken("actor")])).rows).toHaveLength(1);
+    expect((await operation(db,"SystemSalesChannelOrderForActor",["other",ids.order,fixtureSessionToken("other")])).rows).toHaveLength(0);
     await db.query("INSERT INTO user_branches(user_id,tenant_id,branch_id,active) VALUES ('actor',$1,$2,true)",[ids.tenant,ids.otherBranch]);
-    expect((await operation(db,"SystemSalesChannelOrderForActor",["actor",ids.order])).rows).toHaveLength(0);
+    expect((await operation(db,"SystemSalesChannelOrderForActor",["actor",ids.order,fixtureSessionToken("actor")])).rows).toHaveLength(0);
     const result = await operation(db,"SalesChannelOptions",["actor","request-123"]);
     expect((result.rows[0] as {data:{connections:unknown[]}}).data.connections).toHaveLength(0);
     const operations = await operation(db,"SalesChannelOperations",["actor",null,50,"request-123"]);
@@ -98,8 +98,7 @@ describe("PostgreSQL: lifecycle and scope", () => {
       connections:[expect.objectContaining({id:ids.connection})],
       products:[],
     });
-    const denied = await operation(db,"ExportSalesChannelManagement",["other","CONNECTIONS","","","",null,null,"export-denied"]);
-    expect(denied.rows).toHaveLength(0);
+    await expect(operation(db,"ExportSalesChannelManagement",["other","CONNECTIONS","","","",null,null,"export-denied"])).rejects.toThrow("SESSION_REQUIRED");
   });
 
   it("returns aggregate health metrics without exposing tenant records", async () => {
@@ -154,8 +153,7 @@ describe("PostgreSQL: lifecycle and scope", () => {
     await db.query("INSERT INTO sales_channel_order_payments(id,tenant_id,order_id,payment_key,method,prepaid,amount_cents,sequence) VALUES (gen_random_uuid(),$1,$2,'detail-pay','PIX',true,1500,1)",[ids.tenant,ids.order]);
     const allowed = await operation(db,"SalesChannelOrderDetails",["actor",ids.order,"details-request"]);
     expect((allowed.rows[0] as {data:{detailsLoaded:boolean;payments:unknown[]}}).data).toMatchObject({detailsLoaded:true,payments:[expect.objectContaining({method:"PIX"})]});
-    const denied = await operation(db,"SalesChannelOrderDetails",["other",ids.order,"details-denied"]);
-    expect(denied.rows).toHaveLength(0);
+    await expect(operation(db,"SalesChannelOrderDetails",["other",ids.order,"details-denied"])).rejects.toThrow("SESSION_REQUIRED");
   });
 
   it("claims at most one command per order at a time", async () => {
@@ -848,4 +846,21 @@ describe("PostgreSQL: hardening and decommissioning", () => {
     expect((await db.query<{enabled:boolean}>("SELECT enabled FROM sales_channel_product_mappings WHERE id=$1",[ids.mapping])).rows[0]?.enabled).toBe(false);
     expect((await db.query<{action:string}>("SELECT action FROM sales_channel_commands")).rows[0]?.action).toBe("DEACTIVATE_PRODUCT");
   });
+});
+
+
+describe("PostgreSQL: product registration",()=>{
+ beforeEach(async()=>{await db.exec("UPDATE app_pages SET page_key='CAD_PRODUTO'")});
+ const product={name:'Novo produto',categoryId:ids.category,salePriceCents:800,costPriceCents:1000};
+ const save=(payload:object,components:unknown[]=[])=>operation(db,'SaveProduct',['actor',null,payload,components]);
+it('permits below-cost prices while refusing negative prices',async()=>{
+ expect((await save(product)).affectedRows).toBe(1);expect((await save({...product,name:'Negativo',salePriceCents:-1})).affectedRows).toBe(0);
+ await db.exec('UPDATE role_page_permissions SET can_access=false');expect((await save({...product,name:'Sem acesso'})).affectedRows).toBe(0);
+});
+it('checks each component unit rather than the parent unit',async()=>{
+ expect((await save({...product,bundleProduct:true,weightedProduct:true},[{productId:ids.product,quantity:1.5}])).affectedRows).toBe(0);
+ await db.query('UPDATE products SET weighted_product=true WHERE id=$1',[ids.product]);
+ expect((await save({...product,bundleProduct:true,weightedProduct:false},[{productId:ids.product,quantity:1.5}])).affectedRows).toBe(1);
+});
+
 });

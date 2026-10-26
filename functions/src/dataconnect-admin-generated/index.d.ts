@@ -24,6 +24,9 @@ export interface AccountReceivable_Key {
 }
 
 export interface AcknowledgeSalesChannelOrderAlertData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
@@ -31,6 +34,7 @@ export interface AcknowledgeSalesChannelOrderAlertVariables {
   id: UUIDString;
   version: number;
   alertKind: string;
+  sessionToken?: string | null;
 }
 
 export interface AppPage_Key {
@@ -39,44 +43,64 @@ export interface AppPage_Key {
 }
 
 export interface ApprovePosSaleData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface ApprovePosSaleVariables {
   approvalId: UUIDString;
   approved: boolean;
+  sessionToken?: string | null;
 }
 
 export interface ArchiveCategoryData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface ArchiveCategoryVariables {
   id: UUIDString;
+  sessionToken?: string | null;
 }
 
 export interface ArchiveSalesChannelConnectionData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface ArchiveSalesChannelConnectionVariables {
   id: UUIDString;
+  sessionToken?: string | null;
 }
 
 export interface ArchiveSalesChannelProductMappingData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface ArchiveSalesChannelProductMappingVariables {
   id: UUIDString;
+  sessionToken?: string | null;
 }
 
 export interface ArchiveSubcategoryData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface ArchiveSubcategoryVariables {
   id: UUIDString;
+  sessionToken?: string | null;
 }
 
 export interface AuditLog_Key {
@@ -140,12 +164,16 @@ export interface Branch_Key {
 }
 
 export interface CancelSaleData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface CancelSaleVariables {
   saleId: UUIDString;
   reason: string;
+  sessionToken?: string | null;
 }
 
 export interface CashMovement_Key {
@@ -159,11 +187,13 @@ export interface CashSession_Key {
 }
 
 export interface CategoryOptionsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
 export interface CategoryOptionsVariables {
   requestKey?: string | null;
+  sessionToken?: string | null;
 }
 
 export interface Category_Key {
@@ -172,16 +202,21 @@ export interface Category_Key {
 }
 
 export interface ClaimDeviceSessionData {
+  query?: {
+    issued?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface ClaimDeviceSessionVariables {
-  sessionToken: string;
   deviceId: string;
   deviceName: string;
 }
 
 export interface CloseCashSessionData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
@@ -190,9 +225,13 @@ export interface CloseCashSessionVariables {
   countedAmountCents: Int64String;
   notes: string;
   operationId?: string | null;
+  sessionToken?: string | null;
 }
 
 export interface ConnectSalesChannelMerchantData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
@@ -200,41 +239,61 @@ export interface ConnectSalesChannelMerchantVariables {
   connectionId: UUIDString;
   merchantId: string;
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface CreateCategoriesBatchData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface CreateCategoriesBatchVariables {
   names: unknown;
+  sessionToken?: string | null;
 }
 
 export interface CreateCategoryData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface CreateCategoryVariables {
   name: string;
+  sessionToken?: string | null;
 }
 
 export interface CreatePlatformInvoiceData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface CreatePlatformInvoiceVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 
 export interface CreatePlatformTenantData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface CreatePlatformTenantVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 
 export interface CreateSalesChannelConnectionData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
@@ -243,9 +302,13 @@ export interface CreateSalesChannelConnectionVariables {
   branchId: UUIDString;
   displayName: string;
   externalStoreId: string;
+  sessionToken?: string | null;
 }
 
 export interface CreateSalesChannelProductMappingData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
@@ -259,23 +322,32 @@ export interface CreateSalesChannelProductMappingVariables {
   priceMode?: string;
   customPriceCents?: Int64String | null;
   remoteProductState?: string;
+  sessionToken?: string | null;
 }
 
 export interface CreateSubcategoriesBatchData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface CreateSubcategoriesBatchVariables {
   items: unknown;
+  sessionToken?: string | null;
 }
 
 export interface CreateSubcategoryData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface CreateSubcategoryVariables {
   categoryId: UUIDString;
   name: string;
+  sessionToken?: string | null;
 }
 
 export interface Customer_Key {
@@ -284,6 +356,7 @@ export interface Customer_Key {
 }
 
 export interface DailyProfitDashboardData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
@@ -292,13 +365,22 @@ export interface DailyProfitDashboardVariables {
   to: DateString;
   branchId?: UUIDString | null;
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface EnsureSalesDefaultsData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
+export interface EnsureSalesDefaultsVariables {
+  sessionToken?: string | null;
+}
+
 export interface ExportSalesChannelManagementData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
@@ -310,6 +392,7 @@ export interface ExportSalesChannelManagementVariables {
   branchId?: UUIDString | null;
   connectionId?: UUIDString | null;
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface FinancialAccount_Key {
@@ -323,6 +406,7 @@ export interface FinancialCategory_Key {
 }
 
 export interface FinancialIndicatorsDashboardData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
@@ -331,6 +415,7 @@ export interface FinancialIndicatorsDashboardVariables {
   to: DateString;
   filters: unknown;
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface FiscalDocument_Key {
@@ -414,22 +499,29 @@ export interface GetCurrentUserData {
 }
 
 export interface LatestPendingSalesChannelOrderData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
 export interface LatestPendingSalesChannelOrderVariables {
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface LinkPlatformUserData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface LinkPlatformUserVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 
 export interface ListBranchesData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
@@ -440,10 +532,13 @@ export interface ListBranchesVariables {
   limit: number;
   offset: number;
   requestKey?: string | null;
+  sessionToken?: string | null;
 }
 
 export interface ListCategoriesData {
+  session?: unknown | null;
   _select?: unknown[] | null;
+  _selectFirst?: unknown | null;
 }
 
 export interface ListCategoriesVariables {
@@ -453,9 +548,12 @@ export interface ListCategoriesVariables {
   limit: number;
   offset: number;
   requestKey?: string | null;
+  filters?: unknown | null;
+  sessionToken?: string | null;
 }
 
 export interface ListCustomersData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
@@ -466,9 +564,11 @@ export interface ListCustomersVariables {
   limit: number;
   offset: number;
   requestKey?: string | null;
+  sessionToken?: string | null;
 }
 
 export interface ListProductsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
@@ -479,9 +579,11 @@ export interface ListProductsVariables {
   limit: number;
   offset: number;
   requestKey?: string | null;
+  sessionToken?: string | null;
 }
 
 export interface ListSalesData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
@@ -490,10 +592,13 @@ export interface ListSalesVariables {
   limit: number;
   offset: number;
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface ListSubcategoriesData {
+  session?: unknown | null;
   _select?: unknown[] | null;
+  _selectFirst?: unknown | null;
 }
 
 export interface ListSubcategoriesVariables {
@@ -504,9 +609,12 @@ export interface ListSubcategoriesVariables {
   limit: number;
   offset: number;
   requestKey?: string | null;
+  filters?: unknown | null;
+  sessionToken?: string | null;
 }
 
 export interface ListSuppliersData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
@@ -517,9 +625,13 @@ export interface ListSuppliersVariables {
   limit: number;
   offset: number;
   requestKey?: string | null;
+  sessionToken?: string | null;
 }
 
 export interface MapSalesChannelOrderItemData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
@@ -527,6 +639,7 @@ export interface MapSalesChannelOrderItemVariables {
   itemId: UUIDString;
   productId: UUIDString;
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface OfflineOperation_Key {
@@ -535,6 +648,9 @@ export interface OfflineOperation_Key {
 }
 
 export interface OpenCashSessionData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
@@ -542,9 +658,11 @@ export interface OpenCashSessionVariables {
   branchId: UUIDString;
   openingAmountCents: Int64String;
   notes: string;
+  sessionToken?: string | null;
 }
 
 export interface OperationalAnalyticsDashboardData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
@@ -553,6 +671,7 @@ export interface OperationalAnalyticsDashboardVariables {
   to: DateString;
   filters: unknown;
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface PaymentMethod_Key {
@@ -561,26 +680,32 @@ export interface PaymentMethod_Key {
 }
 
 export interface PendingPosApprovalsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
 export interface PendingPosApprovalsVariables {
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface PlatformAdminWorkspaceData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
 export interface PlatformAdminWorkspaceVariables {
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface PlatformBillingWorkspaceData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
 export interface PlatformBillingWorkspaceV2Data {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
@@ -595,6 +720,7 @@ export interface PlatformBillingWorkspaceV2Variables {
   limit: number;
   offset: number;
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface PlatformBillingWorkspaceVariables {
@@ -606,6 +732,7 @@ export interface PlatformBillingWorkspaceVariables {
   limit: number;
   offset: number;
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface PosApproval_Key {
@@ -614,12 +741,14 @@ export interface PosApproval_Key {
 }
 
 export interface PosCashApprovalStatusData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
 export interface PosCashApprovalStatusVariables {
   operationId: string;
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface PosPolicy_Key {
@@ -628,24 +757,31 @@ export interface PosPolicy_Key {
 }
 
 export interface PosProductBranchesData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
 export interface PosProductBranchesVariables {
   productId: UUIDString;
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface PosSaleApprovalStatusData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
 export interface PosSaleApprovalStatusVariables {
   operationId: string;
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface PostSaleData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
   result?: {
     receipt?: unknown | null;
@@ -654,22 +790,34 @@ export interface PostSaleData {
 
 export interface PostSaleVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 
 export interface PostStockAdjustmentData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface PostStockAdjustmentVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 
 export interface PostStockTransferData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
+  confirmation?: {
+    receipt?: unknown | null;
+  };
 }
 
 export interface PostStockTransferVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 
 export interface ProductComponent_Key {
@@ -679,19 +827,23 @@ export interface ProductComponent_Key {
 }
 
 export interface ProductComponentsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
 export interface ProductComponentsVariables {
   productId: UUIDString;
+  sessionToken?: string | null;
 }
 
 export interface ProductPromotionsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
 export interface ProductPromotionsVariables {
   productId: UUIDString;
+  sessionToken?: string | null;
 }
 
 export interface Product_Key {
@@ -705,6 +857,9 @@ export interface Promotion_Key {
 }
 
 export interface QueueSalesChannelOrderActionData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
@@ -717,9 +872,13 @@ export interface QueueSalesChannelOrderActionVariables {
   itemId?: UUIDString | null;
   ean?: string | null;
   quantity?: number | null;
+  sessionToken?: string | null;
 }
 
 export interface RegisterCashMovementData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
@@ -729,14 +888,17 @@ export interface RegisterCashMovementVariables {
   amountCents: Int64String;
   description: string;
   operationId?: string | null;
+  sessionToken?: string | null;
 }
 
 export interface RegistrationOptionsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
 export interface RegistrationOptionsVariables {
   requestKey?: string | null;
+  sessionToken?: string | null;
 }
 
 export interface ReleaseDeviceSessionData {
@@ -748,40 +910,59 @@ export interface ReleaseDeviceSessionVariables {
 }
 
 export interface RequestPosCashApprovalData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface RequestPosCashApprovalVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 
 export interface RequestPosSaleApprovalData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface RequestPosSaleApprovalVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 
 export interface RequestSalesChannelAuthorizationData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface RequestSalesChannelAuthorizationVariables {
   connectionId: UUIDString;
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface RequestSalesChannelOrderReconciliationData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface RequestSalesChannelOrderReconciliationVariables {
   id: UUIDString;
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface RequestSalesChannelSyncData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
@@ -789,50 +970,74 @@ export interface RequestSalesChannelSyncVariables {
   connectionId: UUIDString;
   scope: string;
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface RestoreCategoryData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface RestoreCategoryVariables {
   id: UUIDString;
+  sessionToken?: string | null;
 }
 
 export interface RestoreSubcategoryData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface RestoreSubcategoryVariables {
   id: UUIDString;
+  sessionToken?: string | null;
 }
 
 export interface RetrySalesChannelCommandData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface RetrySalesChannelCommandVariables {
   id: UUIDString;
+  sessionToken?: string | null;
 }
 
 export interface RetrySalesChannelDecommissioningData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface RetrySalesChannelDecommissioningVariables {
   id: UUIDString;
+  sessionToken?: string | null;
 }
 
 export interface ReversePlatformPaymentData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface ReversePlatformPaymentVariables {
   paymentId: UUIDString;
   reason: string;
+  sessionToken?: string | null;
 }
 
 export interface ReverseStockOperationData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
@@ -840,6 +1045,7 @@ export interface ReverseStockOperationVariables {
   operationId: string;
   movementIds: unknown;
   reason: string;
+  sessionToken?: string | null;
 }
 
 export interface RolePagePermission_Key {
@@ -854,12 +1060,14 @@ export interface Role_Key {
 }
 
 export interface SaleDetailsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
 export interface SaleDetailsVariables {
   saleId: UUIDString;
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface SaleItem_Key {
@@ -878,6 +1086,7 @@ export interface Sale_Key {
 }
 
 export interface SalesChannelAnalyticsDashboardData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
@@ -886,6 +1095,7 @@ export interface SalesChannelAnalyticsDashboardVariables {
   to: DateString;
   filters: unknown;
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface SalesChannelCommand_Key {
@@ -899,6 +1109,7 @@ export interface SalesChannelConnection_Key {
 }
 
 export interface SalesChannelConnectionsV2Data {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
@@ -912,6 +1123,7 @@ export interface SalesChannelConnectionsV2Variables {
   limit: number;
   offset: number;
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface SalesChannelEventInbox_Key {
@@ -925,6 +1137,7 @@ export interface SalesChannelFinancialEntry_Key {
 }
 
 export interface SalesChannelOperationsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
@@ -932,14 +1145,17 @@ export interface SalesChannelOperationsVariables {
   connectionId?: UUIDString | null;
   limit?: number;
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface SalesChannelOptionsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
 export interface SalesChannelOptionsVariables {
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface SalesChannelOrderAdjustment_Key {
@@ -954,12 +1170,14 @@ export interface SalesChannelOrderAlertAcknowledgment_Key {
 }
 
 export interface SalesChannelOrderDetailsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
 export interface SalesChannelOrderDetailsVariables {
   id: UUIDString;
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface SalesChannelOrderItem_Key {
@@ -978,10 +1196,12 @@ export interface SalesChannelOrder_Key {
 }
 
 export interface SalesChannelOrdersData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
 export interface SalesChannelOrdersV2Data {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
@@ -992,6 +1212,7 @@ export interface SalesChannelOrdersV2Variables {
   limit: number;
   offset: number;
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface SalesChannelOrdersVariables {
@@ -1002,6 +1223,7 @@ export interface SalesChannelOrdersVariables {
   limit: number;
   offset: number;
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface SalesChannelProductMapping_Key {
@@ -1010,6 +1232,7 @@ export interface SalesChannelProductMapping_Key {
 }
 
 export interface SalesChannelProductMappingsV2Data {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
@@ -1023,9 +1246,11 @@ export interface SalesChannelProductMappingsV2Variables {
   limit: number;
   offset: number;
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface SalesChannelProductOptionsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
@@ -1035,6 +1260,7 @@ export interface SalesChannelProductOptionsVariables {
   productId?: UUIDString | null;
   limit: number;
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface SalesChannelStatusHistory_Key {
@@ -1054,50 +1280,69 @@ export interface SalesChannelSyncJob_Key {
 }
 
 export interface SalesChannelWorkspaceData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
 export interface SalesChannelWorkspaceVariables {
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface SalesWorkspaceData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
 export interface SalesWorkspaceVariables {
   branchId?: UUIDString | null;
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface SaveBranchData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface SaveBranchVariables {
   id?: UUIDString | null;
   payload: unknown;
+  sessionToken?: string | null;
 }
 
 export interface SaveCustomerData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface SaveCustomerVariables {
   id?: UUIDString | null;
   payload: unknown;
+  sessionToken?: string | null;
 }
 
 export interface SaveProductComponentsData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface SaveProductComponentsVariables {
   productId: UUIDString;
   components: unknown;
+  sessionToken?: string | null;
 }
 
 export interface SaveProductData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
@@ -1105,9 +1350,13 @@ export interface SaveProductVariables {
   id?: UUIDString | null;
   payload: unknown;
   components?: unknown | null;
+  sessionToken?: string | null;
 }
 
 export interface SavePromotionData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
@@ -1117,26 +1366,39 @@ export interface SavePromotionVariables {
   promotionalPriceCents: Int64String;
   startsAt: TimestampString;
   endsAt: TimestampString;
+  sessionToken?: string | null;
 }
 
 export interface SaveStockBatchData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
+  confirmation?: {
+    receipt?: unknown | null;
+  };
 }
 
 export interface SaveStockBatchVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 
 export interface SaveSupplierData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface SaveSupplierVariables {
   id?: UUIDString | null;
   payload: unknown;
+  sessionToken?: string | null;
 }
 
 export interface SearchPosCustomersData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
@@ -1145,9 +1407,11 @@ export interface SearchPosCustomersVariables {
   limit?: number | null;
   offset?: number | null;
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface SearchPosProductsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
@@ -1157,139 +1421,200 @@ export interface SearchPosProductsVariables {
   limit?: number | null;
   offset?: number | null;
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface SetBranchStatusData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface SetBranchStatusVariables {
   id: UUIDString;
   active: boolean;
+  sessionToken?: string | null;
 }
 
 export interface SetBranchesStatusBatchData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface SetBranchesStatusBatchVariables {
   ids: unknown;
   active: boolean;
+  sessionToken?: string | null;
 }
 
 export interface SetCategoriesStatusBatchData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface SetCategoriesStatusBatchVariables {
   ids: unknown;
   active: boolean;
+  sessionToken?: string | null;
 }
 
 export interface SetCustomerStatusData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface SetCustomerStatusVariables {
   id: UUIDString;
   active: boolean;
+  sessionToken?: string | null;
 }
 
 export interface SetCustomersStatusBatchData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface SetCustomersStatusBatchVariables {
   ids: unknown;
   active: boolean;
+  sessionToken?: string | null;
 }
 
 export interface SetPlatformRolePermissionData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface SetPlatformRolePermissionVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 
 export interface SetPlatformTenantStatusData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface SetPlatformTenantStatusVariables {
   tenantId: UUIDString;
   active: boolean;
+  sessionToken?: string | null;
 }
 
 export interface SetPlatformUserStatusData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface SetPlatformUserStatusVariables {
   userId: string;
   active: boolean;
+  sessionToken?: string | null;
 }
 
 export interface SetProductStatusData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface SetProductStatusVariables {
   id: UUIDString;
   active: boolean;
+  sessionToken?: string | null;
 }
 
 export interface SetProductsStatusBatchData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface SetProductsStatusBatchVariables {
   ids: unknown;
   active: boolean;
+  sessionToken?: string | null;
 }
 
 export interface SetPromotionStatusData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface SetPromotionStatusVariables {
   id: UUIDString;
   active: boolean;
+  sessionToken?: string | null;
 }
 
 export interface SetSubcategoriesStatusBatchData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface SetSubcategoriesStatusBatchVariables {
   ids: unknown;
   active: boolean;
+  sessionToken?: string | null;
 }
 
 export interface SetSupplierStatusData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface SetSupplierStatusVariables {
   id: UUIDString;
   active: boolean;
+  sessionToken?: string | null;
 }
 
 export interface SetSuppliersStatusBatchData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface SetSuppliersStatusBatchVariables {
   ids: unknown;
   active: boolean;
+  sessionToken?: string | null;
 }
 
 export interface SettlePlatformInvoiceData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface SettlePlatformInvoiceVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 
 export interface StockBalance_Key {
@@ -1309,12 +1634,14 @@ export interface StockMovement_Key {
 }
 
 export interface StockOperationDetailsData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
 export interface StockOperationDetailsVariables {
   operationId: string;
   requestKey: string;
+  sessionToken?: string | null;
 }
 
 export interface StockTransferItem_Key {
@@ -1328,11 +1655,18 @@ export interface StockTransfer_Key {
 }
 
 export interface StockWorkspaceData {
+  session?: unknown | null;
   _select?: unknown[] | null;
 }
 
 export interface StockWorkspaceVariables {
   requestKey: string;
+  filters?: unknown | null;
+  limit?: number | null;
+  offset?: number | null;
+  sortField?: string | null;
+  sortDirection?: string | null;
+  sessionToken?: string | null;
 }
 
 export interface Subcategory_Key {
@@ -1508,6 +1842,7 @@ export interface SystemSalesChannelConnectionForActorData {
 export interface SystemSalesChannelConnectionForActorVariables {
   userId: string;
   connectionId: UUIDString;
+  sessionToken?: string | null;
 }
 
 export interface SystemSalesChannelHealthMetricsData {
@@ -1535,6 +1870,7 @@ export interface SystemSalesChannelOrderForActorData {
 export interface SystemSalesChannelOrderForActorVariables {
   userId: string;
   orderId: UUIDString;
+  sessionToken?: string | null;
 }
 
 export interface SystemSalesChannelWorkQueueData {
@@ -1587,6 +1923,9 @@ export interface Tenant_Key {
 }
 
 export interface TouchDeviceSessionData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
@@ -1595,31 +1934,46 @@ export interface TouchDeviceSessionVariables {
 }
 
 export interface UpdateCategoryData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface UpdateCategoryVariables {
   id: UUIDString;
   name: string;
+  sessionToken?: string | null;
 }
 
 export interface UpdatePlatformInvoiceData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface UpdatePlatformInvoiceVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 
 export interface UpdatePlatformTenantData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
 export interface UpdatePlatformTenantVariables {
   payload: unknown;
+  sessionToken?: string | null;
 }
 
 export interface UpdatePosPolicyData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
@@ -1630,9 +1984,13 @@ export interface UpdatePosPolicyVariables {
   allowOperatorClose: boolean;
   operatorWithdrawalLimitCents?: Int64String | null;
   operatorCloseDifferenceLimitCents?: Int64String | null;
+  sessionToken?: string | null;
 }
 
 export interface UpdateSalesChannelConnectionData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
@@ -1641,9 +1999,13 @@ export interface UpdateSalesChannelConnectionVariables {
   displayName: string;
   externalStoreId: string;
   enabled: boolean;
+  sessionToken?: string | null;
 }
 
 export interface UpdateSalesChannelProductMappingData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
@@ -1657,9 +2019,13 @@ export interface UpdateSalesChannelProductMappingVariables {
   priceMode?: string;
   customPriceCents?: Int64String | null;
   remoteProductState?: string;
+  sessionToken?: string | null;
 }
 
 export interface UpdateSubcategoryData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
@@ -1667,6 +2033,7 @@ export interface UpdateSubcategoryVariables {
   id: UUIDString;
   categoryId: UUIDString;
   name: string;
+  sessionToken?: string | null;
 }
 
 export interface UserBranch_Key {
@@ -1705,6 +2072,9 @@ export interface VerifySalesChannelOrderConstraintsData {
 }
 
 export interface VoidPlatformInvoiceData {
+  query?: {
+    session?: unknown | null;
+  };
   _execute?: number | null;
 }
 
@@ -1712,6 +2082,7 @@ export interface VoidPlatformInvoiceVariables {
   invoiceId: UUIDString;
   reason: string;
   expectedVersion: Int64String;
+  sessionToken?: string | null;
 }
 
 /** Generated Node Admin SDK operation action function for the 'VerifySalesChannelOrderConstraints' Query. Allow users to execute without passing in DataConnect. */
@@ -1870,9 +2241,9 @@ export function setProductsStatusBatch(dc: DataConnect, vars: SetProductsStatusB
 export function setProductsStatusBatch(vars: SetProductsStatusBatchVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<SetProductsStatusBatchData>>;
 
 /** Generated Node Admin SDK operation action function for the 'EnsureSalesDefaults' Mutation. Allow users to execute without passing in DataConnect. */
-export function ensureSalesDefaults(dc: DataConnect, options?: OperationOptions): Promise<ExecuteOperationResponse<EnsureSalesDefaultsData>>;
+export function ensureSalesDefaults(dc: DataConnect, vars?: EnsureSalesDefaultsVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<EnsureSalesDefaultsData>>;
 /** Generated Node Admin SDK operation action function for the 'EnsureSalesDefaults' Mutation. Allow users to pass in custom DataConnect instances. */
-export function ensureSalesDefaults(options?: OperationOptions): Promise<ExecuteOperationResponse<EnsureSalesDefaultsData>>;
+export function ensureSalesDefaults(vars?: EnsureSalesDefaultsVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<EnsureSalesDefaultsData>>;
 
 /** Generated Node Admin SDK operation action function for the 'PostSale' Mutation. Allow users to execute without passing in DataConnect. */
 export function postSale(dc: DataConnect, vars: PostSaleVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<PostSaleData>>;

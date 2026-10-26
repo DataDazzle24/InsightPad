@@ -1,0 +1,700 @@
+{
+  "decision": "DEC-019",
+  "base": "888234283376bfa1145ac913031d827af2c40a74",
+  "items": [
+    {
+      "id": "AJU-PDV-01",
+      "criterion": "Voltar fica ao lado do relógio em desktop e continua acessível a360px/zoom200%, sem perda do carrinho silenciosa.\nReferências: QA21–31/36/37; DES001–003/SEC001–003 para operações. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-PDV-02",
+      "criterion": "Indicador permanece central no espaço disponível; queda/reconexão e pendências mantêm texto e anúncio.\nReferências: QA21–31/36/37; DES001–003/SEC001–003 para operações. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-PDV-03",
+      "criterion": "Caixa confirmado aberto oferece Fechar; fechado oferece Abrir; clique não executa fechamento sem contado e permissão.\nReferências: QA21–31/36/37; DES001–003/SEC001–003 para operações. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-PDV-04",
+      "criterion": "Cancelar não grava; sangria/suprimento alteram caixa uma vez com valor/motivo e autorização; teclado e cores conferidos.\nReferências: QA21–31/36/37; DES001–003/SEC001–003 para operações. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-PDV-05",
+      "criterion": "Campo legível nos temas claro/escuro, normal/foco/erro/desabilitado e contraste medido, QA36/37.\nReferências: QA21–31/36/37; DES001–003/SEC001–003 para operações. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-DASH-01",
+      "criterion": "Título, voltar, navegação e ações alinhados em1366/1920; reflow sem sobreposição nas demais larguras.\nReferências: QA16/32/33/36/37 e CA19/28/35/36. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-DASH-02",
+      "criterion": "Cada ícone tem nome acessível, tooltip por teclado e toque operável sem depender de hover.\nReferências: QA16/32/33/36/37 e CA19/28/35/36. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-DASH-03",
+      "criterion": "Seis indicadores lado a lado em1366/1920; nomes/valores íntegros e reflow a360px/200%.\nReferências: QA16/32/33/36/37 e CA19/28/35/36. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-DASH-04",
+      "criterion": "Trocar período não altera métrica; trocar métrica não altera período; foco e leitura identificam ambos.\nReferências: QA16/32/33/36/37 e CA19/28/35/36. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-DASH-05",
+      "criterion": "Somatórios anuais batem com meses e SQL filtrado; testar virada de ano e período sem registros.\nReferências: QA16/32/33/36/37 e CA19/28/35/36. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-DASH-06",
+      "criterion": "Tabela e gráfico lado a lado no desktop, legíveis sem esconder colunas; empilhamento nas larguras menores.\nReferências: QA16/32/33/36/37 e CA19/28/35/36. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-DASH-07",
+      "criterion": "Ações de filtro/exportar/fórmulas distinguíveis por texto, foco e estado; cores não são a única informação.\nReferências: QA16/32/33/36/37 e CA19/28/35/36. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-DASH-08",
+      "criterion": "Zero, negativos, todos iguais e outlier não distorcem legenda; valor numérico permanece legível em cinza.\nReferências: QA16/32/33/36/37 e CA19/28/35/36. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-DASH-09",
+      "criterion": "QA32/35/36: cada vista carrega fixture própria; falha numa consulta não derruba outras; valor confrontado com SQL-base.\nReferências: QA16/32/33/36/37 e CA19/28/35/36. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-DASH-10",
+      "criterion": "Limpar refaz consulta sem filtros residuais, descarta seleção incompatível e devolve estado indicado na tela.\nReferências: QA16/32/33/36/37 e CA19/28/35/36. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-DASH-11",
+      "criterion": "Exporta além da página atual com mesma ordem/filtros e totais; texto iniciado por =,+,-,@ neutralizado; sem tenant alheio.\nReferências: QA16/32/33/36/37 e CA19/28/35/36. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-DASH-12",
+      "criterion": "PDF gerado mostra filtros/data, valores íntegros e tabelas paginadas; ação disponível após dados; sem dependência paga.\nReferências: QA16/32/33/36/37 e CA19/28/35/36. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-DASH-13",
+      "criterion": "Sem scroll desnecessário no desktop padrão; nenhuma informação ocultada a200% ou360px para cumprir ausência de scroll.\nReferências: QA16/32/33/36/37 e CA19/28/35/36. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-EST-01",
+      "criterion": "Voltar ao lado do título, nome acessível e funcionamento por teclado sem gravação involuntária.\nReferências: QA17–20/33 e CA02/19/20/25/28; SEC001/002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-EST-02",
+      "criterion": "Navegação mantém vista e filtros previstos; não cria duplo scroll nem sobreposição.\nReferências: QA17–20/33 e CA02/19/20/25/28; SEC001/002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-EST-03",
+      "criterion": "Sem seleção ações indisponíveis; com movimento elegível ambas visíveis; movimento de venda orienta Registro de Vendas.\nReferências: QA17–20/33 e CA02/19/20/25/28; SEC001/002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-EST-04",
+      "criterion": "Ambas azuis, rótulos/ícones preservados, estados hover/foco/desabilitado legíveis em claro/escuro.\nReferências: QA17–20/33 e CA02/19/20/25/28; SEC001/002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-EST-05",
+      "criterion": "QA20:501 movimentos/201 transferências, registro antigo localizado/exportável; mudar filtro volta à página1 e total é correto.\nReferências: QA17–20/33 e CA02/19/20/25/28; SEC001/002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-EST-06",
+      "criterion": "Asc/desc por data, produto, quantidade e custo funciona em mais de uma página e announce de sort.\nReferências: QA17–20/33 e CA02/19/20/25/28; SEC001/002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-EST-07",
+      "criterion": "Shift seleciona intervalo de registros visíveis; reversão idempotente autorizada, sem atingir linhas invisíveis nem misturar filiais.\nReferências: QA17–20/33 e CA02/19/20/25/28; SEC001/002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-EST-08",
+      "criterion": "Saldo é último visualmente e na ordem de teclado; nenhum handler muda de vista por índice.\nReferências: QA17–20/33 e CA02/19/20/25/28; SEC001/002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-EST-09",
+      "criterion": "Uma filial: botão cinza sem ação. Duas autorizadas: habilitado. Segunda filial proibida não habilita transferência.\nReferências: QA17–20/33 e CA02/19/20/25/28; SEC001/002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-EST-10",
+      "criterion": "POSTED/REVERSED/PENDING etc têm rótulos e cores consistentes, sem alterar estado persistido.\nReferências: QA17–20/33 e CA02/19/20/25/28; SEC001/002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-EST-11",
+      "criterion": "Colunas restantes alinhadas e ID ainda acessível no detalhe; rastreabilidade e seleção por ID preservadas.\nReferências: QA17–20/33 e CA02/19/20/25/28; SEC001/002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-EST-12",
+      "criterion": "Selecionar Baixo+Sem saldo retorna união, filial limita resultado e clique duplo no card alterna seleção sem perder contexto.\nReferências: QA17–20/33 e CA02/19/20/25/28; SEC001/002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-EST-13",
+      "criterion": "19/10 23:30 local persiste instante correto e volta igual; filtro virada do dia não desloca data.\nReferências: QA17–20/33 e CA02/19/20/25/28; SEC001/002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-EST-14",
+      "criterion": "Sim mostra/exige dados da NF; Não omite no envio; alternância mantém política de rascunho e saída não habilita NF indevida.\nReferências: QA17–20/33 e CA02/19/20/25/28; SEC001/002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-EST-15",
+      "criterion": "Card Produtos ausente e três/quatro indicadores restantes não deixam espaço quebrado; dados preservados.\nReferências: QA17–20/33 e CA02/19/20/25/28; SEC001/002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-EST-16",
+      "criterion": "Produto em máximo exato não conta; máximo+0,001 conta quando pesável; máximo null/0 não gera alto.\nReferências: QA17–20/33 e CA02/19/20/25/28; SEC001/002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-EST-18",
+      "criterion": "Ordem visual e DOM iguais; cada indicador bate com o recorte e mantém rótulo acessível.\nReferências: QA17–20/33 e CA02/19/20/25/28; SEC001/002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-EST-19",
+      "criterion": "Clique Baixo muda a Saldo filtrado; voltar à navegação não perde filial nem mostra registro proibido.\nReferências: QA17–20/33 e CA02/19/20/25/28; SEC001/002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-EST-20",
+      "criterion": "Apagar/colar 1,5 funciona para pesável; unitário rejeita fração sem truncar; 0 e negativo recusados ao confirmar.\nReferências: QA17–20/33 e CA02/19/20/25/28; SEC001/002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-EST-22",
+      "criterion": "QA17–19:entrada/saída/venda/estorno/transferência/reserva/cancelamento conciliam; não calcular saldo só dos300 registros.\nReferências: QA17–20/33 e CA02/19/20/25/28; SEC001/002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-EST-23",
+      "criterion": "Limpar elimina filtros aplicados sem mudar filial indevidamente; consulta/total/CSV retornam ao mesmo recorte.\nReferências: QA17–20/33 e CA02/19/20/25/28; SEC001/002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-PROD-01",
+      "criterion": "Vazio durante edição, backspace/colagem/vírgula e limites; unitário inteiro, componente pela unidade do componente; não mudar máscara monetária.\nReferências: QA13/14/24 e CA07/26; SEC002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-PROD-02",
+      "criterion": "Custo10/venda8 cadastra após aviso; cancelar não grava; negativo rejeitado; preço>=custo normal. Desconto do PDV continua sob regra própria.\nReferências: QA13/14/24 e CA07/26; SEC002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-CAT-01",
+      "criterion": "Categoria com2 produtos e3 subcategorias mostra2, não6; zero e outra empresa não contaminam a contagem.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-CAT-02",
+      "criterion": "Ativo/Inativo/Todos considera páginas além da primeira; zero resultado e total ficam coerentes.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-CAT-03",
+      "criterion": "Com+Status filtra conjunto completo; categoria sem produto aparece em Sem; exportação repete filtro.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-CAT-04",
+      "criterion": "Categorias com/sem subcategorias corretamente localizadas inclusive fora da página; combinação AND com demais filtros.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-CAT-05",
+      "criterion": "Fixture300 limita100:1–100/101–200/201–300; filtro reseta página e total deriva do servidor autorizado.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-CAT-06",
+      "criterion": "Botão com texto exato só para canCreate; subcategoria recebe seu próprio rótulo.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
+      "status": "Em revisão",
+      "commits": [
+        "2b1843d1825bb89f08d90cf19be0697b3101f2dc"
+      ],
+      "tests": [
+        {
+          "file": "frontend/src/pages/CatalogPages.test.tsx",
+          "result": "4 passed (jsdom; revisão e QA real pendentes)",
+          "ci": [
+            "39452787109",
+            "39452800206"
+          ]
+        }
+      ],
+      "review": null
+    },
+    {
+      "id": "AJU-CAT-07",
+      "criterion": "Título solicitado na criação, ID mantido na edição e aria-labelledby conectado.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
+      "status": "Em revisão",
+      "commits": [
+        "2b1843d1825bb89f08d90cf19be0697b3101f2dc"
+      ],
+      "tests": [
+        {
+          "file": "frontend/src/pages/CatalogPages.test.tsx",
+          "result": "4 passed (jsdom; revisão e QA real pendentes)",
+          "ci": [
+            "39452787109",
+            "39452800206"
+          ]
+        }
+      ],
+      "review": null
+    },
+    {
+      "id": "AJU-CAT-08",
+      "criterion": "Rótulo exato em cada campo com ID único; leitor de tela diferencia itens do lote.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
+      "status": "Em revisão",
+      "commits": [
+        "2b1843d1825bb89f08d90cf19be0697b3101f2dc"
+      ],
+      "tests": [
+        {
+          "file": "frontend/src/pages/CatalogPages.test.tsx",
+          "result": "4 passed (jsdom; revisão e QA real pendentes)",
+          "ci": [
+            "39452787109",
+            "39452800206"
+          ]
+        }
+      ],
+      "review": null
+    },
+    {
+      "id": "AJU-CAT-09",
+      "criterion": "Placeholder exato, input inicialmente vazio e envio vazio é recusado.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
+      "status": "Em revisão",
+      "commits": [
+        "2b1843d1825bb89f08d90cf19be0697b3101f2dc"
+      ],
+      "tests": [
+        {
+          "file": "frontend/src/pages/CatalogPages.test.tsx",
+          "result": "4 passed (jsdom; revisão e QA real pendentes)",
+          "ci": [
+            "39452787109",
+            "39452800206"
+          ]
+        }
+      ],
+      "review": null
+    },
+    {
+      "id": "AJU-CAT-10",
+      "criterion": "Adiciona campo vazio e não grava até CADASTRAR; limite do lote não é burlado.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
+      "status": "Em revisão",
+      "commits": [
+        "2b1843d1825bb89f08d90cf19be0697b3101f2dc"
+      ],
+      "tests": [
+        {
+          "file": "frontend/src/pages/CatalogPages.test.tsx",
+          "result": "4 passed (jsdom; revisão e QA real pendentes)",
+          "ci": [
+            "39452787109",
+            "39452800206"
+          ]
+        }
+      ],
+      "review": null
+    },
+    {
+      "id": "AJU-CAT-11",
+      "criterion": "Texto exato; duplo clique/Enter durante gravação não duplica; erros preservam formulário.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
+      "status": "Em revisão",
+      "commits": [
+        "2b1843d1825bb89f08d90cf19be0697b3101f2dc"
+      ],
+      "tests": [
+        {
+          "file": "frontend/src/pages/CatalogPages.test.tsx",
+          "result": "4 passed (jsdom; revisão e QA real pendentes)",
+          "ci": [
+            "39452787109",
+            "39452800206"
+          ]
+        }
+      ],
+      "review": null
+    },
+    {
+      "id": "AJU-CAT-12",
+      "criterion": "Nome novo/alterado persiste maiúsculo com acentos; chamada direta não burla; igualdade normalizada testada.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-CAT-13",
+      "criterion": "Espaços, tab e colagem viram nome canônico; conflito mostra categoria existente sem renomear histórico.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-CAT-14",
+      "criterion": "120 caracteres aceitos;121 recusados; Unicode/maiúsculas medidos pela regra consistente com PostgreSQL.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-SUB-01",
+      "criterion": "Duas subcategorias homônimas de pais distintos recebem suas próprias contagens; zero/ativo/inativo conferidos.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-SUB-02",
+      "criterion": "Com/Sem/Todos funciona além da primeira página e permanece restrito ao tenant/categoria.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-SUB-03",
+      "criterion": "Texto exato e permissão de criação respeitada; categoria não recebe texto errado.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
+      "status": "Em revisão",
+      "commits": [
+        "2b1843d1825bb89f08d90cf19be0697b3101f2dc"
+      ],
+      "tests": [
+        {
+          "file": "frontend/src/pages/CatalogPages.test.tsx",
+          "result": "4 passed (jsdom; revisão e QA real pendentes)",
+          "ci": [
+            "39452787109",
+            "39452800206"
+          ]
+        }
+      ],
+      "review": null
+    },
+    {
+      "id": "AJU-SUB-04",
+      "criterion": "Título de criação exato; edição não muda ID nem promete criação.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
+      "status": "Em revisão",
+      "commits": [
+        "2b1843d1825bb89f08d90cf19be0697b3101f2dc"
+      ],
+      "tests": [
+        {
+          "file": "frontend/src/pages/CatalogPages.test.tsx",
+          "result": "4 passed (jsdom; revisão e QA real pendentes)",
+          "ci": [
+            "39452787109",
+            "39452800206"
+          ]
+        }
+      ],
+      "review": null
+    },
+    {
+      "id": "AJU-SUB-05",
+      "criterion": "Rótulo exato e associação acessível; foco no campo correto após erro.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
+      "status": "Em revisão",
+      "commits": [
+        "2b1843d1825bb89f08d90cf19be0697b3101f2dc"
+      ],
+      "tests": [
+        {
+          "file": "frontend/src/pages/CatalogPages.test.tsx",
+          "result": "4 passed (jsdom; revisão e QA real pendentes)",
+          "ci": [
+            "39452787109",
+            "39452800206"
+          ]
+        }
+      ],
+      "review": null
+    },
+    {
+      "id": "AJU-SUB-06",
+      "criterion": "Placeholder visível só vazio; não é salvo como valor por abertura do modal.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
+      "status": "Em revisão",
+      "commits": [
+        "2b1843d1825bb89f08d90cf19be0697b3101f2dc"
+      ],
+      "tests": [
+        {
+          "file": "frontend/src/pages/CatalogPages.test.tsx",
+          "result": "4 passed (jsdom; revisão e QA real pendentes)",
+          "ci": [
+            "39452787109",
+            "39452800206"
+          ]
+        }
+      ],
+      "review": null
+    },
+    {
+      "id": "AJU-SUB-07",
+      "criterion": "Texto exato; novo item vazio; limite20 e remoção de item continuam corretos.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
+      "status": "Em revisão",
+      "commits": [
+        "2b1843d1825bb89f08d90cf19be0697b3101f2dc"
+      ],
+      "tests": [
+        {
+          "file": "frontend/src/pages/CatalogPages.test.tsx",
+          "result": "4 passed (jsdom; revisão e QA real pendentes)",
+          "ci": [
+            "39452787109",
+            "39452800206"
+          ]
+        }
+      ],
+      "review": null
+    },
+    {
+      "id": "AJU-SUB-08",
+      "criterion": "Clique duplo/Enter produz um lote, erro preserva dados e texto de edição continua contextual.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
+      "status": "Em revisão",
+      "commits": [
+        "2b1843d1825bb89f08d90cf19be0697b3101f2dc"
+      ],
+      "tests": [
+        {
+          "file": "frontend/src/pages/CatalogPages.test.tsx",
+          "result": "4 passed (jsdom; revisão e QA real pendentes)",
+          "ci": [
+            "39452787109",
+            "39452800206"
+          ]
+        }
+      ],
+      "review": null
+    },
+    {
+      "id": "AJU-SUB-09",
+      "criterion": "BE B I D A não é unido; apenas espaços excedentes colapsam; duplicata canônica na mesma categoria recusada.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-SUB-10",
+      "criterion": "Maiúsculas persistidas por chamada normal/direta/lote; produto e histórico mantêm referências.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-SUB-11",
+      "criterion": "120 aceito/121 negado; mesmo comportamento na criação simples/lote/edição.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    },
+    {
+      "id": "AJU-SUB-13",
+      "criterion": "Abrir novo não seleciona pai; edição conserva pai real; envio sem escolha falha sem gravar.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
+      "status": "Em revisão",
+      "commits": [
+        "2b1843d1825bb89f08d90cf19be0697b3101f2dc"
+      ],
+      "tests": [
+        {
+          "file": "frontend/src/pages/CatalogPages.test.tsx",
+          "result": "4 passed (jsdom; revisão e QA real pendentes)",
+          "ci": [
+            "39452787109",
+            "39452800206"
+          ]
+        }
+      ],
+      "review": null
+    },
+    {
+      "id": "AJU-SUB-14",
+      "criterion": "Mesmo nome no mesmo pai falha incluindo duas sessões; em outro pai passa; reativação não cria colisão.\nReferências: QA15/16 e CA05/06/09/19/21; SEC002. Execução futura; não testado pelo parecer estático.",
+      "status": "A fazer",
+      "commits": [],
+      "tests": [],
+      "review": null
+    }
+  ],
+  "additional": [
+    {
+      "id": "OBS-018-AG03-001",
+      "status": "Em implementação",
+      "tests": []
+    }
+  ]
+}

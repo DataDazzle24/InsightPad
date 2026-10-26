@@ -218,6 +218,11 @@ export const purgeIfoodPayloads = onSchedule({
     throw new Error("Falha transitória ao aplicar a retenção iFood.");
   }
 });
+function sessionSecret(value: unknown): string {
+  if(typeof value!=="string" || !/^[a-f0-9]{64}$/.test(value))throw new HttpsError("unauthenticated","Sua sessão expirou. Entre novamente.");
+  return value;
+}
+
 export const ifoodCancellationReasons = onCall({
   secrets: [clientId, clientSecret],
   enforceAppCheck,
@@ -226,12 +231,13 @@ export const ifoodCancellationReasons = onCall({
   concurrency: 4,
 }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Entre novamente para consultar o pedido.");
+  const sessionToken=sessionSecret(request.data?.sessionToken);
   const orderId: unknown = request.data?.orderId;
   if (typeof orderId !== "string" || !/^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/i.test(orderId)) {
     throw new HttpsError("invalid-argument", "Pedido inválido.");
   }
   try {
-    return { reasons: await cancellationReasonsForUser(client(), request.auth.uid, orderId) };
+    return { reasons: await cancellationReasonsForUser(client(), request.auth.uid, orderId, sessionToken) };
   } catch (error) {
     if (error instanceof Error && error.message === "ORDER_ACCESS_DENIED") throw new HttpsError("permission-denied", "Pedido indisponível para esta ação.");
     logger.warn("Falha ao consultar motivos de cancelamento iFood.", { errorType: error instanceof Error ? error.name : "UnknownError" });
@@ -250,10 +256,11 @@ export const ifoodAvailableMerchants = onCall({
   concurrency: 8,
 }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Entre novamente para consultar as lojas.");
+  const sessionToken=sessionSecret(request.data?.sessionToken);
   const connectionId: unknown = request.data?.connectionId;
   if (typeof connectionId !== "string" || !UUID_PATTERN.test(connectionId)) throw new HttpsError("invalid-argument", "Conexão inválida.");
   try {
-    return { merchants: await availableMerchantsForUser(client(), request.auth.uid, connectionId) };
+    return { merchants: await availableMerchantsForUser(client(), request.auth.uid, connectionId, sessionToken) };
   } catch (error) {
     if (error instanceof Error && error.message === "CONNECTION_ACCESS_DENIED") throw new HttpsError("permission-denied", "Você não pode configurar esta conexão.");
     logger.warn("Falha ao listar lojas autorizadas no iFood.", { errorType: error instanceof Error ? error.name : "UnknownError" });
@@ -270,13 +277,14 @@ export const ifoodMerchantOperations = onCall({
   concurrency: 8,
 }, async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Entre novamente para gerenciar a loja.");
+  const sessionToken=sessionSecret(request.data?.sessionToken);
   const connectionId: unknown = request.data?.connectionId;
   const action: unknown = request.data?.action;
   if (typeof connectionId !== "string" || !UUID_PATTERN.test(connectionId) || typeof action !== "string" || !["READ", "SAVE_HOURS", "CREATE_INTERRUPTION", "DELETE_INTERRUPTION"].includes(action)) {
     throw new HttpsError("invalid-argument", "Operação de loja inválida.");
   }
   try {
-    return { data: await merchantOperationForUser(client(), request.auth.uid, connectionId, action, request.data?.payload) };
+    return { data: await merchantOperationForUser(client(), request.auth.uid, connectionId, action, request.data?.payload, sessionToken) };
   } catch (error) {
     if (error instanceof Error && error.message === "CONNECTION_ACCESS_DENIED") throw new HttpsError("permission-denied", "Você não pode realizar esta ação.");
     if (error instanceof Error && error.message === "CONNECTION_NOT_READY") throw new HttpsError("failed-precondition", "Autorize uma conexão ativa antes de gerenciar a loja.");
