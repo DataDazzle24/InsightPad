@@ -15,7 +15,8 @@ concurrency:
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
+    # Pin the supported distro; ubuntu-latest moved to a newer APT package set.
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
       CANDIDATE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
@@ -67,7 +68,7 @@ jobs:
       - name: Chromium e servidor QA no mesmo executor
         run: |
           npm --prefix scripts/qa-browser ci --ignore-scripts --no-audit --no-fund
-          node scripts/qa-browser/node_modules/playwright/cli.js install --with-deps chromium
+          timeout 240s node scripts/qa-browser/node_modules/playwright/cli.js install --with-deps chromium
           sudo apt-get install -y poppler-utils
           node scripts/qa-browser/run.mjs --full
       - name: Proteger evidências visuais antes de sair do runner
