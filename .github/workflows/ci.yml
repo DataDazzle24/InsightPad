@@ -68,7 +68,7 @@ jobs:
       - name: Chromium e servidor QA no mesmo executor
         run: |
           npm --prefix scripts/qa-browser ci --ignore-scripts --no-audit --no-fund
-          timeout 240s node scripts/qa-browser/node_modules/playwright/cli.js install --with-deps chromium
+          timeout 480s node scripts/qa-browser/node_modules/playwright/cli.js install --with-deps chromium
           sudo apt-get install -y poppler-utils
       - name: Regressão do estado vazio de vendas
         run: node scripts/qa-browser/empty-sales.mjs
