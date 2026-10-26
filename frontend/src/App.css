@@ -272,6 +272,8 @@ html[data-theme=light] .pos-page .pos-cart .pos-quantity-input{color:#132329;bac
 .catalog-empty{padding:2rem;text-align:center;color:var(--text)}
 .catalog-empty p{color:var(--muted)}
 .catalog-empty button{border:1px solid var(--line);padding:.75rem;color:var(--text);background:var(--panel)}
+/* Sales results must keep the light surface behind theme-aware empty text. */
+html[data-theme=light] .sales-page .catalog-scroll{background:var(--panel)}
 .stock-heading__actions .stock-heading-action--transfer:not(:disabled),.stock-heading__actions .stock-heading-action--create:not(:disabled){background:#1268a7;color:#fff;border-color:#1268a7}
 .stock-heading__actions .stock-heading-action--transfer:not(:disabled):hover,.stock-heading__actions .stock-heading-action--create:not(:disabled):hover{background:#0e568b;border-color:#0e568b}
 .stock-heading__actions .stock-heading-action:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
