@@ -11,3 +11,12 @@ test('review evidence round-trips privately and refuses a tampered envelope',()=
 test('public workflow uploads only sealed visual evidence and never a private key',()=>{
  const workflow=readFileSync(new URL('../../.github/workflows/ci.yml',import.meta.url),'utf8');assert.match(workflow,/path: artifacts\/browser-sealed\/evidence.enc/);assert.doesNotMatch(workflow,/path:.*browser-private|path:.*private\.pem|path:.*trace/);assert.equal(readFileSync(new URL('./evidence-public.pem',import.meta.url),'utf8').includes('PRIVATE KEY'),false);
 });
+
+test('CI runs sales empty-state regression after browser preparation and before sealing',()=>{
+ const workflow=readFileSync(new URL('../../.github/workflows/ci.yml',import.meta.url),'utf8');
+ const install=workflow.indexOf('playwright/cli.js install --with-deps chromium');
+ const regression=workflow.indexOf('run: node scripts/qa-browser/empty-sales.mjs');
+ const seal=workflow.indexOf('node scripts/qa-browser/seal.mjs');
+ assert.ok(install>=0 && regression>install && seal>regression);
+ assert.match(workflow,/Regressão do estado vazio de vendas\n\s+run: node scripts\/qa-browser\/empty-sales\.mjs/);
+});
