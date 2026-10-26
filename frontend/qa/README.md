@@ -24,6 +24,19 @@ Catalog writes and stock confirmations are in-memory; unknown operations fail
 explicitly. The fixtures do not implement real backend authorization, fiscal
 processing, channel partner integrations or durable persistence.
 
+Analytical fixtures use the execution day's UTC date (`fixtureDate`) rather than
+an old fixed date. Financial cards and daily/product rows share one synthetic
+analytical ledger; customer cards use the actual ABC/dormant lists, and stock
+cards/product rows use the same posted movements. This analytical ledger is
+separate from the interactive POS scenario, not a model of production accounting.
+Product costs include 0, 800, 1075 and 1499 stored cents; quantities vary for
+ordering. A cost of 1075 cents must display/export as R$ 10,75, never R$ 1.075.
+Stock CSV labels state BRL/reais and use the same formatter as the screen.
+Product/date filters are covered by the financial fixture checks; other filter
+and temporal edge cases, full catalog uniqueness and real SQL remain residual
+work requiring explicit scenarios. Do not infer a product defect from an
+unsupported fixture contract.
+
 Use the complete application's catalog, product, stock, PDV and dashboard routes
 for functional/visual review. Verify CSV row counts and print/PDF output,
 keyboard navigation and all columns at 320/360/375 pixels and 200/400% zoom.

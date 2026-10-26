@@ -599,8 +599,8 @@ export function StockPage() {
               "Disponível",
               "Mínimo",
               "Máximo",
-              "Custo médio",
-              "Valor total",
+              "Custo médio (R$)",
+              "Valor total (R$)",
             ],
             ...balance.map((p) => [
               p.name,
@@ -613,8 +613,8 @@ export function StockPage() {
               p.quantity,
               p.minimumStock,
               p.maximumStock,
-              p.cost,
-              p.quantity * Number(p.cost),
+              money(p.cost),
+              money(p.quantity * Number(p.cost)),
             ]),
           ]
         : view==='transfers'? [['ID','Data','Origem','Destino','Itens','Quantidade','Status'],...allTransfers.map(t=>[t.id,t.requestedAt,t.sourceBranch,t.destinationBranch,t.itemCount,t.totalQuantity,stockStatusLabel(t.status)])] : [
@@ -627,7 +627,7 @@ export function StockPage() {
               "Filial",
               "Direção",
               "Quantidade",
-              "Custo unitário",
+              "Custo unitário (R$)",
               "Status",
             ],
             ...allMovements.map((m) => [
@@ -639,7 +639,7 @@ export function StockPage() {
               m.branchName,
               m.direction,
               m.quantity,
-              m.unitCostCents,
+              money(m.unitCostCents),
               m.status,
             ]),
           ];

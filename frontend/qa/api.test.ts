@@ -1,5 +1,5 @@
 import {beforeEach,expect,it} from 'vitest'
-import {qaOperation,qaState,resetFixtures,uuid} from './api'
+import {qaOperation,qaState,resetFixtures,uuid,fixtureDate} from './api'
 beforeEach(()=>{resetFixtures();qaState.fail=false;qaState.ackLoss=false;qaState.delay=0;qaState.permissions='full';qaState.empty=false;qaState.allowedBranches=[]})
 it('uses deterministic full datasets, pagination and explicit unknown-operation failures',async()=>{
  const a=await qaOperation('ListCategories',{limit:100,offset:0}),b=await qaOperation('ListCategories',{limit:100,offset:100});expect(a.data).toMatchObject({_selectFirst:{totalCount:151}});expect((b.data as {_select:unknown[]})._select).toHaveLength(51);
@@ -53,3 +53,13 @@ it('uses identical current product prices in list and POS after editing, and sup
  expect((await qaOperation('ListSuppliers',{limit:1})).data).toMatchObject({_select:[{id:uuid(4000),legalName:'FORNECEDOR FICTÍCIO QA 1'}],_selectFirst:{totalCount:101}});
  await expect(qaOperation('SaveProduct',{id:uuid(101),payload:{name,salePriceCents:'NaN'}})).rejects.toThrow('monetário');
 });
+
+it('reconciles monetary cards, daily rows, product rows and customer counts from the same QA ledger',async()=>{
+ const read=async(name:string,v:Record<string,unknown>={})=>((await qaOperation(name,v)).data as {_select:Array<{data:{cards:Record<string,number>;products:Array<Record<string,number>>;daily:Array<Record<string,number>>;customers:{cards:Record<string,number>;dormant:unknown[];abc:unknown[]};stock:{cards:Record<string,number>;products:Array<{inQuantity:number;valueCents:number}>}}}>})._select[0]!.data
+ const f=await read('FinancialIndicatorsDashboard',{from:fixtureDate,to:fixtureDate});
+ for(const key of ['revenueCents','costCents','providerFeeCents','netRevenueCents','grossProfitCents','profitCents']){expect(Number(f.cards[key])).toBe(f.products.reduce((n:number,r:Record<string,unknown>)=>n+Number(r[key]),0));expect(Number(f.cards[key])).toBe(f.daily.reduce((n:number,r:Record<string,unknown>)=>n+Number(r[key]),0))}
+ expect(new Set(f.products.map((r:Record<string,unknown>)=>r.costCents)).size).toBeGreaterThan(3);expect(f.cards.volume).toBe(f.products.length)
+ const o=await read('OperationalAnalyticsDashboard',{from:fixtureDate,to:fixtureDate});expect(o.customers.cards.withoutPurchase).toBe(o.customers.dormant.length);expect(o.customers.cards.active).toBe(o.customers.abc.length+o.customers.dormant.length);expect(o.stock.cards.inboundQuantity).toBe(o.stock.products.reduce((n:number,r:{inQuantity:number})=>n+r.inQuantity,0));expect(o.stock.cards.inboundValueCents-o.stock.cards.lossValueCents-o.stock.cards.saleCostCents).toBe(o.stock.products.reduce((n:number,r:{valueCents:number})=>n+r.valueCents,0));
+ const outside=await read('FinancialIndicatorsDashboard',{from:'2001-01-01',to:'2001-01-31'});expect(outside.cards.revenueCents).toBe(0);expect(outside.products).toEqual([])
+ const stock=(await qaOperation('StockWorkspace')).data as {_select:Array<{data:{products:Array<{balances:Array<{quantity:number}>}>}}>} ;expect(new Set(stock._select[0]!.data.products.map(p=>p.balances[0]!.quantity)).size).toBeGreaterThan(5)
+})

@@ -7,9 +7,12 @@ export const currentSessionToken=()=> '0'.repeat(64)
 export const sessionKey=(uid:string)=>'qa.session:'+uid
 export const qaState={fail:false,delay:0,ackLoss:false,logs:[] as string[],unsupported:[] as string[],permissions:'full',empty:false,allowedBranches:[] as string[]}
 export const uuid=(n:number)=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`
-const when='2026-10-21T12:00:00Z'
+export const fixtureDate=new Date().toISOString().slice(0,10)
+const when=fixtureDate+'T12:00:00Z'
+const fixtureQuantity=(i:number)=>i%7===0?i/7:20+(i+4)%5
+const fixtureCost=(i:number)=>String([0,800,1075,1499][i%4])
 export const branches=[{id:uuid(1),name:'MATRIZ QA'},{id:uuid(2),name:'FILIAL QA'}]
-const initialProducts=()=>Array.from({length:65},(_,i)=>({id:uuid(100+i),name:`PRODUTO QA ${String(i+1).padStart(3,'0')}`,internalCode:`QA${i+1}`,ean:`789000000${String(i).padStart(4,'0')}`,categoryId:uuid(300),subcategoryId:uuid(800),categoryName:'CATEGORIA QA 001',subcategoryName:'SUBCATEGORIA QA 001',minimumStock:5,maximumStock:30,allowNegativeStock:false,bundleProduct:false,weightedProduct:i%3===0,costPriceCents:'800',salePriceCents:'1200',unit:'UN',active:true,createdAt:when,updatedAt:when,balances:branches.map(b=>({branchId:b.id,branchName:b.name,quantity:i%7===0?2:20,reservedQuantity:0,availableQuantity:i%7===0?2:20,averageCostCents:'800'}))}))
+const initialProducts=()=>Array.from({length:65},(_,i)=>({id:uuid(100+i),name:`PRODUTO QA ${String(i+1).padStart(3,'0')}`,internalCode:`QA${i+1}`,ean:`789000000${String(i).padStart(4,'0')}`,categoryId:uuid(300),subcategoryId:uuid(800),categoryName:'CATEGORIA QA 001',subcategoryName:'SUBCATEGORIA QA 001',minimumStock:5,maximumStock:30,allowNegativeStock:false,bundleProduct:false,weightedProduct:i%3===0,costPriceCents:fixtureCost(i),salePriceCents:'1200',unit:'UN',active:true,createdAt:when,updatedAt:when,balances:branches.map(b=>({branchId:b.id,branchName:b.name,quantity:fixtureQuantity(i),reservedQuantity:0,availableQuantity:fixtureQuantity(i),averageCostCents:fixtureCost(i)}))}))
 export let products=initialProducts()
 let categories:Row[],subcategories:Row[],movements:Row[],transfers:Row[],sessions:Row[],cashMovements:Row[],sales:Row[]
 let nextId=13000,policy:Row
@@ -21,7 +24,7 @@ export function resetFixtures(){
  policy={requireOpenSession:true,operatorDiscountPercent:5,operatorSurchargePercent:5,allowOperatorClose:true,operatorWithdrawalLimitCents:100000,operatorCloseDifferenceLimitCents:100000}
  categories=Array.from({length:151},(_,i)=>({id:uuid(300+i),name:`CATEGORIA QA ${String(i+1).padStart(3,'0')}`,active:i%11!==10,createdAt:when,updatedAt:when,productCount:i%4,subcategoryCount:i%3}))
  subcategories=Array.from({length:151},(_,i)=>({id:uuid(800+i),name:`SUBCATEGORIA QA ${String(i+1).padStart(3,'0')}`,categoryId:uuid(300+i%10),categoryName:`CATEGORIA QA ${String(i%10+1).padStart(3,'0')}`,active:i%11!==10,createdAt:when,updatedAt:when,productCount:i%4}))
- movements=Array.from({length:501},(_,i)=>({id:uuid(2000+i),operationId:'qa-movement-'+i,occurredAt:when,quantity:i%5+1,unitCostCents:'800',status:i%13===0?'REVERSED':'POSTED',typeCode:i%2?'LOSS':'MANUAL_IN',typeName:i%2?'Perda':'Entrada',direction:i%2?'OUT':'IN',productId:products[i%products.length]!.id,productName:products[i%products.length]!.name,branchId:branches[i%2]!.id,branchName:branches[i%2]!.name}))
+ movements=Array.from({length:501},(_,i)=>({id:uuid(2000+i),operationId:'qa-movement-'+i,occurredAt:when,quantity:i%5+1,unitCostCents:products[i%products.length]!.costPriceCents,status:i%13===0?'REVERSED':'POSTED',typeCode:i%2?'LOSS':'MANUAL_IN',typeName:i%2?'Perda':'Entrada',direction:i%2?'OUT':'IN',productId:products[i%products.length]!.id,productName:products[i%products.length]!.name,branchId:branches[i%2]!.id,branchName:branches[i%2]!.name}))
  transfers=Array.from({length:201},(_,i)=>({id:uuid(3000+i),operationId:'qa-transfer-'+i,status:'COMPLETED',requestedAt:when,sourceBranchId:branches[0]!.id,destinationBranchId:branches[1]!.id,sourceBranch:branches[0]!.name,destinationBranch:branches[1]!.name,totalQuantity:i%5+1,itemCount:1}))
  receipts.clear();qaState.logs=[];qaState.unsupported=[]
 }
@@ -49,6 +52,31 @@ const stockWorkspace=(v:Row)=>{
  const ts=(qaState.empty?[]:transfers).filter(t=>branchAllowed(t.sourceBranchId)&&branchAllowed(t.destinationBranchId)&&(has('branches',t.sourceBranchId)||has('branches',t.destinationBranchId))&&date(t.requestedAt)&&[t.sourceBranch,t.destinationBranch,t.operationId].join(' ').toLocaleLowerCase('pt-BR').includes(text));
  const offset=Math.max(0,Number(v.offset??0)),limit=Math.min(1000,Math.max(1,Number(v.limit??100)));
  return {branches:branches.filter(b=>branchAllowed(b.id)),suppliers:[{id:uuid(20),name:'FORNECEDOR QA'}],products:qaState.empty?[]:products.map(p=>({...p,balances:p.balances.filter(b=>branchAllowed(b.branchId))})),movements:sorted(ms,v,'occurredAt').slice(offset,offset+limit),transfers:sorted(ts,v,'requestedAt').slice(offset,offset+limit),movementCount:ms.length,transferCount:ts.length}
+}
+// QA-only analytical ledgers. Cards, tables and exports derive from the same rows.
+const inPeriod=(date:unknown,v:Row)=>(!v.from||String(date).slice(0,10)>=String(v.from))&&(!v.to||String(date).slice(0,10)<=String(v.to))
+const sum=(rows:Row[],key:string)=>rows.reduce((n,r)=>n+Number(r[key]??0),0)
+function financialFixture(v:Row){
+ const f=(v.filters??{}) as Row
+ const rows=(qaState.empty?[]:products).filter(p=>!Array.isArray(f.products)||!f.products.length||(f.products as string[]).includes(p.id)).map((p,i)=>{
+  const quantity=i%9+1,revenueCents=quantity*Number(p.salePriceCents),providerFeeCents=Math.round(revenueCents*.05),costCents=quantity*Number(p.costPriceCents),netRevenueCents=revenueCents-providerFeeCents,grossProfitCents=revenueCents-costCents,profitCents=netRevenueCents-costCents
+  return {...p,date:fixtureDate,quantity,revenueCents,providerFeeCents,netRevenueCents,costCents,grossProfitCents,profitCents,marginPercent:revenueCents?profitCents/revenueCents*100:0,lineCount:1}
+ }).filter(r=>inPeriod(r.date,v))
+ const revenueCents=sum(rows,'revenueCents'),profitCents=sum(rows,'profitCents'),volume=rows.length
+ const cards={volume,revenueCents,providerFeeCents:sum(rows,'providerFeeCents'),netRevenueCents:sum(rows,'netRevenueCents'),costCents:sum(rows,'costCents'),grossProfitCents:sum(rows,'grossProfitCents'),profitCents,marginPercent:revenueCents?profitCents/revenueCents*100:0,ticketCents:volume?Math.round(revenueCents/volume):0,financialPendingSales:0}
+ return {options:{branches,products,categories,subcategories,suppliers:[],sources:[]},cards,monthly:{lastVolume:volume,averageVolume:volume,volumeGrowth:0,lastProfitCents:profitCents,averageProfitCents:profitCents,profitGrowth:0,months:volume?1:0},daily:volume?[{date:fixtureDate,...cards}]:[],products:rows}
+}
+function operationalFixture(v:Row){
+ const ms=(qaState.empty?[]:movements).filter(m=>m.status==='POSTED'&&branchAllowed(m.branchId)&&inPeriod(m.occurredAt,v))
+ const rows=(qaState.empty?[]:products).map(p=>{const own=ms.filter(m=>m.productId===p.id),ins=own.filter(m=>m.direction==='IN'),outs=own.filter(m=>m.direction==='OUT');return {...p,inQuantity:sum(ins,'quantity'),outQuantity:sum(outs,'quantity'),netQuantity:sum(ins,'quantity')-sum(outs,'quantity'),valueCents:own.reduce((n,m)=>n+(m.direction==='IN'?1:-1)*Number(m.quantity)*Number(m.unitCostCents),0)}})
+ const ins=ms.filter(m=>m.direction==='IN'),sale=ms.filter(m=>m.typeCode==='SALE'),loss=ms.filter(m=>m.typeCode==='LOSS'),value=(xs:Row[])=>xs.reduce((n,m)=>n+Number(m.quantity)*Number(m.unitCostCents),0)
+ const stockCards={inboundQuantity:sum(ins,'quantity'),inboundValueCents:value(ins),freightCents:0,extraCostsCents:0,saleQuantity:sum(sale,'quantity'),saleCostCents:value(sale),saleProfitCents:0,lossQuantity:sum(loss,'quantity'),lossValueCents:value(loss)}
+ const activePeriod=inPeriod(fixtureDate,v),financial=financialFixture(v),fp=financial.products
+ const dormant=activePeriod&&!qaState.empty?Array.from({length:1201},(_,i)=>({id:uuid(6000+i),name:`SEM COMPRAR QA ${i+1}`,lastPurchase:null,revenueCents:0})):[]
+ const abc=activePeriod?fp.map((p,i)=>({id:uuid(9000+i),name:`CLIENTE ATIVO QA ${i+1}`,class:i<10?'A':'B',purchases:1,revenueCents:p.revenueCents,lastPurchase:fixtureDate})):[]
+ const birthdays=activePeriod?abc.slice(0,51).map((p,i)=>({id:p.id,name:`ANIVERSARIANTE QA ${i+1}`,birthDate:'2000-'+fixtureDate.slice(5)})):[]
+ const categoryRows=(qaState.empty?[]:categories.slice(0,8)).map((c,i)=>{const selected=fp.filter((_,j)=>j%8===i),revenueCents=sum(selected,'revenueCents'),costCents=sum(selected,'costCents');return {...c,level:'Categoria',quantity:sum(selected,'quantity'),revenueCents,costCents,profitCents:revenueCents-costCents,marginPercent:revenueCents?(revenueCents-costCents)/revenueCents*100:0,growthPercent:0}})
+ return {stock:{cards:stockCards,monthly:ms.length?[{date:fixtureDate,...stockCards}]:[],products:rows},customers:{cards:{active:abc.length+dormant.length,new:abc.length,withoutPurchase:dormant.length,ticketCents:abc.length?Math.round(sum(abc,'revenueCents')/abc.length):0,frequency:abc.length?1:0},abc,regions:abc.length?[{region:'REGIÃO SINTÉTICA QA',customers:abc.length+dormant.length,revenueCents:sum(abc,'revenueCents')}]:[],birthdays,dormant},categories:categoryRows}
 }
 const posProducts=(branchId:unknown)=>products.filter(p=>p.active).map(p=>({...p,listPriceCents:String(p.salePriceCents),effectivePriceCents:String(p.salePriceCents),stock:p.balances.find(b=>b.branchId===branchId)?.availableQuantity??0,stockByBranches:p.balances.filter(b=>branchAllowed(b.branchId)).map(b=>({branchId:b.branchId,branchName:b.branchName,quantity:b.availableQuantity}))}))
 const cashSession=(branchId:unknown)=>sessions.find(x=>x.status==='OPEN'&&x.branchId===branchId)??null
@@ -96,8 +124,8 @@ export async function qaOperation(name:string,variables:unknown={}){
   return {data:{_execute:old?0:1,confirmation:{receipt:{confirmed:true,replay:!!old,operationId:key,kind}}}}
  }
  case 'StockOperationDetails':return box({items:movements.filter(m=>m.operationId===v.operationId),fiscal:null})
- case 'FinancialIndicatorsDashboard':return box({options:{branches,products,categories,subcategories,suppliers:[],sources:[]},cards:{volume:25,revenueCents:'30000',providerFeeCents:'1500',netRevenueCents:'28500',costCents:'16000',grossProfitCents:'14000',profitCents:'12500',marginPercent:41.67,ticketCents:'1200',financialPendingSales:0},monthly:{lastVolume:25,averageVolume:20,volumeGrowth:25,lastProfitCents:'12500',averageProfitCents:'10000',profitGrowth:25,months:2},daily:[{date:'2025-10-21',volume:10,revenueCents:'12000',profitCents:'5000'},{date:'2026-10-21',volume:15,revenueCents:'18000',profitCents:'7500'}],products:products.map((x,i)=>({...x,quantity:i+1,revenueCents:'1200',providerFeeCents:'60',netRevenueCents:'1140',costCents:'800',grossProfitCents:'400',profitCents:i%7?-340:340,marginPercent:28.33,lineCount:1}))})
- case 'OperationalAnalyticsDashboard':return box({stock:{cards:{quantity:500,costCents:400000},monthly:[],products:products.map(x=>({...x,quantity:20,averageCostCents:800,costCents:16000,minimumStock:5,maximumStock:30,status:'NORMAL'}))},customers:{cards:{customers:1201,activeCustomers:1100},abc:[],regions:[],birthdays:Array.from({length:51},(_,i)=>({id:uuid(5000+i),name:`ANIVERSARIANTE QA ${i+1}`,birthDate:'2000-10-21'})),dormant:Array.from({length:1201},(_,i)=>({id:uuid(6000+i),name:`SEM COMPRAR QA ${i+1}`,lastPurchase:null,revenueCents:1200}))},categories:categories.slice(0,8).map(x=>({...x,level:'Categoria',quantity:25,revenueCents:'30000',costCents:'16000',profitCents:'14000',marginPercent:46.67,growthPercent:10}))})
+ case 'FinancialIndicatorsDashboard':return box(financialFixture(v))
+ case 'OperationalAnalyticsDashboard':return box(operationalFixture(v))
  case 'SalesChannelAnalyticsDashboard':return box({options:{branches,connections:[]},cards:{orders:25,sales:25,grossRevenueCents:30000},daily:[],byChannel:[],fees:[],payments:[],topProducts:[]})
  case 'SalesWorkspace':return box({tenant:{legalName:'EMPRESA FICTÍCIA QA',tradeName:'QA'},branches:branches.filter(b=>branchAllowed(b.id)),customers:[],products:posProducts(v.branchId??branches[0]!.id),paymentMethods:[{id:uuid(50),name:'DINHEIRO',code:'CASH',requiresChange:true}],policy,openSession:cashSession(v.branchId??branches[0]!.id)})
  case 'SearchPosProducts':return {data:{_select:qaState.empty?[]:posProducts(v.branchId).filter(x=>!v.search||[x.name,x.ean,x.internalCode].join(' ').toUpperCase().includes(String(v.search).toUpperCase())).slice(Number(v.offset??0),Number(v.offset??0)+Number(v.limit??30))}}

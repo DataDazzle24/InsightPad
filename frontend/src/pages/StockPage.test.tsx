@@ -40,3 +40,15 @@ for(const reply of [{_execute:0},{_execute:0,confirmation:{receipt:{confirmed:tr
  const data=workspace();data.branches.push({id:'b2',name:'Filial'});mocks.workspace.mockResolvedValue({data:{_select:[{data}]}});mocks.transfer.mockResolvedValue({data:reply});await render();await click(find('Transferir'));const selects=container.querySelectorAll<HTMLSelectElement>('.stock-transfer-modal select');await act(async()=>{selects[1].value='b2';selects[1].dispatchEvent(new Event('change',{bubbles:true}));selects[2].value='p1';selects[2].dispatchEvent(new Event('change',{bubbles:true}))});await click(find('Concluir transferência'));
  expect(container.querySelector('.stock-transfer-modal')).not.toBeNull();expect(container.querySelector('[role=alert]')?.textContent).toContain('Confirmação da transferência incerta');expect(container.textContent).not.toContain('Transferência concluída');const payload=mocks.transfer.mock.calls[0][1].payload;await click(find('Concluir transferência'));expect(mocks.transfer.mock.calls[1][1].payload).toEqual(payload);
 });
+
+
+it('exports BRL costs matching the screen without mutating stored cents, including fractional reais and zero',async()=>{
+ const data=workspace(),costs=['800','1075','0'];data.movements=costs.map((unitCostCents,i)=>({...move(i),unitCostCents}));mocks.workspace.mockResolvedValue({data:{_select:[{data}]}});
+ await render();const original=structuredClone(data);let csv='';
+ vi.stubGlobal('Blob',class {constructor(parts:unknown[]){csv=parts.join('')}});
+ const oldCreate=URL.createObjectURL,oldRevoke=URL.revokeObjectURL;URL.createObjectURL=()=> 'blob:qa-cost';URL.revokeObjectURL=()=>{};
+ const anchor=vi.spyOn(HTMLAnchorElement.prototype,'click').mockImplementation(()=>{});
+ try{await click(find('downloadCSV'));expect(csv).toContain('Custo unitário (R$)');for(const cents of costs){const label=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(cents)/100);expect(container.textContent).toContain(label);expect(csv).toContain(label)}expect(data).toEqual(original);expect(csv).not.toContain('"1075"');
+ await click(find('Saldo atual'));await click(find('downloadCSV'));expect(csv).toContain('Custo médio (R$)');expect(csv).toContain('Valor total (R$)');expect(csv).toContain('R$');expect(data).toEqual(original)
+ }finally{URL.createObjectURL=oldCreate;URL.revokeObjectURL=oldRevoke;anchor.mockRestore()}
+})

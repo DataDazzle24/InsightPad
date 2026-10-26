@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {writeFileSync} from 'node:fs';
+import {readFileSync,writeFileSync} from 'node:fs';
 export async function residual({page,output,sha,run,go,panel,wait,screenshot}){
  const measurements=[];
  const theme=async value=>page.evaluate(value=>document.documentElement.dataset.theme=value,value);
@@ -34,6 +34,20 @@ export async function residual({page,output,sha,run,go,panel,wait,screenshot}){
    await page.mouse.move(0,0);await measure(b,mode+' '+name+' normal');await b.hover();await measure(b,mode+' '+name+' hover');await b.focus();await page.keyboard.press('Shift+Tab');await page.keyboard.press('Tab');await measure(b,mode+' '+name+' focus');
   }await screenshot('receipt-'+mode)}
   await dialog.getByRole('button',{name:'Não imprimir',exact:true}).click();
+ });
+ await run('csv-unit-brl-DEC026',async()=>{
+  await go('/estoque');const before=await inspect();const [download]=await Promise.all([page.waitForEvent('download'),page.getByRole('button',{name:/CSV/}).click()]);await download.saveAs(output+'/stock-brl.csv');const lines=readFileSync(output+'/stock-brl.csv','utf8').trim().split(/\r?\n/);assert.match(lines[0],/Custo unitário \(R\$\)/);assert.equal(lines.length,before.movements.length+1);
+  const costs=new Set();for(const m of before.movements){const line=lines.find(r=>r.startsWith('"'+m.id+'";'));assert.ok(line);const expected=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(m.unitCostCents)/100);assert.equal(line.split(';')[8],'"'+expected+'"');costs.add(m.unitCostCents)}assert.ok(costs.has('0')&&costs.has('800')&&costs.has('1075'));
+  assert.deepEqual((await inspect()).products,before.products);await screenshot('stock-cost-screen');writeFileSync(output+'/csv-unit-proof.json',JSON.stringify({sha,rows:lines.length-1,rawCents:[...costs],unit:'BRL/reais',storedCentsUnchanged:true},null,2));
+ });
+ const layouts=[];
+ for(const mode of ['dark','light'])for(const width of [1440,375,320])await run('sales-header-'+mode+'-'+width,async()=>{
+  await page.setViewportSize({width,height:1000});await go('/vendas/registros');await theme(mode);const back=page.getByRole('link',{name:'Voltar ao módulo de vendas',exact:true}),sale=page.getByRole('link',{name:'+ Nova venda',exact:true});const a=await back.boundingBox(),b=await sale.boundingBox();assert.ok(a&&b);assert.ok(a.x+a.width<=b.x||b.x+b.width<=a.x||a.y+a.height<=b.y||b.y+b.height<=a.y,'header controls overlap');assert.ok(a.x>=0&&a.x+a.width<=width&&b.x>=0&&b.x+b.width<=width);
+  await back.focus();await page.keyboard.press('Tab');assert.equal(await sale.evaluate(e=>e===document.activeElement),true);await page.keyboard.press('Enter');await page.waitForURL('**#/vendas/frente-de-caixa');await go('/vendas/registros');await back.click();await page.waitForURL('**#/modulos/vendas');layouts.push({mode,width,back:a,sale:b,keyboard:true,click:true});
+ });
+ writeFileSync(output+'/sales-header-proof.json',JSON.stringify({sha,layouts},null,2));await page.setViewportSize({width:1440,height:1000});
+ await run('stock-distinct-order-DEC026',async()=>{
+  await go('/estoque');const header=page.getByRole('button',{name:'Quantidade',exact:true});const rows=()=>page.locator('.stock-table tbody tr').allTextContents();const before=await rows();await header.click();await page.waitForFunction(()=>document.querySelector('.stock-table tbody tr td:nth-child(6)')?.textContent.trim()==='1');const ascending=await rows();await header.click();await page.waitForFunction(()=>document.querySelector('.stock-table tbody tr td:nth-child(6)')?.textContent.trim()==='5');const descending=await rows();assert.notDeepEqual(ascending,descending);writeFileSync(output+'/stock-order-proof.json',JSON.stringify({sha,before,ascending,descending},null,2));
  });
  await run('stock-action-colors',async()=>{
   await go('/estoque');for(const mode of ['light','dark']){await theme(mode);for(const name of ['Transferir','Nova movimentação']){
