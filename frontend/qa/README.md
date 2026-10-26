@@ -29,7 +29,7 @@ an old fixed date. Financial cards and daily/product rows share one synthetic
 analytical ledger; customer cards use the actual ABC/dormant lists, and stock
 cards/product rows use the same posted movements. This analytical ledger is
 separate from the interactive POS scenario, not a model of production accounting.
-Product costs include 0, 800, 1075 and 1499 stored cents; quantities vary for
+Product costs include 0, 1, 800, 1075, 1234, 1499 and 100001 stored cents; quantities vary for
 ordering. A cost of 1075 cents must display/export as R$ 10,75, never R$ 1.075.
 Stock CSV labels state BRL/reais and use the same formatter as the screen.
 Product/date filters are covered by the financial fixture checks; other filter

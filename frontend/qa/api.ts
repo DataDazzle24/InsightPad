@@ -10,7 +10,7 @@ export const uuid=(n:number)=>`00000000-0000-4000-8000-${String(n).padStart(12,'
 export const fixtureDate=new Date().toISOString().slice(0,10)
 const when=fixtureDate+'T12:00:00Z'
 const fixtureQuantity=(i:number)=>i%7===0?i/7:20+(i+4)%5
-const fixtureCost=(i:number)=>String([0,800,1075,1499][i%4])
+const fixtureCost=(i:number)=>String([0,800,1075,1499,1,1234,100001][i%7])
 export const branches=[{id:uuid(1),name:'MATRIZ QA'},{id:uuid(2),name:'FILIAL QA'}]
 const initialProducts=()=>Array.from({length:65},(_,i)=>({id:uuid(100+i),name:`PRODUTO QA ${String(i+1).padStart(3,'0')}`,internalCode:`QA${i+1}`,ean:`789000000${String(i).padStart(4,'0')}`,categoryId:uuid(300),subcategoryId:uuid(800),categoryName:'CATEGORIA QA 001',subcategoryName:'SUBCATEGORIA QA 001',minimumStock:5,maximumStock:30,allowNegativeStock:false,bundleProduct:false,weightedProduct:i%3===0,costPriceCents:fixtureCost(i),salePriceCents:'1200',unit:'UN',active:true,createdAt:when,updatedAt:when,balances:branches.map(b=>({branchId:b.id,branchName:b.name,quantity:fixtureQuantity(i),reservedQuantity:0,availableQuantity:fixtureQuantity(i),averageCostCents:fixtureCost(i)}))}))
 export let products=initialProducts()
