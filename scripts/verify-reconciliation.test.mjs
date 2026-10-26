@@ -59,3 +59,10 @@ test('accepts the exact shared alert layout correction and rejects unrelated sty
  assert.equal(validateScope(policy,['frontend/src/catalog-standardization.css']),true);
  assert.throws(()=>validateScope(policy,['frontend/src/unreviewed-global.css']),/outside approved scope/);
 });
+
+test('accepts only the exact sales empty-state browser regression path',()=>{
+ assert.equal(validateScope(policy,['scripts/qa-browser/empty-sales.mjs']),true);
+ for(const path of ['scripts/qa-browser/empty-sales.test.mjs','scripts/qa-browser/empty-sales-extra.mjs','scripts/qa-browser/empty-sales.mjs.bak','scripts/qa-browser/nested/empty-sales.mjs']){
+  assert.throws(()=>validateScope(policy,[path]),/outside approved scope/);
+ }
+});
