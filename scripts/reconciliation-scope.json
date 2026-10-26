@@ -1112,6 +1112,12 @@
         "AJU-PDV-03"
       ],
       "reason": "Cabeçalho extraído do PDV para testar navegação, conexão e encaminhamento ao controle de caixa, sem executar fechamento."
+    },
+    "frontend/src/catalog-standardization.css": {
+      "ids": [
+        "DES-2026-001"
+      ],
+      "reason": "DEC-026 additional visual correction: reserve room for persistent order alerts so stock pagination and mobile navigation remain clickable; no change to frozen 68 IDs or excluded requests."
     }
   },
   "bytePreserved": [

@@ -54,3 +54,8 @@ test('accepts exact isolated application QA sources and rejects adjacent unautho
  assert.equal(validateScope(policy,['frontend/qa/application.tsx','frontend/qa/api.ts','functions/test/stock-receipts.test.ts']),true);
  assert.throws(()=>validateScope(policy,['frontend/qa/network-proxy.ts']),/outside approved scope/);
 });
+
+test('accepts the exact shared alert layout correction and rejects unrelated styles',()=>{
+ assert.equal(validateScope(policy,['frontend/src/catalog-standardization.css']),true);
+ assert.throws(()=>validateScope(policy,['frontend/src/unreviewed-global.css']),/outside approved scope/);
+});
