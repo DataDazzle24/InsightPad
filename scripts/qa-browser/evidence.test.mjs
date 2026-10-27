@@ -28,3 +28,9 @@ test('CI runs the closure and disposable PG18 proofs before sealing, without exp
  assert.match(pg,/'--network','none'/);assert.match(pg,/'--tmpfs','\/var\/lib\/postgresql:rw'/);assert.doesNotMatch(pg,/--publish|--volume|DATABASE_URL|GOOGLE_APPLICATION_CREDENTIALS/);
  assert.match(pg,/artifacts\/browser-private\/pg18-abort.json/);
 });
+
+test('full CI entry invokes individual residual consumers and themed report proofs before old coverage',()=>{
+ const runner=readFileSync(new URL('./run.mjs',import.meta.url),'utf8'),cases=readFileSync(new URL('./consolidated.mjs',import.meta.url),'utf8');
+ assert.match(runner,/import \{reports\} from '\.\/reports.mjs'/);assert.match(runner,/import \{consolidated\} from '\.\/consolidated.mjs'/);
+ assert.ok(runner.indexOf('await reports(')<runner.indexOf('await consolidated('));assert.ok(runner.indexOf('await consolidated(')<runner.indexOf('await coverage('));assert.match(cases,/CI must execute all consolidated cases/);
+});

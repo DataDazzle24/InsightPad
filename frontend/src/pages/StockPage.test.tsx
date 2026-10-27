@@ -65,3 +65,8 @@ it('counts high stock only strictly above a positive maximum and preserves all p
  await render();expect(find('Estoque alto1')).toBeTruthy();await click(find('Estoque alto1'));expect(container.querySelector('.stock-table tbody')?.textContent).toContain('EDGE0');expect(container.querySelectorAll('.stock-table tbody tr')).toHaveLength(1)
 })
 it('rejects transfer on a second visible branch when manage permission is absent',async()=>{const data=workspace();data.branches.push({id:'b2',name:'Filial'});mocks.manage=false;mocks.workspace.mockResolvedValue({data:{_select:[{data}]}});await render();expect((find('Transferir') as HTMLButtonElement).disabled).toBe(true);await click(find('Transferir'));expect(mocks.transfer).not.toHaveBeenCalled()})
+
+it.each(['SALE','TRANSFER_OUT'])('guides %s correction to its owning flow without selecting or mutating manual stock',async(typeCode)=>{
+ const previous=mocks.reverse.mock.calls.length;const data=workspace();data.movements=[{...move(1),typeCode}];mocks.workspace.mockResolvedValue({data:{_select:[{data}]}});await render();await click(container.querySelector('.stock-table tbody tr')!);
+ expect(container.querySelector('[role="alert"]')?.textContent).toContain('Vendas são corrigidas no Registro de Vendas');expect(container.querySelector<HTMLInputElement>('.stock-table input')?.checked).toBe(false);expect((find('Editar') as HTMLButtonElement).disabled).toBe(true);expect((find('Estornar') as HTMLButtonElement).disabled).toBe(true);expect(mocks.reverse).toHaveBeenCalledTimes(previous);
+});
