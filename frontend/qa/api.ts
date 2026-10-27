@@ -20,23 +20,24 @@ const initialProducts=()=>Array.from({length:65},(_,i)=>({id:uuid(100+i),name:`P
 export let products=initialProducts()
 let categories:Row[],subcategories:Row[],movements:Row[],transfers:Row[],sessions:Row[],cashMovements:Row[],sales:Row[]
 let ledger:Readonly<Row>[]=[]
-let customers:Row[],suppliers:Row[],promotions:Row[]
+let customers:Row[],suppliers:Row[],promotions:Row[],fiscalDocuments:Row[]
 let nextId=13000,policy:Row
 const mutations=new Map<string,{hash:string;data:unknown}>()
 const receipts=new Map<string,{hash:string;kind:string}>()
+const cashApprovals=new Map<string,Row>()
 export function resetFixtures(){
  branches.splice(0,branches.length,...initialBranches());components.clear();products=initialProducts();
  ledger=products.map((p,i)=>{const quantity=i%9+1,revenueCents=quantity*Number(p.salePriceCents),providerFeeCents=Math.round(revenueCents*.05),costCents=quantity*Number(p.costPriceCents),netRevenueCents=revenueCents-providerFeeCents,grossProfitCents=revenueCents-costCents,profitCents=netRevenueCents-costCents;return immutable({...structuredClone(p),category:p.categoryName,subcategory:p.subcategoryName,branchId:branches[i%2]!.id,saleId:'qa-ledger-'+i,source:i%2?'IFOOD':'POS',supplierId:uuid(20),date:fixtureDate,quantity,revenueCents,providerFeeCents,netRevenueCents,costCents,grossProfitCents,profitCents,marginPercent:revenueCents?profitCents/revenueCents*100:0,lineCount:1})});
  customers=Array.from({length:101},(_,i)=>({id:uuid(4000+i),name:`PESSOA FICTÍCIA QA ${i}`,active:true,createdAt:when,updatedAt:when}));
  suppliers=Array.from({length:101},(_,i)=>({id:uuid(4000+i),name:`FORNECEDOR FICTÍCIO QA ${i+1}`,legalName:`FORNECEDOR FICTÍCIO QA ${i+1}`,tradeName:`FORNECEDOR QA ${i+1}`,active:true,createdAt:when,updatedAt:when}));promotions=[];
- nextId=13000;mutations.clear();cashMovements=[];sales=[]
+ nextId=13000;mutations.clear();cashMovements=[];sales=[];fiscalDocuments=[]
  sessions=[{id:uuid(60),branchId:uuid(1),status:'OPEN',openedAt:when,openingAmountCents:'10000',expectedAmountCents:'10000',movementCount:0}]
  policy={requireOpenSession:true,operatorDiscountPercent:5,operatorSurchargePercent:5,allowOperatorClose:true,operatorWithdrawalLimitCents:100000,operatorCloseDifferenceLimitCents:100000}
  categories=Array.from({length:300},(_,i)=>({id:uuid(300+i),name:`CATEGORIA QA ${String(i+1).padStart(3,'0')}`,active:i%11!==10,createdAt:when,updatedAt:when}))
  subcategories=Array.from({length:300},(_,i)=>({id:uuid(800+i),name:`SUBCATEGORIA QA ${String(i+1).padStart(3,'0')}`,categoryId:uuid(300+i%10),categoryName:`CATEGORIA QA ${String(i%10+1).padStart(3,'0')}`,active:i%11!==10,createdAt:when,updatedAt:when}))
  movements=Array.from({length:501},(_,i)=>({id:uuid(2000+i),operationId:'qa-movement-'+i,occurredAt:when,quantity:i%5+1,unitCostCents:products[i%products.length]!.costPriceCents,status:i%13===0?'REVERSED':'POSTED',typeCode:i%2?'LOSS':'MANUAL_IN',typeName:i%2?'Perda':'Entrada',direction:i%2?'OUT':'IN',productId:products[i%products.length]!.id,productName:products[i%products.length]!.name,branchId:branches[i%2]!.id,branchName:branches[i%2]!.name}))
  transfers=Array.from({length:201},(_,i)=>({id:uuid(3000+i),operationId:'qa-transfer-'+i,status:'COMPLETED',requestedAt:when,sourceBranchId:branches[0]!.id,destinationBranchId:branches[1]!.id,sourceBranch:branches[0]!.name,destinationBranch:branches[1]!.name,totalQuantity:i%5+1,itemCount:1}))
- receipts.clear();qaState.logs=[];qaState.unsupported=[];qaState.requests=[]
+ receipts.clear();cashApprovals.clear();qaState.logs=[];qaState.unsupported=[];qaState.requests=[]
 }
 resetFixtures()
 const result=(data:unknown)=>({data:{_select:[{data:structuredClone(data)}]}})
@@ -65,7 +66,7 @@ const stockWorkspace=(v:Row)=>{
  const ms=(qaState.empty?[]:movements).filter(m=>branchAllowed(m.branchId)&&has('branches',m.branchId)&&has('types',m.typeCode)&&has('products',m.productId)&&date(m.occurredAt)&&[m.productName,m.branchName,m.typeName,m.operationId].join(' ').toLocaleLowerCase('pt-BR').includes(text));
  const ts=(qaState.empty?[]:transfers).filter(t=>branchAllowed(t.sourceBranchId)&&branchAllowed(t.destinationBranchId)&&(has('branches',t.sourceBranchId)||has('branches',t.destinationBranchId))&&date(t.requestedAt)&&[t.sourceBranch,t.destinationBranch,t.operationId].join(' ').toLocaleLowerCase('pt-BR').includes(text));
  const offset=Math.max(0,Number(v.offset??0)),limit=Math.min(1000,Math.max(1,Number(v.limit??100)));
- return {branches:branches.filter(b=>branchAllowed(b.id)),suppliers:[{id:uuid(20),name:'FORNECEDOR QA'}],products:qaState.empty?[]:products.map(p=>({...p,balances:p.balances.filter(b=>branchAllowed(b.branchId))})),movements:sorted(ms,v,'occurredAt').slice(offset,offset+limit),transfers:sorted(ts,v,'requestedAt').slice(offset,offset+limit),movementCount:ms.length,transferCount:ts.length}
+ return {branches:branches.filter(b=>branchAllowed(b.id)),suppliers:suppliers.filter(s=>s.active).map(s=>({id:s.id,name:s.legalName})),products:qaState.empty?[]:products.map(p=>({...p,balances:p.balances.filter(b=>branchAllowed(b.branchId))})),movements:sorted(ms,v,'occurredAt').slice(offset,offset+limit),transfers:sorted(ts,v,'requestedAt').slice(offset,offset+limit),movementCount:ms.length,transferCount:ts.length}
 }
 // QA-only analytical ledgers. Cards, tables and exports derive from the same rows.
 const inPeriod=(date:unknown,v:Row)=>(!v.from||String(date).slice(0,10)>=String(v.from))&&(!v.to||String(date).slice(0,10)<=String(v.to))
@@ -158,18 +159,23 @@ export async function qaOperation(name:string,variables:unknown={}){
  case 'PendingPosApprovals':return {data:{_select:[]}}
  case 'StockWorkspace':return box(stockWorkspace(v))
  case 'SaveStockBatch':case 'PostStockTransfer':{
-  if(p.replacesOperationId||p.fiscalEnabled)throw Error('QA: correção/fiscal ainda sem fixture')
+  const original=p.replacesOperationId?movements.filter(m=>m.operationId===p.replacesOperationId):[];
+  const fiscal=(p.fiscal??{}) as Row;
   const key=String(p.clientOperationId),hash=JSON.stringify(p),kind=name==='SaveStockBatch'?'STOCK_BATCH':'STOCK_TRANSFER',old=receipts.get(key)
   if(old&&(old.hash!==hash||old.kind!==kind))throw new Error('STOCK_NOT_CONFIRMED')
   if(!old){
+  if(p.replacesOperationId&&(!original.some(m=>m.status==='POSTED')||original.some(m=>m.branchId!==p.branchId||String(m.typeCode).startsWith('SALE')||String(m.typeCode).startsWith('TRANSFER')||!branchAllowed(m.branchId))))throw Error('STOCK_NOT_CONFIRMED');
+   if(p.fiscalEnabled&&(name!=='SaveStockBatch'||p.direction!=='IN'||!String(fiscal.documentNumber??'').trim()||fiscal.supplierId&&!suppliers.some(s=>s.id===fiscal.supplierId&&s.active)))throw Error('STOCK_NOT_CONFIRMED');
    const lines=p.items as Row[];if(!Array.isArray(lines)||!lines.length)throw Error('QA: itens obrigatórios');
    const source=name==='SaveStockBatch'?p.branchId:p.sourceBranchId,destination=p.destinationBranchId;
    if(!branchAllowed(source)||name==='PostStockTransfer'&&(!branchAllowed(destination)||source===destination))throw Error('QA: filial inválida');
    if(name==='SaveStockBatch'&&!['IN','OUT'].includes(String(p.direction)))throw Error('QA: direção inválida');
-   const prepared=lines.map(line=>{const product=products.find(x=>x.id===line.product_id&&x.active),quantity=Number(line.quantity);if(!product||!Number.isFinite(quantity)||quantity<=0||!product.weightedProduct&&!Number.isInteger(quantity))throw Error('QA: item inválido');const balance=product.balances.find(b=>b.branchId===source)!;if((name==='PostStockTransfer'||p.direction==='OUT')&&!product.allowNegativeStock&&balance.availableQuantity<quantity)throw Error('QA: saldo insuficiente');return {product,balance,quantity}});
+   const prepared=lines.map(line=>{const product=products.find(x=>x.id===line.product_id&&x.active),quantity=Number(line.quantity);if(!product||!Number.isFinite(quantity)||quantity<=0||!product.weightedProduct&&!Number.isInteger(quantity)||Math.abs(quantity*1000-Math.round(quantity*1000))>1e-7)throw Error('QA: item inválido');const balance=product.balances.find(b=>b.branchId===source)!;const undo=original.filter(m=>m.status==='POSTED'&&m.productId===product.id).reduce((n,m)=>n+(m.direction==='IN'?-1:1)*Number(m.quantity),0);if((name==='PostStockTransfer'||p.direction==='OUT')&&!product.allowNegativeStock&&balance.availableQuantity+undo<quantity)throw Error('QA: saldo insuficiente');return {product,balance,quantity,cost:String(integer(line.unit_cost_cents??line.unit_gross_cents??product.costPriceCents))}});
    if(new Set(prepared.map(x=>x.product.id)).size!==prepared.length)throw Error('QA: item duplicado');
-   for(const {product,balance,quantity}of prepared){const direction=name==='PostStockTransfer'?'OUT':String(p.direction),sign=direction==='IN'?1:-1;balance.quantity+=sign*quantity;balance.availableQuantity+=sign*quantity;if(name==='PostStockTransfer'){const target=product.balances.find(b=>b.branchId===destination)!;target.quantity+=quantity;target.availableQuantity+=quantity;movements.unshift({id:uuid(nextId++),operationId:key,occurredAt:p.occurredAt??when,quantity,unitCostCents:product.costPriceCents,status:'POSTED',typeCode:'TRANSFER_IN',direction:'IN',productId:product.id,productName:product.name,branchId:destination,branchName:branches.find(b=>b.id===destination)!.name})}
-    movements.unshift({id:uuid(nextId++),operationId:key,occurredAt:p.occurredAt??when,quantity,unitCostCents:product.costPriceCents,status:'POSTED',typeCode:name==='PostStockTransfer'?'TRANSFER_OUT':direction==='IN'?'MANUAL_IN':'LOSS',typeName:name==='PostStockTransfer'?'Transferência':direction==='IN'?'Entrada':'Perda',direction,productId:product.id,productName:product.name,branchId:source,branchName:branches.find(b=>b.id===source)!.name})
+   for(const m of original.filter(m=>m.status==='POSTED')){const balance=products.find(x=>x.id===m.productId)!.balances.find(b=>b.branchId===m.branchId)!,undo=(m.direction==='IN'?-1:1)*Number(m.quantity);balance.quantity+=undo;balance.availableQuantity+=undo;m.status='REVERSED'}
+   const fiscalDocumentId=p.fiscalEnabled?uuid(nextId++):null;if(fiscalDocumentId)fiscalDocuments.push({...structuredClone(fiscal),id:fiscalDocumentId,status:'REGISTERED'});
+   for(const {product,balance,quantity,cost}of prepared){const direction=name==='PostStockTransfer'?'OUT':String(p.direction),sign=direction==='IN'?1:-1;balance.quantity+=sign*quantity;balance.availableQuantity+=sign*quantity;if(name==='PostStockTransfer'){const target=product.balances.find(b=>b.branchId===destination)!;target.quantity+=quantity;target.availableQuantity+=quantity;movements.unshift({id:uuid(nextId++),operationId:key,occurredAt:p.occurredAt??when,quantity,unitCostCents:cost,fiscalDocumentId,status:'POSTED',typeCode:'TRANSFER_IN',direction:'IN',productId:product.id,productName:product.name,branchId:destination,branchName:branches.find(b=>b.id===destination)!.name})}
+    movements.unshift({id:uuid(nextId++),operationId:key,occurredAt:p.occurredAt??when,quantity,unitCostCents:cost,fiscalDocumentId,status:'POSTED',typeCode:name==='PostStockTransfer'?'TRANSFER_OUT':direction==='IN'?'MANUAL_IN':'LOSS',typeName:name==='PostStockTransfer'?'Transferência':direction==='IN'?'Entrada':'Perda',direction,productId:product.id,productName:product.name,branchId:source,branchName:branches.find(b=>b.id===source)!.name})
    }
    if(name==='PostStockTransfer')transfers.unshift({id:uuid(nextId++),operationId:key,status:'COMPLETED',requestedAt:when,sourceBranchId:source,destinationBranchId:destination,sourceBranch:branches.find(b=>b.id===source)!.name,destinationBranch:branches.find(b=>b.id===destination)!.name,totalQuantity:prepared.reduce((n,x)=>n+x.quantity,0),itemCount:prepared.length});receipts.set(key,{hash,kind})
   }
@@ -182,10 +188,11 @@ export async function qaOperation(name:string,variables:unknown={}){
   const rows=movements.filter(m=>ids.length?ids.includes(String(m.id)):v.operationId&&m.operationId===v.operationId)
   if(!rows.length||ids.length&&rows.length!==ids.length||rows.some(m=>m.status!=='POSTED'||m.typeCode==='SALE'||m.typeCode==='SALE_REVERSAL'||!branchAllowed(m.branchId)||ids.length&&String(m.typeCode).startsWith('TRANSFER'))||ids.length&&new Set(rows.map(m=>m.branchId)).size!==1)throw Error('QA: estorno não elegível')
   for(const m of rows){const balance=products.find(p=>p.id===m.productId)!.balances.find(b=>b.branchId===m.branchId)!;const delta=(m.direction==='OUT'?1:-1)*Number(m.quantity);balance.quantity+=delta;balance.availableQuantity+=delta;m.status='REVERSED'}
+  for(const f of fiscalDocuments)if(rows.some(m=>m.fiscalDocumentId===f.id)&&!movements.some(m=>m.fiscalDocumentId===f.id&&m.status==='POSTED'))f.status='CANCELLED';
   for(const t of transfers)if(t.operationId===v.operationId&&!movements.some(m=>m.operationId===t.operationId&&m.status==='POSTED'))t.status='CANCELLED'
   return {data:{_execute:1}}
  }
- case 'StockOperationDetails':return box({movements:movements.filter(m=>m.operationId===v.operationId&&branchAllowed(m.branchId)),fiscalDocument:null})
+ case 'StockOperationDetails':{const selected=movements.filter(m=>m.operationId===v.operationId&&branchAllowed(m.branchId));return box({movements:selected,fiscalDocument:fiscalDocuments.find(f=>f.id===selected[0]?.fiscalDocumentId)??null})}
  case 'FinancialIndicatorsDashboard':return box(financialFixture(v))
  case 'OperationalAnalyticsDashboard':return box(operationalFixture(v))
  case 'SalesChannelAnalyticsDashboard':{
@@ -215,9 +222,14 @@ export async function qaOperation(name:string,variables:unknown={}){
  case 'RegisterCashMovement':case 'CloseCashSession':{const replay=mutations.has(name+':'+v.operationId);const data=mutateOnce(name,v.operationId,v,()=>{
   const session=sessions.find(s=>s.id===v.sessionId&&s.status==='OPEN');if(!session||!branchAllowed(session.branchId))throw Error('QA: caixa não está aberto');
   if(name==='CloseCashSession'){Object.assign(session,{status:'CLOSED',countedAmountCents:String(integer(v.countedAmountCents)),closedAt:when,notes:v.notes});return {_execute:1}}
-  if(!['SUPPLY','WITHDRAWAL'].includes(String(v.movementType)))throw Error('QA: tipo inválido');const amount=integer(v.amountCents);if(!amount)throw Error('QA: valor deve ser positivo');const expected=Number(session.expectedAmountCents)+(v.movementType==='SUPPLY'?amount:-amount);if(expected<0)throw Error('QA: saldo insuficiente');Object.assign(session,{expectedAmountCents:String(expected),movementCount:Number(session.movementCount)+1});cashMovements.push({...v,id:uuid(nextId++)});return {_execute:1}
+  if(qaState.permissions==='operator'&&(v.movementType==='SUPPLY'||Number(v.amountCents)>Number(policy.operatorWithdrawalLimitCents??0)))throw Error('QA: aprovação necessária');if(!['SUPPLY','WITHDRAWAL'].includes(String(v.movementType)))throw Error('QA: tipo inválido');const amount=integer(v.amountCents);if(!amount)throw Error('QA: valor deve ser positivo');const expected=Number(session.expectedAmountCents)+(v.movementType==='SUPPLY'?amount:-amount);if(expected<0)throw Error('QA: saldo insuficiente');Object.assign(session,{expectedAmountCents:String(expected),movementCount:Number(session.movementCount)+1});cashMovements.push({...v,id:uuid(nextId++)});return {_execute:1}
  });if(qaState.cashAckLoss&&!replay)throw Object.assign(new TypeError('Failed to fetch'),{code:'unavailable'});return {data:data as {_execute:number}}}
- case 'UpdatePosPolicy':policy={...policy,...v};return {data:{_execute:1}}
+ case 'RequestPosCashApproval':{
+  if(!p.clientOperationId||!['WITHDRAWAL','CLOSE'].includes(String(p.movementType))||!sessions.some(s=>s.id===p.sessionId&&s.status==='OPEN'&&branchAllowed(s.branchId)))throw Error('QA: solicitação inválida');integer(p.amountCents);
+  const id=String(p.clientOperationId),old=cashApprovals.get(id);if(old&&JSON.stringify(old.payload)!==JSON.stringify(p))throw Error('QA: conteúdo conflitante');if(!old)cashApprovals.set(id,{payload:structuredClone(p),status:'PENDING'});return {data:{_execute:1}}
+ }
+ case 'PosCashApprovalStatus':return {data:{_select:cashApprovals.has(String(v.operationId))?[{status:cashApprovals.get(String(v.operationId))!.status}]:[]}}
+ case 'UpdatePosPolicy':if(qaState.permissions==='operator')throw Error('QA: permissão negada');policy={...policy,...v};return {data:{_execute:1}}
  case 'PostSale':{const replay=mutations.has(name+':'+p.clientOperationId);const data=mutateOnce(name,p.clientOperationId,p,()=>{
   if(p.replacesSaleId)throw Error('POS_CORRECTION_UNSUPPORTED');
   const session=cashSession(p.branchId);if(!branchAllowed(p.branchId)||!session||session.id!==p.cashSessionId)throw Error('POS_SESSION_REQUIRED');
@@ -285,4 +297,4 @@ export const executeQuery=(ref:ReturnType<typeof queryRef>)=>qaOperation(ref.nam
 export const executeMutation=executeQuery
 export const httpsCallable=(_functions:unknown,name:string)=>async()=>{throw new Error('QA: chamada externa mockada e desativada: '+name)}
 // Read-only diagnostic snapshot for browser assertions; synthetic QA build only.
-export const inspectFixtures=()=>structuredClone({products,movements,transfers,sessions,sales,cashMovements,ledger,categories,subcategories,branches,policy,customers,suppliers,promotions})
+export const inspectFixtures=()=>structuredClone({products,movements,transfers,sessions,sales,cashMovements,ledger,categories,subcategories,branches,policy,customers,suppliers,promotions,fiscalDocuments})

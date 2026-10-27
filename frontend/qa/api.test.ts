@@ -236,3 +236,10 @@ it('V1C-A03 archive matches SQL eligibility and atomic batches without cascading
 it('own cash lost ACK replays exact payload with one ledger effect',async()=>{
  qaState.cashAckLoss=true;const p={sessionId:uuid(60),operationId:'cash-ack-integration',movementType:'SUPPLY',amountCents:500,description:'MOTIVO QA'};await expect(qaOperation('RegisterCashMovement',p)).rejects.toThrow('Failed to fetch');expect(inspectFixtures().sessions[0]!.expectedAmountCents).toBe('10500');await qaOperation('RegisterCashMovement',p);expect(inspectFixtures().cashMovements).toHaveLength(1);await expect(qaOperation('RegisterCashMovement',{...p,amountCents:501})).rejects.toThrow('conflitante')
 })
+
+it('existing stock correction and fiscal snapshot model the SQL contract without inventing issuance',async()=>{
+ const initial=inspectFixtures().products.find(p=>p.id===uuid(101))!.balances[0]!.quantity;
+ const payload={clientOperationId:'stock-original-fiscal',branchId:uuid(1),direction:'IN',occurredAt:'2026-10-20T02:30:00Z',fiscalEnabled:true,fiscal:{documentNumber:'SYNTHETIC-ONLY',totalCents:1600},items:[{product_id:uuid(101),quantity:2,unit_cost_cents:800}]};await qaOperation('SaveStockBatch',{payload});
+ const details=await box('StockOperationDetails',{operationId:payload.clientOperationId});expect(details.fiscalDocument).toMatchObject({documentNumber:'SYNTHETIC-ONLY',status:'REGISTERED'});
+ const correction={...payload,clientOperationId:'stock-correction-fiscal',replacesOperationId:payload.clientOperationId,items:[{product_id:uuid(101),quantity:3,unit_cost_cents:800}]};await qaOperation('SaveStockBatch',{payload:correction});await qaOperation('SaveStockBatch',{payload:correction});expect(inspectFixtures().products.find(p=>p.id===uuid(101))!.balances[0]!.quantity).toBe(initial+3);expect(inspectFixtures().movements.filter(m=>m.operationId===payload.clientOperationId).every(m=>m.status==='REVERSED')).toBe(true)
+})
