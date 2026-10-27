@@ -20,14 +20,23 @@ export async function closure({page,output,sha,run,go,panel,wait,screenshot}){
   assert.deepEqual(await download(page.getByRole('button',{name:'CSV',exact:true}).first(),'financial-clear'),all);assert.deepEqual((await inspect()).ledger,before.ledger);
   assertions.push({case:'financial-csv',rows:65,filteredRows:1,parser:'Python csv',units:'BRL; one cents conversion; negative prefix removed only for numeric oracle',sha});
  });
+ await run('closure-channel-exporters-actual-files',async()=>{
+  await go('/dashboards/operacional');await page.getByRole('button',{name:'Canais',exact:true}).click();await page.locator('.channel-dashboard .finance-kpis article').first().waitFor();const ledger=(await inspect()).ledger.filter(r=>r.source==='IFOOD');const records=[];
+  for(const [index,title,count]of [[0,'Resultado por loja',1],[1,'Taxas confirmadas pelo iFood',1],[2,'Formas de pagamento',1],[3,'Produtos mais vendidos nos canais',32]]){
+   const region=page.getByRole('region',{name:title+': tabela completa com rolagem horizontal',exact:true}),article=region.locator('..');const dom=await region.locator('tbody tr').evaluateAll(rows=>rows.map(row=>[...row.querySelectorAll('td')].map(c=>c.textContent)));
+   const csv=await download(article.getByRole('button',{name:'CSV',exact:true}),'channel-'+index);assert.equal(csv.length,count+1);assert.deepEqual(csv.slice(1),dom);records.push({title,rows:count});
+   if(index===0){const gross=ledger.reduce((n,r)=>n+r.revenueCents,0),fees=ledger.reduce((n,r)=>n+r.providerFeeCents,0);const value=s=>Number(s.replace(/[^0-9,-]/g,'').replace(',','.'));assert.equal(value(csv[1][3]),gross/100);assert.equal(value(csv[1][4]),fees/100)}
+  }
+  assertions.push({case:'channel-files',sha,records,limit:'completed synthetic channel sales only; no partner state transition, real permission or external financial reconciliation'});
+ });
  await run('closure-existing-exporters-complete-and-filtered',async()=>{
   await go('/estoque');const before=await inspect();
   for(const [tab,field,expected]of [['Movimentações','movements',501],['Transferências','transfers',201]]){
    await page.getByRole('button',{name:tab,exact:true}).click();await wait();const rows=await download(page.getByRole('button',{name:/CSV/}),'stock-'+field);
-   assert.equal(rows.length,expected+1);assert.deepEqual(new Set(rows.slice(1).map(r=>r[0])),new Set(before[field].map(r=>r.id)));
+   assert.equal(rows.length,expected+1);assert.deepEqual(new Set(rows.slice(1).map(r=>r[0])),new Set(before[field].map(r=>r.id)));for(const r of rows.slice(1)){const source=before[field].find(x=>x.id===r[0]);if(field==='movements'){assert.equal(Number(r[7]),source.quantity);assert.equal(Number(r[8].replace(/[^0-9,-]/g,'').replace(',','.')),Number(source.unitCostCents)/100)}else{assert.equal(Number(r[4]),source.itemCount);assert.equal(Number(r[5]),source.totalQuantity)}};
    if(field==='transfers'){
-    await page.getByRole('button',{name:'Próxima',exact:true}).click();await wait();await page.getByRole('button',{name:'Próxima',exact:true}).click();await wait();assert.match(await page.locator('.stock-panel').innerText(),/201–201 de 201/);
-    await page.getByPlaceholder('Pesquisar...').fill('qa-transfer-200');await wait();assert.match(await page.locator('.stock-panel').innerText(),/1–1 de 1/);assert.equal(await page.locator('.stock-panel tbody tr').count(),1);
+    await page.getByRole('button',{name:'Próxima',exact:true}).click();await wait();await page.getByRole('button',{name:'Próxima',exact:true}).click();await wait();assert.match(await page.locator('.stock-panel').innerText(),/201–201 de 201/i);
+    await page.getByPlaceholder('Pesquisar...').fill('qa-transfer-200');await page.locator('.catalog-pagination span').filter({hasText:/1–1 de 1 registros/i}).waitFor();assert.match(await page.locator('.stock-panel').innerText(),/1–1 de 1/i);assert.equal(await page.locator('.stock-panel tbody tr').count(),1);
     await page.getByRole('button',{name:'Limpar filtros',exact:true}).click();await wait();
    }
   }
@@ -62,10 +71,10 @@ export async function closure({page,output,sha,run,go,panel,wait,screenshot}){
   for(let i=0;i<10&&!await d.getByLabel('Estoque mínimo',{exact:true}).isVisible();i++)await d.getByRole('button',{name:'Próxima',exact:true}).click();
   const field=d.getByLabel('Estoque mínimo',{exact:true});for(const text of ['', '1,5', '0', '2']){await field.fill(text);assert.equal(await field.inputValue(),text)}
   await field.focus();await page.keyboard.press('ControlOrMeta+A');await page.keyboard.press('Backspace');assert.equal(await field.inputValue(),'');await page.keyboard.insertText('2');assert.equal(await field.inputValue(),'2');
-  await d.getByRole('button',{name:'Cancelar',exact:true}).click();assert.deepEqual((await inspect()).products,before.products);
+  await d.getByRole('button',{name:'Cancelar',exact:true}).click();await page.getByRole('alertdialog').getByRole('button',{name:'Confirmar',exact:true}).click();await d.waitFor({state:'hidden'});assert.deepEqual((await inspect()).products,before.products);
  });
  for(const [route,label]of [['clientes','Nome / Razão social','Novo cliente'],['fornecedores','Razão social / Nome','Novo fornecedor'],['filiais','Nome da filial','Nova filial']])await run('closure-registration-'+route+'-create-edit-cancel',async()=>{
-  await go('/cadastros/'+route);const opener=page.getByRole('button',{name:/Novo cadastro/i});await opener.click();let d=page.getByRole('dialog').first();await d.getByLabel(label,{exact:false}).fill('CANCELAR QA');await d.getByRole('button',{name:'Cancelar',exact:true}).click();await d.waitFor({state:'hidden'});
+  await go('/cadastros/'+route);const opener=page.getByRole('button',{name:/Novo cadastro/i});await opener.click();let d=page.getByRole('dialog').first();await d.getByLabel(label,{exact:false}).fill('CANCELAR QA');await d.getByRole('button',{name:'Cancelar',exact:true}).click();await page.getByRole('alertdialog').getByRole('button',{name:'Confirmar',exact:true}).click();await d.waitFor({state:'hidden'});
   await opener.click();d=page.getByRole('dialog').first();await d.getByLabel(label,{exact:false}).fill('CADASTRO NOVO QA');
   for(let i=0;i<12&&await d.getByRole('button',{name:'Próxima',exact:true}).count();i++)await d.getByRole('button',{name:'Próxima',exact:true}).click();await d.getByRole('button',{name:'Salvar',exact:true}).click();await page.getByRole('alertdialog').getByRole('button',{name:'Confirmar',exact:true}).click();await d.waitFor({state:'hidden'});
   await page.getByPlaceholder('Pesquisar...').fill('CADASTRO NOVO QA');const row=page.getByRole('row').filter({hasText:'CADASTRO NOVO QA'});await row.waitFor();await row.getByRole('button',{name:/Editar/}).click();d=page.getByRole('dialog').first();await d.getByLabel(label,{exact:false}).fill('CADASTRO EDITADO QA');
@@ -78,7 +87,7 @@ export async function closure({page,output,sha,run,go,panel,wait,screenshot}){
   await page.evaluate(()=>location.hash='#/vendas/registros');await page.getByRole('button',{name:'Detalhes',exact:true}).waitFor();const csv=await download(page.getByRole('button',{name:'Exportar CSV',exact:true}),'sales');assert.equal(csv.length,2);assert.equal(csv[1][0],id);assert.match(csv[1][9],/24,00/);assert.match(csv[1][10],/6,00/);
   await page.getByRole('button',{name:'Detalhes',exact:true}).click();const details=page.getByRole('dialog');await details.waitFor();assert.doesNotMatch(await details.innerText(),/NaN|undefined/);assert.match(await details.innerText(),/24,00/);await details.getByRole('button',{name:'Fechar',exact:true}).click();
   await page.getByRole('button',{name:'Cancelar',exact:true}).click();await page.getByLabel('Motivo',{exact:true}).fill('CANCELAMENTO ISOLADO QA');await page.getByRole('button',{name:'Confirmar cancelamento',exact:true}).click();await page.getByText('Venda cancelada e estoque estornado com sucesso.',{exact:true}).waitFor();
-  const after=await inspect();assert.equal(after.sessions[0].expectedAmountCents,'10000');assert.equal(after.products[0].balances[0].quantity,10);assert.equal(after.sales[0].id,id);assert.equal(after.sales[0].status,'CANCELLED');
+  const after=await inspect();assert.equal(after.sessions[0].expectedAmountCents,'10000');assert.equal(after.products[0].balances[0].quantity,10);assert.equal(after.sales[0].id,id);assert.equal(after.sales[0].status,'CANCELLED');assert.deepEqual(after.cashMovements.filter(m=>m.saleId===id).map(m=>[m.movementType,m.amountCents]),[['SALE',2400],['SALE_REVERSAL',-2400]]);
   for(const state of [before,sold,after]){const physical=state.movements.filter(m=>m.status==='POSTED'&&m.branchId===state.products[0].balances[0].branchId).reduce((n,m)=>n+(m.direction==='IN'?1:-1)*m.quantity,0);assert.equal(physical,state.products[0].balances[0].quantity)}
   assertions.push({case:'integrated-sale-cash-stock-cancel',sha,id,before,sold,after,limit:'interactive synthetic memory profile; no external backend or partner; original authenticated smoke remains unchanged'});
  });
@@ -97,7 +106,7 @@ export async function closure({page,output,sha,run,go,panel,wait,screenshot}){
  });
  // Consumer-specific data/empty/error checks, not inventory-as-acceptance.
  for(const view of ['Vendas','Estoque','Clientes','Categorias','Canais'])await run('closure-dashboard-states-'+view,async()=>{
-  await go('/dashboards/operacional');await page.getByRole('button',{name:view,exact:true}).click();await wait();assert.ok(await page.locator('.finance-kpis article').count()>0);assert.doesNotMatch(await page.locator('main').innerText(),/\b(?:NaN|undefined)\b/);
+  await go('/dashboards/operacional');await page.getByRole('button',{name:view,exact:true}).click();await page.locator('.finance-kpis article').first().waitFor();assert.ok(await page.locator('.finance-kpis article').count()>0);assert.doesNotMatch(await page.locator('main').innerText(),/\b(?:NaN|undefined)\b/);
   await panel();await page.getByLabel('Dados vazios',{exact:true}).check();await page.getByRole('button',{name:view,exact:true}).click();await wait();assert.doesNotMatch(await page.locator('main').innerText(),/\bNaN\b/);await screenshot('closure-'+view+'-empty');
   await page.getByLabel('Dados vazios',{exact:true}).uncheck();await page.getByLabel('Falha sintética de API',{exact:true}).check();await page.getByRole('button',{name:view,exact:true}).click();await page.getByRole('alert').first().waitFor();await screenshot('closure-'+view+'-error');
  });

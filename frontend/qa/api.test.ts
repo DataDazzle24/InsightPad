@@ -220,3 +220,7 @@ it('A04 details preserve existing stock and sales reader field contracts',async(
  const payload={clientOperationId:'details-sale',branchId:uuid(1),cashSessionId:uuid(60),items:[{product_id:uuid(101),quantity:2,requested_price:1200}],payments:[{payment_method_id:uuid(50),amount_cents:3000,sequence:1}]};await qaOperation('PostSale',{payload});
  expect(await box('SaleDetails',{saleId:'details-sale'})).toMatchObject({sale:{total_cents:2400},items:[{productName:'PRODUTO QA 002',unitSalePriceCents:1200,totalCents:2400}],payments:[{paymentMethodName:'DINHEIRO',amountCents:3000}]})
 })
+
+it('A05 negative monetary fields never persist, and the interactive profile reconciles cash ledger entries',async()=>{
+ const before=inspectFixtures().products;for(const field of ['costPriceCents','salePriceCents'])await expect(qaOperation('SaveProduct',{id:uuid(101),payload:{name:'INVALIDO', [field]:-1}})).rejects.toThrow('monetário');expect(inspectFixtures().products).toEqual(before)
+})
