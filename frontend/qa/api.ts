@@ -32,8 +32,8 @@ export function resetFixtures(){
  nextId=13000;mutations.clear();cashMovements=[];sales=[]
  sessions=[{id:uuid(60),branchId:uuid(1),status:'OPEN',openedAt:when,openingAmountCents:'10000',expectedAmountCents:'10000',movementCount:0}]
  policy={requireOpenSession:true,operatorDiscountPercent:5,operatorSurchargePercent:5,allowOperatorClose:true,operatorWithdrawalLimitCents:100000,operatorCloseDifferenceLimitCents:100000}
- categories=Array.from({length:300},(_,i)=>({id:uuid(300+i),name:`CATEGORIA QA ${String(i+1).padStart(3,'0')}`,active:i%11!==10,createdAt:when,updatedAt:when,productCount:i%4,subcategoryCount:i%3}))
- subcategories=Array.from({length:300},(_,i)=>({id:uuid(800+i),name:`SUBCATEGORIA QA ${String(i+1).padStart(3,'0')}`,categoryId:uuid(300+i%10),categoryName:`CATEGORIA QA ${String(i%10+1).padStart(3,'0')}`,active:i%11!==10,createdAt:when,updatedAt:when,productCount:i%4}))
+ categories=Array.from({length:300},(_,i)=>({id:uuid(300+i),name:`CATEGORIA QA ${String(i+1).padStart(3,'0')}`,active:i%11!==10,createdAt:when,updatedAt:when}))
+ subcategories=Array.from({length:300},(_,i)=>({id:uuid(800+i),name:`SUBCATEGORIA QA ${String(i+1).padStart(3,'0')}`,categoryId:uuid(300+i%10),categoryName:`CATEGORIA QA ${String(i%10+1).padStart(3,'0')}`,active:i%11!==10,createdAt:when,updatedAt:when}))
  movements=Array.from({length:501},(_,i)=>({id:uuid(2000+i),operationId:'qa-movement-'+i,occurredAt:when,quantity:i%5+1,unitCostCents:products[i%products.length]!.costPriceCents,status:i%13===0?'REVERSED':'POSTED',typeCode:i%2?'LOSS':'MANUAL_IN',typeName:i%2?'Perda':'Entrada',direction:i%2?'OUT':'IN',productId:products[i%products.length]!.id,productName:products[i%products.length]!.name,branchId:branches[i%2]!.id,branchName:branches[i%2]!.name}))
  transfers=Array.from({length:201},(_,i)=>({id:uuid(3000+i),operationId:'qa-transfer-'+i,status:'COMPLETED',requestedAt:when,sourceBranchId:branches[0]!.id,destinationBranchId:branches[1]!.id,sourceBranch:branches[0]!.name,destinationBranch:branches[1]!.name,totalQuantity:i%5+1,itemCount:1}))
  receipts.clear();qaState.logs=[];qaState.unsupported=[]
@@ -74,6 +74,12 @@ const sum=(rows:Row[],key:string)=>rows.reduce((n,r)=>n+Number(r[key]??0),0)
 export function useBoundaryLedger(){
  const specs=[['2025-12-31',0,0,0],['2026-01-01',1,1,0],['2026-01-31',2,800,900],['2026-02-01',3,1234,1234],['2026-02-28',4,100001,1],['2026-03-01',5,800,900]] as const
  ledger=specs.map(([date,i,revenueCents,costCents])=>immutable({...structuredClone(products[i]!),category:'CATEGORIA QA 001',subcategory:'SUBCATEGORIA QA 001',saleId:'boundary-'+i,source:i%2?'IFOOD':'POS',supplierId:uuid(20),branchId:branches[i%2]!.id,date,quantity:1,revenueCents,providerFeeCents:0,netRevenueCents:revenueCents,costCents,grossProfitCents:revenueCents-costCents,profitCents:revenueCents-costCents,marginPercent:revenueCents?(revenueCents-costCents)/revenueCents*100:0,lineCount:1}))
+}
+// Separate interactive flow profile: opening ledger and balances reconcile by ID.
+export function useFlowFixtures(){
+ resetFixtures();const product=products.find(p=>p.id===uuid(101))!;products=[product]
+ product.balances.forEach((b,i)=>{b.quantity=i===0?10:0;b.availableQuantity=b.quantity;b.reservedQuantity=0})
+ movements=[{id:uuid(1999),operationId:'qa-flow-opening',occurredAt:when,quantity:10,unitCostCents:product.costPriceCents,status:'POSTED',typeCode:'MANUAL_IN',typeName:'Entrada inicial QA',direction:'IN',productId:product.id,productName:product.name,branchId:uuid(1),branchName:branches[0]!.name}];transfers=[];ledger=[]
 }
 const analyticalRows=(v:Row,period=true)=>{
  const f=(v.filters??{}) as Row,keys:Record<string,string>={products:'id',categories:'categoryId',subcategories:'subcategoryId',branches:'branchId',suppliers:'supplierId',sources:'source'}
@@ -178,7 +184,7 @@ export async function qaOperation(name:string,variables:unknown={}){
   for(const t of transfers)if(t.operationId===v.operationId&&!movements.some(m=>m.operationId===t.operationId&&m.status==='POSTED'))t.status='CANCELLED'
   return {data:{_execute:1}}
  }
- case 'StockOperationDetails':return box({items:movements.filter(m=>m.operationId===v.operationId),fiscal:null})
+ case 'StockOperationDetails':return box({movements:movements.filter(m=>m.operationId===v.operationId&&branchAllowed(m.branchId)),fiscalDocument:null})
  case 'FinancialIndicatorsDashboard':return box(financialFixture(v))
  case 'OperationalAnalyticsDashboard':return box(operationalFixture(v))
  case 'SalesChannelAnalyticsDashboard':{
@@ -224,7 +230,7 @@ export async function qaOperation(name:string,variables:unknown={}){
   Object.assign(session,{expectedAmountCents:String(Number(session.expectedAmountCents)+total),movementCount:Number(session.movementCount)+1});
   const receipt={id:String(p.clientOperationId),date:when,status:'COMPLETED',offline:false,operator:'OPERADOR FICTÍCIO QA',customer:'Consumidor final',tenant:{legalName:'EMPRESA FICTÍCIA QA',tradeName:'QA'},branch:{name:branches.find(b=>b.id===p.branchId)!.name},items,payments:tender,subtotalCents:subtotal,discountCents:discount,surchargeCents:surcharge,totalCents:total,changeCents:paid-total};sales.push({...receipt,branchId:p.branchId,cashSessionId:session.id});return {_execute:1,result:{receipt:{data:receipt}}}
  });if(qaState.ackLoss&&!replay)throw Error('QA: confirmação perdida após persistência sintética');return {data:data as {_execute:number;result:{receipt:unknown}}}}
- case 'SaleDetails':{const sale=sales.find(s=>s.id===v.saleId&&branchAllowed(s.branchId));if(!sale)throw Error('QA: venda inválida');return box({sale,branch:sale.branch,customer:null,items:sale.items,payments:sale.payments})}
+ case 'SaleDetails':{const sale=sales.find(s=>s.id===v.saleId&&branchAllowed(s.branchId));if(!sale)throw Error('QA: venda inválida');return box({sale:{...sale,total_cents:sale.totalCents,source:'POS'},branch:sale.branch,customer:null,items:(sale.items as Row[]).map(i=>({...i,productName:i.name,unitSalePriceCents:i.unitPriceCents,discountCents:0,totalCents:Math.round(Number(i.quantity)*Number(i.unitPriceCents))})),payments:(sale.payments as Row[]).map(p=>({...p,paymentMethodName:p.name}))})}
  case 'CancelSale':{
   if(!String(v.reason??'').trim())throw Error('QA: motivo obrigatório');
   const sale=sales.find(s=>s.id===v.saleId);if(!sale||!branchAllowed(sale.branchId))throw Error('QA: venda inválida');

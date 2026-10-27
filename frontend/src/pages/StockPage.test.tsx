@@ -59,3 +59,9 @@ it('exports the selected balance levels in the same displayed order and clears t
  let csv='';const OriginalBlob=globalThis.Blob;vi.stubGlobal('Blob',class{constructor(parts:string[]){csv=parts.join('')}});const oldCreate=URL.createObjectURL,oldRevoke=URL.revokeObjectURL;URL.createObjectURL=()=> 'blob:qa-filter';URL.revokeObjectURL=()=>{};vi.spyOn(HTMLAnchorElement.prototype,'click').mockImplementation(()=>{});
  try{await click(find('downloadCSV'));expect(csv).toContain('OUTRO SALDO');expect(csv).not.toContain('"Produto";""');expect(csv.trim().split('\n')).toHaveLength(2);await click(find('Limpar filtros'));await click(find('downloadCSV'));expect(csv.trim().split('\n')).toHaveLength(3)}finally{vi.stubGlobal('Blob',OriginalBlob);URL.createObjectURL=oldCreate;URL.revokeObjectURL=oldRevoke}
 })
+
+it('counts high stock only strictly above a positive maximum and preserves all physical quantities',async()=>{
+ const data=workspace();data.products=[...data.products,...[10.001,100,100].map((quantity,i)=>({...data.products[0],id:'edge'+i,name:'EDGE'+i,maximumStock:i===0?10:0,balances:[{...data.products[0].balances[0],quantity,availableQuantity:quantity}]}))];mocks.workspace.mockResolvedValue({data:{_select:[{data}]}});
+ await render();expect(find('Estoque alto1')).toBeTruthy();await click(find('Estoque alto1'));expect(container.querySelector('.stock-table tbody')?.textContent).toContain('EDGE0');expect(container.querySelectorAll('.stock-table tbody tr')).toHaveLength(1)
+})
+it('rejects transfer on a second visible branch when manage permission is absent',async()=>{const data=workspace();data.branches.push({id:'b2',name:'Filial'});mocks.manage=false;mocks.workspace.mockResolvedValue({data:{_select:[{data}]}});await render();expect((find('Transferir') as HTMLButtonElement).disabled).toBe(true);await click(find('Transferir'));expect(mocks.transfer).not.toHaveBeenCalled()})

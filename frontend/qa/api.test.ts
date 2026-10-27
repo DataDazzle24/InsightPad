@@ -214,3 +214,9 @@ it('A07 orders all 201 transfers with stable ID ties, date bounds, scope and non
  expect((await read({filters:{from:fixtureDate+'T12:00:00.001Z'}})).transferCount).toBe(0)
  qaState.allowedBranches=[uuid(1)];expect((await read({})).transferCount).toBe(0);qaState.allowedBranches=[];expect((await read({})).transferCount).toBe(201)
 })
+
+it('A04 details preserve existing stock and sales reader field contracts',async()=>{
+ const movement=inspectFixtures().movements[0]!;expect(await box('StockOperationDetails',{operationId:movement.operationId})).toMatchObject({movements:[movement],fiscalDocument:null});
+ const payload={clientOperationId:'details-sale',branchId:uuid(1),cashSessionId:uuid(60),items:[{product_id:uuid(101),quantity:2,requested_price:1200}],payments:[{payment_method_id:uuid(50),amount_cents:3000,sequence:1}]};await qaOperation('PostSale',{payload});
+ expect(await box('SaleDetails',{saleId:'details-sale'})).toMatchObject({sale:{total_cents:2400},items:[{productName:'PRODUTO QA 002',unitSalePriceCents:1200,totalCents:2400}],payments:[{paymentMethodName:'DINHEIRO',amountCents:3000}]})
+})
