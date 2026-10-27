@@ -265,12 +265,14 @@ export async function qaOperation(name:string,variables:unknown={}){
    for(const x of prepared){const values={...x,categoryName:sub?categories.find(c=>c.id===x.categoryId)!.name:undefined,updatedAt:when};if(v.id)Object.assign(list.find(x=>x.id===v.id)!,values);else list.push({...values,id:uuid(nextId++),active:true,createdAt:when})}
    return {data:{_execute:prepared.length}}
   }
-  const ids=(v.ids??[v.id]) as string[],active=v.active??/^Restore/.test(name)
+  const ids=[...new Set((v.ids??[v.id]) as string[])],active=v.active??/^Restore/.test(name)
   if(!Array.isArray(ids)||!ids.length||typeof active!=='boolean'||ids.some(id=>!list.some(row=>row.id===id)))throw Error('QA: registros inexistentes')
   const rows=list.filter(r=>ids.includes(String(r.id))),key=(r:Row)=>String(sub?r.categoryId:'')+'|'+normalizeCatalogName(String(r.name))
   if(active&&rows.some(r=>list.some(x=>x.id!==r.id&&(x.active||ids.includes(String(x.id)))&&key(x)===key(r))))throw Error('QA: nome duplicado')
   if(active&&sub&&rows.some(r=>!categories.some(c=>c.id===r.categoryId&&c.active)))throw Error('QA: categoria obrigatória')
-  for(const row of rows)row.active=active
+  // SQL status mutations are atomic: one ineligible ID rejects the whole batch.
+  if(!active&&rows.some(r=>products.some(p=>p.active&&p[sub?'subcategoryId':'categoryId']===r.id)||!sub&&subcategories.some(c=>c.active&&c.categoryId===r.id)))return {data:{_execute:0}}
+  for(const row of rows)Object.assign(row,{active,deletedAt:active?null:when})
   return {data:{_execute:rows.length}}
  }
  qaState.unsupported.push(name)

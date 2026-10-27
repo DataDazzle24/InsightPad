@@ -224,3 +224,11 @@ it('A04 details preserve existing stock and sales reader field contracts',async(
 it('A05 negative monetary fields never persist, and the interactive profile reconciles cash ledger entries',async()=>{
  const before=inspectFixtures().products;for(const field of ['costPriceCents','salePriceCents'])await expect(qaOperation('SaveProduct',{id:uuid(101),payload:{name:'INVALIDO', [field]:-1}})).rejects.toThrow('monetário');expect(inspectFixtures().products).toEqual(before)
 })
+
+it('V1C-A03 archive matches SQL eligibility and atomic batches without cascading active links',async()=>{
+ for(const [operation,id]of [['ArchiveCategory',uuid(300)],['ArchiveSubcategory',uuid(800)]] as const){const before=inspectFixtures();expect((await qaOperation(operation,{id})).data).toMatchObject({_execute:0});expect(inspectFixtures()).toEqual(before)}
+ const before=inspectFixtures();expect((await qaOperation('SetCategoriesStatusBatch',{ids:[uuid(300),uuid(598)],active:false})).data).toMatchObject({_execute:0});expect(inspectFixtures()).toEqual(before)
+ expect((await qaOperation('SetCategoriesStatusBatch',{ids:[uuid(598)],active:false})).data).toMatchObject({_execute:1});expect(inspectFixtures().categories.find(c=>c.id===uuid(598))).toMatchObject({active:false})
+ // No active product/child: existing inactivation rule permits the row once.
+ expect((await qaOperation('ArchiveSubcategory',{id:uuid(1098)})).data).toMatchObject({_execute:1});expect(inspectFixtures().subcategories.find(c=>c.id===uuid(1098))).toMatchObject({active:false})
+})
