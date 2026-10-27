@@ -210,7 +210,7 @@ export async function qaOperation(name:string,variables:unknown={}){
   const kit=(v.components??[]) as Row[];
   if(!Array.isArray(kit)||p.bundleProduct&&(!kit.length||new Set(kit.map(x=>x.productId)).size!==kit.length))throw Error('QA: composição inválida');
   for(const item of kit){const child=products.find(p=>p.id===item.productId);if(!child||child.id===v.id||!Number.isFinite(Number(item.quantity))||Number(item.quantity)<=0||!child.weightedProduct&&!Number.isInteger(Number(item.quantity)))throw Error('QA: quantidade de componente inválida')}
-  const row={...structuredClone(current??initialProducts()[0]!),...p,id:current?.id??uuid(nextId++),name:String(p.name).trim().toUpperCase(),salePriceCents:String(integer(p.salePriceCents??current?.salePriceCents??0)),costPriceCents:String(integer(p.costPriceCents??current?.costPriceCents??0)),updatedAt:when};
+  const row={...(current?structuredClone(current):{...initialProducts()[0]!,internalCode:'',ean:''}),...p,id:current?.id??uuid(nextId++),name:String(p.name).trim().toUpperCase(),salePriceCents:String(integer(p.salePriceCents??current?.salePriceCents??0)),costPriceCents:String(integer(p.costPriceCents??current?.costPriceCents??0)),updatedAt:when};
   components.set(row.id,structuredClone(kit));if(current)Object.assign(current,row);else products.push({...row,balances:branches.map(b=>({branchId:b.id,branchName:b.name,quantity:0,reservedQuantity:0,availableQuantity:0,averageCostCents:row.costPriceCents}))});return {data:{_execute:1}}
  }
  case 'SetProductsStatusBatch':{

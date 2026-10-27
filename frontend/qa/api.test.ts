@@ -243,3 +243,10 @@ it('existing stock correction and fiscal snapshot model the SQL contract without
  const details=await box('StockOperationDetails',{operationId:payload.clientOperationId});expect(details.fiscalDocument).toMatchObject({documentNumber:'SYNTHETIC-ONLY',status:'REGISTERED'});
  const correction={...payload,clientOperationId:'stock-correction-fiscal',replacesOperationId:payload.clientOperationId,items:[{product_id:uuid(101),quantity:3,unit_cost_cents:800}]};await qaOperation('SaveStockBatch',{payload:correction});await qaOperation('SaveStockBatch',{payload:correction});expect(inspectFixtures().products.find(p=>p.id===uuid(101))!.balances[0]!.quantity).toBe(initial+3);expect(inspectFixtures().movements.filter(m=>m.operationId===payload.clientOperationId).every(m=>m.status==='REVERSED')).toBe(true)
 })
+it('new product fixtures do not inherit another product unique codes on a later edit',async()=>{
+ await qaOperation('SaveProduct',{payload:{name:'COMBO SEM CODIGO',bundleProduct:true,weightedProduct:false,costPriceCents:1600,salePriceCents:3000},components:[{productId:uuid(101),quantity:2}]});
+ const product=inspectFixtures().products.find(p=>p.name==='COMBO SEM CODIGO')!;expect(product.internalCode).toBe('');expect(product.ean).toBe('');
+ await qaOperation('SaveProduct',{id:product.id,payload:{...product,name:'COMBO EDITADO',costPriceCents:2249},components:[{productId:uuid(103),quantity:1.5}]});
+ expect(inspectFixtures().products.find(p=>p.id===product.id)).toMatchObject({name:'COMBO EDITADO',costPriceCents:'2249'});
+ await expect(qaOperation('SaveProduct',{id:product.id,payload:{name:'INVALIDO',internalCode:'QA1'}})).rejects.toThrow('duplicado');
+});
