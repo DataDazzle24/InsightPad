@@ -65,7 +65,7 @@ it('reconciles monetary cards, daily rows, product rows and customer counts from
 })
 it('selects immutable analytical records without recomputing quantities or money',async()=>{
  const read=async(v={})=>((await qaOperation('FinancialIndicatorsDashboard',v)).data as {_select:{data:{products:Record<string,unknown>[]}}[]})._select[0]!.data.products;
- const all=await read(),target=all[17]!;const selected=await read({filters:{products:[target.id]}});expect(selected).toEqual([target]);
+ const all=await read(),target=all[17]!;expect(target.category).toBe('CATEGORIA QA 001');expect(target.subcategory).toBe('SUBCATEGORIA QA 001');const selected=await read({filters:{products:[target.id]}});expect(selected).toEqual([target]);
  await qaOperation('SaveProduct',{id:target.id,payload:{name:'EDITADO SEM REESCREVER HISTÓRICO',salePriceCents:'9999'}});expect(await read({filters:{products:[target.id]}})).toEqual([target]);expect(await read()).toEqual(all);
 })
 it('derives category/subcategory counts from actual product relationships',async()=>{
@@ -99,4 +99,8 @@ it('keeps uncertain sale ACK retry payload and applies cash and stock once',asyn
  const payload={clientOperationId:'sale-ack',branchId:uuid(1),cashSessionId:uuid(60),items:[{product_id:uuid(101),quantity:2,requested_price:1200}],payments:[{payment_method_id:uuid(50),amount_cents:3000,sequence:1}]};qaState.ackLoss=true;
  await expect(qaOperation('PostSale',{payload})).rejects.toThrow('confirmação perdida');await qaOperation('PostSale',{payload});await expect(qaOperation('PostSale',{payload:{...payload,discountCents:1}})).rejects.toThrow('conflitante');
  expect((await qaOperation('SalesWorkspace',{branchId:uuid(1)})).data).toMatchObject({_select:[{data:{openSession:{expectedAmountCents:'12400',movementCount:1}}}]});
+})
+it('reconciles category and subcategory analytical groups with the immutable financial ledger',async()=>{
+ const f=(await qaOperation('FinancialIndicatorsDashboard')).data as {_select:{data:{cards:{revenueCents:number}}}[]};const o=(await qaOperation('OperationalAnalyticsDashboard')).data as {_select:{data:{categories:{level:string;revenueCents:number}[]}}[]};
+ for(const level of ['Categoria','Subcategoria'])expect(o._select[0]!.data.categories.filter(x=>x.level===level).reduce((n,x)=>n+x.revenueCents,0)).toBe(f._select[0]!.data.cards.revenueCents);
 })
