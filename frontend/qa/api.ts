@@ -1,3 +1,4 @@
+import {isValidCpf,isValidCnpj,normalizeCatalogName} from '../src/utils/registration'
 // Deterministic, memory-only fixtures. This module never imports Firebase or fetch.
 type Row=Record<string,unknown>
 export const connectorConfig={connector:'qa-only',service:'fixture',location:'local'}
@@ -25,7 +26,7 @@ const mutations=new Map<string,{hash:string;data:unknown}>()
 const receipts=new Map<string,{hash:string;kind:string}>()
 export function resetFixtures(){
  branches.splice(0,branches.length,...initialBranches());components.clear();products=initialProducts();
- ledger=products.map((p,i)=>{const quantity=i%9+1,revenueCents=quantity*Number(p.salePriceCents),providerFeeCents=Math.round(revenueCents*.05),costCents=quantity*Number(p.costPriceCents),netRevenueCents=revenueCents-providerFeeCents,grossProfitCents=revenueCents-costCents,profitCents=netRevenueCents-costCents;return immutable({...structuredClone(p),category:p.categoryName,subcategory:p.subcategoryName,branchId:branches[i%2]!.id,date:fixtureDate,quantity,revenueCents,providerFeeCents,netRevenueCents,costCents,grossProfitCents,profitCents,marginPercent:revenueCents?profitCents/revenueCents*100:0,lineCount:1})});
+ ledger=products.map((p,i)=>{const quantity=i%9+1,revenueCents=quantity*Number(p.salePriceCents),providerFeeCents=Math.round(revenueCents*.05),costCents=quantity*Number(p.costPriceCents),netRevenueCents=revenueCents-providerFeeCents,grossProfitCents=revenueCents-costCents,profitCents=netRevenueCents-costCents;return immutable({...structuredClone(p),category:p.categoryName,subcategory:p.subcategoryName,branchId:branches[i%2]!.id,saleId:'qa-ledger-'+i,source:i%2?'IFOOD':'POS',supplierId:uuid(20),date:fixtureDate,quantity,revenueCents,providerFeeCents,netRevenueCents,costCents,grossProfitCents,profitCents,marginPercent:revenueCents?profitCents/revenueCents*100:0,lineCount:1})});
  customers=Array.from({length:101},(_,i)=>({id:uuid(4000+i),name:`PESSOA FICTÍCIA QA ${i}`,active:true,createdAt:when,updatedAt:when}));
  suppliers=Array.from({length:101},(_,i)=>({id:uuid(4000+i),name:`FORNECEDOR FICTÍCIO QA ${i+1}`,legalName:`FORNECEDOR FICTÍCIO QA ${i+1}`,tradeName:`FORNECEDOR QA ${i+1}`,active:true,createdAt:when,updatedAt:when}));promotions=[];
  nextId=13000;mutations.clear();cashMovements=[];sales=[]
@@ -60,7 +61,7 @@ const sorted=(rows:Row[],v:Row,date:string)=>[...rows].sort((a,b)=>{
 const stockWorkspace=(v:Row)=>{
  const f=(v.filters??{}) as Row,has=(key:string,value:unknown)=>!Array.isArray(f[key])||!(f[key] as unknown[]).length||(f[key] as unknown[]).includes(value);
  const text=String(f.search??'').toLocaleLowerCase('pt-BR');
- const date=(value:unknown)=>(!f.from||String(value)>=String(f.from))&&(!f.to||String(value)<=String(f.to));
+ const date=(value:unknown)=>(!f.from||Date.parse(String(value))>=Date.parse(String(f.from)))&&(!f.to||Date.parse(String(value))<=Date.parse(String(f.to)));
  const ms=(qaState.empty?[]:movements).filter(m=>branchAllowed(m.branchId)&&has('branches',m.branchId)&&has('types',m.typeCode)&&has('products',m.productId)&&date(m.occurredAt)&&[m.productName,m.branchName,m.typeName,m.operationId].join(' ').toLocaleLowerCase('pt-BR').includes(text));
  const ts=(qaState.empty?[]:transfers).filter(t=>branchAllowed(t.sourceBranchId)&&branchAllowed(t.destinationBranchId)&&(has('branches',t.sourceBranchId)||has('branches',t.destinationBranchId))&&date(t.requestedAt)&&[t.sourceBranch,t.destinationBranch,t.operationId].join(' ').toLocaleLowerCase('pt-BR').includes(text));
  const offset=Math.max(0,Number(v.offset??0)),limit=Math.min(1000,Math.max(1,Number(v.limit??100)));
@@ -69,16 +70,30 @@ const stockWorkspace=(v:Row)=>{
 // QA-only analytical ledgers. Cards, tables and exports derive from the same rows.
 const inPeriod=(date:unknown,v:Row)=>(!v.from||String(date).slice(0,10)>=String(v.from))&&(!v.to||String(date).slice(0,10)<=String(v.to))
 const sum=(rows:Row[],key:string)=>rows.reduce((n,r)=>n+Number(r[key]??0),0)
+// Fixed boundary fixture: does not change the normal mass or product contracts.
+export function useBoundaryLedger(){
+ const specs=[['2025-12-31',0,0,0],['2026-01-01',1,1,0],['2026-01-31',2,800,900],['2026-02-01',3,1234,1234],['2026-02-28',4,100001,1],['2026-03-01',5,800,900]] as const
+ ledger=specs.map(([date,i,revenueCents,costCents])=>immutable({...structuredClone(products[i]!),category:'CATEGORIA QA 001',subcategory:'SUBCATEGORIA QA 001',saleId:'boundary-'+i,source:i%2?'IFOOD':'POS',supplierId:uuid(20),branchId:branches[i%2]!.id,date,quantity:1,revenueCents,providerFeeCents:0,netRevenueCents:revenueCents,costCents,grossProfitCents:revenueCents-costCents,profitCents:revenueCents-costCents,marginPercent:revenueCents?(revenueCents-costCents)/revenueCents*100:0,lineCount:1}))
+}
+const analyticalRows=(v:Row,period=true)=>{
+ const f=(v.filters??{}) as Row,keys:Record<string,string>={products:'id',categories:'categoryId',subcategories:'subcategoryId',branches:'branchId',suppliers:'supplierId',sources:'source'}
+ return (qaState.empty?[]:ledger).filter(r=>(!period||inPeriod(r.date,v))&&branchAllowed(r.branchId)&&Object.entries(keys).every(([key,field])=>!Array.isArray(f[key])||!(f[key] as unknown[]).length||(f[key] as unknown[]).includes(r[field])))
+}
+const financialCards=(rows:Readonly<Row>[])=>{
+ const revenueCents=sum(rows,'revenueCents'),profitCents=sum(rows,'profitCents'),volume=new Set(rows.map(r=>r.saleId)).size
+ return {volume,revenueCents,providerFeeCents:sum(rows,'providerFeeCents'),netRevenueCents:sum(rows,'netRevenueCents'),costCents:sum(rows,'costCents'),grossProfitCents:sum(rows,'grossProfitCents'),profitCents,marginPercent:revenueCents?profitCents/revenueCents*100:0,ticketCents:volume?Math.round(revenueCents/volume):0,financialPendingSales:0}
+}
 function financialFixture(v:Row){
- const f=(v.filters??{}) as Row
- const rows=(qaState.empty?[]:ledger).filter(r=>inPeriod(r.date,v)&&branchAllowed(r.branchId)&&['products','categories','subcategories','branches'].every(key=>!Array.isArray(f[key])||!(f[key] as unknown[]).length||(f[key] as unknown[]).includes(r[({products:'id',categories:'categoryId',subcategories:'subcategoryId',branches:'branchId'} as Record<string,string>)[key]!])));
-
- const revenueCents=sum(rows,'revenueCents'),profitCents=sum(rows,'profitCents'),volume=rows.length
- const cards={volume,revenueCents,providerFeeCents:sum(rows,'providerFeeCents'),netRevenueCents:sum(rows,'netRevenueCents'),costCents:sum(rows,'costCents'),grossProfitCents:sum(rows,'grossProfitCents'),profitCents,marginPercent:revenueCents?profitCents/revenueCents*100:0,ticketCents:volume?Math.round(revenueCents/volume):0,financialPendingSales:0}
- return {options:{branches,products,categories,subcategories,suppliers:[],sources:[]},cards,monthly:{lastVolume:volume,averageVolume:volume,volumeGrowth:0,lastProfitCents:profitCents,averageProfitCents:profitCents,profitGrowth:0,months:volume?1:0},daily:volume?[{date:fixtureDate,...cards}]:[],products:rows}
+ const rows=analyticalRows(v),cards=financialCards(rows)
+ const days=[...new Set(rows.map(r=>String(r.date)))].sort(),daily=days.map(date=>({date,...financialCards(rows.filter(r=>r.date===date))}))
+ const historical=analyticalRows(v,false).filter(r=>String(r.date).slice(0,7)<String(v.to??fixtureDate).slice(0,7)),months=[...new Set(historical.map(r=>String(r.date).slice(0,7)))].sort().slice(-12),closed=months.map(month=>financialCards(historical.filter(r=>String(r.date).startsWith(month))))
+ const last=closed.at(-1),averageVolume=closed.length?sum(closed,'volume')/closed.length:0,averageProfitCents=closed.length?Math.round(sum(closed,'profitCents')/closed.length):0,lastVolume=last?.volume??0,lastProfitCents=last?.profitCents??0
+ const productRows:Row[]=[...new Set(rows.map(r=>r.id))].map(id=>{const own=rows.filter(r=>r.id===id),totals=financialCards(own);return {...own[0],...totals,quantity:sum(own,'quantity'),lineCount:own.length}})
+ return {options:{branches:branches.filter(b=>branchAllowed(b.id)),products,categories,subcategories,suppliers:[{id:uuid(20),name:'FORNECEDOR QA'}],sources:[{id:'POS',name:'Balcão / PDV'},{id:'IFOOD',name:'iFood'}]},cards,monthly:{lastVolume,averageVolume,volumeGrowth:averageVolume?(lastVolume-averageVolume)/averageVolume*100:0,lastProfitCents,averageProfitCents,profitGrowth:averageProfitCents?(lastProfitCents-averageProfitCents)/averageProfitCents*100:0,months:closed.length},daily,products:productRows}
 }
 function operationalFixture(v:Row){
- const ms=(qaState.empty?[]:movements).filter(m=>m.status==='POSTED'&&branchAllowed(m.branchId)&&inPeriod(m.occurredAt,v))
+ const filters=(v.filters??{}) as Row
+ const ms=(qaState.empty?[]:movements).filter(m=>m.status==='POSTED'&&branchAllowed(m.branchId)&&inPeriod(m.occurredAt,v)&&(!Array.isArray(filters.branches)||!filters.branches.length||filters.branches.includes(m.branchId)))
  const rows=(qaState.empty?[]:products).map(p=>{const own=ms.filter(m=>m.productId===p.id),ins=own.filter(m=>m.direction==='IN'),outs=own.filter(m=>m.direction==='OUT');return {...p,inQuantity:sum(ins,'quantity'),outQuantity:sum(outs,'quantity'),netQuantity:sum(ins,'quantity')-sum(outs,'quantity'),valueCents:own.reduce((n,m)=>n+(m.direction==='IN'?1:-1)*Number(m.quantity)*Number(m.unitCostCents),0)}})
  const ins=ms.filter(m=>m.direction==='IN'),sale=ms.filter(m=>m.typeCode==='SALE'),loss=ms.filter(m=>m.typeCode==='LOSS'),value=(xs:Row[])=>xs.reduce((n,m)=>n+Number(m.quantity)*Number(m.unitCostCents),0)
  const stockCards={inboundQuantity:sum(ins,'quantity'),inboundValueCents:value(ins),freightCents:0,extraCostsCents:0,saleQuantity:sum(sale,'quantity'),saleCostCents:value(sale),saleProfitCents:0,lossQuantity:sum(loss,'quantity'),lossValueCents:value(loss)}
@@ -121,9 +136,9 @@ export async function qaOperation(name:string,variables:unknown={}){
   const old=v.id?list.find(x=>x.id===v.id):undefined;if(v.id&&!old)throw Error('QA: registro inexistente');
   const label=String(name==='SaveSupplier'?p.legalName??'':p.name??'').trim(),cpf=String(p.cpf??'').replace(/\D/g,''),cnpj=String(p.cnpj??'').replace(/\D/g,'');
   if(name!=='SavePromotion'&&label.length<2)throw Error('QA: nome obrigatório');
-  if((cpf&&cnpj)||(cpf&&cpf.length!==11)||(cnpj&&cnpj.length!==14))throw Error('QA: documento inválido');
+  if((cpf&&cnpj)||(cpf&&!isValidCpf(cpf))||(cnpj&&!isValidCnpj(cnpj)))throw Error('QA: documento inválido');
   if(list.some(x=>x.id!==v.id&&(x as Row).active!==false&&(name==='SaveBranch'?(String(x.name).trim().toUpperCase()===label.toUpperCase()||p.internalCode&&(x as Row).internalCode===p.internalCode):((cpf&&(x as Row).cpf===cpf)||(cnpj&&(x as Row).cnpj===cnpj)))))throw Error('QA: registro duplicado');
-  if(name==='SavePromotion'){integer(p.promotionalPriceCents);if(!products.some(x=>x.id===p.productId)||!p.startsAt||!p.endsAt||String(p.endsAt)<=String(p.startsAt))throw Error('QA: promoção inválida')}
+  if(name==='SavePromotion'){const amount=integer(p.promotionalPriceCents),product=products.find(x=>x.id===p.productId&&x.active);if(!product||amount<=0||amount*100>=Number(product.salePriceCents)*95||!Number.isFinite(Date.parse(String(p.startsAt)))||!Number.isFinite(Date.parse(String(p.endsAt)))||Date.parse(String(p.endsAt))<=Date.parse(String(p.startsAt))||promotions.some(x=>x.id!==v.id&&x.active&&x.productId===p.productId&&Date.parse(String(x.startsAt))<Date.parse(String(p.endsAt))&&Date.parse(String(x.endsAt))>Date.parse(String(p.startsAt))))throw Error('QA: promoção inválida')}
   const row={...p,cpf,cnpj,id:String(old?.id??uuid(nextId++)),name:label,active:p.active??true,createdAt:(old as Row|undefined)?.createdAt??when,updatedAt:when};
   if(old)Object.assign(old,row);else list.push(row);return {data:{_execute:1}}
  }
@@ -154,10 +169,23 @@ export async function qaOperation(name:string,variables:unknown={}){
   if(qaState.ackLoss&&!old)throw new Error('QA: confirmação perdida após persistência sintética')
   return {data:{_execute:old?0:1,confirmation:{receipt:{confirmed:true,replay:!!old,operationId:key,kind}}}}
  }
+ // Mirrors ReverseStockOperation eligibility. No invented reservation/fiscal endpoint.
+ case 'ReverseStockOperation':{
+  const ids=(v.movementIds??[]) as string[];if(!Array.isArray(ids)||new Set(ids).size!==ids.length||String(v.reason??'').trim().length<5)throw Error('QA: estorno inválido')
+  const rows=movements.filter(m=>ids.length?ids.includes(String(m.id)):v.operationId&&m.operationId===v.operationId)
+  if(!rows.length||ids.length&&rows.length!==ids.length||rows.some(m=>m.status!=='POSTED'||m.typeCode==='SALE'||m.typeCode==='SALE_REVERSAL'||!branchAllowed(m.branchId)||ids.length&&String(m.typeCode).startsWith('TRANSFER'))||ids.length&&new Set(rows.map(m=>m.branchId)).size!==1)throw Error('QA: estorno não elegível')
+  for(const m of rows){const balance=products.find(p=>p.id===m.productId)!.balances.find(b=>b.branchId===m.branchId)!;const delta=(m.direction==='OUT'?1:-1)*Number(m.quantity);balance.quantity+=delta;balance.availableQuantity+=delta;m.status='REVERSED'}
+  for(const t of transfers)if(t.operationId===v.operationId&&!movements.some(m=>m.operationId===t.operationId&&m.status==='POSTED'))t.status='CANCELLED'
+  return {data:{_execute:1}}
+ }
  case 'StockOperationDetails':return box({items:movements.filter(m=>m.operationId===v.operationId),fiscal:null})
  case 'FinancialIndicatorsDashboard':return box(financialFixture(v))
  case 'OperationalAnalyticsDashboard':return box(operationalFixture(v))
- case 'SalesChannelAnalyticsDashboard':return box({options:{branches,connections:[]},cards:{orders:25,sales:25,grossRevenueCents:30000},daily:[],byChannel:[],fees:[],payments:[],topProducts:[]})
+ case 'SalesChannelAnalyticsDashboard':{
+  const filter=(v.filters??v) as Row,rows=analyticalRows(v).filter(r=>r.source==='IFOOD'&&(!filter.branchId||r.branchId===filter.branchId)&&(!filter.connectionId||filter.connectionId===uuid(70)))
+  const metrics=(rows:Readonly<Row>[])=>{const c=financialCards(rows);return {...c,orders:c.volume,sales:c.volume,cancelledOrders:0,grossRevenueCents:c.revenueCents,customerPaidCents:c.revenueCents,partnerSubsidyCents:0,merchantDiscountCents:0,financialAdjustmentsCents:0,averageTicketCents:c.ticketCents}}
+  return box({options:{branches:branches.filter(b=>branchAllowed(b.id)),connections:[{id:uuid(70),name:'CANAL FICTÍCIO QA'}]},cards:metrics(rows),daily:[...new Set(rows.map(r=>r.date))].sort().map(date=>({date,...metrics(rows.filter(r=>r.date===date))})),byChannel:rows.length?[{id:uuid(70),name:'CANAL FICTÍCIO QA',...metrics(rows)}]:[],fees:rows.length?[{name:'TAXA SINTÉTICA',entries:rows.length,amountCents:sum(rows,'providerFeeCents')}]:[],payments:rows.length?[{method:'PAGAMENTO SINTÉTICO',orders:rows.length,amountCents:sum(rows,'revenueCents')}]:[],topProducts:rows})
+ }
  case 'SalesWorkspace':return box({tenant:{legalName:'EMPRESA FICTÍCIA QA',tradeName:'QA'},branches:branches.filter(b=>branchAllowed(b.id)),customers:[],products:posProducts(v.branchId??branches[0]!.id),paymentMethods:[{id:uuid(50),name:'DINHEIRO',code:'CASH',requiresChange:true}],policy,openSession:cashSession(v.branchId??branches[0]!.id)})
  case 'SearchPosProducts':return {data:{_select:qaState.empty?[]:posProducts(v.branchId).filter(x=>!v.search||[x.name,x.ean,x.internalCode].join(' ').toUpperCase().includes(String(v.search).toUpperCase())).slice(Number(v.offset??0),Number(v.offset??0)+Number(v.limit??30))}}
  case 'SearchPosCustomers':return {data:{_select:[]}}
@@ -218,18 +246,26 @@ export async function qaOperation(name:string,variables:unknown={}){
  // operations fail explicitly; they never pretend to validate a real backend.
  const sub=name.includes('Subcategor'),cat=['CreateCategory','UpdateCategory','ArchiveCategory','RestoreCategory','CreateCategoriesBatch','SetCategoriesStatusBatch','CreateSubcategory','UpdateSubcategory','ArchiveSubcategory','RestoreSubcategory','CreateSubcategoriesBatch','SetSubcategoriesStatusBatch'].includes(name)
  if(cat){
-  const list=sub?subcategories:categories,rows=(v.names??v.items??[v.name??'NOVA CATEGORIA QA']) as unknown[]
+  const list=sub?subcategories:categories
   if(/^(Create|Update)/.test(name)){
-   const normalize=(value:unknown)=>String(value??'').replace(/\s+/gu,' ').trim().toUpperCase();
-   const names=rows.map(value=>normalize(typeof value==='object'&&value?(value as Row).name:value));
-   if(v.id)names.splice(0,names.length,normalize(v.name));
-   if(names.some(n=>!n||[...n].length>120)||new Set(names).size!==names.length)throw Error('QA: nome inválido ou duplicado');
-   if(sub&&!categories.some(c=>c.id===v.categoryId))throw Error('QA: categoria obrigatória');
-   if(names.some(n=>list.some(r=>r.id!==v.id&&normalize(r.name)===n&&(!sub||r.categoryId===v.categoryId))))throw Error('QA: nome duplicado');
-   if(v.id){const row=list.find(x=>x.id===v.id);if(!row)throw Error('QA: registro inexistente');Object.assign(row,{name:String(v.name??'').replace(/\s+/gu,' ').trim().toUpperCase(),categoryId:v.categoryId??row.categoryId})}
-   else for(const value of rows){const x=typeof value==='object'&&value?value as Row:{name:value};list.push({id:uuid(12000+list.length),name:String(x.name??value).replace(/\s+/gu,' ').trim().toUpperCase(),categoryId:x.categoryId??uuid(300),categoryName:'CATEGORIA QA 001',active:true,createdAt:when,updatedAt:when,productCount:0,subcategoryCount:0})}
-  }else{const ids=(v.ids??[v.id]) as string[];if(!ids.length||ids.some(id=>!list.some(row=>row.id===id)))throw Error('QA: registros inexistentes');for(const row of list)if(ids.includes(String(row.id)))row.active=v.active??/^Restore/.test(name)}
-  return {data:{_execute:(v.ids as unknown[]|undefined)?.length??rows.length}}
+   const rows=(v.names??v.items??[{name:v.name,categoryId:v.categoryId}]) as Row[]|string[]
+   if(!Array.isArray(rows)||rows.length<1||rows.length>20)throw Error('QA: lote deve conter 1 a 20 registros')
+   const prepared=rows.map(value=>{const x=typeof value==='object'&&value?value:{name:value,categoryId:v.categoryId};return {name:normalizeCatalogName(String(x.name??'')),categoryId:sub?x.categoryId:undefined}})
+   const key=(x:Row)=>String(sub?x.categoryId:'')+'|'+normalizeCatalogName(String(x.name))
+   if(prepared.some(x=>[...x.name].length<2||[...x.name].length>120)||new Set(prepared.map(key)).size!==prepared.length)throw Error('QA: nome inválido ou duplicado')
+   if(sub&&prepared.some(x=>!categories.some(c=>c.id===x.categoryId&&c.active)))throw Error('QA: categoria obrigatória')
+   if(v.id&&!list.some(x=>x.id===v.id))throw Error('QA: registro inexistente')
+   if(prepared.some(x=>list.some(r=>r.id!==v.id&&r.active&&key(r)===key(x))))throw Error('QA: nome duplicado')
+   for(const x of prepared){const values={...x,categoryName:sub?categories.find(c=>c.id===x.categoryId)!.name:undefined,updatedAt:when};if(v.id)Object.assign(list.find(x=>x.id===v.id)!,values);else list.push({...values,id:uuid(nextId++),active:true,createdAt:when})}
+   return {data:{_execute:prepared.length}}
+  }
+  const ids=(v.ids??[v.id]) as string[],active=v.active??/^Restore/.test(name)
+  if(!Array.isArray(ids)||!ids.length||typeof active!=='boolean'||ids.some(id=>!list.some(row=>row.id===id)))throw Error('QA: registros inexistentes')
+  const rows=list.filter(r=>ids.includes(String(r.id))),key=(r:Row)=>String(sub?r.categoryId:'')+'|'+normalizeCatalogName(String(r.name))
+  if(active&&rows.some(r=>list.some(x=>x.id!==r.id&&(x.active||ids.includes(String(x.id)))&&key(x)===key(r))))throw Error('QA: nome duplicado')
+  if(active&&sub&&rows.some(r=>!categories.some(c=>c.id===r.categoryId&&c.active)))throw Error('QA: categoria obrigatória')
+  for(const row of rows)row.active=active
+  return {data:{_execute:rows.length}}
  }
  qaState.unsupported.push(name)
  throw new Error('QA: operação ainda sem fixture: '+name)
@@ -240,4 +276,4 @@ export const executeQuery=(ref:ReturnType<typeof queryRef>)=>qaOperation(ref.nam
 export const executeMutation=executeQuery
 export const httpsCallable=(_functions:unknown,name:string)=>async()=>{throw new Error('QA: chamada externa mockada e desativada: '+name)}
 // Read-only diagnostic snapshot for browser assertions; synthetic QA build only.
-export const inspectFixtures=()=>structuredClone({products,movements,transfers,sessions,sales,cashMovements})
+export const inspectFixtures=()=>structuredClone({products,movements,transfers,sessions,sales,cashMovements,ledger,categories,subcategories})

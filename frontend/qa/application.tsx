@@ -6,7 +6,7 @@ import App from '../src/App'
 import {AuthContext,type AuthContextValue,type UserProfile} from '../src/auth/auth-context'
 import {ThemeProvider} from '../src/theme/ThemeProvider'
 import {appRoutes} from '../src/config/pages'
-import {qaState,resetFixtures,inspectFixtures,uuid} from './api'
+import {qaState,resetFixtures,inspectFixtures,useBoundaryLedger,uuid} from './api'
 import '../src/index.css'
 import '../src/dev-adjustments.css'
 import './review.css'
@@ -26,7 +26,7 @@ export function ApplicationQa(){
  <p>Fixtures:300 categorias,300 subcategorias,501 movimentos,201 transferências,51 aniversariantes e1201 clientes semcomprar. Escritas somente em memória.</p><nav aria-label="Rotas QA">{appRoutes.filter(r=>['CAIXA','ESTOQUE','CAD_CATEGORIA','CAD_SUBCATEGORIA','CAD_PRODUTO','RELATORIOS_OPERACIONAIS'].includes(r.pageKey)).map(r=><Link key={r.pageKey} to={r.route}>{pageNames[r.pageKey]} </Link>)}</nav><p>Últimas chamadas:{qaState.logs.slice(-8).join(', ')}</p></details>
  <AuthContext.Provider value={context}><App key={version}/></AuthContext.Provider></>
 }
-Object.assign(window,{__insightpadQa:{state:qaState,reset:resetFixtures,inspect:inspectFixtures}})
+Object.assign(window,{__insightpadQa:{state:qaState,reset:resetFixtures,inspect:inspectFixtures,boundary:useBoundaryLedger}})
 // Navigation to unrelated services is disabled in this isolated fixture entry.
 document.addEventListener('click',e=>{const a=(e.target as Element).closest?.('a');if(a&&a.href&&!a.href.startsWith(location.origin)&&!a.href.startsWith('blob:'))e.preventDefault()},true)
 createRoot(document.getElementById('root')!).render(<HashRouter><ThemeProvider><ApplicationQa/></ThemeProvider></HashRouter>)
