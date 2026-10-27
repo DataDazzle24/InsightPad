@@ -280,3 +280,10 @@ html[data-theme=light] .sales-page .catalog-scroll{background:var(--panel)}
 .stock-heading__actions .stock-heading-action:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
 /* Keyboard focus must remain distinguishable against the light surrounding panel. */
 html[data-theme=light] .catalog-confirm footer button:focus-visible,html[data-theme=light] .stock-heading__actions .stock-heading-action:focus-visible{outline-color:#1268a7}
+
+/* Reports must not inherit dark screen surfaces when printed from either theme. */
+@media print{
+ .finance-dashboard,.analytics-page{--panel:#fff;--panel-soft:#fff;--bg:#fff;--text:#000;--muted:#333;--line:#888;color-scheme:light}
+ .finance-heading,.finance-heading h1,.finance-heading p,.finance-comparison,.finance-chart-card,.finance-chart-card header,.finance-chart-card header strong,.finance-chart-card header span,.finance-kpis article,.finance-kpis article strong,.finance-kpis article span,.finance-kpis article small{background:#fff!important;color:#000!important}
+ .finance-comparison strong,.finance-comparison span,.finance-comparison small,.finance-table-card small,.finance-table-card strong,.finance-chart-card small,.channel-dashboard__empty{color:#000!important}
+}

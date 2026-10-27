@@ -71,3 +71,8 @@ test('permits only the exact isolated closure and disposable PG18 proofs, reject
  assert.equal(validateScope(policy,['scripts/qa-browser/closure.mjs','scripts/qa-browser/pg18-abort.py']),true);
  for(const path of ['scripts/qa-browser/closure-extra.mjs','scripts/qa-browser/closure.mjs.bak','scripts/qa-browser/pg18-abort.sql','scripts/qa-browser/pg18-remote.py'])assert.throws(()=>validateScope(policy,[path]),/outside approved scope/);
 });
+
+test('permits only the exact existing reports regression and rejects neighboring scripts',()=>{
+ assert.equal(validateScope(policy,['scripts/qa-browser/reports.mjs']),true);
+ for(const path of ['scripts/qa-browser/reports-extra.mjs','scripts/qa-browser/reports.mjs.bak','scripts/qa-browser/remote-reports.mjs'])assert.throws(()=>validateScope(policy,[path]),/outside approved scope/);
+});

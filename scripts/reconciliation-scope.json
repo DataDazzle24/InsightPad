@@ -1135,6 +1135,12 @@
         "SEC-2026-008"
       ],
       "reason": "Disposable PostgreSQL18 write rollback and lock release evidence only, no backend or migration. Exact path only."
+    },
+    "scripts/qa-browser/reports.mjs": {
+      "ids": [
+        "AJU-DASH-12"
+      ],
+      "reason": "Exact isolated PDF/print contrast regression for all five existing dashboard views and both themes; no remote operation or public evidence."
     }
   },
   "bytePreserved": [
