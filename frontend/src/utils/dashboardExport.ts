@@ -18,6 +18,11 @@ export function heatmapStyle(value:number,values:number[]):CSSProperties{
 // Financial fields are stored in cents. Export BRL once, explicitly labelled.
 export type FinancialExportRow={name:string;category?:string;subcategory?:string;quantity:number;revenueCents:string|number;providerFeeCents:string|number;netRevenueCents:string|number;costCents:string|number;profitCents:string|number;marginPercent:number}
 export function financialCsv(products:FinancialExportRow[]){
- const brl=(cents:string|number)=>new Intl.NumberFormat('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2,useGrouping:false}).format(Number(cents)/100)
+ const brl=(cents:string|number)=>{
+  // Int64 arrives as integer text. Never round it through Number or a quotient.
+  if(typeof cents==='number'&&!Number.isSafeInteger(cents)||typeof cents==='string'&&!/^[+-]?\d+$/.test(cents))throw new TypeError('Centavos inteiros: use texto para valores fora da precisão de number.')
+  const value=BigInt(cents),digits=(value<0n?-value:value).toString().padStart(3,'0')
+  return (value<0n?'-':'')+digits.slice(0,-2)+','+digits.slice(-2)
+ }
  return dashboardCsv(['Produto','Categoria','Subcategoria','Volume','Faturamento bruto (R$)','Taxas iFood (R$)','Repasse líquido (R$)','Custo (R$)','Lucro após taxas (R$)','Margem (%)'],products.map(p=>[p.name,p.category??'',p.subcategory??'',p.quantity,brl(p.revenueCents),brl(p.providerFeeCents),brl(p.netRevenueCents),brl(p.costCents),brl(p.profitCents),p.marginPercent]))
 }

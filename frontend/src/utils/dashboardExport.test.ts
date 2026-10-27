@@ -14,3 +14,8 @@ it('financial CSV declares BRL, converts cents exactly once and preserves the le
  for(const expected of ["'=FORMULA","'+CATEGORY","'@SUB"])expect(csv).toContain(expected)
  expect(rows).toEqual(before);expect(csv).not.toContain('"100001"')
 })
+
+it('preserves exact contractual bigint cents, including a safe integer whose division loses a cent',()=>{
+ const inputs:Array<[string|number,string]>=[['9007199254740991','90071992547409,91'],[9007199254740991,'90071992547409,91'],['9999999999999999','99999999999999,99'],['-9999999999999999',"'-99999999999999,99"],['9223372036854775807','92233720368547758,07'],[0,'0,00'],[1,'0,01'],['99','0,99'],[100,'1,00'],[-1,"'-0,01"]]
+ for(const [value,expected]of inputs){const rows=[{name:'=EXACT',category:'+CAT',subcategory:'@SUB',quantity:1,revenueCents:value,providerFeeCents:value,netRevenueCents:value,costCents:value,profitCents:value,marginPercent:0}],before=structuredClone(rows);const line=financialCsv(rows).split('\n')[1]!.split(';');for(const cell of line.slice(4,9))expect(cell).toBe('"'+expected+'"');expect(rows).toEqual(before)}
+})
