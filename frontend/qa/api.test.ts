@@ -2,7 +2,7 @@ import {beforeEach,expect,it} from 'vitest'
 import {qaOperation,qaState,resetFixtures,uuid,fixtureDate} from './api'
 beforeEach(()=>{resetFixtures();qaState.fail=false;qaState.ackLoss=false;qaState.delay=0;qaState.permissions='full';qaState.empty=false;qaState.allowedBranches=[]})
 it('uses deterministic full datasets, pagination and explicit unknown-operation failures',async()=>{
- const a=await qaOperation('ListCategories',{limit:100,offset:0}),b=await qaOperation('ListCategories',{limit:100,offset:100});expect(a.data).toMatchObject({_selectFirst:{totalCount:151}});expect((b.data as {_select:unknown[]})._select).toHaveLength(51);
+ const a=await qaOperation('ListCategories',{limit:100,offset:0}),b=await qaOperation('ListCategories',{limit:100,offset:100});expect(a.data).toMatchObject({_selectFirst:{totalCount:300}});expect((b.data as {_select:unknown[]})._select).toHaveLength(100);
  const r=await qaOperation('OperationalAnalyticsDashboard');const data=(r.data as {_select:Array<{data:{customers:{birthdays:unknown[];dormant:unknown[]}}}>})._select[0]!.data;expect(data.customers.birthdays).toHaveLength(51);expect(data.customers.dormant).toHaveLength(1201);
  await expect(qaOperation('RealBackendNotMocked')).rejects.toThrow('operação ainda sem fixture');
 })
@@ -62,4 +62,41 @@ it('reconciles monetary cards, daily rows, product rows and customer counts from
  const o=await read('OperationalAnalyticsDashboard',{from:fixtureDate,to:fixtureDate});expect(o.customers.cards.withoutPurchase).toBe(o.customers.dormant.length);expect(o.customers.cards.active).toBe(o.customers.abc.length+o.customers.dormant.length);expect(o.stock.cards.inboundQuantity).toBe(o.stock.products.reduce((n:number,r:{inQuantity:number})=>n+r.inQuantity,0));expect(o.stock.cards.inboundValueCents-o.stock.cards.lossValueCents-o.stock.cards.saleCostCents).toBe(o.stock.products.reduce((n:number,r:{valueCents:number})=>n+r.valueCents,0));
  const outside=await read('FinancialIndicatorsDashboard',{from:'2001-01-01',to:'2001-01-31'});expect(outside.cards.revenueCents).toBe(0);expect(outside.products).toEqual([])
  const stock=(await qaOperation('StockWorkspace')).data as {_select:Array<{data:{products:Array<{balances:Array<{quantity:number}>}>}}>} ;expect(new Set(stock._select[0]!.data.products.map(p=>p.balances[0]!.quantity)).size).toBeGreaterThan(5)
+})
+it('selects immutable analytical records without recomputing quantities or money',async()=>{
+ const read=async(v={})=>((await qaOperation('FinancialIndicatorsDashboard',v)).data as {_select:{data:{products:Record<string,unknown>[]}}[]})._select[0]!.data.products;
+ const all=await read(),target=all[17]!;const selected=await read({filters:{products:[target.id]}});expect(selected).toEqual([target]);
+ await qaOperation('SaveProduct',{id:target.id,payload:{name:'EDITADO SEM REESCREVER HISTÓRICO',salePriceCents:'9999'}});expect(await read({filters:{products:[target.id]}})).toEqual([target]);expect(await read()).toEqual(all);
+})
+it('derives category/subcategory counts from actual product relationships',async()=>{
+ const read=async(name:string)=>(await qaOperation(name,{limit:1000})).data as {_select:Record<string,unknown>[]};
+ const products=(await read('ListProducts'))._select,categories=(await read('ListCategories'))._select,subs=(await read('ListSubcategories'))._select;
+ for(const c of categories){expect(c.productCount).toBe(products.filter(p=>p.categoryId===c.id).length);expect(c.subcategoryCount).toBe(subs.filter(s=>s.categoryId===c.id).length)}
+ for(const s of subs)expect(s.productCount).toBe(products.filter(p=>p.subcategoryId===s.id).length);
+})
+it('supports existing customer supplier branch and promotion contracts without fake writes',async()=>{
+ for(const [save,list]of [['SaveCustomer','ListCustomers'],['SaveSupplier','ListSuppliers'],['SaveBranch','ListBranches']]){
+  await qaOperation(save!,{payload:{name:'NOME NOVO QA',legalName:'NOME NOVO QA'}});const data=(await qaOperation(list!,{search:'NOME NOVO QA'})).data as {_select:{id:string}[]};const id=data._select[0]!.id;
+  await expect(qaOperation(save!,{payload:{name:'NOME NOVO QA'}})).rejects.toThrow('duplicado');await qaOperation(save!,{id,payload:{name:'NOME EDITADO QA'}});expect((await qaOperation(list!,{search:'NOME NOVO QA'})).data).toMatchObject({_select:[]});
+  qaState.permissions='read';await expect(qaOperation(save!,{id,payload:{name:'NEGADO'}})).rejects.toThrow('permissão');qaState.permissions='full';
+ }
+ await qaOperation('SavePromotion',{productId:uuid(101),promotionalPriceCents:'999',startsAt:'2000-01-01',endsAt:'2099-01-01'});expect((await qaOperation('ProductPromotions',{productId:uuid(101)})).data).toMatchObject({_select:[{promotionalPriceCents:'999',status:'ACTIVE'}]});
+})
+it('reconciles sale and cancellation once across cash stock and the same sale ID',async()=>{
+ await qaOperation('SaveStockBatch',{payload:{clientOperationId:'initial-stock',branchId:uuid(1),direction:'OUT',items:[{product_id:uuid(101),quantity:10}]}});
+ const sale={clientOperationId:'coherent-sale',branchId:uuid(1),cashSessionId:uuid(60),items:[{product_id:uuid(101),quantity:2,requested_price:1200}],payments:[{payment_method_id:uuid(50),amount_cents:3000,sequence:1}]};
+ await qaOperation('PostSale',{payload:sale});const read=async()=>((await qaOperation('SalesWorkspace',{branchId:uuid(1)})).data as {_select:{data:{openSession:{expectedAmountCents:string};products:{id:string;stock:number}[]}}[]})._select[0]!.data;
+ const sold=await read();expect(sold.openSession.expectedAmountCents).toBe('12400');expect(sold.products.find(p=>p.id===uuid(101))!.stock).toBe(8);
+ await qaOperation('CancelSale',{saleId:sale.clientOperationId,reason:'teste isolado'});await qaOperation('CancelSale',{saleId:sale.clientOperationId,reason:'mesmo cancelamento'});const cancelled=await read();expect(cancelled.openSession.expectedAmountCents).toBe('10000');expect(cancelled.products.find(p=>p.id===uuid(101))!.stock).toBe(10);
+})
+it('rejects unit component fractions, preserves weighed quantities and resets added branches',async()=>{
+ const payload={name:'KIT TESTE',bundleProduct:true,salePriceCents:1200};
+ await expect(qaOperation('SaveProduct',{payload,components:[{productId:uuid(101),quantity:.5}]})).rejects.toThrow('componente');
+ await qaOperation('SaveProduct',{payload,components:[{productId:uuid(100),quantity:.5}]});const data=(await qaOperation('ListProducts',{search:'KIT TESTE'})).data as {_select:{id:string}[]};expect((await qaOperation('ProductComponents',{productId:data._select[0]!.id})).data).toMatchObject({_select:[{productId:uuid(100),quantity:.5}]});
+ await qaOperation('SaveBranch',{payload:{name:'FILIAL ADICIONAL'}});resetFixtures();expect((await qaOperation('ListBranches',{limit:1000})).data).toMatchObject({_selectFirst:{totalCount:2}});
+})
+it('keeps uncertain sale ACK retry payload and applies cash and stock once',async()=>{
+ const payload={clientOperationId:'sale-ack',branchId:uuid(1),cashSessionId:uuid(60),items:[{product_id:uuid(101),quantity:2,requested_price:1200}],payments:[{payment_method_id:uuid(50),amount_cents:3000,sequence:1}]};qaState.ackLoss=true;
+ await expect(qaOperation('PostSale',{payload})).rejects.toThrow('confirmação perdida');await qaOperation('PostSale',{payload});await expect(qaOperation('PostSale',{payload:{...payload,discountCents:1}})).rejects.toThrow('conflitante');
+ expect((await qaOperation('SalesWorkspace',{branchId:uuid(1)})).data).toMatchObject({_select:[{data:{openSession:{expectedAmountCents:'12400',movementCount:1}}}]});
 })

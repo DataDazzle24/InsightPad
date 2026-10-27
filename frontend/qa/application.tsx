@@ -23,7 +23,7 @@ export function ApplicationQa(){
  <label><input type="checkbox" onChange={e=>qaState.ackLoss=e.target.checked}/>Perder primeira confirmação do estoque</label>
  <label><input type="checkbox" onChange={e=>qaState.delay=e.target.checked?1500:0}/>Resposta lenta</label>
  <button onClick={()=>{resetFixtures();setVersion(x=>x+1)}}>Restaurar fixtures</button><button onClick={()=>setSigned(x=>!x)}>{signed?'Exibir login mockado':'Entrar como usuário fictício'}</button>
- <p>Fixtures:151 categorias,151 subcategorias,501 movimentos,201 transferências,51 aniversariantes e1201 clientes semcomprar. Escritas somente em memória.</p><nav aria-label="Rotas QA">{appRoutes.filter(r=>['CAIXA','ESTOQUE','CAD_CATEGORIA','CAD_SUBCATEGORIA','CAD_PRODUTO','RELATORIOS_OPERACIONAIS'].includes(r.pageKey)).map(r=><Link key={r.pageKey} to={r.route}>{pageNames[r.pageKey]} </Link>)}</nav><p>Últimas chamadas:{qaState.logs.slice(-8).join(', ')}</p></details>
+ <p>Fixtures:300 categorias,300 subcategorias,501 movimentos,201 transferências,51 aniversariantes e1201 clientes semcomprar. Escritas somente em memória.</p><nav aria-label="Rotas QA">{appRoutes.filter(r=>['CAIXA','ESTOQUE','CAD_CATEGORIA','CAD_SUBCATEGORIA','CAD_PRODUTO','RELATORIOS_OPERACIONAIS'].includes(r.pageKey)).map(r=><Link key={r.pageKey} to={r.route}>{pageNames[r.pageKey]} </Link>)}</nav><p>Últimas chamadas:{qaState.logs.slice(-8).join(', ')}</p></details>
  <AuthContext.Provider value={context}><App key={version}/></AuthContext.Provider></>
 }
 Object.assign(window,{__insightpadQa:{state:qaState,reset:resetFixtures,inspect:inspectFixtures}})

@@ -18,7 +18,7 @@ Do not publish a preview without the separate required authorization.
 The collapsible QA panel shows the exact source SHA and offers complete,
 no-export and read-only permissions, synthetic API error, response delay,
 loss of the first stock acknowledgment and fixture reset. Use fictitious data.
-Fixtures include 151 categories/subcategories, 65 products, two branches,
+Fixtures include 300 categories/subcategories, 65 products, two branches,
 501 movements, 201 transfers, 51 birthdays and 1,201 dormant customers.
 Catalog writes and stock confirmations are in-memory; unknown operations fail
 explicitly. The fixtures do not implement real backend authorization, fiscal
@@ -105,7 +105,7 @@ withdrawal/close/policy, sale with validated cash payment/change/stock and
 matching retry receipt, catalog writes and simple stock entries/transfers.
 Writes survive route navigation in the same loaded app; reload/reset restores
 fixtures deterministically. Unknown or unmodeled operations (including stock
-reversal, promotions, external calls) throw explicitly. Empty/error/latency,
+reversal and external calls) throw explicitly. Empty/error/latency,
 no-export/read/denied modes are controlled by the QA panel. The fixture
 permission/branch checks are synthetic, not backend authorization evidence.
 
@@ -132,3 +132,5 @@ These additions do not complete the full interface inventory or backend gates.
 The action trace retains DOM snapshots and sources without a continuous screenshot
 filmstrip; explicit PNGs record each case and important intermediate states. This
 keeps long pending-response evidence bounded without freezing UI animations.
+
+V1 closure fixture updates: analytical records are immutable snapshots; filters select their original quantities and monetary values. Category/subcategory counts derive from product and parent IDs. Existing customer, supplier, branch and promotion writes persist in memory, and product components validate the component unit. Sale cancellation restores the original open cash session and stock once; uncertain sale ACK replay validates the identical payload. This remains a synthetic contract, not proof of deployed authorization, durable transactions or real SQL.

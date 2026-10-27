@@ -7,23 +7,32 @@ export const currentSessionToken=()=> '0'.repeat(64)
 export const sessionKey=(uid:string)=>'qa.session:'+uid
 export const qaState={fail:false,delay:0,ackLoss:false,logs:[] as string[],unsupported:[] as string[],permissions:'full',empty:false,allowedBranches:[] as string[]}
 export const uuid=(n:number)=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`
+const immutable=<T>(value:T):T=>{if(value&&typeof value==='object'){Object.values(value).forEach(immutable);Object.freeze(value)}return value}
 export const fixtureDate=new Date().toISOString().slice(0,10)
 const when=fixtureDate+'T12:00:00Z'
 const fixtureQuantity=(i:number)=>i%7===0?i/7:20+(i+4)%5
 const fixtureCost=(i:number)=>String([0,800,1075,1499,1,1234,100001][i%7])
-export const branches=[{id:uuid(1),name:'MATRIZ QA'},{id:uuid(2),name:'FILIAL QA'}]
+const initialBranches=()=>[{id:uuid(1),name:'MATRIZ QA'},{id:uuid(2),name:'FILIAL QA'}]
+export const branches=initialBranches()
+const components=new Map<string,Row[]>()
 const initialProducts=()=>Array.from({length:65},(_,i)=>({id:uuid(100+i),name:`PRODUTO QA ${String(i+1).padStart(3,'0')}`,internalCode:`QA${i+1}`,ean:`789000000${String(i).padStart(4,'0')}`,categoryId:uuid(300),subcategoryId:uuid(800),categoryName:'CATEGORIA QA 001',subcategoryName:'SUBCATEGORIA QA 001',minimumStock:5,maximumStock:30,allowNegativeStock:false,bundleProduct:false,weightedProduct:i%3===0,costPriceCents:fixtureCost(i),salePriceCents:'1200',unit:'UN',active:true,createdAt:when,updatedAt:when,balances:branches.map(b=>({branchId:b.id,branchName:b.name,quantity:fixtureQuantity(i),reservedQuantity:0,availableQuantity:fixtureQuantity(i),averageCostCents:fixtureCost(i)}))}))
 export let products=initialProducts()
 let categories:Row[],subcategories:Row[],movements:Row[],transfers:Row[],sessions:Row[],cashMovements:Row[],sales:Row[]
+let ledger:Readonly<Row>[]=[]
+let customers:Row[],suppliers:Row[],promotions:Row[]
 let nextId=13000,policy:Row
 const mutations=new Map<string,{hash:string;data:unknown}>()
 const receipts=new Map<string,{hash:string;kind:string}>()
 export function resetFixtures(){
- products=initialProducts();nextId=13000;mutations.clear();cashMovements=[];sales=[]
+ branches.splice(0,branches.length,...initialBranches());components.clear();products=initialProducts();
+ ledger=products.map((p,i)=>{const quantity=i%9+1,revenueCents=quantity*Number(p.salePriceCents),providerFeeCents=Math.round(revenueCents*.05),costCents=quantity*Number(p.costPriceCents),netRevenueCents=revenueCents-providerFeeCents,grossProfitCents=revenueCents-costCents,profitCents=netRevenueCents-costCents;return immutable({...structuredClone(p),branchId:branches[i%2]!.id,date:fixtureDate,quantity,revenueCents,providerFeeCents,netRevenueCents,costCents,grossProfitCents,profitCents,marginPercent:revenueCents?profitCents/revenueCents*100:0,lineCount:1})});
+ customers=Array.from({length:101},(_,i)=>({id:uuid(4000+i),name:`PESSOA FICTÍCIA QA ${i}`,active:true,createdAt:when,updatedAt:when}));
+ suppliers=Array.from({length:101},(_,i)=>({id:uuid(4000+i),name:`FORNECEDOR FICTÍCIO QA ${i+1}`,legalName:`FORNECEDOR FICTÍCIO QA ${i+1}`,tradeName:`FORNECEDOR QA ${i+1}`,active:true,createdAt:when,updatedAt:when}));promotions=[];
+ nextId=13000;mutations.clear();cashMovements=[];sales=[]
  sessions=[{id:uuid(60),branchId:uuid(1),status:'OPEN',openedAt:when,openingAmountCents:'10000',expectedAmountCents:'10000',movementCount:0}]
  policy={requireOpenSession:true,operatorDiscountPercent:5,operatorSurchargePercent:5,allowOperatorClose:true,operatorWithdrawalLimitCents:100000,operatorCloseDifferenceLimitCents:100000}
- categories=Array.from({length:151},(_,i)=>({id:uuid(300+i),name:`CATEGORIA QA ${String(i+1).padStart(3,'0')}`,active:i%11!==10,createdAt:when,updatedAt:when,productCount:i%4,subcategoryCount:i%3}))
- subcategories=Array.from({length:151},(_,i)=>({id:uuid(800+i),name:`SUBCATEGORIA QA ${String(i+1).padStart(3,'0')}`,categoryId:uuid(300+i%10),categoryName:`CATEGORIA QA ${String(i%10+1).padStart(3,'0')}`,active:i%11!==10,createdAt:when,updatedAt:when,productCount:i%4}))
+ categories=Array.from({length:300},(_,i)=>({id:uuid(300+i),name:`CATEGORIA QA ${String(i+1).padStart(3,'0')}`,active:i%11!==10,createdAt:when,updatedAt:when,productCount:i%4,subcategoryCount:i%3}))
+ subcategories=Array.from({length:300},(_,i)=>({id:uuid(800+i),name:`SUBCATEGORIA QA ${String(i+1).padStart(3,'0')}`,categoryId:uuid(300+i%10),categoryName:`CATEGORIA QA ${String(i%10+1).padStart(3,'0')}`,active:i%11!==10,createdAt:when,updatedAt:when,productCount:i%4}))
  movements=Array.from({length:501},(_,i)=>({id:uuid(2000+i),operationId:'qa-movement-'+i,occurredAt:when,quantity:i%5+1,unitCostCents:products[i%products.length]!.costPriceCents,status:i%13===0?'REVERSED':'POSTED',typeCode:i%2?'LOSS':'MANUAL_IN',typeName:i%2?'Perda':'Entrada',direction:i%2?'OUT':'IN',productId:products[i%products.length]!.id,productName:products[i%products.length]!.name,branchId:branches[i%2]!.id,branchName:branches[i%2]!.name}))
  transfers=Array.from({length:201},(_,i)=>({id:uuid(3000+i),operationId:'qa-transfer-'+i,status:'COMPLETED',requestedAt:when,sourceBranchId:branches[0]!.id,destinationBranchId:branches[1]!.id,sourceBranch:branches[0]!.name,destinationBranch:branches[1]!.name,totalQuantity:i%5+1,itemCount:1}))
  receipts.clear();qaState.logs=[];qaState.unsupported=[]
@@ -33,7 +42,11 @@ const result=(data:unknown)=>({data:{_select:[{data:structuredClone(data)}]}})
 const page=(rows:Row[],v:Row)=>{
  let selected=rows.filter(r=>!v.search||String(r.name).toLowerCase().includes(String(v.search).toLowerCase()))
  const filters=(v.filters??{}) as Record<string,unknown[]>
- for(const [k,values] of Object.entries(filters))if(Array.isArray(values)&&values.length)selected=selected.filter(r=>values.map(String).includes(String(r[k])))
+ for(const [k,values] of Object.entries(filters)){
+  if(Array.isArray(values)&&values.length)selected=selected.filter(r=>values.map(String).includes(k==='productPresence'?(Number(r.productCount)>0?'with':'without'):k==='subcategoryPresence'?(Number(r.subcategoryCount)>0?'with':'without'):String(r[k])))
+  if(k.endsWith('From'))selected=selected.filter(r=>String(r[k.slice(0,-4)])>=String(values));
+  if(k.endsWith('To'))selected=selected.filter(r=>String(r[k.slice(0,-2)])<=String(values));
+ }
  if(v.categoryId)selected=selected.filter(r=>r.categoryId===v.categoryId)
  if(v.sortField){const sign=v.sortDirection==='desc'?-1:1;selected=[...selected].sort((a,b)=>sign*String(a[String(v.sortField)]??'').localeCompare(String(b[String(v.sortField)]??''),'pt-BR',{numeric:true}))}
  return {data:{_select:structuredClone(selected.slice(Number(v.offset??0),Number(v.offset??0)+Number(v.limit??100))),_selectFirst:{totalCount:selected.length}}}
@@ -58,10 +71,8 @@ const inPeriod=(date:unknown,v:Row)=>(!v.from||String(date).slice(0,10)>=String(
 const sum=(rows:Row[],key:string)=>rows.reduce((n,r)=>n+Number(r[key]??0),0)
 function financialFixture(v:Row){
  const f=(v.filters??{}) as Row
- const rows=(qaState.empty?[]:products).filter(p=>!Array.isArray(f.products)||!f.products.length||(f.products as string[]).includes(p.id)).map((p,i)=>{
-  const quantity=i%9+1,revenueCents=quantity*Number(p.salePriceCents),providerFeeCents=Math.round(revenueCents*.05),costCents=quantity*Number(p.costPriceCents),netRevenueCents=revenueCents-providerFeeCents,grossProfitCents=revenueCents-costCents,profitCents=netRevenueCents-costCents
-  return {...p,date:fixtureDate,quantity,revenueCents,providerFeeCents,netRevenueCents,costCents,grossProfitCents,profitCents,marginPercent:revenueCents?profitCents/revenueCents*100:0,lineCount:1}
- }).filter(r=>inPeriod(r.date,v))
+ const rows=(qaState.empty?[]:ledger).filter(r=>inPeriod(r.date,v)&&branchAllowed(r.branchId)&&['products','categories','subcategories','branches'].every(key=>!Array.isArray(f[key])||!(f[key] as unknown[]).length||(f[key] as unknown[]).includes(r[({products:'id',categories:'categoryId',subcategories:'subcategoryId',branches:'branchId'} as Record<string,string>)[key]!])));
+
  const revenueCents=sum(rows,'revenueCents'),profitCents=sum(rows,'profitCents'),volume=rows.length
  const cards={volume,revenueCents,providerFeeCents:sum(rows,'providerFeeCents'),netRevenueCents:sum(rows,'netRevenueCents'),costCents:sum(rows,'costCents'),grossProfitCents:sum(rows,'grossProfitCents'),profitCents,marginPercent:revenueCents?profitCents/revenueCents*100:0,ticketCents:volume?Math.round(revenueCents/volume):0,financialPendingSales:0}
  return {options:{branches,products,categories,subcategories,suppliers:[],sources:[]},cards,monthly:{lastVolume:volume,averageVolume:volume,volumeGrowth:0,lastProfitCents:profitCents,averageProfitCents:profitCents,profitGrowth:0,months:volume?1:0},daily:volume?[{date:fixtureDate,...cards}]:[],products:rows}
@@ -75,7 +86,7 @@ function operationalFixture(v:Row){
  const dormant=activePeriod&&!qaState.empty?Array.from({length:1201},(_,i)=>({id:uuid(6000+i),name:`SEM COMPRAR QA ${i+1}`,lastPurchase:null,revenueCents:0})):[]
  const abc=activePeriod?fp.map((p,i)=>({id:uuid(9000+i),name:`CLIENTE ATIVO QA ${i+1}`,class:i<10?'A':'B',purchases:1,revenueCents:p.revenueCents,lastPurchase:fixtureDate})):[]
  const birthdays=activePeriod?abc.slice(0,51).map((p,i)=>({id:p.id,name:`ANIVERSARIANTE QA ${i+1}`,birthDate:'2000-'+fixtureDate.slice(5)})):[]
- const categoryRows=(qaState.empty?[]:categories.slice(0,8)).map((c,i)=>{const selected=fp.filter((_,j)=>j%8===i),revenueCents=sum(selected,'revenueCents'),costCents=sum(selected,'costCents');return {...c,level:'Categoria',quantity:sum(selected,'quantity'),revenueCents,costCents,profitCents:revenueCents-costCents,marginPercent:revenueCents?(revenueCents-costCents)/revenueCents*100:0,growthPercent:0}})
+ const categoryRows=(qaState.empty?[]:categories.slice(0,8)).map(c=>{const selected=fp.filter(p=>p.categoryId===c.id),revenueCents=sum(selected,'revenueCents'),costCents=sum(selected,'costCents');return {...c,level:'Categoria',quantity:sum(selected,'quantity'),revenueCents,costCents,profitCents:revenueCents-costCents,marginPercent:revenueCents?(revenueCents-costCents)/revenueCents*100:0,growthPercent:0}})
  return {stock:{cards:stockCards,monthly:ms.length?[{date:fixtureDate,...stockCards}]:[],products:rows},customers:{cards:{active:abc.length+dormant.length,new:abc.length,withoutPurchase:dormant.length,ticketCents:abc.length?Math.round(sum(abc,'revenueCents')/abc.length):0,frequency:abc.length?1:0},abc,regions:abc.length?[{region:'REGIÃO SINTÉTICA QA',customers:abc.length+dormant.length,revenueCents:sum(abc,'revenueCents')}]:[],birthdays,dormant},categories:categoryRows}
 }
 const posProducts=(branchId:unknown)=>products.filter(p=>p.active).map(p=>({...p,listPriceCents:String(p.salePriceCents),effectivePriceCents:String(p.salePriceCents),stock:p.balances.find(b=>b.branchId===branchId)?.availableQuantity??0,stockByBranches:p.balances.filter(b=>branchAllowed(b.branchId)).map(b=>({branchId:b.branchId,branchName:b.branchName,quantity:b.availableQuantity}))}))
@@ -86,23 +97,40 @@ const mutateOnce=(name:string,key:unknown,payload:unknown,apply:()=>unknown)=>{
  const data=apply();mutations.set(id,{hash,data:structuredClone(data)});return data
 }
 export async function qaOperation(name:string,variables:unknown={}){
- const v=(variables??{}) as Row,p=(v.payload??{}) as Row
+ const v=(variables??{}) as Row,p=(name==='SavePromotion'?v:v.payload??{}) as Row
  qaState.logs.push(name);qaState.logs=qaState.logs.slice(-40)
  if(qaState.delay)await new Promise(r=>setTimeout(r,qaState.delay))
  if(qaState.fail)throw new Error('QA: falha sintética de API')
- const writing=/^(Save|Create|Update|Set|Archive|Restore|Open|Close|Register|Post|Reverse|Ensure)/.test(name)
+ const writing=/^(Cancel|Save|Create|Update|Set|Archive|Restore|Open|Close|Register|Post|Reverse|Ensure)/.test(name)
  if(qaState.permissions==='denied'||writing&&qaState.permissions==='read')throw Error('QA: permissão negada')
  const box=(value:unknown)=>result(value)
  switch(name){
- case 'ListCategories':return page(qaState.empty?[]:categories,v)
- case 'ListSubcategories':return page(qaState.empty?[]:subcategories,v)
+ case 'ListCategories':return page(qaState.empty?[]:categories.map(c=>({...c,productCount:products.filter(p=>p.categoryId===c.id).length,subcategoryCount:subcategories.filter(p=>p.categoryId===c.id).length})),v)
+ case 'ListSubcategories':return page(qaState.empty?[]:subcategories.map(c=>({...c,productCount:products.filter(p=>p.subcategoryId===c.id).length})),v)
  case 'CategoryOptions':return {data:{_select:categories.filter(c=>c.active)}}
  case 'RegistrationOptions':return box({branches,categories,subcategories,suppliers:[{id:uuid(20),name:'FORNECEDOR QA'}],products,paymentMethods:[],options:{}})
  case 'ListProducts':return page(qaState.empty?[]:products.map(p=>({...p,effectivePriceCents:p.salePriceCents,listPriceCents:p.salePriceCents})),v)
- case 'ListBranches':return page(branches.map(b=>({...b,active:true,createdAt:when,updatedAt:when})),v)
- case 'ListSuppliers':return page(qaState.empty?[]:Array.from({length:101},(_,i)=>({id:uuid(4000+i),legalName:`FORNECEDOR FICTÍCIO QA ${i+1}`,tradeName:`FORNECEDOR QA ${i+1}`,name:`FORNECEDOR FICTÍCIO QA ${i+1}`,active:true,createdAt:when,updatedAt:when})),v)
- case 'ListCustomers':return page(Array.from({length:101},(_,i)=>({id:uuid(4000+i),name:`PESSOA FICTÍCIA QA ${i}`,active:true,createdAt:when,updatedAt:when})),v)
- case 'ProductComponents':case 'ProductPromotions':case 'PendingPosApprovals':return {data:{_select:[]}}
+ case 'ListBranches':return page(qaState.empty?[]:branches.map(b=>({active:true,createdAt:when,updatedAt:when,...b})),v)
+ case 'ListSuppliers':return page(qaState.empty?[]:suppliers,v)
+ case 'ListCustomers':return page(qaState.empty?[]:customers,v)
+ case 'ProductPromotions':return {data:{_select:structuredClone(promotions.filter(p=>p.productId===v.productId).map(p=>({...p,promotionalPriceCents:String(p.promotionalPriceCents),status:!p.active?'INACTIVE':String(p.startsAt)>new Date().toISOString()?'SCHEDULED':String(p.endsAt)<new Date().toISOString()?'ENDED':'ACTIVE'})))}}
+ case 'SaveCustomer':case 'SaveSupplier':case 'SaveBranch':case 'SavePromotion':{
+  const list=name==='SaveCustomer'?customers:name==='SaveSupplier'?suppliers:name==='SaveBranch'?branches:promotions;
+  const old=v.id?list.find(x=>x.id===v.id):undefined;if(v.id&&!old)throw Error('QA: registro inexistente');
+  const label=String(p.name??p.legalName??'').trim().toUpperCase();
+  if(name!=='SavePromotion'&&!label)throw Error('QA: nome obrigatório');
+  if(list.some(x=>x.id!==v.id&&((label&&String((x as Row).name).toUpperCase()===label)||(p.document&&(x as Row).document===p.document))))throw Error('QA: registro duplicado');
+  if(name==='SavePromotion'){integer(p.promotionalPriceCents);if(!products.some(x=>x.id===p.productId)||!p.startsAt||!p.endsAt||String(p.endsAt)<=String(p.startsAt))throw Error('QA: promoção inválida')}
+  const row={...p,id:String(old?.id??uuid(nextId++)),name:label,active:p.active??true,createdAt:(old as Row|undefined)?.createdAt??when,updatedAt:when};
+  if(old)Object.assign(old,row);else list.push(row);return {data:{_execute:1}}
+ }
+ case 'SetCustomersStatusBatch':case 'SetSuppliersStatusBatch':case 'SetBranchesStatusBatch':case 'SetPromotionStatus':{
+  const list=name==='SetCustomersStatusBatch'?customers:name==='SetSuppliersStatusBatch'?suppliers:name==='SetBranchesStatusBatch'?branches:promotions,ids=(v.ids??[v.id]) as string[];
+  if(typeof v.active!=='boolean'||!ids.length||ids.some(id=>!list.some(x=>x.id===id)))throw Error('QA: estado ou registros inválidos');
+  for(const row of list)if(ids.includes(row.id as string))Object.assign(row,{active:v.active});return {data:{_execute:ids.length}}
+ }
+ case 'ProductComponents':return {data:{_select:structuredClone(components.get(String(v.productId))??[])}}
+ case 'PendingPosApprovals':return {data:{_select:[]}}
  case 'StockWorkspace':return box(stockWorkspace(v))
  case 'SaveStockBatch':case 'PostStockTransfer':{
   if(p.replacesOperationId||p.fiscalEnabled)throw Error('QA: correção/fiscal ainda sem fixture')
@@ -115,7 +143,7 @@ export async function qaOperation(name:string,variables:unknown={}){
    if(name==='SaveStockBatch'&&!['IN','OUT'].includes(String(p.direction)))throw Error('QA: direção inválida');
    const prepared=lines.map(line=>{const product=products.find(x=>x.id===line.product_id&&x.active),quantity=Number(line.quantity);if(!product||!Number.isFinite(quantity)||quantity<=0||!product.weightedProduct&&!Number.isInteger(quantity))throw Error('QA: item inválido');const balance=product.balances.find(b=>b.branchId===source)!;if((name==='PostStockTransfer'||p.direction==='OUT')&&!product.allowNegativeStock&&balance.availableQuantity<quantity)throw Error('QA: saldo insuficiente');return {product,balance,quantity}});
    if(new Set(prepared.map(x=>x.product.id)).size!==prepared.length)throw Error('QA: item duplicado');
-   for(const {product,balance,quantity}of prepared){const direction=name==='PostStockTransfer'?'OUT':String(p.direction),sign=direction==='IN'?1:-1;balance.quantity+=sign*quantity;balance.availableQuantity+=sign*quantity;if(name==='PostStockTransfer'){const target=product.balances.find(b=>b.branchId===destination)!;target.quantity+=quantity;target.availableQuantity+=quantity}
+   for(const {product,balance,quantity}of prepared){const direction=name==='PostStockTransfer'?'OUT':String(p.direction),sign=direction==='IN'?1:-1;balance.quantity+=sign*quantity;balance.availableQuantity+=sign*quantity;if(name==='PostStockTransfer'){const target=product.balances.find(b=>b.branchId===destination)!;target.quantity+=quantity;target.availableQuantity+=quantity;movements.unshift({id:uuid(nextId++),operationId:key,occurredAt:p.occurredAt??when,quantity,unitCostCents:product.costPriceCents,status:'POSTED',typeCode:'TRANSFER_IN',direction:'IN',productId:product.id,productName:product.name,branchId:destination,branchName:branches.find(b=>b.id===destination)!.name})}
     movements.unshift({id:uuid(nextId++),operationId:key,occurredAt:p.occurredAt??when,quantity,unitCostCents:product.costPriceCents,status:'POSTED',typeCode:name==='PostStockTransfer'?'TRANSFER_OUT':direction==='IN'?'MANUAL_IN':'LOSS',typeName:name==='PostStockTransfer'?'Transferência':direction==='IN'?'Entrada':'Perda',direction,productId:product.id,productName:product.name,branchId:source,branchName:branches.find(b=>b.id===source)!.name})
    }
    if(name==='PostStockTransfer')transfers.unshift({id:uuid(nextId++),operationId:key,status:'COMPLETED',requestedAt:when,sourceBranchId:source,destinationBranchId:destination,sourceBranch:branches.find(b=>b.id===source)!.name,destinationBranch:branches.find(b=>b.id===destination)!.name,totalQuantity:prepared.reduce((n,x)=>n+x.quantity,0),itemCount:prepared.length});receipts.set(key,{hash,kind})
@@ -134,8 +162,11 @@ export async function qaOperation(name:string,variables:unknown={}){
  case 'SaveProduct':{
   if(!String(p.name??'').trim())throw Error('QA: nome obrigatório');const current=v.id?products.find(x=>x.id===v.id):null;if(v.id&&!current)throw Error('QA: produto inexistente');
   for(const key of ['ean','internalCode'])if(p[key]&&products.some(x=>x.id!==v.id&&String(x[key as 'ean'|'internalCode'])===String(p[key])))throw Error('QA: código duplicado');
+  const kit=(v.components??[]) as Row[];
+  if(!Array.isArray(kit)||p.bundleProduct&&(!kit.length||new Set(kit.map(x=>x.productId)).size!==kit.length))throw Error('QA: composição inválida');
+  for(const item of kit){const child=products.find(p=>p.id===item.productId);if(!child||child.id===v.id||!Number.isFinite(Number(item.quantity))||Number(item.quantity)<=0||!child.weightedProduct&&!Number.isInteger(Number(item.quantity)))throw Error('QA: quantidade de componente inválida')}
   const row={...structuredClone(current??initialProducts()[0]!),...p,id:current?.id??uuid(nextId++),name:String(p.name).trim().toUpperCase(),salePriceCents:String(integer(p.salePriceCents??current?.salePriceCents??0)),costPriceCents:String(integer(p.costPriceCents??current?.costPriceCents??0)),updatedAt:when};
-  if(current)Object.assign(current,row);else products.push({...row,balances:branches.map(b=>({branchId:b.id,branchName:b.name,quantity:0,reservedQuantity:0,availableQuantity:0,averageCostCents:row.costPriceCents}))});return {data:{_execute:1}}
+  components.set(row.id,structuredClone(kit));if(current)Object.assign(current,row);else products.push({...row,balances:branches.map(b=>({branchId:b.id,branchName:b.name,quantity:0,reservedQuantity:0,availableQuantity:0,averageCostCents:row.costPriceCents}))});return {data:{_execute:1}}
  }
  case 'SetProductsStatusBatch':{
   const ids=(v.ids??[]) as string[];if(typeof v.active!=='boolean')throw Error('QA: estado inválido');if(!ids.length||ids.some(id=>!products.some(p=>p.id===id)))throw Error('QA: produtos inválidos');for(const p of products)if(ids.includes(p.id))p.active=v.active===true;return {data:{_execute:ids.length}}
@@ -149,7 +180,7 @@ export async function qaOperation(name:string,variables:unknown={}){
   if(!['SUPPLY','WITHDRAWAL'].includes(String(v.movementType)))throw Error('QA: tipo inválido');const amount=integer(v.amountCents);if(!amount)throw Error('QA: valor deve ser positivo');const expected=Number(session.expectedAmountCents)+(v.movementType==='SUPPLY'?amount:-amount);if(expected<0)throw Error('QA: saldo insuficiente');Object.assign(session,{expectedAmountCents:String(expected),movementCount:Number(session.movementCount)+1});cashMovements.push({...v,id:uuid(nextId++)});return {_execute:1}
  }) as {_execute:number}}
  case 'UpdatePosPolicy':policy={...policy,...v};return {data:{_execute:1}}
- case 'PostSale':return {data:mutateOnce(name,p.clientOperationId,p,()=>{
+ case 'PostSale':{const replay=mutations.has(name+':'+p.clientOperationId);const data=mutateOnce(name,p.clientOperationId,p,()=>{
   if(p.replacesSaleId)throw Error('POS_CORRECTION_UNSUPPORTED');
   const session=cashSession(p.branchId);if(!branchAllowed(p.branchId)||!session||session.id!==p.cashSessionId)throw Error('POS_SESSION_REQUIRED');
   const lines=p.items as Row[],payments=p.payments as Row[];if(!Array.isArray(lines)||!lines.length||!Array.isArray(payments)||!payments.length)throw Error('POS_INVALID');
@@ -160,8 +191,17 @@ export async function qaOperation(name:string,variables:unknown={}){
   const tender=payments.map(x=>{if(x.payment_method_id!==uuid(50)||!integer(x.amount_cents))throw Error('POS_PAYMENT_UNSUPPORTED');return {paymentMethodId:String(x.payment_method_id),name:'DINHEIRO',amountCents:integer(x.amount_cents),sequence:integer(x.sequence),externalReference:null}}),paid=tender.reduce((n,x)=>n+x.amountCents,0);if(paid<total)throw Error('POS_PAYMENT_INSUFFICIENT');
   for(const item of items){const product=products.find(x=>x.id===item.productId)!,balance=product.balances.find(b=>b.branchId===p.branchId)!;balance.quantity-=item.quantity;balance.availableQuantity-=item.quantity;movements.unshift({id:uuid(nextId++),operationId:p.clientOperationId,occurredAt:when,quantity:item.quantity,unitCostCents:String(item.costPriceCents),status:'POSTED',typeCode:'SALE',typeName:'Venda',direction:'OUT',productId:item.productId,productName:item.name,branchId:p.branchId,branchName:branches.find(b=>b.id===p.branchId)!.name})}
   Object.assign(session,{expectedAmountCents:String(Number(session.expectedAmountCents)+total),movementCount:Number(session.movementCount)+1});
-  const receipt={id:String(p.clientOperationId),date:when,status:'COMPLETED',offline:false,operator:'OPERADOR FICTÍCIO QA',customer:'Consumidor final',tenant:{legalName:'EMPRESA FICTÍCIA QA',tradeName:'QA'},branch:{name:branches.find(b=>b.id===p.branchId)!.name},items,payments:tender,subtotalCents:subtotal,discountCents:discount,surchargeCents:surcharge,totalCents:total,changeCents:paid-total};sales.push({...receipt,branchId:p.branchId});return {_execute:1,result:{receipt:{data:receipt}}}
- }) as {_execute:number;result:{receipt:unknown}}}
+  const receipt={id:String(p.clientOperationId),date:when,status:'COMPLETED',offline:false,operator:'OPERADOR FICTÍCIO QA',customer:'Consumidor final',tenant:{legalName:'EMPRESA FICTÍCIA QA',tradeName:'QA'},branch:{name:branches.find(b=>b.id===p.branchId)!.name},items,payments:tender,subtotalCents:subtotal,discountCents:discount,surchargeCents:surcharge,totalCents:total,changeCents:paid-total};sales.push({...receipt,branchId:p.branchId,cashSessionId:session.id});return {_execute:1,result:{receipt:{data:receipt}}}
+ });if(qaState.ackLoss&&!replay)throw Error('QA: confirmação perdida após persistência sintética');return {data:data as {_execute:number;result:{receipt:unknown}}}}
+ case 'SaleDetails':{const sale=sales.find(s=>s.id===v.saleId&&branchAllowed(s.branchId));if(!sale)throw Error('QA: venda inválida');return box({sale,branch:sale.branch,customer:null,items:sale.items,payments:sale.payments})}
+ case 'CancelSale':{
+  if(!String(v.reason??'').trim())throw Error('QA: motivo obrigatório');
+  const sale=sales.find(s=>s.id===v.saleId);if(!sale||!branchAllowed(sale.branchId))throw Error('QA: venda inválida');
+  if(sale.status==='CANCELLED')return {data:{_execute:0}};
+  const session=cashSession(sale.branchId);if(!session||session.id!==sale.cashSessionId)throw Error('QA: caixa fechado');
+  for(const item of sale.items as Row[]){const product=products.find(p=>p.id===item.productId)!,balance=product.balances.find(b=>b.branchId===sale.branchId)!;balance.quantity+=Number(item.quantity);balance.availableQuantity+=Number(item.quantity);movements.unshift({id:uuid(nextId++),operationId:'cancel:'+sale.id,occurredAt:when,quantity:item.quantity,unitCostCents:String(item.costPriceCents),status:'POSTED',typeCode:'SALE_REVERSAL',direction:'IN',productId:product.id,branchId:sale.branchId})}
+  session.expectedAmountCents=String(Number(session.expectedAmountCents)-Number(sale.totalCents));sale.status='CANCELLED';return {data:{_execute:1}}
+ }
  case 'SalesChannelOptions':return box({branches,connections:[]})
  case 'LatestPendingSalesChannelOrder':return box({orders:[]})
  case 'ListSales':return page(sales.map(s=>({...s,clientOperationId:s.id,source:'POS',soldAt:s.date,createdByUid:'qa-user',branchId:s.branchId,branchName:(s.branch as Row).name,customerName:s.customer,name:s.customer,itemCount:(s.items as unknown[]).length,paymentMethods:'DINHEIRO'})),{...v,search:(v.filters as Row|undefined)?.search??''})
@@ -177,8 +217,14 @@ export async function qaOperation(name:string,variables:unknown={}){
  if(cat){
   const list=sub?subcategories:categories,rows=(v.names??v.items??[v.name??'NOVA CATEGORIA QA']) as unknown[]
   if(/^(Create|Update)/.test(name)){
-   if(v.id){const row=list.find(x=>x.id===v.id);if(!row)throw Error('QA: registro inexistente');Object.assign(row,{name:String(v.name??'').trim().toUpperCase(),categoryId:v.categoryId??row.categoryId})}
-   else for(const value of rows){const x=typeof value==='object'&&value?value as Row:{name:value};list.push({id:uuid(12000+list.length),name:String(x.name??value).trim().toUpperCase(),categoryId:x.categoryId??uuid(300),categoryName:'CATEGORIA QA 001',active:true,createdAt:when,updatedAt:when,productCount:0,subcategoryCount:0})}
+   const normalize=(value:unknown)=>String(value??'').replace(/\s+/gu,' ').trim().toUpperCase();
+   const names=rows.map(value=>normalize(typeof value==='object'&&value?(value as Row).name:value));
+   if(v.id)names.splice(0,names.length,normalize(v.name));
+   if(names.some(n=>!n||[...n].length>120)||new Set(names).size!==names.length)throw Error('QA: nome inválido ou duplicado');
+   if(sub&&!categories.some(c=>c.id===v.categoryId))throw Error('QA: categoria obrigatória');
+   if(names.some(n=>list.some(r=>r.id!==v.id&&normalize(r.name)===n&&(!sub||r.categoryId===v.categoryId))))throw Error('QA: nome duplicado');
+   if(v.id){const row=list.find(x=>x.id===v.id);if(!row)throw Error('QA: registro inexistente');Object.assign(row,{name:String(v.name??'').replace(/\s+/gu,' ').trim().toUpperCase(),categoryId:v.categoryId??row.categoryId})}
+   else for(const value of rows){const x=typeof value==='object'&&value?value as Row:{name:value};list.push({id:uuid(12000+list.length),name:String(x.name??value).replace(/\s+/gu,' ').trim().toUpperCase(),categoryId:x.categoryId??uuid(300),categoryName:'CATEGORIA QA 001',active:true,createdAt:when,updatedAt:when,productCount:0,subcategoryCount:0})}
   }else{const ids=(v.ids??[v.id]) as string[];if(!ids.length||ids.some(id=>!list.some(row=>row.id===id)))throw Error('QA: registros inexistentes');for(const row of list)if(ids.includes(String(row.id)))row.active=v.active??/^Restore/.test(name)}
   return {data:{_execute:(v.ids as unknown[]|undefined)?.length??rows.length}}
  }
