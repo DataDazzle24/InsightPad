@@ -66,3 +66,8 @@ test('accepts only the exact sales empty-state browser regression path',()=>{
   assert.throws(()=>validateScope(policy,[path]),/outside approved scope/);
  }
 });
+
+test('permits only the exact isolated closure and disposable PG18 proofs, rejects adjacent files',()=>{
+ assert.equal(validateScope(policy,['scripts/qa-browser/closure.mjs','scripts/qa-browser/pg18-abort.py']),true);
+ for(const path of ['scripts/qa-browser/closure-extra.mjs','scripts/qa-browser/closure.mjs.bak','scripts/qa-browser/pg18-abort.sql','scripts/qa-browser/pg18-remote.py'])assert.throws(()=>validateScope(policy,[path]),/outside approved scope/);
+});

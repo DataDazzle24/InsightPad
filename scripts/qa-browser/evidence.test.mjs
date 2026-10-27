@@ -20,3 +20,11 @@ test('CI runs sales empty-state regression after browser preparation and before 
  assert.ok(install>=0 && regression>install && seal>regression);
  assert.match(workflow,/Regressão do estado vazio de vendas\n\s+run: node scripts\/qa-browser\/empty-sales\.mjs/);
 });
+
+test('CI runs the closure and disposable PG18 proofs before sealing, without exposing their originals',()=>{
+ const workflow=readFileSync(new URL('../../.github/workflows/ci.yml',import.meta.url),'utf8'),coverage=readFileSync(new URL('./coverage.mjs',import.meta.url),'utf8'),pg=readFileSync(new URL('./pg18-abort.py',import.meta.url),'utf8');
+ assert.match(coverage,/import \{closure\} from '\.\/closure.mjs'/);assert.match(coverage,/await closure\(\{page,output,sha,run,go,panel,wait,screenshot\}\)/);
+ assert.ok(workflow.indexOf('python3 scripts/qa-browser/pg18-abort.py')<workflow.indexOf('node scripts/qa-browser/seal.mjs'));
+ assert.match(pg,/'--network','none'/);assert.match(pg,/'--tmpfs','\/var\/lib\/postgresql:rw'/);assert.doesNotMatch(pg,/--publish|--volume|DATABASE_URL|GOOGLE_APPLICATION_CREDENTIALS/);
+ assert.match(pg,/artifacts\/browser-private\/pg18-abort.json/);
+});

@@ -1118,6 +1118,23 @@
         "DES-2026-001"
       ],
       "reason": "DEC-026 additional visual correction: reserve room for persistent order alerts so stock pagination and mobile navigation remain clickable; no change to frozen 68 IDs or excluded requests."
+    },
+    "scripts/qa-browser/closure.mjs": {
+      "ids": [
+        "AJU-DASH-11",
+        "AJU-DASH-12",
+        "AJU-EST-05",
+        "AJU-EST-23",
+        "AJU-CAT-01",
+        "AJU-PROD-02"
+      ],
+      "reason": "Residual isolated exporter, PDF, form and dashboard consumer regressions; reuse existing runner, no operational access. Exact path only."
+    },
+    "scripts/qa-browser/pg18-abort.py": {
+      "ids": [
+        "SEC-2026-008"
+      ],
+      "reason": "Disposable PostgreSQL18 write rollback and lock release evidence only, no backend or migration. Exact path only."
     }
   },
   "bytePreserved": [

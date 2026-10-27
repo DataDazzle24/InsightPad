@@ -104,8 +104,7 @@ Supported memory behavior: product create/edit/status, cash open/supply/
 withdrawal/close/policy, sale with validated cash payment/change/stock and
 matching retry receipt, catalog writes and simple stock entries/transfers.
 Writes survive route navigation in the same loaded app; reload/reset restores
-fixtures deterministically. Unknown or unmodeled operations (including stock
-reversal and external calls) throw explicitly. Empty/error/latency,
+fixtures deterministically. Unknown or unmodeled operations (including unmodeled fiscal flows and external calls) throw explicitly. Empty/error/latency,
 no-export/read/denied modes are controlled by the QA panel. The fixture
 permission/branch checks are synthetic, not backend authorization evidence.
 
@@ -134,3 +133,28 @@ filmstrip; explicit PNGs record each case and important intermediate states. Thi
 keeps long pending-response evidence bounded without freezing UI animations.
 
 V1 closure fixture updates: analytical records are immutable snapshots; filters select their original quantities and monetary values. Category/subcategory counts derive from product and parent IDs. Existing customer, supplier, branch and promotion writes persist in memory, and product components validate the component unit. Sale cancellation restores the original open cash session and stock once; uncertain sale ACK replay validates the identical payload. This remains a synthetic contract, not proof of deployed authorization, durable transactions or real SQL.
+
+Stage A residual runner (`closure.mjs`) shares the full runner's existing server,
+Chromium and private output. It parses actual CSVs with Python's independent csv
+parser; reconciles all customer PDF occurrences (65 active,51 birthdays,1201
+without purchase), and rasterizes section boundaries plus the last page. It
+checks additional dashboard states and header consumers in light/dark themes at
+emulated320/375/1366/1920 CSS pixels. These assertions do not certify every overlay
+or replace visual inspection, native zoom/print or authenticated tests.
+
+The boundary ledger is opt-in and fixed at dates around2025/2026 and month-end;
+normal fixtures retain their current-period mass. Financial filters never change
+historical quantities or money, daily/product/category/channel totals derive from
+selected rows. This synthetic channel ledger covers completed sales only, not
+partner state transitions. Existing `ReverseStockOperation` now has a bounded
+memory contract matching eligibility of manual IDs/full operations, refuses
+partial transfers and sales, and does not invent a reservation endpoint. Channel
+reservations and comprehensive fiscal documents remain SQL/assisted cases.
+
+`pg18-abort.py` runs the pinned PostgreSQL18 image in a disposable network-none,
+tmpfs-only container. It proves a held lock from another connection, waits for
+transaction/idle abort, then proves rollback and NOWAIT lock acquisition from a
+fresh connection. Its small budgets are experimental, not production settings.
+CI seals its report with browser evidence; no plaintext evidence upload is added.
+Possession of the corresponding private key and external inspection must be
+confirmed by the reviewer; ciphertext upload alone is not delivered inspection.
