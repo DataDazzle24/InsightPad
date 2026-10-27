@@ -1214,6 +1214,13 @@
         "AJU-SUB-14"
       ],
       "reason": "Exact isolated residual consumer tests for the frozen68, preserving exclusions and sufficient cases; no business endpoint, remote operation or public evidence."
+    },
+    "functions/test/pos.test.ts": {
+      "ids": [
+        "AJU-EST-22",
+        "AJU-PDV-04"
+      ],
+      "reason": "Exact existing SQL test for the authorized extended cash sale stock transfer and channel reservation chain in disposable PGlite; no remote operation."
     }
   },
   "bytePreserved": [

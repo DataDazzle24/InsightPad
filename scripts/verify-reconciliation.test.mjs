@@ -81,3 +81,8 @@ test('permits only the exact consolidated isolated consumer proof and rejects ne
  assert.equal(validateScope(policy,['scripts/qa-browser/consolidated.mjs']),true);
  for(const path of ['scripts/qa-browser/consolidated-extra.mjs','scripts/qa-browser/consolidated.mjs.bak','scripts/qa-browser/consolidated/remote.mjs'])assert.throws(()=>validateScope(policy,[path]),/outside approved scope/);
 });
+
+test('allows only the existing POS SQL chain test and refuses adjacent unapproved paths',()=>{
+ assert.equal(validateScope(policy,['functions/test/pos.test.ts']),true);
+ for(const path of ['functions/test/pos-extra.test.ts','functions/test/pos.test.ts.bak','functions/src/pos.ts'])assert.throws(()=>validateScope(policy,[path]),/outside approved scope/);
+});

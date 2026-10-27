@@ -27,7 +27,7 @@ export async function reports({page,output,sha}){
    if(view==='Clientes')assert.match(pages.at(-1),/SEM COMPRAR QA 1201/);
    for(const p of selected)execFileSync('pdftoppm',['-f',String(p),'-l',String(p),'-scale-to','1600','-png',pdf,dir+'/'+name]);
    // Poppler independently parses actual PDF font colors/text, not the JS serializer.
-   const xml=execFileSync('pdftohtml',['-xml','-i','-stdout',pdf],{encoding:'utf8',maxBuffer:30*1024*1024});writeFileSync(dir+'/'+name+'.xml',xml);assert.ok(xml.includes('<text'));
+   const xml=execFileSync('pdftohtml',['-xml','-i','-stdout',pdf],{encoding:'utf8',maxBuffer:30*1024*1024});writeFileSync(dir+'/'+name+'.xml',xml);assert.ok(xml.includes('<text'));assert.doesNotMatch(xml,/<fontspec[^>]*color="(?!#000000)[^"]+"/,'actual PDF text font must print black');
    cases.push({name,result:'passed',pages:pages.length,printTextSamples:measured.length,minRatio:Math.min(...measured.map(x=>x.ratio)),sections,rasterizedPages:[...selected].sort((a,b)=>a-b),source:sha});await page.emulateMedia({media:'screen'});
   }
  }finally{await page.emulateMedia({media:'screen'});writeFileSync(dir+'/results.json',JSON.stringify({sha,browser:page.context().browser().version(),auth:'mock',api:'memory',printMethod:'UI print handler + Chromium PDF renderer; native print dialog not exercised',cases},null,2))}
