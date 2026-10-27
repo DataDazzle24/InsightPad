@@ -1,7 +1,6 @@
 import { useDashboardExport } from '../utils/dashboardAuthorization';
 import { Link } from 'react-router-dom';
-import { csvSafe } from '../utils/registration';
-import { heatmapStyle } from '../utils/dashboardExport';
+import { financialCsv,heatmapStyle } from '../utils/dashboardExport';
 /* eslint-disable react-hooks/preserve-manual-memoization */
 import { useCallback, useEffect, useMemo, useRef, useState,type ReactNode } from "react";
 import { getDataConnect } from "firebase/data-connect";
@@ -217,43 +216,7 @@ export function DailyProfitDashboardPage({navigation}:{navigation?:ReactNode}) {
   }
   function csv() {
     if(!canExport||!data||busy)return;
-    const rows = [
-        [
-          "Produto",
-          "Categoria",
-          "Subcategoria",
-          "Volume",
-          "Faturamento bruto",
-          "Taxas iFood",
-          "Repasse líquido",
-          "Custo",
-          "Lucro após taxas",
-          "Margem",
-        ],
-        ...products.map((i) => [
-          i.name,
-          i.category ?? "",
-          i.subcategory ?? "",
-          i.quantity,
-          i.revenueCents,
-          i.providerFeeCents,
-          i.netRevenueCents,
-          i.costCents,
-          i.profitCents,
-          i.marginPercent,
-        ]),
-      ],
-      blob = new Blob(
-        [
-          "\uFEFF" +
-            rows
-              .map((r) =>
-                r.map((v) => `"${csvSafe(String(v)).replaceAll('"', '""')}"`).join(";"),
-              )
-              .join("\n"),
-        ],
-        { type: "text/csv;charset=utf-8" },
-      ),
+    const blob = new Blob([financialCsv(products)],{type:'text/csv;charset=utf-8'}),
       url = URL.createObjectURL(blob),
       a = document.createElement("a");
     a.href = url;

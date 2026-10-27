@@ -602,7 +602,7 @@ export function StockPage() {
               "Custo médio (R$)",
               "Valor total (R$)",
             ],
-            ...balance.map((p) => [
+            ...visibleBalances.map((p) => [
               p.name,
               p.internalCode ?? "",
               p.ean ?? "",

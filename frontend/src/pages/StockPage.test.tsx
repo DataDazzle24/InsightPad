@@ -52,3 +52,10 @@ it('exports BRL costs matching the screen without mutating stored cents, includi
  await click(find('Saldo atual'));await click(find('downloadCSV'));expect(csv).toContain('Custo médio (R$)');expect(csv).toContain('Valor total (R$)');expect(csv).toContain('R$');expect(data).toEqual(original)
  }finally{URL.createObjectURL=oldCreate;URL.revokeObjectURL=oldRevoke;anchor.mockRestore()}
 })
+
+it('exports the selected balance levels in the same displayed order and clears the recorte',async()=>{
+ const data=workspace();data.products.push({...data.products[0],id:'p2',name:'OUTRO SALDO',balances:[{...data.products[0].balances[0],quantity:1,availableQuantity:1}] } as typeof data.products[number]);data.products[1].minimumStock=2;
+ mocks.workspace.mockResolvedValue({data:{_select:[{data}]}});await render();await click(find('Saldo atual'));await click([...container.querySelectorAll('button')].find(b=>b.textContent?.includes('Estoque baixo'))!);
+ let csv='';const OriginalBlob=globalThis.Blob;vi.stubGlobal('Blob',class{constructor(parts:string[]){csv=parts.join('')}});const oldCreate=URL.createObjectURL,oldRevoke=URL.revokeObjectURL;URL.createObjectURL=()=> 'blob:qa-filter';URL.revokeObjectURL=()=>{};vi.spyOn(HTMLAnchorElement.prototype,'click').mockImplementation(()=>{});
+ try{await click(find('downloadCSV'));expect(csv).toContain('OUTRO SALDO');expect(csv).not.toContain('"Produto";""');expect(csv.trim().split('\n')).toHaveLength(2);await click(find('Limpar filtros'));await click(find('downloadCSV'));expect(csv.trim().split('\n')).toHaveLength(3)}finally{vi.stubGlobal('Blob',OriginalBlob);URL.createObjectURL=oldCreate;URL.revokeObjectURL=oldRevoke}
+})
