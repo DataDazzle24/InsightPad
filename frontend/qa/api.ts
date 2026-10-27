@@ -119,11 +119,12 @@ export async function qaOperation(name:string,variables:unknown={}){
  case 'SaveCustomer':case 'SaveSupplier':case 'SaveBranch':case 'SavePromotion':{
   const list=name==='SaveCustomer'?customers:name==='SaveSupplier'?suppliers:name==='SaveBranch'?branches:promotions;
   const old=v.id?list.find(x=>x.id===v.id):undefined;if(v.id&&!old)throw Error('QA: registro inexistente');
-  const label=String(p.name??p.legalName??'').trim().toUpperCase();
-  if(name!=='SavePromotion'&&!label)throw Error('QA: nome obrigatório');
-  if(list.some(x=>x.id!==v.id&&((label&&String((x as Row).name).toUpperCase()===label)||(p.document&&(x as Row).document===p.document))))throw Error('QA: registro duplicado');
+  const label=String(name==='SaveSupplier'?p.legalName??'':p.name??'').trim(),cpf=String(p.cpf??'').replace(/\D/g,''),cnpj=String(p.cnpj??'').replace(/\D/g,'');
+  if(name!=='SavePromotion'&&label.length<2)throw Error('QA: nome obrigatório');
+  if((cpf&&cnpj)||(cpf&&cpf.length!==11)||(cnpj&&cnpj.length!==14))throw Error('QA: documento inválido');
+  if(list.some(x=>x.id!==v.id&&(x as Row).active!==false&&(name==='SaveBranch'?(String(x.name).trim().toUpperCase()===label.toUpperCase()||p.internalCode&&(x as Row).internalCode===p.internalCode):((cpf&&(x as Row).cpf===cpf)||(cnpj&&(x as Row).cnpj===cnpj)))))throw Error('QA: registro duplicado');
   if(name==='SavePromotion'){integer(p.promotionalPriceCents);if(!products.some(x=>x.id===p.productId)||!p.startsAt||!p.endsAt||String(p.endsAt)<=String(p.startsAt))throw Error('QA: promoção inválida')}
-  const row={...p,id:String(old?.id??uuid(nextId++)),name:label,active:p.active??true,createdAt:(old as Row|undefined)?.createdAt??when,updatedAt:when};
+  const row={...p,cpf,cnpj,id:String(old?.id??uuid(nextId++)),name:label,active:p.active??true,createdAt:(old as Row|undefined)?.createdAt??when,updatedAt:when};
   if(old)Object.assign(old,row);else list.push(row);return {data:{_execute:1}}
  }
  case 'SetCustomersStatusBatch':case 'SetSuppliersStatusBatch':case 'SetBranchesStatusBatch':case 'SetPromotionStatus':{

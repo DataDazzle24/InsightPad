@@ -76,8 +76,8 @@ it('derives category/subcategory counts from actual product relationships',async
 })
 it('supports existing customer supplier branch and promotion contracts without fake writes',async()=>{
  for(const [save,list]of [['SaveCustomer','ListCustomers'],['SaveSupplier','ListSuppliers'],['SaveBranch','ListBranches']]){
-  await qaOperation(save!,{payload:{name:'NOME NOVO QA',legalName:'NOME NOVO QA'}});const data=(await qaOperation(list!,{search:'NOME NOVO QA'})).data as {_select:{id:string}[]};const id=data._select[0]!.id;
-  await expect(qaOperation(save!,{payload:{name:'NOME NOVO QA'}})).rejects.toThrow('duplicado');await qaOperation(save!,{id,payload:{name:'NOME EDITADO QA'}});expect((await qaOperation(list!,{search:'NOME NOVO QA'})).data).toMatchObject({_select:[]});
+  await qaOperation(save!,{payload:{name:'NOME NOVO QA',legalName:'NOME NOVO QA',cpf:'529.982.247-25'}});const data=(await qaOperation(list!,{search:'NOME NOVO QA'})).data as {_select:{id:string}[]};const id=data._select[0]!.id;
+  await expect(qaOperation(save!,{payload:{name:'NOME NOVO QA',legalName:'NOME NOVO QA',cpf:'52998224725'}})).rejects.toThrow('duplicado');await qaOperation(save!,{id,payload:{name:'NOME EDITADO QA',legalName:'NOME EDITADO QA',cpf:'52998224725'}});expect((await qaOperation(list!,{search:'NOME NOVO QA'})).data).toMatchObject({_select:[]});
   qaState.permissions='read';await expect(qaOperation(save!,{id,payload:{name:'NEGADO'}})).rejects.toThrow('permissão');qaState.permissions='full';
  }
  await qaOperation('SavePromotion',{productId:uuid(101),promotionalPriceCents:'999',startsAt:'2000-01-01',endsAt:'2099-01-01'});expect((await qaOperation('ProductPromotions',{productId:uuid(101)})).data).toMatchObject({_select:[{promotionalPriceCents:'999',status:'ACTIVE'}]});
@@ -103,4 +103,8 @@ it('keeps uncertain sale ACK retry payload and applies cash and stock once',asyn
 it('reconciles category and subcategory analytical groups with the immutable financial ledger',async()=>{
  const f=(await qaOperation('FinancialIndicatorsDashboard')).data as {_select:{data:{cards:{revenueCents:number}}}[]};const o=(await qaOperation('OperationalAnalyticsDashboard')).data as {_select:{data:{categories:{level:string;revenueCents:number}[]}}[]};
  for(const level of ['Categoria','Subcategoria'])expect(o._select[0]!.data.categories.filter(x=>x.level===level).reduce((n,x)=>n+x.revenueCents,0)).toBe(f._select[0]!.data.cards.revenueCents);
+})
+
+it('allows customer and supplier homonyms while rejecting duplicate active normalized documents',async()=>{
+ for(const name of ['SaveCustomer','SaveSupplier']){await qaOperation(name,{payload:{name:'HOMONIMO QA',legalName:'HOMONIMO QA'}});await qaOperation(name,{payload:{name:'HOMONIMO QA',legalName:'HOMONIMO QA'}});await qaOperation(name,{payload:{name:'OUTRO QA',legalName:'OUTRO QA',cpf:'529.982.247-25'}});await expect(qaOperation(name,{payload:{name:'OUTRO NOME QA',legalName:'OUTRO NOME QA',cpf:'52998224725'}})).rejects.toThrow('duplicado')}
 })
