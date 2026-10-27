@@ -76,3 +76,8 @@ test('permits only the exact existing reports regression and rejects neighboring
  assert.equal(validateScope(policy,['scripts/qa-browser/reports.mjs']),true);
  for(const path of ['scripts/qa-browser/reports-extra.mjs','scripts/qa-browser/reports.mjs.bak','scripts/qa-browser/remote-reports.mjs'])assert.throws(()=>validateScope(policy,[path]),/outside approved scope/);
 });
+
+test('permits only the exact consolidated isolated consumer proof and rejects neighbors',()=>{
+ assert.equal(validateScope(policy,['scripts/qa-browser/consolidated.mjs']),true);
+ for(const path of ['scripts/qa-browser/consolidated-extra.mjs','scripts/qa-browser/consolidated.mjs.bak','scripts/qa-browser/consolidated/remote.mjs'])assert.throws(()=>validateScope(policy,[path]),/outside approved scope/);
+});

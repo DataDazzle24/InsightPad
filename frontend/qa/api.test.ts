@@ -1,6 +1,6 @@
 import {beforeEach,expect,it} from 'vitest'
 import {qaOperation,qaState,resetFixtures,uuid,fixtureDate,inspectFixtures,useBoundaryLedger} from './api'
-beforeEach(()=>{resetFixtures();qaState.fail=false;qaState.ackLoss=false;qaState.delay=0;qaState.permissions='full';qaState.empty=false;qaState.allowedBranches=[]})
+beforeEach(()=>{resetFixtures();qaState.fail=false;qaState.cashAckLoss=false;qaState.ackLoss=false;qaState.delay=0;qaState.permissions='full';qaState.empty=false;qaState.allowedBranches=[]})
 it('uses deterministic full datasets, pagination and explicit unknown-operation failures',async()=>{
  const a=await qaOperation('ListCategories',{limit:100,offset:0}),b=await qaOperation('ListCategories',{limit:100,offset:100});expect(a.data).toMatchObject({_selectFirst:{totalCount:300}});expect((b.data as {_select:unknown[]})._select).toHaveLength(100);
  const r=await qaOperation('OperationalAnalyticsDashboard');const data=(r.data as {_select:Array<{data:{customers:{birthdays:unknown[];dormant:unknown[]}}}>})._select[0]!.data;expect(data.customers.birthdays).toHaveLength(51);expect(data.customers.dormant).toHaveLength(1201);
@@ -231,4 +231,8 @@ it('V1C-A03 archive matches SQL eligibility and atomic batches without cascading
  expect((await qaOperation('SetCategoriesStatusBatch',{ids:[uuid(598)],active:false})).data).toMatchObject({_execute:1});expect(inspectFixtures().categories.find(c=>c.id===uuid(598))).toMatchObject({active:false})
  // No active product/child: existing inactivation rule permits the row once.
  expect((await qaOperation('ArchiveSubcategory',{id:uuid(1098)})).data).toMatchObject({_execute:1});expect(inspectFixtures().subcategories.find(c=>c.id===uuid(1098))).toMatchObject({active:false})
+})
+
+it('own cash lost ACK replays exact payload with one ledger effect',async()=>{
+ qaState.cashAckLoss=true;const p={sessionId:uuid(60),operationId:'cash-ack-integration',movementType:'SUPPLY',amountCents:500,description:'MOTIVO QA'};await expect(qaOperation('RegisterCashMovement',p)).rejects.toThrow('Failed to fetch');expect(inspectFixtures().sessions[0]!.expectedAmountCents).toBe('10500');await qaOperation('RegisterCashMovement',p);expect(inspectFixtures().cashMovements).toHaveLength(1);await expect(qaOperation('RegisterCashMovement',{...p,amountCents:501})).rejects.toThrow('conflitante')
 })

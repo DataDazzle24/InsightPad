@@ -6,7 +6,7 @@ export const firebaseApp={},auth={currentUser:null},appCheck=null
 export const getDataConnect=()=>({qa:true}),getFunctions=()=>({qa:true})
 export const currentSessionToken=()=> '0'.repeat(64)
 export const sessionKey=(uid:string)=>'qa.session:'+uid
-export const qaState={fail:false,delay:0,ackLoss:false,logs:[] as string[],unsupported:[] as string[],permissions:'full',empty:false,allowedBranches:[] as string[]}
+export const qaState={fail:false,delay:0,ackLoss:false,logs:[] as string[],unsupported:[] as string[],permissions:'full',empty:false,allowedBranches:[] as string[],cashAckLoss:false,requests:[] as {name:string;variables:unknown}[]}
 export const uuid=(n:number)=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`
 const immutable=<T>(value:T):T=>{if(value&&typeof value==='object'){Object.values(value).forEach(immutable);Object.freeze(value)}return value}
 export const fixtureDate=new Date().toISOString().slice(0,10)
@@ -36,7 +36,7 @@ export function resetFixtures(){
  subcategories=Array.from({length:300},(_,i)=>({id:uuid(800+i),name:`SUBCATEGORIA QA ${String(i+1).padStart(3,'0')}`,categoryId:uuid(300+i%10),categoryName:`CATEGORIA QA ${String(i%10+1).padStart(3,'0')}`,active:i%11!==10,createdAt:when,updatedAt:when}))
  movements=Array.from({length:501},(_,i)=>({id:uuid(2000+i),operationId:'qa-movement-'+i,occurredAt:when,quantity:i%5+1,unitCostCents:products[i%products.length]!.costPriceCents,status:i%13===0?'REVERSED':'POSTED',typeCode:i%2?'LOSS':'MANUAL_IN',typeName:i%2?'Perda':'Entrada',direction:i%2?'OUT':'IN',productId:products[i%products.length]!.id,productName:products[i%products.length]!.name,branchId:branches[i%2]!.id,branchName:branches[i%2]!.name}))
  transfers=Array.from({length:201},(_,i)=>({id:uuid(3000+i),operationId:'qa-transfer-'+i,status:'COMPLETED',requestedAt:when,sourceBranchId:branches[0]!.id,destinationBranchId:branches[1]!.id,sourceBranch:branches[0]!.name,destinationBranch:branches[1]!.name,totalQuantity:i%5+1,itemCount:1}))
- receipts.clear();qaState.logs=[];qaState.unsupported=[]
+ receipts.clear();qaState.logs=[];qaState.unsupported=[];qaState.requests=[]
 }
 resetFixtures()
 const result=(data:unknown)=>({data:{_select:[{data:structuredClone(data)}]}})
@@ -121,6 +121,7 @@ const mutateOnce=(name:string,key:unknown,payload:unknown,apply:()=>unknown)=>{
 }
 export async function qaOperation(name:string,variables:unknown={}){
  const v=(variables??{}) as Row,p=(name==='SavePromotion'?v:v.payload??{}) as Row
+ qaState.requests.push({name,variables:structuredClone(v)});qaState.requests=qaState.requests.slice(-200);
  qaState.logs.push(name);qaState.logs=qaState.logs.slice(-40)
  if(qaState.delay)await new Promise(r=>setTimeout(r,qaState.delay))
  if(qaState.fail)throw new Error('QA: falha sintética de API')
@@ -211,11 +212,11 @@ export async function qaOperation(name:string,variables:unknown={}){
  case 'OpenCashSession':{
   if(!branchAllowed(v.branchId)||cashSession(v.branchId))throw Error('QA: filial inválida ou caixa já aberto');const amount=integer(v.openingAmountCents);sessions.push({id:uuid(nextId++),branchId:v.branchId,status:'OPEN',openedAt:when,openingAmountCents:String(amount),expectedAmountCents:String(amount),movementCount:0});return {data:{_execute:1}}
  }
- case 'RegisterCashMovement':case 'CloseCashSession':return {data:mutateOnce(name,v.operationId,v,()=>{
+ case 'RegisterCashMovement':case 'CloseCashSession':{const replay=mutations.has(name+':'+v.operationId);const data=mutateOnce(name,v.operationId,v,()=>{
   const session=sessions.find(s=>s.id===v.sessionId&&s.status==='OPEN');if(!session||!branchAllowed(session.branchId))throw Error('QA: caixa não está aberto');
   if(name==='CloseCashSession'){Object.assign(session,{status:'CLOSED',countedAmountCents:String(integer(v.countedAmountCents)),closedAt:when,notes:v.notes});return {_execute:1}}
   if(!['SUPPLY','WITHDRAWAL'].includes(String(v.movementType)))throw Error('QA: tipo inválido');const amount=integer(v.amountCents);if(!amount)throw Error('QA: valor deve ser positivo');const expected=Number(session.expectedAmountCents)+(v.movementType==='SUPPLY'?amount:-amount);if(expected<0)throw Error('QA: saldo insuficiente');Object.assign(session,{expectedAmountCents:String(expected),movementCount:Number(session.movementCount)+1});cashMovements.push({...v,id:uuid(nextId++)});return {_execute:1}
- }) as {_execute:number}}
+ });if(qaState.cashAckLoss&&!replay)throw Object.assign(new TypeError('Failed to fetch'),{code:'unavailable'});return {data:data as {_execute:number}}}
  case 'UpdatePosPolicy':policy={...policy,...v};return {data:{_execute:1}}
  case 'PostSale':{const replay=mutations.has(name+':'+p.clientOperationId);const data=mutateOnce(name,p.clientOperationId,p,()=>{
   if(p.replacesSaleId)throw Error('POS_CORRECTION_UNSUPPORTED');
@@ -284,4 +285,4 @@ export const executeQuery=(ref:ReturnType<typeof queryRef>)=>qaOperation(ref.nam
 export const executeMutation=executeQuery
 export const httpsCallable=(_functions:unknown,name:string)=>async()=>{throw new Error('QA: chamada externa mockada e desativada: '+name)}
 // Read-only diagnostic snapshot for browser assertions; synthetic QA build only.
-export const inspectFixtures=()=>structuredClone({products,movements,transfers,sessions,sales,cashMovements,ledger,categories,subcategories})
+export const inspectFixtures=()=>structuredClone({products,movements,transfers,sessions,sales,cashMovements,ledger,categories,subcategories,branches,policy,customers,suppliers,promotions})

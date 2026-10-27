@@ -46,10 +46,11 @@ export function CashSessionModal({
   const [amount, setAmount] = useState("R$ 0,00"),
     [notes, setNotes] = useState(""),
     [busy, setBusy] = useState(false),
+    [uncertain,setUncertain]=useState(false),
     [waitingApproval,setWaitingApproval] = useState(false),
     [draftPolicy, setDraftPolicy] = useState<PosPolicy>(policy ?? {requireOpenSession:true, operatorDiscountPercent:0, operatorSurchargePercent:0, allowOperatorClose:false,operatorWithdrawalLimitCents:0,operatorCloseDifferenceLimitCents:0});
   const inFlight = useRef(false), operation = useRef({payload:"",id:""});
-  useDialogAccessibility(true, () => { if(!busy) onClose() });
+  useDialogAccessibility(true, () => { if(!busy&&!uncertain) onClose() });
   const expected = Number(session?.expectedAmountCents ?? 0);
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -128,7 +129,10 @@ export function CashSessionModal({
       onClose();
     } catch (error) {
       console.error(error);
-      onNotice(
+      const code=String((error as {code?:unknown})?.code??''),network=/^(?:.*\/)?(?:unavailable|deadline-exceeded)$/.test(code)||error instanceof TypeError&&/fetch|network/i.test(error.message);
+      if(network&&['supply','withdrawal','close'].includes(mode)){
+        setUncertain(true);onNotice(`Confirmação do caixa incerta. Repita sem alterar os dados. Referência: ${operationId}`);
+      }else onNotice(
         error instanceof Error
           ? error.message
           : "Não foi possível atualizar o caixa.",
@@ -151,7 +155,7 @@ export function CashSessionModal({
             <h2>{mode === "policy" ? "REGRAS DO CAIXA" : session ? "MEU CAIXA ABERTO" : "ABRIR MEU CAIXA"}</h2>
             {!session && <p>Cada usuário abre seu próprio caixa nesta filial. Dinheiro exige abertura; as demais vendas seguem as regras da empresa.</p>}
           </div>
-          <button disabled={busy} onClick={onClose} aria-label="Fechar controle de caixa">
+          <button disabled={busy||uncertain} onClick={onClose} aria-label="Fechar controle de caixa">
             ×
           </button>
         </header>
@@ -228,10 +232,10 @@ export function CashSessionModal({
             <label><span>Limite de sangria sem aprovação</span><input inputMode="numeric" value={maskMoney(Number(draftPolicy.operatorWithdrawalLimitCents ?? 0))} onChange={event => setDraftPolicy(value => ({...value,operatorWithdrawalLimitCents:parseMoney(event.target.value)}))} /></label>
             <label><span>Diferença máxima no fechamento sem aprovação</span><input inputMode="numeric" value={maskMoney(Number(draftPolicy.operatorCloseDifferenceLimitCents ?? 0))} onChange={event => setDraftPolicy(value => ({...value,operatorCloseDifferenceLimitCents:parseMoney(event.target.value)}))} /></label>
             <p className="wide">Receber dinheiro sempre exige caixa aberto. Suprimentos exigem gestão. Sangria e fechamento acima dos limites exigem aprovação por outro gestor. Desabilitar o fechamento do operador exige aprovação em todos os fechamentos.</p>
-          </fieldset><footer><button type="button" className="catalog-modal-cancel" disabled={busy} onClick={() => setMode(session ? "summary" : "open")}>Voltar</button><button className="catalog-primary" disabled={busy}>Salvar regras</button></footer></form>
+          </fieldset><footer><button type="button" className="catalog-modal-cancel" disabled={busy||uncertain} onClick={() => setMode(session ? "summary" : "open")}>Voltar</button><button className="catalog-primary" disabled={busy}>Salvar regras</button></footer></form>
         ) : (
           <form onSubmit={submit}>
-            <fieldset disabled={busy || waitingApproval} className="master-form-grid">
+            <fieldset disabled={busy || waitingApproval || uncertain} className="master-form-grid">
               <label>
                 <span>
                   {mode === "open"
@@ -274,7 +278,7 @@ export function CashSessionModal({
             </fieldset>
             <footer>
               <button
-                type="button" className="catalog-modal-cancel" disabled={busy}
+                type="button" className="catalog-modal-cancel" disabled={busy||uncertain}
                 onClick={() => {setWaitingApproval(false);operation.current={payload:"",id:""};if(session)setMode("summary");else onClose()}}
               >
                 {session ? "Voltar" : draftPolicy.requireOpenSession ? "Cancelar" : "Seguir sem abrir"}

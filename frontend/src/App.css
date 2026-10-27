@@ -287,3 +287,6 @@ html[data-theme=light] .catalog-confirm footer button:focus-visible,html[data-th
  .finance-heading,.finance-heading h1,.finance-heading p,.finance-comparison,.finance-chart-card,.finance-chart-card header,.finance-chart-card header strong,.finance-chart-card header span,.finance-kpis article,.finance-kpis article strong,.finance-kpis article span,.finance-kpis article small{background:#fff!important;color:#000!important}
  .finance-comparison strong,.finance-comparison span,.finance-comparison small,.finance-table-card small,.finance-table-card strong,.finance-chart-card small,.channel-dashboard__empty{color:#000!important}
 }
+@media print{
+ :is(.finance-dashboard,.analytics-page) :is(h1,h2,h3,p,span,strong,small,th,td,button,a){color:#000!important}
+}

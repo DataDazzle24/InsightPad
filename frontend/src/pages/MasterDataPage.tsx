@@ -1583,7 +1583,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
               </thead>
               <tbody>
                 {visibleRows.map((row) => (
-                  <tr key={row.id} className={!row.active ? "is-inactive" : ""}>
+                  <tr data-record-id={row.id} key={row.id} className={!row.active ? "is-inactive" : ""}>
                     <td>
                       <input
                         type="checkbox"

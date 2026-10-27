@@ -787,7 +787,7 @@ export function StockPage() {
             <tbody>
               {view === "balance"
                 ? visibleBalances.slice(page*100,(page+1)*100).map((p) => (
-                    <tr key={p.id}>
+                    <tr data-record-id={p.id} key={p.id}>
                       <td>
                         <strong>{p.name}</strong>
                         <small>{p.internalCode || p.ean || "Sem código"}</small>
@@ -851,7 +851,7 @@ export function StockPage() {
                       </tr>
                     ))
                   : data.transfers.map((t) => (
-                      <tr key={t.id} title={`ID: ${t.id} · Operação: ${t.operationId}`}>
+                      <tr data-record-id={t.id} key={t.id} title={`ID: ${t.id} · Operação: ${t.operationId}`}>
                         <td>
                           {new Date(t.requestedAt).toLocaleString("pt-BR")}
                         </td>
