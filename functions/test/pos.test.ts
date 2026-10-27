@@ -131,3 +131,29 @@ describe('PDV: venda, caixa e isolamento transacionais',()=>{
   await expect(operation(db,'RegisterCashMovement',['actor',session,'WITHDRAWAL',1001,'Teste',crypto.randomUUID()])).rejects.toThrow();
  });
 });
+
+it('single isolated ledger chain links cash sale cancellation entry transfer and existing reservation reconciliation',async()=>{
+ await db.query("INSERT INTO app_pages(id,page_key,active) VALUES(gen_random_uuid(),'ESTOQUE',true)");
+ await db.query("INSERT INTO role_page_permissions(role_id,page_id,tenant_id,can_access,can_create,can_delete,can_update,can_manage) SELECT $1,id,$2,true,true,true,true,true FROM app_pages WHERE page_key='ESTOQUE'",[ids.role,ids.tenant]);
+ await db.query('UPDATE cash_sessions SET opening_amount_cents=10000 WHERE id=$1',[session]);await db.query("UPDATE cash_movements SET amount_cents=10000 WHERE session_id=$1 AND movement_type='OPENING'",[session]);
+ await db.query('UPDATE products SET sale_price_cents=1200,cost_price_cents=500 WHERE id=$1',[ids.product]);
+ await db.exec('DELETE FROM stock_balances');
+ const entry={branchId:ids.branch,direction:'IN',clientOperationId:'closure-entry-ten',occurredAt:'2026-10-19T23:30:00-03:00',items:[{product_id:ids.product,quantity:10,unit_cost_cents:500,unit_gross_cents:500}]};
+ await operation(db,'SaveStockBatch',['actor',entry]);await operation(db,'SaveStockBatch',['actor',entry]);expect(await balance()).toBe(10);
+ const p=payload({items:[{product_id:ids.product,quantity:2,requested_price:1200}],payments:[{payment_method_id:cash,amount_cents:3000,sequence:1}]});
+ await post(p);await post(p);expect(await balance()).toBe(8);expect((await sales())[0]).toMatchObject({total_cents:2400,change_cents:600});
+ const cashTotal=async()=>Number((await db.query<{n:string}>('SELECT coalesce(sum(amount_cents),0)::text n FROM cash_movements WHERE session_id=$1',[session])).rows[0]!.n);
+ expect(await cashTotal()).toBe(12400);await operation(db,'CancelSale',['actor',(await sales())[0]!.id,'CANCELAMENTO DA CADEIA']);expect(await balance()).toBe(10);expect(await cashTotal()).toBe(10000);
+ await operation(db,'SaveStockBatch',['actor',{...entry,clientOperationId:'closure-entry-three',items:[{product_id:ids.product,quantity:3,unit_cost_cents:500,unit_gross_cents:500}]}]);expect(await balance()).toBe(13);
+ const transfer={sourceBranchId:ids.branch,destinationBranchId:ids.otherBranch,clientOperationId:'closure-transfer-two',items:[{product_id:ids.product,quantity:2}]};
+ await operation(db,'PostStockTransfer',['actor',transfer]);await operation(db,'PostStockTransfer',['actor',transfer]);expect(await balance()).toBe(11);
+ expect(Number((await db.query<{q:string}>('SELECT quantity q FROM stock_balances WHERE branch_id=$1 AND product_id=$2',[ids.otherBranch,ids.product])).rows[0]!.q)).toBe(2);
+ await db.query("UPDATE sales_channel_order_items SET product_id=$1,mapping_status='MAPPED',external_product_id='item-1',unit_price_cents=1200,total_cents=1200 WHERE id=$2",[ids.product,ids.orderItem]);
+ await db.query("UPDATE sales_channel_orders SET status='ACCEPTED',pending_action=NULL,command_status='CONFIRMED',subtotal_cents=1200,total_cents=1200,payment_integrity_status='VALID' WHERE id=$1",[ids.order]);
+ const evidence={merchantId:'merchant-1',eventId:ids.event,workerId:'worker-123'};
+ for(let i=0;i<2;i++)await operation(db,'SystemReconcileSalesChannelCommerce',[ids.connection,'order-1',evidence]);
+ expect((await db.query('SELECT status,quantity::text FROM sales_channel_stock_reservations')).rows).toEqual([{status:'RESERVED',quantity:'1.000'}]);expect(await balance()).toBe(11);
+ await db.query("UPDATE sales_channel_orders SET status='CANCELLED' WHERE id=$1",[ids.order]);
+ for(let i=0;i<2;i++)await operation(db,'SystemReconcileSalesChannelCommerce',[ids.connection,'order-1',evidence]);
+ expect((await db.query('SELECT status FROM sales_channel_stock_reservations')).rows).toEqual([{status:'RELEASED'}]);expect(await balance()).toBe(11);expect(await cashTotal()).toBe(10000);
+});

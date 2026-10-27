@@ -819,7 +819,7 @@ export function StockPage() {
                 : view === "movements"
                   ? movements.map((m) => (
                       <tr
-                        key={m.id}
+                        data-record-id={m.id} key={m.id}
                         className={selectedIds.includes(m.id)?"selected":""} title={`ID: ${m.id} · Operação: ${m.operationId}`}
                         onClick={(event)=>selectMovement(m,event.shiftKey)}
                       >

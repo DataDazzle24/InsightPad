@@ -80,3 +80,14 @@ it.each(['CAD_CATEGORIA','CAD_SUBCATEGORIA'] as const)('limits %s UI batch to tw
  await click(button('Cancelar'));expect(container.querySelector('[role="dialog"]')).toBeNull();expect(mocks.create).not.toHaveBeenCalled()
 })
 it('does not offer subcategory creation without its own canCreate permission',async()=>{mocks.canCreate=false;await render('CAD_SUBCATEGORIA');expect(container.textContent).not.toContain('+ Nova Subcategoria')})
+
+it('refuses an incomplete second subcategory instead of silently submitting only the first',async()=>{
+ await render('CAD_SUBCATEGORIA');await click(button('+ Nova Subcategoria'));
+ const parent=container.querySelector('select')!;
+ await act(async()=>{parent.value='11111111-1111-4111-8111-111111111111';parent.dispatchEvent(new Event('change',{bubbles:true}))});
+ await input(container.querySelector<HTMLInputElement>('#subcategory-name-0')!,'PRIMEIRA');await click(button('+ ADICIONAR OUTRA SUBCATEGORIA'));
+ await input(container.querySelector<HTMLInputElement>('#subcategory-name-1')!,'SEGUNDA SEM PAI');
+ await act(async()=>{container.querySelector('form')!.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}))});
+ expect(container.querySelector('[role="alertdialog"]')).toBeNull();expect(container.querySelector('[role="alert"]')?.textContent).toContain('Informe combinações');
+ await act(async()=>{await vi.advanceTimersByTimeAsync(20)});expect(document.activeElement?.id).toBe('subcategory-parent-1');expect(document.activeElement?.getAttribute('aria-invalid')).toBe('true');
+});
