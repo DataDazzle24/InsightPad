@@ -290,3 +290,5 @@ html[data-theme=light] .catalog-confirm footer button:focus-visible,html[data-th
 @media print{
  :is(.finance-dashboard,.analytics-page) :is(h1,h2,h3,p,span,strong,small,th,td,button,a){color:#000!important}
 }
+/* Match the existing light-theme focus contrast for report consumers. */
+html[data-theme=light] :is(.finance-dashboard,.analytics-page) button:focus-visible{outline-color:#1268a7}
