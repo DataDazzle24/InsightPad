@@ -37,6 +37,8 @@ it('counts avoid join multiplication and paging/filter totals cover all 300 rows
  // Deliberately inconsistent foreign-tenant links must not contaminate aggregates.
  await db.query("INSERT INTO products(tenant_id,category_id,name) VALUES($1,$2,'ALIEN PRODUCT')",[ids.otherTenant,first]);
  await db.query("INSERT INTO subcategories(tenant_id,category_id,name) VALUES($1,$2,'ALIEN SUB')",[ids.otherTenant,first]);
+ await db.query("INSERT INTO products(tenant_id,category_id,name,active) VALUES($1,$2,'INATIVO',false)",[ids.tenant,first]);
+ await db.query("INSERT INTO subcategories(tenant_id,category_id,name,active) VALUES($1,$2,'INATIVA',false)",[ids.tenant,first]);
  const list=async(offset:number,filters:object={})=>await run('ListCategories','','name','asc',100,offset,'test',filters) as Awaited<ReturnType<typeof run>>&{meta:{totalCount:number}};
  const one=await list(0);expect(one.rows).toHaveLength(100);expect(Number(one.meta.totalCount)).toBe(300);expect(one.rows[0]).toMatchObject({productCount:2,subcategoryCount:3});
  expect((await list(100)).rows).toHaveLength(100);expect((await list(200)).rows).toHaveLength(100);

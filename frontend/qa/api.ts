@@ -59,6 +59,7 @@ const sorted=(rows:Row[],v:Row,date:string)=>[...rows].sort((a,b)=>{
  const field=String(v.sortField??date),numeric=['quantity','totalQuantity','unitCostCents','itemCount'].includes(field),sign=v.sortDirection==='asc'?1:-1;
  const order=numeric?Number(a[field]??0)-Number(b[field]??0):String(a[field]??'').localeCompare(String(b[field]??''),'pt-BR',{numeric:true});return sign*order||String(a.id).localeCompare(String(b.id))
 })
+const supplierOptions=()=>suppliers.filter(s=>s.active&&!s.deletedAt).map(s=>({id:s.id,name:String(s.tradeName||s.legalName||s.name)}))
 const stockWorkspace=(v:Row)=>{
  const f=(v.filters??{}) as Row,has=(key:string,value:unknown)=>!Array.isArray(f[key])||!(f[key] as unknown[]).length||(f[key] as unknown[]).includes(value);
  const text=String(f.search??'').toLocaleLowerCase('pt-BR');
@@ -66,7 +67,7 @@ const stockWorkspace=(v:Row)=>{
  const ms=(qaState.empty?[]:movements).filter(m=>branchAllowed(m.branchId)&&has('branches',m.branchId)&&has('types',m.typeCode)&&has('products',m.productId)&&date(m.occurredAt)&&[m.productName,m.branchName,m.typeName,m.operationId].join(' ').toLocaleLowerCase('pt-BR').includes(text));
  const ts=(qaState.empty?[]:transfers).filter(t=>branchAllowed(t.sourceBranchId)&&branchAllowed(t.destinationBranchId)&&(has('branches',t.sourceBranchId)||has('branches',t.destinationBranchId))&&date(t.requestedAt)&&[t.sourceBranch,t.destinationBranch,t.operationId].join(' ').toLocaleLowerCase('pt-BR').includes(text));
  const offset=Math.max(0,Number(v.offset??0)),limit=Math.min(1000,Math.max(1,Number(v.limit??100)));
- return {branches:branches.filter(b=>branchAllowed(b.id)),suppliers:suppliers.filter(s=>s.active).map(s=>({id:s.id,name:s.legalName})),products:qaState.empty?[]:products.map(p=>({...p,balances:p.balances.filter(b=>branchAllowed(b.branchId))})),movements:sorted(ms,v,'occurredAt').slice(offset,offset+limit),transfers:sorted(ts,v,'requestedAt').slice(offset,offset+limit),movementCount:ms.length,transferCount:ts.length}
+ return {branches:branches.filter(b=>branchAllowed(b.id)),suppliers:supplierOptions(),products:qaState.empty?[]:products.map(p=>({...p,balances:p.balances.filter(b=>branchAllowed(b.branchId))})),movements:sorted(ms,v,'occurredAt').slice(offset,offset+limit),transfers:sorted(ts,v,'requestedAt').slice(offset,offset+limit),movementCount:ms.length,transferCount:ts.length}
 }
 // QA-only analytical ledgers. Cards, tables and exports derive from the same rows.
 const inPeriod=(date:unknown,v:Row)=>(!v.from||String(date).slice(0,10)>=String(v.from))&&(!v.to||String(date).slice(0,10)<=String(v.to))
@@ -130,10 +131,10 @@ export async function qaOperation(name:string,variables:unknown={}){
  if(qaState.permissions==='denied'||writing&&qaState.permissions==='read')throw Error('QA: permissão negada')
  const box=(value:unknown)=>result(value)
  switch(name){
- case 'ListCategories':return page(qaState.empty?[]:categories.map(c=>({...c,productCount:products.filter(p=>p.categoryId===c.id).length,subcategoryCount:subcategories.filter(p=>p.categoryId===c.id).length})),v)
- case 'ListSubcategories':return page(qaState.empty?[]:subcategories.map(c=>({...c,productCount:products.filter(p=>p.subcategoryId===c.id).length})),v)
+ case 'ListCategories':return page(qaState.empty?[]:categories.map(c=>({...c,productCount:products.filter(p=>p.categoryId===c.id&&p.active&&!('deletedAt'in p&&p.deletedAt)).length,subcategoryCount:subcategories.filter(p=>p.categoryId===c.id&&p.active&&!p.deletedAt).length})),v)
+ case 'ListSubcategories':return page(qaState.empty?[]:subcategories.map(c=>({...c,productCount:products.filter(p=>p.subcategoryId===c.id&&p.active&&!('deletedAt'in p&&p.deletedAt)).length})),v)
  case 'CategoryOptions':return {data:{_select:categories.filter(c=>c.active)}}
- case 'RegistrationOptions':return box({branches,categories,subcategories,suppliers:[{id:uuid(20),name:'FORNECEDOR QA'}],products,paymentMethods:[],options:{}})
+ case 'RegistrationOptions':return box({branches:branches.filter(b=>branchAllowed(b.id)),categories:categories.filter(c=>c.active&&!c.deletedAt),subcategories:subcategories.filter(s=>s.active&&!s.deletedAt),suppliers:supplierOptions(),products:products.filter(p=>p.active&&!('deletedAt'in p&&p.deletedAt)&&!p.bundleProduct).map(({id,name,costPriceCents,weightedProduct})=>({id,name,costPriceCents,weightedProduct})),paymentMethods:[],options:{}})
  case 'ListProducts':return page(qaState.empty?[]:products.map(p=>({...p,effectivePriceCents:p.salePriceCents,listPriceCents:p.salePriceCents})),v)
  case 'ListBranches':return page(qaState.empty?[]:branches.map(b=>({active:true,createdAt:when,updatedAt:when,...b})),v)
  case 'ListSuppliers':return page(qaState.empty?[]:suppliers,v)
@@ -147,7 +148,7 @@ export async function qaOperation(name:string,variables:unknown={}){
   if((cpf&&cnpj)||(cpf&&!isValidCpf(cpf))||(cnpj&&!isValidCnpj(cnpj)))throw Error('QA: documento inválido');
   if(list.some(x=>x.id!==v.id&&(x as Row).active!==false&&(name==='SaveBranch'?(String(x.name).trim().toUpperCase()===label.toUpperCase()||p.internalCode&&(x as Row).internalCode===p.internalCode):((cpf&&(x as Row).cpf===cpf)||(cnpj&&(x as Row).cnpj===cnpj)))))throw Error('QA: registro duplicado');
   if(name==='SavePromotion'){const amount=integer(p.promotionalPriceCents),product=products.find(x=>x.id===p.productId&&x.active);if(!product||amount<=0||amount*100>=Number(product.salePriceCents)*95||!Number.isFinite(Date.parse(String(p.startsAt)))||!Number.isFinite(Date.parse(String(p.endsAt)))||Date.parse(String(p.endsAt))<=Date.parse(String(p.startsAt))||promotions.some(x=>x.id!==v.id&&x.active&&x.productId===p.productId&&Date.parse(String(x.startsAt))<Date.parse(String(p.endsAt))&&Date.parse(String(x.endsAt))>Date.parse(String(p.startsAt))))throw Error('QA: promoção inválida')}
-  const row={...p,cpf,cnpj,id:String(old?.id??uuid(nextId++)),name:label,active:p.active??true,createdAt:(old as Row|undefined)?.createdAt??when,updatedAt:when};
+  const row={...p,...(name==='SaveSupplier'?{tradeName:String(p.tradeName??'').trim()||null}:{}),cpf,cnpj,id:String(old?.id??uuid(nextId++)),name:label,active:p.active??true,createdAt:(old as Row|undefined)?.createdAt??when,updatedAt:when};
   if(old)Object.assign(old,row);else list.push(row);return {data:{_execute:1}}
  }
  case 'SetCustomersStatusBatch':case 'SetSuppliersStatusBatch':case 'SetBranchesStatusBatch':case 'SetPromotionStatus':{
@@ -209,7 +210,7 @@ export async function qaOperation(name:string,variables:unknown={}){
   for(const key of ['ean','internalCode'])if(p[key]&&products.some(x=>x.id!==v.id&&String(x[key as 'ean'|'internalCode'])===String(p[key])))throw Error('QA: código duplicado');
   const kit=(v.components??[]) as Row[];
   if(!Array.isArray(kit)||p.bundleProduct&&(!kit.length||new Set(kit.map(x=>x.productId)).size!==kit.length))throw Error('QA: composição inválida');
-  for(const item of kit){const child=products.find(p=>p.id===item.productId);if(!child||child.id===v.id||!Number.isFinite(Number(item.quantity))||Number(item.quantity)<=0||!child.weightedProduct&&!Number.isInteger(Number(item.quantity)))throw Error('QA: quantidade de componente inválida')}
+  for(const item of kit){const child=products.find(p=>p.id===item.productId);if(!child||!child.active||child.bundleProduct||('deletedAt'in child&&child.deletedAt)||child.id===v.id||!Number.isFinite(Number(item.quantity))||Number(item.quantity)<=0||child.weightedProduct&&Number(item.quantity)<.001||Math.abs(Number(item.quantity)*1000-Math.round(Number(item.quantity)*1000))>1e-7||!child.weightedProduct&&!Number.isInteger(Number(item.quantity)))throw Error('QA: quantidade de componente inválida')}
   const row={...(current?structuredClone(current):{...initialProducts()[0]!,internalCode:'',ean:''}),...p,id:current?.id??uuid(nextId++),name:String(p.name).trim().toUpperCase(),salePriceCents:String(integer(p.salePriceCents??current?.salePriceCents??0)),costPriceCents:String(integer(p.costPriceCents??current?.costPriceCents??0)),updatedAt:when};
   components.set(row.id,structuredClone(kit));if(current)Object.assign(current,row);else products.push({...row,balances:branches.map(b=>({branchId:b.id,branchName:b.name,quantity:0,reservedQuantity:0,availableQuantity:0,averageCostCents:row.costPriceCents}))});return {data:{_execute:1}}
  }

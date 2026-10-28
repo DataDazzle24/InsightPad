@@ -71,8 +71,8 @@ it('selects immutable analytical records without recomputing quantities or money
 it('derives category/subcategory counts from actual product relationships',async()=>{
  const read=async(name:string)=>(await qaOperation(name,{limit:1000})).data as {_select:Record<string,unknown>[]};
  const products=(await read('ListProducts'))._select,categories=(await read('ListCategories'))._select,subs=(await read('ListSubcategories'))._select;
- for(const c of categories){expect(c.productCount).toBe(products.filter(p=>p.categoryId===c.id).length);expect(c.subcategoryCount).toBe(subs.filter(s=>s.categoryId===c.id).length)}
- for(const s of subs)expect(s.productCount).toBe(products.filter(p=>p.subcategoryId===s.id).length);
+ for(const c of categories){expect(c.productCount).toBe(products.filter(p=>p.active&&!p.deletedAt&&p.categoryId===c.id).length);expect(c.subcategoryCount).toBe(subs.filter(s=>s.active&&!s.deletedAt&&s.categoryId===c.id).length)}
+ for(const s of subs)expect(s.productCount).toBe(products.filter(p=>p.active&&!p.deletedAt&&p.subcategoryId===s.id).length);
 })
 it('supports existing customer supplier branch and promotion contracts without fake writes',async()=>{
  for(const [save,list]of [['SaveCustomer','ListCustomers'],['SaveSupplier','ListSuppliers'],['SaveBranch','ListBranches']]){
@@ -249,4 +249,16 @@ it('new product fixtures do not inherit another product unique codes on a later 
  await qaOperation('SaveProduct',{id:product.id,payload:{...product,name:'COMBO EDITADO',costPriceCents:2249},components:[{productId:uuid(103),quantity:1.5}]});
  expect(inspectFixtures().products.find(p=>p.id===product.id)).toMatchObject({name:'COMBO EDITADO',costPriceCents:'2249'});
  await expect(qaOperation('SaveProduct',{id:product.id,payload:{name:'INVALIDO',internalCode:'QA1'}})).rejects.toThrow('duplicado');
+});
+it('catalog aggregates exclude inactive or deleted relations just like the existing SQL',async()=>{
+ const read=async(name:string)=>((await qaOperation(name,{limit:1000})).data as {_select:Array<{id:string;productCount:number;subcategoryCount?:number}>})._select;
+ const verify=async()=>{const raw=inspectFixtures();for(const c of await read('ListCategories')){expect(c.productCount).toBe(raw.products.filter(p=>p.active&&p.categoryId===c.id&&!('deletedAt'in p&&p.deletedAt)).length);expect(c.subcategoryCount).toBe(raw.subcategories.filter(s=>s.active&&!s.deletedAt&&s.categoryId===c.id).length)}for(const c of await read('ListSubcategories'))expect(c.productCount).toBe(raw.products.filter(p=>p.active&&p.subcategoryId===c.id&&!('deletedAt'in p&&p.deletedAt)).length)};
+ await verify();const ledger=inspectFixtures().ledger;await qaOperation('SetProductsStatusBatch',{ids:[uuid(100)],active:false});await qaOperation('ArchiveSubcategory',{id:uuid(801)});await verify();expect(inspectFixtures().ledger).toEqual(ledger);
+});
+it('registration options reference eligible actual records and components refuse inactive products or nested kits',async()=>{
+ await qaOperation('SetSuppliersStatusBatch',{ids:[uuid(4000)],active:false});await qaOperation('SetProductsStatusBatch',{ids:[uuid(100)],active:false});
+ const payload={name:'KIT DISPONIVEL',bundleProduct:true,costPriceCents:800,salePriceCents:1200};await qaOperation('SaveProduct',{payload,components:[{productId:uuid(101),quantity:1}]});const raw=inspectFixtures(),kit=raw.products.find(p=>p.name===payload.name)!;
+ const options=((await qaOperation('RegistrationOptions')).data as {_select:Array<{data:{categories:Array<{id:string}>;subcategories:Array<{id:string}>;suppliers:Array<{id:string;name:string}>;products:Array<{id:string}>}}>})._select[0]!.data;
+ expect(new Set(options.categories.map(x=>x.id))).toEqual(new Set(raw.categories.filter(x=>x.active&&!x.deletedAt).map(x=>x.id)));expect(new Set(options.subcategories.map(x=>x.id))).toEqual(new Set(raw.subcategories.filter(x=>x.active&&!x.deletedAt).map(x=>x.id)));expect(new Set(options.suppliers.map(x=>x.id))).toEqual(new Set(raw.suppliers.filter(x=>x.active&&!x.deletedAt).map(x=>x.id)));expect(new Set(options.products.map(x=>x.id))).toEqual(new Set(raw.products.filter(x=>x.active&&!x.bundleProduct).map(x=>x.id)));
+ for(const component of [{productId:uuid(100),quantity:1},{productId:kit.id,quantity:1},{productId:uuid(103),quantity:.0001}])await expect(qaOperation('SaveProduct',{payload:{...payload,name:'RECUSADO'},components:[component]})).rejects.toThrow('componente');expect(inspectFixtures()).toEqual(raw);
 });
