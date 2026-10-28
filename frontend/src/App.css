@@ -296,3 +296,10 @@ html[data-theme=light] .catalog-confirm footer button:focus-visible,html[data-th
 html[data-theme=light] :is(.finance-dashboard,.analytics-page) button:focus-visible{outline-color:#1268a7}
 /* Compact tables must retain their existing row actions. */
 @media(max-width:700px){.catalog-table td:nth-child(n+4):not(:last-child):has(.catalog-actions){display:block}}
+@media(max-width:700px){
+ .catalog-panel>.catalog-scroll{background:var(--panel)}
+ div.catalog-table{min-width:0;width:100%}
+ div.catalog-table>table{min-width:0;width:100%}
+ .catalog-table .catalog-actions{min-width:0;max-width:100%}
+ .catalog-table tbody tr{background:var(--panel)}
+}
