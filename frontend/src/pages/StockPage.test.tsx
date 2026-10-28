@@ -70,3 +70,12 @@ it.each(['SALE','TRANSFER_OUT'])('guides %s correction to its owning flow withou
  const previous=mocks.reverse.mock.calls.length;const data=workspace();data.movements=[{...move(1),typeCode}];mocks.workspace.mockResolvedValue({data:{_select:[{data}]}});await render();await click(container.querySelector('.stock-table tbody tr')!);
  expect(container.querySelector('[role="alert"]')?.textContent).toContain('Vendas são corrigidas no Registro de Vendas');expect(container.querySelector<HTMLInputElement>('.stock-table input')?.checked).toBe(false);expect((find('Editar') as HTMLButtonElement).disabled).toBe(true);expect((find('Estornar') as HTMLButtonElement).disabled).toBe(true);expect(mocks.reverse).toHaveBeenCalledTimes(previous);
 });
+
+it('renders every existing stock and transfer status with its Portuguese label and matching class without changing input',async()=>{
+ const data=workspace();data.movements=['POSTED','REVERSED','PENDING'].map((status,i)=>({...move(i),status}));
+ data.transfers=['PENDING','COMPLETED','CANCELLED'].map((status,i)=>({id:'t'+i,operationId:'transfer'+i,requestedAt:'2026-10-20T12:00:00Z',sourceBranch:'Matriz',destinationBranch:'Filial',itemCount:1,totalQuantity:1,status})) as typeof data.transfers;
+ const original=structuredClone(data);mocks.workspace.mockResolvedValue({data:{_select:[{data}]}});await render();
+ const labels=()=>[...container.querySelectorAll('.stock-status')].map(e=>[e.textContent,e.className]);
+ expect(labels()).toEqual([['Registrado','stock-status stock-status--posted'],['Estornado','stock-status stock-status--reversed'],['Pendente','stock-status stock-status--pending']]);
+ await click(find('Transferências'));expect(labels()).toEqual([['Pendente','stock-status stock-status--pending'],['Concluído','stock-status stock-status--completed'],['Cancelado','stock-status stock-status--cancelled']]);expect(data).toEqual(original);
+});
