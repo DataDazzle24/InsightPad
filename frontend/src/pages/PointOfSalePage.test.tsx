@@ -90,8 +90,9 @@ async function mountCash(mode='Suprimento',props=cashProps()){
  api.execute.mockImplementation(sdkExecute);
  await act(async()=>root.render(<CashSessionModal {...props}/>));
  const originalModeAction=reactProps(button(mode)).onClick!;
+ const otherModeAction=reactProps(button(mode==='Suprimento'?'Sangria':'Suprimento')).onClick!;
  await click(mode);if(mode!=='Fechar caixa')await cashInput('input','500');await cashInput('textarea','Movimento teste');
- return{props,originalModeAction};
+ return{props,originalModeAction,otherModeAction};
 }
 
 it('CASH-ACK-SDK-AD CLOSE: SDK lost ACK reconciles one closure with identical payload',async()=>{
@@ -101,11 +102,11 @@ it('CASH-ACK-SDK-AD CLOSE: SDK lost ACK reconciles one closure with identical pa
  const calls=qaState.requests.filter(r=>r.name==='CloseCashSession');expect(calls).toHaveLength(2);expect(calls[1]!.variables).toEqual(calls[0]!.variables);expect(inspectFixtures()).toEqual(before);expect(props.onClose).toHaveBeenCalledOnce();
 })
 it('CASH-ACK-SDK-AD: direct field, mode and exit callbacks cannot bypass the uncertain instruction',async()=>{
- qaState.cashAckLoss=true;const{props,originalModeAction}=await mountCash();await submitCash();const first=structuredClone(api.execute.mock.calls[0][0]);
+ qaState.cashAckLoss=true;const{props,originalModeAction,otherModeAction}=await mountCash();await submitCash();const first=structuredClone(api.execute.mock.calls[0][0]);
  await act(async()=>{
   reactProps(container.querySelector('input')!).onChange!({target:{value:'900'}});
   reactProps(container.querySelector('textarea')!).onChange!({target:{value:'Outra intenção'}});
-  originalModeAction();reactProps(button('Voltar')).onClick!();reactProps(container.querySelector('[aria-label="Fechar controle de caixa"]')!).onClick!();
+  originalModeAction();otherModeAction();reactProps(button('Voltar')).onClick!();reactProps(container.querySelector('[aria-label="Fechar controle de caixa"]')!).onClick!();
   document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
  });
  expect(props.onClose).not.toHaveBeenCalled();await submitCash();expect(api.execute.mock.calls[1][0]).toEqual(first);expect(inspectFixtures().cashMovements).toHaveLength(1);expect(inspectFixtures().sessions[0]!.expectedAmountCents).toBe('10500');
