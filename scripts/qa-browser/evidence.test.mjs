@@ -34,3 +34,11 @@ test('full CI entry invokes individual residual consumers and themed report proo
  assert.match(runner,/import \{reports\} from '\.\/reports.mjs'/);assert.match(runner,/import \{consolidated\} from '\.\/consolidated.mjs'/);
  assert.ok(runner.indexOf('await reports(')<runner.indexOf('await consolidated('));assert.ok(runner.indexOf('await consolidated(')<runner.indexOf('await coverage('));assert.match(cases,/CI must execute all consolidated cases/);
 });
+
+test('public browser failure summaries exclude private values and retain useful failure categories',async()=>{
+ const {sanitizeScenarioError}=await import('./coverage.mjs');
+ assert.equal(sanitizeScenarioError(new Error('locator.click: Timeout 8000ms exceeded.\nSelector contains cpf=52998224725 token=private-value')),'click timed out after 8000ms');
+ assert.equal(sanitizeScenarioError(Object.assign(new Error('customer=Private Name expected secret value'),{code:'ERR_ASSERTION'})),'assertion failed');
+ assert.equal(sanitizeScenarioError(new Error('locator.click: strict mode violation: private document')),'ambiguous locator');
+ assert.equal(sanitizeScenarioError(new Error('authorization=private-value')),'browser scenario error');
+});

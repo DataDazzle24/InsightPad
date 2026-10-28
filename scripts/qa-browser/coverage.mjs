@@ -3,14 +3,23 @@ import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import {residual} from './residual.mjs';
 import {closure} from './closure.mjs';
+// Public diagnostics identify the case without exposing selectors, values or payloads.
+export function sanitizeScenarioError(error){
+ const message=String(error?.message??error),timeout=message.match(/^(?:locator|page)\.([A-Za-z]+): Timeout (\d+)ms exceeded/);
+ if(timeout&&['click','fill','waitFor','press','selectOption','check','uncheck','waitForFunction','goto'].includes(timeout[1]))return `${timeout[1]} timed out after ${timeout[2]}ms`;
+ if(error?.code==='ERR_ASSERTION'||error?.name==='AssertionError')return 'assertion failed';
+ if(message.includes('strict mode violation'))return 'ambiguous locator';
+ return 'browser scenario error';
+}
 // Outputs contain synthetic data, but are internal review evidence: seal before upload.
 export async function coverage({page,context,output,sha}){
+ const initialViewport=page.viewportSize();
  const cases=[],inventory=[],pageErrors=[];page.on('pageerror',error=>pageErrors.push(error.message));const base='http://127.0.0.1:4174/qa/application.html';let index=0,navigation=0;
  const screenshot=async(name)=>{const file=`${String(++index).padStart(3,'0')}-${name}.png`;await page.screenshot({path:output+'/'+file,fullPage:false});return file};
  const wait=async()=>{await page.waitForLoadState('networkidle');await page.evaluate(()=>document.fonts.ready)};
  const go=async(route)=>{await page.goto(base+'?scenario='+String(++navigation)+'#'+route);await wait();await page.locator('.qa-controls summary').evaluate((e,sha)=>{e.textContent='QA · '+sha},sha)};
  const panel=async()=>page.locator('.qa-controls').evaluate(e=>{e.open=true});
- const run=async(name,steps)=>{try{await steps();assert.equal(await page.locator('.fatal-error').count(),0);cases.push({name,result:'executed',capture:await screenshot(name)})}catch(e){cases.push({name,result:'failed',error:String(e.message).slice(0,600),capture:await screenshot(name+'-failed')})}};
+ const run=async(name,steps)=>{try{await steps();assert.equal(await page.locator('.fatal-error').count(),0);cases.push({name,result:'executed',capture:await screenshot(name)})}catch(e){cases.push({name,result:'failed',error:String(e.message).slice(0,600),capture:await screenshot(name+'-failed')});console.error(`QA coverage case ${name}: ${sanitizeScenarioError(e)}; details remain encrypted`)}};
  await context.tracing.start({screenshots:false,snapshots:true,sources:true});
  try{
   const app=readFileSync('frontend/src/App.tsx','utf8'),routes=readFileSync('frontend/src/config/pages.ts','utf8');
@@ -40,7 +49,7 @@ export async function coverage({page,context,output,sha}){
   await closure({page,output,sha,run,go,panel,wait,screenshot});
   for(const theme of ['dark','light'])for(const width of [1440,375,320])await run('columns-'+theme+'-'+width,async()=>{await page.setViewportSize({width,height:1000});await go('/dashboards/operacional');await page.evaluate(theme=>localStorage.setItem('insightpad.theme',theme),theme);await page.reload();await wait();await page.getByRole('button',{name:'Categorias',exact:true}).click();await wait();const region=page.getByRole('region',{name:/tabela completa com rolagem horizontal/}).first();await region.focus();const geometry=await region.evaluate(e=>({columns:[...e.querySelectorAll('th')].map(t=>({name:t.textContent,width:t.getBoundingClientRect().width})),width:e.clientWidth,scrollWidth:e.scrollWidth}));assert.ok(geometry.columns.length>=7&&geometry.columns.every(c=>c.width>0));if(geometry.scrollWidth>geometry.width){await page.keyboard.press('ArrowRight');await page.waitForFunction(()=>{const r=document.activeElement;return r?.getAttribute('role')==='region'&&r.scrollLeft>0});geometry.keyboardScrollLeft=await region.evaluate(e=>e.scrollLeft);await region.evaluate(e=>e.scrollTo({left:e.scrollWidth,behavior:'instant'}));geometry.lastColumnVisible=await region.evaluate(e=>{const last=e.querySelector('th:last-child'),a=e.getBoundingClientRect(),b=last.getBoundingClientRect();return b.right<=a.right+2&&b.left>=a.left-2});assert.equal(geometry.lastColumnVisible,true)}writeFileSync(output+`/geometry-${theme}-${width}.json`,JSON.stringify(geometry,null,2))});
 
- }finally{await context.tracing.stop({path:output+'/trace.zip'});writeFileSync(output+'/coverage.json',JSON.stringify({sha,executor:process.env.GITHUB_ACTIONS?'GitHub Actions: same runner loopback':'cloud workspace: same executor loopback',browser:context.browser().version(),auth:'mock',api:'synthetic memory only',inventory,cases,pageErrors,limits:['CSS zoom and viewport are emulation, not native interactive zoom or physical mobile','PDF is Chromium print renderer after invoking UI PDF handler, not interactive print-dialog validation','Inventory captures are not visual acceptance; platform role and unsupported operations are identified','No backend, external Auth, partner, migration, persistence across reload or 68-criterion acceptance implied']},null,2))}
+ }finally{await context.tracing.stop({path:output+'/trace.zip'});writeFileSync(output+'/coverage.json',JSON.stringify({sha,initialViewport,executor:process.env.GITHUB_ACTIONS?'GitHub Actions: same runner loopback':'cloud workspace: same executor loopback',browser:context.browser().version(),auth:'mock',api:'synthetic memory only',inventory,cases,pageErrors,limits:['CSS zoom and viewport are emulation, not native interactive zoom or physical mobile','PDF is Chromium print renderer after invoking UI PDF handler, not interactive print-dialog validation','Inventory captures are not visual acceptance; platform role and unsupported operations are identified','No backend, external Auth, partner, migration, persistence across reload or 68-criterion acceptance implied']},null,2))}
  if(pageErrors.length)throw Error('JavaScript errors in QA; inspect private evidence');
  const failed=cases.filter(x=>x.result==='failed');if(inventory.some(x=>x.fatal))throw Error('Route inventory contains a fatal render; inspect encrypted evidence');if(failed.length)throw Error(`${failed.length} synthetic browser scenarios failed; inspect the encrypted evidence`);
 }

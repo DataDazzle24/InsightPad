@@ -24,5 +24,5 @@ try{
  console.log('Synthetic application route rendered at source '+sha);
  if(process.argv.includes('--reports')||process.argv.includes('--full'))await reports({page,output,sha});
  if(process.argv.includes('--consolidated')||process.argv.includes('--full'))await consolidated({page,output,sha});
- if(process.argv.includes('--full')){await page.locator('.qa-controls').evaluate(e=>{e.open=false});await coverage({page,context,output,sha})}
+ if(process.argv.includes('--full')){await page.setViewportSize({width:1440,height:1000});await page.locator('.qa-controls').evaluate(e=>{e.open=false});await coverage({page,context,output,sha})}
 }finally{await browser?.close();server.kill();}
