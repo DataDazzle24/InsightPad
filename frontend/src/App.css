@@ -296,6 +296,7 @@ html[data-theme=light] .catalog-confirm footer button:focus-visible,html[data-th
 html[data-theme=light] :is(.finance-dashboard,.analytics-page) button:focus-visible{outline-color:#1268a7}
 /* Wrapped dashboard navigation must not clip its keyboard tooltips. */
 .finance-heading .dashboard-hub__nav{overflow:visible}
+.finance-heading .dashboard-hub__nav button::after{color:var(--white)}
 /* Compact tables must retain their existing row actions. */
 @media(max-width:700px){.catalog-table td:nth-child(n+4):not(:last-child):has(.catalog-actions){display:block}}
 @media(max-width:700px){
