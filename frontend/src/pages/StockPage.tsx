@@ -877,6 +877,7 @@ export function StockPage() {
           setStep={setStep}
           costs={costs}
           editing={editing}
+          movementId={selected?.id??''}
           updateItem={updateItem}
           add={() => add("form")}
           close={() => setOperationOpen(false)}
@@ -1133,6 +1134,7 @@ function OperationModal({
   setStep,
   costs,
   editing,
+  movementId,
   updateItem,
   add,
   close,
@@ -1147,6 +1149,7 @@ function OperationModal({
   setStep: (v: number) => void;
   costs: number[];
   editing: string;
+  movementId: string;
   updateItem: (i: number, p: Partial<Item>) => void;
   add: () => void;
   close: () => void;
@@ -1171,6 +1174,7 @@ function OperationModal({
             <h2 id="stock-operation-title">
               {editing ? "CORRIGIR MOVIMENTAÇÃO" : "NOVA MOVIMENTAÇÃO"}
             </h2>
+            {editing&&<small style={{display:'block',overflowWrap:'anywhere'}}>Referência: {movementId}</small>}
           </div>
           <button aria-label="Fechar movimentação" onClick={close}>×</button>
         </header>
