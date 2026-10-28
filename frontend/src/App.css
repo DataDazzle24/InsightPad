@@ -290,5 +290,7 @@ html[data-theme=light] .catalog-confirm footer button:focus-visible,html[data-th
 @media print{
  :is(.finance-dashboard,.analytics-page) :is(h1,h2,h3,p,span,strong,small,th,td,button,a){color:#000!important}
 }
+/* Keep report table exports consistent with heading controls on keyboard focus. */
+.finance-table-card header button:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
 /* Match the existing light-theme focus contrast for report consumers. */
 html[data-theme=light] :is(.finance-dashboard,.analytics-page) button:focus-visible{outline-color:#1268a7}
