@@ -130,6 +130,34 @@ describe('PDV: venda, caixa e isolamento transacionais',()=>{
   expect((await db.query("SELECT id FROM audit_logs WHERE entity_name='PosPolicy'")).rows).toHaveLength(1);
   await expect(operation(db,'RegisterCashMovement',['actor',session,'WITHDRAWAL',1001,'Teste',crypto.randomUUID()])).rejects.toThrow();
  });
+ for(const kind of ['SUPPLY','WITHDRAWAL','CLOSE'])it('CASH-ACK-SDK-AD SQL oracle: '+kind+' confirms only the same instruction and rejects conflicting retries',async()=>{
+  await operation(db,'CloseCashSession',['actor',session,1000,'Preparar controle isolado',crypto.randomUUID()]);
+  await operation(db,'OpenCashSession',['actor',ids.branch,10000,'Controle DEC034']);
+  session=(await db.query<{id:string}>("SELECT id FROM cash_sessions WHERE opened_by_uid='actor' AND status='OPEN'")).rows[0]!.id;
+  expect((await db.query('SELECT amount_cents FROM cash_movements WHERE session_id=$1 AND movement_type=\'OPENING\'',[session])).rows).toEqual([{amount_cents:10000}]);
+  const id=crypto.randomUUID(),close=kind==='CLOSE',name=close?'CloseCashSession':'RegisterCashMovement';
+  const params=close?['actor',session,10000,'Conferência QA',id]:['actor',session,kind,500,'Movimento teste',id];
+  // The first result is deliberately ignored to model an unknown client ACK;
+  // this is real candidate SQL in PGlite, not a remote transport fault.
+  expect((await operation(db,name,params)).affectedRows).toBeGreaterThan(0);
+  expect((await operation(db,name,params)).affectedRows).toBeGreaterThan(0);
+  const before=await db.query('SELECT * FROM cash_sessions WHERE id=$1',[session]);
+  for(const index of close?[2,3]:[2,3,4]){
+   const altered=[...params];altered[index]=index===(close?2:3)?Number(altered[index])+1:index===2?(kind==='SUPPLY'?'WITHDRAWAL':'SUPPLY'):'Outro motivo';
+   await expect(operation(db,name,altered)).rejects.toThrow('POS_REJECTED');
+   expect((await db.query('SELECT * FROM cash_sessions WHERE id=$1',[session])).rows).toEqual(before.rows);
+  }
+  if(close){
+   expect(before.rows[0]).toMatchObject({status:'CLOSED',counted_amount_cents:10000});
+   expect((await db.query("SELECT id FROM audit_logs WHERE entity_id=$1 AND action='CLOSE'",[session])).rows).toHaveLength(1);
+  }else{
+   expect((await db.query("SELECT id FROM cash_movements WHERE session_id=$1 AND movement_type<>'OPENING'",[session])).rows).toHaveLength(1);
+   const balance=await db.query<{balance:number}>('SELECT cs.opening_amount_cents+COALESCE(sum(cm.amount_cents) FILTER(WHERE cm.movement_type<>\'OPENING\'),0) balance FROM cash_sessions cs LEFT JOIN cash_movements cm ON cm.session_id=cs.id WHERE cs.id=$1 GROUP BY cs.id',[session]);
+   expect(Number(balance.rows[0]!.balance)).toBe(kind==='SUPPLY'?10500:9500);
+   const ledger=await db.query<{balance:number}>('SELECT sum(amount_cents) balance FROM cash_movements WHERE session_id=$1',[session]);
+   expect(Number(ledger.rows[0]!.balance)).toBe(Number(balance.rows[0]!.balance));
+  }
+ });
 });
 
 it('single isolated ledger chain links cash sale cancellation entry transfer and existing reservation reconciliation',async()=>{

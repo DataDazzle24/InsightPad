@@ -1,6 +1,13 @@
 import {beforeEach,expect,it} from 'vitest'
-import {qaOperation,qaState,resetFixtures,uuid,fixtureDate,inspectFixtures,useBoundaryLedger} from './api'
+import {qaOperation,qaState,resetFixtures,uuid,fixtureDate,inspectFixtures,useBoundaryLedger,DataConnectError} from './api'
 beforeEach(()=>{resetFixtures();qaState.fail=false;qaState.cashAckLoss=false;qaState.ackLoss=false;qaState.delay=0;qaState.permissions='full';qaState.empty=false;qaState.allowedBranches=[]})
+for(const name of ['RegisterCashMovement','CloseCashSession'])it('CASH-ACK-SDK-AD fixture '+name+' matches SDK transport shape after one commit',async()=>{
+ qaState.cashAckLoss=true;const payload=name==='CloseCashSession'?{sessionId:uuid(60),countedAmountCents:10000,notes:'Conferência QA',operationId:'sdk-close'}:{sessionId:uuid(60),movementType:'SUPPLY',amountCents:500,description:'Movimento teste',operationId:'sdk-supply'};
+ await expect(qaOperation(name,payload)).rejects.toMatchObject({name:'DataConnectError',code:'other',message:'Failed to fetch: Failed to fetch'});
+ const committed=inspectFixtures();expect((await qaOperation(name,payload)).data).toMatchObject({_execute:1});expect(inspectFixtures()).toEqual(committed);
+ await expect(qaOperation(name,{...payload,...(name==='CloseCashSession'?{notes:'Outro motivo'}:{description:'Outro motivo'})})).rejects.toMatchObject({name:'DataConnectOperationError',code:'partial-error',response:{errors:[{path:['_execute'],message:expect.stringContaining('POS_REJECTED')}]}});expect(inspectFixtures()).toEqual(committed);
+ expect(new DataConnectError('other','Failed to fetch')).not.toBeInstanceOf(TypeError);
+})
 it('uses deterministic full datasets, pagination and explicit unknown-operation failures',async()=>{
  const a=await qaOperation('ListCategories',{limit:100,offset:0}),b=await qaOperation('ListCategories',{limit:100,offset:100});expect(a.data).toMatchObject({_selectFirst:{totalCount:300}});expect((b.data as {_select:unknown[]})._select).toHaveLength(100);
  const r=await qaOperation('OperationalAnalyticsDashboard');const data=(r.data as {_select:Array<{data:{customers:{birthdays:unknown[];dormant:unknown[]}}}>})._select[0]!.data;expect(data.customers.birthdays).toHaveLength(51);expect(data.customers.dormant).toHaveLength(1201);

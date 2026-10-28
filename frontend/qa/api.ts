@@ -1,6 +1,15 @@
 import {isValidCpf,isValidCnpj,normalizeCatalogName} from '../src/utils/registration'
 // Deterministic, memory-only fixtures. This module never imports Firebase or fetch.
 type Row=Record<string,unknown>
+// SDK-compatible error shapes only; QA never loads Firebase or makes a request.
+export class DataConnectError extends Error {
+ code:string;
+ constructor(code:string,message:string){super(message);this.name='DataConnectError';this.code=code}
+}
+export class DataConnectOperationError extends DataConnectError {
+ response:{data:null;errors:{message:string;path:string[]}[]};
+ constructor(message:string){super('partial-error',message);this.name='DataConnectOperationError';this.response={data:null,errors:[{message:'POS_REJECTED: '+message,path:['_execute']}]}}
+}
 export const connectorConfig={connector:'qa-only',service:'fixture',location:'local'}
 export const firebaseApp={},auth={currentUser:null},appCheck=null
 export const getDataConnect=()=>({qa:true}),getFunctions=()=>({qa:true})
@@ -128,7 +137,7 @@ export async function qaOperation(name:string,variables:unknown={}){
  if(qaState.delay)await new Promise(r=>setTimeout(r,qaState.delay))
  if(qaState.fail)throw new Error('QA: falha sintética de API')
  const writing=/^(Cancel|Save|Create|Update|Set|Archive|Restore|Open|Close|Register|Post|Reverse|Ensure)/.test(name)
- if(qaState.permissions==='denied'||writing&&qaState.permissions==='read')throw Error('QA: permissão negada')
+ if(qaState.permissions==='denied'||writing&&qaState.permissions==='read')throw ['RegisterCashMovement','CloseCashSession'].includes(name)?new DataConnectOperationError('QA: permissão negada'):Error('QA: permissão negada')
  const box=(value:unknown)=>result(value)
  switch(name){
  case 'ListCategories':return page(qaState.empty?[]:categories.map(c=>({...c,productCount:products.filter(p=>p.categoryId===c.id&&p.active&&!('deletedAt'in p&&p.deletedAt)).length,subcategoryCount:subcategories.filter(p=>p.categoryId===c.id&&p.active&&!p.deletedAt).length})),v)
@@ -220,11 +229,11 @@ export async function qaOperation(name:string,variables:unknown={}){
  case 'OpenCashSession':{
   if(!branchAllowed(v.branchId)||cashSession(v.branchId))throw Error('QA: filial inválida ou caixa já aberto');const amount=integer(v.openingAmountCents);sessions.push({id:uuid(nextId++),branchId:v.branchId,status:'OPEN',openedAt:when,openingAmountCents:String(amount),expectedAmountCents:String(amount),movementCount:0});return {data:{_execute:1}}
  }
- case 'RegisterCashMovement':case 'CloseCashSession':{const replay=mutations.has(name+':'+v.operationId);const data=mutateOnce(name,v.operationId,v,()=>{
+ case 'RegisterCashMovement':case 'CloseCashSession':{try{const replay=mutations.has(name+':'+v.operationId);const data=mutateOnce(name,v.operationId,v,()=>{
   const session=sessions.find(s=>s.id===v.sessionId&&s.status==='OPEN');if(!session||!branchAllowed(session.branchId))throw Error('QA: caixa não está aberto');
   if(name==='CloseCashSession'){Object.assign(session,{status:'CLOSED',countedAmountCents:String(integer(v.countedAmountCents)),closedAt:when,notes:v.notes});return {_execute:1}}
   if(qaState.permissions==='operator'&&(v.movementType==='SUPPLY'||Number(v.amountCents)>Number(policy.operatorWithdrawalLimitCents??0)))throw Error('QA: aprovação necessária');if(!['SUPPLY','WITHDRAWAL'].includes(String(v.movementType)))throw Error('QA: tipo inválido');const amount=integer(v.amountCents);if(!amount)throw Error('QA: valor deve ser positivo');const expected=Number(session.expectedAmountCents)+(v.movementType==='SUPPLY'?amount:-amount);if(expected<0)throw Error('QA: saldo insuficiente');Object.assign(session,{expectedAmountCents:String(expected),movementCount:Number(session.movementCount)+1});cashMovements.push({...v,id:uuid(nextId++)});return {_execute:1}
- });if(qaState.cashAckLoss&&!replay)throw Object.assign(new TypeError('Failed to fetch'),{code:'unavailable'});return {data:data as {_execute:number}}}
+ });if(qaState.cashAckLoss&&!replay)throw new DataConnectError('other','Failed to fetch: Failed to fetch');return {data:data as {_execute:number}}}catch(error){if(error instanceof DataConnectError)throw error;throw new DataConnectOperationError(error instanceof Error?error.message:'QA: operação recusada')}}
  case 'RequestPosCashApproval':{
   if(!p.clientOperationId||!['WITHDRAWAL','CLOSE'].includes(String(p.movementType))||!sessions.some(s=>s.id===p.sessionId&&s.status==='OPEN'&&branchAllowed(s.branchId)))throw Error('QA: solicitação inválida');integer(p.amountCents);
   const id=String(p.clientOperationId),old=cashApprovals.get(id);if(old&&JSON.stringify(old.payload)!==JSON.stringify(p))throw Error('QA: conteúdo conflitante');if(!old)cashApprovals.set(id,{payload:structuredClone(p),status:'PENDING'});return {data:{_execute:1}}
