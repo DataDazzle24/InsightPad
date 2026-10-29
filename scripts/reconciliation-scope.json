@@ -1225,9 +1225,11 @@
     "scripts/qa-browser/session-runtime.py": {
       "ids": [
         "SEC-2026-001",
-        "SEC-2026-002"
+        "SEC-2026-002",
+        "AJU-PDV-04",
+        "AJU-EST-22"
       ],
-      "reason": "Exact isolated Data Connect compiler and disposable PG18 session-renewal regression; synthetic actors, private sealed evidence, no remote backend or permissions change."
+      "reason": "Exact isolated Data Connect compiler and disposable PG18 regression for session/core write ordering, financial/stock ledgers and replay; synthetic actors, sealed evidence, no remote backend or permissions change."
     }
   },
   "bytePreserved": [

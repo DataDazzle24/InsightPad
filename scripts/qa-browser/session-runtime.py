@@ -19,6 +19,49 @@ IMAGE = 'postgres@sha256:edb0c08dc33befd0262ab3b5cf1c4f3f8cfd8b09e88c05b45adee29
 VERSION = '3.4.23'
 BINARY_SHA = '337ec8a195d6198e83bdeb070b12a64cecbf7aa1ba2c190b6611f78cd128a21a'
 DOWNLOAD = f'https://storage.googleapis.com/firemat-preview-drop/emulator/dataconnect-emulator-linux-amd64-v{VERSION}'
+CORE_OPERATIONS = (
+    'CreateCategory',
+    'UpdateCategory',
+    'ArchiveCategory',
+    'CreateSubcategory',
+    'UpdateSubcategory',
+    'ArchiveSubcategory',
+    'RestoreCategory',
+    'RestoreSubcategory',
+    'CreateCategoriesBatch',
+    'CreateSubcategoriesBatch',
+    'SaveBranch',
+    'SetBranchStatus',
+    'SaveSupplier',
+    'SetSupplierStatus',
+    'SaveCustomer',
+    'SetCustomerStatus',
+    'SaveProduct',
+    'SetProductStatus',
+    'SaveProductComponents',
+    'SavePromotion',
+    'SetPromotionStatus',
+    'SetCategoriesStatusBatch',
+    'SetSubcategoriesStatusBatch',
+    'SetBranchesStatusBatch',
+    'SetSuppliersStatusBatch',
+    'SetCustomersStatusBatch',
+    'SetProductsStatusBatch',
+    'EnsureSalesDefaults',
+    'PostSale',
+    'CancelSale',
+    'PostStockAdjustment',
+    'PostStockTransfer',
+    'SaveStockBatch',
+    'ReverseStockOperation',
+    'OpenCashSession',
+    'RegisterCashMovement',
+    'CloseCashSession',
+    'UpdatePosPolicy',
+    'RequestPosSaleApproval',
+    'ApprovePosSale',
+    'RequestPosCashApproval',
+)
 OUT = REPO / 'artifacts/browser-private/session-runtime'
 OUT.mkdir(parents=True, exist_ok=True)
 record = {'sha': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=REPO, text=True).strip(),
@@ -90,6 +133,123 @@ def claim():
     return token
 
 
+def successful(name, variables, token):
+    response = operation(name, {**variables, 'sessionToken': token})
+    assert response.get('data') is not None and not response.get('errors'), name + ' failed'
+    return response
+
+
+def core_contracts(token, tenant, role):
+    """Compiler regression and independent ledger checks, not individual68 acceptance."""
+    branch = '00000000-0000-4000-8000-000000000004'
+    second = '00000000-0000-4000-8000-000000000005'
+    product = '00000000-0000-4000-8000-000000000012'
+    cash = '00000000-0000-4000-8000-000000000060'
+    sql(f"INSERT INTO branches(id,tenant_id,name,created_at,updated_at) VALUES('{branch}','{tenant}','Synthetic first',now(),now()),('{second}','{tenant}','Synthetic second',now(),now());"
+        "INSERT INTO app_pages(id,page_key,display_name,module,route,created_at,updated_at) SELECT gen_random_uuid(),key,key,'Synthetic','/'||key,now(),now() FROM unnest(ARRAY['CAD_CATEGORIA','CAD_SUBCATEGORIA','CAD_FILIAL','CAD_FORNECEDOR','CAD_CLIENTE','CAD_PRODUTO','CAIXA','GESTAO_VENDAS','ESTOQUE']) key;"
+        f"INSERT INTO role_page_permissions(role_id,page_id,tenant_id,can_access,can_create,can_update,can_delete,can_manage,can_export,created_at,updated_at) SELECT '{role}',id,'{tenant}',true,true,true,true,true,true,now(),now() FROM app_pages;")
+    source = (REPO / 'dataconnect/app/mutations.gql').read_text()
+    compilation = []
+    for name in CORE_OPERATIONS:
+        signature = definition(source, name).split('\n', 1)[0]
+        variables = {}
+        for variable, kind in re.findall(r'\$(\w+):\s*(\[[^\]]+\]!?|\w+!?)', signature):
+            basic = kind.rstrip('!')
+            if basic.startswith('['):
+                value = []
+            elif basic == 'UUID':
+                value = branch if variable in ['branchId', 'sourceBranchId', 'destinationBranchId'] else '00000000-0000-4000-8000-000000000099'
+            elif basic in ['Int', 'Int64', 'Float']:
+                value = 0
+            elif basic == 'Boolean':
+                value = False
+            elif basic in ['Date', 'Timestamp']:
+                value = '2026-10-29' if basic == 'Date' else '2026-10-29T12:00:00Z'
+            elif basic == 'Any':
+                value = ({'branchId': branch, 'clientOperationId': 'synthetic-noeffect-' + name,
+                          'items': [], 'payments': []} if variable == 'payload' else [])
+            else:
+                value = 'X' if variable == 'name' else ''
+            variables[variable] = value
+        response = operation(name, {**variables, 'sessionToken': token})
+        errors = response.get('errors', [])
+        assert response.get('data') is not None, name + ' did not reach execution'
+        assert not any(e.get('extensions', {}).get('code') == 'INVALID_ARGUMENT' for e in errors), name + ' probe has invalid GraphQL arguments'
+        states = [state for error in errors for state in re.findall(
+            r'err_code: ([0-9A-Z]+)', error.get('extensions', {}).get('debugDetails', ''))]
+        assert not any(state in ['42601', '0A000'] for state in states), name + ' SQL composition failed'
+        compilation.append({'operation': name, 'sqlstates': states,
+                            'scope': 'Reached stages compile; invalid/empty business input is not functional acceptance'})
+    record['coreCompilation'] = compilation
+    checks.append('41 core compiler probes; reached stages have no SQL composition failure, not business acceptance')
+    successful('CreateCategory', {'name': 'SYNTHETIC CATEGORY'}, token)
+    successful('CreateCategory', {'name': '  synthetic   category  '}, token)
+    assert sql("SELECT count(*) FROM categories WHERE name='SYNTHETIC CATEGORY';") == '1'
+    category = sql("SELECT id::text FROM categories WHERE name='SYNTHETIC CATEGORY';")
+    successful('UpdateCategory', {'id': category, 'name': 'SYNTHETIC RENAMED'}, token)
+    assert sql("SELECT name FROM categories WHERE id='" + category + "';") == 'SYNTHETIC RENAMED'
+    checks.append('Category create/canonical duplicate/update through real local compiler')
+    sql(f"INSERT INTO products(id,tenant_id,category_id,name,sale_price_cents,cost_price_cents,created_at,updated_at) VALUES('{product}','{tenant}','{category}','Synthetic item',1200,800,now(),now());"
+        f"INSERT INTO stock_balances(tenant_id,branch_id,product_id,quantity,average_cost_cents,version,updated_at) VALUES('{tenant}','{branch}','{product}',10,800,1,now());"
+        f"INSERT INTO payment_methods(id,tenant_id,code,name,requires_change,created_at,updated_at) VALUES('{cash}','{tenant}','CASH','Synthetic cash',true,now(),now());")
+    # Discard only synthetic cash opened by compilation probes, through its existing close contract.
+    for session in sql("SELECT id::text FROM cash_sessions WHERE status='OPEN';").splitlines():
+        successful('CloseCashSession', {'sessionId': session, 'countedAmountCents': 0,
+                                       'notes': 'Synthetic probe closure', 'operationId': str(uuid.uuid4())}, token)
+    successful('OpenCashSession', {'branchId': branch, 'openingAmountCents': 10000, 'notes': 'Synthetic SM06'}, token)
+    session = sql("SELECT id::text FROM cash_sessions WHERE status='OPEN';")
+    payload = {'clientOperationId': 'synthetic-sale-positive-0001', 'branchId': branch,
+               'cashSessionId': session, 'customerId': None, 'replacesSaleId': None,
+               'discountCents': 0, 'surchargeCents': 0,
+               'items': [{'product_id': product, 'quantity': 1, 'requested_price': 1200}],
+               'payments': [{'payment_method_id': cash, 'amount_cents': 2000, 'sequence': 1, 'external_reference': None}]}
+    successful('PostSale', {'payload': payload}, token)
+    successful('PostSale', {'payload': payload}, token)
+    assert sql('SELECT count(*) FROM sales;') == '1'
+    assert sql("SELECT total_cents||':'||change_cents FROM sales;") == '1200:800'
+    assert sql('SELECT sum(amount_cents) FROM cash_movements;') == '11200'
+    assert float(sql('SELECT quantity FROM stock_balances;')) == 9
+    checks.append('SM06 numbers: one sale/replay, cash11200, stock9, received2000/change800 cents')
+    sale = sql('SELECT id::text FROM sales;')
+    successful('CancelSale', {'saleId': sale, 'reason': 'Synthetic cancellation'}, token)
+    assert sql('SELECT sum(amount_cents) FROM cash_movements;') == '10000'
+    assert float(sql('SELECT quantity FROM stock_balances;')) == 10
+    # An already canceled sale may be rejected, but must never refund twice.
+    operation('CancelSale', {'saleId': sale, 'reason': 'Synthetic cancellation', 'sessionToken': token})
+    assert sql('SELECT sum(amount_cents) FROM cash_movements;') == '10000'
+    assert float(sql('SELECT quantity FROM stock_balances;')) == 10
+    checks.append('Cancellation/repeat restores cash10000 and stock10 exactly once')
+    entry = {'clientOperationId': 'synthetic-stock-positive-0001', 'branchId': branch, 'direction': 'IN',
+             'occurredAt': '2026-10-29T12:00:00Z', 'notes': 'Synthetic stock',
+             'items': [{'product_id': product, 'quantity': 2, 'unit_gross_cents': 800, 'unit_cost_cents': 800}]}
+    successful('SaveStockBatch', {'payload': entry}, token)
+    successful('SaveStockBatch', {'payload': entry}, token)
+    assert float(sql('SELECT quantity FROM stock_balances;')) == 12
+    transfer = {'clientOperationId': 'synthetic-transfer-positive-0001', 'sourceBranchId': branch,
+                'destinationBranchId': second, 'notes': 'Synthetic transfer',
+                'items': [{'product_id': product, 'quantity': 3}]}
+    successful('PostStockTransfer', {'payload': transfer}, token)
+    successful('PostStockTransfer', {'payload': transfer}, token)
+    assert sql('SELECT count(*) FROM stock_transfers;') == '1'
+    assert [float(x) for x in sql('SELECT quantity FROM stock_balances ORDER BY branch_id;').splitlines()] == [9, 3]
+    checks.append('Separate entry/transfer with exact replays preserves single effects and balances9/3')
+    movement = {'sessionId': session, 'movementType': 'WITHDRAWAL', 'amountCents': 1000,
+                'description': 'Synthetic withdrawal', 'operationId': 'synthetic-cash-positive-0001'}
+    successful('RegisterCashMovement', movement, token)
+    successful('RegisterCashMovement', movement, token)
+    assert sql('SELECT sum(amount_cents) FROM cash_movements;') == '9000'
+    assert sql("SELECT count(*) FROM cash_movements WHERE movement_type='WITHDRAWAL';") == '1'
+    response = operation('RegisterCashMovement', {**movement, 'amountCents': 2000, 'sessionToken': token})
+    assert response.get('errors') and sql('SELECT sum(amount_cents) FROM cash_movements;') == '9000'
+    checks.append('Cash ACK exact replay has one effect; same operationId with changed payload rejected')
+    close = {'sessionId': session, 'countedAmountCents': 9000,
+             'notes': 'Synthetic closure', 'operationId': 'synthetic-close-positive-0001'}
+    successful('CloseCashSession', close, token)
+    successful('CloseCashSession', close, token)
+    assert sql("SELECT status||':'||difference_cents FROM cash_sessions WHERE id='" + session + "';") == 'CLOSED:0'
+    checks.append('Cash close and exact replay preserve one closure and zero difference')
+
+
 try:
     with tempfile.TemporaryDirectory(prefix='ipsess-') as temporary:
         temp = Path(temporary)
@@ -97,8 +257,7 @@ try:
         (config / 'schema').mkdir(parents=True)
         (config / 'app').mkdir()
         schema = (REPO / 'dataconnect/schema/schema.gql').read_text()
-        (config / 'schema/schema.gql').write_text('\n\n'.join(
-            definition(schema, name) for name in ['Tenant', 'Role', 'User', 'UserDeviceSession']))
+        (config / 'schema/schema.gql').write_text(schema)
         (config / 'dataconnect.yaml').write_text(
             'specVersion: "v1"\nserviceId: "insightpad"\nlocation: "southamerica-east1"\n'
             'schema:\n  source: "./schema"\n  datasource:\n    postgresql:\n'
@@ -106,7 +265,7 @@ try:
             'connectorDirs: ["./app"]\n')
         (config / 'app/connector.yaml').write_text('connectorId: app\n')
         for filename, names in [('queries.gql', ['ValidateDeviceSession']),
-                                ('mutations.gql', ['ClaimDeviceSession', 'TouchDeviceSession', 'ReleaseDeviceSession'])]:
+                                ('mutations.gql', ['ClaimDeviceSession', 'TouchDeviceSession', 'ReleaseDeviceSession', *CORE_OPERATIONS])]:
             source = (REPO / 'dataconnect/app' / filename).read_text()
             (config / 'app' / filename).write_text('\n\n'.join(definition(source, name) for name in names))
         cache = Path(os.environ.get('FIREBASE_EMULATORS_PATH', str(Path.home() / '.cache/firebase/emulators')))
@@ -158,7 +317,7 @@ try:
                         time.sleep(.1)
                 post('/emulator/configure', {'connectionString': 'postgresql://postgres@/fdcdb?host=' + str(sock)
                                             + '&sslmode=disable', 'database': 'fdcdb', 'serviceId': 'insightpad'})
-                assert sql("SELECT count(*) FROM pg_tables WHERE schemaname='public';") == '4'
+                assert sql("SELECT count(*) FROM pg_tables WHERE schemaname='public';") == '53'
                 tenant, role = '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000002'
                 sql(f"INSERT INTO tenants(id,legal_name,timezone,currency_code,active,created_at,updated_at) VALUES('{tenant}','Synthetic','UTC','BRL',true,now(),now());"
                     f"INSERT INTO roles(id,tenant_id,name,hierarchy_level,system_role,active,created_at,updated_at) VALUES('{role}','{tenant}','Synthetic',100,false,true,now(),now());"
@@ -179,6 +338,7 @@ try:
                 assert sql('SELECT claimed_at::text FROM user_device_sessions;') == initial_claim
                 assert sql("SELECT last_seen_at>now()-interval '10 seconds' FROM user_device_sessions;") == 't'
                 checks.append('Valid lease renews through the compiler and preserves its absolute deadline')
+                core_contracts(token, tenant, role)
                 replacement = claim()
                 denied(token)
                 renew(replacement)
@@ -232,4 +392,4 @@ finally:
 
 if not record.get('passed'):
     raise RuntimeError('Session runtime regression failed; inspect the encrypted private evidence')
-print(f"Data Connect {VERSION}: {len(checks)} isolated session scenarios passed; no real authenticated smoke claimed")
+print(f"Data Connect {VERSION}: {len(checks)} isolated contract scenarios passed; no real authenticated smoke claimed")
