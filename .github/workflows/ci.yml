@@ -74,6 +74,8 @@ jobs:
         run: node scripts/qa-browser/empty-sales.mjs
       - name: PostgreSQL 18 descartável (aborto e locks, sem rede)
         run: python3 scripts/qa-browser/pg18-abort.py
+      - name: Renovação de sessão pelo compilador Data Connect isolado
+        run: python3 scripts/qa-browser/session-runtime.py
       - name: Cobertura integrada QA existente
         run: node scripts/qa-browser/run.mjs --full
       - name: Proteger evidências visuais antes de sair do runner

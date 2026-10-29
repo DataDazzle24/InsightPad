@@ -86,3 +86,8 @@ test('allows only the existing POS SQL chain test and refuses adjacent unapprove
  assert.equal(validateScope(policy,['functions/test/pos.test.ts']),true);
  for(const path of ['functions/test/pos-extra.test.ts','functions/test/pos.test.ts.bak','functions/src/pos.ts'])assert.throws(()=>validateScope(policy,[path]),/outside approved scope/);
 });
+
+test('permits only the exact isolated session runtime regression and rejects neighbors',()=>{
+ assert.equal(validateScope(policy,['scripts/qa-browser/session-runtime.py']),true);
+ for(const path of ['scripts/qa-browser/session-runtime-extra.py','scripts/qa-browser/session-runtime.py.bak','scripts/qa-browser/session-remote.py'])assert.throws(()=>validateScope(policy,[path]),/outside approved scope/);
+});

@@ -1221,6 +1221,13 @@
         "AJU-PDV-04"
       ],
       "reason": "Exact existing SQL test for the authorized extended cash sale stock transfer and channel reservation chain in disposable PGlite; no remote operation."
+    },
+    "scripts/qa-browser/session-runtime.py": {
+      "ids": [
+        "SEC-2026-001",
+        "SEC-2026-002"
+      ],
+      "reason": "Exact isolated Data Connect compiler and disposable PG18 session-renewal regression; synthetic actors, private sealed evidence, no remote backend or permissions change."
     }
   },
   "bytePreserved": [

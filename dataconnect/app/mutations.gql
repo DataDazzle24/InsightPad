@@ -2516,11 +2516,13 @@ mutation TouchDeviceSession($sessionToken: String!) @auth(level: USER) @transact
     ) AS valid
   """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
   }
+  # Stage the write after the checked query; independent fields can be combined as scalar SQL.
   _execute(sql: """
     UPDATE user_device_sessions SET last_seen_at=now()
     WHERE user_id=$1 AND session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
       AND last_seen_at>now()-interval '15 minutes' AND claimed_at>now()-interval '12 hours'
-  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this > 0", message: "SESSION_REQUIRED")
+      AND $3::boolean
+  """,params:[{_expr:"auth.uid"},$sessionToken,{_expr:"response.query.session.valid"}]) @check(expr: "this > 0", message: "SESSION_REQUIRED")
 }
 
 mutation ReleaseDeviceSession($sessionToken: String!) @auth(level: USER) {
