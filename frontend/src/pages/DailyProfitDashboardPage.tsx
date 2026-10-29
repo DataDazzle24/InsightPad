@@ -1,7 +1,7 @@
+import { useDialogAccessibility } from '../hooks/useDialogAccessibility';
 import { useDashboardExport } from '../utils/dashboardAuthorization';
 import { Link } from 'react-router-dom';
-import { csvSafe } from '../utils/registration';
-import { heatmapStyle } from '../utils/dashboardExport';
+import { financialCsv,heatmapStyle } from '../utils/dashboardExport';
 /* eslint-disable react-hooks/preserve-manual-memoization */
 import { useCallback, useEffect, useMemo, useRef, useState,type ReactNode } from "react";
 import { getDataConnect } from "firebase/data-connect";
@@ -122,6 +122,8 @@ export function DailyProfitDashboardPage({navigation}:{navigation?:ReactNode}) {
     ]),
     [sort, setSort] = useState<keyof Product>("revenueCents"),
     [selected, setSelected] = useState(false);
+  useDialogAccessibility(filterOpen,()=>setFilterOpen(false));
+  useDialogAccessibility(info,()=>setInfo(false));
   const sequence=useRef(0);
   const load = useCallback(async () => {
     const request=++sequence.current;
@@ -217,43 +219,7 @@ export function DailyProfitDashboardPage({navigation}:{navigation?:ReactNode}) {
   }
   function csv() {
     if(!canExport||!data||busy)return;
-    const rows = [
-        [
-          "Produto",
-          "Categoria",
-          "Subcategoria",
-          "Volume",
-          "Faturamento bruto",
-          "Taxas iFood",
-          "Repasse líquido",
-          "Custo",
-          "Lucro após taxas",
-          "Margem",
-        ],
-        ...products.map((i) => [
-          i.name,
-          i.category ?? "",
-          i.subcategory ?? "",
-          i.quantity,
-          i.revenueCents,
-          i.providerFeeCents,
-          i.netRevenueCents,
-          i.costCents,
-          i.profitCents,
-          i.marginPercent,
-        ]),
-      ],
-      blob = new Blob(
-        [
-          "\uFEFF" +
-            rows
-              .map((r) =>
-                r.map((v) => `"${csvSafe(String(v)).replaceAll('"', '""')}"`).join(";"),
-              )
-              .join("\n"),
-        ],
-        { type: "text/csv;charset=utf-8" },
-      ),
+    const blob = new Blob([financialCsv(products)],{type:'text/csv;charset=utf-8'}),
       url = URL.createObjectURL(blob),
       a = document.createElement("a");
     a.href = url;
@@ -564,13 +530,13 @@ export function DailyProfitDashboardPage({navigation}:{navigation?:ReactNode}) {
       )}
       {filterOpen && (
         <div className="catalog-backdrop">
-          <section className="catalog-modal finance-filter-modal">
+          <section className="catalog-modal finance-filter-modal" role="dialog" aria-modal="true" aria-label="Filtros do dashboard financeiro">
             <header>
               <div>
                 <span className="eyebrow">PESQUISA</span>
                 <h2>FILTROS DO DASHBOARD</h2>
               </div>
-              <button onClick={() => setFilterOpen(false)}>×</button>
+              <button aria-label="Fechar filtros" onClick={() => setFilterOpen(false)}>×</button>
             </header>
             <div className="finance-filter-grid">
               <DateRangePicker
@@ -619,7 +585,7 @@ export function DailyProfitDashboardPage({navigation}:{navigation?:ReactNode}) {
       )}
       {info && (
         <div className="catalog-backdrop">
-          <section className="catalog-confirm formula-modal">
+          <section className="catalog-confirm formula-modal" role="dialog" aria-modal="true" aria-label="Como os indicadores são calculados">
             <span className="material-symbols-rounded">calculate</span>
             <h2>Como os indicadores são calculados</h2>
             <p>

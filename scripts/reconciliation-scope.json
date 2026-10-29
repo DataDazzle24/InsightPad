@@ -1118,6 +1118,118 @@
         "DES-2026-001"
       ],
       "reason": "DEC-026 additional visual correction: reserve room for persistent order alerts so stock pagination and mobile navigation remain clickable; no change to frozen 68 IDs or excluded requests."
+    },
+    "scripts/qa-browser/closure.mjs": {
+      "ids": [
+        "AJU-DASH-11",
+        "AJU-DASH-12",
+        "AJU-EST-05",
+        "AJU-EST-23",
+        "AJU-CAT-01",
+        "AJU-PROD-02"
+      ],
+      "reason": "Residual isolated exporter, PDF, form and dashboard consumer regressions; reuse existing runner, no operational access. Exact path only."
+    },
+    "scripts/qa-browser/pg18-abort.py": {
+      "ids": [
+        "SEC-2026-008"
+      ],
+      "reason": "Disposable PostgreSQL18 write rollback and lock release evidence only, no backend or migration. Exact path only."
+    },
+    "scripts/qa-browser/reports.mjs": {
+      "ids": [
+        "AJU-DASH-12"
+      ],
+      "reason": "Exact isolated PDF/print contrast regression for all five existing dashboard views and both themes; no remote operation or public evidence."
+    },
+    "scripts/qa-browser/consolidated.mjs": {
+      "ids": [
+        "AJU-PDV-01",
+        "AJU-PDV-02",
+        "AJU-PDV-03",
+        "AJU-PDV-04",
+        "AJU-PDV-05",
+        "AJU-DASH-01",
+        "AJU-DASH-02",
+        "AJU-DASH-03",
+        "AJU-DASH-04",
+        "AJU-DASH-05",
+        "AJU-DASH-06",
+        "AJU-DASH-07",
+        "AJU-DASH-08",
+        "AJU-DASH-09",
+        "AJU-DASH-10",
+        "AJU-DASH-11",
+        "AJU-DASH-12",
+        "AJU-DASH-13",
+        "AJU-EST-01",
+        "AJU-EST-02",
+        "AJU-EST-03",
+        "AJU-EST-04",
+        "AJU-EST-05",
+        "AJU-EST-06",
+        "AJU-EST-07",
+        "AJU-EST-08",
+        "AJU-EST-09",
+        "AJU-EST-10",
+        "AJU-EST-11",
+        "AJU-EST-12",
+        "AJU-EST-13",
+        "AJU-EST-14",
+        "AJU-EST-15",
+        "AJU-EST-16",
+        "AJU-EST-18",
+        "AJU-EST-19",
+        "AJU-EST-20",
+        "AJU-EST-22",
+        "AJU-EST-23",
+        "AJU-PROD-01",
+        "AJU-PROD-02",
+        "AJU-CAT-01",
+        "AJU-CAT-02",
+        "AJU-CAT-03",
+        "AJU-CAT-04",
+        "AJU-CAT-05",
+        "AJU-CAT-06",
+        "AJU-CAT-07",
+        "AJU-CAT-08",
+        "AJU-CAT-09",
+        "AJU-CAT-10",
+        "AJU-CAT-11",
+        "AJU-CAT-12",
+        "AJU-CAT-13",
+        "AJU-CAT-14",
+        "AJU-SUB-01",
+        "AJU-SUB-02",
+        "AJU-SUB-03",
+        "AJU-SUB-04",
+        "AJU-SUB-05",
+        "AJU-SUB-06",
+        "AJU-SUB-07",
+        "AJU-SUB-08",
+        "AJU-SUB-09",
+        "AJU-SUB-10",
+        "AJU-SUB-11",
+        "AJU-SUB-13",
+        "AJU-SUB-14"
+      ],
+      "reason": "Exact isolated residual consumer tests for the frozen68, preserving exclusions and sufficient cases; no business endpoint, remote operation or public evidence."
+    },
+    "functions/test/pos.test.ts": {
+      "ids": [
+        "AJU-EST-22",
+        "AJU-PDV-04"
+      ],
+      "reason": "Exact existing SQL test for the authorized extended cash sale stock transfer and channel reservation chain in disposable PGlite; no remote operation."
+    },
+    "scripts/qa-browser/session-runtime.py": {
+      "ids": [
+        "SEC-2026-001",
+        "SEC-2026-002",
+        "AJU-PDV-04",
+        "AJU-EST-22"
+      ],
+      "reason": "Exact isolated Data Connect compiler and disposable PG18 regression for session/core write ordering, financial/stock ledgers and replay; synthetic actors, sealed evidence, no remote backend or permissions change."
     }
   },
   "bytePreserved": [

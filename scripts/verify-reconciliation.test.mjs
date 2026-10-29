@@ -66,3 +66,28 @@ test('accepts only the exact sales empty-state browser regression path',()=>{
   assert.throws(()=>validateScope(policy,[path]),/outside approved scope/);
  }
 });
+
+test('permits only the exact isolated closure and disposable PG18 proofs, rejects adjacent files',()=>{
+ assert.equal(validateScope(policy,['scripts/qa-browser/closure.mjs','scripts/qa-browser/pg18-abort.py']),true);
+ for(const path of ['scripts/qa-browser/closure-extra.mjs','scripts/qa-browser/closure.mjs.bak','scripts/qa-browser/pg18-abort.sql','scripts/qa-browser/pg18-remote.py'])assert.throws(()=>validateScope(policy,[path]),/outside approved scope/);
+});
+
+test('permits only the exact existing reports regression and rejects neighboring scripts',()=>{
+ assert.equal(validateScope(policy,['scripts/qa-browser/reports.mjs']),true);
+ for(const path of ['scripts/qa-browser/reports-extra.mjs','scripts/qa-browser/reports.mjs.bak','scripts/qa-browser/remote-reports.mjs'])assert.throws(()=>validateScope(policy,[path]),/outside approved scope/);
+});
+
+test('permits only the exact consolidated isolated consumer proof and rejects neighbors',()=>{
+ assert.equal(validateScope(policy,['scripts/qa-browser/consolidated.mjs']),true);
+ for(const path of ['scripts/qa-browser/consolidated-extra.mjs','scripts/qa-browser/consolidated.mjs.bak','scripts/qa-browser/consolidated/remote.mjs'])assert.throws(()=>validateScope(policy,[path]),/outside approved scope/);
+});
+
+test('allows only the existing POS SQL chain test and refuses adjacent unapproved paths',()=>{
+ assert.equal(validateScope(policy,['functions/test/pos.test.ts']),true);
+ for(const path of ['functions/test/pos-extra.test.ts','functions/test/pos.test.ts.bak','functions/src/pos.ts'])assert.throws(()=>validateScope(policy,[path]),/outside approved scope/);
+});
+
+test('permits only the exact isolated session runtime regression and rejects neighbors',()=>{
+ assert.equal(validateScope(policy,['scripts/qa-browser/session-runtime.py']),true);
+ for(const path of ['scripts/qa-browser/session-runtime-extra.py','scripts/qa-browser/session-runtime.py.bak','scripts/qa-browser/session-remote.py'])assert.throws(()=>validateScope(policy,[path]),/outside approved scope/);
+});

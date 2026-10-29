@@ -13,7 +13,7 @@ let root:Root,container:HTMLDivElement
 const click=async(el:Element,shiftKey=false)=>{await act(async()=>el.dispatchEvent(new MouseEvent('click',{bubbles:true,shiftKey})))}
 const find=(label:string)=>{const el=[...container.querySelectorAll('button')].find(b=>[...b.childNodes].filter(n=>n.nodeType===Node.TEXT_NODE).map(n=>n.textContent).join('').trim()===label||b.textContent?.trim()===label);if(!el)throw new Error(label);return el}
 const move=(n:number)=>({id:'m'+n,operationId:'operation'+n,occurredAt:'2026-10-20T12:00:00Z',quantity:1,unitCostCents:'100',status:'POSTED',typeCode:'MANUAL_IN',typeName:'Entrada',direction:'IN',productId:'p1',productName:'Produto',branchId:'b1',branchName:'Matriz'})
-const workspace=()=>({branches:[{id:'b1',name:'Matriz'}],suppliers:[],products:[{id:'p1',name:'Produto',minimumStock:1,maximumStock:10,weightedProduct:true,costPriceCents:'100',balances:[{branchId:'b1',branchName:'Matriz',quantity:10,reservedQuantity:0,availableQuantity:10,averageCostCents:'100'}]}],movements:[move(1),move(2),move(3)],transfers:[],movementCount:3,transferCount:0})
+const workspace=()=>({branches:[{id:'b1',name:'Matriz'}],suppliers:[],products:[{id:'p1',name:'Produto',minimumStock:1,maximumStock:10 as number|null,weightedProduct:true,costPriceCents:'100',balances:[{branchId:'b1',branchName:'Matriz',quantity:10,reservedQuantity:0,availableQuantity:10,averageCostCents:'100'}]}],movements:[move(1),move(2),move(3)],transfers:[],movementCount:3,transferCount:0})
 beforeEach(()=>{vi.useFakeTimers();vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);mocks.manage=true;mocks.workspace.mockResolvedValue({data:{_select:[{data:workspace()}]}});mocks.reverse.mockResolvedValue({data:{_execute:1}});mocks.transfer.mockReset().mockResolvedValue({data:{_execute:1}})})
 afterEach(async()=>{if(root)await act(async()=>root.unmount());container?.remove();vi.useRealTimers();vi.unstubAllGlobals()})
 async function render(){container=document.createElement('div');document.body.append(container);root=createRoot(container);await act(async()=>root.render(<MemoryRouter><StockPage/></MemoryRouter>));await act(async()=>{await vi.advanceTimersByTimeAsync(0)})}
@@ -52,3 +52,30 @@ it('exports BRL costs matching the screen without mutating stored cents, includi
  await click(find('Saldo atual'));await click(find('downloadCSV'));expect(csv).toContain('Custo médio (R$)');expect(csv).toContain('Valor total (R$)');expect(csv).toContain('R$');expect(data).toEqual(original)
  }finally{URL.createObjectURL=oldCreate;URL.revokeObjectURL=oldRevoke;anchor.mockRestore()}
 })
+
+it('exports the selected balance levels in the same displayed order and clears the recorte',async()=>{
+ const data=workspace();data.products.push({...data.products[0],id:'p2',name:'OUTRO SALDO',balances:[{...data.products[0].balances[0],quantity:1,availableQuantity:1}] } as typeof data.products[number]);data.products[1].minimumStock=2;
+ mocks.workspace.mockResolvedValue({data:{_select:[{data}]}});await render();await click(find('Saldo atual'));await click([...container.querySelectorAll('button')].find(b=>b.textContent?.includes('Estoque baixo'))!);
+ let csv='';const OriginalBlob=globalThis.Blob;vi.stubGlobal('Blob',class{constructor(parts:string[]){csv=parts.join('')}});const oldCreate=URL.createObjectURL,oldRevoke=URL.revokeObjectURL;URL.createObjectURL=()=> 'blob:qa-filter';URL.revokeObjectURL=()=>{};vi.spyOn(HTMLAnchorElement.prototype,'click').mockImplementation(()=>{});
+ try{await click(find('downloadCSV'));expect(csv).toContain('OUTRO SALDO');expect(csv).not.toContain('"Produto";""');expect(csv.trim().split('\n')).toHaveLength(2);await click(find('Limpar filtros'));await click(find('downloadCSV'));expect(csv.trim().split('\n')).toHaveLength(3)}finally{vi.stubGlobal('Blob',OriginalBlob);URL.createObjectURL=oldCreate;URL.revokeObjectURL=oldRevoke}
+})
+
+it('counts high stock only strictly above a positive maximum and preserves all physical quantities',async()=>{
+ const data=workspace();data.products=[...data.products,...[10.001,100,100].map((quantity,i)=>({...data.products[0],id:'edge'+i,name:'EDGE'+i,maximumStock:i===0?10:i===1?0:null,balances:[{...data.products[0].balances[0],quantity,availableQuantity:quantity}]}))];mocks.workspace.mockResolvedValue({data:{_select:[{data}]}});
+ await render();expect(find('Estoque alto1')).toBeTruthy();await click(find('Estoque alto1'));expect(container.querySelector('.stock-table tbody')?.textContent).toContain('EDGE0');expect(container.querySelectorAll('.stock-table tbody tr')).toHaveLength(1)
+})
+it('rejects transfer on a second visible branch when manage permission is absent',async()=>{const data=workspace();data.branches.push({id:'b2',name:'Filial'});mocks.manage=false;mocks.workspace.mockResolvedValue({data:{_select:[{data}]}});await render();expect((find('Transferir') as HTMLButtonElement).disabled).toBe(true);await click(find('Transferir'));expect(mocks.transfer).not.toHaveBeenCalled()})
+
+it.each(['SALE','TRANSFER_OUT'])('guides %s correction to its owning flow without selecting or mutating manual stock',async(typeCode)=>{
+ const previous=mocks.reverse.mock.calls.length;const data=workspace();data.movements=[{...move(1),typeCode}];mocks.workspace.mockResolvedValue({data:{_select:[{data}]}});await render();await click(container.querySelector('.stock-table tbody tr')!);
+ expect(container.querySelector('[role="alert"]')?.textContent).toContain('Vendas são corrigidas no Registro de Vendas');expect(container.querySelector<HTMLInputElement>('.stock-table input')?.checked).toBe(false);expect((find('Editar') as HTMLButtonElement).disabled).toBe(true);expect((find('Estornar') as HTMLButtonElement).disabled).toBe(true);expect(mocks.reverse).toHaveBeenCalledTimes(previous);
+});
+
+it('renders every existing stock and transfer status with its Portuguese label and matching class without changing input',async()=>{
+ const data=workspace();data.movements=['POSTED','REVERSED','PENDING'].map((status,i)=>({...move(i),status}));
+ data.transfers=['PENDING','COMPLETED','CANCELLED'].map((status,i)=>({id:'t'+i,operationId:'transfer'+i,requestedAt:'2026-10-20T12:00:00Z',sourceBranch:'Matriz',destinationBranch:'Filial',itemCount:1,totalQuantity:1,status})) as typeof data.transfers;
+ const original=structuredClone(data);mocks.workspace.mockResolvedValue({data:{_select:[{data}]}});await render();
+ const labels=()=>[...container.querySelectorAll('.stock-status')].map(e=>[e.textContent,e.className]);
+ expect(labels()).toEqual([['Registrado','stock-status stock-status--posted'],['Estornado','stock-status stock-status--reversed'],['Pendente','stock-status stock-status--pending']]);
+ await click(find('Transferências'));expect(labels()).toEqual([['Pendente','stock-status stock-status--pending'],['Concluído','stock-status stock-status--completed'],['Cancelado','stock-status stock-status--cancelled']]);expect(data).toEqual(original);
+});

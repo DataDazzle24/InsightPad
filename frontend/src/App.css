@@ -256,6 +256,7 @@ html[data-theme=light] .pos-page .pos-cart .pos-quantity-input{color:#132329;bac
  .finance-table-card>header{break-after:avoid;border-color:#888}
  .finance-table-card th{border-bottom:1px solid #888}
  .finance-table-card td{border-bottom:1px solid #ddd}
+ .finance-table-card:last-child{margin-bottom:0}
 }
 
 @media print{.finance-table-card th button{display:inline!important;border:0!important;padding:0!important;color:inherit!important}.finance-table-card th button .material-symbols-rounded{display:none!important}}
@@ -279,3 +280,29 @@ html[data-theme=light] .sales-page .catalog-scroll{background:var(--panel)}
 .stock-heading__actions .stock-heading-action:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
 /* Keyboard focus must remain distinguishable against the light surrounding panel. */
 html[data-theme=light] .catalog-confirm footer button:focus-visible,html[data-theme=light] .stock-heading__actions .stock-heading-action:focus-visible{outline-color:#1268a7}
+
+/* Reports must not inherit dark screen surfaces when printed from either theme. */
+@media print{
+ .finance-dashboard,.analytics-page{--panel:#fff;--panel-soft:#fff;--bg:#fff;--text:#000;--muted:#333;--line:#888;color-scheme:light}
+ .finance-heading,.finance-heading h1,.finance-heading p,.finance-comparison,.finance-chart-card,.finance-chart-card header,.finance-chart-card header strong,.finance-chart-card header span,.finance-kpis article,.finance-kpis article strong,.finance-kpis article span,.finance-kpis article small{background:#fff!important;color:#000!important}
+ .finance-comparison strong,.finance-comparison span,.finance-comparison small,.finance-table-card small,.finance-table-card strong,.finance-chart-card small,.channel-dashboard__empty{color:#000!important}
+}
+@media print{
+ :is(.finance-dashboard,.analytics-page) :is(h1,h2,h3,p,span,strong,small,th,td,button,a){color:#000!important}
+}
+/* Keep report table exports consistent with heading controls on keyboard focus. */
+.finance-table-card header button:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+/* Match the existing light-theme focus contrast for report consumers. */
+html[data-theme=light] :is(.finance-dashboard,.analytics-page) button:focus-visible{outline-color:#1268a7}
+/* Wrapped dashboard navigation must not clip its keyboard tooltips. */
+.finance-heading .dashboard-hub__nav{overflow:visible}
+.finance-heading .dashboard-hub__nav button::after{color:var(--white)}
+/* Compact tables must retain their existing row actions. */
+@media(max-width:700px){.catalog-table td:nth-child(n+4):not(:last-child):has(.catalog-actions){display:block}}
+@media(max-width:700px){
+ .catalog-panel>.catalog-scroll{background:var(--panel)}
+ div.catalog-table{min-width:0;width:100%}
+ div.catalog-table>table{min-width:0;width:100%}
+ .catalog-table .catalog-actions{min-width:0;max-width:100%}
+ .catalog-table tbody tr{background:var(--panel)}
+}

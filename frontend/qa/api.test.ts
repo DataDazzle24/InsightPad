@@ -1,8 +1,15 @@
 import {beforeEach,expect,it} from 'vitest'
-import {qaOperation,qaState,resetFixtures,uuid,fixtureDate} from './api'
-beforeEach(()=>{resetFixtures();qaState.fail=false;qaState.ackLoss=false;qaState.delay=0;qaState.permissions='full';qaState.empty=false;qaState.allowedBranches=[]})
+import {qaOperation,qaState,resetFixtures,uuid,fixtureDate,inspectFixtures,useBoundaryLedger,DataConnectError} from './api'
+beforeEach(()=>{resetFixtures();qaState.fail=false;qaState.cashAckLoss=false;qaState.ackLoss=false;qaState.delay=0;qaState.permissions='full';qaState.empty=false;qaState.allowedBranches=[]})
+for(const name of ['RegisterCashMovement','CloseCashSession'])it('CASH-ACK-SDK-AD fixture '+name+' matches SDK transport shape after one commit',async()=>{
+ qaState.cashAckLoss=true;const payload=name==='CloseCashSession'?{sessionId:uuid(60),countedAmountCents:10000,notes:'Conferência QA',operationId:'sdk-close'}:{sessionId:uuid(60),movementType:'SUPPLY',amountCents:500,description:'Movimento teste',operationId:'sdk-supply'};
+ await expect(qaOperation(name,payload)).rejects.toMatchObject({name:'DataConnectError',code:'other',message:'Failed to fetch: Failed to fetch'});
+ const committed=inspectFixtures();expect((await qaOperation(name,payload)).data).toMatchObject({_execute:1});expect(inspectFixtures()).toEqual(committed);
+ await expect(qaOperation(name,{...payload,...(name==='CloseCashSession'?{notes:'Outro motivo'}:{description:'Outro motivo'})})).rejects.toMatchObject({name:'DataConnectOperationError',code:'partial-error',response:{errors:[{path:['_execute'],message:expect.stringContaining('POS_REJECTED')}]}});expect(inspectFixtures()).toEqual(committed);
+ expect(new DataConnectError('other','Failed to fetch')).not.toBeInstanceOf(TypeError);
+})
 it('uses deterministic full datasets, pagination and explicit unknown-operation failures',async()=>{
- const a=await qaOperation('ListCategories',{limit:100,offset:0}),b=await qaOperation('ListCategories',{limit:100,offset:100});expect(a.data).toMatchObject({_selectFirst:{totalCount:151}});expect((b.data as {_select:unknown[]})._select).toHaveLength(51);
+ const a=await qaOperation('ListCategories',{limit:100,offset:0}),b=await qaOperation('ListCategories',{limit:100,offset:100});expect(a.data).toMatchObject({_selectFirst:{totalCount:300}});expect((b.data as {_select:unknown[]})._select).toHaveLength(100);
  const r=await qaOperation('OperationalAnalyticsDashboard');const data=(r.data as {_select:Array<{data:{customers:{birthdays:unknown[];dormant:unknown[]}}}>})._select[0]!.data;expect(data.customers.birthdays).toHaveLength(51);expect(data.customers.dormant).toHaveLength(1201);
  await expect(qaOperation('RealBackendNotMocked')).rejects.toThrow('operação ainda sem fixture');
 })
@@ -63,3 +70,202 @@ it('reconciles monetary cards, daily rows, product rows and customer counts from
  const outside=await read('FinancialIndicatorsDashboard',{from:'2001-01-01',to:'2001-01-31'});expect(outside.cards.revenueCents).toBe(0);expect(outside.products).toEqual([])
  const stock=(await qaOperation('StockWorkspace')).data as {_select:Array<{data:{products:Array<{balances:Array<{quantity:number}>}>}}>} ;expect(new Set(stock._select[0]!.data.products.map(p=>p.balances[0]!.quantity)).size).toBeGreaterThan(5)
 })
+it('selects immutable analytical records without recomputing quantities or money',async()=>{
+ const read=async(v={})=>((await qaOperation('FinancialIndicatorsDashboard',v)).data as {_select:{data:{products:Record<string,unknown>[]}}[]})._select[0]!.data.products;
+ const all=await read(),target=all[17]!;expect(target.category).toBe('CATEGORIA QA 001');expect(target.subcategory).toBe('SUBCATEGORIA QA 001');const selected=await read({filters:{products:[target.id]}});expect(selected).toEqual([target]);
+ await qaOperation('SaveProduct',{id:target.id,payload:{name:'EDITADO SEM REESCREVER HISTÓRICO',salePriceCents:'9999'}});expect(await read({filters:{products:[target.id]}})).toEqual([target]);expect(await read()).toEqual(all);
+})
+it('derives category/subcategory counts from actual product relationships',async()=>{
+ const read=async(name:string)=>(await qaOperation(name,{limit:1000})).data as {_select:Record<string,unknown>[]};
+ const products=(await read('ListProducts'))._select,categories=(await read('ListCategories'))._select,subs=(await read('ListSubcategories'))._select;
+ for(const c of categories){expect(c.productCount).toBe(products.filter(p=>p.active&&!p.deletedAt&&p.categoryId===c.id).length);expect(c.subcategoryCount).toBe(subs.filter(s=>s.active&&!s.deletedAt&&s.categoryId===c.id).length)}
+ for(const s of subs)expect(s.productCount).toBe(products.filter(p=>p.active&&!p.deletedAt&&p.subcategoryId===s.id).length);
+})
+it('supports existing customer supplier branch and promotion contracts without fake writes',async()=>{
+ for(const [save,list]of [['SaveCustomer','ListCustomers'],['SaveSupplier','ListSuppliers'],['SaveBranch','ListBranches']]){
+  await qaOperation(save!,{payload:{name:'NOME NOVO QA',legalName:'NOME NOVO QA',cpf:'529.982.247-25'}});const data=(await qaOperation(list!,{search:'NOME NOVO QA'})).data as {_select:{id:string}[]};const id=data._select[0]!.id;
+  await expect(qaOperation(save!,{payload:{name:'NOME NOVO QA',legalName:'NOME NOVO QA',cpf:'52998224725'}})).rejects.toThrow('duplicado');await qaOperation(save!,{id,payload:{name:'NOME EDITADO QA',legalName:'NOME EDITADO QA',cpf:'52998224725'}});expect((await qaOperation(list!,{search:'NOME NOVO QA'})).data).toMatchObject({_select:[]});
+  qaState.permissions='read';await expect(qaOperation(save!,{id,payload:{name:'NEGADO'}})).rejects.toThrow('permissão');qaState.permissions='full';
+ }
+ await qaOperation('SavePromotion',{productId:uuid(101),promotionalPriceCents:'999',startsAt:'2000-01-01',endsAt:'2099-01-01'});expect((await qaOperation('ProductPromotions',{productId:uuid(101)})).data).toMatchObject({_select:[{promotionalPriceCents:'999',status:'ACTIVE'}]});
+})
+it('reconciles sale and cancellation once across cash stock and the same sale ID',async()=>{
+ await qaOperation('SaveStockBatch',{payload:{clientOperationId:'initial-stock',branchId:uuid(1),direction:'OUT',items:[{product_id:uuid(101),quantity:10}]}});
+ const sale={clientOperationId:'coherent-sale',branchId:uuid(1),cashSessionId:uuid(60),items:[{product_id:uuid(101),quantity:2,requested_price:1200}],payments:[{payment_method_id:uuid(50),amount_cents:3000,sequence:1}]};
+ await qaOperation('PostSale',{payload:sale});const read=async()=>((await qaOperation('SalesWorkspace',{branchId:uuid(1)})).data as {_select:{data:{openSession:{expectedAmountCents:string};products:{id:string;stock:number}[]}}[]})._select[0]!.data;
+ const sold=await read();expect(sold.openSession.expectedAmountCents).toBe('12400');expect(sold.products.find(p=>p.id===uuid(101))!.stock).toBe(8);
+ await qaOperation('CancelSale',{saleId:sale.clientOperationId,reason:'teste isolado'});await qaOperation('CancelSale',{saleId:sale.clientOperationId,reason:'mesmo cancelamento'});const cancelled=await read();expect(cancelled.openSession.expectedAmountCents).toBe('10000');expect(cancelled.products.find(p=>p.id===uuid(101))!.stock).toBe(10);
+})
+it('rejects unit component fractions, preserves weighed quantities and resets added branches',async()=>{
+ const payload={name:'KIT TESTE',bundleProduct:true,salePriceCents:1200};
+ await expect(qaOperation('SaveProduct',{payload,components:[{productId:uuid(101),quantity:.5}]})).rejects.toThrow('componente');
+ await qaOperation('SaveProduct',{payload,components:[{productId:uuid(100),quantity:.5}]});const data=(await qaOperation('ListProducts',{search:'KIT TESTE'})).data as {_select:{id:string}[]};expect((await qaOperation('ProductComponents',{productId:data._select[0]!.id})).data).toMatchObject({_select:[{productId:uuid(100),quantity:.5}]});
+ await qaOperation('SaveBranch',{payload:{name:'FILIAL ADICIONAL'}});resetFixtures();expect((await qaOperation('ListBranches',{limit:1000})).data).toMatchObject({_selectFirst:{totalCount:2}});
+})
+it('keeps uncertain sale ACK retry payload and applies cash and stock once',async()=>{
+ const payload={clientOperationId:'sale-ack',branchId:uuid(1),cashSessionId:uuid(60),items:[{product_id:uuid(101),quantity:2,requested_price:1200}],payments:[{payment_method_id:uuid(50),amount_cents:3000,sequence:1}]};qaState.ackLoss=true;
+ await expect(qaOperation('PostSale',{payload})).rejects.toThrow('confirmação perdida');await qaOperation('PostSale',{payload});await expect(qaOperation('PostSale',{payload:{...payload,discountCents:1}})).rejects.toThrow('conflitante');
+ expect((await qaOperation('SalesWorkspace',{branchId:uuid(1)})).data).toMatchObject({_select:[{data:{openSession:{expectedAmountCents:'12400',movementCount:1}}}]});
+})
+it('reconciles category and subcategory analytical groups with the immutable financial ledger',async()=>{
+ const f=(await qaOperation('FinancialIndicatorsDashboard')).data as {_select:{data:{cards:{revenueCents:number}}}[]};const o=(await qaOperation('OperationalAnalyticsDashboard')).data as {_select:{data:{categories:{level:string;revenueCents:number}[]}}[]};
+ for(const level of ['Categoria','Subcategoria'])expect(o._select[0]!.data.categories.filter(x=>x.level===level).reduce((n,x)=>n+x.revenueCents,0)).toBe(f._select[0]!.data.cards.revenueCents);
+})
+
+it('allows customer and supplier homonyms while rejecting duplicate active normalized documents',async()=>{
+ for(const name of ['SaveCustomer','SaveSupplier']){await qaOperation(name,{payload:{name:'HOMONIMO QA',legalName:'HOMONIMO QA'}});await qaOperation(name,{payload:{name:'HOMONIMO QA',legalName:'HOMONIMO QA'}});await qaOperation(name,{payload:{name:'OUTRO QA',legalName:'OUTRO QA',cpf:'529.982.247-25'}});await expect(qaOperation(name,{payload:{name:'OUTRO NOME QA',legalName:'OUTRO NOME QA',cpf:'52998224725'}})).rejects.toThrow('duplicado')}
+})
+
+// Independent expected records: these tests do not call the fixture aggregators.
+type R=Record<string,unknown>
+const box=async(name:string,v:R={})=>((await qaOperation(name,v)).data as {_select:{data:R}[]})._select[0]!.data
+const list=async(name:string,v:R={})=>((await qaOperation(name,{limit:1000,...v})).data as {_select:R[]})._select
+it('A01 selects fixed dates, branches, sources and clear without rewriting any ledger record',async()=>{
+ useBoundaryLedger();const original=inspectFixtures().ledger
+ const cases:[R,number[]][]=[[{from:'2025-12-31',to:'2026-01-01'},[0,1]],[{from:'2026-01-01',to:'2026-01-31'},[1,2]],[{filters:{branches:[uuid(1)]}},[0,2,4]],[{filters:{sources:['IFOOD']}},[1,3,5]],[{filters:{products:[uuid(104)],suppliers:[uuid(20)]}},[4]],[{filters:{categories:[uuid(999)]}},[]],[{},[0,1,2,3,4,5]]]
+ const expectedRevenue=[0,1,800,1234,100001,800],expectedCost=[0,0,900,1234,1,900]
+ for(const [v,indices]of cases){const f=await box('FinancialIndicatorsDashboard',v),cards=f.cards as R,rows=f.products as R[]
+  expect(rows.map(r=>r.id)).toEqual(indices.map(i=>uuid(100+i)));expect(cards.revenueCents).toBe(indices.reduce((n,i)=>n+expectedRevenue[i]!,0));expect(cards.costCents).toBe(indices.reduce((n,i)=>n+expectedCost[i]!,0));expect(cards.volume).toBe(indices.length)
+  expect(inspectFixtures().ledger).toEqual(original)
+ }
+ const multi=await box('FinancialIndicatorsDashboard',{from:'2025-12-31',to:'2026-03-01'});expect((multi.daily as R[]).map(r=>r.date)).toEqual(['2025-12-31','2026-01-01','2026-01-31','2026-02-01','2026-02-28','2026-03-01']);expect(multi.monthly).toMatchObject({months:3,lastVolume:2,lastProfitCents:100000,averageVolume:5/3,averageProfitCents:33300})
+ const channels=await box('SalesChannelAnalyticsDashboard',{from:'2026-01-01',to:'2026-03-01',branchId:uuid(2)});expect(channels.cards).toMatchObject({orders:3,grossRevenueCents:2035,profitCents:-99});expect((channels.topProducts as R[]).map(r=>r.id)).toEqual([uuid(101),uuid(103),uuid(105)])
+ expect((await box('SalesChannelAnalyticsDashboard',{connectionId:'missing'})).cards).toMatchObject({orders:0,grossRevenueCents:0})
+})
+it('A01 operational categories inherit the selected immutable universe; errors never become zero data',async()=>{
+ useBoundaryLedger();const v={from:'2026-01-01',to:'2026-02-28',filters:{branches:[uuid(1)],sources:['POS']}}
+ const f=await box('FinancialIndicatorsDashboard',v),o=await box('OperationalAnalyticsDashboard',v)
+ for(const level of ['Categoria','Subcategoria'])expect((o.categories as R[]).filter(r=>r.level===level).reduce((n,r)=>n+Number(r.revenueCents),0)).toBe((f.cards as R).revenueCents)
+ qaState.fail=true;await expect(box('FinancialIndicatorsDashboard',v)).rejects.toThrow('falha sintética');qaState.fail=false;expect((await box('FinancialIndicatorsDashboard',v)).cards).toEqual(f.cards)
+})
+it('A02 counts two products against three subcategories once, and homonyms belong to their own parent',async()=>{
+ for(const name of ['PARENT A','PARENT B'])await qaOperation('CreateCategory',{name})
+ const cats=await list('ListCategories'),a=cats.find(c=>c.name==='PARENT A')!,b=cats.find(c=>c.name==='PARENT B')!
+ await qaOperation('CreateSubcategoriesBatch',{items:[{categoryId:a.id,name:'HOMONIMO'},{categoryId:a.id,name:'OUTRO'},{categoryId:a.id,name:'TERCEIRO'},{categoryId:b.id,name:'HOMONIMO'}]})
+ const subs=await list('ListSubcategories'),sa=subs.find(x=>x.categoryId===a.id&&x.name==='HOMONIMO')!,sb=subs.find(x=>x.categoryId===b.id&&x.name==='HOMONIMO')!
+ for(const [name,categoryId,subcategoryId]of [['PA1',a.id,sa.id],['PA2',a.id,sa.id],['PB1',b.id,sb.id]])await qaOperation('SaveProduct',{payload:{name,categoryId,subcategoryId,salePriceCents:1200}})
+ const rows=await list('ListCategories');expect(rows.find(c=>c.id===a.id)).toMatchObject({productCount:2,subcategoryCount:3});expect(rows.find(c=>c.id===b.id)).toMatchObject({productCount:1,subcategoryCount:1})
+ const children=await list('ListSubcategories');expect(children.find(s=>s.id===sa.id)?.productCount).toBe(2);expect(children.find(s=>s.id===sb.id)?.productCount).toBe(1)
+ const selected=await list('ListCategories',{filters:{active:['true'],productPresence:['with'],subcategoryPresence:['with']}});expect(selected.map(c=>c.id)).toContain(a.id);expect(selected.every(c=>c.active&&Number(c.productCount)>0&&Number(c.subcategoryCount)>0)).toBe(true)
+})
+it('A02 partitions all 300 catalog rows by status and AND filters without lost/duplicated IDs',async()=>{
+ for(const name of ['ListCategories','ListSubcategories']){
+  const all=await list(name),active=await list(name,{filters:{active:['true']}}),inactive=await list(name,{filters:{active:['false']}})
+  expect(active.length+inactive.length).toBe(300);expect(new Set([...active,...inactive].map(r=>r.id)).size).toBe(300)
+  const paged=(await Promise.all([0,100,200].map(offset=>list(name,{offset,limit:100,sortField:'name',sortDirection:'asc'})))).flat();expect(new Set(paged.map(r=>r.id))).toEqual(new Set(all.map(r=>r.id)))
+  const filtered=await list(name,{filters:{active:['true'],productPresence:['without']}});expect(filtered.every(r=>r.active&&r.productCount===0)).toBe(true)
+ }
+})
+it('A04 catalog batches enforce 0/20/21, canonical Unicode, scoped homonyms and all-or-nothing rejection',async()=>{
+ for(const sub of [false,true]){
+  const op=sub?'CreateSubcategoriesBatch':'CreateCategoriesBatch',read=sub?'ListSubcategories':'ListCategories',args=(names:string[])=>sub?{items:names.map(name=>({name,categoryId:uuid(300)}))}:{names}
+  const before=await list(read);await expect(qaOperation(op,args([]))).rejects.toThrow('1 a 20');await expect(qaOperation(op,args(Array.from({length:21},(_,i)=>'LOTE '+i)))) .rejects.toThrow('1 a 20');expect(await list(read)).toEqual(before)
+  await qaOperation(op,args(Array.from({length:20},(_,i)=>'LOTE '+i)));expect((await list(read)).length).toBe(320)
+  await qaOperation(op,args(['  áGUA   MINERAL  ']));expect((await list(read,{search:'ÁGUA'}))[0]?.name).toBe('ÁGUA MINERAL')
+  await expect(qaOperation(op,args(['AGUARDAR NOVO','áGua MINERAL']))).rejects.toThrow('duplicado');expect(await list(read,{search:'AGUARDAR NOVO'})).toEqual([])
+  await qaOperation(op,args(['😀'.repeat(120)]));await expect(qaOperation(op,args(['😀'.repeat(121)]))).rejects.toThrow('nome inválido')
+  await expect(qaOperation(op,args(['']))).rejects.toThrow('nome inválido')
+ }
+ await expect(qaOperation('CreateSubcategory',{name:'SEM PAI',categoryId:''})).rejects.toThrow('categoria obrigatória')
+})
+it('A04 reactivation rejects an active canonical conflict and edit preserves identity and parent',async()=>{
+ await qaOperation('CreateSubcategory',{name:'NOME ANTIGO',categoryId:uuid(301)});const id=(await list('ListSubcategories',{search:'NOME ANTIGO'}))[0]!.id
+ await qaOperation('UpdateSubcategory',{id,name:'  nome   NOVO ',categoryId:uuid(301)});expect((await list('ListSubcategories',{search:'NOME NOVO'}))[0]).toMatchObject({id,categoryId:uuid(301),name:'NOME NOVO'})
+ await qaOperation('ArchiveSubcategory',{id});await qaOperation('CreateSubcategory',{name:'NOME NOVO',categoryId:uuid(301)});await expect(qaOperation('RestoreSubcategory',{id})).rejects.toThrow('duplicado')
+ await qaOperation('CreateSubcategory',{name:'NOME NOVO',categoryId:uuid(302)})
+})
+it('A04 promotion enforces the implemented 5% boundary, schedule, overlap and persisted IDs',async()=>{
+ const p={productId:uuid(101),promotionalPriceCents:1139,startsAt:'2026-01-01T00:00:00Z',endsAt:'2026-02-01T00:00:00Z'}
+ for(const promotionalPriceCents of [0,-1,1140,1200])await expect(qaOperation('SavePromotion',{...p,promotionalPriceCents})).rejects.toThrow()
+ await expect(qaOperation('SavePromotion',{...p,endsAt:p.startsAt})).rejects.toThrow('promoção');await qaOperation('SavePromotion',p)
+ const id=(await list('ProductPromotions',{productId:p.productId}))[0]!.id;await expect(qaOperation('SavePromotion',p)).rejects.toThrow('promoção')
+ await qaOperation('SavePromotion',{...p,id,promotionalPriceCents:1000});expect((await list('ProductPromotions',{productId:p.productId}))[0]).toMatchObject({id,promotionalPriceCents:'1000'})
+ await qaOperation('SetPromotionStatus',{id,active:false});await qaOperation('SavePromotion',p)
+})
+it('A04 registration documents use checksum validation, allow homonyms and deny changes without mutation',async()=>{
+ for(const op of ['SaveCustomer','SaveSupplier']){
+  const p={name:'PESSOA QA',legalName:'PESSOA QA'}
+  await expect(qaOperation(op,{payload:{...p,cpf:'11111111111'}})).rejects.toThrow('documento');await expect(qaOperation(op,{payload:{...p,cnpj:'11111111111111'}})).rejects.toThrow('documento')
+  qaState.permissions='read';await expect(qaOperation(op,{payload:p})).rejects.toThrow('permissão');qaState.permissions='full';await qaOperation(op,{payload:p})
+ }
+})
+it('A06 separate entry/transfer/reversal branch conserves total stock, rejects partial transfer and sale reversal',async()=>{
+ const before=inspectFixtures().products.find(p=>p.id===uuid(101))!.balances.map(b=>b.quantity)
+ await qaOperation('SaveStockBatch',{payload:{clientOperationId:'entry3',branchId:uuid(1),direction:'IN',items:[{product_id:uuid(101),quantity:3}]}})
+ const transfer={clientOperationId:'transfer2',sourceBranchId:uuid(1),destinationBranchId:uuid(2),items:[{product_id:uuid(101),quantity:2}]};await qaOperation('PostStockTransfer',{payload:transfer})
+ let now=inspectFixtures();expect(now.products.find(p=>p.id===uuid(101))!.balances.map(b=>b.quantity)).toEqual([before[0]!+1,before[1]!+2]);const legs=now.movements.filter(m=>m.operationId==='transfer2')
+ await expect(qaOperation('ReverseStockOperation',{operationId:'transfer2',movementIds:[legs[0]!.id],reason:'RECUSA PARCIAL'})).rejects.toThrow('não elegível');expect(inspectFixtures()).toEqual(now)
+ await qaOperation('ReverseStockOperation',{operationId:'transfer2',movementIds:[],reason:'ESTORNO TOTAL'});now=inspectFixtures();expect(now.transfers.find(t=>t.operationId==='transfer2')!.status).toBe('CANCELLED');expect(now.products.find(p=>p.id===uuid(101))!.balances.map(b=>b.quantity)).toEqual([before[0]!+3,before[1]])
+ await expect(qaOperation('ReverseStockOperation',{operationId:'transfer2',movementIds:[],reason:'REPETICAO'})).rejects.toThrow('não elegível');expect(inspectFixtures()).toEqual(now)
+ await qaOperation('ReverseStockOperation',{operationId:'entry3',movementIds:[],reason:'ESTORNO ENTRADA'});expect(inspectFixtures().products.find(p=>p.id===uuid(101))!.balances.map(b=>b.quantity)).toEqual(before)
+})
+it('A06 rejected stock/sale requests have zero effects, including late invalid lines and restricted destinations',async()=>{
+ const before=inspectFixtures(),payload={clientOperationId:'rejected',branchId:uuid(1),direction:'OUT',items:[{product_id:uuid(101),quantity:1},{product_id:uuid(102),quantity:100000}]}
+ await expect(qaOperation('SaveStockBatch',{payload})).rejects.toThrow('saldo');expect(inspectFixtures()).toEqual(before)
+ for(const quantity of [0,-1,.5,Number.NaN]){await expect(qaOperation('SaveStockBatch',{payload:{...payload,items:[{product_id:uuid(101),quantity}]}})).rejects.toThrow();expect(inspectFixtures()).toEqual(before)}
+ qaState.allowedBranches=[uuid(1)];await expect(qaOperation('PostStockTransfer',{payload:{clientOperationId:'denied',sourceBranchId:uuid(1),destinationBranchId:uuid(2),items:[{product_id:uuid(101),quantity:1}]}})).rejects.toThrow('filial');expect(inspectFixtures()).toEqual(before)
+})
+it('A06 cash invalid requests, same payload replay and changed retry preserve one effect',async()=>{
+ const p={sessionId:uuid(60),operationId:'cash-once',movementType:'SUPPLY',amountCents:500}
+ for(const amountCents of [0,-1,1.5])await expect(qaOperation('RegisterCashMovement',{...p,amountCents})).rejects.toThrow()
+ expect(inspectFixtures().sessions[0]!.expectedAmountCents).toBe('10000');await qaOperation('RegisterCashMovement',p);await qaOperation('RegisterCashMovement',p)
+ await expect(qaOperation('RegisterCashMovement',{...p,amountCents:600})).rejects.toThrow('conflitante');expect(inspectFixtures().cashMovements).toHaveLength(1)
+ await expect(qaOperation('RegisterCashMovement',{...p,operationId:'too-large',movementType:'WITHDRAWAL',amountCents:20000})).rejects.toThrow('saldo');expect(inspectFixtures().sessions[0]!.expectedAmountCents).toBe('10500')
+ await qaOperation('RegisterCashMovement',{...p,operationId:'withdraw',movementType:'WITHDRAWAL'});expect(inspectFixtures().sessions[0]!.expectedAmountCents).toBe('10000')
+})
+it('A07 orders all 201 transfers with stable ID ties, date bounds, scope and nonoverlapping pages',async()=>{
+ const read=async(v:R)=>box('StockWorkspace',v),all=await read({limit:1000,sortField:'totalQuantity',sortDirection:'asc'}),rows=all.transfers as R[]
+ expect(rows).toHaveLength(201);expect(rows.every((r,i)=>i===0||Number(rows[i-1]!.totalQuantity)<=Number(r.totalQuantity))).toBe(true)
+ const pages=(await Promise.all([0,100,200].map(offset=>read({limit:100,offset,sortField:'totalQuantity',sortDirection:'asc'})))).flatMap(x=>x.transfers as R[]);expect(pages.map(r=>r.id)).toEqual(rows.map(r=>r.id));expect(new Set(pages.map(r=>r.id)).size).toBe(201)
+ const end=await read({filters:{from:fixtureDate+'T12:00:00Z',to:fixtureDate+'T12:00:00Z'},limit:1000});expect(end.transferCount).toBe(201)
+ expect((await read({filters:{from:fixtureDate+'T12:00:00.001Z'}})).transferCount).toBe(0)
+ qaState.allowedBranches=[uuid(1)];expect((await read({})).transferCount).toBe(0);qaState.allowedBranches=[];expect((await read({})).transferCount).toBe(201)
+})
+
+it('A04 details preserve existing stock and sales reader field contracts',async()=>{
+ const movement=inspectFixtures().movements[0]!;expect(await box('StockOperationDetails',{operationId:movement.operationId})).toMatchObject({movements:[movement],fiscalDocument:null});
+ const payload={clientOperationId:'details-sale',branchId:uuid(1),cashSessionId:uuid(60),items:[{product_id:uuid(101),quantity:2,requested_price:1200}],payments:[{payment_method_id:uuid(50),amount_cents:3000,sequence:1}]};await qaOperation('PostSale',{payload});
+ expect(await box('SaleDetails',{saleId:'details-sale'})).toMatchObject({sale:{total_cents:2400},items:[{productName:'PRODUTO QA 002',unitSalePriceCents:1200,totalCents:2400}],payments:[{paymentMethodName:'DINHEIRO',amountCents:3000}]})
+})
+
+it('A05 negative monetary fields never persist, and the interactive profile reconciles cash ledger entries',async()=>{
+ const before=inspectFixtures().products;for(const field of ['costPriceCents','salePriceCents'])await expect(qaOperation('SaveProduct',{id:uuid(101),payload:{name:'INVALIDO', [field]:-1}})).rejects.toThrow('monetário');expect(inspectFixtures().products).toEqual(before)
+})
+
+it('V1C-A03 archive matches SQL eligibility and atomic batches without cascading active links',async()=>{
+ for(const [operation,id]of [['ArchiveCategory',uuid(300)],['ArchiveSubcategory',uuid(800)]] as const){const before=inspectFixtures();expect((await qaOperation(operation,{id})).data).toMatchObject({_execute:0});expect(inspectFixtures()).toEqual(before)}
+ const before=inspectFixtures();expect((await qaOperation('SetCategoriesStatusBatch',{ids:[uuid(300),uuid(598)],active:false})).data).toMatchObject({_execute:0});expect(inspectFixtures()).toEqual(before)
+ expect((await qaOperation('SetCategoriesStatusBatch',{ids:[uuid(598)],active:false})).data).toMatchObject({_execute:1});expect(inspectFixtures().categories.find(c=>c.id===uuid(598))).toMatchObject({active:false})
+ // No active product/child: existing inactivation rule permits the row once.
+ expect((await qaOperation('ArchiveSubcategory',{id:uuid(1098)})).data).toMatchObject({_execute:1});expect(inspectFixtures().subcategories.find(c=>c.id===uuid(1098))).toMatchObject({active:false})
+})
+
+it('own cash lost ACK replays exact payload with one ledger effect',async()=>{
+ qaState.cashAckLoss=true;const p={sessionId:uuid(60),operationId:'cash-ack-integration',movementType:'SUPPLY',amountCents:500,description:'MOTIVO QA'};await expect(qaOperation('RegisterCashMovement',p)).rejects.toThrow('Failed to fetch');expect(inspectFixtures().sessions[0]!.expectedAmountCents).toBe('10500');await qaOperation('RegisterCashMovement',p);expect(inspectFixtures().cashMovements).toHaveLength(1);await expect(qaOperation('RegisterCashMovement',{...p,amountCents:501})).rejects.toThrow('conflitante')
+})
+
+it('existing stock correction and fiscal snapshot model the SQL contract without inventing issuance',async()=>{
+ const initial=inspectFixtures().products.find(p=>p.id===uuid(101))!.balances[0]!.quantity;
+ const payload={clientOperationId:'stock-original-fiscal',branchId:uuid(1),direction:'IN',occurredAt:'2026-10-20T02:30:00Z',fiscalEnabled:true,fiscal:{documentNumber:'SYNTHETIC-ONLY',totalCents:1600},items:[{product_id:uuid(101),quantity:2,unit_cost_cents:800}]};await qaOperation('SaveStockBatch',{payload});
+ const details=await box('StockOperationDetails',{operationId:payload.clientOperationId});expect(details.fiscalDocument).toMatchObject({documentNumber:'SYNTHETIC-ONLY',status:'REGISTERED'});
+ const correction={...payload,clientOperationId:'stock-correction-fiscal',replacesOperationId:payload.clientOperationId,items:[{product_id:uuid(101),quantity:3,unit_cost_cents:800}]};await qaOperation('SaveStockBatch',{payload:correction});await qaOperation('SaveStockBatch',{payload:correction});expect(inspectFixtures().products.find(p=>p.id===uuid(101))!.balances[0]!.quantity).toBe(initial+3);expect(inspectFixtures().movements.filter(m=>m.operationId===payload.clientOperationId).every(m=>m.status==='REVERSED')).toBe(true)
+})
+it('new product fixtures do not inherit another product unique codes on a later edit',async()=>{
+ await qaOperation('SaveProduct',{payload:{name:'COMBO SEM CODIGO',bundleProduct:true,weightedProduct:false,costPriceCents:1600,salePriceCents:3000},components:[{productId:uuid(101),quantity:2}]});
+ const product=inspectFixtures().products.find(p=>p.name==='COMBO SEM CODIGO')!;expect(product.internalCode).toBe('');expect(product.ean).toBe('');
+ await qaOperation('SaveProduct',{id:product.id,payload:{...product,name:'COMBO EDITADO',costPriceCents:2249},components:[{productId:uuid(103),quantity:1.5}]});
+ expect(inspectFixtures().products.find(p=>p.id===product.id)).toMatchObject({name:'COMBO EDITADO',costPriceCents:'2249'});
+ await expect(qaOperation('SaveProduct',{id:product.id,payload:{name:'INVALIDO',internalCode:'QA1'}})).rejects.toThrow('duplicado');
+});
+it('catalog aggregates exclude inactive or deleted relations just like the existing SQL',async()=>{
+ const read=async(name:string)=>((await qaOperation(name,{limit:1000})).data as {_select:Array<{id:string;productCount:number;subcategoryCount?:number}>})._select;
+ const verify=async()=>{const raw=inspectFixtures();for(const c of await read('ListCategories')){expect(c.productCount).toBe(raw.products.filter(p=>p.active&&p.categoryId===c.id&&!('deletedAt'in p&&p.deletedAt)).length);expect(c.subcategoryCount).toBe(raw.subcategories.filter(s=>s.active&&!s.deletedAt&&s.categoryId===c.id).length)}for(const c of await read('ListSubcategories'))expect(c.productCount).toBe(raw.products.filter(p=>p.active&&p.subcategoryId===c.id&&!('deletedAt'in p&&p.deletedAt)).length)};
+ await verify();const ledger=inspectFixtures().ledger;await qaOperation('SetProductsStatusBatch',{ids:[uuid(100)],active:false});await qaOperation('ArchiveSubcategory',{id:uuid(801)});await verify();expect(inspectFixtures().ledger).toEqual(ledger);
+});
+it('registration options reference eligible actual records and components refuse inactive products or nested kits',async()=>{
+ await qaOperation('SetSuppliersStatusBatch',{ids:[uuid(4000)],active:false});await qaOperation('SetProductsStatusBatch',{ids:[uuid(100)],active:false});
+ const payload={name:'KIT DISPONIVEL',bundleProduct:true,costPriceCents:800,salePriceCents:1200};await qaOperation('SaveProduct',{payload,components:[{productId:uuid(101),quantity:1}]});const raw=inspectFixtures(),kit=raw.products.find(p=>p.name===payload.name)!;
+ const options=((await qaOperation('RegistrationOptions')).data as {_select:Array<{data:{categories:Array<{id:string}>;subcategories:Array<{id:string}>;suppliers:Array<{id:string;name:string}>;products:Array<{id:string}>}}>})._select[0]!.data;
+ expect(new Set(options.categories.map(x=>x.id))).toEqual(new Set(raw.categories.filter(x=>x.active&&!x.deletedAt).map(x=>x.id)));expect(new Set(options.subcategories.map(x=>x.id))).toEqual(new Set(raw.subcategories.filter(x=>x.active&&!x.deletedAt).map(x=>x.id)));expect(new Set(options.suppliers.map(x=>x.id))).toEqual(new Set(raw.suppliers.filter(x=>x.active&&!x.deletedAt).map(x=>x.id)));expect(new Set(options.products.map(x=>x.id))).toEqual(new Set(raw.products.filter(x=>x.active&&!x.bundleProduct).map(x=>x.id)));
+ for(const component of [{productId:uuid(100),quantity:1},{productId:kit.id,quantity:1},{productId:uuid(103),quantity:.0001}])await expect(qaOperation('SaveProduct',{payload:{...payload,name:'RECUSADO'},components:[component]})).rejects.toThrow('componente');expect(inspectFixtures()).toEqual(raw);
+});
