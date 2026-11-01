@@ -1,6 +1,4 @@
 /* Screen-only interface; existing business and print contracts are preserved. */
-/* Screen-only interface; existing business and print contracts are preserved. */
-/* Screen-only interface; existing business and print contracts are preserved. */
 /* Screen interface tokens and opt-in component families. Print templates remain unchanged. */
 @font-face {
   font-family: IPInterface;
@@ -202,17 +200,13 @@
       --ip-inset: 18px;
       --ip-top: 60px;
       --ip-footer: 30px;
-      --ip-gap: 12px
-
-
+      --ip-gap: 12px;
     }
   }
   @media(max-width:700px) {
     .ip-ui {
       --ip-rail: 60px;
-      --ip-inset: 12px
-
-
+      --ip-inset: 12px;
     }
     .ip-ui[data-theme] .ip-top {
       font-size: 12px;
@@ -694,17 +688,18 @@
     letter-spacing: normal;
     box-shadow: none;
   }
-  .ip-ui[data-theme] :is(.catalog-primary,.catalog-modal-submit--create,.stock-heading-action--create,.pos-pay) {
+  .ip-ui[data-theme] :is(.catalog-primary,.catalog-modal-submit--create,.stock-heading-action--create,.stock-heading-action--transfer,.pos-pay):not(:disabled),
+  .ip-ui[data-theme] .stock-heading__actions :is(.stock-heading-action--transfer,.stock-heading-action--create):not(:disabled) {
     background: var(--ip-primary);
     color: var(--ip-on-primary);
     border-color: transparent;
   }
-  .ip-ui[data-theme] :is(.catalog-action--edit,.catalog-row-edit,.stock-heading-action--edit,.cash-action--withdrawal) {
+  .ip-ui[data-theme] :is(.catalog-action--edit,.catalog-row-edit,.stock-heading-action--edit,.cash-action--withdrawal):not(:disabled) {
     background: var(--ip-edit);
     color: var(--ip-on-edit);
     border-color: transparent;
   }
-  .ip-ui[data-theme] :is(.catalog-modal-submit--edit,.cash-action--supply,.catalog-batch-action--success) {
+  .ip-ui[data-theme] :is(.catalog-modal-submit--edit,.cash-action--supply,.catalog-batch-action--success):not(:disabled) {
     background: var(--ip-confirm);
     color: var(--ip-on-confirm);
     border-color: transparent;
@@ -714,12 +709,12 @@
     color: var(--ip-on-confirm);
     border-color: transparent;
   }
-  .ip-ui[data-theme] :is(.danger,.catalog-action--delete,.catalog-batch-action--danger,.stock-action-danger,.stock-item-remove,.pos-clear,.combo-remove) {
+  .ip-ui[data-theme] :is(.danger,.catalog-action--delete,.catalog-batch-action--danger,.stock-action-danger,.stock-item-remove,.pos-clear,.combo-remove):not(:disabled) {
     background: var(--ip-delete);
     color: var(--ip-on-delete);
     border-color: transparent;
   }
-  .ip-ui[data-theme] :is(.catalog-modal-cancel,.cash-action--cancel,.stock-modal-secondary) {
+  .ip-ui[data-theme] :is(.catalog-modal-cancel,.cash-action--cancel,.stock-modal-secondary):not(:disabled) {
     background: var(--ip-raised);
     color: var(--ip-text);
     border-color: var(--ip-line);
@@ -734,7 +729,8 @@
     border-color: var(--ip-line);
     opacity: 1;
   }
-  .ip-ui[data-theme] :is(.catalog-primary,.catalog-back,.catalog-action,.catalog-modal-cancel,.catalog-clear-tools,.catalog-modal-submit,.stock-tabs button,.master-modal-tabs button,.pos-header button,.catalog-modal button,.catalog-pagination button,.ip-account-trigger):focus-visible {
+  .ip-ui[data-theme] :is(.catalog-primary,.catalog-back,.catalog-action,.catalog-modal-cancel,.catalog-clear-tools,.catalog-modal-submit,.stock-tabs button,.master-modal-tabs button,.pos-header button,.catalog-modal button,.catalog-pagination button,.ip-account-trigger):focus-visible,
+  .ip-ui[data-theme] .stock-heading__actions .stock-heading-action:focus-visible {
     outline: 2px solid var(--ip-focus);
     outline-offset: 3px;
   }
@@ -1405,8 +1401,6 @@
   }
   .ip-ui[data-theme] .channel-alert-readiness {
     right: 12px;
-    bottom: 42px;
-    min-height: 34px;
     max-width: calc(100vw - var(--ip-rail) - 24px);
     padding: 8px 10px;
     border: 1px solid var(--ip-line);
@@ -1562,5 +1556,22 @@
   .ip-ui[data-theme] .platform-panel>.platform-table {
     min-width: 0;
     flex: 1;
+  }
+  /* Reserve a footer lane for the persistent alert, never the table paginator. */
+  .app-frame.ip-ui[data-theme]:has(>.channel-alert-readiness) {
+    --ip-footer: 42px;
+  }
+  .ip-ui[data-theme] .channel-alert-readiness {
+    bottom: 4px;
+    height: 34px;
+    min-height: 34px;
+  }
+  .app-frame.ip-ui[data-theme]:has(>.channel-alert-readiness)>.ip-bottom {
+    padding-right: 330px;
+  }
+  @media(max-width:700px) {
+    .app-frame.ip-ui[data-theme]:has(>.channel-alert-readiness)>.ip-bottom {
+      padding-right: 76px;
+    }
   }
 }

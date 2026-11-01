@@ -2,7 +2,9 @@ import assert from 'node:assert/strict';
 import {readFileSync,writeFileSync} from 'node:fs';
 export async function residual({page,output,sha,run,go,panel,wait,screenshot}){
  const measurements=[];
- const theme=async value=>page.evaluate(value=>document.documentElement.dataset.theme=value,value);
+ // Contrast probes emulate CSS theme state, including the opt-in presentation
+ // scopes. The separate theme-interaction case exercises the real provider UI.
+ const theme=async value=>page.evaluate(value=>{document.documentElement.dataset.theme=value;for(const scope of document.querySelectorAll('.ip-ui[data-theme]'))scope.dataset.theme=value},value);
  const focused=locator=>locator.evaluate(e=>e.contains(document.activeElement));
  const cycle=async dialog=>{
   const controls=dialog.locator('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex="0"]').filter({visible:true});
@@ -55,7 +57,7 @@ export async function residual({page,output,sha,run,go,panel,wait,screenshot}){
  await run('stock-action-colors',async()=>{
   await go('/estoque');for(const mode of ['light','dark']){await theme(mode);for(const name of ['Transferir','Nova movimentação']){
    const b=page.getByRole('button',{name:new RegExp(name,'i')});await b.waitFor();assert.equal(await b.isEnabled(),true);
-   const background=await b.evaluate(e=>getComputedStyle(e).backgroundColor);assert.equal(background,'rgb(18, 104, 167)');await measure(b,mode+' '+name);await b.hover();await measure(b,mode+' '+name+' hover');await b.focus();await page.keyboard.press('Shift+Tab');await page.keyboard.press('Tab');await measure(b,mode+' '+name+' focus');await page.mouse.move(0,0);
+   await page.waitForFunction(label=>{const b=[...document.querySelectorAll('.stock-heading__actions button')].find(b=>b.textContent.toLocaleLowerCase('pt-BR').includes(label.toLocaleLowerCase('pt-BR')));return b&&!b.disabled&&getComputedStyle(b).backgroundColor==='rgb(16, 199, 232)'},name);const background=await b.evaluate(e=>getComputedStyle(e).backgroundColor);assert.equal(background,'rgb(16, 199, 232)');await measure(b,mode+' '+name);await b.hover();await measure(b,mode+' '+name+' hover');await b.focus();await page.keyboard.press('Shift+Tab');await page.keyboard.press('Tab');await measure(b,mode+' '+name+' focus');await page.mouse.move(0,0);
   }await screenshot('stock-actions-'+mode)}
   await panel();await page.getByLabel('Permissões',{exact:true}).selectOption('read');await wait();for(const b of await page.locator('.stock-heading__actions button').all())assert.equal(await b.isDisabled(),true);await screenshot('stock-actions-disabled');
  });

@@ -108,7 +108,12 @@ export async function closure({page,output,sha,run,go,panel,wait,screenshot}){
  for(const view of ['Vendas','Estoque','Clientes','Categorias','Canais'])await run('closure-dashboard-states-'+view,async()=>{
   await go('/dashboards/operacional');await page.getByRole('button',{name:view,exact:true}).click();await page.locator('.finance-kpis article').first().waitFor();assert.ok(await page.locator('.finance-kpis article').count()>0);assert.doesNotMatch(await page.locator('main').innerText(),/\b(?:NaN|undefined)\b/);
   await panel();await page.getByLabel('Dados vazios',{exact:true}).check();await page.getByRole('button',{name:view,exact:true}).click();await wait();assert.doesNotMatch(await page.locator('main').innerText(),/\bNaN\b/);await screenshot('closure-'+view+'-empty');
-  await page.getByLabel('Dados vazios',{exact:true}).uncheck();await page.getByLabel('Falha sintética de API',{exact:true}).check();await page.getByRole('button',{name:view,exact:true}).click();await page.getByRole('alert').first().waitFor();await screenshot('closure-'+view+'-error');
+  await page.getByLabel('Dados vazios',{exact:true}).uncheck();await page.getByLabel('Falha sintética de API',{exact:true}).check();
+  // The QA toggle remounts App into the default Vendas tab. Observe its error
+  // before clicking: the dismissible toast temporarily covers the tab controls.
+  await page.getByRole('alert').first().waitFor();
+  if(view!=='Vendas'){await page.getByRole('alert').first().getByRole('button',{name:'Fechar aviso',exact:true}).click();await page.getByRole('button',{name:view,exact:true}).click();await page.getByRole('alert').first().waitFor()}
+  await screenshot('closure-'+view+'-error');
  });
  for(const theme of ['light','dark'])for(const width of [320,375,1366,1920])await run('closure-dashboard-consumers-'+theme+'-'+width,async()=>{
   await page.setViewportSize({width,height:1000});await go('/dashboards/operacional');await page.evaluate(theme=>localStorage.setItem('insightpad.theme',theme),theme);await page.reload();await wait();
