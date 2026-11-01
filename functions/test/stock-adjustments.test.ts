@@ -56,3 +56,16 @@ it('unit fractions and mixed invalid input are rejected without partial writes',
  await db.query('UPDATE products SET weighted_product=true WHERE id=$1',[ids.product]);
  expect((await run('SaveStockBatch',payload('weight-valid-01',1.5))).affectedRows).toBe(1);
 });
+
+it('A07 sorts dates products quantities and costs in both directions across three pages with stable ID ties',async()=>{
+ await db.query("UPDATE products SET name='ZETA' WHERE id=$1",[ids.product]);const second=(await db.query<{id:string}>("INSERT INTO products(tenant_id,category_id,name) VALUES($1,$2,'ALFA') RETURNING id",[ids.tenant,ids.category])).rows[0]!.id;
+ await db.query("INSERT INTO stock_movement_types(id,tenant_id,code,name,direction) VALUES($1,$2,'MANUAL_IN','Entrada','IN')",[ids.event,ids.tenant]);
+ await db.query("INSERT INTO stock_movements(tenant_id,branch_id,product_id,movement_type_id,client_operation_id,quantity,unit_cost_cents,status,occurred_at) SELECT $1,$2,CASE WHEN i%2=0 THEN $3::uuid ELSE $5::uuid END,$4,'sort-'||i,i%9+1,i%7*100,'POSTED','2026-10-20T12:00:00Z'::timestamptz-(i%5)*interval '1 minute' FROM generate_series(1,211)i",[ids.tenant,ids.branch,ids.product,ids.event,second]);
+ const raw=(await db.query<{id:string;occurredAt:Date;productName:string;quantity:number;unitCostCents:number}>('SELECT m.id,m.occurred_at AS "occurredAt",p.name AS "productName",m.quantity,m.unit_cost_cents AS "unitCostCents" FROM stock_movements m JOIN products p ON p.id=m.product_id')).rows;
+ for(const field of ['occurredAt','productName','quantity','unitCostCents'] as const)for(const direction of ['asc','desc']){
+  const compare=(a:typeof raw[number],b:typeof raw[number])=>{const av=field==='occurredAt'?new Date(a[field]).getTime():field==='productName'?a[field].toLowerCase():Number(a[field]),bv=field==='occurredAt'?new Date(b[field]).getTime():field==='productName'?b[field].toLowerCase():Number(b[field]);return (direction==='asc'?1:-1)*(av<bv?-1:av>bv?1:0)||new Date(b.occurredAt).getTime()-new Date(a.occurredAt).getTime()||(a.id<b.id?-1:a.id>b.id?1:0)};
+  const expected=[...raw].sort(compare).map(r=>r.id),actual:string[]=[];
+  for(const offset of [0,100,200]){const data=(await run('StockWorkspace','sorting-test',{},100,offset,field,direction)).rows[0] as {data:{movements:{id:string}[];movementCount:number}};expect(data.data.movementCount).toBe(211);actual.push(...data.data.movements.map(r=>r.id))}
+  expect(actual).toEqual(expected);expect(new Set(actual).size).toBe(211)
+ }
+});

@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { InterfaceLink as Link } from '../components/InterfaceNavigationLink'
 import { appRoutes } from '../config/pages'
 import { moduleMenus } from '../config/navigation'
 import { useAuth } from '../auth/useAuth'

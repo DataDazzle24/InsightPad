@@ -59,22 +59,30 @@ export async function operation(db: PGlite, name: string, params: unknown[], con
   const userScoped = body.includes('level: USER');
   let result;
   let issued: unknown;
+  let validatedSession: boolean | undefined;
+  const executedFields: Record<string, number | undefined> = {};
   await db.exec("SAVEPOINT operation_fields");
   try {
     for (const statement of statements) {
       const values = statement[3]!.split(",").filter(raw=>raw.trim()).map(raw => {
         const variable=raw.trim().slice(1);
-        const value=raw.includes('response._execute') ? result?.affectedRows : raw.includes('response.query.issued.token') ? issued : raw.includes('auth.uid') ? params[0] : variable==='sessionToken' && body.includes('session: _selectFirst') ? (context ? context.sessionToken : fixtureSessionToken(String(params[0]))) : params[variables.indexOf(variable)+(userScoped?1:0)];
+        const priorField=/response\.(lockedBranch|stockMutex)/.exec(raw)?.[1];
+        const value=priorField ? executedFields[priorField] : raw.includes('response._execute') ? result?.affectedRows : raw.includes('response.query.issued.token') ? issued : raw.includes('response.query.session.valid') ? validatedSession : raw.includes('auth.uid') ? params[0] : variable==='sessionToken' && body.includes('session: _selectFirst') ? (context ? context.sessionToken : fixtureSessionToken(String(params[0]))) : params[variables.indexOf(variable)+(userScoped?1:0)];
         return value !== null && typeof value === "object" ? JSON.stringify(value) : value;
       });
       const executed = await db.query(statement[2]!, values);
+      if (statement[1]==='_execute') {
+        const alias=body.slice(0,statement.index).match(/(\w+):\s*$/)?.[1] ?? '_execute';
+        executedFields[alias]=executed.affectedRows;
+      }
       if(statement[4]!.includes('this.confirmed == true')){
         if(!(executed.rows[0] as {confirmed?:boolean})?.confirmed)throw new Error('STOCK_NOT_CONFIRMED');
         if(result)Object.assign(result,{receipt:executed.rows[0]});
         continue;
       }
       if (statement[4]!.includes('this.valid == true')) {
-        if (!(executed.rows[0] as {valid?:boolean})?.valid) throw new Error('SESSION_REQUIRED');
+        validatedSession=(executed.rows[0] as {valid?:boolean})?.valid;
+        if (validatedSession!==true) throw new Error('SESSION_REQUIRED');
         continue;
       }
       if(statement[2]!.includes('AS token')) {issued=(executed.rows[0] as {token:string}).token;continue;}

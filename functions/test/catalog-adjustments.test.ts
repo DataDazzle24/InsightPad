@@ -34,6 +34,11 @@ it('counts avoid join multiplication and paging/filter totals cover all 300 rows
  const first=(await db.query<{id:string}>('SELECT id FROM categories ORDER BY name LIMIT 1')).rows[0]!.id;
  await db.query("INSERT INTO products(tenant_id,category_id,name) SELECT $1,$2,'PROD '||i FROM generate_series(1,2)i",[ids.tenant,first]);
  await db.query("INSERT INTO subcategories(tenant_id,category_id,name) SELECT $1,$2,'SUB '||i FROM generate_series(1,3)i",[ids.tenant,first]);
+ // Deliberately inconsistent foreign-tenant links must not contaminate aggregates.
+ await db.query("INSERT INTO products(tenant_id,category_id,name) VALUES($1,$2,'ALIEN PRODUCT')",[ids.otherTenant,first]);
+ await db.query("INSERT INTO subcategories(tenant_id,category_id,name) VALUES($1,$2,'ALIEN SUB')",[ids.otherTenant,first]);
+ await db.query("INSERT INTO products(tenant_id,category_id,name,active) VALUES($1,$2,'INATIVO',false)",[ids.tenant,first]);
+ await db.query("INSERT INTO subcategories(tenant_id,category_id,name,active) VALUES($1,$2,'INATIVA',false)",[ids.tenant,first]);
  const list=async(offset:number,filters:object={})=>await run('ListCategories','','name','asc',100,offset,'test',filters) as Awaited<ReturnType<typeof run>>&{meta:{totalCount:number}};
  const one=await list(0);expect(one.rows).toHaveLength(100);expect(Number(one.meta.totalCount)).toBe(300);expect(one.rows[0]).toMatchObject({productCount:2,subcategoryCount:3});
  expect((await list(100)).rows).toHaveLength(100);expect((await list(200)).rows).toHaveLength(100);
@@ -58,4 +63,12 @@ it('subcategory counts remain scoped to tenant and parent, with server filters a
  const list=async(filters:object={})=>await run('ListSubcategories','',null,'productCount','desc',100,0,'test',filters) as Awaited<ReturnType<typeof run>>&{meta:{totalCount:number}};
  const all=await list();expect(all.rows.map(x=>(x as {productCount:number}).productCount)).toEqual([2,1]);expect(Number(all.meta.totalCount)).toBe(2);
  expect((await list({categoryId:[parent],productPresence:['with']})).rows).toHaveLength(1);expect((await list({productPresence:['without']})).rows).toHaveLength(0);
+});
+it('archive batches reject linked rows atomically and archive only an entirely eligible batch',async()=>{
+ const free=(await db.query<{id:string}>("INSERT INTO categories(tenant_id,name) VALUES($1,'ELEGIVEL') RETURNING id",[ids.tenant])).rows[0]!.id;
+ const before=(await db.query('SELECT id,active,deleted_at FROM categories ORDER BY id')).rows;
+ expect((await run('SetCategoriesStatusBatch',[free,ids.category],false)).affectedRows).toBe(0);
+ expect((await db.query('SELECT id,active,deleted_at FROM categories ORDER BY id')).rows).toEqual(before);
+ expect((await run('SetCategoriesStatusBatch',[free],false)).affectedRows).toBe(1);
+ expect((await db.query('SELECT active FROM categories WHERE id=$1',[free])).rows[0]).toEqual({active:false});
 });

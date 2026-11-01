@@ -2,6 +2,7 @@
 import { act, StrictMode, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { ThemeProvider } from '../theme/ThemeProvider';
 import { LoginPage } from './LoginPage';
 import { ModalDialog } from '../components/ModalDialog';
 
@@ -54,7 +55,7 @@ async function renderLogin() {
   container = document.createElement('div');
   document.body.append(container);
   root = createRoot(container);
-  await act(async () => root.render(<LoginPage />));
+  await act(async () => root.render(<ThemeProvider><LoginPage /></ThemeProvider>));
 }
 
 describe('recovery modal regression (BUG-2026-001)', () => {
@@ -81,7 +82,7 @@ describe('recovery modal regression (BUG-2026-001)', () => {
     container = document.createElement('div');
     document.body.append(container);
     root = createRoot(container);
-    await act(async () => root.render(<StrictMode><LoginPage /></StrictMode>));
+    await act(async () => root.render(<StrictMode><ThemeProvider><LoginPage /></ThemeProvider></StrictMode>));
     const opener = await open();
     expect(document.activeElement).toBe(dialog().querySelector('input'));
     await cancel();

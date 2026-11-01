@@ -700,7 +700,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
         const product = options.products.find((p) => p.id === item.productId);
         return (
           total +
-          Number(product?.costPriceCents ?? 0) * Number(item.quantity || 0)
+          Number(product?.costPriceCents ?? 0) * (parseQuantityDraft(item.quantity,!!product?.weightedProduct) ?? 0)
         );
       }, 0),
     [kitItems, options.products],
@@ -1583,7 +1583,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
               </thead>
               <tbody>
                 {visibleRows.map((row) => (
-                  <tr key={row.id} className={!row.active ? "is-inactive" : ""}>
+                  <tr data-record-id={row.id} key={row.id} className={!row.active ? "is-inactive" : ""}>
                     <td>
                       <input
                         type="checkbox"

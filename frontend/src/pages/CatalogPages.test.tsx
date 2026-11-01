@@ -68,3 +68,26 @@ it('uses the server total for paging and sends filters with a reset offset',asyn
  await click(status);await act(async()=>{await vi.advanceTimersByTimeAsync(350)});
  expect(mocks.list.mock.lastCall?.[1]).toMatchObject({offset:0,filters:{active:['false']}});
 });
+
+it.each(['CAD_CATEGORIA','CAD_SUBCATEGORIA'] as const)('limits %s UI batch to twenty named rows and never appends a twenty-first',async(key)=>{
+ await render(key);await click(button(key==='CAD_CATEGORIA'?'+ Nova Categoria':'+ Nova Subcategoria'));
+ for(let i=0;i<20;i++){
+  const field=container.querySelectorAll<HTMLInputElement>('[role="dialog"] input')[i];await input(field,'NOME '+i);
+  if(key==='CAD_SUBCATEGORIA'){const el=container.querySelectorAll('select')[i];await act(async()=>{el.value='11111111-1111-4111-8111-111111111111';el.dispatchEvent(new Event('change',{bubbles:true}))})}
+  if(i<19)await click(button(key==='CAD_CATEGORIA'?'ADICIONAR OUTRA CATEGORIA':'+ ADICIONAR OUTRA SUBCATEGORIA'))
+ }
+ expect(container.querySelectorAll('[role="dialog"] input')).toHaveLength(20);expect([...container.querySelectorAll('button')].some(b=>b.textContent?.includes('ADICIONAR OUTRA'))).toBe(false);
+ await click(button('Cancelar'));expect(container.querySelector('[role="dialog"]')).toBeNull();expect(mocks.create).not.toHaveBeenCalled()
+})
+it('does not offer subcategory creation without its own canCreate permission',async()=>{mocks.canCreate=false;await render('CAD_SUBCATEGORIA');expect(container.textContent).not.toContain('+ Nova Subcategoria')})
+
+it('refuses an incomplete second subcategory instead of silently submitting only the first',async()=>{
+ await render('CAD_SUBCATEGORIA');await click(button('+ Nova Subcategoria'));
+ const parent=container.querySelector('select')!;
+ await act(async()=>{parent.value='11111111-1111-4111-8111-111111111111';parent.dispatchEvent(new Event('change',{bubbles:true}))});
+ await input(container.querySelector<HTMLInputElement>('#subcategory-name-0')!,'PRIMEIRA');await click(button('+ ADICIONAR OUTRA SUBCATEGORIA'));
+ await input(container.querySelector<HTMLInputElement>('#subcategory-name-1')!,'SEGUNDA SEM PAI');
+ await act(async()=>{container.querySelector('form')!.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}))});
+ expect(container.querySelector('[role="alertdialog"]')).toBeNull();expect(container.querySelector('[role="alert"]')?.textContent).toContain('Informe combinações');
+ await act(async()=>{await vi.advanceTimersByTimeAsync(20)});expect(document.activeElement?.id).toBe('subcategory-parent-1');expect(document.activeElement?.getAttribute('aria-invalid')).toBe('true');
+});

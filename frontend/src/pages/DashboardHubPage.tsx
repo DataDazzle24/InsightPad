@@ -1,3 +1,4 @@
+import { useDialogAccessibility } from '../hooks/useDialogAccessibility';
 import { useDashboardExport } from '../utils/dashboardAuthorization';
 import { Link } from 'react-router-dom';
 import { downloadDashboardCsv,heatmapStyle } from '../utils/dashboardExport';
@@ -96,6 +97,7 @@ function Operational({ view,navigation }: { view: Exclude<View, "sales" | "chann
     [data, setData] = useState<Data | null>(null),
     [busy, setBusy] = useState(true),
     [notice, setNotice] = useState<Notice | null>(null);
+  useDialogAccessibility(filter,()=>setFilter(false));
   const sequence=useRef(0);
   const load = useCallback(async () => {
     const request=++sequence.current;
@@ -160,13 +162,13 @@ function Operational({ view,navigation }: { view: Exclude<View, "sales" | "chann
       {data && view === "categories" && <CategoryView data={data.categories} />}{" "}
       {filter && (
         <div className="catalog-backdrop">
-          <section className="catalog-modal finance-filter-modal">
+          <section className="catalog-modal finance-filter-modal" role="dialog" aria-modal="true" aria-label="Período de análise">
             <header>
               <div>
                 <span className="eyebrow">PESQUISA</span>
                 <h2>PERÍODO DE ANÁLISE</h2>
               </div>
-              <button onClick={() => setFilter(false)}>×</button>
+              <button aria-label="Fechar período" onClick={() => setFilter(false)}>×</button>
             </header>
             <div className="finance-filter-grid">
               <DateRangePicker

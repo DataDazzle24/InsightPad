@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { InterfaceLink as Link } from "../components/InterfaceNavigationLink";
 
 const items = [
   {
