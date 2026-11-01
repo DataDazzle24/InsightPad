@@ -1,11 +1,13 @@
 import { useRef, useState, type FormEvent } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
+import { useTheme } from "../theme/theme-context";
 import { ModalDialog } from "../components/ModalDialog";
 
 type RecoveryMethod = "email" | "sms";
 
 export function LoginPage() {
+  const { theme } = useTheme();
   const { status, error, signIn, resetPassword } = useAuth();
   const [email, setEmail] = useState(""),
     [password, setPassword] = useState(""),
@@ -73,11 +75,11 @@ export function LoginPage() {
   const busy = submitting || status === "loading";
 
   return (
-    <main className="brand-login">
+    <main className="brand-login ip-ui" data-theme={theme}>
       <section className="brand-login__hero">
         <img
           className="brand-login__logo"
-          src="/brand/insight-pad-logo-dark.png"
+          src="/brand/insight-pad-interface.png"
           alt="Insight Pad"
         />
         <div className="brand-login__statement">
@@ -98,7 +100,7 @@ export function LoginPage() {
           <span className="login-hud__corner login-hud__corner--br" />
           <img
             className="login-mobile-logo"
-            src="/brand/insight-pad-logo-dark.png"
+            src="/brand/insight-pad-interface.png"
             alt="Insight Pad"
           />
           <header>

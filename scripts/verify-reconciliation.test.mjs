@@ -91,3 +91,10 @@ test('permits only the exact isolated session runtime regression and rejects nei
  assert.equal(validateScope(policy,['scripts/qa-browser/session-runtime.py']),true);
  for(const path of ['scripts/qa-browser/session-runtime-extra.py','scripts/qa-browser/session-runtime.py.bak','scripts/qa-browser/session-remote.py'])assert.throws(()=>validateScope(policy,[path]),/outside approved scope/);
 });
+
+test('visual migration authorizes only nominal presentation assets and rejects neighboring code',()=>{
+ const files=['frontend/src/components/InterfaceNavigationLink.test.tsx','frontend/src/interface.css','frontend/src/components/InterfaceNavigationLink.tsx','frontend/src/layout/AppLayout.tsx','frontend/src/pages/DashboardPage.tsx','frontend/src/pages/ModuleMenuPage.tsx','frontend/src/pages/PlatformAdminMenuPage.tsx','frontend/src/pages/AccessDeniedPage.tsx','frontend/public/brand/insight-pad-interface.png','frontend/public/fonts/interface/DejaVuSans.ttf','frontend/public/fonts/interface/LICENSE.txt','scripts/qa-browser/interface.mjs','scripts/verify-interface.mjs'];
+ assert.equal(validateScope(policy,files),true);
+ for(const path of ['frontend/src/components/InterfaceNavigationLink.test-extra.tsx','frontend/src/interface-extra.css','frontend/src/components/InterfaceNavigationLinkExtra.tsx','frontend/public/brand/insight-pad-interface.svg','frontend/public/fonts/interface/Extra.ttf','scripts/qa-browser/interface-remote.mjs','scripts/verify-interface-extra.mjs'])assert.throws(()=>validateScope(policy,[path]),/outside approved scope/);
+ const invalid=structuredClone(policy);invalid.additionalIds.push('UXIP-002');assert.throws(()=>validateScope(invalid,[]),/Unapproved requirement ID/);
+});

@@ -1,7 +1,9 @@
 import { Navigate } from 'react-router-dom'
+import { useTheme } from '../theme/theme-context'
 import { useAuth } from '../auth/useAuth'
 
 export function AccessDeniedPage() {
+  const { theme } = useTheme()
   const { status, error, signOut } = useAuth()
 
   if (status === 'unauthenticated') {
@@ -13,7 +15,7 @@ export function AccessDeniedPage() {
   }
 
   return (
-    <main className="access-page">
+    <main className="access-page ip-ui" data-theme={theme}>
       <section className="access-card">
         <div className="access-card__icon" aria-hidden="true">
           !

@@ -269,3 +269,10 @@ it('registration options reference eligible actual records and components refuse
  expect(new Set(options.categories.map(x=>x.id))).toEqual(new Set(raw.categories.filter(x=>x.active&&!x.deletedAt).map(x=>x.id)));expect(new Set(options.subcategories.map(x=>x.id))).toEqual(new Set(raw.subcategories.filter(x=>x.active&&!x.deletedAt).map(x=>x.id)));expect(new Set(options.suppliers.map(x=>x.id))).toEqual(new Set(raw.suppliers.filter(x=>x.active&&!x.deletedAt).map(x=>x.id)));expect(new Set(options.products.map(x=>x.id))).toEqual(new Set(raw.products.filter(x=>x.active&&!x.bundleProduct).map(x=>x.id)));
  for(const component of [{productId:uuid(100),quantity:1},{productId:kit.id,quantity:1},{productId:uuid(103),quantity:.0001}])await expect(qaOperation('SaveProduct',{payload:{...payload,name:'RECUSADO'},components:[component]})).rejects.toThrow('componente');expect(inspectFixtures()).toEqual(raw);
 });
+it('provides only the existing read-only platform contracts for isolated presentation checks',async()=>{
+ const before=inspectFixtures();
+ const workspace=(await qaOperation('PlatformAdminWorkspace',{})).data as {_select:Array<{data:{tenants:Array<{id:string}>;roles:Array<{tenantId:string}>;pages:Array<{id:string}>;users:Array<{tenantId:string}>}}>};
+ const data=workspace._select[0]!.data;expect(data.tenants).toHaveLength(1);expect(data.roles[0]!.tenantId).toBe(data.tenants[0]!.id);expect(data.users[0]!.tenantId).toBe(data.tenants[0]!.id);expect(new Set(data.pages.map(p=>p.id)).size).toBe(data.pages.length);
+ expect((await qaOperation('PlatformBillingWorkspaceV2',{})).data).toMatchObject({_select:[{data:{total:0,invoices:[],summary:{receivableCents:'0'}}}]});
+ expect(inspectFixtures()).toEqual(before);await expect(qaOperation('CreatePlatformTenant',{payload:{}})).rejects.toThrow('operação ainda sem fixture');
+});

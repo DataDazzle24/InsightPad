@@ -1,3 +1,4 @@
+import {appRoutes} from '../src/config/pages'
 import {isValidCpf,isValidCnpj,normalizeCatalogName} from '../src/utils/registration'
 // Deterministic, memory-only fixtures. This module never imports Firebase or fetch.
 type Row=Record<string,unknown>
@@ -262,6 +263,13 @@ export async function qaOperation(name:string,variables:unknown={}){
   for(const item of sale.items as Row[]){const product=products.find(p=>p.id===item.productId)!,balance=product.balances.find(b=>b.branchId===sale.branchId)!;balance.quantity+=Number(item.quantity);balance.availableQuantity+=Number(item.quantity);movements.unshift({id:uuid(nextId++),operationId:'cancel:'+sale.id,occurredAt:when,quantity:item.quantity,unitCostCents:String(item.costPriceCents),status:'POSTED',typeCode:'SALE_REVERSAL',typeName:'Estorno de venda',direction:'IN',productId:product.id,productName:product.name,branchId:sale.branchId,branchName:branches.find(b=>b.id===sale.branchId)!.name})}
   session.expectedAmountCents=String(Number(session.expectedAmountCents)-Number(sale.totalCents));session.movementCount=Number(session.movementCount)+1;cashMovements.push({id:uuid(nextId++),sessionId:session.id,saleId:sale.id,movementType:'SALE_REVERSAL',amountCents:-Number(sale.totalCents)});sale.status='CANCELLED';return {data:{_execute:1}}
  }
+ case 'PlatformAdminWorkspace':return box({
+  tenants:[{id:uuid(10),legalName:'EMPRESA FICTÍCIA QA',tradeName:'QA',active:true,userCount:1,branchCount:2,billingProfileConfigured:false,allowEmailBilling:false,allowWhatsappBilling:false,monthlyAmountCents:'10000',billingDay:10,graceDays:5,suspendAfterDays:15,openBalanceCents:'0',overdueCount:0}],
+  users:[{id:'qa-user',tenantId:uuid(10),tenantName:'QA',roleId:uuid(11),roleName:'Administrador QA',name:'OPERADOR FICTÍCIO QA',email:'qa@example.invalid',active:true,onboardingPending:false}],
+  roles:[{id:uuid(11),tenantId:uuid(10),tenantName:'QA',name:'Administrador QA',active:true}],
+  pages:appRoutes.map((p,i)=>({id:uuid(14000+i),pageKey:p.pageKey,displayName:p.pageKey,module:'QA'})),permissions:[]
+ })
+ case 'PlatformBillingWorkspaceV2':return box({summary:{receivableCents:'0',overdueCents:'0',overdueTenants:0,receivedMonthCents:'0'},total:0,invoices:[]})
  case 'SalesChannelOptions':return box({branches,connections:[]})
  case 'LatestPendingSalesChannelOrder':return box({orders:[]})
  case 'ListSales':return page(sales.map(s=>({...s,clientOperationId:s.id,source:'POS',soldAt:s.date,createdByUid:'qa-user',branchId:s.branchId,branchName:(s.branch as Row).name,customerName:s.customer,name:s.customer,itemCount:(s.items as unknown[]).length,paymentMethods:'DINHEIRO'})),{...v,search:(v.filters as Row|undefined)?.search??''})

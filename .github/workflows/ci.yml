@@ -48,7 +48,9 @@ jobs:
       - name: Testar manifesto
         run: node --test scripts/version-manifest.test.mjs scripts/ci-dev-config.test.mjs scripts/verify-reconciliation.test.mjs scripts/qa-browser/evidence.test.mjs
       - name: Conferir preservação da fonte recuperada
-        run: node scripts/verify-reconciliation.mjs
+        run: |
+          node scripts/verify-reconciliation.mjs
+          node scripts/verify-interface.mjs
       - name: Configuração pública de cliente DEV (somente leitura)
         run: node scripts/ci-dev-config.mjs
       - name: Frontend (lint, testes, tipos e build)

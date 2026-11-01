@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
 import { navigationModules } from "../config/navigation";
 import { appRoutes } from "../config/pages";
 import { useTheme } from "../theme/theme-context";
 import { smartMaskInput } from "../utils/inputMasks";
+import { InterfaceNavLink as NavLink } from "../components/InterfaceNavigationLink";
 import { ChannelOrderNotifier } from "../components/ChannelOrderNotifier";
 
 function WhatsAppIcon() {
@@ -89,7 +90,8 @@ export function AppLayout() {
 
   return (
     <main
-      className="app-frame"
+      className="app-frame ip-ui"
+      data-theme={theme}
       onChangeCapture={(event) => {
         // Format after React detects the change, before the field reads its value.
         if (event.target instanceof HTMLInputElement)
@@ -103,17 +105,15 @@ export function AppLayout() {
           to="/"
           aria-label="Insight Pad — início"
         >
-          <img src="/brand/insight-pad-logo-compact.png" alt="Insight Pad" />
+          <img src="/brand/insight-pad-interface.png" alt="Insight Pad" />
         </Link>
-        <div className="legacy-header__title">
-          <span>{pageTitle}</span>
-        </div>
         <nav className="legacy-header__nav" aria-label="Módulos do Insight Pad">
           {modules.map((module) => (
             <NavLink
               className="header-nav-item"
               key={module.label}
               to={module.to}
+              aria-label={module.label}
             >
               <span className="material-symbols-rounded" aria-hidden="true">
                 {module.icon}
@@ -121,7 +121,7 @@ export function AppLayout() {
               <span className="header-nav-item__tooltip">{module.label}</span>
             </NavLink>
           ))}
-          <NavLink className="header-nav-item" to="/" end>
+          <NavLink className="header-nav-item" to="/" end aria-label="Início">
             <span className="material-symbols-rounded" aria-hidden="true">
               home
             </span>
@@ -130,17 +130,18 @@ export function AppLayout() {
         </nav>
         <button
           ref={drawerTriggerRef}
-          className="legacy-header__user"
+          className="legacy-header__user ip-account-trigger"
           type="button"
           onClick={() => setDrawerOpen(true)}
-          aria-label="Abrir painel do usuário"
+          aria-label="Conta e sistema — abrir painel do usuário"
+          title="Conta e sistema"
           aria-controls="user-drawer"
           aria-expanded={drawerOpen}
         >
           <span className="material-symbols-rounded" aria-hidden="true">
-            person
+            manage_accounts
           </span>
-          <span>{profile?.name?.split(" ")[0]}</span>
+          <span className="ip-rail-label">Conta e sistema</span>
         </button>
       </header>
 
@@ -267,9 +268,15 @@ export function AppLayout() {
         </footer>
       </aside>
 
-      <section className="app-stage">
-        <Outlet />
-      </section>
+      <header className="ip-top">
+          <div className="ip-context"><strong>{pageTitle}</strong><span>{profile?.tenant.tradeName ?? profile?.tenant.legalName}</span></div>
+          <button className="ip-btn ip-btn--compact" type="button" onClick={toggleTheme} aria-label={`Ativar tema ${theme === "dark" ? "claro" : "escuro"}`} aria-pressed={theme === "light"}>
+            <span className="material-symbols-rounded" aria-hidden="true">{theme === "dark" ? "light_mode" : "dark_mode"}</span>
+            <span>Tema {theme === "dark" ? "claro" : "escuro"}</span>
+          </button>
+        </header>
+        <section className="app-stage"><Outlet /></section>
+      <footer className="ip-bottom">Uma solução Data Dazzle <span>© 2026</span></footer>
       <ChannelOrderNotifier />
     </main>
   );

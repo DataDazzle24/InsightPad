@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import {coverage} from './coverage.mjs';
 import {reports} from './reports.mjs';
 import {consolidated} from './consolidated.mjs';
+import {interfaceProof} from './interface.mjs';
 const sha=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
 const meta=JSON.parse(readFileSync('artifacts/recovery-qa/qa-source.json','utf8'));assert.equal(meta.commit,sha);assert.equal(meta.auth,'mock');
 const output='artifacts/browser-private';mkdirSync(output,{recursive:true});
@@ -22,6 +23,7 @@ try{
  await page.screenshot({path:output+'/route.png',fullPage:true});assert.deepEqual(errors,[]);
  writeFileSync(output+'/proof.json',JSON.stringify({sha,browser:browser.version(),headless:true,server:'same-process-executor/loopback',route:'/cadastros/categorias',auth:'mock',api:'synthetic',viewport:{width:1440,height:1000},scope:'single route rendering proof; no integrated acceptance'},null,2));
  console.log('Synthetic application route rendered at source '+sha);
+ if(process.argv.includes('--interface')||process.argv.includes('--full'))await interfaceProof({page,output,sha});
  if(process.argv.includes('--reports')||process.argv.includes('--full'))await reports({page,output,sha});
  if(process.argv.includes('--consolidated')||process.argv.includes('--full'))await consolidated({page,output,sha});
  if(process.argv.includes('--full')){await page.setViewportSize({width:1440,height:1000});await page.locator('.qa-controls').evaluate(e=>{e.open=false});await coverage({page,context,output,sha})}

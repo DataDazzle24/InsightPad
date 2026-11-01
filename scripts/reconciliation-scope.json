@@ -88,7 +88,8 @@
     "SEC-2026-008",
     "DES-2026-001",
     "DES-2026-002",
-    "DES-2026-003"
+    "DES-2026-003",
+    "UXIP-001"
   ],
   "paths": {
     ".gitignore": {
@@ -1230,6 +1231,84 @@
         "AJU-EST-22"
       ],
       "reason": "Exact isolated Data Connect compiler and disposable PG18 regression for session/core write ordering, financial/stock ledgers and replay; synthetic actors, sealed evidence, no remote backend or permissions change."
+    },
+    "frontend/src/interface.css": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Screen-only visual migration and exact presentation/preservation regression; preserve business callbacks, fields, domain sources and print. Exact path only; no backend or operational change."
+    },
+    "frontend/src/components/InterfaceNavigationLink.tsx": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Screen-only visual migration and exact presentation/preservation regression; preserve business callbacks, fields, domain sources and print. Exact path only; no backend or operational change."
+    },
+    "frontend/src/layout/AppLayout.tsx": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Screen-only visual migration and exact presentation/preservation regression; preserve business callbacks, fields, domain sources and print. Exact path only; no backend or operational change."
+    },
+    "frontend/src/pages/DashboardPage.tsx": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Screen-only visual migration and exact presentation/preservation regression; preserve business callbacks, fields, domain sources and print. Exact path only; no backend or operational change."
+    },
+    "frontend/src/pages/ModuleMenuPage.tsx": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Screen-only visual migration and exact presentation/preservation regression; preserve business callbacks, fields, domain sources and print. Exact path only; no backend or operational change."
+    },
+    "frontend/src/pages/PlatformAdminMenuPage.tsx": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Screen-only visual migration and exact presentation/preservation regression; preserve business callbacks, fields, domain sources and print. Exact path only; no backend or operational change."
+    },
+    "frontend/src/pages/AccessDeniedPage.tsx": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Screen-only visual migration and exact presentation/preservation regression; preserve business callbacks, fields, domain sources and print. Exact path only; no backend or operational change."
+    },
+    "frontend/public/brand/insight-pad-interface.png": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Screen-only visual migration and exact presentation/preservation regression; preserve business callbacks, fields, domain sources and print. Exact path only; no backend or operational change."
+    },
+    "frontend/public/fonts/interface/DejaVuSans.ttf": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Screen-only visual migration and exact presentation/preservation regression; preserve business callbacks, fields, domain sources and print. Exact path only; no backend or operational change."
+    },
+    "frontend/public/fonts/interface/LICENSE.txt": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Screen-only visual migration and exact presentation/preservation regression; preserve business callbacks, fields, domain sources and print. Exact path only; no backend or operational change."
+    },
+    "scripts/qa-browser/interface.mjs": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Screen-only visual migration and exact presentation/preservation regression; preserve business callbacks, fields, domain sources and print. Exact path only; no backend or operational change."
+    },
+    "scripts/verify-interface.mjs": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Screen-only visual migration and exact presentation/preservation regression; preserve business callbacks, fields, domain sources and print. Exact path only; no backend or operational change."
+    },
+    "frontend/src/components/InterfaceNavigationLink.test.tsx": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Exact router/handler/reduced-motion regression for the presentation link; no business navigation interception or timeout."
     }
   },
   "bytePreserved": [
