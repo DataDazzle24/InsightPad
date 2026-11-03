@@ -59,6 +59,26 @@ async function renderLogin() {
 }
 
 describe('recovery modal regression (BUG-2026-001)', () => {
+  it('changes the persisted theme without submitting or clearing valid login fields', async () => {
+    localStorage.setItem('insightpad.theme', 'dark');
+    await renderLogin();
+    const email = container.querySelector<HTMLInputElement>('#email')!;
+    const password = container.querySelector<HTMLInputElement>('#password')!;
+    await act(async () => {
+      for (const [field, value] of [[email, 'designer@example.invalid'], [password, 'SenhaFicticia!123']] as const) {
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(field, value);
+        field.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    });
+    await click(button('Ativar tema claro'));
+    expect(container.querySelector('main')?.getAttribute('data-theme')).toBe('light');
+    expect(localStorage.getItem('insightpad.theme')).toBe('light');
+    expect(email.value).toBe('designer@example.invalid');
+    expect(password.value).toBe('SenhaFicticia!123');
+    expect(auth.signIn).not.toHaveBeenCalled();
+    expect(auth.resetPassword).not.toHaveBeenCalled();
+  });
+
   it('opens modally with named dialog and explicit initial focus; Cancel restores opener', async () => {
     await renderLogin();
     const opener = await open();

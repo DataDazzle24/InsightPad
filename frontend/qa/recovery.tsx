@@ -12,6 +12,7 @@ import '../src/App.css';
 import '../src/home-header-refinements.css';
 import '../src/sidebar-refinements.css';
 import '../src/catalog-standardization.css';
+import '../src/interface.css';
 import './review.css';
 
 export function Review() {
@@ -19,6 +20,7 @@ export function Review() {
   const [outcome, setOutcome] = useState<'success' | 'failure'>('success');
   const [delay, setDelay] = useState(15);
   const [requests, setRequests] = useState(0);
+  const [visualContext, setVisualContext] = useState<'initial' | 'error' | 'loading'>('initial');
   const [outer, setOuter] = useState(false);
   const [inner, setInner] = useState(false);
   const outerFocus = useRef<HTMLButtonElement>(null);
@@ -26,7 +28,9 @@ export function Review() {
 
   const auth: AuthContextValue = {
     firebaseUser: null, profile: null, permissions: {},
-    status: 'unauthenticated', error: null, canAccess: () => false,
+    status: visualContext === 'loading' ? 'loading' : 'unauthenticated',
+    error: visualContext === 'error' ? 'E-mail ou senha inválidos.' : null,
+    canAccess: () => false,
     signIn: async () => { throw new Error('Login real desativado neste harness.'); },
     signOut: async () => {},
     resetPassword: () => {
@@ -57,6 +61,13 @@ export function Review() {
         </select>
       </label>
       <p aria-live="polite">Requisições simuladas: {requests}</p>
+      <label>Contexto visual de autenticação (QA, sem login real)
+        <select value={visualContext} onChange={e => setVisualContext(e.target.value as typeof visualContext)}>
+          <option value="initial">Inicial</option>
+          <option value="error">Erro controlado</option>
+          <option value="loading">Processamento controlado</option>
+        </select>
+      </label>
       <button type="button" onClick={toggleTheme}>Tema: {theme}</button>
       <button type="button" onClick={() => setOuter(true)}>Ensaiar diálogos aninhados</button>
       <p>Escolha tema/resultado/tempo antes de abrir o modal. Use apenas e-mail fictício; não digite senha real. Recolha este painel para avaliar layout.</p>

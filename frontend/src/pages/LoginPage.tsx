@@ -4,10 +4,26 @@ import { useAuth } from "../auth/useAuth";
 import { useTheme } from "../theme/theme-context";
 import { ModalDialog } from "../components/ModalDialog";
 
+import "./LoginPage.visual.css";
+
+function LoginIcon({ name }: { name: "mail" | "lock" | "arrow" | "eye" | "eyeOff" | "shield" | "sms" | "theme" }) {
+  const paths = {
+    mail: <><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></>,
+    lock: <><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></>,
+    arrow: <><path d="M4 12h15m-6-6 6 6-6 6"/></>,
+    eye: <><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></>,
+    eyeOff: <><path d="m3 3 18 18M10 5a10 10 0 0 1 2 0c6.5 0 10 7 10 7a18 18 0 0 1-3 4M6 6a20 20 0 0 0-4 6s3.5 7 10 7a12 12 0 0 0 5-1M10 10a3 3 0 0 0 4 4"/></>,
+    shield: <><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6l8-3Z"/><path d="m8 12 3 3 5-6"/></>,
+    sms: <><path d="M21 14a3 3 0 0 1-3 3H9l-6 4V6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v8Z"/><path d="M7 8h10M7 12h6"/></>,
+    theme: <><circle cx="12" cy="12" r="9"/><path d="M12 3v18" fill="currentColor"/></>,
+  };
+  return <svg className="login-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">{paths[name]}</svg>;
+}
+
 type RecoveryMethod = "email" | "sms";
 
 export function LoginPage() {
-  const { theme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
   const { status, error, signIn, resetPassword } = useAuth();
   const [email, setEmail] = useState(""),
     [password, setPassword] = useState(""),
@@ -75,41 +91,38 @@ export function LoginPage() {
   const busy = submitting || status === "loading";
 
   return (
-    <main className="brand-login ip-ui" data-theme={theme}>
+    <main className="brand-login ip-ui ip-login-v2" data-theme={theme}>
+      <div className="login-atmosphere" aria-hidden="true" />
+      <button className="login-theme" type="button" onClick={toggleTheme}
+        aria-label={`Ativar tema ${theme === "dark" ? "claro" : "escuro"}`}>
+        <LoginIcon name="theme" />
+        {theme === "dark" ? "Tema claro" : "Tema escuro"}
+      </button>
       <section className="brand-login__hero">
+        <div className="login-logo-frame">
         <img
           className="brand-login__logo"
           src="/brand/insight-pad-interface.png"
           alt="Insight Pad"
         />
-        <div className="brand-login__statement">
-          <h1>
-            DADOS PARA O PRESENTE.
-            <br />
-            <em>INSIGHTS PARA O FUTURO.</em>
-          </h1>
         </div>
         <footer>
           <span>Um produto</span>
-          <img src="/brand/data-dazzle-logo-dark.png" alt="Data Dazzle" />
+          <img src="/brand/data-dazzle-logo-dark.png" alt="" />
+          <strong>Data Dazzle</strong>
         </footer>
       </section>
       <section className="brand-login__access">
         <div className="login-hud">
-          <span className="login-hud__corner login-hud__corner--tl" />
-          <span className="login-hud__corner login-hud__corner--br" />
-          <img
-            className="login-mobile-logo"
-            src="/brand/insight-pad-interface.png"
-            alt="Insight Pad"
-          />
+
           <header>
+            <span className="login-card-icon"><LoginIcon name="lock" /></span>
             <h2>Bem-vindo de volta</h2>
           </header>
           <form onSubmit={handleSubmit}>
             <label htmlFor="email">E-mail</label>
             <div className="hud-input">
-              <span className="material-symbols-rounded">mail</span>
+              <LoginIcon name="mail" />
               <input
                 id="email"
                 type="email"
@@ -128,7 +141,7 @@ export function LoginPage() {
               </button>
             </div>
             <div className="hud-input">
-              <span className="material-symbols-rounded">lock</span>
+              <LoginIcon name="lock" />
               <input
                 id="password"
                 type={showPassword ? "text" : "password"}
@@ -146,9 +159,7 @@ export function LoginPage() {
                 aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                 aria-pressed={showPassword}
               >
-                <span className="material-symbols-rounded">
-                  {showPassword ? "visibility_off" : "visibility"}
-                </span>
+                <LoginIcon name={showPassword ? "eyeOff" : "eye"} />
               </button>
             </div>
             <div className="form-feedback" aria-live="polite">
@@ -157,11 +168,11 @@ export function LoginPage() {
             </div>
             <button className="login-submit" type="submit" disabled={busy}>
               <span>{busy ? "Validando acesso..." : "Entrar"}</span>
-              <span className="material-symbols-rounded">arrow_forward</span>
+              <LoginIcon name="arrow" />
             </button>
           </form>
           <footer>
-            <span className="status-dot" />
+            <LoginIcon name="shield" />
             Ambiente protegido pelo Firebase
           </footer>
         </div>
@@ -192,6 +203,7 @@ export function LoginPage() {
               </button>
             </header>
             <form onSubmit={requestRecovery}>
+              <div className="recovery-body">
               <p>
                 Escolha como deseja confirmar sua identidade. Por segurança, a
                 resposta não informa se uma conta existe.
@@ -203,7 +215,7 @@ export function LoginPage() {
                   className={method === "email" ? "active" : ""}
                   onClick={() => setMethod("email")}
                 >
-                  <span className="material-symbols-rounded">mail</span>
+                  <LoginIcon name="mail" />
                   <b>E-mail</b>
                   <small>Link seguro do Firebase</small>
                 </button>
@@ -213,7 +225,7 @@ export function LoginPage() {
                   className={method === "sms" ? "active" : ""}
                   onClick={() => setMethod("sms")}
                 >
-                  <span className="material-symbols-rounded">sms</span>
+                  <LoginIcon name="sms" />
                   <b>SMS</b>
                   <small>Requer ativação administrativa</small>
                 </button>
@@ -233,9 +245,7 @@ export function LoginPage() {
                 </label>
               ) : (
                 <div className="recovery-security-note">
-                  <span className="material-symbols-rounded">
-                    verified_user
-                  </span>
+                  <LoginIcon name="shield" />
                   <p>
                     O SMS será habilitado somente com telefone previamente
                     verificado, código temporário com expiração, limite de
@@ -243,6 +253,7 @@ export function LoginPage() {
                   </p>
                 </div>
               )}
+              </div>
               <footer>
                 <button
                   type="button"

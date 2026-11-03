@@ -201,13 +201,15 @@
     },
     "frontend/src/pages/LoginPage.tsx": {
       "ids": [
-        "PREP-DEC017"
+        "PREP-DEC017",
+        "UXIP-001"
       ],
       "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
     },
     "frontend/src/pages/LoginPage.test.tsx": {
       "ids": [
-        "PREP-DEC017"
+        "PREP-DEC017",
+        "UXIP-001"
       ],
       "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
     },
@@ -225,7 +227,8 @@
     },
     "frontend/qa/recovery.tsx": {
       "ids": [
-        "PREP-DEC017"
+        "PREP-DEC017",
+        "UXIP-001"
       ],
       "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
     },
@@ -597,7 +600,8 @@
     },
     "scripts/verify-reconciliation.test.mjs": {
       "ids": [
-        "OBS-018-AG03-001"
+        "OBS-018-AG03-001",
+        "UXIP-001"
       ],
       "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
     },
@@ -1309,6 +1313,30 @@
         "UXIP-001"
       ],
       "reason": "Exact router/handler/reduced-motion regression for the presentation link; no business navigation interception or timeout."
+    },
+    "frontend/src/pages/LoginPage.visual.css": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Approved login/recovery v2 presentation and directed regression only; preserve existing auth/session wiring, shared styles and original brand assets. Exact path; no backend or deployment."
+    },
+    "frontend/public/brand/login-flow-dark.svg": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Approved login/recovery v2 presentation and directed regression only; preserve existing auth/session wiring, shared styles and original brand assets. Exact path; no backend or deployment."
+    },
+    "frontend/public/brand/login-flow-light.svg": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Approved login/recovery v2 presentation and directed regression only; preserve existing auth/session wiring, shared styles and original brand assets. Exact path; no backend or deployment."
+    },
+    "scripts/qa-browser/login-visual-v2.mjs": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Approved login/recovery v2 presentation and directed regression only; preserve existing auth/session wiring, shared styles and original brand assets. Exact path; no backend or deployment."
     }
   },
   "bytePreserved": [

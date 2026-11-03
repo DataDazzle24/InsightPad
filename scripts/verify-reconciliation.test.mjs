@@ -98,3 +98,9 @@ test('visual migration authorizes only nominal presentation assets and rejects n
  for(const path of ['frontend/src/components/InterfaceNavigationLink.test-extra.tsx','frontend/src/interface-extra.css','frontend/src/components/InterfaceNavigationLinkExtra.tsx','frontend/public/brand/insight-pad-interface.svg','frontend/public/fonts/interface/Extra.ttf','scripts/qa-browser/interface-remote.mjs','scripts/verify-interface-extra.mjs'])assert.throws(()=>validateScope(policy,[path]),/outside approved scope/);
  const invalid=structuredClone(policy);invalid.additionalIds.push('UXIP-002');assert.throws(()=>validateScope(invalid,[]),/Unapproved requirement ID/);
 });
+
+test('approved login presentation accepts only the exact stylesheet, backgrounds and directed browser proof',()=>{
+ const files=['frontend/src/pages/LoginPage.visual.css','frontend/public/brand/login-flow-dark.svg','frontend/public/brand/login-flow-light.svg','scripts/qa-browser/login-visual-v2.mjs'];
+ assert.equal(validateScope(policy,files),true);
+ for(const path of ['frontend/src/pages/LoginPage.global.css','frontend/src/pages/LoginPage.visual-extra.css','frontend/public/brand/login-flow-extra.svg','scripts/qa-browser/login-visual-v2-extra.mjs','frontend/src/auth/login-visual-v2.ts'])assert.throws(()=>validateScope(policy,[path]),/outside approved scope/);
+});
