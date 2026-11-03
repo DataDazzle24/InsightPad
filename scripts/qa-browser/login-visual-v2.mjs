@@ -27,7 +27,7 @@ async function reachable(locator){
 }
 async function geometry(page){return page.evaluate(()=>{
  const selectors=['.brand-login','.brand-login__hero','.login-logo-frame','.brand-login__logo','.brand-login__hero>footer','.login-hud','.login-hud header h2','#email','#password','.login-submit','.login-hud>footer','dialog[open]','.recovery-modal','.recovery-body','.recovery-modal form>footer'];
- return selectors.flatMap(selector=>{const e=document.querySelector(selector);if(!e)return[];const r=e.getBoundingClientRect(),s=getComputedStyle(e);return[{selector,box:{x:r.x,y:r.y,width:r.width,height:r.height},style:Object.fromEntries(['display','padding','fontSize','fontFamily','lineHeight','borderTopWidth','backgroundColor','color','maxHeight','overflow','objectFit'].map(k=>[k,s[k]]))}]});
+ return selectors.flatMap(selector=>{const e=document.querySelector(selector);if(!e)return[];const r=e.getBoundingClientRect(),s=getComputedStyle(e);return[{selector,box:{x:r.x,y:r.y,width:r.width,height:r.height},style:Object.fromEntries(['display','padding','fontSize','fontFamily','lineHeight','borderTopWidth','backgroundColor','color','maxHeight','overflow','objectFit','backdropFilter','textRendering','webkitFontSmoothing'].map(k=>[k,s[k]]))}]});
 })}
 async function loginPage(browser,viewport,theme,recovery=false){
  const context=await browser.newContext({viewport,locale:'pt-BR',deviceScaleFactor:1,colorScheme:theme});await protect(context);

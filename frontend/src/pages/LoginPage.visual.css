@@ -14,6 +14,7 @@
  align-items:center;align-content:safe center;gap:clamp(40px,6vw,108px);padding:72px max(40px,calc((100vw - 1140px)/2));
  min-height:100dvh;height:100dvh;min-width:0;width:100%;overflow:auto;background:var(--login-bg);
  color:var(--login-ink);font:14px/1.55 IPLogin,system-ui,sans-serif;color-scheme:dark;
+ text-rendering:auto;-webkit-font-smoothing:auto;
  }
  .brand-login.ip-ui.ip-login-v2[data-theme],.brand-login.ip-ui.ip-login-v2[data-theme] *{box-sizing:border-box}
  .brand-login.ip-ui.ip-login-v2[data-theme][data-theme=light]{--login-bg:#edf4f8;--login-card:rgba(255,255,255,.93);--login-ink:#172d3e;--login-muted:#526a7b;
@@ -38,7 +39,8 @@
  .brand-login.ip-ui.ip-login-v2[data-theme] .brand-login__hero>footer strong{font-weight:600;font-size:13px}
  .brand-login.ip-ui.ip-login-v2[data-theme][data-theme=light] .brand-login__hero>footer img{filter:brightness(0);opacity:.7}
  .brand-login.ip-ui.ip-login-v2[data-theme] .brand-login__access{display:block;min-height:0;height:auto;padding:0;background:none;min-width:0;position:relative}
- .brand-login.ip-ui.ip-login-v2[data-theme] .login-hud{position:relative;width:100%;max-width:440px;margin:0 auto;padding:36px;border:1px solid var(--login-line);border-top-color:color-mix(in srgb,var(--login-line),var(--login-cyan) 32%);border-radius:24px;background:var(--login-card);box-shadow:var(--login-shadow);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+ /* Keep the standard backdrop property last: the production minifier folds aliases. */
+ .brand-login.ip-ui.ip-login-v2[data-theme] .login-hud{position:relative;width:100%;max-width:440px;margin:0 auto;padding:36px;border:1px solid var(--login-line);border-top-color:color-mix(in srgb,var(--login-line),var(--login-cyan) 32%);border-radius:24px;background:var(--login-card);box-shadow:var(--login-shadow);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px)}
  .brand-login.ip-ui.ip-login-v2[data-theme] .login-hud::before{content:'';position:absolute;top:-1px;left:36px;right:36px;height:1px;background:linear-gradient(90deg,transparent,var(--login-cyan),transparent);opacity:.75;pointer-events:none}
  .brand-login.ip-ui.ip-login-v2[data-theme] .login-hud header{margin:0 0 28px}
  .brand-login.ip-ui.ip-login-v2[data-theme] .login-card-icon{width:42px;height:42px;display:grid;place-items:center;margin-bottom:19px;border:1px solid color-mix(in srgb,var(--login-accent),transparent 65%);border-radius:13px;background:color-mix(in srgb,var(--login-cyan),transparent 91%);color:var(--login-accent)}
@@ -70,7 +72,7 @@
  .brand-login.ip-ui.ip-login-v2[data-theme] button:disabled{cursor:not-allowed}
  .brand-login.ip-ui.ip-login-v2[data-theme] .hud-input:has(input:disabled){opacity:.65}
  /* Native dialog preserves showModal(), focus trap and busy/escape contract. */
- .brand-login.ip-ui.ip-login-v2[data-theme] dialog.recovery-backdrop{position:fixed;inset:0;margin:auto;padding:0;width:min(520px,calc(100vw - 32px));height:fit-content;max-width:none;max-height:calc(100dvh - 32px);min-width:0;border:1px solid var(--login-line);border-radius:22px;background:var(--login-card);color:var(--login-ink);box-shadow:var(--login-shadow);overflow:hidden;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+ .brand-login.ip-ui.ip-login-v2[data-theme] dialog.recovery-backdrop{position:fixed;inset:0;margin:auto;padding:0;width:min(520px,calc(100vw - 32px));height:fit-content;max-width:none;max-height:calc(100dvh - 32px);min-width:0;border:1px solid var(--login-line);border-radius:22px;background:var(--login-card);color:var(--login-ink);box-shadow:var(--login-shadow);overflow:hidden;-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px)}
  .brand-login.ip-ui.ip-login-v2[data-theme] dialog.recovery-backdrop[open]{display:block;place-items:normal;align-items:normal}
  .brand-login.ip-ui.ip-login-v2[data-theme] dialog.recovery-backdrop::backdrop{background:var(--login-overlay);backdrop-filter:blur(5px)}
  .brand-login.ip-ui.ip-login-v2[data-theme] .recovery-modal{display:flex;flex-direction:column;width:100%;max-height:calc(100dvh - 34px);padding:0;border:0;border-radius:0;background:transparent;overflow:hidden;min-width:0;color:var(--login-ink)}
