@@ -1,4 +1,6 @@
 import { currentSessionToken } from '../auth/session-data-connect';
+import { createPortal } from 'react-dom';
+import { useChannelAlertTarget } from '../hooks/useChannelAlertTarget';
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { executeMutation, executeQuery, getDataConnect, mutationRef, queryRef } from "firebase/data-connect";
@@ -52,6 +54,7 @@ const mutationApplied = (result: unknown) => Boolean((result as { data?: { _exec
 
 export function ChannelOrderNotifier() {
   const permission = useAuth().permissions.CANAIS_VENDA;
+  const alertTarget = useChannelAlertTarget(Boolean(permission?.canUpdate));
   const navigate = useNavigate();
   const [order, setOrder] = useState<PendingOrder | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(() => storageGet(SOUND_PREFERENCE_KEY) !== "off");
@@ -279,7 +282,7 @@ export function ChannelOrderNotifier() {
   }
 
   if (!permission?.canUpdate) return null;
-  if (!order && !settingsOpen) return <button className="channel-alert-readiness" type="button" onClick={() => { setError(""); setSettingsOpen(true); }} aria-label="Configurar e testar alertas de pedidos"><span className="material-symbols-rounded">notifications_active</span><span>Alertas de pedidos</span><i className={soundEnabled ? "is-ready" : ""} aria-hidden="true" /></button>;
+  if (!order && !settingsOpen) return alertTarget ? createPortal(<button className="channel-alert-readiness" type="button" onClick={() => { setError(""); setSettingsOpen(true); }} aria-label="Configurar e testar alertas de pedidos"><span className="material-symbols-rounded">notifications_active</span><span>Alertas de pedidos</span><i className={soundEnabled ? "is-ready" : ""} aria-hidden="true" /></button>, alertTarget) : null;
   if (!order) return <div className="catalog-backdrop channel-order-notification-backdrop"><section className="channel-alert-settings" role="dialog" aria-modal="true" aria-labelledby="channel-alert-settings-title">
     <header><div><small>Pedidos integrados</small><h2 id="channel-alert-settings-title">Testar alertas</h2></div><button type="button" onClick={() => setSettingsOpen(false)} aria-label="Fechar configurações"><span className="material-symbols-rounded">close</span></button></header>
     <p>Mantenha o Insight Pad aberto neste computador durante a operação. O alerta visual funciona na tela; som e notificação dependem da permissão deste navegador.</p>

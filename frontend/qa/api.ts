@@ -16,7 +16,7 @@ export const firebaseApp={},auth={currentUser:null},appCheck=null
 export const getDataConnect=()=>({qa:true}),getFunctions=()=>({qa:true})
 export const currentSessionToken=()=> '0'.repeat(64)
 export const sessionKey=(uid:string)=>'qa.session:'+uid
-export const qaState={fail:false,delay:0,ackLoss:false,logs:[] as string[],unsupported:[] as string[],permissions:'full',empty:false,allowedBranches:[] as string[],cashAckLoss:false,requests:[] as {name:string;variables:unknown}[]}
+export const qaState={pendingChannelOrders:[] as Row[],fail:false,delay:0,ackLoss:false,logs:[] as string[],unsupported:[] as string[],permissions:'full',empty:false,allowedBranches:[] as string[],cashAckLoss:false,requests:[] as {name:string;variables:unknown}[]}
 export const uuid=(n:number)=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`
 const immutable=<T>(value:T):T=>{if(value&&typeof value==='object'){Object.values(value).forEach(immutable);Object.freeze(value)}return value}
 export const fixtureDate=new Date().toISOString().slice(0,10)
@@ -47,7 +47,7 @@ export function resetFixtures(){
  subcategories=Array.from({length:300},(_,i)=>({id:uuid(800+i),name:`SUBCATEGORIA QA ${String(i+1).padStart(3,'0')}`,categoryId:uuid(300+i%10),categoryName:`CATEGORIA QA ${String(i%10+1).padStart(3,'0')}`,active:i%11!==10,createdAt:when,updatedAt:when}))
  movements=Array.from({length:501},(_,i)=>({id:uuid(2000+i),operationId:'qa-movement-'+i,occurredAt:new Date(Date.parse(when)-i*60000).toISOString(),quantity:i%5+1,unitCostCents:products[i%products.length]!.costPriceCents,status:i%13===0?'REVERSED':'POSTED',typeCode:i%2?'LOSS':'MANUAL_IN',typeName:i%2?'Perda':'Entrada',direction:i%2?'OUT':'IN',productId:products[i%products.length]!.id,productName:products[i%products.length]!.name,branchId:branches[i%2]!.id,branchName:branches[i%2]!.name}))
  transfers=Array.from({length:201},(_,i)=>({id:uuid(3000+i),operationId:'qa-transfer-'+i,status:'COMPLETED',requestedAt:when,sourceBranchId:branches[0]!.id,destinationBranchId:branches[1]!.id,sourceBranch:branches[0]!.name,destinationBranch:branches[1]!.name,totalQuantity:i%5+1,itemCount:1}))
- receipts.clear();cashApprovals.clear();qaState.logs=[];qaState.unsupported=[];qaState.requests=[]
+ receipts.clear();cashApprovals.clear();qaState.pendingChannelOrders=[];qaState.logs=[];qaState.unsupported=[];qaState.requests=[]
 }
 resetFixtures()
 const result=(data:unknown)=>({data:{_select:[{data:structuredClone(data)}]}})
@@ -137,7 +137,7 @@ export async function qaOperation(name:string,variables:unknown={}){
  qaState.logs.push(name);qaState.logs=qaState.logs.slice(-40)
  if(qaState.delay)await new Promise(r=>setTimeout(r,qaState.delay))
  if(qaState.fail)throw new Error('QA: falha sintética de API')
- const writing=/^(Cancel|Save|Create|Update|Set|Archive|Restore|Open|Close|Register|Post|Reverse|Ensure)/.test(name)
+ const writing=/^(Cancel|Save|Create|Update|Set|Archive|Restore|Open|Close|Register|Post|Reverse|Ensure|Acknowledge)/.test(name)
  if(qaState.permissions==='denied'||writing&&qaState.permissions==='read')throw ['RegisterCashMovement','CloseCashSession'].includes(name)?new DataConnectOperationError('QA: permissão negada'):Error('QA: permissão negada')
  const box=(value:unknown)=>result(value)
  switch(name){
@@ -271,7 +271,8 @@ export async function qaOperation(name:string,variables:unknown={}){
  })
  case 'PlatformBillingWorkspaceV2':return box({summary:{receivableCents:'0',overdueCents:'0',overdueTenants:0,receivedMonthCents:'0'},total:0,invoices:[]})
  case 'SalesChannelOptions':return box({branches,connections:[]})
- case 'LatestPendingSalesChannelOrder':return box({orders:[]})
+ case 'LatestPendingSalesChannelOrder':return box({orders:structuredClone(qaState.pendingChannelOrders)})
+ case 'AcknowledgeSalesChannelOrderAlert':{const current=qaState.pendingChannelOrders.find(row=>row.id===v.id);if(!current||current.version!==v.version||current.alertKind!==v.alertKind)throw Error('QA: alerta divergente');qaState.pendingChannelOrders=qaState.pendingChannelOrders.filter(row=>row.id!==v.id);return {data:{_execute:1}}}
  case 'ListSales':return page(sales.map(s=>({...s,clientOperationId:s.id,source:'POS',soldAt:s.date,createdByUid:'qa-user',branchId:s.branchId,branchName:(s.branch as Row).name,customerName:s.customer,name:s.customer,itemCount:(s.items as unknown[]).length,paymentMethods:'DINHEIRO'})),{...v,search:(v.filters as Row|undefined)?.search??''})
  case 'SalesChannelConnectionsV2':return box({rows:[],total:0,summary:{total:0,authorized:0,preparing:0,attention:0}})
  case 'SalesChannelProductMappingsV2':return box({rows:[],total:0,summary:{total:0,automatic:0,pending:0,errors:0}})

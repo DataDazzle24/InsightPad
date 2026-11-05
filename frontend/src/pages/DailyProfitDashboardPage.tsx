@@ -1,9 +1,15 @@
+import {AnalysisDetails} from '../components/dashboard-v3/AnalysisDetails';
 import { useDialogAccessibility } from '../hooks/useDialogAccessibility';
 import { useDashboardExport } from '../utils/dashboardAuthorization';
-import { Link } from 'react-router-dom';
-import { financialCsv,heatmapStyle } from '../utils/dashboardExport';
-/* eslint-disable react-hooks/preserve-manual-memoization */
-import { useCallback, useEffect, useMemo, useRef, useState,type ReactNode } from "react";
+import { useNavigate } from 'react-router-dom';
+import {useTheme} from '../theme/theme-context';
+import {DashboardSurface} from '../components/dashboard-v3/DashboardSurface';
+import {buildSalesModel} from '../components/dashboard-v3/adapters';
+import {compareRaw} from '../components/dashboard-v3/geometry';
+import {SalesPrintReport} from '../components/dashboard-v3/DashboardPrintReport';
+import {dashboardViews,waitingModel,type DashboardViewProps} from '../components/dashboard-v3/integration';
+import { financialCsv } from '../utils/dashboardExport';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getDataConnect } from "firebase/data-connect";
 import {
   connectorConfig,
@@ -80,15 +86,6 @@ type Data = {
   products: Product[];
 };
 const dc = getDataConnect(firebaseApp, connectorConfig),
-  money = (v: unknown) =>
-    new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(Number(v ?? 0) / 100),
-  num = (v: unknown) =>
-    new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 }).format(
-      Number(v ?? 0),
-    ),
   iso = (d: Date) =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
   blank: Filters = {
@@ -101,7 +98,9 @@ const dc = getDataConnect(firebaseApp, connectorConfig),
   },
   opts = (items: Option[] = []): SelectOption[] =>
     items.map((i) => ({ value: i.id, label: i.name }));
-export function DailyProfitDashboardPage({navigation}:{navigation?:ReactNode}) {
+export function DailyProfitDashboardPage({onViewChange}:DashboardViewProps) {
+  const navigate=useNavigate(),{theme}=useTheme();
+  const [visualReset,setVisualReset]=useState(0),[generatedAt,setGeneratedAt]=useState<Date|null>(null);
   const canExport=useDashboardExport();
   const today = new Date(),
     initial = new Date(today.getFullYear(), today.getMonth(), 1),
@@ -138,7 +137,7 @@ export function DailyProfitDashboardPage({navigation}:{navigation?:ReactNode}) {
         box = ((result.data._select ?? [])[0] as { data?: Data } | undefined)
           ?.data;
       if (!box) throw new Error();
-      if(request!==sequence.current)return;setData(box);
+      if(request!==sequence.current)return;setData(box);setGeneratedAt(new Date());
     } catch (error) {
       if(request!==sequence.current)return;console.error(error);
       setNotice({
@@ -157,22 +156,10 @@ export function DailyProfitDashboardPage({navigation}:{navigation?:ReactNode}) {
       () => aggregateFinancialDays(data?.daily ?? [], group),
       [data, group],
     ),
-    max = useMemo(
-      () =>
-        Math.max(
-          1,
-          ...series.flatMap((d) => [
-            Number(d.volume),
-            Number(d.revenueCents),
-            Math.max(0, Number(d.profitCents)),
-          ]),
-        ),
-      [series],
-    ),
     products = useMemo(
       () =>
         [...(data?.products ?? [])].sort(
-          (a, b) => Number(b[sort] ?? 0) - Number(a[sort] ?? 0),
+          (a, b) => compareRaw(b[sort], a[sort]),
         ),
       [data, sort],
     );
@@ -193,6 +180,7 @@ export function DailyProfitDashboardPage({navigation}:{navigation?:ReactNode}) {
     setSelected(false);
   }
   function clear() {
+    setVisualReset(value=>value+1);
     const fresh = { from: iso(initial), to: iso(today) };
     setDraft(blank);
     setFilters(blank);
@@ -217,9 +205,9 @@ export function DailyProfitDashboardPage({navigation}:{navigation?:ReactNode}) {
     setTo(end>to?to:end);
     setSelected(true);
   }
-  function csv() {
+  function csv(rows:Product[] = products) {
     if(!canExport||!data||busy)return;
-    const blob = new Blob([financialCsv(products)],{type:'text/csv;charset=utf-8'}),
+    const blob = new Blob([financialCsv(rows)],{type:'text/csv;charset=utf-8'}),
       url = URL.createObjectURL(blob),
       a = document.createElement("a");
     a.href = url;
@@ -227,36 +215,20 @@ export function DailyProfitDashboardPage({navigation}:{navigation?:ReactNode}) {
     a.click();
     URL.revokeObjectURL(url);
   }
-  const c = data?.cards,
-    m = data?.monthly;
-  return (
-    <section className="finance-dashboard">
-      <header className="finance-heading">
-        <div>
-          <span className="eyebrow">DASHBOARD</span>
-          <h1><Link className="catalog-back" to="/modulos/dashboards" aria-label="Voltar aos dashboards"><span className="material-symbols-rounded">arrow_back</span></Link>INDICADORES FINANCEIROS</h1><p className="dashboard-filter-summary">{from} — {to} · {Object.entries(filters).filter(([,ids])=>ids.length).map(([key,ids])=>ids.map(id=>data?.options[key as keyof Filters]?.find(option=>option.id===id)?.name??id).join(', ')).join(' · ')||'Todos os filtros'} · Gerado em {new Date().toLocaleString('pt-BR')}</p>
-        </div>
-        {navigation}<div className="finance-actions"><button onClick={clear}>Limpar filtros</button><button disabled={!canExport||!data||busy} onClick={()=>{if(canExport&&data&&!busy)window.print()}}>PDF</button>
-          <button onClick={() => setInfo(true)}>
-            <span className="material-symbols-rounded">info</span>Fórmulas
-          </button>
-          <button disabled={!canExport||!data||busy} onClick={csv}>
-            <span className="material-symbols-rounded">download</span>CSV
-          </button>
-          <button
-            className="catalog-primary"
-            onClick={() => {
-              setDraft(filters);
-              setRange({ from, to });
-              setFilterOpen(true);
-            }}
-          >
-            <span className="material-symbols-rounded">tune</span>Filtros
-          </button>
-        </div>
-      </header>
-      <AppToast notice={notice} onClose={() => setNotice(null)} />
-      {selected && (
+  const c = data?.cards;
+  const filterSummary=Object.entries(filters).filter(([,ids])=>ids.length).map(([key,ids])=>ids.map(id=>data?.options[key as keyof Filters]?.find(option=>option.id===id)?.name??id).join(', ')).join(' · ')||'Todos os filtros';
+  const groupControls=<div className="dv-segment" role="group" aria-label="Agrupar período">{(['day','month','year']as const).map((value,index)=><button type="button" key={value} aria-pressed={group===value} onClick={()=>setGroup(value)}>{['Dia','Mês','Ano'][index]}</button>)}</div>;
+  const model=data?buildSalesModel(data,series,groupControls,{keys:metrics,onToggle:key=>{if(key==='volume'||key==='revenue'||key==='profit')toggle(key)}}):waitingModel('sales');
+  const columns:Array<keyof Product>=['name','category','subcategory','quantity','revenueCents','providerFeeCents','netRevenueCents','costCents','profitCents','marginPercent'];
+  const table=model.pages.flatMap(page=>page.panels).find(panel=>panel.id==='sales-products');
+  if(table?.kind==='table')table.sorting={column:columns.indexOf(sort),onChange:index=>setSort(columns[index])};
+  return <section className="finance-dashboard dashboard-v3-controller" data-theme={theme}>
+    <DashboardSurface model={model} view="sales" views={dashboardViews} theme={theme} busy={busy} canExport={canExport&&!!data} filterResetToken={visualReset}
+      actions={{onViewChange,onBack:()=>navigate('/modulos/dashboards'),onClear:clear,onDetails:()=>setInfo(true),onFilters:()=>{setDraft(filters);setRange({from,to});setFilterOpen(true)},onPrint:()=>{if(canExport&&data&&!busy)window.print()},
+        onSelectPeriod:id=>{const day=series.find(item=>item.date===id);if(day)choosePeriod(day)},
+        onSelectProduct:(id,{additive})=>{const ids=additive?(filters.products.includes(id)?filters.products.filter(value=>value!==id):[...filters.products,id]):[id];const next={...filters,products:ids};setFilters(next);setDraft(next)},
+        onExportTable:(id,ordered)=>{if(!canExport||!data||busy||id!=='sales-products')return;const byId=new Map(data.products.map(row=>[row.id,row]));csv(ordered.flatMap(key=>{const row=byId.get(key);return row?[row]:[]}))}}}
+      selectionSummary={<><span>{filterSummary}</span>      {selected && (
         <button
           className="period-chip"
           onClick={() => {
@@ -268,269 +240,14 @@ export function DailyProfitDashboardPage({navigation}:{navigation?:ReactNode}) {
           Período selecionado · remover ×
         </button>
       )}
-      {c && c.financialPendingSales > 0 && (
-        <p className="finance-reconciliation-note" role="status">
-          <span className="material-symbols-rounded">schedule</span>
-          {c.financialPendingSales} venda(s) do iFood ainda aguardam a
-          conciliação oficial. Até lá, taxas e repasse aparecem como provisórios.
-        </p>
-      )}
-      {c && m && (
-        <>
-          <div className="finance-kpis">
-            <article>
-              <span>Volume de vendas</span>
-              <strong>{num(c.volume)}</strong>
-              <small>Vendas concluídas</small>
-            </article>
-            <article>
-              <span>Faturamento bruto</span>
-              <strong>{money(c.revenueCents)}</strong>
-              <small>Antes das taxas do canal</small>
-            </article>
-            <article>
-              <span>Taxas do iFood</span>
-              <strong>{money(c.providerFeeCents)}</strong>
-              <small>Valores conciliados pelo parceiro</small>
-            </article>
-            <article>
-              <span>Repasse líquido</span>
-              <strong>{money(c.netRevenueCents)}</strong>
-              <small>Faturamento bruto − taxas</small>
-            </article>
-            <article>
-              <span>Lucro após taxas</span>
-              <strong>{money(c.profitCents)}</strong>
-              <small>Margem {num(c.marginPercent)}%</small>
-            </article>
-            <article>
-              <span>Ticket médio</span>
-              <strong>{money(c.ticketCents)}</strong>
-              <small>Faturamento ÷ vendas</small>
-            </article>
-          </div><div className="finance-comparisons">
-            <article className="finance-comparison">
-              <span>Último mês fechado · volume</span>
-              <strong>{num(m.lastVolume)}</strong>
-              <small className={m.volumeGrowth >= 0 ? "positive" : "negative"}>
-                {m.volumeGrowth >= 0 ? "▲" : "▼"}{" "}
-                {num(Math.abs(m.volumeGrowth))}% vs. média de {m.months} mês(es)
-                · {num(m.averageVolume)}
-              </small>
-            </article>
-            <article className="finance-comparison">
-              <span>Último mês fechado · lucro após taxas</span>
-              <strong>{money(m.lastProfitCents)}</strong>
-              <small className={m.profitGrowth >= 0 ? "positive" : "negative"}>
-                {m.profitGrowth >= 0 ? "▲" : "▼"}{" "}
-                {num(Math.abs(m.profitGrowth))}% vs. média ·{" "}
-                {money(m.averageProfitCents)}
-              </small>
-            </article>
-          </div>
-          <div className="finance-workspace"><article className="finance-chart-card">
-            <header>
-              <div>
-                <span>Evolução financeira</span>
-                <strong>
-                  {group === "day" ? "Visão diária" :group==='year'?'Visão anual': "Visão mensal"}
-                </strong>
-              </div>
-              <div className="chart-controls"><div role="group" aria-label="Agrupar período">
-                <button
-                  className={group === "day" ? "active" : ""}
-                  onClick={() => setGroup("day")}
-                >
-                  Dia
-                </button>
-                <button
-                  className={group === "month" ? "active" : ""}
-                  onClick={() => setGroup("month")}
-                >
-                  Mês
-                </button>
-<button className={group==='year'?'active':''} onClick={()=>setGroup('year')}>Ano</button></div><div role="group" aria-label="Métricas do gráfico">{(["volume", "revenue", "profit"] as const).map((metric) => (
-                  <button
-                    key={metric}
-                    className={
-                      metrics.includes(metric) ? `active ${metric}` : ""
-                    }
-                    onClick={() => toggle(metric)}
-                  >
-                    {metric === "volume"
-                      ? "Volume"
-                      : metric === "revenue"
-                        ? "Faturamento"
-                        : "Lucro"}
-                  </button>
-                ))}</div>
-              </div>
-            </header>
-            <div className="finance-chart">
-              {series.map((day) => (
-                <button
-                  key={day.date}
-                  onClick={() => choosePeriod(day)}
-                  title={`${money(day.revenueCents)} faturados; ${money(day.profitCents)} de lucro`}
-                >
-                  <span className="chart-bars">
-                    {metrics.includes("volume") && (
-                      <i
-                        className="volume"
-                        style={{
-                          height: `${(Number(day.volume) * 100) / max}%`,
-                        }}
-                      />
-                    )}
-                    {metrics.includes("revenue") && (
-                      <i
-                        className="revenue"
-                        style={{
-                          height: `${(Number(day.revenueCents) * 100) / max}%`,
-                        }}
-                      />
-                    )}
-                    {metrics.includes("profit") && (
-                      <i
-                        className="profit"
-                        style={{
-                          height: `${(Math.max(0, Number(day.profitCents)) * 100) / max}%`,
-                        }}
-                      />
-                    )}
-                  </span>
-                  <small>
-                    {new Date(`${day.date}T12:00:00`).toLocaleDateString(
-                      "pt-BR",
-                      group === "day"
-                        ? { day: "2-digit", month: "2-digit" }
-                        : { month: "short", year: "2-digit" },
-                    )}
-                  </small>
-                </button>
-              ))}
-            </div>
-          </article>
-          <article className="finance-table-card">
-            <header>
-              <div>
-                <span>Análise por produto</span>
-                <strong>Receita, custo e rentabilidade</strong>
-              </div>
-<div><small>Clique em um produto para filtrar todo o painel.</small><button disabled={!canExport||!data||busy} onClick={csv}>CSV</button></div><small>Cor: intensidade relativa da coluna; valores negativos em âmbar.</small>
-            </header>
-            <div tabIndex={0} role="region" aria-label="Produtos: tabela completa com rolagem horizontal">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Produto</th>
-                    <th>Categoria</th>
-                    <th>Subcategoria</th>
-                    {(
-                      [
-                        ["quantity", "Volume"],
-                        ["revenueCents", "Fat. bruto"],
-                        ["providerFeeCents", "Taxas iFood"],
-                        ["netRevenueCents", "Repasse líquido"],
-                        ["costCents", "Custo"],
-                        ["profitCents", "Lucro após taxas"],
-                        ["marginPercent", "Margem"],
-                      ] as Array<[keyof Product, string]>
-                    ).map(([key, label]) => (
-                      <th key={key}>
-                        <button onClick={() => setSort(key)}>
-                          {label}
-                          {sort === key ? " ↓" : ""}
-                        </button>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {products.map((item) => (
-                    <tr
-                      key={item.id}
-                      onClick={() => {
-                        const next = { ...filters, products: [item.id] };
-                        setFilters(next);
-                        setDraft(next);
-                      }}
-                    >
-                      <td>
-                        <strong>{item.name}</strong>
-                      </td>
-                      <td>{item.category || "—"}</td>
-                      <td>{item.subcategory || "—"}</td>
-                      <td style={heatmapStyle(Number(item.quantity),products.map(p=>Number(p.quantity)))}>{num(item.quantity)}</td>
-                      <td style={heatmapStyle(Number(item.revenueCents),products.map(p=>Number(p.revenueCents)))}>{money(item.revenueCents)}</td>
-                      <td style={heatmapStyle(Number(item.providerFeeCents),products.map(p=>Number(p.providerFeeCents)))}>{money(item.providerFeeCents)}</td>
-                      <td style={heatmapStyle(Number(item.netRevenueCents),products.map(p=>Number(p.netRevenueCents)))}>{money(item.netRevenueCents)}</td>
-                      <td style={heatmapStyle(Number(item.costCents),products.map(p=>Number(p.costCents)))}>{money(item.costCents)}</td>
-                      <td
-                        className={
-                          Number(item.profitCents) >= 0
-                            ? "positive"
-                            : "negative"
-                        } style={heatmapStyle(Number(item.profitCents),products.map(p=>Number(p.profitCents)))}>
-                        {money(item.profitCents)}
-                      </td>
-                      <td style={heatmapStyle(Number(item.marginPercent),products.map(p=>Number(p.marginPercent)))}>{num(item.marginPercent)}%</td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot>
-                  <tr>
-                    <th colSpan={3}>TOTAL</th>
-                    <th>
-                      {num(
-                        products.reduce((s, i) => s + Number(i.quantity), 0),
-                      )}
-                    </th>
-                    <th>
-                      {money(
-                        products.reduce(
-                          (s, i) => s + Number(i.revenueCents),
-                          0,
-                        ),
-                      )}
-                    </th>
-                    <th>
-                      {money(
-                        products.reduce(
-                          (s, i) => s + Number(i.providerFeeCents),
-                          0,
-                        ),
-                      )}
-                    </th>
-                    <th>
-                      {money(
-                        products.reduce(
-                          (s, i) => s + Number(i.netRevenueCents),
-                          0,
-                        ),
-                      )}
-                    </th>
-                    <th>
-                      {money(
-                        products.reduce((s, i) => s + Number(i.costCents), 0),
-                      )}
-                    </th>
-                    <th>
-                      {money(
-                        products.reduce((s, i) => s + Number(i.profitCents), 0),
-                      )}
-                    </th>
-                    <th>{num(c.marginPercent)}%</th>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          </article></div>
-        </>
-      )}
+</>}
+      notice={c&&c.financialPendingSales>0?<p className="dv-provisional" role="status">Valores provisórios · {c.financialPendingSales} venda(s) aguardam conciliação. Consulte Detalhes da análise.</p>:undefined}
+      emptySlot={!data&&!busy?<p role="status">Os indicadores ainda não estão disponíveis para esta consulta.</p>:undefined}
+      printSlot={data?<SalesPrintReport data={data} products={products} series={series} metrics={metrics} group={group} sort={sort} from={from} to={to} summary={`${filterSummary} · Atualizado em ${generatedAt?.toLocaleString('pt-BR')??'—'}`}/>:null}/>
+    <AppToast notice={notice} onClose={()=>setNotice(null)}/>
       {filterOpen && (
-        <div className="catalog-backdrop">
-          <section className="catalog-modal finance-filter-modal" role="dialog" aria-modal="true" aria-label="Filtros do dashboard financeiro">
+        <div className="catalog-backdrop dashboard-v3-modal-backdrop" data-theme={theme}>
+          <section className="catalog-modal finance-filter-modal dashboard-v3-modal" role="dialog" aria-modal="true" aria-label="Filtros do dashboard financeiro">
             <header>
               <div>
                 <span className="eyebrow">PESQUISA</span>
@@ -583,11 +300,10 @@ export function DailyProfitDashboardPage({navigation}:{navigation?:ReactNode}) {
           </section>
         </div>
       )}
-      {info && (
-        <div className="catalog-backdrop">
-          <section className="catalog-confirm formula-modal" role="dialog" aria-modal="true" aria-label="Como os indicadores são calculados">
-            <span className="material-symbols-rounded">calculate</span>
-            <h2>Como os indicadores são calculados</h2>
+    {info&&<div className="catalog-backdrop dashboard-v3-modal-backdrop" data-theme={theme}><AnalysisDetails onClose={()=>setInfo(false)}>
+      <p><strong>Período aplicado:</strong> {from} — {to}</p><p><strong>Filtros:</strong> {filterSummary}</p>
+      <p><strong>Atualizado em:</strong> {generatedAt?.toLocaleString('pt-BR')??'—'}</p>
+      <h3>Como os indicadores são calculados</h3>
             <p>
               <strong>Faturamento bruto:</strong> total das vendas concluídas
               elegíveis. <strong>Taxas iFood:</strong> comissões, tarifas e taxas
@@ -602,18 +318,11 @@ export function DailyProfitDashboardPage({navigation}:{navigation?:ReactNode}) {
               duplicar o faturamento. Os comparativos usam até 12 meses fechados
               e respeitam todos os filtros selecionados.
             </p>
-            <footer>
-              <button
-                className="catalog-primary"
-                onClick={() => setInfo(false)}
-              >
-                Entendi
-              </button>
-            </footer>
-          </section>
-        </div>
-      )}
-      {busy && <AppLoading text="Calculando indicadores financeiros..." />}
-    </section>
-  );
+
+      <p>Cor: intensidade relativa da coluna; valores negativos em âmbar. Moeda e quantidade usam eixos separados.</p>
+      {!!c?.financialPendingSales&&<p>{c.financialPendingSales} venda(s) do iFood ainda aguardam a conciliação oficial. Até lá, taxas e repasse aparecem como provisórios.</p>}
+    </AnalysisDetails></div>}
+    {busy&&<AppLoading text="Calculando indicadores financeiros..."/>}
+  </section>;
 }
+export type {Data as FinancialDashboardData,Product as FinancialProduct,Day as FinancialDay};

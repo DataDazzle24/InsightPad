@@ -621,10 +621,8 @@
 
 /* Keep the persistent alert control clear of page actions and mobile navigation. */
 @media screen {
-  .app-frame:has(> .channel-alert-readiness) > .app-stage { padding-bottom: 4.5rem; }
 }
 @media screen and (max-width: 1100px) {
-  .app-frame:has(> .channel-alert-readiness) > .app-stage { padding-bottom: 8.7rem; }
   .channel-alert-readiness { bottom: 4.85rem; }
 }
 .channel-alert-settings { width: min(37rem, calc(100vw - 1.25rem)); max-height: min(44rem, calc(100dvh - 1.25rem)); overflow: auto; border: 1px solid #42dcfa; color: #f6f8f9; background: #0d1214; box-shadow: 0 28px 90px rgba(0,0,0,.75); }

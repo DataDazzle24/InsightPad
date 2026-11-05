@@ -104,3 +104,9 @@ test('approved login presentation accepts only the exact stylesheet, backgrounds
  assert.equal(validateScope(policy,files),true);
  for(const path of ['frontend/src/pages/LoginPage.global.css','frontend/src/pages/LoginPage.visual-extra.css','frontend/public/brand/login-flow-extra.svg','scripts/qa-browser/login-visual-v2-extra.mjs','frontend/src/auth/login-visual-v2.ts'])assert.throws(()=>validateScope(policy,[path]),/outside approved scope/);
 });
+
+
+test('dashboard v3 authorizes exact approved integration assets and tests, rejects adjacent domain or mock code',()=>{
+ assert.equal(validateScope(policy,['frontend/src/components/dashboard-v3/DashboardSurface.tsx','frontend/src/components/dashboard-v3/DashboardSurface.test.tsx','frontend/src/hooks/useChannelAlertTarget.ts','frontend/src/channel-alert-placement.css','frontend/public/dashboard-v3/card-art/finance.webp','scripts/qa-browser/dashboard-v3.mjs']),true);
+ for(const path of ['frontend/src/components/dashboard-v3/MockApi.ts','frontend/src/components/dashboard-v3/shell.js','frontend/src/components/dashboard-v3/Extra.tsx','frontend/public/dashboard-v3/card-art/extra.webp','frontend/src/hooks/useChannelAlertTargetExtra.ts','scripts/qa-browser/dashboard-v3-remote.mjs','dataconnect/app/dashboard-v3.gql'])assert.throws(()=>validateScope(policy,[path]),/outside approved scope/);
+});

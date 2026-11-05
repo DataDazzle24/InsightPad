@@ -1,0 +1,17 @@
+{
+  "CORE": "CORE não gravada",
+  "operation": "APPEND_ONLY",
+  "phase": "DASHBOARD_V3_IMPLEMENTATION",
+  "project": "insightpad-dd-dev",
+  "sourceBranch": "agent/dashboard-visual-v3",
+  "baseCandidate": "b753891db86b3219e9f11cc113405a83bf3fedb5",
+  "candidateResolution": "Preencher com o SHA exato do CI e recibo externo; este arquivo acompanha o código, não comprova publicação.",
+  "scope": "Frontend DEV: cinco vistas, treze subpáginas, retirada exclusiva de ip-bottom, posicionamento compacto do notifier, preservação dos contratos e relatório completo.",
+  "preserved": ["legacy-header e ip-top JSX", "DashboardPage home", "login v2", "Auth e sessões", "loaders/queries/requestKey", "financialCsv/csvSafe", "notifier e sua lógica original", "SQL/schema/connector/Functions/IAM", "lockfiles", "contenções operacionais"],
+  "historicalDevBaseline": {"source": "recibo P47R fornecido", "hostingVersion": "a7f9d9526cc5fb29", "release": "1793791765554000", "candidate": "b753891db86b3219e9f11cc113405a83bf3fedb5", "freshRemoteCheck": false},
+  "publicationAuthorization": "Autonomia DEV vigente, após gates; sem PROD ou ampliação incidental de backend/infra.",
+  "limitations": ["Não inferir deploy ou login real de build/fixtures.", "Aparelho físico, leitor de tela e áudio audível não comprovados.", "Meses individuais e cruzamentos produto × dia indisponíveis no contrato atual.", "Filial/conexão singulares e período contíguo preservados.", "Aguardar recibo remoto e smokes autenticados antes de encerrar a fase operacional."],
+  "pendingEvidence": ["SHA congelado/CI obrigatório", "Recibo de Hosting ou impedimento concreto de acesso", "Smokes autenticados", "Anexação deste delta e do recibo à CORE sem substituir histórico"],
+  "planning": {"priorEnvelopeUSD":4.25,"authorizedCapUSD":5,"measuredGoogleCloudUSD":null},
+  "productRemoteMutationsByThisCodeIntegration": false
+}

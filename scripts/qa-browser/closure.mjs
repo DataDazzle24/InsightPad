@@ -9,22 +9,23 @@ export async function closure({page,output,sha,run,go,panel,wait,screenshot}){
  const download=async(button,name)=>{const [d]=await Promise.all([page.waitForEvent('download'),button.click()]);const path=output+'/closure-'+name+'.csv';await d.saveAs(path);return parse(path)};
  const assertions=[];
  await run('closure-financial-csv-brl-filter-clear',async()=>{
-  await go('/dashboards/operacional');await page.locator('.finance-table-card tbody tr').first().waitFor();const before=await inspect();
-  const all=await download(page.getByRole('button',{name:'CSV',exact:true}).first(),'financial-all');assert.equal(all.length,66);assert.match(all[0][4],/\(R\$\)/);
+  await go('/dashboards/operacional');await page.locator('.dv-kpi').first().waitFor();await page.locator('.dv-subnav').getByRole('button',{name:'Produtos',exact:true}).click();await page.locator('.dv-table-scroll tbody tr').first().waitFor();const before=await inspect();
+  const all=await download(page.getByRole('button',{name:'Exportar CSV de Análise por produto',exact:true}),'financial-all');assert.equal(all.length,66);assert.match(all[0][4],/\(R\$\)/);
   const ledger=before.ledger;
   const brl=n=>Number(String(n).replace(/^'/,'').replace(',','.'));
   for(const r of all.slice(1)){const record=ledger.find(p=>p.name===r[0]);assert.ok(record);assert.equal(brl(r[4]),record.revenueCents/100);assert.equal(brl(r[7]),record.costCents/100);assert.equal(brl(r[8]),record.profitCents/100)}
-  await page.locator('.finance-table-card tbody tr').filter({hasText:'PRODUTO QA 018'}).click();await page.waitForFunction(()=>document.querySelectorAll('.finance-table-card tbody tr').length===1);
-  const filtered=await download(page.getByRole('button',{name:'CSV',exact:true}).first(),'financial-filtered');assert.deepEqual(filtered,[all[0],all.find(r=>r[0]==='PRODUTO QA 018')]);
-  await page.getByRole('button',{name:'Limpar filtros',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.finance-table-card tbody tr').length===65);
-  assert.deepEqual(await download(page.getByRole('button',{name:'CSV',exact:true}).first(),'financial-clear'),all);assert.deepEqual((await inspect()).ledger,before.ledger);
+  await page.getByRole('button',{name:'PRODUTO QA 018',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.dv-table-scroll tbody tr').length===1);
+  const filtered=await download(page.getByRole('button',{name:'Exportar CSV de Análise por produto',exact:true}),'financial-filtered');assert.deepEqual(filtered,[all[0],all.find(r=>r[0]==='PRODUTO QA 018')]);
+  await page.getByRole('button',{name:'Limpar filtros',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.dv-table-scroll tbody tr').length===65);
+  assert.deepEqual(await download(page.getByRole('button',{name:'Exportar CSV de Análise por produto',exact:true}),'financial-clear'),all);assert.deepEqual((await inspect()).ledger,before.ledger);
   assertions.push({case:'financial-csv',rows:65,filteredRows:1,parser:'Python csv',units:'BRL; one cents conversion; negative prefix removed only for numeric oracle',sha});
  });
  await run('closure-channel-exporters-actual-files',async()=>{
-  await go('/dashboards/operacional');await page.getByRole('button',{name:'Canais',exact:true}).click();await page.locator('.channel-dashboard .finance-kpis article').first().waitFor();const ledger=(await inspect()).ledger.filter(r=>r.source==='IFOOD');const records=[];
+  await go('/dashboards/operacional');await page.getByRole('button',{name:'Canais',exact:true}).click();await page.locator('.channel-dashboard .dv-kpi').first().waitFor();const ledger=(await inspect()).ledger.filter(r=>r.source==='IFOOD');const records=[];
   for(const [index,title,count]of [[0,'Resultado por loja',1],[1,'Taxas confirmadas pelo iFood',1],[2,'Formas de pagamento',1],[3,'Produtos mais vendidos nos canais',32]]){
-   const region=page.getByRole('region',{name:title+': tabela completa com rolagem horizontal',exact:true}),article=region.locator('..');const dom=await region.locator('tbody tr').evaluateAll(rows=>rows.map(row=>[...row.querySelectorAll('td')].map(c=>c.textContent)));
-   const csv=await download(article.getByRole('button',{name:'CSV',exact:true}),'channel-'+index);assert.equal(csv.length,count+1);assert.deepEqual(csv.slice(1).map(row=>row.map(cell=>/^'[=+\-@]/.test(cell)?cell.slice(1):cell)),dom);records.push({title,rows:count});
+   await page.locator('.dv-subnav').getByRole('button',{name:index<2?'Lojas e taxas':'Pagamentos e produtos',exact:true}).click();
+   const region=page.locator('.dv-original-print').getByRole('region',{name:title+': tabela completa com rolagem horizontal',exact:true,includeHidden:true});const dom=await region.locator('tbody tr').evaluateAll(rows=>rows.map(row=>[...row.querySelectorAll('td')].map(c=>c.textContent)));
+   const csv=await download(page.getByRole('button',{name:'Exportar CSV de '+title,exact:true}),'channel-'+index);assert.equal(csv.length,count+1);const normalize=s=>s.replace(/^'(?=[=+\-@])/,'').replace(/\s/g,'').replace('−','-');assert.deepEqual(csv.slice(1).map(row=>row.map(normalize)),dom.map(row=>row.map(normalize)));records.push({title,rows:count});
    if(index===0){const gross=ledger.reduce((n,r)=>n+r.revenueCents,0),fees=ledger.reduce((n,r)=>n+r.providerFeeCents,0);const value=s=>Number(s.replace(/[^0-9,-]/g,'').replace(',','.'));assert.equal(value(csv[1][3]),gross/100);assert.equal(value(csv[1][4]),fees/100)}
   }
   assertions.push({case:'channel-files',sha,records,limit:'completed synthetic channel sales only; no partner state transition, real permission or external financial reconciliation'});
@@ -106,21 +107,21 @@ export async function closure({page,output,sha,run,go,panel,wait,screenshot}){
  });
  // Consumer-specific data/empty/error checks, not inventory-as-acceptance.
  for(const view of ['Vendas','Estoque','Clientes','Categorias','Canais'])await run('closure-dashboard-states-'+view,async()=>{
-  await go('/dashboards/operacional');await page.getByRole('button',{name:view,exact:true}).click();await page.locator('.finance-kpis article').first().waitFor();assert.ok(await page.locator('.finance-kpis article').count()>0);assert.doesNotMatch(await page.locator('main').innerText(),/\b(?:NaN|undefined)\b/);
-  await panel();await page.getByLabel('Dados vazios',{exact:true}).check();await page.getByRole('button',{name:view,exact:true}).click();await wait();assert.doesNotMatch(await page.locator('main').innerText(),/\bNaN\b/);await screenshot('closure-'+view+'-empty');
+  await go('/dashboards/operacional');await page.locator('.dv-nav').getByRole('button',{name:view,exact:true}).click();await page.locator('.dv-kpi').first().waitFor();assert.ok(await page.locator('.dv-kpi').count()>0);assert.doesNotMatch(await page.locator('main').innerText(),/\b(?:NaN|undefined)\b/);
+  await panel();await page.getByLabel('Dados vazios',{exact:true}).check();await page.locator('.dv-nav').getByRole('button',{name:view,exact:true}).click();await wait();assert.doesNotMatch(await page.locator('main').innerText(),/\bNaN\b/);await screenshot('closure-'+view+'-empty');
   await page.getByLabel('Dados vazios',{exact:true}).uncheck();await page.getByLabel('Falha sintética de API',{exact:true}).check();
   // The QA toggle remounts App into the default Vendas tab. Observe its error
   // before clicking: the dismissible toast temporarily covers the tab controls.
   await page.getByRole('alert').first().waitFor();
-  if(view!=='Vendas'){await page.getByRole('alert').first().getByRole('button',{name:'Fechar aviso',exact:true}).click();await page.getByRole('button',{name:view,exact:true}).click();await page.getByRole('alert').first().waitFor()}
+  if(view!=='Vendas'){await page.getByRole('alert').first().getByRole('button',{name:'Fechar aviso',exact:true}).click();await page.locator('.dv-nav').getByRole('button',{name:view,exact:true}).click();await page.getByRole('alert').first().waitFor()}
   await screenshot('closure-'+view+'-error');
  });
  for(const theme of ['light','dark'])for(const width of [320,375,1366,1920])await run('closure-dashboard-consumers-'+theme+'-'+width,async()=>{
   await page.setViewportSize({width,height:1000});await go('/dashboards/operacional');await page.evaluate(theme=>localStorage.setItem('insightpad.theme',theme),theme);await page.reload();await wait();
   for(const view of ['Vendas','Estoque','Clientes','Categorias','Canais']){
-   await page.getByRole('button',{name:view,exact:true}).click();await wait();const heading=page.locator('.finance-heading');assert.ok(await heading.getByRole('heading').count()>0);
-   const buttons=heading.locator('button');for(const b of await buttons.all())assert.ok((await b.getAttribute('aria-label'))||(await b.innerText()).trim());
-   const overlaps=await heading.evaluate(e=>{const rects=[...e.querySelectorAll('button')].map(b=>b.getBoundingClientRect()).filter(r=>r.width&&r.height);return rects.some((a,i)=>rects.slice(i+1).some(b=>Math.min(a.right,b.right)-Math.max(a.left,b.left)>2&&Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>2))});assert.equal(overlaps,false,'header buttons overlap');
+   await page.locator('.dv-nav').getByRole('button',{name:view,exact:true}).click();await wait();const heading=page.locator('.dv-head');assert.ok(await heading.getByRole('heading').count()>0);
+   const buttons=page.locator('.dv-head button,.dv-actions button');for(const b of await buttons.all())assert.ok((await b.getAttribute('aria-label'))||(await b.innerText()).trim());
+   const overlaps=await page.locator('.dv-head,.dv-actions').evaluateAll(es=>es.some(e=>{const rects=[...e.querySelectorAll('button')].map(b=>b.getBoundingClientRect()).filter(r=>r.width&&r.height);return rects.some((a,i)=>rects.slice(i+1).some(b=>Math.min(a.right,b.right)-Math.max(a.left,b.left)>2&&Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>2))}));assert.equal(overlaps,false,'header buttons overlap');
    await screenshot('closure-'+view+'-'+theme+'-'+width);
   }
  });

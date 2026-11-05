@@ -276,7 +276,6 @@ export function AppLayout() {
           </button>
         </header>
         <section className="app-stage"><Outlet /></section>
-      <footer className="ip-bottom">Uma solução Data Dazzle <span>© 2026</span></footer>
       <ChannelOrderNotifier />
     </main>
   );

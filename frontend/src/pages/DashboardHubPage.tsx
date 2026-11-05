@@ -1,8 +1,14 @@
+import {AnalysisDetails} from '../components/dashboard-v3/AnalysisDetails';
 import { useDialogAccessibility } from '../hooks/useDialogAccessibility';
 import { useDashboardExport } from '../utils/dashboardAuthorization';
-import { Link } from 'react-router-dom';
-import { downloadDashboardCsv,heatmapStyle } from '../utils/dashboardExport';
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {useNavigate} from 'react-router-dom';
+import {useTheme} from '../theme/theme-context';
+import {DashboardSurface} from '../components/dashboard-v3/DashboardSurface';
+import {buildStockModel,buildCustomerModel,buildCategoryModel} from '../components/dashboard-v3/adapters';
+import {StockPrintView,CustomerPrintView,CategoryPrintView} from '../components/dashboard-v3/DashboardPrintReport';
+import {dashboardViews,waitingModel,type DashboardViewProps} from '../components/dashboard-v3/integration';
+import { downloadDashboardCsv } from '../utils/dashboardExport';
+import { useCallback, useEffect, useRef, useState } from "react";
 import { executeQuery, getDataConnect, queryRef } from "firebase/data-connect";
 import { connectorConfig } from "@insightpad/dataconnect";
 import { firebaseApp } from "../lib/firebase";
@@ -40,53 +46,17 @@ type Category = {
 };
 type Data = { stock: Stock; customers: Customer; categories: Category[] };
 const dc = getDataConnect(firebaseApp, connectorConfig),
-  money = (v: unknown) =>
-    new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(Number(v ?? 0) / 100),
-  num = (v: unknown) =>
-    new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 }).format(
-      Number(v ?? 0),
-    ),
-  iso = (d: Date) => d.toISOString().slice(0, 10),
-  views: Array<{ key: View; label: string; icon: string }> = [
-    { key: "sales", label: "Vendas", icon: "monitoring" },
-    { key: "channels", label: "Canais", icon: "hub" },
-    { key: "stock", label: "Estoque", icon: "inventory_2" },
-    { key: "customers", label: "Clientes", icon: "groups" },
-    { key: "categories", label: "Categorias", icon: "category" },
-  ];
+  iso = (d: Date) => d.toISOString().slice(0, 10);
 export function DashboardHubPage() {
-  const [view, setView] = useState<View>("sales");
-  const navigation=(      <nav className="dashboard-hub__nav" aria-label="Painéis operacionais">
-        {views.map((i) => (
-          <button
-            key={i.key} aria-label={i.label} title={i.label} aria-pressed={view===i.key}
-            className={view === i.key ? "active" : ""}
-            onClick={() => setView(i.key)}
-          >
-            <span className="material-symbols-rounded">{i.icon}</span>
-
-          </button>
-        ))}
-      </nav>);
-  return (
-    <section className="dashboard-hub">
-
-      <div className="dashboard-hub__content">
-        {view === "sales" ? (
-          <DailyProfitDashboardPage navigation={navigation}/>
-        ) : view === "channels" ? (
-          <ChannelDashboardPage navigation={navigation}/>
-        ) : (
-          <Operational key={view} view={view} navigation={navigation}/>
-        )}
-      </div>
-    </section>
-  );
+  const [view,setView]=useState<View>('sales');
+  return <section className="dashboard-hub"><div className="dashboard-hub__content">
+    {view==='sales'?<DailyProfitDashboardPage key={view} onViewChange={setView}/>:view==='channels'?<ChannelDashboardPage key={view} onViewChange={setView}/>:<Operational key={view} view={view} onViewChange={setView}/>}
+  </div></section>;
 }
-function Operational({ view,navigation }: { view: Exclude<View, "sales" | "channels">;navigation:ReactNode }) {
+function Operational({view,onViewChange}:DashboardViewProps&{view:Exclude<View,"sales"|"channels">}) {
+  const navigate=useNavigate(),{theme}=useTheme();
+  const [info,setInfo]=useState(false),[visualReset,setVisualReset]=useState(0),[generatedAt,setGeneratedAt]=useState<Date|null>(null);
+  useDialogAccessibility(info,()=>setInfo(false));
   const canExport=useDashboardExport();
   const now = new Date(),
     start = new Date(now.getFullYear(), now.getMonth(), 1),
@@ -114,7 +84,7 @@ function Operational({ view,navigation }: { view: Exclude<View, "sales" | "chann
         box = ((r.data as { _select?: Array<{ data?: Data }> })._select ??
           [])[0]?.data;
       if (!box) throw new Error();
-      if(request!==sequence.current)return;setData(box);
+      if(request!==sequence.current)return;setData(box);setGeneratedAt(new Date());
     } catch (e) {
       if(request!==sequence.current)return;console.error(e);
       setNotice({
@@ -129,40 +99,19 @@ function Operational({ view,navigation }: { view: Exclude<View, "sales" | "chann
     const timer = setTimeout(() => void load(), 0);
     return () => clearTimeout(timer);
   }, [load]);
-  return (
-    <section className="catalog-page analytics-page">
-      <header className="finance-heading">
-        <div>
-          <span className="eyebrow">DASHBOARD</span>
-<h1><Link className="catalog-back" to="/modulos/dashboards" aria-label="Voltar aos dashboards"><span className="material-symbols-rounded">arrow_back</span></Link>
-            {view === "stock"
-              ? "ESTOQUE"
-              : view === "customers"
-                ? "CLIENTES"
-                : "CATEGORIAS E SUBCATEGORIAS"}
-          </h1>
-          <p>
-            {new Date(`${from}T12:00:00`).toLocaleDateString("pt-BR")} —{" "}
-            {new Date(`${to}T12:00:00`).toLocaleDateString("pt-BR")}
-          </p>
-        </div>
-        {navigation}<div className="finance-actions"><button disabled={!canExport||!data||busy} onClick={()=>{if(canExport&&data&&!busy)window.print()}}>PDF</button><button onClick={()=>{setFrom(iso(start));setTo(iso(now));setDraft({from:iso(start),to:iso(now)})}}>Limpar filtros</button><button
-          className="catalog-primary"
-          onClick={() => {
-            setDraft({ from, to });
-            setFilter(true);
-          }}
-        >
-          <span className="material-symbols-rounded">tune</span>Período
-        </button>
-      </div></header>
-      <AppToast notice={notice} onClose={() => setNotice(null)} />
-      {data && view === "stock" && <StockView data={data.stock} />}{" "}
-      {data && view === "customers" && <CustomerView data={data.customers} />}{" "}
-      {data && view === "categories" && <CategoryView data={data.categories} />}{" "}
+  function clear(){setFrom(iso(start));setTo(iso(now));setDraft({from:iso(start),to:iso(now)});setVisualReset(value=>value+1)}
+  const model=!data?waitingModel(view):view==='stock'?buildStockModel(data.stock):view==='customers'?buildCustomerModel(data.customers):buildCategoryModel(data.categories);
+  const printReport=!data?null:<section className="catalog-page analytics-page"><header className="finance-heading"><div><h1>{model.title}</h1><p>{new Date(`${from}T12:00:00`).toLocaleDateString("pt-BR")} — {new Date(`${to}T12:00:00`).toLocaleDateString("pt-BR")} · Atualizado em {generatedAt?.toLocaleString('pt-BR')??'—'}</p></div></header>{view==='stock'?<StockPrintView data={data.stock}/>:view==='customers'?<CustomerPrintView data={data.customers}/>:<CategoryPrintView data={data.categories}/>}</section>;
+  return <section className="catalog-page analytics-page dashboard-v3-controller" data-theme={theme}>
+    <DashboardSurface model={model} view={view} views={dashboardViews} theme={theme} busy={busy} canExport={canExport&&!!data} filterResetToken={visualReset}
+      actions={{onViewChange,onBack:()=>navigate('/modulos/dashboards'),onClear:clear,onDetails:()=>setInfo(true),onFilters:()=>{setDraft({from,to});setFilter(true)},onPrint:()=>{if(canExport&&data&&!busy)window.print()},
+        onExportTable:(id,ordered)=>{if(!canExport||!data||busy)return;const panel=model.pages.flatMap(page=>page.panels).find(item=>item.id===id);if(panel?.kind!=='table')return;const byId=new Map(panel.rows.map(row=>[row.id,row]));const rows=ordered.flatMap(key=>{const row=byId.get(key);return row?[row.csv??row.cells.map(cell=>cell.text)]:[]});if(rows.length)downloadDashboardCsv(panel.title,panel.columns.map(column=>column.label),rows)}}}
+      selectionSummary="Todos os filtros do período aplicado"
+      emptySlot={!data&&!busy?<p role="status">Os indicadores ainda não estão disponíveis para esta consulta.</p>:undefined} printSlot={printReport}/>
+    <AppToast notice={notice} onClose={()=>setNotice(null)}/>
       {filter && (
-        <div className="catalog-backdrop">
-          <section className="catalog-modal finance-filter-modal" role="dialog" aria-modal="true" aria-label="Período de análise">
+        <div className="catalog-backdrop dashboard-v3-modal-backdrop" data-theme={theme}>
+          <section className="catalog-modal finance-filter-modal dashboard-v3-modal" role="dialog" aria-modal="true" aria-label="Período de análise">
             <header>
               <div>
                 <span className="eyebrow">PESQUISA</span>
@@ -198,285 +147,11 @@ function Operational({ view,navigation }: { view: Exclude<View, "sales" | "chann
           </section>
         </div>
       )}
-      {busy && <AppLoading text="Calculando indicadores..." />}
-    </section>
-  );
+    {info&&<div className="catalog-backdrop dashboard-v3-modal-backdrop" data-theme={theme}><AnalysisDetails onClose={()=>setInfo(false)}>
+      <p><strong>Período aplicado:</strong> {from} — {to}</p><p><strong>Atualizado em:</strong> {generatedAt?.toLocaleString('pt-BR')??'—'}</p>
+      {view==='stock'?<><p>Saldo: movimentação no período, não posição atual de estoque.</p><p>Lucro mantém o indicador recebido do sistema para as saídas por venda.</p></>:view==='customers'?<><p>A Curva ABC usa as classes recebidas do sistema. Selecionar A, B ou C filtra somente essa tabela e seu CSV; os indicadores gerais permanecem iguais.</p><p>Frequência: compras por cliente, conforme o cálculo do sistema.</p></>:<p>Categorias e subcategorias são níveis do mesmo faturamento e não são somados como receitas independentes. Margem, crescimento e líderes mantêm os valores e a ordem recebidos.</p>}
+    </AnalysisDetails></div>}
+    {busy&&<AppLoading text="Calculando indicadores..."/>}
+  </section>;
 }
-const Cards = ({ items }: { items: Array<[string, string, string?]> }) => (
-  <div className="finance-kpis analytics-kpis">
-    {items.map((i) => (
-      <article key={i[0]}>
-        <span>{i[0]}</span>
-        <strong>{i[1]}</strong>
-        <small>{i[2] ?? "Período selecionado"}</small>
-      </article>
-    ))}
-  </div>
-);
-function StockView({ data }: { data: Stock }) {
-  const c = data.cards,
-    max = useMemo(
-      () =>
-        Math.max(
-          1,
-          ...data.monthly.map((i) =>
-            Math.max(
-              Number(i.inboundQuantity),
-              Number(i.saleQuantity),
-              Number(i.lossQuantity),
-            ),
-          ),
-        ),
-      [data],
-    );
-  return (
-    <>
-      <Cards
-        items={[
-          [`Entradas`, num(c.inboundQuantity), money(c.inboundValueCents)],
-          ["Frete", money(c.freightCents)],
-          ["Outras custas", money(c.extraCostsCents)],
-          [
-            "Saídas por venda",
-            num(c.saleQuantity),
-            `Custo ${money(c.saleCostCents)}`,
-          ],
-          ["Lucro", money(c.saleProfitCents)],
-          ["Perdas", num(c.lossQuantity), money(c.lossValueCents)],
-        ]}
-      />
-      <article className="finance-chart-card">
-        <header>
-          <div>
-            <span>Evolução mensal</span>
-            <strong>Entradas, vendas e perdas</strong>
-          </div>
-        </header>
-        <div className="finance-chart analytics-chart">
-          {data.monthly.map((i) => (
-            <div key={String(i.date)}>
-              <span className="chart-bars">
-                <i
-                  className="volume"
-                  style={{
-                    height: `${(Number(i.inboundQuantity) * 100) / max}%`,
-                  }}
-                />
-                <i
-                  className="revenue"
-                  style={{ height: `${(Number(i.saleQuantity) * 100) / max}%` }}
-                />
-                <i
-                  className="profit"
-                  style={{ height: `${(Number(i.lossQuantity) * 100) / max}%` }}
-                />
-              </span>
-              <small>
-                {new Date(`${i.date}T12:00:00`).toLocaleDateString("pt-BR", {
-                  month: "short",
-                  year: "2-digit",
-                })}
-              </small>
-            </div>
-          ))}
-        </div>
-      </article>
-      <Table
-        title="Movimentação por produto"
-        headers={["Produto", "Entradas", "Saídas", "Saldo", "Valor"]}
-        rows={data.products.map((i) => [
-          i.name,
-          num(i.inQuantity),
-          num(i.outQuantity),
-          num(i.netQuantity),
-          money(i.valueCents),
-        ])}
-      />
-    </>
-  );
-}
-function CustomerView({ data }: { data: Customer }) {
-  const c = data.cards;
-  return (
-    <>
-      <Cards
-        items={[
-          [`Clientes ativos`, num(c.active)],
-          ["Novos clientes", num(c.new)],
-          ["Sem compras", num(c.withoutPurchase)],
-          ["Ticket médio", money(c.ticketCents)],
-          ["Frequência", num(c.frequency), "Compras por cliente"],
-        ]}
-      />
-      <div className="analytics-grid">
-        <Table
-          title="Curva ABC"
-          headers={[
-            "Cliente",
-            "Classe",
-            "Compras",
-            "Faturamento",
-            "Última compra",
-          ]}
-          rows={data.abc.map((i) => [
-            i.name,
-            i.class,
-            i.purchases,
-            money(i.revenueCents),
-            date(i.lastPurchase),
-          ])}
-        />
-        <Table
-          title="Clientes por região"
-          headers={["Região", "Clientes", "Faturamento"]}
-          rows={data.regions.map((i) => [
-            i.region || "Não informada",
-            i.customers,
-            money(i.revenueCents),
-          ])}
-        />
-        <Table
-          title="Aniversariantes"
-          headers={["Cliente", "Nascimento"]}
-          rows={data.birthdays
-
-            .map((i) => [i.name, date(i.birthDate)])}
-        />
-        <Table
-          title="Clientes sem comprar"
-          headers={["Cliente", "Última compra", "Histórico"]}
-          rows={data.dormant
-
-            .map((i) => [i.name, date(i.lastPurchase), money(i.revenueCents)])}
-        />
-      </div>
-    </>
-  );
-}
-function CategoryView({ data }: { data: Category[] }) {
-  const cat = data.filter((i) => i.level === "Categoria"),
-    sub = data.filter((i) => i.level === "Subcategoria"),
-    margin = [...data].sort((a, b) => b.marginPercent - a.marginPercent)[0],
-    profit = [...data].sort(
-      (a, b) => Number(b.profitCents) - Number(a.profitCents),
-    )[0],
-    growth = [...data].sort((a, b) => b.growthPercent - a.growthPercent)[0];
-  return (
-    <>
-      <Cards
-        items={[
-          [`Categoria líder`, cat[0]?.name ?? "—", money(cat[0]?.revenueCents)],
-          [
-            "Subcategoria líder",
-            sub[0]?.name ?? "—",
-            money(sub[0]?.revenueCents),
-          ],
-          [
-            "Maior margem",
-            margin?.name ?? "—",
-            `${num(margin?.marginPercent)}%`,
-          ],
-          [
-            "Maior crescimento",
-            growth?.name ?? "—",
-            `${num(growth?.growthPercent)}%`,
-          ],
-          ["Maior lucro", profit?.name ?? "—", money(profit?.profitCents)],
-        ]}
-      />
-      <div className="analytics-grid">
-        <Table
-          title="Categorias"
-          headers={[
-            "Categoria",
-            "Volume",
-            "Faturamento",
-            "Custo",
-            "Lucro",
-            "Margem",
-            "Crescimento",
-          ]}
-          rows={cat.map((i) => [
-            i.name,
-            num(i.quantity),
-            money(i.revenueCents),
-            money(i.costCents),
-            money(i.profitCents),
-            `${num(i.marginPercent)}%`,
-            `${num(i.growthPercent)}%`,
-          ])}
-        />
-        <Table
-          title="Subcategorias"
-          headers={[
-            "Subcategoria",
-            "Volume",
-            "Faturamento",
-            "Custo",
-            "Lucro",
-            "Margem",
-            "Crescimento",
-          ]}
-          rows={sub.map((i) => [
-            i.name,
-            num(i.quantity),
-            money(i.revenueCents),
-            money(i.costCents),
-            money(i.profitCents),
-            `${num(i.marginPercent)}%`,
-            `${num(i.growthPercent)}%`,
-          ])}
-        />
-      </div>
-    </>
-  );
-}
-const date = (v: unknown) =>
-  v ? new Date(`${String(v)}T12:00:00`).toLocaleDateString("pt-BR") : "Nunca";
-function Table({
-  title,
-  headers,
-  rows,
-}: {
-  title: string;
-  headers: string[];
-  rows: unknown[][];
-}) {
-  const canExport=useDashboardExport();
-  return (
-    <article className="finance-table-card analytics-table">
-      <header>
-        <div>
-          <span>{title}</span>
-          <strong>{rows.length} registro(s)</strong>
-        </div><button disabled={!canExport} onClick={()=>{if(canExport)downloadDashboardCsv(title,headers,rows)}}>CSV</button>
-      </header>
-      <div tabIndex={0} role="region" aria-label={`${title}: tabela completa com rolagem horizontal`}>
-        <table>
-          <thead>
-            <tr>
-              {headers.map((h) => (
-                <th key={h}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length ? (
-              rows.map((r, i) => (
-                <tr key={i}>
-                  {r.map((c, n) => (
-                    <td key={n} style={typeof c==='number'?heatmapStyle(c,rows.map(row=>Number(row[n]))):undefined}>{String(c ?? "—")}</td>
-                  ))}
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={headers.length}>Nenhum dado no período.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </article>
-  );
-}
+export type {Stock,Customer,Category};

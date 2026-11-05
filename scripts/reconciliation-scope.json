@@ -1337,6 +1337,132 @@
         "UXIP-001"
       ],
       "reason": "Approved login/recovery v2 presentation and directed regression only; preserve existing auth/session wiring, shared styles and original brand assets. Exact path; no backend or deployment."
+    },
+    "frontend/src/components/dashboard-v3/DashboardSurface.tsx": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Approved dashboard v3 integration on b753891: exact presentation, real existing controller wiring, complete original print, persistent compact alert placement and directed regression. No backend/auth/IAM/dependency or mock product changes."
+    },
+    "frontend/src/components/dashboard-v3/DashboardSurface.test.tsx": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Approved dashboard v3 integration on b753891: exact presentation, real existing controller wiring, complete original print, persistent compact alert placement and directed regression. No backend/auth/IAM/dependency or mock product changes."
+    },
+    "frontend/src/components/dashboard-v3/model.ts": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Approved dashboard v3 integration on b753891: exact presentation, real existing controller wiring, complete original print, persistent compact alert placement and directed regression. No backend/auth/IAM/dependency or mock product changes."
+    },
+    "frontend/src/components/dashboard-v3/geometry.ts": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Approved dashboard v3 integration on b753891: exact presentation, real existing controller wiring, complete original print, persistent compact alert placement and directed regression. No backend/auth/IAM/dependency or mock product changes."
+    },
+    "frontend/src/components/dashboard-v3/adapters.ts": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Approved dashboard v3 integration on b753891: exact presentation, real existing controller wiring, complete original print, persistent compact alert placement and directed regression. No backend/auth/IAM/dependency or mock product changes."
+    },
+    "frontend/src/components/dashboard-v3/dashboard.css": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Approved dashboard v3 integration on b753891: exact presentation, real existing controller wiring, complete original print, persistent compact alert placement and directed regression. No backend/auth/IAM/dependency or mock product changes."
+    },
+    "frontend/src/components/dashboard-v3/integration.ts": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Approved dashboard v3 integration on b753891: exact presentation, real existing controller wiring, complete original print, persistent compact alert placement and directed regression. No backend/auth/IAM/dependency or mock product changes."
+    },
+    "frontend/src/components/dashboard-v3/AnalysisDetails.tsx": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Approved dashboard v3 integration on b753891: exact presentation, real existing controller wiring, complete original print, persistent compact alert placement and directed regression. No backend/auth/IAM/dependency or mock product changes."
+    },
+    "frontend/src/components/dashboard-v3/DashboardPrintReport.tsx": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Approved dashboard v3 integration on b753891: exact presentation, real existing controller wiring, complete original print, persistent compact alert placement and directed regression. No backend/auth/IAM/dependency or mock product changes."
+    },
+    "frontend/public/dashboard-v3/card-art/finance.webp": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Approved dashboard v3 integration on b753891: exact presentation, real existing controller wiring, complete original print, persistent compact alert placement and directed regression. No backend/auth/IAM/dependency or mock product changes."
+    },
+    "frontend/public/dashboard-v3/card-art/receipt.webp": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Approved dashboard v3 integration on b753891: exact presentation, real existing controller wiring, complete original print, persistent compact alert placement and directed regression. No backend/auth/IAM/dependency or mock product changes."
+    },
+    "frontend/public/dashboard-v3/card-art/inventory.webp": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Approved dashboard v3 integration on b753891: exact presentation, real existing controller wiring, complete original print, persistent compact alert placement and directed regression. No backend/auth/IAM/dependency or mock product changes."
+    },
+    "frontend/public/dashboard-v3/card-art/customers.webp": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Approved dashboard v3 integration on b753891: exact presentation, real existing controller wiring, complete original print, persistent compact alert placement and directed regression. No backend/auth/IAM/dependency or mock product changes."
+    },
+    "frontend/public/dashboard-v3/card-art/store.webp": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Approved dashboard v3 integration on b753891: exact presentation, real existing controller wiring, complete original print, persistent compact alert placement and directed regression. No backend/auth/IAM/dependency or mock product changes."
+    },
+    "frontend/public/dashboard-v3/card-art/shipping.webp": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Approved dashboard v3 integration on b753891: exact presentation, real existing controller wiring, complete original print, persistent compact alert placement and directed regression. No backend/auth/IAM/dependency or mock product changes."
+    },
+    "frontend/src/hooks/useChannelAlertTarget.ts": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Approved dashboard v3 integration on b753891: exact presentation, real existing controller wiring, complete original print, persistent compact alert placement and directed regression. No backend/auth/IAM/dependency or mock product changes."
+    },
+    "frontend/src/channel-alert-placement.css": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Approved dashboard v3 integration on b753891: exact presentation, real existing controller wiring, complete original print, persistent compact alert placement and directed regression. No backend/auth/IAM/dependency or mock product changes."
+    },
+    "scripts/qa-browser/dashboard-v3.mjs": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Approved dashboard v3 integration on b753891: exact presentation, real existing controller wiring, complete original print, persistent compact alert placement and directed regression. No backend/auth/IAM/dependency or mock product changes."
+    },
+    "docs/dashboard-v3-integration.md": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Approved dashboard v3 integration on b753891: exact presentation, real existing controller wiring, complete original print, persistent compact alert placement and directed regression. No backend/auth/IAM/dependency or mock product changes."
+    },
+    "docs/dashboard-v3-core-delta.json": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Approved dashboard v3 integration on b753891: exact presentation, real existing controller wiring, complete original print, persistent compact alert placement and directed regression. No backend/auth/IAM/dependency or mock product changes."
+    },
+    "scripts/qa-browser/dashboard-v3-zoom.mjs": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Approved dashboard v3 integration on b753891: exact presentation, real existing controller wiring, complete original print, persistent compact alert placement and directed regression. No backend/auth/IAM/dependency or mock product changes."
     }
   },
   "bytePreserved": [

@@ -276,3 +276,11 @@ it('provides only the existing read-only platform contracts for isolated present
  expect((await qaOperation('PlatformBillingWorkspaceV2',{})).data).toMatchObject({_select:[{data:{total:0,invoices:[],summary:{receivableCents:'0'}}}]});
  expect(inspectFixtures()).toEqual(before);await expect(qaOperation('CreatePlatformTenant',{payload:{}})).rejects.toThrow('operação ainda sem fixture');
 });
+
+it('keeps pending alert fixtures isolated and requires matching acknowledgement identity/version',async()=>{
+ qaState.pendingChannelOrders=[{id:'pending-only',version:7,alertKind:'RECEPTION'}];
+ expect((await qaOperation('LatestPendingSalesChannelOrder')).data).toMatchObject({_select:[{data:{orders:[{id:'pending-only'}]}}]});
+ await expect(qaOperation('AcknowledgeSalesChannelOrderAlert',{id:'pending-only',version:6,alertKind:'RECEPTION'})).rejects.toThrow('alerta divergente');expect(qaState.pendingChannelOrders).toHaveLength(1);
+ qaState.permissions='read';await expect(qaOperation('AcknowledgeSalesChannelOrderAlert',{id:'pending-only',version:7,alertKind:'RECEPTION'})).rejects.toThrow('permissão negada');qaState.permissions='full';
+ expect(await qaOperation('AcknowledgeSalesChannelOrderAlert',{id:'pending-only',version:7,alertKind:'RECEPTION'})).toEqual({data:{_execute:1}});expect(qaState.pendingChannelOrders).toEqual([]);
+});

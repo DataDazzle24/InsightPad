@@ -96,10 +96,10 @@ export async function residual({page,output,sha,run,go,panel,wait,screenshot}){
   writeFileSync(output+'/ack-'+transfer+'.json',JSON.stringify({sha,operation:transfer?'transfer':'entry',operationId,uncertainNotice:await notice.count()===0?'dismissed after confirmation':'present',beforeCount:before.movements.length,persistedCount:persisted.movements.length,retryCount:after.movements.length,product:a},null,2));
  });
  await run('export-handlers-denied',async()=>{
-  await go('/dashboards/operacional');await page.getByRole('button',{name:'Clientes',exact:true}).click();await page.getByText('SEM COMPRAR QA 1201',{exact:true}).waitFor();await panel();await page.getByLabel('Permissões',{exact:true}).selectOption('noexport');await wait();
+  await go('/dashboards/operacional');await page.getByRole('button',{name:'Clientes',exact:true}).click();await page.locator('.dv-kpi').first().waitFor();await panel();await page.getByLabel('Permissões',{exact:true}).selectOption('noexport');await wait();
   const result=await page.evaluate(async()=>{
    let blobs=0,prints=0,handlers=0;const create=URL.createObjectURL,print=window.print;URL.createObjectURL=()=>{blobs++;return 'blob:qa-denied'};window.print=()=>prints++;
-   try{for(const b of document.querySelectorAll('button'))if(/^(CSV|PDF)$/.test(b.textContent.trim())){const key=Object.keys(b).find(k=>k.startsWith('__reactProps'));const handler=key&&b[key]?.onClick;if(handler){handlers++;await handler({preventDefault(){}})}}return {blobs,prints,handlers}}finally{URL.createObjectURL=create;window.print=print}
+   try{for(const b of document.querySelectorAll('button'))if(/^Exportar (CSV|PDF)/.test(b.getAttribute('aria-label')||'')){const key=Object.keys(b).find(k=>k.startsWith('__reactProps'));const handler=key&&b[key]?.onClick;if(handler){handlers++;await handler({preventDefault(){}})}}return {blobs,prints,handlers}}finally{URL.createObjectURL=create;window.print=print}
   });assert.ok(result.handlers>=3);assert.equal(result.blobs,0);assert.equal(result.prints,0);writeFileSync(output+'/denied-handlers.json',JSON.stringify({sha,...result,method:'invoke current React click callbacks despite disabled controls in isolated QA only'},null,2));
  });
  await run('stock-pending-duplicate',async()=>{
