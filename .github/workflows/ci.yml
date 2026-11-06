@@ -46,7 +46,7 @@ jobs:
           node scripts/normalize-dataconnect-sdk.mjs
           git diff --exit-code -- frontend/src/dataconnect-generated functions/src/dataconnect-admin-generated
       - name: Testar manifesto
-        run: node --test scripts/version-manifest.test.mjs scripts/ci-dev-config.test.mjs scripts/verify-reconciliation.test.mjs scripts/qa-browser/evidence.test.mjs
+        run: node --test scripts/version-manifest.test.mjs scripts/ci-dev-config.test.mjs scripts/verify-reconciliation.test.mjs scripts/qa-browser/evidence.test.mjs scripts/qa-browser/install-chromium.test.mjs
       - name: Conferir preservação da fonte recuperada
         run: |
           node scripts/verify-reconciliation.mjs
@@ -67,11 +67,12 @@ jobs:
         run: |
           npm --prefix frontend run test:qa
           npm --prefix frontend run build:qa
-      - name: Chromium e servidor QA no mesmo executor
+      - name: Bibliotecas do Chromium e PDF no executor descartável
         run: |
           npm --prefix scripts/qa-browser ci --ignore-scripts --no-audit --no-fund
-          timeout 480s node scripts/qa-browser/node_modules/playwright/cli.js install --with-deps chromium
-          sudo apt-get install -y poppler-utils
+          bash scripts/qa-browser/install-chromium.sh dependencies
+      - name: Chromium e servidor QA no mesmo executor
+        run: bash scripts/qa-browser/install-chromium.sh browser
       - name: Regressão do estado vazio de vendas
         run: node scripts/qa-browser/empty-sales.mjs
       - name: PostgreSQL 18 descartável (aborto e locks, sem rede)

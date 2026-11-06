@@ -1463,6 +1463,18 @@
         "UXIP-001"
       ],
       "reason": "Approved dashboard v3 integration on b753891: exact presentation, real existing controller wiring, complete original print, persistent compact alert placement and directed regression. No backend/auth/IAM/dependency or mock product changes."
+    },
+    "scripts/qa-browser/install-chromium.sh": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Directed CI provisioning correction after exit124 in required Chromium install; same lockfile/browser and all verification gates retained, bounded dependencies/download and one retry. Disposable runner only; no product/GCP resource change."
+    },
+    "scripts/qa-browser/install-chromium.test.mjs": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "Directed CI provisioning correction after exit124 in required Chromium install; same lockfile/browser and all verification gates retained, bounded dependencies/download and one retry. Disposable runner only; no product/GCP resource change."
     }
   },
   "bytePreserved": [
