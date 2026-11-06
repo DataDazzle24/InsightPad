@@ -14,10 +14,11 @@ test('public workflow uploads only sealed visual evidence and never a private ke
 
 test('CI runs sales empty-state regression after browser preparation and before sealing',()=>{
  const workflow=readFileSync(new URL('../../.github/workflows/ci.yml',import.meta.url),'utf8');
- const install=workflow.indexOf('playwright/cli.js install --with-deps chromium');
+ const libraries=workflow.indexOf('bash scripts/qa-browser/install-chromium.sh dependencies');
+ const install=workflow.indexOf('bash scripts/qa-browser/install-chromium.sh browser');
  const regression=workflow.indexOf('run: node scripts/qa-browser/empty-sales.mjs');
  const seal=workflow.indexOf('node scripts/qa-browser/seal.mjs');
- assert.ok(install>=0 && regression>install && seal>regression);
+ assert.ok(libraries>=0 && install>libraries && regression>install && seal>regression);
  assert.match(workflow,/Regressão do estado vazio de vendas\n\s+run: node scripts\/qa-browser\/empty-sales\.mjs/);
 });
 
