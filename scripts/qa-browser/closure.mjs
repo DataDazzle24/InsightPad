@@ -1,3 +1,4 @@
+import {usePosBranch} from './pos-branch.mjs';
 import assert from 'node:assert/strict';
 import {readFileSync,writeFileSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
@@ -82,7 +83,7 @@ export async function closure({page,output,sha,run,go,panel,wait,screenshot}){
   for(let i=0;i<12&&await d.getByRole('button',{name:'Próxima',exact:true}).count();i++)await d.getByRole('button',{name:'Próxima',exact:true}).click();await d.getByRole('button',{name:'Salvar',exact:true}).click();await page.getByRole('alertdialog').getByRole('button',{name:'Confirmar',exact:true}).click();await d.waitFor({state:'hidden'});await page.getByPlaceholder('Pesquisar...').fill('CADASTRO EDITADO QA');await page.getByRole('row').filter({hasText:'CADASTRO EDITADO QA'}).waitFor();
  });
  await run('closure-integrated-sale-cash-stock-cancel-and-export',async()=>{
-  await go('/cadastros/categorias');await page.evaluate(()=>{window.__insightpadQa.flow();location.hash='#/vendas/frente-de-caixa'});await wait();await page.getByLabel(/^Filial/).selectOption({label:'MATRIZ QA'});
+  await go('/cadastros/categorias');await page.evaluate(()=>{window.__insightpadQa.flow();location.hash='#/vendas/frente-de-caixa'});await wait();await usePosBranch(page);
   const before=await inspect();await page.getByPlaceholder('Código, EAN ou nome').fill('PRODUTO QA 002');await page.getByRole('option').filter({hasText:'PRODUTO QA 002'}).first().click();await page.getByLabel(/^Quantidade/).fill('2');await page.getByRole('button',{name:/Adicionar ao carrinho/}).click();await page.getByRole('button',{name:/Ir para pagamento/}).click();await page.getByLabel('Valor do pagamento 1',{exact:true}).fill('3000');await page.getByRole('button',{name:/Concluir venda/}).click();await page.getByText(/Venda concluída/i).first().waitFor();
   const sold=await inspect();assert.equal(sold.sessions[0].expectedAmountCents,'12400');assert.equal(sold.products[0].balances[0].quantity,8);const id=sold.sales[0].id;assert.equal(sold.sales[0].changeCents,600);
   await page.evaluate(()=>location.hash='#/vendas/registros');await page.getByRole('button',{name:'Detalhes',exact:true}).waitFor();const csv=await download(page.getByRole('button',{name:'Exportar CSV',exact:true}),'sales');assert.equal(csv.length,2);assert.equal(csv[1][0],id);assert.match(csv[1][9],/24,00/);assert.match(csv[1][10],/6,00/);

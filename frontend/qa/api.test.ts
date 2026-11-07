@@ -284,3 +284,9 @@ it('keeps pending alert fixtures isolated and requires matching acknowledgement 
  qaState.permissions='read';await expect(qaOperation('AcknowledgeSalesChannelOrderAlert',{id:'pending-only',version:7,alertKind:'RECEPTION'})).rejects.toThrow('permissão negada');qaState.permissions='full';
  expect(await qaOperation('AcknowledgeSalesChannelOrderAlert',{id:'pending-only',version:7,alertKind:'RECEPTION'})).toEqual({data:{_execute:1}});expect(qaState.pendingChannelOrders).toEqual([]);
 });
+it('PDV v2 fixture matches real branch-bound session and authorized stock contracts',async()=>{
+ expect((await qaOperation('SalesWorkspace',{branchId:null})).data).toMatchObject({_select:[{data:{openSession:null,products:[]}}]});
+ expect((await qaOperation('SalesWorkspace',{branchId:uuid(2)})).data).toMatchObject({_select:[{data:{openSession:null}}]});
+ qaState.allowedBranches=[uuid(2)];const response=(await qaOperation('PosProductBranches',{productId:uuid(101)})).data as {_select:{branchId:string;branchName:string;physicalQuantity:number;reservedQuantity:number;quantity:number}[]};
+ expect(response._select).toHaveLength(1);expect(response._select[0]).toMatchObject({branchId:uuid(2),branchName:'FILIAL QA',reservedQuantity:0});expect(response._select[0]!.quantity).toBe(response._select[0]!.physicalQuantity-response._select[0]!.reservedQuantity)
+})

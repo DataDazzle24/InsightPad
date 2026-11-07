@@ -8,11 +8,11 @@ import { CashSessionModal } from '../components/CashSessionModal'
 import type { DataConnect } from 'firebase/data-connect'
 import { DataConnectError } from '@firebase/data-connect'
 import { qaOperation, qaState, resetFixtures, inspectFixtures, uuid } from '../../qa/api'
-const api=vi.hoisted(()=>({execute:vi.fn(),requestApproval:vi.fn(),approvalStatus:vi.fn(),sessionToken:'synthetic-session'}))
+const api=vi.hoisted(()=>({execute:vi.fn(),requestApproval:vi.fn(),approvalStatus:vi.fn(),workspace:vi.fn(),sessionToken:'synthetic-session'}))
 vi.mock('firebase/data-connect',()=>({executeMutation:api.execute,mutationRef:(_dc:unknown,name:string,variables:Record<string,unknown>)=>({name,variables:{...variables,sessionToken:api.sessionToken}})}))
-vi.mock('@insightpad/dataconnect',()=>({updatePosPolicy:vi.fn(),requestPosCashApproval:api.requestApproval,posCashApprovalStatus:api.approvalStatus}))
+vi.mock('@insightpad/dataconnect',()=>({updatePosPolicy:vi.fn(),requestPosCashApproval:api.requestApproval,posCashApprovalStatus:api.approvalStatus,salesWorkspace:api.workspace}))
 let root:Root,container:HTMLDivElement
-beforeEach(()=>{vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);api.execute.mockReset();api.requestApproval.mockReset();api.approvalStatus.mockReset();api.sessionToken='synthetic-session';resetFixtures();Object.assign(qaState,{fail:false,empty:false,delay:0,permissions:'full',allowedBranches:[],cashAckLoss:false});container=document.createElement('div');document.body.append(container);root=createRoot(container)})
+beforeEach(()=>{vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);api.execute.mockReset();api.workspace.mockReset();api.requestApproval.mockReset();api.approvalStatus.mockReset();api.sessionToken='synthetic-session';resetFixtures();Object.assign(qaState,{fail:false,empty:false,delay:0,permissions:'full',allowedBranches:[],cashAckLoss:false});container=document.createElement('div');document.body.append(container);root=createRoot(container)})
 afterEach(async()=>{await act(async()=>root.unmount());container.remove();vi.restoreAllMocks();vi.unstubAllGlobals()})
 const buttons=()=>[...container.querySelectorAll('button')]
 const button=(text:string)=>{const result=buttons().find(el=>el.textContent?.includes(text));if(!result)throw Error(text);return result}
@@ -158,4 +158,69 @@ it('CASH-ACK-SDK-AD: approved close retries the SQL instruction instead of reque
  api.execute.mockImplementation(sdkExecute);api.requestApproval.mockResolvedValue({data:{_execute:1}});api.approvalStatus.mockResolvedValue({data:{_select:[{status:'APPROVED'}]}});
  await act(async()=>root.render(<CashSessionModal {...props}/>));await click('Fechar meu caixa');await cashInput('textarea','Conferência');await submitCash();expect(api.execute).not.toHaveBeenCalled();await submitCash();expect(container.querySelector('fieldset')!.disabled).toBe(true);
  api.approvalStatus.mockResolvedValue({data:{_select:[{status:'USED'}]}});await submitCash();expect(api.requestApproval).toHaveBeenCalledOnce();expect(api.approvalStatus).toHaveBeenCalledOnce();expect(api.execute.mock.calls[1][0]).toEqual(api.execute.mock.calls[0][0]);expect(inspectFixtures().sessions[0]!.status).toBe('CLOSED');expect(props.onClose).toHaveBeenCalledOnce();
+})
+
+// PDV v2: only an acknowledged opening or an owned session read may bind branch.
+const eligible=[{id:'branch',name:'MATRIZ'},{id:'other',name:'FILIAL'}]
+const selectOpening=async(value:string)=>{
+ await act(async()=>{const el=container.querySelector('select')!;Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype,'value')!.set!.call(el,value);el.dispatchEvent(new Event('change',{bubbles:true}))});
+ await act(async()=>{await new Promise(resolve=>setTimeout(resolve,10))})
+}
+const openingProps=()=>({dc:{} as DataConnect,branchId:'branch',branchName:'MATRIZ',branches:eligible,canOpen:true,canManage:false,onClose:vi.fn(),onChanged:vi.fn(async()=>{}),onOpened:vi.fn(async(branch:string)=>{void branch}),onNotice:vi.fn()})
+const lookup=(open:typeof session|null=null)=>({data:{_select:[{data:{branches:eligible,openSession:open}}]}})
+const renderOpening=async(props:ReturnType<typeof openingProps>)=>{
+ api.workspace.mockResolvedValue(lookup());await act(async()=>root.render(<CashSessionModal {...props}/>));await act(async()=>{await new Promise(resolve=>setTimeout(resolve,10))})
+}
+it('PDV-v2: branch selection is draft; cancel does not change the product context',async()=>{
+ const props=openingProps();await renderOpening(props);await selectOpening('other');await click('Cancelar');
+ expect(props.onClose).toHaveBeenCalledOnce();expect(props.onOpened).not.toHaveBeenCalled();expect(props.onChanged).not.toHaveBeenCalled();expect(api.execute).not.toHaveBeenCalled();
+ expect(api.workspace.mock.calls.at(-1)?.[1].branchId).toBe('other')
+})
+it('PDV-v2: unique branch prefilled and disabled, invalid/unauthorized handler rejected',async()=>{
+ const props={...openingProps(),branchId:'',branches:[eligible[1]]};await renderOpening(props);
+ expect(container.querySelector('select')?.value).toBe('other');expect(container.querySelector('select')?.disabled).toBe(true);
+ await act(async()=>root.render(<CashSessionModal {...props} canOpen={false}/>));await submitCash();expect(api.execute).not.toHaveBeenCalled();expect(props.onOpened).not.toHaveBeenCalled()
+})
+it('PDV-v2: cart/correction lock rejects a synthetic different-branch submit',async()=>{
+ const props={...openingProps(),branchLocked:true};await renderOpening(props);expect(container.querySelector('select')?.disabled).toBe(true);
+ await selectOpening('other');await submitCash();expect(api.execute).not.toHaveBeenCalled();expect(props.onOpened).not.toHaveBeenCalled()
+})
+it('PDV-v2: positive opening binds only chosen eligible branch with original service fields',async()=>{
+ const props=openingProps();await renderOpening(props);await selectOpening('other');api.execute.mockResolvedValue({data:{_execute:1}});await cashInput('input','5000');await submitCash();
+ expect(api.execute).toHaveBeenCalledOnce();expect(api.execute.mock.calls[0][0]).toMatchObject({name:'OpenCashSession',variables:{branchId:'other',openingAmountCents:5000,notes:''}});
+ expect(api.execute.mock.calls[0][0].variables).not.toHaveProperty('operationId');expect(props.onOpened).toHaveBeenCalledExactlyOnceWith('other');expect(props.onClose).toHaveBeenCalledOnce()
+})
+it('PDV-v2: existing owned session resumes by reading, without new opening',async()=>{
+ const props=openingProps();await renderOpening(props);api.workspace.mockResolvedValue(lookup(session));await selectOpening('other');expect(button('Retomar caixa')).toBeTruthy();await submitCash();
+ expect(api.execute).not.toHaveBeenCalled();expect(props.onOpened).toHaveBeenCalledExactlyOnceWith('other')
+})
+it('PDV-v2: lost opening ACK reconciles same branch read; no duplicate opening',async()=>{
+ const props=openingProps();await renderOpening(props);api.execute.mockRejectedValue(new TypeError('Failed to fetch'));await submitCash();expect(container.querySelector('select')?.matches(':disabled')).toBe(true);
+ expect(button('Cancelar').disabled).toBe(true);await act(async()=>{(container.querySelector('[aria-label="Fechar controle de caixa"]') as HTMLButtonElement).click()});expect(props.onClose).not.toHaveBeenCalled();
+ api.workspace.mockResolvedValue(lookup(session));await submitCash();expect(api.execute).toHaveBeenCalledOnce();expect(props.onOpened).toHaveBeenCalledExactlyOnceWith('branch');expect(props.onClose).toHaveBeenCalledOnce()
+})
+it('PDV-v2: uncertain uncommitted opening repeats identical frozen reference after bounded read',async()=>{
+ const props=openingProps();await renderOpening(props);api.execute.mockRejectedValueOnce(new TypeError('Failed to fetch')).mockResolvedValueOnce({data:{_execute:1}});await cashInput('input','2500');await submitCash();const first=api.execute.mock.calls[0][0];await submitCash();
+ expect(api.execute.mock.calls[1][0]).toBe(first);expect(api.workspace).toHaveBeenCalledTimes(2);expect(props.onOpened).toHaveBeenCalledOnce()
+})
+it('PDV-v2: SDK secret change blocks uncertain opening replay',async()=>{
+ const props=openingProps();await renderOpening(props);api.execute.mockRejectedValue(new TypeError('Failed to fetch'));await submitCash();api.sessionToken='new-session';await submitCash();expect(api.execute).toHaveBeenCalledOnce();expect(props.onOpened).not.toHaveBeenCalled()
+})
+it('PDV-v2: confirmed opening plus refresh failure retries context only',async()=>{
+ const props=openingProps();props.onOpened.mockRejectedValueOnce(Error('read failed')).mockResolvedValueOnce();await renderOpening(props);api.execute.mockResolvedValue({data:{_execute:1}});await submitCash();expect(button('Atualizar contexto')).toBeTruthy();await submitCash();
+ expect(api.execute).toHaveBeenCalledOnce();expect(props.onOpened).toHaveBeenCalledTimes(2);expect(props.onClose).toHaveBeenCalledOnce()
+})
+it('PDV-v2: refused opening leaves branch unbound; reread required before retry',async()=>{
+ const props=openingProps();await renderOpening(props);api.execute.mockRejectedValue(Object.assign(Error('SESSION_REQUIRED'),{name:'DataConnectOperationError',code:'partial-error',response:{errors:[{message:'SESSION_REQUIRED',path:['session']}]}}));await submitCash();
+ expect(props.onOpened).not.toHaveBeenCalled();expect(props.onClose).not.toHaveBeenCalled();expect(button('Abrir caixa').disabled).toBe(true);await click('Conferir sessão');await act(async()=>{await new Promise(resolve=>setTimeout(resolve,10))});expect(button('Abrir caixa').disabled).toBe(false)
+})
+it('PDV-v2: stale branch session read cannot replace the newer draft result',async()=>{
+ const props=openingProps();let resolve!:(result:ReturnType<typeof lookup>)=>void;api.workspace.mockImplementationOnce(()=>new Promise(r=>{resolve=r})).mockResolvedValue(lookup(session));
+ await act(async()=>root.render(<CashSessionModal {...props}/>));await act(async()=>{await new Promise(r=>setTimeout(r,10))});await selectOpening('other');await act(async()=>resolve(lookup()));
+ expect(button('Retomar caixa')).toBeTruthy();await submitCash();expect(props.onOpened).toHaveBeenCalledExactlyOnceWith('other');expect(api.execute).not.toHaveBeenCalled()
+})
+it('PDV-v2: double submit while opening is in flight produces one mutation',async()=>{
+ const props=openingProps();await renderOpening(props);let resolve!:(value:{data:{_execute:number}})=>void;api.execute.mockImplementationOnce(()=>new Promise(r=>{resolve=r}));
+ await act(async()=>{for(let i=0;i<2;i++)container.querySelector('form')!.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}))});
+ expect(api.execute).toHaveBeenCalledOnce();expect(props.onOpened).not.toHaveBeenCalled();await act(async()=>resolve({data:{_execute:1}}));expect(props.onOpened).toHaveBeenCalledOnce()
 })

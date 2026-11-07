@@ -1,3 +1,4 @@
+import {usePosBranch} from './pos-branch.mjs';
 import assert from 'node:assert/strict';
 import {mkdirSync,writeFileSync} from 'node:fs';
 
@@ -62,7 +63,7 @@ export async function interfaceProof({page,output,sha}) {
  });
  for(const theme of ['light','dark'])for(const [width,height]of[[1280,800],[1024,600],[390,844],[320,568]])await run(`pos-payment-${theme}-${width}`,async()=>{
   await page.setViewportSize({width,height});await go('/vendas/frente-de-caixa',theme);
-  await page.getByLabel(/^Filial/).selectOption({label:'MATRIZ QA'});await page.getByPlaceholder('Código, EAN ou nome').fill('PRODUTO QA 002');await page.getByRole('option').filter({hasText:'PRODUTO QA 002'}).first().click();await page.getByRole('button',{name:/Adicionar ao carrinho/}).click();
+  await usePosBranch(page);await page.getByPlaceholder('Código, EAN ou nome').fill('PRODUTO QA 002');await page.getByRole('option').filter({hasText:'PRODUTO QA 002'}).first().click();await page.getByRole('button',{name:/Adicionar ao carrinho/}).click();
   await page.waitForFunction(()=>document.activeElement===document.querySelector('.pos-search-input input'));
   await page.locator('.pos-quantity-input').fill('2');const cart=await picture(`pos-${theme}-${width}`);
   await page.getByRole('button',{name:/Ir para pagamento/}).click();const dialog=page.getByRole('dialog').last();

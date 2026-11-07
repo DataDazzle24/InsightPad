@@ -23,7 +23,7 @@ for(const family of families){
  const path='frontend/src/'+family,before=attributes(git('show',baseline+':'+path),path),after=attributes(readFileSync(path,'utf8'),path);
  for(const [attribute,count]of before)assert.ok((after.get(attribute)??0)>=count,`${path}: removed or changed business wiring ${attribute}`);
 }
-for(const path of ['frontend/src/App.css','frontend/src/index.css','frontend/src/home-header-refinements.css','frontend/src/sidebar-refinements.css','frontend/src/components/CashSessionModal.tsx','frontend/src/components/PosApprovalsModal.tsx','frontend/src/pages/PointOfSalePage.tsx','frontend/src/pages/StockPage.tsx','frontend/src/pages/MasterDataPage.tsx','frontend/src/pages/PlatformAdminPage.tsx','frontend/src/pages/SalesManagementPage.tsx','frontend/src/utils/salesOffline.ts','frontend/src/hooks/useModalIsolation.ts','frontend/src/hooks/useDialogAccessibility.ts'])assert.equal(readFileSync(path,'utf8').trim(),git('show',baseline+':'+path),`Functional or print source changed: ${path}`);
+for(const path of ['frontend/src/App.css','frontend/src/index.css','frontend/src/home-header-refinements.css','frontend/src/sidebar-refinements.css','frontend/src/components/PosApprovalsModal.tsx','frontend/src/pages/StockPage.tsx','frontend/src/pages/MasterDataPage.tsx','frontend/src/pages/PlatformAdminPage.tsx','frontend/src/pages/SalesManagementPage.tsx','frontend/src/utils/salesOffline.ts','frontend/src/hooks/useModalIsolation.ts','frontend/src/hooks/useDialogAccessibility.ts'])assert.equal(readFileSync(path,'utf8').trim(),git('show',baseline+':'+path),`Functional or print source changed: ${path}`);
 const changed=git('diff','--name-only',baseline).split('\n').filter(Boolean);
 assert.ok(!changed.some(p=>/^(dataconnect\/|functions\/|frontend\/src\/dataconnect-generated\/|frontend\/src\/auth\/)/.test(p)||/package(?:-lock)?\.json$/.test(p)),'Visual scope changed domain/backend/dependencies');
 const css=readFileSync('frontend/src/interface.css','utf8');assert.ok(!css.includes('!important')&&!/@media\s+print/.test(css),'Screen stylesheet must not weaken cascade or redesign print');
@@ -134,3 +134,23 @@ for(const [page,id]of [['SubcategoryPage','subcategory-name-0'],['CategoryPage',
 const restoredCatalogFile=parse(catalogPath,restoredCatalog),catalogBefore=parse(catalogPath,git('show','a440615bd4b807b6b1484368c32d4149e20ba042:'+catalogPath));
 assert.equal(canonical(restoredCatalogFile,restoredCatalogFile),canonical(catalogBefore,catalogBefore),'Catalog changed beyond the authorized failed-submit focus correction; JSX, validation, requests and data must survive');
 console.log('Catalog: exact post-unmount focus exception; original JSX, validation, API calls, drafts and mutations preserved.');
+
+// PDV v2 explicitly replaces the route presentation/branch draft, not sale,
+// queue, scanner, approval, money, receipt or shared-shell contracts.
+const pdvBase='8efbd9d34e00b9d46a92f545d7d335368ce8f825';
+for(const [path,names] of [
+ ['frontend/src/pages/PointOfSalePage.tsx',['finish','sync','readProductCode','openCheckout','setPaymentAmount','printReceipt']],
+ ['frontend/src/components/CashSessionModal.tsx',['definitiveCashRefusal','refreshConfirmed','signature','movementType','requiresApproval','instruction','operationId']]
+]){
+ const before=parse(path,git('show',pdvBase+':'+path)),after=parse(path,readFileSync(path,'utf8'));
+ for(const name of names)assert.equal(canonical(after,namedNode(after,name)),canonical(before,namedNode(before,name)),`${path}: protected PDV financial contract ${name} changed`);
+}
+for(const path of ['frontend/src/layout/AppLayout.tsx','frontend/src/interface.css','frontend/src/components/SalesUi.tsx','frontend/src/utils/sales.ts','frontend/src/utils/salesOffline.ts','frontend/src/utils/receipt.ts','frontend/src/utils/serverReceipt.ts'])assert.equal(readFileSync(path,'utf8').trim(),git('show',pdvBase+':'+path),`PDV v2 must preserve shared/financial source ${path}`);
+const pdvCss=postcss.parse(readFileSync('frontend/src/pages/PointOfSalePage.v2.css','utf8'));
+pdvCss.walkRules(rule=>{
+ if(rule.parent.type==='atrule'&&rule.parent.name==='keyframes')return;
+ assert.ok(rule.selectors.every(selector=>selector.includes('.ip-pos-route')||selector.includes('.ip-pos-modal')),`PDV selector escapes route/modal: ${rule.selector}`);
+ let screen=false;for(let parent=rule.parent;parent;parent=parent.parent)if(parent.type==='atrule'&&parent.name==='media'&&parent.params==='screen')screen=true;
+ assert.ok(screen,`PDV styles must be screen-only: ${rule.selector}`);
+});
+console.log('PDV v2 scope: sale/queue/scanner/payment/receipt and cash financial instructions preserved; all new CSS is screen-only and route/modal scoped.');

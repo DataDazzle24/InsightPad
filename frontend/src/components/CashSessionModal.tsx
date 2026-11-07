@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import {
   executeMutation,
   mutationRef,
@@ -6,7 +6,7 @@ import {
   type MutationRef,
 } from "firebase/data-connect";
 import { useDialogAccessibility } from "../hooks/useDialogAccessibility";
-import { updatePosPolicy, requestPosCashApproval, posCashApprovalStatus } from "@insightpad/dataconnect";
+import { updatePosPolicy, requestPosCashApproval, posCashApprovalStatus, salesWorkspace } from "@insightpad/dataconnect";
 import { maskMoney, parseMoney } from "../utils/stock";
 
 type Session = {
@@ -49,6 +49,10 @@ export function CashSessionModal({
   dc,
   branchId,
   branchName,
+  branches = [],
+  branchLocked = false,
+  canOpen = false,
+  onOpened,
   session,
   canManage,
   policy,
@@ -60,6 +64,10 @@ export function CashSessionModal({
   dc: DataConnect;
   branchId: string;
   branchName: string;
+  branches?: ReadonlyArray<{id: string; name: string}>;
+  branchLocked?: boolean;
+  canOpen?: boolean;
+  onOpened?: (branchId: string) => void | Promise<void>;
   session?: Session | null;
   canManage: boolean;
   pendingCount?: number;
@@ -78,15 +86,87 @@ export function CashSessionModal({
     [confirmed,setConfirmed]=useState(false),
     [waitingApproval,setWaitingApproval] = useState(false),
     [draftPolicy, setDraftPolicy] = useState<PosPolicy>(policy ?? {requireOpenSession:true, operatorDiscountPercent:0, operatorSurchargePercent:0, allowOperatorClose:false,operatorWithdrawalLimitCents:0,operatorCloseDifferenceLimitCents:0});
+  const [openingBranchId, setOpeningBranchId] = useState(() => branches.some(b => b.id === branchId) ? branchId : branches.length === 1 ? branches[0].id : "");
+  const [openingLookup, setOpeningLookup] = useState<{branchId:string; session:Session|null; error:boolean; busy:boolean}>({branchId:"",session:null,error:false,busy:false});
+  const [lookupAttempt, setLookupAttempt] = useState(0);
+  const opening = useRef<{dc:DataConnect; branchId:string; signature:string; payload:Record<string,unknown>; reference:MutationRef<{_execute?:unknown},Record<string,unknown>>; state:"uncertain"|"confirmed"} | null>(null);
+  const lookupSequence = useRef(0);
+  const openingAllowed = branches.some(b => b.id === openingBranchId) && (!branchLocked || openingBranchId === branchId);
+  const readOpeningSession = useCallback(async (selectedBranch:string) => {
+    const result = await salesWorkspace(dc,{branchId:selectedBranch,requestKey:crypto.randomUUID()});
+    const data = (result.data._select?.[0] as {data?:{branches?:{id:string}[];openSession?:Session|null}}|undefined)?.data;
+    if (!data?.branches?.some(b => b.id === selectedBranch)) throw new Error("Filial não disponível para este usuário.");
+    return data.openSession ?? null;
+  },[dc]);
+  useEffect(() => {
+    const request = ++lookupSequence.current;
+    if (mode !== "open" || !openingAllowed || opening.current) return;
+    let disposed = false;
+    // A single authorized branch lookup; never enumerate sessions across branches.
+    const timer = setTimeout(() => {
+      setOpeningLookup({branchId:openingBranchId,session:null,error:false,busy:true});
+      void readOpeningSession(openingBranchId).then(found => {
+        if (!disposed && request === lookupSequence.current) setOpeningLookup({branchId:openingBranchId,session:found,error:false,busy:false});
+      }).catch(() => {
+        if (!disposed && request === lookupSequence.current) setOpeningLookup({branchId:openingBranchId,session:null,error:true,busy:false});
+      });
+    },0);
+    return () => { disposed = true; clearTimeout(timer) };
+  }, [readOpeningSession,mode,openingBranchId,openingAllowed,lookupAttempt]);
   const inFlight = useRef(false), operation = useRef<CashInstruction | null>(null);
-  const instructionLocked = () => inFlight.current || operation.current?.state === "uncertain" || operation.current?.state === "confirmed";
-  const close = () => { if (!inFlight.current && operation.current?.state !== "uncertain") onClose() };
+  const instructionLocked = () => inFlight.current || Boolean(opening.current) || operation.current?.state === "uncertain" || operation.current?.state === "confirmed";
+  const close = () => { if (!inFlight.current && opening.current?.state !== "uncertain" && operation.current?.state !== "uncertain") onClose() };
   useDialogAccessibility(true, close);
   const expected = Number(session?.expectedAmountCents ?? 0);
   const uncertainNotice = (id: string) => onNotice(`Confirmação do caixa incerta. Repita sem alterar os dados. Referência: ${id}`);
   async function refreshConfirmed() {
     try { await onChanged(); onClose() }
     catch { onNotice(`Operação do caixa confirmada, mas não foi possível atualizar o saldo. Tente atualizar novamente. Referência: ${operation.current?.id ?? ""}`) }
+  }
+  async function submitOpening() {
+    if (!openingAllowed || !canOpen || !onOpened) { onNotice("Selecione uma filial autorizada para abrir seu caixa."); return }
+    if (!navigator.onLine) { onNotice("Conecte-se para operar o caixa."); return }
+    const amountCents = parseMoney(amount);
+    if (!Number.isSafeInteger(amountCents) || amountCents < 0) { onNotice("Informe um valor válido."); return }
+    const signature = JSON.stringify({branchId:openingBranchId,activeBranchId:branchId,branchLocked,canOpen,amountCents,notes});
+    const previous = opening.current;
+    if (previous && (previous.dc !== dc || previous.signature !== signature || JSON.stringify(mutationRef(dc,"OpenCashSession",previous.payload).variables) !== JSON.stringify(previous.reference.variables))) {
+      onNotice("O contexto da abertura mudou. Preserve esta confirmação e confira a sessão antes de continuar."); return;
+    }
+    if (!previous && (openingLookup.busy || openingLookup.error || openingLookup.branchId !== openingBranchId)) { onNotice("Confira a sessão desta filial antes de abrir o caixa."); return }
+    inFlight.current = true; setBusy(true);
+    let dispatched = false;
+    try {
+      if (previous?.state !== "confirmed") {
+        // OpenCashSession has no operationId. Reconcile a lost ACK by reading the
+        // same user's session in the same branch before considering a replay.
+        const existing = previous ? await readOpeningSession(openingBranchId) : openingLookup.session;
+        if (!existing) {
+          const payload = previous?.payload ?? Object.freeze({branchId:openingBranchId,openingAmountCents:amountCents,notes});
+          const reference = previous?.reference ?? mutationRef<{_execute?:unknown},Record<string,unknown>>(dc,"OpenCashSession",payload);
+          Object.freeze(reference.variables);
+          opening.current = previous ?? {dc,branchId:openingBranchId,signature,payload,reference,state:"uncertain"};
+          dispatched = true;
+          const result = await executeMutation(reference);
+          if (typeof result.data._execute !== "number" || !Number.isSafeInteger(result.data._execute) || result.data._execute <= 0) throw new Error("Abertura sem confirmação positiva.");
+        }
+        if (opening.current) opening.current = {...opening.current,state:"confirmed"};
+        else opening.current = {dc,branchId:openingBranchId,signature,payload:{branchId:openingBranchId,openingAmountCents:amountCents,notes},reference:mutationRef(dc,"OpenCashSession",{branchId:openingBranchId,openingAmountCents:amountCents,notes}),state:"confirmed"};
+        setConfirmed(true); setUncertain(false);
+        onNotice(existing ? "Caixa existente retomado." : "Caixa aberto com sucesso.");
+      }
+      await onOpened(openingBranchId); onClose();
+    } catch (error) {
+      if (opening.current?.state === "confirmed") {
+        onNotice("A abertura foi confirmada. Atualize o contexto para carregar seu caixa.");
+      } else if (previous || dispatched && !definitiveCashRefusal(error)) {
+        setUncertain(true); onNotice("Confirmação da abertura incerta. Confira novamente sem alterar a filial ou os valores.");
+      } else {
+        opening.current = null; setUncertain(false);
+        setOpeningLookup(current => ({...current,error:true}));
+        onNotice("A abertura foi recusada. Confira a sessão, a filial e suas permissões antes de tentar novamente.");
+      }
+    } finally { inFlight.current = false; setBusy(false) }
   }
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -96,6 +176,7 @@ export function CashSessionModal({
       try { await refreshConfirmed() } finally { inFlight.current = false; setBusy(false) }
       return;
     }
+    if (mode === "open") { await submitOpening(); return }
     const amountCents = parseMoney(amount);
     const financial = ["supply", "withdrawal", "close"].includes(mode);
     const signature = JSON.stringify({branchId,sessionId:session?.id,canManage,mode,amountCents,notes});
@@ -148,14 +229,6 @@ export function CashSessionModal({
       }
       let result;
       if (mode === "policy") result = await updatePosPolicy(dc, {...draftPolicy,operatorWithdrawalLimitCents:String(draftPolicy.operatorWithdrawalLimitCents ?? 0),operatorCloseDifferenceLimitCents:String(draftPolicy.operatorCloseDifferenceLimitCents ?? 0)});
-      else if (mode === "open")
-        result = await executeMutation(
-          mutationRef(dc, "OpenCashSession", {
-            branchId,
-            openingAmountCents: amountCents,
-            notes,
-          }),
-        );
       else {
         dispatched = true;
         result = await executeMutation(instruction!.reference);
@@ -165,9 +238,7 @@ export function CashSessionModal({
         throw new Error(financial ? "Resposta do caixa sem confirmação positiva." : "A operação foi recusada pelas regras do caixa.");
       if (instruction) { operation.current = {...instruction,state:"confirmed"}; setConfirmed(true); setUncertain(false) }
       onNotice(
-        mode === "policy" ? "Regras do caixa atualizadas." : mode === "open"
-          ? "Caixa aberto com sucesso."
-          : mode === "close"
+        mode === "policy" ? "Regras do caixa atualizadas." : mode === "close"
             ? "Caixa fechado e conferido."
             : mode === "supply"
               ? "Suprimento registrado."
@@ -290,6 +361,13 @@ export function CashSessionModal({
         ) : (
           <form onSubmit={submit}>
             <fieldset disabled={busy || waitingApproval || uncertain || confirmed} className="master-form-grid">
+              {mode === "open" && <>
+                <label className="wide"><span>Filial</span><select aria-label="Filial" required value={openingBranchId} disabled={branches.length === 1 || branchLocked} onChange={event => {if(!instructionLocked())setOpeningBranchId(event.target.value)}}>
+                  <option value="">Selecione a filial</option>{branches.map(branch => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
+                </select></label>
+                {branchLocked && <p className="wide">O carrinho ou a correção mantém este caixa na filial atual.</p>}
+                {openingAllowed && <p className="wide" role="status">{openingLookup.branchId !== openingBranchId || openingLookup.busy ? "Conferindo a sessão desta filial..." : openingLookup.error ? "Não foi possível conferir a sessão desta filial." : openingLookup.session ? "Você já tem um caixa aberto nesta filial. Retome a sessão existente." : "A abertura será confirmada nesta filial."}</p>}
+              </>}
               <label>
                 <span>
                   {mode === "open"
@@ -337,12 +415,13 @@ export function CashSessionModal({
               >
                 {session ? "Voltar" : draftPolicy.requireOpenSession ? "Cancelar" : "Seguir sem abrir"}
               </button>
+              {mode === "open" && openingLookup.error && !uncertain && !confirmed && <button type="button" disabled={busy} onClick={() => setLookupAttempt(value => value+1)}>Conferir sessão</button>}
               {!session && canManage && <button type="button" disabled={busy} onClick={() => {if(!instructionLocked())setMode("policy")}}>Regras da empresa</button>}
-              <button className="catalog-primary" disabled={busy}>
-                {confirmed ? "Atualizar saldo" : uncertain ? "Repetir confirmação" : waitingApproval ? "Verificar aprovação e concluir" : busy
+              <button className="catalog-primary" disabled={busy || mode === "open" && (!openingAllowed || !canOpen || !onOpened || !uncertain && !confirmed && (openingLookup.busy || openingLookup.error || openingLookup.branchId !== openingBranchId))}>
+                {confirmed && mode === "open" ? "Atualizar contexto" : confirmed ? "Atualizar saldo" : uncertain ? "Repetir confirmação" : waitingApproval ? "Verificar aprovação e concluir" : busy
                   ? "Processando..."
                   : mode === "open"
-                    ? "Abrir caixa"
+                    ? openingLookup.session ? "Retomar caixa" : "Abrir caixa"
                     : mode === "close"
                       ? "Confirmar fechamento"
                       : "Registrar"}

@@ -89,7 +89,8 @@
     "DES-2026-001",
     "DES-2026-002",
     "DES-2026-003",
-    "UXIP-001"
+    "UXIP-001",
+    "PDV-V2-20261107"
   ],
   "paths": {
     ".gitignore": {
@@ -293,9 +294,10 @@
         "AJU-PDV-02",
         "AJU-PDV-03",
         "AJU-PDV-04",
-        "AJU-PDV-05"
+        "AJU-PDV-05",
+        "PDV-V2-20261107"
       ],
-      "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão."
+      "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão. Frente de Caixa v2 explicitamente autorizada em 2026-11-07: apresentação/filial em rascunho, sem backend; guardas financeiras verificadas separadamente."
     },
     "frontend/src/components/CashSessionModal.tsx": {
       "ids": [
@@ -303,9 +305,10 @@
         "AJU-PDV-02",
         "AJU-PDV-03",
         "AJU-PDV-04",
-        "AJU-PDV-05"
+        "AJU-PDV-05",
+        "PDV-V2-20261107"
       ],
-      "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão."
+      "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão. Frente de Caixa v2 explicitamente autorizada em 2026-11-07: apresentação/filial em rascunho, sem backend; guardas financeiras verificadas separadamente."
     },
     "frontend/src/pages/DashboardHubPage.tsx": {
       "ids": [
@@ -766,9 +769,10 @@
         "AJU-PDV-02",
         "AJU-PDV-03",
         "AJU-PDV-04",
-        "AJU-PDV-05"
+        "AJU-PDV-05",
+        "PDV-V2-20261107"
       ],
-      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard. Frente de Caixa v2 explicitamente autorizada em 2026-11-07: apresentação/filial em rascunho, sem backend; guardas financeiras verificadas separadamente."
     },
     "frontend/src/pages/DashboardHubPage.test.tsx": {
       "ids": [
@@ -1114,9 +1118,10 @@
       "ids": [
         "AJU-PDV-01",
         "AJU-PDV-02",
-        "AJU-PDV-03"
+        "AJU-PDV-03",
+        "PDV-V2-20261107"
       ],
-      "reason": "Cabeçalho extraído do PDV para testar navegação, conexão e encaminhamento ao controle de caixa, sem executar fechamento."
+      "reason": "Cabeçalho extraído do PDV para testar navegação, conexão e encaminhamento ao controle de caixa, sem executar fechamento. Frente de Caixa v2 explicitamente autorizada em 2026-11-07: apresentação/filial em rascunho, sem backend; guardas financeiras verificadas separadamente."
     },
     "frontend/src/catalog-standardization.css": {
       "ids": [
@@ -1505,6 +1510,30 @@
         "UXIP-001"
       ],
       "reason": "06 Nov v6 dashboard-only visual refinement, explicit removal of retired footer UI/relocations, preserved order business logic and selective restoration; geometry/cleanup/export/eleven-viewport regression. Exact path; no backend/auth/dependency or infrastructure change."
+    },
+    "frontend/src/pages/PointOfSalePage.v2.css": {
+      "ids": [
+        "PDV-V2-20261107"
+      ],
+      "reason": "Pedido Frente de Caixa v2 de 2026-11-07: layout restrito, filial em rascunho e evidência dirigida, preservando contratos reais e matriz congelada."
+    },
+    "scripts/qa-browser/pos-branch.mjs": {
+      "ids": [
+        "PDV-V2-20261107"
+      ],
+      "reason": "Pedido Frente de Caixa v2 de 2026-11-07: layout restrito, filial em rascunho e evidência dirigida, preservando contratos reais e matriz congelada."
+    },
+    "scripts/qa-browser/pdv-v2.mjs": {
+      "ids": [
+        "PDV-V2-20261107"
+      ],
+      "reason": "Pedido Frente de Caixa v2 de 2026-11-07: layout restrito, filial em rascunho e evidência dirigida, preservando contratos reais e matriz congelada."
+    },
+    "docs/pdv-v2-review.md": {
+      "ids": [
+        "PDV-V2-20261107"
+      ],
+      "reason": "Pedido Frente de Caixa v2 de 2026-11-07: layout restrito, filial em rascunho e evidência dirigida, preservando contratos reais e matriz congelada."
     }
   },
   "bytePreserved": [

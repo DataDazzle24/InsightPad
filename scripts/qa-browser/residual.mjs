@@ -1,3 +1,4 @@
+import {usePosBranch} from './pos-branch.mjs';
 import assert from 'node:assert/strict';
 import {readFileSync,writeFileSync} from 'node:fs';
 export async function residual({page,output,sha,run,go,panel,wait,screenshot}){
@@ -110,7 +111,7 @@ export async function residual({page,output,sha,run,go,panel,wait,screenshot}){
   await dialog.getByRole('button',{name:'Concluir',exact:true}).evaluate(e=>{const key=Object.keys(e).find(k=>k.startsWith('__reactProps'));e[key].onClick();e[key].onClick()});await page.keyboard.press('Enter');await screenshot('stock-pending');await dialog.waitFor({state:'hidden'});const after=await inspect();assert.equal(after.movements.length,before.movements.length+1);assert.equal(await page.evaluate(()=>window.__insightpadQa.state.logs.filter(n=>n==='SaveStockBatch').length),1);
  });
  await run('cash-supply-withdrawal',async()=>{
-  await go('/vendas/frente-de-caixa');await page.getByLabel(/^Filial/).selectOption({label:'MATRIZ QA'});const before=await inspect();await page.getByRole('button',{name:'Fechar caixa',exact:true}).click();const dialog=page.getByRole('dialog',{name:'Controle de caixa'});
+  await go('/vendas/frente-de-caixa');await usePosBranch(page);const before=await inspect();await page.getByRole('button',{name:'Fechar caixa',exact:true}).click();const dialog=page.getByRole('dialog',{name:'Controle de caixa'});
   for(const [action,reason,message]of [['Suprimento','Motivo do suprimento','Suprimento registrado.'],['Sangria','Motivo da sangria','Sangria registrada.']]){
    await dialog.getByRole('button',{name:action,exact:true}).click();await dialog.getByLabel('Valor',{exact:true}).fill('500');await dialog.getByLabel(reason,{exact:true}).fill('MOTIVO SINTÉTICO QA');await dialog.getByRole('button',{name:'Registrar',exact:true}).click();await page.locator('[role="alert"]').filter({hasText:message}).waitFor();await dialog.waitFor({state:'hidden'});if(action==='Suprimento')await page.getByRole('button',{name:'Fechar caixa',exact:true}).click();
   }

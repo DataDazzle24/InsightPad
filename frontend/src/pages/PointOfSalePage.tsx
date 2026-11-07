@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useLayoutEffect,
   useRef,
   useState,
   type FormEvent,
@@ -55,6 +56,9 @@ import {
 } from "../utils/salesOffline";
 import { serverReceipt as confirmedReceipt } from "../utils/serverReceipt";
 import { printSaleReceipt, type SaleReceipt } from "../utils/receipt";
+
+import { useTheme } from "../theme/theme-context";
+import "./PointOfSalePage.v2.css";
 
 const dc = getDataConnect(firebaseApp, connectorConfig);
 type Branch = {
@@ -130,6 +134,7 @@ const empty: Workspace = {
 };
 
 export function PointOfSalePage() {
+  const { theme } = useTheme();
   const { permissions, profile, firebaseUser } = useAuth(),
     permission = permissions.CAIXA,
     offlineOwner = useMemo<OfflineOwner>(
@@ -142,6 +147,7 @@ export function PointOfSalePage() {
     branchStorageKey = `insightpad.sale.branch:${profile?.tenant.id ?? "unknown"}:${firebaseUser?.uid ?? "unknown"}`;
   const [workspace, setWorkspace] = useState<Workspace>(empty),
     [loadedBranchId, setLoadedBranchId] = useState<string | null>(null),
+    [workspaceError, setWorkspaceError] = useState(false),
     [branchId, setBranchId] = useState(
       () => localStorage.getItem(branchStorageKey) ?? "",
     ),
@@ -178,13 +184,15 @@ export function PointOfSalePage() {
     [lastReceipt, setLastReceipt] = useState<SaleReceipt | null>(null),
     [receiptPrompt, setReceiptPrompt] = useState(false),
     [cashControl, setCashControl] = useState(false),
-    [cashPromptedBranch, setCashPromptedBranch] = useState(""),
     [correctionId, setCorrectionId] = useState(""),
     [searchOpen, setSearchOpen] = useState(false),
     [scanner, setScanner] = useState(false),
     [clock, setClock] = useState(() => new Date());
   const searchRef = useRef<HTMLInputElement>(null),
     searchBoxRef = useRef<HTMLDivElement>(null),
+    productListRef = useRef<HTMLDivElement>(null),
+    stockRequest = useRef(0),
+    contextLockedRef = useRef(false),
     previousCheckoutTotal = useRef(0),
     productRequest = useRef(0),
     codeReadInFlight = useRef(false),
@@ -196,16 +204,21 @@ export function PointOfSalePage() {
   useEffect(() => { ownerRef.current = offlineOwner }, [offlineOwner]);
   useEffect(() => { branchRef.current = branchId }, [branchId]);
   const pending = pendingRows.length;
+  useLayoutEffect(() => { contextLockedRef.current = cart.length > 0 || Boolean(correctionId) }, [cart.length, correctionId]);
+  const cashReady = loadedBranchId === branchId;
+  const activeBranchAllowed = workspace.branches.some(branch => branch.id === branchId);
+  const canOpenCashControl = cashReady && !busy && !codeBusy && workspace.branches.length > 0;
+  const itemEntryDisabled = !branchId || !activeBranchAllowed || busy || codeBusy || !cashReady || !permission?.canCreate;
   useDialogAccessibility(checkout, () => { if (!finishInFlight.current) setCheckout(false) });
   useDialogAccessibility(receiptPrompt, () => setReceiptPrompt(false));
   useDialogAccessibility(queueOpen, () => { if (!syncInFlight.current) setQueueOpen(false) });
   useDialogAccessibility(Boolean(stockProduct), () => setStockProduct(null));
   useDialogAccessibility(confirmClear, () => setConfirmClear(false));
-  const load = useCallback(async () => {
+  const load = useCallback(async ({readOnly = false, rejectErrors = false}: {readOnly?: boolean; rejectErrors?: boolean} = {}) => {
     const request = ++workspaceRequest.current;
     setBusy(true);
     try {
-      await ensureSalesDefaults(dc);
+      if (!readOnly) await ensureSalesDefaults(dc);
       const result = await salesWorkspace(dc, {
         branchId: branchId || null,
         requestKey: crypto.randomUUID(),
@@ -214,19 +227,22 @@ export function PointOfSalePage() {
         ((result.data._select ?? [])[0] as { data?: Workspace } | undefined)
           ?.data ?? empty;
       if (request !== workspaceRequest.current) return;
+      setWorkspaceError(false);
       setWorkspace(current => ({...data, products: current.products}));
       setLoadedBranchId(branchId);
       if (branchId && !data.branches.some(branch => branch.id === branchId)) {
-        setBranchId(""); setCart([]); setChosenProduct(null);
+        if (!contextLockedRef.current) {
+          branchRef.current = ""; setBranchId(""); setChosenProduct(null); setSelectedId(""); setTerm("");
+        } else setNotice("A filial deste carrinho não está disponível. Preserve os itens e confira sua permissão antes de continuar.");
       }
-      if (!branchId && data.branches.length === 1)
-        setBranchId(data.branches[0].id);
     } catch (error) {
       if (request !== workspaceRequest.current) return;
       console.error(error);
+      setWorkspaceError(true);
       setNotice(
         "Não foi possível carregar o caixa. Verifique sua conexão e permissão.",
       );
+      if (rejectErrors) throw error;
     } finally {
       if (request === workspaceRequest.current) setBusy(false);
     }
@@ -238,15 +254,6 @@ export function PointOfSalePage() {
   useEffect(() => {
     localStorage.setItem(branchStorageKey, branchId);
   }, [branchId, branchStorageKey]);
-  useEffect(() => {
-    if (!busy && loadedBranchId === branchId && workspace.branches.some(branch => branch.id === branchId) && !workspace.openSession && cashPromptedBranch !== branchId) {
-      const timer = window.setTimeout(() => {
-        setCashPromptedBranch(branchId);
-        setCashControl(true);
-      }, 0);
-      return () => window.clearTimeout(timer);
-    }
-  }, [branchId, loadedBranchId, busy, cashPromptedBranch, workspace.openSession, workspace.branches]);
   useEffect(() => {
     if (!notice) return;
     const timer = setTimeout(() => setNotice(""), 7000);
@@ -359,7 +366,7 @@ export function PointOfSalePage() {
       );
   }, [busy, correctionId]);
   const selected =
-      chosenProduct ?? filtered.find(p => p.id === selectedId) ?? (searchOpen ? filtered[0] : undefined),
+      (searchOpen ? filtered.find(p => p.id === selectedId) : undefined) ?? chosenProduct ?? (searchOpen ? filtered[0] : undefined),
     totals = saleTotals(cart, cents(discount), cents(surcharge)),
     paid = payments.reduce((sum, p) => sum + p.amountCents, 0),
     change = Math.max(0, paid - totals.totalCents),
@@ -393,7 +400,38 @@ export function PointOfSalePage() {
             : "info",
       }
     : null;
+  useEffect(() => {
+    const list = productListRef.current, active = list?.querySelector<HTMLElement>('[aria-selected="true"]');
+    if (!list || !active) return;
+    const bounds = list.getBoundingClientRect(), option = active.getBoundingClientRect();
+    if (option.bottom > bounds.bottom) list.scrollTop += option.bottom - bounds.bottom + 5;
+    else if (option.top < bounds.top) list.scrollTop -= bounds.top - option.top + 5;
+  }, [searchOpen, selected?.id, filtered]);
+  function cashOpened(openedBranchId: string) {
+    if (!workspace.branches.some(branch => branch.id === openedBranchId) || (contextLockedRef.current && openedBranchId !== branchRef.current))
+      throw new Error("O carrinho está vinculado à filial atual. Confira o contexto antes de continuar.");
+    if (openedBranchId === branchRef.current) return load({readOnly:true,rejectErrors:true});
+    ++workspaceRequest.current; ++productRequest.current; ++stockRequest.current;
+    branchRef.current = openedBranchId;
+    setBranchId(openedBranchId); setLoadedBranchId(null);
+    setTerm(""); setLoadedTerm(""); setSelectedId(""); setChosenProduct(null); setQty(1);
+    setSearchOpen(false); setProductBusy(false); setProductMore(false); setProductOffset(0); setStockProduct(null);
+    setWorkspace(current => ({...current,products:[],openSession:null}));
+  }
+  async function showStockByBranch() {
+    if (itemEntryDisabled || !chosenProduct || workspace.branches.length <= 1) return;
+    const request = ++stockRequest.current, lookupBranch = branchId, lookupOwner = offlineOwner;
+    setSearchOpen(false);
+    try {
+      const result = await posProductBranches(dc,{productId:chosenProduct.id,requestKey:crypto.randomUUID()});
+      if (request !== stockRequest.current || branchRef.current !== lookupBranch || ownerRef.current.uid !== lookupOwner.uid || ownerRef.current.tenantId !== lookupOwner.tenantId) return;
+      setStockProduct({...chosenProduct,stockByBranches:(result.data._select ?? []) as Product["stockByBranches"]});
+    } catch {
+      if (request === stockRequest.current && branchRef.current === lookupBranch) setNotice("Não foi possível consultar o estoque das filiais.");
+    }
+  }
   function add(product = selected) {
+    if (itemEntryDisabled || finishInFlight.current) return;
     if (!branchId) {
       setNotice("Selecione a filial antes de iniciar a venda.");
       return;
@@ -497,10 +535,10 @@ export function PointOfSalePage() {
   useEffect(() => {
     const shortcuts=(event:KeyboardEvent)=>{
       if (finishInFlight.current || codeReadInFlight.current || checkout || cashControl || scanner || stockProduct || confirmClear || receiptPrompt || queueOpen || approvalsOpen) return;
-      if(event.key==='F2'){event.preventDefault();searchRef.current?.focus();setSearchOpen(true)}
+      if(event.key==='F2'){event.preventDefault();if(!itemEntryDisabled){searchRef.current?.focus();setSearchOpen(true)}}
       else if(event.key==='F4'){event.preventDefault();openCheckout()}
-      else if(event.key==='F6'){event.preventDefault();setScanner(true)}
-      else if(event.key==='F8'){event.preventDefault();if(branchId)setCashControl(true)}
+      else if(event.key==='F6'){event.preventDefault();if(!itemEntryDisabled){setSearchOpen(false);setScanner(true)}}
+      else if(event.key==='F8'){event.preventDefault();if(canOpenCashControl)setCashControl(true)}
       else if(event.key==='Escape'){setSearchOpen(false)}
     };
     window.addEventListener('keydown',shortcuts);
@@ -680,167 +718,98 @@ export function PointOfSalePage() {
     }
   }
   return (
-    <section className="sales-page pos-page">
+    <section className="sales-page pos-page ip-pos-route" data-theme={theme}>
       <PosHeader clock={clock} online={online} pending={pending} blocked={pendingRows.filter(row => row.blocked).length}
-        syncing={syncing} cashReady={loadedBranchId === branchId} cashOpen={!!workspace.openSession}
-        cashDisabled={!branchId || busy || loadedBranchId !== branchId} canManage={!!permission?.canManage} hasCart={cart.length > 0}
+        syncing={syncing} cashReady={cashReady} cashOpen={!!workspace.openSession}
+        cashDisabled={!canOpenCashControl} workspaceError={workspaceError} onRefresh={() => void load({readOnly:true})} canManage={!!permission?.canManage} hasCart={cart.length > 0}
         onCash={() => setCashControl(true)} onSync={() => void sync()} onQueue={() => setQueueOpen(true)} onApprovals={() => setApprovalsOpen(true)} />
       <AppToast notice={toast} onClose={() => setNotice("")} />
       <div className="pos-layout">
         <aside className="pos-entry">
-          <label>
-            Filial
-            <select
-              value={branchId}
-              disabled={busy || codeBusy || scanner || Boolean(correctionId)}
-              onChange={(e) => {
-                if (codeReadInFlight.current) return;
-                if (cart.length) {
-                  setNotice("Limpe o carrinho antes de trocar de filial.");
-                  return;
-                }
-                branchRef.current = e.target.value;
-                setBranchId(e.target.value); setChosenProduct(null); setSelectedId(""); setTerm(""); setWorkspace(current => ({...current,products:[]}));
-              }}
-            >
-              <option value="">Selecione</option>
-              {workspace.branches.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <div className="pos-search" ref={searchBoxRef}>
-            <label>
-              Produto
-              <div className="pos-search-input">
-                <span className="material-symbols-rounded">search</span>
-                <input
-                  type="text"
-                  data-mask="none"
-                  ref={searchRef}
-                  disabled={busy || codeBusy}
-                  aria-busy={codeBusy}
-                  value={term}
-                  role="combobox" aria-autocomplete="list" aria-expanded={searchOpen} aria-controls="pos-product-results" aria-activedescendant={searchOpen && selected ? `pos-product-${selected.id}` : undefined}
-                  onFocus={() => setSearchOpen(true)}
-                  onChange={(e) => {
-                    setTerm(e.target.value); setSelectedId(""); setChosenProduct(null);
-                    setSearchOpen(true);
-                  }}
-                  onKeyDown={async (e) => {
-                    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-                      e.preventDefault(); setSearchOpen(true);
-                      const index = filtered.findIndex(product => product.id === selected?.id);
-                      const next = filtered[(index + (e.key === "ArrowDown" ? 1 : -1) + filtered.length) % filtered.length];
-                      if(next) {setSelectedId(next.id); setChosenProduct(null)}
-                      return;
-                    }
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      if (e.repeat || codeReadInFlight.current || !term.trim()) return;
-                      if (/^\d{8,14}$/.test(term.trim())) await readProductCode(term);
-                      else if (!productBusy) { add(); setSearchOpen(false) }
-                    }
-                    if (e.key === "Escape") setSearchOpen(false);
-                  }}
-                  placeholder="Código, EAN ou nome"
-                />
-                <button
-                  type="button"
-                  className="scan-button"
-                  disabled={busy || codeBusy}
-                  onClick={() => setScanner(true)}
-                  aria-label="Escanear código de barras"
-                >
-                  <span className="material-symbols-rounded">
-                    barcode_scanner
-                  </span>
-                </button>
-              </div>
-            </label>
-            {codeBusy && <small role="status">Consultando código...</small>}
-            {searchOpen && (
-              <div id="pos-product-results" role="listbox" aria-label="Produtos encontrados" className="product-results product-results--dropdown">
-                {!filtered.length && <p role="status">{productBusy ? "Buscando produtos..." : "Nenhum produto encontrado."}</p>}
-                {filtered.map((p) => (
-                  <button
-                    id={`pos-product-${p.id}`} role="option" aria-selected={selected?.id === p.id}
-                    className={selected?.id === p.id ? "active" : ""}
-                    key={p.id}
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => {
-                      setSelectedId(p.id); setChosenProduct(p);
-                      setTerm(p.name);
-                      setSearchOpen(false);
-                    }}
-                  >
-                    <span>
-                      <strong>{p.name}</strong>
-                      <small>
-                        {p.internalCode || p.ean || "Sem código"} ·{" "}
-                        {p.bundleProduct
-                          ? "Combo"
-                          : p.weightedProduct
-                            ? "Pesável"
-                            : "Unidade"}
-                      </small>
-                    </span>
-                    <span>
-                      <b>{money(p.effectivePriceCents)}</b>
-                      <small>{p.allowNegativeStock && !p.bundleProduct ? "Estoque livre" : `Saldo ${p.stock} ${p.bundleProduct ? "combo(s)" : p.weightedProduct ? "kg/L" : "un."}`}</small>
-                    </span>
-                  </button>
-                ))}
-                {productMore && <button disabled={productBusy} onClick={() => void searchProducts(term, productOffset + 30)}>Carregar mais produtos</button>}
-              </div>
-            )}
+          <div className="pdv-section-title">
+            <span className="pdv-icon-tile"><span className="material-symbols-rounded" aria-hidden="true">inventory_2</span></span>
+            <div><strong>Entrada de itens</strong><small>Pesquise ou leia o código de barras.</small></div>
           </div>
-          {selected && (
-            <div className="selected-product">
-              <div>
-                <strong>{selected.name}</strong>
-                <button onClick={async () => {
-                  try { const result = await posProductBranches(dc,{ productId: selected.id, requestKey: crypto.randomUUID() }); setStockProduct({...selected,stockByBranches:(result.data._select ?? []) as Product["stockByBranches"]}) }
-                  catch { setNotice("Não foi possível consultar o estoque das filiais.") }
-                }}>
-                  Estoque por filial
-                </button>
-              </div>
+          <div className="pos-entry-fields">
+            <div className="pos-search" ref={searchBoxRef} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setSearchOpen(false) }}>
               <label>
-                Quantidade {selected.weightedProduct ? "(kg/L)" : selected.bundleProduct ? "(combos)" : "(un.)"}
-                <input
-                  type="number"
-                  disabled={busy || codeBusy}
-                  min={selected.weightedProduct ? 0.001 : 1}
-                  step={selected.weightedProduct ? 0.001 : 1}
-                  value={qty || ""}
-                  onChange={(e) => setQty(e.target.value === "" ? 0 : Number(e.target.value))}
-                  onBlur={() => {if(!qty)setQty(selected.weightedProduct ? .001 : 1)}}
-                />
+                Produto
+                <div className="pos-search-input">
+                  <span className="material-symbols-rounded" aria-hidden="true">search</span>
+                  <input type="text" data-mask="none" ref={searchRef}
+                    disabled={itemEntryDisabled} aria-busy={codeBusy} value={term}
+                    role="combobox" aria-label="Produto" aria-autocomplete="list"
+                    aria-expanded={searchOpen && !itemEntryDisabled}
+                    aria-controls={searchOpen && !itemEntryDisabled ? "pos-product-results" : undefined}
+                    aria-activedescendant={searchOpen && !itemEntryDisabled && filtered.some(product => product.id === selected?.id) ? `pos-product-${selected?.id}` : undefined}
+                    onFocus={() => setSearchOpen(true)}
+                    onChange={event => { setTerm(event.target.value); setSelectedId(""); setChosenProduct(null); setSearchOpen(true) }}
+                    onKeyDown={async event => {
+                      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                        event.preventDefault(); setSearchOpen(true);
+                        const index = filtered.findIndex(product => product.id === selected?.id);
+                        const next = filtered[index < 0 ? (event.key === "ArrowDown" ? 0 : filtered.length - 1) : (index + (event.key === "ArrowDown" ? 1 : -1) + filtered.length) % filtered.length];
+                        if (next) { setSelectedId(next.id); setChosenProduct(null) }
+                        return;
+                      }
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        if (event.repeat || codeReadInFlight.current || !term.trim()) return;
+                        if (/^\d{8,14}$/.test(term.trim())) await readProductCode(term);
+                        else if (!productBusy) { add(); setSearchOpen(false) }
+                      }
+                      if (event.key === "Escape") setSearchOpen(false);
+                    }} placeholder="Código, EAN ou nome" />
+                  <button type="button" className="scan-button" disabled={itemEntryDisabled}
+                    onClick={() => { setSearchOpen(false); setScanner(true) }} aria-label="Escanear código de barras">
+                    <span className="material-symbols-rounded" aria-hidden="true">barcode_scanner</span>
+                  </button>
+                </div>
               </label>
-              <button
-                className="catalog-primary"
-                disabled={busy || codeBusy}
-                onClick={() => {
-                  add();
-                  setSearchOpen(false);
-                }}
-              >
-                <span className="material-symbols-rounded">
-                  add_shopping_cart
-                </span>
-                Adicionar ao carrinho
-              </button>
+              {codeBusy && <small role="status">Consultando código...</small>}
+              {searchOpen && !itemEntryDisabled && (
+                <div id="pos-product-results" ref={productListRef} role="listbox" aria-label="Produtos encontrados" className="product-results product-results--dropdown">
+                  {!filtered.length && <p role="status">{productBusy ? "Buscando produtos..." : "Nenhum produto encontrado."}</p>}
+                  {filtered.map(product => <button tabIndex={-1} id={`pos-product-${product.id}`} role="option"
+                    aria-selected={selected?.id === product.id} className={selected?.id === product.id ? "active" : ""}
+                    key={product.id} onMouseDown={event => event.preventDefault()}
+                    onClick={() => { setSelectedId(product.id); setChosenProduct(product); setTerm(product.name); setSearchOpen(false) }}>
+                    <span><strong>{product.name}</strong><small>{product.internalCode || product.ean || "Sem código"} · {product.bundleProduct ? "Combo" : product.weightedProduct ? "Pesável" : "Unidade"}</small></span>
+                    <span><b>{money(product.effectivePriceCents)}</b><small>{product.allowNegativeStock && !product.bundleProduct ? "Estoque livre" : `Saldo ${product.stock} ${product.bundleProduct ? "combo(s)" : product.weightedProduct ? "kg/L" : "un."}`}</small></span>
+                  </button>)}
+                  {productMore && <button disabled={productBusy} onClick={() => void searchProducts(term, productOffset + 30)}>Carregar mais produtos</button>}
+                </div>
+              )}
             </div>
-          )}
+            <label className="pos-qty-field">
+              Quantidade
+              <input type="number" aria-label={selected?.weightedProduct ? "Quantidade em kg ou L" : selected?.bundleProduct ? "Quantidade em combos" : "Quantidade"}
+                disabled={itemEntryDisabled} min={selected?.weightedProduct ? 0.001 : 1} step={selected?.weightedProduct ? 0.001 : 1}
+                value={qty || ""} onChange={event => setQty(event.target.value === "" ? 0 : Number(event.target.value))}
+                onBlur={() => { if (!qty) setQty(selected?.weightedProduct ? .001 : 1) }} />
+            </label>
+            <button type="button" className="pos-stock-button" aria-label="Estoque por filial" title="Estoque por filial"
+              disabled={itemEntryDisabled || !chosenProduct || workspace.branches.length <= 1} onClick={() => void showStockByBranch()}>
+              <span className="material-symbols-rounded" aria-hidden="true">package_2</span>
+            </button>
+          </div>
+          {chosenProduct && <div className="selected-product">
+            <div><strong>{chosenProduct.name}</strong><small>{chosenProduct.weightedProduct ? "kg/L" : chosenProduct.bundleProduct ? "combos" : "un."}</small></div>
+            <button className="catalog-primary" disabled={itemEntryDisabled} onClick={() => { add(chosenProduct); setSearchOpen(false) }}>
+              <span className="material-symbols-rounded" aria-hidden="true">add_shopping_cart</span>Adicionar ao carrinho
+            </button>
+          </div>}
+          <div className="pdv-shortcuts" aria-label="Atalhos da Frente de Caixa">
+            <span className="material-symbols-rounded" aria-hidden="true">keyboard</span>
+            <span><kbd>F2</kbd>Buscar</span><span><kbd>F4</kbd>Pagamento</span><span><kbd>F6</kbd>Leitor</span><span><kbd>F8</kbd>Caixa</span>
+          </div>
         </aside>
         <main className="pos-cart">
           <div className="pos-cart-head">
             <div>
-              <strong>Carrinho</strong>
-              <small>{cart.length} produto(s)</small>
+              <span className="pdv-icon-tile"><span className="material-symbols-rounded" aria-hidden="true">shopping_cart</span></span>
+              <div><strong>Carrinho</strong>
+              <small>{cart.length} produto(s)</small></div>
             </div>
             {cart.length > 0 && (
               <button
@@ -923,6 +892,7 @@ export function PointOfSalePage() {
           </footer>
         </main>
       </div>
+      <div className="ip-pos-modal" data-theme={theme}>
       {checkout && (
         <div className="catalog-backdrop">
           <section
@@ -1144,11 +1114,13 @@ export function PointOfSalePage() {
           </section>
         </div>
       )}
-      {cashControl && loadedBranchId === branchId && (
+      {cashControl && cashReady && workspace.branches.length > 0 && (
         <CashSessionModal
-          key={`${branchId}:${workspace.openSession?.id ?? "new"}`}
           dc={dc}
           branchId={branchId}
+          branches={workspace.branches}
+          branchLocked={cart.length > 0 || Boolean(correctionId)}
+          canOpen={permission?.canCreate === true}
           branchName={
             workspace.branches.find((b) => b.id === branchId)?.name ?? "Filial"
           }
@@ -1157,7 +1129,8 @@ export function PointOfSalePage() {
           policy={workspace.policy}
           pendingCount={pendingRows.filter(row => row.payload.cashSessionId === workspace.openSession?.id).length}
           onClose={() => setCashControl(false)}
-          onChanged={load}
+          onChanged={() => load({readOnly:true,rejectErrors:true})}
+          onOpened={cashOpened}
           onNotice={setNotice}
         />
       )}{" "}
@@ -1203,6 +1176,7 @@ export function PointOfSalePage() {
       </section></div>}
       {approvalsOpen && <PosApprovalsModal dc={dc} onClose={() => setApprovalsOpen(false)} onNotice={setNotice} />}
       {busy && <AppLoading text="Processando operação..." />}
+      </div>
     </section>
   );
 }
