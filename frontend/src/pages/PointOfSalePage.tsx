@@ -407,7 +407,7 @@ export function PointOfSalePage() {
     if (option.bottom > bounds.bottom) list.scrollTop += option.bottom - bounds.bottom + 5;
     else if (option.top < bounds.top) list.scrollTop -= bounds.top - option.top + 5;
   }, [searchOpen, selected?.id, filtered]);
-  function cashOpened(openedBranchId: string) {
+  function confirmCashBranch(openedBranchId: string) {
     if (!workspace.branches.some(branch => branch.id === openedBranchId) || (contextLockedRef.current && openedBranchId !== branchRef.current))
       throw new Error("O carrinho está vinculado à filial atual. Confira o contexto antes de continuar.");
     if (openedBranchId === branchRef.current) return load({readOnly:true,rejectErrors:true});
@@ -1130,7 +1130,8 @@ export function PointOfSalePage() {
           pendingCount={pendingRows.filter(row => row.payload.cashSessionId === workspace.openSession?.id).length}
           onClose={() => setCashControl(false)}
           onChanged={() => load({readOnly:true,rejectErrors:true})}
-          onOpened={cashOpened}
+          onOpened={confirmCashBranch}
+          onContinueWithoutOpening={confirmCashBranch}
           onNotice={setNotice}
         />
       )}{" "}

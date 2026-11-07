@@ -53,6 +53,7 @@ export function CashSessionModal({
   branchLocked = false,
   canOpen = false,
   onOpened,
+  onContinueWithoutOpening,
   session,
   canManage,
   policy,
@@ -68,6 +69,7 @@ export function CashSessionModal({
   branchLocked?: boolean;
   canOpen?: boolean;
   onOpened?: (branchId: string) => void | Promise<void>;
+  onContinueWithoutOpening?: (branchId: string) => void | Promise<void>;
   session?: Session | null;
   canManage: boolean;
   pendingCount?: number;
@@ -174,6 +176,21 @@ export function CashSessionModal({
         onNotice("A abertura foi recusada. Confira a sessão, a filial e suas permissões antes de tentar novamente.");
       }
     } finally { inFlight.current = false; setBusy(false) }
+  }
+  async function continueWithoutOpening() {
+    if (instructionLocked() || mode !== "open" || draftPolicy.requireOpenSession || !openingAllowed || !canOpen || !onContinueWithoutOpening) return;
+    if (!navigator.onLine) { onNotice("Conecte-se para confirmar a filial."); return }
+    inFlight.current = true; setBusy(true);
+    try {
+      // This is a branch confirmation, not a cash instruction. Revalidate the
+      // real policy at the service before allowing the existing optional flow.
+      const result = await salesWorkspace(dc,{branchId:openingBranchId,requestKey:crypto.randomUUID()});
+      const data = (result.data._select?.[0] as {data?:{branches?:{id:string}[];policy?:{requireOpenSession?:boolean}}}|undefined)?.data;
+      if (!data?.branches?.some(branch => branch.id === openingBranchId) || data.policy?.requireOpenSession !== false)
+        throw new Error("Não foi possível confirmar a filial sem abertura. Confira as regras atuais da empresa.");
+      await onContinueWithoutOpening(openingBranchId); onClose();
+    } catch { onNotice("Não foi possível confirmar a filial sem abertura. Confira a conexão e as regras atuais da empresa.") }
+    finally { inFlight.current = false; setBusy(false) }
   }
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -419,10 +436,10 @@ export function CashSessionModal({
             </fieldset>
             <footer>
               <button
-                type="button" className="catalog-modal-cancel" disabled={busy||uncertain||confirmed}
-                onClick={() => {if(instructionLocked())return;setWaitingApproval(false);operation.current=null;if(session)setMode("summary");else close()}}
+                type="button" className="catalog-modal-cancel" disabled={busy||uncertain||confirmed || mode === "open" && !draftPolicy.requireOpenSession && !resumableSession && (!openingAllowed || !canOpen || !onContinueWithoutOpening || openingLookup.busy || openingLookup.error || openingLookup.branchId !== openingBranchId)}
+                onClick={() => {if(instructionLocked())return;if(mode === "open" && !draftPolicy.requireOpenSession && !resumableSession){void continueWithoutOpening();return}setWaitingApproval(false);operation.current=null;if(session)setMode("summary");else close()}}
               >
-                {session ? "Voltar" : draftPolicy.requireOpenSession ? "Cancelar" : "Seguir sem abrir"}
+                {session ? "Voltar" : draftPolicy.requireOpenSession || resumableSession ? "Cancelar" : "Seguir sem abrir"}
               </button>
               {mode === "open" && openingLookup.error && !uncertain && !confirmed && <button type="button" disabled={busy} onClick={() => setLookupAttempt(value => value+1)}>Conferir sessão</button>}
               {!session && canManage && <button type="button" disabled={busy || !branchId && !openingAllowed} onClick={() => {if(!instructionLocked())setMode("policy")}}>Regras da empresa</button>}

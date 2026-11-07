@@ -166,7 +166,7 @@ const selectOpening=async(value:string)=>{
  await act(async()=>{const el=container.querySelector('select')!;Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype,'value')!.set!.call(el,value);el.dispatchEvent(new Event('change',{bubbles:true}))});
  await act(async()=>{await new Promise(resolve=>setTimeout(resolve,10))})
 }
-const openingProps=()=>({dc:{} as DataConnect,branchId:'branch',branchName:'MATRIZ',branches:eligible,canOpen:true,canManage:false,onClose:vi.fn(),onChanged:vi.fn(async()=>{}),onOpened:vi.fn(async(branch:string)=>{void branch}),onNotice:vi.fn()})
+const openingProps=()=>({dc:{} as DataConnect,branchId:'branch',branchName:'MATRIZ',branches:eligible,canOpen:true,canManage:false,onClose:vi.fn(),onChanged:vi.fn(async()=>{}),onOpened:vi.fn(async(branch:string)=>{void branch}),onContinueWithoutOpening:vi.fn(async(branch:string)=>{void branch}),onNotice:vi.fn()})
 const lookup=(open:typeof session|null=null)=>({data:{_select:[{data:{branches:eligible,openSession:open}}]}})
 const renderOpening=async(props:ReturnType<typeof openingProps>)=>{
  api.workspace.mockResolvedValue(lookup());await act(async()=>root.render(<CashSessionModal {...props}/>));await act(async()=>{await new Promise(resolve=>setTimeout(resolve,10))})
@@ -231,4 +231,18 @@ it('PDV-v2: double submit while opening is in flight produces one mutation',asyn
 it('PDV-v2: company rules use an eligible draft without binding or opening a cash branch',async()=>{
  const props={...openingProps(),branchId:'',canManage:true};await renderOpening(props);expect(button('Regras da empresa').disabled).toBe(true);await selectOpening('other');expect(button('Regras da empresa').disabled).toBe(false);
  await click('Regras da empresa');api.policy.mockResolvedValue({data:{_execute:1}});await submitCash();expect(api.policy).toHaveBeenCalledOnce();expect(props.onChanged).toHaveBeenCalledOnce();expect(props.onClose).toHaveBeenCalledOnce();expect(props.onOpened).not.toHaveBeenCalled();expect(api.execute).not.toHaveBeenCalled()
+})
+
+const optionalPolicy={requireOpenSession:false,operatorDiscountPercent:0,operatorSurchargePercent:0,allowOperatorClose:false}
+it('PDV-v2: optional cash confirms eligible branch by service read, with no opening or movement',async()=>{
+ const props={...openingProps(),branchId:'',policy:optionalPolicy};await renderOpening(props);await selectOpening('other');api.workspace.mockResolvedValue({data:{_select:[{data:{branches:eligible,policy:optionalPolicy,openSession:null}}]}});await click('Seguir sem abrir');
+ expect(api.execute).not.toHaveBeenCalled();expect(props.onOpened).not.toHaveBeenCalled();expect(props.onContinueWithoutOpening).toHaveBeenCalledExactlyOnceWith('other');expect(props.onClose).toHaveBeenCalledOnce();expect(api.workspace.mock.calls.at(-1)?.[1].branchId).toBe('other')
+})
+it('PDV-v2: changed or missing service policy refuses optional continuation without binding',async()=>{
+ const props={...openingProps(),branchId:'',policy:optionalPolicy};await renderOpening(props);await selectOpening('other');api.workspace.mockResolvedValue({data:{_select:[{data:{branches:eligible,policy:{requireOpenSession:true},openSession:null}}]}});await click('Seguir sem abrir');
+ expect(api.execute).not.toHaveBeenCalled();expect(props.onContinueWithoutOpening).not.toHaveBeenCalled();expect(props.onOpened).not.toHaveBeenCalled();expect(props.onClose).not.toHaveBeenCalled();expect(props.onNotice).toHaveBeenCalledWith(expect.stringMatching(/regras atuais/))
+})
+it('PDV-v2: closing optional draft still cancels without committing its branch',async()=>{
+ const props={...openingProps(),branchId:'',policy:optionalPolicy};await renderOpening(props);await selectOpening('other');await act(async()=>{(container.querySelector('[aria-label="Fechar controle de caixa"]') as HTMLButtonElement).click()});
+ expect(props.onClose).toHaveBeenCalledOnce();expect(props.onContinueWithoutOpening).not.toHaveBeenCalled();expect(props.onOpened).not.toHaveBeenCalled();expect(api.execute).not.toHaveBeenCalled()
 })
