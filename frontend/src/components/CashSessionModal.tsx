@@ -92,6 +92,7 @@ export function CashSessionModal({
   const opening = useRef<{dc:DataConnect; branchId:string; signature:string; payload:Record<string,unknown>; reference:MutationRef<{_execute?:unknown},Record<string,unknown>>; state:"uncertain"|"confirmed"} | null>(null);
   const lookupSequence = useRef(0);
   const openingAllowed = branches.some(b => b.id === openingBranchId) && (!branchLocked || openingBranchId === branchId);
+  const resumableSession = mode === "open" && openingLookup.branchId === openingBranchId && !openingLookup.busy && !openingLookup.error ? openingLookup.session : null;
   const readOpeningSession = useCallback(async (selectedBranch:string) => {
     const result = await salesWorkspace(dc,{branchId:selectedBranch,requestKey:crypto.randomUUID()});
     const data = (result.data._select?.[0] as {data?:{branches?:{id:string}[];openSession?:Session|null}}|undefined)?.data;
@@ -384,7 +385,8 @@ export function CashSessionModal({
                 </span>
                 <input
                   inputMode="numeric"
-                  value={amount}
+                  disabled={Boolean(resumableSession)}
+                  value={resumableSession ? maskMoney(Number(resumableSession.openingAmountCents)) : amount}
                   onChange={(event) =>
                     !instructionLocked() && !waitingApproval && setAmount(maskMoney(parseMoney(event.target.value)))
                   }
@@ -400,6 +402,7 @@ export function CashSessionModal({
                       : "Observações"}
                 </span>
                 <textarea
+                  disabled={Boolean(resumableSession)}
                   value={notes}
                   onChange={(event) => {if(!instructionLocked()&&!waitingApproval)setNotes(event.target.value)}}
                   required={mode === "supply" || mode === "withdrawal"}

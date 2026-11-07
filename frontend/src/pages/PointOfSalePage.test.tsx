@@ -191,7 +191,7 @@ it('PDV-v2: positive opening binds only chosen eligible branch with original ser
  expect(api.execute.mock.calls[0][0].variables).not.toHaveProperty('operationId');expect(props.onOpened).toHaveBeenCalledExactlyOnceWith('other');expect(props.onClose).toHaveBeenCalledOnce()
 })
 it('PDV-v2: existing owned session resumes by reading, without new opening',async()=>{
- const props=openingProps();await renderOpening(props);api.workspace.mockResolvedValue(lookup(session));await selectOpening('other');expect(button('Retomar caixa')).toBeTruthy();await submitCash();
+ const props=openingProps();await renderOpening(props);api.workspace.mockResolvedValue(lookup(session));await selectOpening('other');expect(button('Retomar caixa')).toBeTruthy();expect(container.querySelector('input')?.value.replace(/\s/g,'')).toBe('R$10,00');expect(container.querySelector('input')?.matches(':disabled')).toBe(true);expect(container.querySelector('textarea')?.matches(':disabled')).toBe(true);expect(container.querySelector('select')?.disabled).toBe(false);await submitCash();
  expect(api.execute).not.toHaveBeenCalled();expect(props.onOpened).toHaveBeenCalledExactlyOnceWith('other')
 })
 it('PDV-v2: lost opening ACK reconciles same branch read; no duplicate opening',async()=>{

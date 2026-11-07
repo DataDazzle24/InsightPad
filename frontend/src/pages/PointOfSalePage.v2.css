@@ -18,7 +18,7 @@
 :is(.ip-ui[data-theme] .ip-pos-route,.ip-pos-modal[data-theme]) .material-symbols-rounded{flex:none;vertical-align:middle}
 :is(.ip-ui[data-theme] .ip-pos-route,.ip-pos-modal[data-theme]) :is(.catalog-primary,.cash-action--supply){background:var(--pdv-cyan-bg);color:var(--pdv-cyan);border-color:color-mix(in srgb,var(--pdv-cyan) 35%,var(--pdv-line))}
 :is(.ip-ui[data-theme] .ip-pos-route,.ip-pos-modal[data-theme]) :is(.pos-pay,.catalog-modal form>footer .catalog-primary,.pos-queue .catalog-primary,.receipt-prompt .catalog-primary){background:var(--pdv-green);color:var(--pdv-green-ink);border-color:var(--pdv-green)}
-:is(.ip-ui[data-theme] .ip-pos-route,.ip-pos-modal[data-theme]) :is(.danger,.pos-clear,.cash-action--withdrawal){color:var(--pdv-bad);background:var(--pdv-bad-bg);border-color:color-mix(in srgb,var(--pdv-bad) 24%,var(--pdv-line))}
+:is(.ip-ui[data-theme] .ip-pos-route,.ip-pos-modal[data-theme]) :is(.danger,.pos-clear,.cash-action--withdrawal){color:var(--pdv-bad)!important;background:var(--pdv-bad-bg);border-color:color-mix(in srgb,var(--pdv-bad) 24%,var(--pdv-line))!important}
 :is(.ip-ui[data-theme] .ip-pos-route,.ip-pos-modal[data-theme]){display:flex;flex-direction:column;flex:1;min-height:0;min-width:0;gap:10px}
 :is(.ip-ui[data-theme] .ip-pos-route,.ip-pos-modal[data-theme]) .pos-topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px 12px;border:1px solid var(--pdv-line);border-radius:14px;background:var(--pdv-panel);padding:6px 10px;flex:none}
 :is(.ip-ui[data-theme] .ip-pos-route,.ip-pos-modal[data-theme]) .pos-clock-group,:is(.ip-ui[data-theme] .ip-pos-route,.ip-pos-modal[data-theme]) .pos-clock,:is(.ip-ui[data-theme] .ip-pos-route,.ip-pos-modal[data-theme]) .sales-header-actions{display:flex;align-items:center;gap:9px;min-width:0}
@@ -224,7 +224,9 @@
 :is(.ip-ui[data-theme] .ip-pos-route,.ip-pos-modal[data-theme]) .pos-cart-scroll .pos-quantity-input{height:34px}
 :is(.ip-ui[data-theme] .ip-pos-route,.ip-pos-modal[data-theme]) .cash-session-modal .cash-session-actions .cash-action--supply{background:var(--pdv-cyan-bg)!important;color:var(--pdv-cyan)!important;border-color:var(--pdv-line)!important}
 :is(.ip-ui[data-theme] .ip-pos-route,.ip-pos-modal[data-theme]) .cash-session-modal .cash-session-actions .cash-action--withdrawal{background:var(--pdv-bad-bg)!important;color:var(--pdv-bad)!important;border-color:var(--pdv-line)!important}
-:is(.ip-ui[data-theme] .ip-pos-route,.ip-pos-modal[data-theme]) .cash-session-actions button{font-size:12px;padding-inline:10px;min-height:38px;white-space:normal}
+/* Resolve the legacy cash-summary button selector inside this modal only. */
+:is(.ip-ui[data-theme] .ip-pos-route,.ip-pos-modal[data-theme]) .cash-session-modal .cash-session-actions button{font-size:12px;padding-inline:10px;min-height:38px;white-space:normal;background:var(--pdv-sub)!important;color:var(--pdv-ink)!important;border-color:var(--pdv-line)!important}
+:is(.ip-ui[data-theme] .ip-pos-route,.ip-pos-modal[data-theme]) .cash-session-modal .cash-session-actions .danger{color:var(--pdv-bad)!important;background:var(--pdv-bad-bg)!important;border-color:color-mix(in srgb,var(--pdv-bad) 24%,var(--pdv-line))!important}
 :is(.ip-ui[data-theme] .ip-pos-route,.ip-pos-modal[data-theme]) .stock-branches-list{padding:15px 19px}
 :is(.ip-ui[data-theme] .ip-pos-route,.ip-pos-modal[data-theme]) .barcode-modal video{width:100%;max-height:40dvh;object-fit:contain;background:#080d12}
 :is(.ip-ui[data-theme] .ip-pos-route,.ip-pos-modal[data-theme]) .sales-notice{flex:none}
