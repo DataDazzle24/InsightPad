@@ -30,7 +30,7 @@ beforeEach(()=>{
  vi.stubGlobal('ResizeObserver',class {constructor(callback:()=>void){callbacks.push(callback);disconnects.push(this.disconnect)}observe=vi.fn();disconnect=vi.fn()});
  fonts=Object.assign(new EventTarget(),{ready:Promise.resolve()});previousFonts=Object.getOwnPropertyDescriptor(document,'fonts');Object.defineProperty(document,'fonts',{value:fonts,configurable:true});
  vi.spyOn(Element.prototype,'getBoundingClientRect').mockImplementation(function(this:HTMLElement){const kind=this.dataset.rect;return new DOMRect(kind==='active'?260:100,0,kind==='svg'?diameter:kind==='pager'||kind==='button'?80:500,kind==='svg'?diameter:40)});
- vi.spyOn(Element.prototype,'getClientRects').mockImplementation(function(this:HTMLElement){const box=this.getBoundingClientRect();return {0:box,length:1,item:(index:number)=>index===0?box:null} as DOMRectList});
+ vi.spyOn(Element.prototype,'getClientRects').mockImplementation(function(this:HTMLElement){const box=this.getBoundingClientRect();return {0:box,length:1,item:(index:number)=>index===0?box:null,[Symbol.iterator]:()=>[box][Symbol.iterator]()} satisfies DOMRectList});
  vi.spyOn(document,'createRange').mockImplementation(()=>({selectNodeContents:vi.fn(),getBoundingClientRect:()=>new DOMRect(0,0,textWidth,20),getClientRects:()=>(lineWidths??[textWidth]).map(width=>new DOMRect(0,0,width,20))}) as unknown as Range);
  host=document.createElement('div');document.body.append(host);root=createRoot(host);
 });
