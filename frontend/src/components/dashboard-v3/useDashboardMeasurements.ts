@@ -7,6 +7,7 @@ export function useDashboardMeasurements(rootRef: RefObject<HTMLElement | null>,
     if (!root) return;
     let frame = 0;
     let disposed = false;
+    let fittedTotals = new WeakMap<HTMLElement, {diameter:number;text:string;fit:number;compact:boolean}>();
     const measure = () => {
       if (disposed) return;
       const line = root.querySelector<HTMLElement>('.dv-sub-line');
@@ -36,10 +37,23 @@ export function useDashboardMeasurements(rootRef: RefObject<HTMLElement | null>,
         // Measuring only its bounding width would repeatedly toggle compact mode.
         const textWidth = [...range.getClientRects()].reduce((sum, rect) => sum + rect.width, 0);
         const font = parseFloat(getComputedStyle(value).fontSize);
-        const fit = Math.min(21, Math.floor((font * Math.max(1, diameter * .54 - 4) / Math.max(1, textWidth) + .001) * 10) / 10);
-        graphic.classList.toggle('is-compact', diameter < 180 || fit < 12);
-        graphic.style.setProperty('--dv-donut-font', `${Math.max(12, fit)}px`);
-        graphic.style.setProperty('--dv-donut-label', `${Math.max(10, Math.min(12, fit * .65))}px`);
+        const text = value.textContent ?? '';
+        const previous = fittedTotals.get(graphic);
+        const unchanged = previous && Math.abs(previous.diameter-diameter)<.5 && previous.text===text;
+        const limit = Math.max(1, diameter*.54-4);
+        // Font hinting is quantized: feeding the last result back into an
+        // unconstrained ratio can alternate forever between two font sizes.
+        // For identical geometry/content, keep a fit that is already safe and
+        // only shrink an overflowing one. Growing the ring/changing the data or
+        // loading fonts starts a new fit; business state is never touched.
+        if (unchanged && (previous.compact || textWidth<=limit+.25)) return;
+        let fit = Math.min(21, Math.floor((font*limit/Math.max(1,textWidth)+.001)*10)/10);
+        if (unchanged) fit = Math.min(fit, previous.fit-.1);
+        const compact = diameter<180 || fit<12;
+        graphic.classList.toggle('is-compact', compact);
+        graphic.style.setProperty('--dv-donut-font', `${Math.max(12,fit)}px`);
+        graphic.style.setProperty('--dv-donut-label', `${Math.max(10,Math.min(12,fit*.65))}px`);
+        fittedTotals.set(graphic,{diameter,text,fit:Math.max(12,fit),compact});
       });
     };
     const schedule = () => {
@@ -51,15 +65,16 @@ export function useDashboardMeasurements(rootRef: RefObject<HTMLElement | null>,
     observer?.observe(root);
     root.querySelectorAll('.dv-nav,.dv-subnav,.dv-donut-graphic svg,.dv-donut-total strong').forEach(element => observer?.observe(element));
     window.addEventListener('resize', schedule);
-    document.fonts?.addEventListener('loadingdone', schedule);
-    void document.fonts?.ready.then(schedule);
+    const fontsChanged = () => { if(disposed)return; fittedTotals=new WeakMap(); schedule(); };
+    document.fonts?.addEventListener('loadingdone', fontsChanged);
+    void document.fonts?.ready.then(fontsChanged);
     schedule();
     return () => {
       disposed = true;
       observer?.disconnect();
       cancelAnimationFrame(frame);
       window.removeEventListener('resize', schedule);
-      document.fonts?.removeEventListener('loadingdone', schedule);
+      document.fonts?.removeEventListener('loadingdone', fontsChanged);
     };
   }, [rootRef, layoutKey]);
 }
