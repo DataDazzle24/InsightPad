@@ -8,11 +8,11 @@ import { CashSessionModal } from '../components/CashSessionModal'
 import type { DataConnect } from 'firebase/data-connect'
 import { DataConnectError } from '@firebase/data-connect'
 import { qaOperation, qaState, resetFixtures, inspectFixtures, uuid } from '../../qa/api'
-const api=vi.hoisted(()=>({execute:vi.fn(),requestApproval:vi.fn(),approvalStatus:vi.fn(),workspace:vi.fn(),sessionToken:'synthetic-session'}))
+const api=vi.hoisted(()=>({execute:vi.fn(),requestApproval:vi.fn(),approvalStatus:vi.fn(),workspace:vi.fn(),policy:vi.fn(),sessionToken:'synthetic-session'}))
 vi.mock('firebase/data-connect',()=>({executeMutation:api.execute,mutationRef:(_dc:unknown,name:string,variables:Record<string,unknown>)=>({name,variables:{...variables,sessionToken:api.sessionToken}})}))
-vi.mock('@insightpad/dataconnect',()=>({updatePosPolicy:vi.fn(),requestPosCashApproval:api.requestApproval,posCashApprovalStatus:api.approvalStatus,salesWorkspace:api.workspace}))
+vi.mock('@insightpad/dataconnect',()=>({updatePosPolicy:api.policy,requestPosCashApproval:api.requestApproval,posCashApprovalStatus:api.approvalStatus,salesWorkspace:api.workspace}))
 let root:Root,container:HTMLDivElement
-beforeEach(()=>{vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);api.execute.mockReset();api.workspace.mockReset();api.requestApproval.mockReset();api.approvalStatus.mockReset();api.sessionToken='synthetic-session';resetFixtures();Object.assign(qaState,{fail:false,empty:false,delay:0,permissions:'full',allowedBranches:[],cashAckLoss:false});container=document.createElement('div');document.body.append(container);root=createRoot(container)})
+beforeEach(()=>{vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);api.execute.mockReset();api.workspace.mockReset();api.policy.mockReset();api.requestApproval.mockReset();api.approvalStatus.mockReset();api.sessionToken='synthetic-session';resetFixtures();Object.assign(qaState,{fail:false,empty:false,delay:0,permissions:'full',allowedBranches:[],cashAckLoss:false});container=document.createElement('div');document.body.append(container);root=createRoot(container)})
 afterEach(async()=>{await act(async()=>root.unmount());container.remove();vi.restoreAllMocks();vi.unstubAllGlobals()})
 const buttons=()=>[...container.querySelectorAll('button')]
 const button=(text:string)=>{const result=buttons().find(el=>el.textContent?.includes(text));if(!result)throw Error(text);return result}
@@ -223,4 +223,9 @@ it('PDV-v2: double submit while opening is in flight produces one mutation',asyn
  const props=openingProps();await renderOpening(props);let resolve!:(value:{data:{_execute:number}})=>void;api.execute.mockImplementationOnce(()=>new Promise(r=>{resolve=r}));
  await act(async()=>{for(let i=0;i<2;i++)container.querySelector('form')!.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}))});
  expect(api.execute).toHaveBeenCalledOnce();expect(props.onOpened).not.toHaveBeenCalled();await act(async()=>resolve({data:{_execute:1}}));expect(props.onOpened).toHaveBeenCalledOnce()
+})
+
+it('PDV-v2: company rules use an eligible draft without binding or opening a cash branch',async()=>{
+ const props={...openingProps(),branchId:'',canManage:true};await renderOpening(props);expect(button('Regras da empresa').disabled).toBe(true);await selectOpening('other');expect(button('Regras da empresa').disabled).toBe(false);
+ await click('Regras da empresa');api.policy.mockResolvedValue({data:{_execute:1}});await submitCash();expect(api.policy).toHaveBeenCalledOnce();expect(props.onChanged).toHaveBeenCalledOnce();expect(props.onClose).toHaveBeenCalledOnce();expect(props.onOpened).not.toHaveBeenCalled();expect(api.execute).not.toHaveBeenCalled()
 })

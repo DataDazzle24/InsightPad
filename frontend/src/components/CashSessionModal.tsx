@@ -185,7 +185,7 @@ export function CashSessionModal({
     }
     if (!navigator.onLine) { onNotice("Conecte-se para operar o caixa."); return }
     if (mode === "close" && pendingCount) { onNotice("Sincronize as vendas deste caixa antes de fechar."); return }
-    if (!branchId) {
+    if (!(mode === "policy" && openingAllowed ? openingBranchId : branchId)) {
       onNotice("Selecione uma filial.");
       return;
     }
@@ -362,7 +362,7 @@ export function CashSessionModal({
           <form onSubmit={submit}>
             <fieldset disabled={busy || waitingApproval || uncertain || confirmed} className="master-form-grid">
               {mode === "open" && <>
-                <label className="wide"><span>Filial</span><select aria-label="Filial" required value={openingBranchId} disabled={branches.length === 1 || branchLocked} onChange={event => {if(!instructionLocked())setOpeningBranchId(event.target.value)}}>
+                <label className="wide"><span>Filial</span><select aria-label="Filial" autoFocus={branches.length > 1 && !branchLocked} required value={openingBranchId} disabled={branches.length === 1 || branchLocked} onChange={event => {if(!instructionLocked())setOpeningBranchId(event.target.value)}}>
                   <option value="">Selecione a filial</option>{branches.map(branch => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
                 </select></label>
                 {branchLocked && <p className="wide">O carrinho ou a correção mantém este caixa na filial atual.</p>}
@@ -382,7 +382,7 @@ export function CashSessionModal({
                   onChange={(event) =>
                     !instructionLocked() && !waitingApproval && setAmount(maskMoney(parseMoney(event.target.value)))
                   }
-                  autoFocus
+                  autoFocus={mode !== "open" || branches.length === 1 || branchLocked}
                 />
               </label>
               <label className="wide">
@@ -416,7 +416,7 @@ export function CashSessionModal({
                 {session ? "Voltar" : draftPolicy.requireOpenSession ? "Cancelar" : "Seguir sem abrir"}
               </button>
               {mode === "open" && openingLookup.error && !uncertain && !confirmed && <button type="button" disabled={busy} onClick={() => setLookupAttempt(value => value+1)}>Conferir sessão</button>}
-              {!session && canManage && <button type="button" disabled={busy} onClick={() => {if(!instructionLocked())setMode("policy")}}>Regras da empresa</button>}
+              {!session && canManage && <button type="button" disabled={busy || !branchId && !openingAllowed} onClick={() => {if(!instructionLocked())setMode("policy")}}>Regras da empresa</button>}
               <button className="catalog-primary" disabled={busy || mode === "open" && (!openingAllowed || !canOpen || !onOpened || !uncertain && !confirmed && (openingLookup.busy || openingLookup.error || openingLookup.branchId !== openingBranchId))}>
                 {confirmed && mode === "open" ? "Atualizar contexto" : confirmed ? "Atualizar saldo" : uncertain ? "Repetir confirmação" : waitingApproval ? "Verificar aprovação e concluir" : busy
                   ? "Processando..."
