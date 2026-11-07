@@ -205,7 +205,7 @@
 :is(.ip-ui[data-theme] .ip-pos-route,.ip-pos-modal[data-theme]) .pos-entry{overflow:visible}
 :is(.ip-ui[data-theme] .ip-pos-route,.ip-pos-modal[data-theme]) .pos-search{position:static}
 :is(.ip-ui[data-theme] .ip-pos-route,.ip-pos-modal[data-theme]) .pos-search-input{height:38px;min-height:38px}
-:is(.ip-ui[data-theme] .ip-pos-route,.ip-pos-modal[data-theme]) .pos-search-input>.material-symbols-rounded{font-size:18px;width:16px;color:var(--pdv-cyan)}
+:is(.ip-ui[data-theme] .ip-pos-route,.ip-pos-modal[data-theme]) .pos-search-input>.material-symbols-rounded{padding:0;font-size:18px;width:16px;color:var(--pdv-cyan)}
 :is(.ip-ui[data-theme] .ip-pos-route,.ip-pos-modal[data-theme]) .pos-search-input input:not([type=checkbox]){height:32px;box-shadow:none}
 /* These five declarations override the legacy global scan button !important. */
 :is(.ip-ui[data-theme] .ip-pos-route,.ip-pos-modal[data-theme]) .pos-search-input .scan-button{display:grid!important;border:0!important;border-radius:7px;border-left:0!important;background:var(--pdv-cyan-bg)!important;color:var(--pdv-cyan)!important;width:33px;min-width:0;height:32px}
