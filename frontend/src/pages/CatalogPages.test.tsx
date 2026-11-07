@@ -9,7 +9,7 @@ const mocks=vi.hoisted(()=>({canCreate:true,create:vi.fn(),list:vi.fn(),options:
 vi.mock('../auth/useAuth',()=>({useAuth:()=>({permissions:{CAD_CATEGORIA:{canCreate:mocks.canCreate},CAD_SUBCATEGORIA:{canCreate:mocks.canCreate}}})}))
 vi.mock('firebase/data-connect',()=>({getDataConnect:()=>({})}))
 vi.mock('../lib/firebase',()=>({firebaseApp:{}}))
-vi.mock('@insightpad/dataconnect',()=>({connectorConfig:{},categoryOptions:()=>mocks.options(),listCategories:(...args:unknown[])=>mocks.list(...args),listSubcategories:(...args:unknown[])=>mocks.list(...args),createCategory:(...args:unknown[])=>mocks.create(...args),createCategoriesBatch:vi.fn(),createSubcategory:vi.fn(),createSubcategoriesBatch:vi.fn(),updateCategory:vi.fn(),updateSubcategory:vi.fn(),setCategoriesStatusBatch:vi.fn(),setSubcategoriesStatusBatch:vi.fn()}))
+vi.mock('@insightpad/dataconnect',()=>({connectorConfig:{},categoryOptions:()=>mocks.options(),listCategories:(...args:unknown[])=>mocks.list(...args),listSubcategories:(...args:unknown[])=>mocks.list(...args),createCategory:(...args:unknown[])=>mocks.create(...args),createCategoriesBatch:vi.fn(),createSubcategory:(...args:unknown[])=>mocks.create(...args),createSubcategoriesBatch:vi.fn(),updateCategory:vi.fn(),updateSubcategory:vi.fn(),setCategoriesStatusBatch:vi.fn(),setSubcategoriesStatusBatch:vi.fn()}))
 let root:Root,container:HTMLDivElement
 const button=(text:string)=>{const result=[...container.querySelectorAll('button')].find(el=>el.textContent===text);if(!result)throw new Error(text);return result}
 const click=async(el:HTMLElement)=>{await act(async()=>el.click())}
@@ -20,7 +20,7 @@ async function render(pageKey:'CAD_CATEGORIA'|'CAD_SUBCATEGORIA'){
  await act(async()=>{await vi.advanceTimersByTimeAsync(350)})
 }
 beforeEach(()=>{vi.useFakeTimers();vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);mocks.canCreate=true;mocks.list.mockResolvedValue({data:{_select:[]}});mocks.options.mockResolvedValue({data:{_select:[{id:'11111111-1111-4111-8111-111111111111',name:'BEBIDAS'}]}});mocks.create.mockReset()})
-afterEach(async()=>{if(root)await act(async()=>root.unmount());container?.remove();vi.useRealTimers();vi.unstubAllGlobals()})
+afterEach(async()=>{if(root)await act(async()=>root.unmount());container?.remove();vi.useRealTimers();vi.unstubAllGlobals();vi.restoreAllMocks()})
 
 it('AJU-CAT-06..11: names creation controls and appends a blank category without submitting',async()=>{
  await render('CAD_CATEGORIA');await click(button('+ Nova Categoria'))
@@ -90,4 +90,24 @@ it('refuses an incomplete second subcategory instead of silently submitting only
  await act(async()=>{container.querySelector('form')!.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}))});
  expect(container.querySelector('[role="alertdialog"]')).toBeNull();expect(container.querySelector('[role="alert"]')?.textContent).toContain('Informe combinações');
  await act(async()=>{await vi.advanceTimersByTimeAsync(20)});expect(document.activeElement?.id).toBe('subcategory-parent-1');expect(document.activeElement?.getAttribute('aria-invalid')).toBe('true');
+});
+
+it.each(['CAD_CATEGORIA','CAD_SUBCATEGORIA'] as const)('returns %s failed-submit focus only after the confirmation unmounts',async(key)=>{
+ const frames=new Map<number,FrameRequestCallback>(),requestedWithConfirmation:boolean[]=[];let frameId=0;
+ vi.stubGlobal('requestAnimationFrame',(callback:FrameRequestCallback)=>{requestedWithConfirmation.push(Boolean(container.querySelector('[role="alertdialog"]')));frames.set(++frameId,callback);return frameId});
+ vi.stubGlobal('cancelAnimationFrame',(id:number)=>frames.delete(id));
+ vi.spyOn(console,'error').mockImplementation(()=>{});mocks.create.mockRejectedValue(new Error('synthetic rejected write'));
+ await render(key);await click(button(key==='CAD_CATEGORIA'?'+ Nova Categoria':'+ Nova Subcategoria'));
+ const field=container.querySelector<HTMLInputElement>(key==='CAD_CATEGORIA'?'#category-name-0':'#subcategory-name-0')!;
+ await input(field,'RASCUNHO PRESERVADO');
+ if(key==='CAD_SUBCATEGORIA'){const parent=container.querySelector('select')!;await act(async()=>{parent.value='11111111-1111-4111-8111-111111111111';parent.dispatchEvent(new Event('change',{bubbles:true}))})}
+ await act(async()=>{container.querySelector('form')!.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}))});
+ expect(container.querySelector('[role="alertdialog"]')).not.toBeNull();await click(button('Confirmar'));
+ expect(container.querySelector('[role="alertdialog"]')).toBeNull();expect(container.querySelector('[role="dialog"]')).not.toBeNull();
+ expect(field.value).toBe('RASCUNHO PRESERVADO');expect(mocks.create).toHaveBeenCalledTimes(1);
+ expect(requestedWithConfirmation).toEqual([false]);
+ await act(async()=>{for(const [id,callback]of [...frames]){frames.delete(id);callback(0)}});
+ expect(document.activeElement).toBe(field);
+ // A later event-loop turn must not let confirmation cleanup steal focus back.
+ await act(async()=>{await vi.advanceTimersByTimeAsync(20)});expect(document.activeElement).toBe(field);
 });

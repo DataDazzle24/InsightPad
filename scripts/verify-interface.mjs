@@ -104,3 +104,33 @@ const geometryPath='frontend/src/components/dashboard-v3/geometry.ts',geometry=p
 for(const name of ['compareRaw','smoothPath','ringSegments','lineSegments','toggleSelection'])assert.equal(canonical(geometry,namedNode(geometry,name)),canonical(originalGeometry,namedNode(originalGeometry,name)),`${name}: v6 may change display sizing and heat opacity, not data/geometry contracts`);
 assert.ok(!readFileSync('frontend/src/layout/AppLayout.tsx','utf8').includes('Uma solução Data Dazzle'),'Retired global-footer signature must not reappear');
 console.log('v6: screen-only dashboard/modal namespace; original model, adapters, full report, money comparisons and selection preserved.');
+
+// Arthur explicitly authorized only failed-submit focus in the two catalog forms.
+// Check that exact hook, then compare the rest of the page with the P48 source.
+const catalogPath='frontend/src/pages/CatalogPages.tsx',catalogSource=readFileSync(catalogPath,'utf8'),catalogFile=parse(catalogPath,catalogSource);
+const focusHook=namedNode(catalogFile,'useCatalogErrorFocus');
+const expectedFocusHook=parse(catalogPath,`function useCatalogErrorFocus(confirmation:Confirmation|null,id:string){
+ const requested=useRef(false)
+ useEffect(()=>{
+  if(confirmation||!requested.current)return
+  requested.current=false
+  const frame=requestAnimationFrame(()=>document.getElementById(id)?.focus())
+  return()=>cancelAnimationFrame(frame)
+ },[confirmation,id])
+ return useCallback(()=>{requested.current=true},[])
+}`);
+assert.equal(canonical(catalogFile,focusHook),canonical(expectedFocusHook,namedNode(expectedFocusHook,'useCatalogErrorFocus')),'Only the reviewed post-unmount focus hook is authorized');
+let restoredCatalog=catalogSource.slice(0,focusHook.getFullStart())+catalogSource.slice(focusHook.end);
+for(const [page,id]of [['SubcategoryPage','subcategory-name-0'],['CategoryPage','category-name-0']]){
+ const file=parse(catalogPath,restoredCatalog),node=namedNode(file,page),start=node.getStart(file),end=node.end;
+ let body=restoredCatalog.slice(start,end);
+ const declaration=` const requestErrorFocus=useCatalogErrorFocus(confirmation,'${id}')\n`;
+ assert.equal(body.split(declaration).length,2,`${page}: unexpected focus request wiring`);body=body.replace(declaration,'');
+ const replacement="requestErrorFocus();setConfirmation(null);setNotice({type:'error',text:conflict??'Operação não aplicada. Verifique duplicidades e permissões.'})";
+ assert.equal(body.split(replacement).length,2,`${page}: focus may change only the failed-confirmation path`);
+ body=body.replace(replacement,`setConfirmation(null);setNotice({type:'error',text:conflict??'Operação não aplicada. Verifique duplicidades e permissões.'});focusCatalogField('${id}')`);
+ restoredCatalog=restoredCatalog.slice(0,start)+body+restoredCatalog.slice(end);
+}
+const restoredCatalogFile=parse(catalogPath,restoredCatalog),catalogBefore=parse(catalogPath,git('show','a440615bd4b807b6b1484368c32d4149e20ba042:'+catalogPath));
+assert.equal(canonical(restoredCatalogFile,restoredCatalogFile),canonical(catalogBefore,catalogBefore),'Catalog changed beyond the authorized failed-submit focus correction; JSX, validation, requests and data must survive');
+console.log('Catalog: exact post-unmount focus exception; original JSX, validation, API calls, drafts and mutations preserved.');

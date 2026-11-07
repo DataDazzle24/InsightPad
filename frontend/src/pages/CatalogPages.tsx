@@ -46,6 +46,18 @@ async function existingCatalogConflict(sub:boolean,candidates:{id?:string;name:s
 }
 function focusCatalogField(id:string,invalid=false){requestAnimationFrame(()=>{const field=document.getElementById(id);if(invalid)field?.setAttribute('aria-invalid','true');field?.focus()})}
 
+// Schedule failed-submit focus after confirmation unmount effects.
+function useCatalogErrorFocus(confirmation:Confirmation|null,id:string){
+ const requested=useRef(false)
+ useEffect(()=>{
+  if(confirmation||!requested.current)return
+  requested.current=false
+  const frame=requestAnimationFrame(()=>document.getElementById(id)?.focus())
+  return()=>cancelAnimationFrame(frame)
+ },[confirmation,id])
+ return useCallback(()=>{requested.current=true},[])
+}
+
 export function CatalogPages({pageKey}:{pageKey:'CAD_CATEGORIA'|'CAD_SUBCATEGORIA'}){return pageKey==='CAD_CATEGORIA'?<CategoryPage/>:<SubcategoryPage/>}
 
 function CategoryPage(){
@@ -55,6 +67,7 @@ function CategoryPage(){
  const [selected,setSelected]=useState<string[]>([]),[visibleCount,setVisibleCount]=useState(100),[filters,setFilters]=useState<Record<string,string[]>>({}),[filterSearch,setFilterSearch]=useState<Record<string,string>>({}),[dateFilters,setDateFilters]=useState<DateRangeMap>({}),[filterModal,setFilterModal]=useState(false)
  const [sort,setSort]=useState<TableSort|null>(null)
  const [confirmation,setConfirmation]=useState<Confirmation|null>(null)
+ const requestErrorFocus=useCatalogErrorFocus(confirmation,'category-name-0')
  const requestSequence=useRef(0),submitInFlight=useRef(false)
  const setSearch=(value:string)=>{setSearchState(value);setPage(0);setSelected([])}
  const load=useCallback(async()=>{const requestId=++requestSequence.current;setBusy(true);try{const result=await listCategories(dc,{search:search.trim(),sortField:sort?.key??'',sortDirection:sort?.direction??'',limit:PAGE_SIZE,offset:page*PAGE_SIZE,filters:serverFilters(filters,dateFilters),requestKey:crypto.randomUUID()});if(requestId===requestSequence.current){setItems(z.array(categorySchema).parse(result.data._select??[]));setTotal(Number((result.data._selectFirst as {totalCount?:number}|null)?.totalCount??0))}}
@@ -72,7 +85,7 @@ function CategoryPage(){
  }
  async function status(ids:string[],active:boolean){setBusy(true);try{const result=await setCategoriesStatusBatch(dc,{ids,active});if(Number(result.data._execute)!==ids.length)throw new Error('Nem todos os registros são elegíveis.');setSelected([]);setNotice({type:'success',text:'Status atualizado.'});setPage(0);if(page===0)await load()}
   catch(error){console.error(error);const conflict=active?await existingCatalogConflict(false,items.filter(row=>ids.includes(row.id))).catch(()=>null):null;setNotice({type:'error',text:conflict??'Não foi possível alterar o status. Verifique vínculos e permissões.'})}finally{setBusy(false)}}
- async function confirm(){if(!confirmation||submitInFlight.current)return;submitInFlight.current=true;setBusy(true);try{await confirmation.run();setConfirmation(null)}catch(error){console.error(error);const conflict=await existingCatalogConflict(false,names.map(name=>({name,id:editing?.id}))).catch(()=>null);setConfirmation(null);setNotice({type:'error',text:conflict??'Operação não aplicada. Verifique duplicidades e permissões.'});focusCatalogField('category-name-0')}finally{submitInFlight.current=false;setBusy(false)}}
+ async function confirm(){if(!confirmation||submitInFlight.current)return;submitInFlight.current=true;setBusy(true);try{await confirmation.run();setConfirmation(null)}catch(error){console.error(error);const conflict=await existingCatalogConflict(false,names.map(name=>({name,id:editing?.id}))).catch(()=>null);requestErrorFocus();setConfirmation(null);setNotice({type:'error',text:conflict??'Operação não aplicada. Verifique duplicidades e permissões.'})}finally{submitInFlight.current=false;setBusy(false)}}
  const options={name:[...new Set(items.map(item=>item.name))].sort().map(value=>({value,label:value})),active:[{value:'true',label:'Ativo'},{value:'false',label:'Inativo'}]}
  async function exportAll(){setBusy(true);try{const all:Category[]=[],pageSize=1000;for(let offset=0;;offset+=pageSize){const result=await listCategories(dc,{search:search.trim(),sortField:sort?.key??'',sortDirection:sort?.direction??'',limit:pageSize,offset,filters:serverFilters(filters,dateFilters),requestKey:crypto.randomUUID()});const page=z.array(categorySchema).parse(result.data._select??[]);all.push(...page);if(page.length<pageSize)break}
   const exportRows=all;csv('categorias-completo.csv',['ID','Categoria','Status','Produtos','Subcategorias','Cadastro','Atualização'],exportRows.map(item=>[item.id,item.name,item.active?'Ativo':'Inativo',String(item.productCount),String(item.subcategoryCount),formatDate(item.createdAt),formatDate(item.updatedAt)]));setNotice({type:'success',text:`CSV gerado com ${exportRows.length} registro(s).`})}
@@ -97,6 +110,7 @@ function SubcategoryPage(){
  const [modal,setModal]=useState(false),[editing,setEditing]=useState<Subcategory|null>(null),[batch,setBatch]=useState<BatchSubcategory[]>([{categoryId:'',name:''}])
  const [selected,setSelected]=useState<string[]>([]),[visibleCount,setVisibleCount]=useState(100),[filters,setFilters]=useState<Record<string,string[]>>({}),[filterSearch,setFilterSearch]=useState<Record<string,string>>({}),[dateFilters,setDateFilters]=useState<DateRangeMap>({}),[filterModal,setFilterModal]=useState(false),[confirmation,setConfirmation]=useState<Confirmation|null>(null)
  const [sort,setSort]=useState<TableSort|null>(null)
+ const requestErrorFocus=useCatalogErrorFocus(confirmation,'subcategory-name-0')
  const requestSequence=useRef(0),submitInFlight=useRef(false)
  const setSearch=(value:string)=>{setSearchState(value);setPage(0);setSelected([])}
  const load=useCallback(async()=>{const requestId=++requestSequence.current;setBusy(true);try{const key=crypto.randomUUID(),[records,options]=await Promise.all([listSubcategories(dc,{search:search.trim(),categoryId:null,sortField:sort?.key??'',sortDirection:sort?.direction??'',limit:PAGE_SIZE,offset:page*PAGE_SIZE,filters:serverFilters(filters,dateFilters),requestKey:key}),categoryOptions(dc,{requestKey:key})]);if(requestId===requestSequence.current){setItems(z.array(subcategorySchema).parse(records.data._select??[]));setTotal(Number((records.data._selectFirst as {totalCount?:number}|null)?.totalCount??0));setCategories(z.array(optionSchema).parse(options.data._select??[]))}}
@@ -114,7 +128,7 @@ function SubcategoryPage(){
  }
  async function status(ids:string[],active:boolean){setBusy(true);try{const result=await setSubcategoriesStatusBatch(dc,{ids,active});if(Number(result.data._execute)!==ids.length)throw new Error('Nem todos os registros são elegíveis.');setSelected([]);setNotice({type:'success',text:'Status atualizado.'});setPage(0);if(page===0)await load()}
   catch(error){console.error(error);const conflict=active?await existingCatalogConflict(true,items.filter(row=>ids.includes(row.id))).catch(()=>null):null;setNotice({type:'error',text:conflict??'Não foi possível alterar o status. Verifique produtos vinculados.'})}finally{setBusy(false)}}
- async function confirm(){if(!confirmation||submitInFlight.current)return;submitInFlight.current=true;setBusy(true);try{await confirmation.run();setConfirmation(null)}catch(error){console.error(error);const conflict=await existingCatalogConflict(true,batch.map(row=>({...row,id:editing?.id}))).catch(()=>null);setConfirmation(null);setNotice({type:'error',text:conflict??'Operação não aplicada. Verifique duplicidades e permissões.'});focusCatalogField('subcategory-name-0')}finally{submitInFlight.current=false;setBusy(false)}}
+ async function confirm(){if(!confirmation||submitInFlight.current)return;submitInFlight.current=true;setBusy(true);try{await confirmation.run();setConfirmation(null)}catch(error){console.error(error);const conflict=await existingCatalogConflict(true,batch.map(row=>({...row,id:editing?.id}))).catch(()=>null);requestErrorFocus();setConfirmation(null);setNotice({type:'error',text:conflict??'Operação não aplicada. Verifique duplicidades e permissões.'})}finally{submitInFlight.current=false;setBusy(false)}}
  const names=[...new Set(items.map(item=>item.name))].sort().map(value=>({value,label:value})),categoryValues=categories.map(category=>({value:category.id,label:category.name}))
  async function exportAll(){setBusy(true);try{const all:Subcategory[]=[],pageSize=1000;for(let offset=0;;offset+=pageSize){const result=await listSubcategories(dc,{search:search.trim(),categoryId:null,sortField:sort?.key??'',sortDirection:sort?.direction??'',limit:pageSize,offset,filters:serverFilters(filters,dateFilters),requestKey:crypto.randomUUID()});const page=z.array(subcategorySchema).parse(result.data._select??[]);all.push(...page);if(page.length<pageSize)break}
   const exportRows=all;csv('subcategorias-completo.csv',['ID','Subcategoria','Categoria','Status','Produtos','Cadastro','Atualização'],exportRows.map(item=>[item.id,item.name,item.categoryName,item.active?'Ativo':'Inativo',String(item.productCount),formatDate(item.createdAt),formatDate(item.updatedAt)]));setNotice({type:'success',text:`CSV gerado com ${exportRows.length} registro(s).`})}

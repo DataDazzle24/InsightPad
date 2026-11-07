@@ -578,7 +578,7 @@
         "AJU-SUB-13",
         "AJU-SUB-14"
       ],
-      "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão."
+      "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão. Arthur autorizou em 07/11/2026 a correção restrita do foco após erro em Categorias/Subcategorias; JSX, validações, APIs e mutações permanecem preservados por comparação da exceção exata."
     },
     "dataconnect/schema/schema.gql": {
       "ids": [
