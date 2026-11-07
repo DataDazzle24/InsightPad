@@ -97,7 +97,7 @@ async function mountCash(mode='Suprimento',props=cashProps()){
 
 it('CASH-ACK-SDK-AD CLOSE: SDK lost ACK reconciles one closure with identical payload',async()=>{
  qaState.cashAckLoss=true;const{props}=await mountCash('Fechar caixa');await submitCash();
- expect(container.querySelector('fieldset')!.disabled).toBe(true);expect(button('Conferir abertura')).toBeTruthy();
+ expect(container.querySelector('fieldset')!.disabled).toBe(true);expect(button('Repetir confirmação')).toBeTruthy();
  expect(inspectFixtures().sessions[0]!.status).toBe('CLOSED');const before=inspectFixtures();await submitCash();
  const calls=qaState.requests.filter(r=>r.name==='CloseCashSession');expect(calls).toHaveLength(2);expect(calls[1]!.variables).toEqual(calls[0]!.variables);expect(inspectFixtures()).toEqual(before);expect(props.onClose).toHaveBeenCalledOnce();
 })
