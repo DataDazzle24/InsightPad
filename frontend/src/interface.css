@@ -1391,16 +1391,6 @@
     color: var(--ip-on-primary);
     background: var(--ip-primary);
   }
-  .ip-ui[data-theme] .channel-alert-readiness {
-    right: 12px;
-    max-width: calc(100vw - var(--ip-rail) - 24px);
-    padding: 8px 10px;
-    border: 1px solid var(--ip-line);
-    border-radius: 11px;
-    color: var(--ip-muted);
-    background: var(--ip-surface);
-    font-size: 11px;
-  }
   .ip-ui[data-theme] .permissions-grid {
     min-height: 0;
     overflow: auto;
@@ -1428,9 +1418,6 @@
     .ip-ui[data-theme] .payment-row>button {
       grid-column: 2;
       grid-row: 1/4;
-    }
-    .ip-ui[data-theme] .channel-alert-readiness {
-      max-width: calc(100vw - 84px);
     }
   }
   /* Keep .app-stage a direct child: the existing print contract relies on it. */
@@ -1544,11 +1531,5 @@
   .ip-ui[data-theme] .platform-panel>.platform-table {
     min-width: 0;
     flex: 1;
-  }
-  /* Preserve existing compact readiness dimensions pending local-slot integration. */
-  .ip-ui[data-theme] .channel-alert-readiness {
-    bottom: 4px;
-    height: 34px;
-    min-height: 34px;
   }
 }

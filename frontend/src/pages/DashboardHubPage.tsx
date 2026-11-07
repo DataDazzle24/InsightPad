@@ -111,7 +111,7 @@ function Operational({view,onViewChange}:DashboardViewProps&{view:Exclude<View,"
     <AppToast notice={notice} onClose={()=>setNotice(null)}/>
       {filter && (
         <div className="catalog-backdrop dashboard-v3-modal-backdrop" data-theme={theme}>
-          <section className="catalog-modal finance-filter-modal dashboard-v3-modal" role="dialog" aria-modal="true" aria-label="Período de análise">
+          <section className="catalog-modal finance-filter-modal dashboard-v3-modal" data-theme={theme} role="dialog" aria-modal="true" aria-label="Período de análise">
             <header>
               <div>
                 <span className="eyebrow">PESQUISA</span>
@@ -147,7 +147,7 @@ function Operational({view,onViewChange}:DashboardViewProps&{view:Exclude<View,"
           </section>
         </div>
       )}
-    {info&&<div className="catalog-backdrop dashboard-v3-modal-backdrop" data-theme={theme}><AnalysisDetails onClose={()=>setInfo(false)}>
+    {info&&<div className="catalog-backdrop dashboard-v3-modal-backdrop" data-theme={theme}><AnalysisDetails theme={theme} onClose={()=>setInfo(false)}>
       <p><strong>Período aplicado:</strong> {from} — {to}</p><p><strong>Atualizado em:</strong> {generatedAt?.toLocaleString('pt-BR')??'—'}</p>
       {view==='stock'?<><p>Saldo: movimentação no período, não posição atual de estoque.</p><p>Lucro mantém o indicador recebido do sistema para as saídas por venda.</p></>:view==='customers'?<><p>A Curva ABC usa as classes recebidas do sistema. Selecionar A, B ou C filtra somente essa tabela e seu CSV; os indicadores gerais permanecem iguais.</p><p>Frequência: compras por cliente, conforme o cálculo do sistema.</p></>:<p>Categorias e subcategorias são níveis do mesmo faturamento e não são somados como receitas independentes. Margem, crescimento e líderes mantêm os valores e a ordem recebidos.</p>}
     </AnalysisDetails></div>}

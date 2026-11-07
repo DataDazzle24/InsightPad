@@ -2,8 +2,9 @@ import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import {readFileSync} from 'node:fs';
 import ts from '../frontend/node_modules/typescript/lib/typescript.js';
+import postcss from '../frontend/node_modules/postcss/lib/postcss.mjs';
 
-// Presentation may relocate controls; it must retain their business wiring.
+// Presentation is scoped; retired footer UI is removed, never relocated.
 const baseline='3f5ba5b67567e3bf831575fb229d16a79d6ed6b1';
 const git=(...args)=>execFileSync('git',args,{encoding:'utf8'}).trim();
 git('merge-base','--is-ancestor',baseline,'HEAD');
@@ -35,7 +36,8 @@ function checkShell(node){if(ts.isJsxElement(node)&&node.openingElement.tagName.
 checkShell(shell);assert.ok(printStagePreserved,'Existing print stylesheet needs .app-stage directly below .app-frame');
 
 const removeOldAlertReserve=source=>source.replace(/^  \.app-frame:has\(> \.channel-alert-readiness\) > \.app-stage \{ padding-bottom: (?:4\.5|8\.7)rem; \}\n/gm,'');
-assert.equal(readFileSync('frontend/src/catalog-standardization.css','utf8').replaceAll('.app-frame:not(.ip-ui) ','').trim(),removeOldAlertReserve(git('show',baseline+':frontend/src/catalog-standardization.css')),'Only the approved obsolete footer/alert reserves and legacy selector scope may change; other declarations/print must survive');
+const removeRetiredFooterCss=source=>source.replace(/^.*\.channel-alert-(?:readiness|settings)[^\n]*\n/gm,'').replace('/* Keep the persistent alert control clear of page actions and mobile navigation. */\n@media screen {\n}\n@media screen and (max-width: 1100px) {\n}\n','');
+assert.equal(readFileSync('frontend/src/catalog-standardization.css','utf8').replaceAll('.app-frame:not(.ip-ui) ','').trim(),removeRetiredFooterCss(removeOldAlertReserve(git('show',baseline+':frontend/src/catalog-standardization.css'))).trim(),'Only the approved obsolete footer/alert reserves and legacy selector scope may change; other declarations/print must survive');
 
 // Approved dashboard v3 replaces presentation, never the loader/session/domain contracts.
 const dashboardBase='b753891db86b3219e9f11cc113405a83bf3fedb5';
@@ -54,12 +56,29 @@ for(const className of ['legacy-header','ip-top']){
 }
 assert.equal((readFileSync('frontend/src/layout/AppLayout.tsx','utf8').match(/<ChannelOrderNotifier\s*\/>/g)||[]).length,1);
 assert.ok(!readFileSync('frontend/src/layout/AppLayout.tsx','utf8').includes('className="ip-bottom"'));
-// Invert only the reviewed portal plumbing; the entire notifier must then be original.
+// Remove only the retired footer readiness/settings UI from the pre-dashboard
+// notifier. All order guards, callbacks, leases, hooks, audio and acknowledgement
+// must still be exactly the original implementation after this explicit excision.
 const notifier='frontend/src/components/ChannelOrderNotifier.tsx';
-const unportal=readFileSync(notifier,'utf8').replace("import { createPortal } from 'react-dom';\n",'').replace("import { useChannelAlertTarget } from '../hooks/useChannelAlertTarget';\n",'').replace('  const alertTarget = useChannelAlertTarget(Boolean(permission?.canUpdate));\n','').replace('return alertTarget ? createPortal(<button className="channel-alert-readiness"','return <button className="channel-alert-readiness"').replace('</button>, alertTarget) : null;','</button>;');
-assert.equal(unportal.trim(),git('show',dashboardBase+':'+notifier),'Notifier audio/order/session/permission logic changed');
+function removeRetiredFooterNotifierUi(source){
+ return source.replace('  const [settingsOpen, setSettingsOpen] = useState(false);\n','')
+ .replace('const [browserNotifications, setBrowserNotifications]','const [browserNotifications]')
+ .replace('    else setSettingsOpen(false);\n','')
+ .replace('useDialogAccessibility(Boolean(order) || settingsOpen, closeActiveDialog);','useDialogAccessibility(Boolean(order), closeActiveDialog);')
+ .replace(/  async function toggleBrowserNotifications\(\) \{[\s\S]*?(?=  async function beginReject\(\))/,'')
+ .replace(/  if \(!permission\?\.canUpdate\) return null;[\s\S]*?(?=  const validRejection)/,'  if (!permission?.canUpdate || !order) return null;\n');
+}
+const notifierFile=parse(notifier,readFileSync(notifier,'utf8'));
+const expectedNotifier=parse(notifier,removeRetiredFooterNotifierUi(git('show',dashboardBase+':'+notifier)));
+assert.equal(canonical(notifierFile,notifierFile),canonical(expectedNotifier,expectedNotifier),'Notifier changed beyond removal of footer-owned UI');
+assert.ok(!readFileSync(notifier,'utf8').includes('channel-alert-readiness'));
+assert.ok(!readFileSync('frontend/src/components/dashboard-v3/DashboardSurface.tsx','utf8').includes('data-channel-alert-slot'));
+const retiredInterface=git('show','a440615bd4b807b6b1484368c32d4149e20ba042:frontend/src/interface.css')
+ .replace(/^ +\.ip-ui\[data-theme\] \.channel-alert-readiness \{[^}]*\}\n/gm,'')
+ .replace('  /* Preserve existing compact readiness dimensions pending local-slot integration. */\n','');
+assert.equal(readFileSync('frontend/src/interface.css','utf8').trim(),retiredInterface.trim(),'Shared shell CSS may only remove retired footer-owned declarations in this refinement');
 for(const path of ['frontend/src/pages/LoginPage.tsx','frontend/src/pages/LoginPage.visual.css','frontend/src/pages/DashboardPage.tsx','frontend/src/utils/dashboardExport.ts','frontend/src/utils/stock.ts','frontend/src/utils/dashboardAuthorization.ts'])assert.equal(readFileSync(path,'utf8').trim(),git('show',dashboardBase+':'+path),`Dashboard migration changed preserved source ${path}`);
-console.log('Dashboard v3: exact shell JSX, one notifier, original alert logic, API loaders, stale-response guards, filters, money/CSV and login preserved.');
+console.log('Dashboard v3: exact shell JSX, one notifier, original order alert logic without footer readiness UI, API loaders, stale-response guards, filters, money/CSV and login preserved.');
 // The complete original report mappings survive separately from the active screen.
 const reportPath='frontend/src/components/dashboard-v3/DashboardPrintReport.tsx';
 const report=parse(reportPath,readFileSync(reportPath,'utf8'));
@@ -72,3 +91,16 @@ for(const family of ['DashboardHubPage.tsx','ChannelDashboardPage.tsx']){
 function reportControls(n){assert.ok(!(ts.isJsxAttribute(n)&&/^on[A-Z]/.test(n.name.getText(report))),'Print report must not duplicate live handlers');if(ts.isJsxOpeningElement(n)||ts.isJsxSelfClosingElement(n))assert.notEqual(n.tagName.getText(report),'button','Print keeps report data, not hidden duplicate buttons');ts.forEachChild(n,reportControls)}
 reportControls(report);
 console.log('Full original operational/channel report rows, columns and headers preserved; no duplicate report actions.');
+
+// v6 refinements cannot leak into the shell, other dialogs or print.
+const refinementCss=postcss.parse(readFileSync('frontend/src/components/dashboard-v3/dashboard-v6.css','utf8'));
+refinementCss.walkRules(rule=>{
+ for(const selector of postcss.list.comma(rule.selector))assert.match(selector,/^\.(?:ip-dashboard-v3|dashboard-v3-modal(?:-backdrop)?)(?:[.\s[:>]|$)/,'Unscoped v6 selector');
+ let scopedToScreen=false;for(let parent=rule.parent;parent;parent=parent.parent)if(parent.type==='atrule'&&parent.name==='media'&&/\bscreen\b/.test(parent.params))scopedToScreen=true;
+ assert.ok(scopedToScreen,'Every v6 refinement must be screen-only');
+});
+for(const path of ['frontend/src/components/dashboard-v3/model.ts','frontend/src/components/dashboard-v3/adapters.ts','frontend/src/components/dashboard-v3/integration.ts','frontend/src/components/dashboard-v3/DashboardPrintReport.tsx'])assert.equal(readFileSync(path,'utf8').trim(),git('show','a440615bd4b807b6b1484368c32d4149e20ba042:'+path),`v6 changed preserved dashboard data/print contract ${path}`);
+const geometryPath='frontend/src/components/dashboard-v3/geometry.ts',geometry=parse(geometryPath,readFileSync(geometryPath,'utf8')),originalGeometry=parse(geometryPath,git('show','a440615bd4b807b6b1484368c32d4149e20ba042:'+geometryPath));
+for(const name of ['compareRaw','smoothPath','ringSegments','lineSegments','toggleSelection'])assert.equal(canonical(geometry,namedNode(geometry,name)),canonical(originalGeometry,namedNode(originalGeometry,name)),`${name}: v6 may change display sizing and heat opacity, not data/geometry contracts`);
+assert.ok(!readFileSync('frontend/src/layout/AppLayout.tsx','utf8').includes('Uma solução Data Dazzle'),'Retired global-footer signature must not reappear');
+console.log('v6: screen-only dashboard/modal namespace; original model, adapters, full report, money comparisons and selection preserved.');

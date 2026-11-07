@@ -1,0 +1,19 @@
+{
+  "CORE": "CORE não gravada",
+  "operation": "APPEND_ONLY",
+  "project": "insightpad-dd-dev",
+  "phase": "DASHBOARD_V6_IMPLEMENTATION_RECORD",
+  "baseCandidate": "a440615bd4b807b6b1484368c32d4149e20ba042",
+  "baseReceipt": {"phase": "P48", "release": "1793982535522000", "version": "db8c31efcb005604", "freshLiveCheck": false},
+  "branch": "agent/dashboard-refinements-v6",
+  "candidateResolution": "Use immutable commit and CI from the external delivery receipt; this source record does not claim validation or deploy.",
+  "authority": "Arthur direct instruction removes all footer-owned UI and relocated copies; scoped v6 guide; standing frontend DEV authorization only.",
+  "changes": ["remove global readiness/settings UI and portal injection; preserve independent incoming-order logic", "restore only prior insertion effects outside dashboards", "dashboard-only compact frame, final tokens, KPI density, useful-container breakpoints and plot/donut geometry", "own themed modal namespace; preserve all data, handlers, CSV and full print"],
+  "functionsPublished": false,
+  "schemaChanged": false,
+  "connectorPublished": false,
+  "migrationExecuted": false,
+  "IAMChanged": false,
+  "pending": ["attach exact frozen-SHA test and CI evidence", "perform already-authorized Hosting-only publication after fresh preflight", "record authenticated browser result using existing account without new business movements", "append to remote CORE preserving history"],
+  "limits": ["prototype measurements do not approve DEV", "QA evidence uses memory fixtures", "no PROD/backend/service reactivation authorization", "billing unavailable; last planning envelope4.50/cap5 USD"]
+}

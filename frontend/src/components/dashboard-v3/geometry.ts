@@ -16,7 +16,7 @@ export function compareRaw(a:unknown,b:unknown):number {
 export function heatStyle(value:number,values:number[]):{backgroundColor?:string}{
  if(!Number.isFinite(value)||value===0)return {};
  const d=[...new Set(values.filter(Number.isFinite).map(Math.abs).filter(Boolean))].sort((a,b)=>a-b),r=d.length<2?.5:Math.max(0,d.indexOf(Math.abs(value)))/(d.length-1);
- return {backgroundColor:`hsl(${value<0?33:210-62*r} 92% 53% / ${.14+.33*r})`};
+ return {backgroundColor:`hsl(${value<0?33:210-62*r} 92% 53% / ${.14+.30*r})`};
 }
 export function toggleSelection(current:string[],id:string,additive:boolean):string[]{return additive?(current.includes(id)?current.filter(x=>x!==id):[...current,id]):current.length===1&&current[0]===id?[]:[id];}
 

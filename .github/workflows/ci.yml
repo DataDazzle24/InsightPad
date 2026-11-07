@@ -17,7 +17,9 @@ jobs:
   validate:
     # Pin the supported distro; ubuntu-latest moved to a newer APT package set.
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    # The v6 matrix adds eleven native-100% viewport sizes and dialog coverage.
+    # Preserve all gates; allow the expanded browser proof to finish.
+    timeout-minutes: 30
     env:
       CANDIDATE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:

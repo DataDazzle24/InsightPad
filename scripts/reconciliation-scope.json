@@ -1475,6 +1475,36 @@
         "UXIP-001"
       ],
       "reason": "Directed CI provisioning correction after exit124 in required Chromium install; same lockfile/browser and all verification gates retained, bounded dependencies/download and one retry. Disposable runner only; no product/GCP resource change."
+    },
+    "frontend/src/components/dashboard-v3/dashboard-v6.css": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "06 Nov v6 dashboard-only visual refinement, explicit removal of retired footer UI/relocations, preserved order business logic and selective restoration; geometry/cleanup/export/eleven-viewport regression. Exact path; no backend/auth/dependency or infrastructure change."
+    },
+    "frontend/src/components/dashboard-v3/useDashboardMeasurements.ts": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "06 Nov v6 dashboard-only visual refinement, explicit removal of retired footer UI/relocations, preserved order business logic and selective restoration; geometry/cleanup/export/eleven-viewport regression. Exact path; no backend/auth/dependency or infrastructure change."
+    },
+    "frontend/src/components/dashboard-v3/useDashboardMeasurements.test.tsx": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "06 Nov v6 dashboard-only visual refinement, explicit removal of retired footer UI/relocations, preserved order business logic and selective restoration; geometry/cleanup/export/eleven-viewport regression. Exact path; no backend/auth/dependency or infrastructure change."
+    },
+    "docs/dashboard-v6-refinements.md": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "06 Nov v6 dashboard-only visual refinement, explicit removal of retired footer UI/relocations, preserved order business logic and selective restoration; geometry/cleanup/export/eleven-viewport regression. Exact path; no backend/auth/dependency or infrastructure change."
+    },
+    "docs/dashboard-v6-core-delta.json": {
+      "ids": [
+        "UXIP-001"
+      ],
+      "reason": "06 Nov v6 dashboard-only visual refinement, explicit removal of retired footer UI/relocations, preserved order business logic and selective restoration; geometry/cleanup/export/eleven-viewport regression. Exact path; no backend/auth/dependency or infrastructure change."
     }
   },
   "bytePreserved": [

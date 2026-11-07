@@ -228,6 +228,7 @@ export function DailyProfitDashboardPage({onViewChange}:DashboardViewProps) {
         onSelectPeriod:id=>{const day=series.find(item=>item.date===id);if(day)choosePeriod(day)},
         onSelectProduct:(id,{additive})=>{const ids=additive?(filters.products.includes(id)?filters.products.filter(value=>value!==id):[...filters.products,id]):[id];const next={...filters,products:ids};setFilters(next);setDraft(next)},
         onExportTable:(id,ordered)=>{if(!canExport||!data||busy||id!=='sales-products')return;const byId=new Map(data.products.map(row=>[row.id,row]));csv(ordered.flatMap(key=>{const row=byId.get(key);return row?[row]:[]}))}}}
+      hasSelectionContext={selected||filterSummary!=='Todos os filtros'}
       selectionSummary={<><span>{filterSummary}</span>      {selected && (
         <button
           className="period-chip"
@@ -247,7 +248,7 @@ export function DailyProfitDashboardPage({onViewChange}:DashboardViewProps) {
     <AppToast notice={notice} onClose={()=>setNotice(null)}/>
       {filterOpen && (
         <div className="catalog-backdrop dashboard-v3-modal-backdrop" data-theme={theme}>
-          <section className="catalog-modal finance-filter-modal dashboard-v3-modal" role="dialog" aria-modal="true" aria-label="Filtros do dashboard financeiro">
+          <section className="catalog-modal finance-filter-modal dashboard-v3-modal" data-theme={theme} role="dialog" aria-modal="true" aria-label="Filtros do dashboard financeiro">
             <header>
               <div>
                 <span className="eyebrow">PESQUISA</span>
@@ -300,7 +301,7 @@ export function DailyProfitDashboardPage({onViewChange}:DashboardViewProps) {
           </section>
         </div>
       )}
-    {info&&<div className="catalog-backdrop dashboard-v3-modal-backdrop" data-theme={theme}><AnalysisDetails onClose={()=>setInfo(false)}>
+    {info&&<div className="catalog-backdrop dashboard-v3-modal-backdrop" data-theme={theme}><AnalysisDetails theme={theme} onClose={()=>setInfo(false)}>
       <p><strong>Período aplicado:</strong> {from} — {to}</p><p><strong>Filtros:</strong> {filterSummary}</p>
       <p><strong>Atualizado em:</strong> {generatedAt?.toLocaleString('pt-BR')??'—'}</p>
       <h3>Como os indicadores são calculados</h3>
