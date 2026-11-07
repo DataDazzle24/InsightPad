@@ -139,8 +139,14 @@ export function CashSessionModal({
     try {
       if (previous?.state !== "confirmed") {
         // OpenCashSession has no operationId. Reconcile a lost ACK by reading the
-        // same user's session in the same branch before considering a replay.
+        // same user's session in the same branch. Absence is not proof of no commit:
+        // another tab may already have closed it. Never resend an uncertain open.
         const existing = previous ? await readOpeningSession(openingBranchId) : openingLookup.session;
+        if (previous && !existing) {
+          setUncertain(true);
+          onNotice("A abertura ainda não pôde ser confirmada. Nenhuma nova abertura foi enviada. Confira o caixa com o responsável e consulte novamente.");
+          return;
+        }
         if (!existing) {
           const payload = previous?.payload ?? Object.freeze({branchId:openingBranchId,openingAmountCents:amountCents,notes});
           const reference = previous?.reference ?? mutationRef<{_execute?:unknown},Record<string,unknown>>(dc,"OpenCashSession",payload);
@@ -418,7 +424,7 @@ export function CashSessionModal({
               {mode === "open" && openingLookup.error && !uncertain && !confirmed && <button type="button" disabled={busy} onClick={() => setLookupAttempt(value => value+1)}>Conferir sessão</button>}
               {!session && canManage && <button type="button" disabled={busy || !branchId && !openingAllowed} onClick={() => {if(!instructionLocked())setMode("policy")}}>Regras da empresa</button>}
               <button className="catalog-primary" disabled={busy || mode === "open" && (!openingAllowed || !canOpen || !onOpened || !uncertain && !confirmed && (openingLookup.busy || openingLookup.error || openingLookup.branchId !== openingBranchId))}>
-                {confirmed && mode === "open" ? "Atualizar contexto" : confirmed ? "Atualizar saldo" : uncertain ? "Repetir confirmação" : waitingApproval ? "Verificar aprovação e concluir" : busy
+                {confirmed && mode === "open" ? "Atualizar contexto" : confirmed ? "Atualizar saldo" : uncertain ? mode === "open" ? "Conferir abertura" : "Repetir confirmação" : waitingApproval ? "Verificar aprovação e concluir" : busy
                   ? "Processando..."
                   : mode === "open"
                     ? openingLookup.session ? "Retomar caixa" : "Abrir caixa"

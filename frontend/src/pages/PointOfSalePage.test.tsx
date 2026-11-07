@@ -97,7 +97,7 @@ async function mountCash(mode='Suprimento',props=cashProps()){
 
 it('CASH-ACK-SDK-AD CLOSE: SDK lost ACK reconciles one closure with identical payload',async()=>{
  qaState.cashAckLoss=true;const{props}=await mountCash('Fechar caixa');await submitCash();
- expect(container.querySelector('fieldset')!.disabled).toBe(true);expect(button('Repetir confirmação')).toBeTruthy();
+ expect(container.querySelector('fieldset')!.disabled).toBe(true);expect(button('Conferir abertura')).toBeTruthy();
  expect(inspectFixtures().sessions[0]!.status).toBe('CLOSED');const before=inspectFixtures();await submitCash();
  const calls=qaState.requests.filter(r=>r.name==='CloseCashSession');expect(calls).toHaveLength(2);expect(calls[1]!.variables).toEqual(calls[0]!.variables);expect(inspectFixtures()).toEqual(before);expect(props.onClose).toHaveBeenCalledOnce();
 })
@@ -199,9 +199,12 @@ it('PDV-v2: lost opening ACK reconciles same branch read; no duplicate opening',
  expect(button('Cancelar').disabled).toBe(true);await act(async()=>{(container.querySelector('[aria-label="Fechar controle de caixa"]') as HTMLButtonElement).click()});expect(props.onClose).not.toHaveBeenCalled();
  api.workspace.mockResolvedValue(lookup(session));await submitCash();expect(api.execute).toHaveBeenCalledOnce();expect(props.onOpened).toHaveBeenCalledExactlyOnceWith('branch');expect(props.onClose).toHaveBeenCalledOnce()
 })
-it('PDV-v2: uncertain uncommitted opening repeats identical frozen reference after bounded read',async()=>{
+it('PDV-v2: absent session after lost opening ACK never authorizes a second opening',async()=>{
  const props=openingProps();await renderOpening(props);api.execute.mockRejectedValueOnce(new TypeError('Failed to fetch')).mockResolvedValueOnce({data:{_execute:1}});await cashInput('input','2500');await submitCash();const first=api.execute.mock.calls[0][0];await submitCash();
- expect(api.execute.mock.calls[1][0]).toBe(first);expect(api.workspace).toHaveBeenCalledTimes(2);expect(props.onOpened).toHaveBeenCalledOnce()
+ // The original opening might have committed and been closed in another tab.
+ // A branch read returning null cannot authorize another financial effect.
+ expect(api.execute).toHaveBeenCalledOnce();expect(Object.isFrozen(first.variables)).toBe(true);expect(api.workspace).toHaveBeenCalledTimes(2);expect(props.onOpened).not.toHaveBeenCalled();expect(button('Conferir abertura')).toBeTruthy();
+ api.workspace.mockResolvedValue(lookup(session));await submitCash();expect(api.execute).toHaveBeenCalledOnce();expect(props.onOpened).toHaveBeenCalledOnce()
 })
 it('PDV-v2: SDK secret change blocks uncertain opening replay',async()=>{
  const props=openingProps();await renderOpening(props);api.execute.mockRejectedValue(new TypeError('Failed to fetch'));await submitCash();api.sessionToken='new-session';await submitCash();expect(api.execute).toHaveBeenCalledOnce();expect(props.onOpened).not.toHaveBeenCalled()
