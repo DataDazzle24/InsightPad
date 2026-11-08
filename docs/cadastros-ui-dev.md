@@ -1,7 +1,7 @@
 # Cadastros: UI DEV sobre a publicação P50R
 
 Base de produto: `9c50ee250c54ed9b2ab6a2b4656aedff1fb9a63a`.
-Último Hosting conhecido: `6b49361abe1815f7`, release `1794142116878000`, conforme recibo do operador P50R. Este pacote não declara publicação nova.
+A publicação deve conferir o conjunto efetivamente servido e a compatibilidade com esta base. Esta documentação técnica não substitui os registros operacionais privados.
 
 ## Resultado pretendido
 
@@ -33,6 +33,6 @@ A matriz local inclui as sete rotas em seis viewports nos dois temas e comparaç
 
 Este trabalho não altera Functions, SQL, Data Connect, SDK, IAM, schedulers, integrações, dependências ou PROD. iFood permanece contido. Não repetir migrations ou restaurações anteriores para publicar esta camada de UI.
 
-Sem sessão autenticada GCP/navegador neste executor, a aceitação real e as capturas de DEV não são inferidas dos testes sintéticos. A CORE ainda não foi gravada; o complemento deve preservar seu histórico e conter o resultado efetivo. O teto anterior USD5 já foi atingido pelo envelope de planejamento P50R; qualquer futura operação com nova reserva precisa tratar esse limite, sem confundi-lo com cobrança medida.
+Sem sessão autenticada GCP/navegador neste executor, a aceitação real e as capturas de DEV não são inferidas dos testes sintéticos. Os registros operacionais e a autorização de recursos/custos são mantidos separadamente. A publicação deve preservar o histórico e registrar o resultado efetivo, sem confundir planejamento com cobrança medida.
 
 Revisar o SHA e CI final entregues separadamente, sem misturar este pacote com o build QA. A publicação deve seguir o fluxo existente, preservar configuração/rewrites e conferir a release corrente antes de escrever. Para reversão, usar a revisão específica e as guardas do Hosting; não executar uma reversão cega diante de versão concorrente ou de backend incompatível.
