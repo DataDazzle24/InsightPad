@@ -143,11 +143,13 @@ export function DateRangePicker({
   to,
   onChange,
   label = "Período da venda",
+  cadastros = false,
 }: {
   from: string;
   to: string;
   onChange: (from: string, to: string) => void;
   label?: string;
+  cadastros?: boolean;
 }) {
   const trigger = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false),
@@ -188,7 +190,7 @@ export function DateRangePicker({
       className="filter-field date-range-field"
       ref={root}
       onKeyDown={(event) => {
-        if (event.key !== "Escape" || !open || !event.currentTarget.closest("[data-cadastros]")) return;
+        if (event.key !== "Escape" || !open || !cadastros) return;
         event.preventDefault();
         setOpen(false);
         trigger.current?.focus();
@@ -198,7 +200,7 @@ export function DateRangePicker({
       <button
         type="button"
         ref={trigger}
-        aria-expanded={open}
+        aria-expanded={cadastros ? open : undefined}
         className="date-range-trigger"
         onClick={() => setOpen((value) => !value)}
       >
@@ -277,7 +279,7 @@ export function DateRangePicker({
               className="catalog-primary"
               onClick={() => {
                 setOpen(false);
-                if (root.current?.closest("[data-cadastros]")) trigger.current?.focus();
+                if (cadastros) trigger.current?.focus();
               }}
             >
               Concluir

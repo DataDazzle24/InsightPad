@@ -1611,6 +1611,12 @@
       "ids": [
         "CADASTROS-UI-20261108"
       ]
+    },
+    "frontend/src/components/CadastroCalendar.test.tsx": {
+      "reason": "Cadastros-only calendar opt-in regression: preserve all other modules Escape behavior and accessible attributes.",
+      "ids": [
+        "CADASTROS-UI-20261108"
+      ]
     }
   },
   "bytePreserved": [

@@ -1031,6 +1031,8 @@
   outline-offset: 2px;
 }
 .ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit .product-search-select__input > button {
+  /* The legacy .component-row button mobile rule spans every nested button. */
+  grid-column: auto;
   min-width: 29px;
   min-height: 29px;
   padding: 0;

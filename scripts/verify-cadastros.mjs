@@ -44,6 +44,12 @@ export function verifyCadastros(){
  const masterAfter=parse(after('pages/MasterDataPage.tsx'));
  assert.equal(named(masterAfter,'save').replaceAll('setFormNotice(', 'setNotice('),named(masterBefore,'save'),'Product/customer/supplier/branch save may only move errors inside the dialog');
  assert.equal(named(masterAfter,'open').replace('setFormNotice(""); ',''),named(masterBefore,'open'),'Opening a form must preserve persisted values and component quantities');
+ const sharedBefore=parse(before('components/SalesUi.tsx')),sharedAfter=parse(after('components/SalesUi.tsx'));
+ for(const node of sharedBefore.statements)if(ts.isFunctionDeclaration(node)&&!['DateRangePicker','BarcodeScanner'].includes(node.name?.text))assert.equal(named(sharedAfter,node.name.text),canonical(sharedBefore,node),'Unrelated shared UI changed');
+ function effects(file,name){const result=[];let owner;for(const n of file.statements)if(ts.isFunctionDeclaration(n)&&n.name?.text===name)owner=n;assert.ok(owner);function visit(n){if(ts.isCallExpression(n)&&n.expression.getText(file)==='useEffect')result.push(canonical(file,n));ts.forEachChild(n,visit)}visit(owner);return result}
+ for(const name of ['DateRangePicker','BarcodeScanner'])assert.deepEqual(effects(sharedAfter,name),effects(sharedBefore,name),name+': calendar effects, camera lifecycle, detector/fallback or media cleanup changed');
+ const originalSelect=after('components/SearchableProductSelect.tsx').replace(/              if \(event.currentTarget.closest\("\[data-cadastros\]"\)\) \{\n                if \(!open\) return;\n                event.preventDefault\(\);\n              \}\n/,'');
+ assert.equal(originalSelect.trim(),before('components/SearchableProductSelect.tsx'),'Shared product selection must preserve all behavior except scoped open-list Escape');
  const css=postcss.parse(after('cadastros.css'));
  css.walkRules(rule=>{
   for(const selector of postcss.list.comma(rule.selector)){

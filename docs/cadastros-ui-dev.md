@@ -12,7 +12,9 @@ O patch anexado foi aplicado sobre sua base exata após conferência dos sete ha
 ## Adaptações após integração
 
 - Todo o novo CSS é screen-only para preservar as folhas de impressão existentes.
+- A regra mobile antiga de botões de composição fazia o botão de limpar do seletor saltar para outra linha. O reset de grid-column fica restrito ao botão interno de Cadastros; entrada e limpar permanecem lado a lado e têm regressão geométrica nos doze pares de tema/viewport.
 - Escape na sugestão aberta de e-mail fecha a lista antes de alcançar o formulário, como ocorre nos seletores/calendários locais.
+- Calendário e scanner recebem origem cadastros explícita; fora do módulo, o calendário mantém inclusive os atributos e o comportamento de Escape anteriores.
 - Promoções notifica mudanças apenas após resposta positiva. Fechar durante uma requisição não perde a atualização se a confirmação chegar depois; não há repetição da mutação. O pai consulta a referência do loader atual, preservando o recorte corrente e ignorando retorno a um cadastro já desmontado.
 - Os testes antigos que localizavam formulário pelo nome genérico usam o atributo estável existente: o novo aria-labelledby mantém a identificação pelo título efetivo.
 - verify-cadastros confere as mudanças aprovadas contra a base publicada, incluindo operações e argumentos, gravação, cálculos, carregamento, campos, CSV, CEP e escopo CSS. Os testes históricos continuam conferindo sua visão anterior dessas quatro fontes já validadas; os outros arquivos usam o conteúdo atual.

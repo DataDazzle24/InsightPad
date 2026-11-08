@@ -1873,7 +1873,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                     if (field.type === "date") {
                       const range = dateFilters[field.key] ?? { from: "", to: "" };
                       return (
-                        <DateRangePicker
+                        <DateRangePicker cadastros
                           key={field.key}
                           label={field.label}
                           from={range.from}
