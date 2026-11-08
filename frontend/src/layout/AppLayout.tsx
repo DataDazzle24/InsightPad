@@ -93,9 +93,9 @@ export function AppLayout() {
       className="app-frame ip-ui"
       data-theme={theme}
       data-cadastros={
-        location.pathname === "/modulos/cadastros" ||
+        location.pathname.replace(/\/+$/, "").toLowerCase() === "/modulos/cadastros" ||
         appRoutes.some(({ route }) =>
-          route.startsWith("/cadastros/") && route === location.pathname
+          route.startsWith("/cadastros/") && route === location.pathname.replace(/\/+$/, "").toLowerCase()
         )
           ? ""
           : undefined

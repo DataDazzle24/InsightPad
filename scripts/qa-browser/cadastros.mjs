@@ -19,7 +19,7 @@ export async function cadastrosProof({output,sha,origin='http://127.0.0.1:4174'}
   const uuid=n=>'00000000-0000-4000-8000-'+String(n).padStart(12,'0');
   async function zoom(value){const actual=await worker.evaluate(async({origin,value})=>{const tab=(await chrome.tabs.query({})).find(t=>t.url?.startsWith(origin));await chrome.tabs.setZoom(tab.id,value);return chrome.tabs.getZoom(tab.id)},{origin,value});assert.equal(actual,value);return actual}
   async function go(route,theme='dark'){
-   await page.goto(origin+'/qa/application.html?cadastros_case='+(++navigation)+'#'+route);await page.evaluate(t=>localStorage.setItem('insightpad.theme',t),theme);await page.reload();await page.locator('.qa-controls').evaluate(e=>e.style.visibility='hidden');await page.locator(route.startsWith('/cadastros/')?'.cad-page':'.cad-module').waitFor();await page.locator('.catalog-loader').waitFor({state:'hidden'});await page.evaluate(()=>document.fonts.ready);await zoom(1);
+   await page.goto(origin+'/qa/application.html?cadastros_case='+(++navigation)+'#'+route);await page.evaluate(t=>localStorage.setItem('insightpad.theme',t),theme);await page.reload();await page.locator('.qa-controls').evaluate(e=>e.style.visibility='hidden');await page.locator(route.toLowerCase().startsWith('/cadastros/')?'.cad-page':'.cad-module').waitFor();await page.locator('.catalog-loader').waitFor({state:'hidden'});await page.evaluate(()=>document.fonts.ready);await zoom(1);
   }
   const call=(name,v)=>page.evaluate(async({name,v})=>window.__insightpadQa.operate(name,v),{name,v});
   async function capture(name){const file=name+'.png';await page.screenshot({path:dir+'/'+file});return file}
@@ -38,7 +38,9 @@ export async function cadastrosProof({output,sha,origin='http://127.0.0.1:4174'}
    for(const route of ['categorias','subcategorias','produtos','clientes','fornecedores','filiais']){
     await go('/cadastros/'+route);assert.equal(await page.locator('[data-cadastros] .cad-page').count(),1);await mode('read');assert.equal(await add().count(),0);assert.equal(await page.locator('.catalog-action').count(),0);assert.equal(await page.getByRole('button',{name:'Exportar CSV',exact:true}).count(),0);
    }
-   await mode('denied');await page.waitForFunction(()=>!location.hash.includes('/cadastros/'));return{sixReadOnlyPages:true,directRouteGuard:true};
+   await mode('denied');await page.waitForFunction(()=>!location.hash.includes('/cadastros/'));
+   for(const route of ['/modulos/cadastros/','/CADASTROS/PRODUTOS/']){await go(route);assert.equal(await page.locator('[data-cadastros]').count(),1);if(route.startsWith('/CADASTROS/')){await add().click();await page.locator('.product-kind-modal').waitFor();await page.keyboard.press('Escape');await page.locator('.product-kind-modal').waitFor({state:'hidden'})}}
+   return{sixReadOnlyPages:true,directRouteGuard:true,routerCompatibleCaseAndTrailingSlash:true};
   });
   for(const theme of ['dark','light'])await run('hover-focus-'+theme,['CAD-04','CAD-08','CAD-09'],async()=>{
    await go('/cadastros/produtos',theme);const seen={};
