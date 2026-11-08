@@ -1,0 +1,1125 @@
+/* Screen-only Cadastros layer; existing print styles remain authoritative. */
+@media screen {
+/* Visual proposal scoped to the original Cadastros dialog families. */
+
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-backdrop {
+  --cad-dialog: #151b22;
+  --cad-layer: #1b242e;
+  --cad-field: #0d131a;
+  --cad-edge: #334252;
+  --cad-text: #f0f5f8;
+  --cad-muted: #b6c2ce;
+  --cad-accent: #56d8f0;
+  --cad-accent-bg: #112b36;
+  --cad-confirm: #a0ed54;
+  --cad-on-confirm: #142309;
+  --cad-edit: #f5ca65;
+  --cad-on-edit: #352508;
+  --cad-danger: #ffacb5;
+  --cad-danger-bg: #3c2229;
+  --cad-shadow: 0 20px 58px rgb(0 0 0 / .48);
+  --cad-inset: 22px;
+  --cad-gap: 12px;
+  padding: 16px;
+  background: rgb(3 8 12 / .76);
+  backdrop-filter: blur(3px);
+}
+.ip-ui[data-theme="light"][data-cadastros] .cad-page .catalog-backdrop {
+  --cad-dialog: #fff;
+  --cad-layer: #edf3f8;
+  --cad-field: #f7fafc;
+  --cad-edge: #bdcbd8;
+  --cad-text: #162532;
+  --cad-muted: #516272;
+  --cad-accent: #006781;
+  --cad-accent-bg: #e3f5fa;
+  --cad-danger: #a72439;
+  --cad-danger-bg: #fdecef;
+  --cad-shadow: 0 20px 56px rgb(18 45 67 / .23);
+  background: rgb(18 32 47 / .52);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-backdrop:has(.catalog-confirm) {
+  z-index: var(--ip-z-child);
+  backdrop-filter: none;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-backdrop:has(.barcode-modal) {
+  z-index: var(--ip-z-child);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-backdrop :is(.catalog-modal,.catalog-confirm) {
+  --cad-width: 860px;
+  width: min(var(--cad-width),100%);
+  max-width: 100%;
+  max-height: calc(100dvh - 32px);
+  min-width: 0;
+  border: 1px solid var(--cad-edge);
+  border-radius: 18px;
+  background: var(--cad-dialog);
+  box-shadow: var(--cad-shadow);
+  color: var(--cad-text);
+  font-family: inherit;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-backdrop .catalog-modal:has(.batch-fields) { --cad-width: 660px; }
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-backdrop .catalog-modal:has(.batch-row--subcategory) { --cad-width: 760px; }
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-backdrop .advanced-search-modal { --cad-width: 880px; }
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-backdrop .product-kind-modal { --cad-width: 650px; }
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-backdrop .product-extras { --cad-width: 920px; }
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-backdrop .barcode-modal { --cad-width: 520px; }
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-backdrop .catalog-confirm { --cad-width: 492px; padding: 20px; gap: 9px; }
+
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal > header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 68px;
+  flex: none;
+  padding: 12px var(--cad-inset);
+  border-color: var(--cad-edge);
+  background: var(--cad-dialog);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal > header > div {
+  flex: 1;
+  min-width: 0;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal > header .eyebrow {
+  display: block;
+  margin: 0 0 3px;
+  color: var(--cad-accent);
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal > header h2 {
+  margin: 0;
+  color: var(--cad-text);
+  font: 700 21px/1.2 IPInterface,system-ui,sans-serif;
+  letter-spacing: -.03em;
+  overflow-wrap: anywhere;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal > header > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
+  color: var(--cad-muted);
+  background: var(--cad-layer);
+  border: 1px solid var(--cad-edge);
+  border-radius: 10px;
+  font: 400 23px/1 system-ui,sans-serif;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal > header > button:hover {
+  color: var(--cad-accent);
+  border-color: var(--cad-accent);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal > form { min-height: 0; overflow: hidden; }
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal :is(.master-modal-content,.catalog-filter-body,.batch-fields,.product-extras__body,.product-kind-body) {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  padding: 17px var(--cad-inset);
+  overflow: auto;
+  overscroll-behavior: contain;
+  scroll-padding: 14px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--cad-edge) transparent;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal :is(.master-form-grid,.promotion-form__fields) {
+  gap: var(--cad-gap);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .master-form-grid {
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  align-items: start;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .master-form-grid .wide { grid-column: 1 / -1; }
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal :is(.master-form-grid label,.batch-row label,.promotion-form__fields label,.filter-field) {
+  min-width: 0;
+  gap: 6px;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal :is(.master-form-grid label,.batch-row label,.promotion-form__fields label,.filter-field) > span:first-child {
+  color: var(--cad-text);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal :is(input:not([type="checkbox"],[type="radio"]),textarea,select,.filter-multiselect > summary,.date-range-trigger) {
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 11px;
+  color: var(--cad-text);
+  background: var(--cad-field);
+  border: 1px solid var(--cad-edge);
+  border-radius: 10px;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.3;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal textarea {
+  min-height: 72px;
+  resize: vertical;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal input::placeholder { color: var(--cad-muted); opacity: .84; }
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal :is(input[type="checkbox"],input[type="radio"]) {
+  accent-color: var(--cad-accent);
+  flex: 0 0 auto;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal :is(input,select,textarea)[aria-invalid="true"] {
+  border-color: var(--cad-danger);
+  background: var(--cad-danger-bg);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-backdrop :is(button,summary,input,select,textarea):focus-visible {
+  outline: 2px solid var(--cad-accent);
+  outline-offset: 2px;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-backdrop :is(button,input,select,textarea):disabled {
+  cursor: not-allowed;
+  opacity: .6;
+}
+
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .master-modal-tabs {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 9px var(--cad-inset);
+  margin: 0;
+  background: var(--cad-layer);
+  border-bottom: 1px solid var(--cad-edge);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .master-modal-tabs button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 36px;
+  min-width: 0;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--cad-muted);
+  font: 700 11px/1.25 IPInterface,system-ui,sans-serif;
+  text-transform: none;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .master-modal-tabs button.active {
+  background: var(--cad-accent-bg);
+  color: var(--cad-accent);
+  border-color: var(--cad-accent);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .master-modal-tabs button .material-symbols-rounded { font-size: 16px; }
+
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-backdrop :is(.catalog-modal > footer,.catalog-modal > form > footer,.catalog-confirm > footer) {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  flex: none;
+  gap: 8px;
+  margin: 0;
+  padding: 12px var(--cad-inset);
+  background: var(--cad-dialog);
+  border-top: 1px solid var(--cad-edge);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-backdrop .catalog-confirm > footer {
+  padding: 12px 0 0;
+  margin-top: 5px;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-backdrop :is(.catalog-modal > footer,.catalog-modal form > footer,.catalog-confirm > footer) button,
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal :is(.batch-add,.batch-row > button,.combo-remove) {
+  min-height: 38px;
+  min-width: 0;
+  padding: 8px 13px;
+  border: 1px solid var(--cad-edge);
+  border-radius: 9px;
+  background: var(--cad-layer);
+  color: var(--cad-text);
+  font: 700 12px/1.3 IPInterface,system-ui,sans-serif;
+  text-transform: none;
+  letter-spacing: 0;
+  white-space: normal;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-backdrop :is(.catalog-modal,.catalog-confirm) :is(.catalog-modal-submit,.catalog-primary) {
+  border-color: var(--cad-confirm);
+  background: var(--cad-confirm);
+  color: var(--cad-on-confirm);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-backdrop .catalog-modal .catalog-modal-submit--edit {
+  border-color: var(--cad-edit);
+  background: var(--cad-edit);
+  color: var(--cad-on-edit);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-backdrop .catalog-modal .cad-submit--next {
+  border-color: var(--cad-accent);
+  background: var(--cad-accent-bg);
+  color: var(--cad-accent);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-backdrop :is(.cad-confirm--danger .catalog-modal-submit,.catalog-modal .batch-row > button,.catalog-modal .combo-remove) {
+  border-color: color-mix(in srgb,var(--cad-danger) 45%,var(--cad-edge));
+  background: var(--cad-danger-bg);
+  color: var(--cad-danger);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-backdrop .cad-confirm--warning .catalog-modal-submit {
+  border-color: var(--cad-edit);
+  background: var(--cad-edit);
+  color: var(--cad-on-edit);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-backdrop :is(.catalog-modal,.catalog-confirm) button:not(:disabled):hover {
+  filter: brightness(1.045);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .batch-fields {
+  display: grid;
+  gap: 9px;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .batch-row {
+  gap: 10px;
+  min-width: 0;
+  background: var(--cad-layer);
+  border: 1px solid var(--cad-edge);
+  border-radius: 11px;
+  padding: 11px;
+  align-items: center;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .batch-row small {
+  color: var(--cad-muted);
+  font: 400 10px/1.35 IPInterface,system-ui,sans-serif;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .batch-add {
+  margin: 0 var(--cad-inset) 12px;
+  flex: none;
+  color: var(--cad-accent);
+  background: var(--cad-accent-bg);
+  border-color: var(--cad-edge);
+}
+
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal :is(.filter-dropdown,.range-calendar,.product-search-select__options,.email-suggestion-list) {
+  max-width: 100%;
+  border: 1px solid var(--cad-edge);
+  border-radius: 10px;
+  color: var(--cad-text);
+  background: var(--cad-dialog);
+  box-shadow: var(--cad-shadow);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal :is(.filter-dropdown__options,.product-search-select__options) {
+  max-height: min(220px,32dvh);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal :is(.filter-dropdown,.range-calendar) {
+  position: static;
+  transform: none;
+  width: 100%;
+  margin-top: 5px;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .range-calendar {
+  width: min(330px,100%);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .date-range-field:has(.range-calendar) {
+  grid-column: span 2;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .product-search-select.is-open {
+  padding-bottom: 8px;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .product-search-select__options {
+  position: static;
+  margin-top: 5px;
+}
+
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal :is(.product-kind-option,.promotion-summary > span,.promotion-editor,.promotion-history) {
+  color: var(--cad-text);
+  background: var(--cad-layer);
+  border-color: var(--cad-edge);
+  border-radius: 12px;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .product-kind-option > .material-symbols-rounded,
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-backdrop .catalog-confirm > .material-symbols-rounded {
+  width: 39px;
+  height: 39px;
+  border-radius: 10px;
+  background: var(--cad-accent-bg);
+  color: var(--cad-accent);
+  font-size: 21px;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .product-kind-option:hover {
+  border-color: var(--cad-accent);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .promotion-form > footer {
+  border-color: var(--cad-edge);
+  background: transparent;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-backdrop .catalog-confirm :is(h2,p) {
+  margin: 0;
+  color: var(--cad-text);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-backdrop .catalog-confirm h2 {
+  font: 700 19px/1.3 IPInterface,system-ui,sans-serif;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-backdrop .catalog-confirm p {
+  font-size: 13px;
+  line-height: 1.5;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .scanner-view {
+  min-height: 110px;
+  height: min(175px,30dvh);
+  margin: 15px var(--cad-inset) 0;
+  display: grid;
+  place-items: center;
+  background: var(--cad-field);
+  border: 1px solid var(--cad-edge);
+  border-radius: 12px;
+}
+
+@media (max-width: 1040px) {
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .master-form-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+}
+@media (max-width: 640px) {
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-backdrop { --cad-inset: 13px; --cad-gap: 11px; padding: 8px; }
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-backdrop :is(.catalog-modal,.catalog-confirm) {
+    max-height: calc(100dvh - 16px);
+    border-radius: 14px;
+  }
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal > header { min-height: 60px; padding-block: 11px; }
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal > header h2 { font-size: 18px; }
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal :is(.master-form-grid,.product-kind-options,.promotion-form__fields,.batch-row,.batch-row--subcategory) {
+    grid-template-columns: minmax(0,1fr);
+  }
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .date-range-field:has(.range-calendar) { grid-column: 1 / -1; }
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .master-modal-tabs { padding-block: 6px; gap: 4px; }
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .master-modal-tabs button { min-height: 34px; padding: 4px 7px; }
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-backdrop :is(.catalog-modal > footer,.catalog-modal > form > footer) { padding-block: 8px; }
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .product-kind-option { min-height: 105px; }
+}
+@media (max-height: 460px) {
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal > header { min-height: 48px; padding-block: 6px; }
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal > form > footer { padding-block: 6px; }
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .master-modal-tabs { padding-block: 4px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-backdrop :is(.catalog-modal,.catalog-confirm,button) { animation: none; transition: none; }
+}
+
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal > header .cad-dialog-icon {
+  flex: 0 0 39px;
+  width: 39px;
+  height: 39px;
+  border: 1px solid color-mix(in srgb,var(--cad-accent) 32%,var(--cad-edge));
+  border-radius: 10px;
+  background: var(--cad-accent-bg);
+  color: var(--cad-accent);
+  font-size: 20px;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal :is(.master-form-grid label,.batch-row label,.promotion-form__fields label,.filter-field) > span:first-child {
+  text-transform: none;
+  letter-spacing: 0;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .barcode-input {
+  border: 1px solid var(--cad-edge);
+  border-radius: 10px;
+  background: var(--cad-field);
+  min-height: 42px;
+  min-width: 0;
+  padding: 3px;
+  gap: 3px;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .barcode-input > input {
+  min-height: 34px;
+  border: 0;
+  background: transparent;
+  padding: 5px 7px;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .barcode-input > button {
+  min-height: 34px;
+  min-width: 34px;
+  border: 1px solid var(--cad-edge);
+  border-radius: 7px;
+  background: var(--cad-accent-bg);
+  color: var(--cad-accent);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .barcode-input:focus-within {
+  outline: 2px solid var(--cad-accent);
+  outline-offset: 2px;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .barcode-input:has(input[aria-invalid="true"]) {
+  border-color: var(--cad-danger);
+  background: var(--cad-danger-bg);
+}
+@media(max-width:640px) {
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal > header { gap: 9px; }
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal > header .cad-dialog-icon {
+    width: 33px;
+    height: 33px;
+    flex-basis: 33px;
+    font-size: 18px;
+  }
+}
+
+/* Catalog pages keep the source order and fields. Only the table scrolls. */
+.app-frame.ip-ui[data-theme][data-cadastros]:has(>.app-stage>:is(.cad-page,.cad-module)) {
+  grid-template-rows: var(--ip-top) minmax(0,1fr);
+  overflow: hidden;
+}
+.ip-ui[data-theme][data-cadastros] :is(.cad-page,.cad-module) {
+  --cad-page-inset: clamp(12px,1.6vw,24px);
+  --cad-panel: #151b22;
+  --cad-panel-raised: #1b242e;
+  --cad-page-field: #0d131a;
+  --cad-page-border: #334252;
+  --cad-page-accent: #56d8f0;
+  --cad-page-accent-bg: #112b36;
+  padding: 14px var(--cad-page-inset);
+  gap: 12px;
+}
+.ip-ui[data-theme="light"][data-cadastros] :is(.cad-page,.cad-module) {
+  --cad-panel: #fff;
+  --cad-panel-raised: #edf3f8;
+  --cad-page-field: #f7fafc;
+  --cad-page-border: #c9d5e0;
+  --cad-page-accent: #006781;
+  --cad-page-accent-bg: #e3f5fa;
+}
+.ip-ui[data-theme][data-cadastros] .cad-module {
+  overflow: auto;
+  padding-top: clamp(20px,3.2vh,40px);
+  gap: 19px;
+}
+.ip-ui[data-theme][data-cadastros] .cad-module .legacy-module__intro h1 {
+  font-size: clamp(23px,2.5vw,32px);
+  text-transform: none;
+  letter-spacing: -.035em;
+  margin: 3px 0 6px;
+}
+.ip-ui[data-theme][data-cadastros] .cad-module .legacy-module__intro p { margin: 0; }
+.ip-ui[data-theme][data-cadastros] .cad-module .legacy-module__grid {
+  flex: 0 0 auto;
+  height: auto;
+  max-width: none;
+  margin: 0;
+  padding: 2px;
+  grid-template-rows: none;
+  grid-auto-rows: minmax(116px,auto);
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 12px;
+  overflow: visible;
+}
+.ip-ui[data-theme][data-cadastros] .cad-module .legacy-tile {
+  min-height: 0;
+  height: auto;
+  justify-content: center;
+  padding: 16px;
+  border: 1px solid var(--cad-page-border);
+  border-radius: 14px;
+  background: var(--cad-panel);
+}
+.ip-ui[data-theme][data-cadastros] .cad-module .legacy-tile:hover {
+  background: var(--cad-panel-raised);
+  border-color: var(--cad-page-accent);
+}
+.ip-ui[data-theme][data-cadastros] .cad-module .legacy-tile .ip-nav-content {
+  display: grid;
+  grid-template-columns: 42px minmax(0,1fr) 18px;
+  grid-template-rows: auto;
+  align-items: center;
+  gap: 11px;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.ip-ui[data-theme][data-cadastros] .cad-module .legacy-tile :is(.legacy-tile__icon,.legacy-tile__arrow) {
+  grid-row: 1;
+  color: var(--cad-page-accent);
+}
+.ip-ui[data-theme][data-cadastros] .cad-module .legacy-tile .legacy-tile__icon {
+  grid-column: 1;
+  width: 42px;
+  height: 42px;
+  border: 1px solid color-mix(in srgb,var(--cad-page-accent) 23%,var(--cad-page-border));
+  background: var(--cad-page-accent-bg);
+  font-size: 22px;
+}
+.ip-ui[data-theme][data-cadastros] .cad-module .legacy-tile .ip-nav-content>span:not([class]) {
+  grid-column: 2;
+  min-width: 0;
+}
+.ip-ui[data-theme][data-cadastros] .cad-module .legacy-tile .legacy-tile__arrow {
+  grid-column: 3;
+  align-self: center;
+  opacity: .8;
+  font-size: 18px;
+}
+.ip-ui[data-theme][data-cadastros] .cad-module .legacy-tile strong {
+  color: var(--ip-text);
+  font-size: 15px;
+}
+.ip-ui[data-theme][data-cadastros] .cad-module .legacy-tile small {
+  color: var(--ip-muted);
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.ip-ui[data-theme][data-cadastros] .cad-module .legacy-tile.is-feedback {
+  border-color: var(--ip-nav);
+}
+.ip-ui[data-theme][data-cadastros] .cad-module .legacy-tile.is-feedback::before { opacity: .12; }
+.ip-ui[data-theme][data-cadastros] .cad-module .legacy-tile.is-feedback .legacy-tile__icon {
+  color: var(--ip-on-nav);
+  background: var(--ip-nav);
+}
+
+.ip-ui[data-theme][data-cadastros] .cad-page > header {
+  min-height: 0;
+  padding: 0;
+  gap: 10px;
+  align-items: center;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-title-group { min-width: 0; gap: 9px; }
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-title-group h1 {
+  margin: 0;
+  line-height: 1.2;
+  font-size: clamp(18px,2vw,26px);
+  overflow-wrap: anywhere;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-title-group .eyebrow {
+  font-size: 9px;
+  line-height: 1.3;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-header-actions { gap: 7px; }
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-header-actions :is(.catalog-primary,.catalog-clear-tools) {
+  width: auto;
+  min-width: 0;
+  min-height: 38px;
+  padding: 7px 12px;
+  border-radius: 9px;
+  font: 700 12px/1.25 IPInterface,system-ui,sans-serif;
+  white-space: normal;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-back {
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
+  border-radius: 9px;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-back .material-symbols-rounded { font-size: 18px; }
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-panel {
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid var(--cad-page-border);
+  border-radius: 14px;
+  background: var(--cad-panel);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-toolbar {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 9px 11px;
+  gap: 7px;
+  border-color: var(--cad-page-border);
+  background: var(--cad-panel);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-toolbar > label {
+  display: flex;
+  flex: 1 1 190px;
+  min-width: 0;
+  width: auto;
+  min-height: 36px;
+  gap: 7px;
+  padding: 0 9px;
+  border: 1px solid var(--cad-page-border);
+  border-radius: 9px;
+  background: var(--cad-page-field);
+  color: var(--cad-page-accent);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-toolbar > label:focus-within {
+  outline: 2px solid var(--cad-page-accent);
+  outline-offset: 2px;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-toolbar > label .material-symbols-rounded {
+  font-size: 16px;
+  padding: 0;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-toolbar > label input {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  min-height: 34px;
+  padding: 5px 0;
+  border: 0;
+  outline: none;
+  box-shadow: none;
+  background: transparent;
+  color: var(--ip-text);
+  font: 13px/1.35 IPInterface,system-ui,sans-serif;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-toolbar > button {
+  min-height: 36px;
+  min-width: 0;
+  width: auto;
+  padding: 7px 10px;
+  border-radius: 9px;
+  border: 1px solid var(--cad-page-border);
+  background: var(--cad-panel-raised);
+  color: var(--ip-text);
+  font: 700 11px/1.25 IPInterface,system-ui,sans-serif;
+  text-transform: none;
+  white-space: normal;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-toolbar > .catalog-batch-action--danger {
+  color: var(--ip-negative); background: var(--ip-negative-bg);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-toolbar > .catalog-batch-action--success {
+  color: var(--ip-positive); background: var(--ip-positive-bg);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-scroll {
+  min-height: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--cad-page-border) transparent;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-scroll:focus-visible {
+  outline: 2px solid var(--cad-page-accent);
+  outline-offset: -2px;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-table {
+  width: max-content;
+  min-width: 100%;
+  background: var(--cad-panel);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-table > table {
+  width: max-content;
+  min-width: 100%;
+  table-layout: auto;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-table :is(th,td):nth-child(n) {
+  padding: 7px 10px;
+  border-color: var(--cad-page-border);
+  font: 12px/1.38 IPInterface,system-ui,sans-serif;
+  white-space: nowrap;
+  text-overflow: clip;
+  max-width: none;
+  min-width: 0;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-table th:nth-child(n) {
+  padding-block: 4px;
+  background: var(--cad-panel-raised);
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0;
+  height: 36px;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-table tr:hover td { background: var(--cad-panel-raised); }
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-table .catalog-sort {
+  gap: 5px;
+  min-height: 30px;
+  padding: 2px 0;
+  white-space: nowrap;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-table input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  vertical-align: middle;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-table .catalog-actions {
+  display: flex;
+  flex-flow: row nowrap;
+  min-width: 0;
+  gap: 4px;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-table .catalog-actions .catalog-action {
+  width: auto;
+  min-height: 31px;
+  min-width: 0;
+  padding: 5px 7px;
+  border-radius: 7px;
+  font: 700 10.5px/1.2 IPInterface,system-ui,sans-serif;
+  text-transform: none;
+  white-space: nowrap;
+  letter-spacing: 0;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-table .catalog-action .material-symbols-rounded { font-size: 14px; }
+.ip-ui[data-theme][data-cadastros] .cad-page :is(.catalog-table,.product-extras) .catalog-actions .catalog-action--edit {
+  border-color: color-mix(in srgb,var(--ip-edit) 40%,var(--cad-page-border));
+  color: var(--ip-warning);
+  background: var(--ip-warning-bg);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page :is(.catalog-table,.product-extras) .catalog-actions .catalog-action--danger {
+  border-color: color-mix(in srgb,var(--ip-negative) 40%,var(--cad-page-border));
+  color: var(--ip-negative);
+  background: var(--ip-negative-bg);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page :is(.catalog-table,.product-extras) .catalog-actions .catalog-action--success {
+  border-color: color-mix(in srgb,var(--ip-positive) 40%,var(--cad-page-border));
+  color: var(--ip-positive);
+  background: var(--ip-positive-bg);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page :is(.catalog-table,.product-extras) .catalog-actions .catalog-action--info {
+  border-color: color-mix(in srgb,var(--cad-page-accent) 40%,var(--cad-page-border));
+  color: var(--cad-page-accent);
+  background: var(--cad-page-accent-bg);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-table .catalog-actions button:not(:disabled):hover {
+  box-shadow: none;
+  transform: none;
+  filter: brightness(1.1);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-table :is(.catalog-status,.product-type) {
+  border-radius: 6px;
+  font: 700 10px/1.25 IPInterface,system-ui,sans-serif;
+  text-transform: none;
+  white-space: nowrap;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-pagination {
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  min-height: 0;
+  padding: 7px 10px;
+  background: var(--cad-panel);
+  border-color: var(--cad-page-border);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-pagination span {
+  font: 600 10.5px/1.25 IPInterface,system-ui,sans-serif;
+  text-transform: none;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-pagination button {
+  width: auto;
+  min-width: 0;
+  min-height: 32px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font: 700 10.5px/1.25 IPInterface,system-ui,sans-serif;
+  text-transform: none;
+}
+@media(max-width:1040px) {
+  .ip-ui[data-theme][data-cadastros] .cad-module .legacy-module__grid {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+}
+@media(max-width:700px) {
+  .ip-ui[data-theme][data-cadastros] .cad-page { padding: 10px; gap: 8px; overflow: auto; }
+  .ip-ui[data-theme][data-cadastros] .cad-page > header { display: flex; flex-flow: row wrap; }
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-header-actions { width: auto; flex-wrap: wrap; }
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-panel { flex: 1 0 290px; }
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-toolbar { padding: 7px; }
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-toolbar > label { flex-basis: 100%; }
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-toolbar > button { flex: 1 1 auto; }
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-pagination { justify-content: center; }
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-pagination span { order: -1; width: 100%; text-align: center; }
+  .ip-ui[data-theme][data-cadastros] .cad-module .legacy-module__grid {
+    grid-template-columns: minmax(0,1fr);
+    grid-auto-rows: minmax(84px,auto);
+  }
+  .ip-ui[data-theme][data-cadastros] .cad-module .legacy-tile { padding: 11px; }
+  .ip-ui[data-theme][data-cadastros] .cad-module .legacy-tile .ip-nav-content { grid-template-columns: 34px minmax(0,1fr) 16px; gap: 8px; }
+  .ip-ui[data-theme][data-cadastros] .cad-module .legacy-tile .legacy-tile__icon { width: 34px; height: 34px; font-size: 18px; }
+  .ip-ui[data-theme][data-cadastros] .cad-module .legacy-tile small { font-size: 11px; }
+}
+
+/* Replace the old icon-font pseudo-elements with a native, local chevron. */
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal details.filter-multiselect > summary::after {
+  content: "";
+  display: block;
+  flex: 0 0 7px;
+  width: 7px;
+  height: 7px;
+  margin: -3px 3px 0 5px;
+  border: solid var(--cad-accent);
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal details.filter-multiselect[open] > summary::after {
+  content: "";
+  margin-top: 3px;
+  transform: rotate(225deg);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal details.filter-multiselect[open] > summary {
+  border-color: var(--cad-accent);
+  background: var(--cad-accent-bg);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .filter-dropdown__search {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 8px;
+  background: var(--cad-field);
+  border: 1px solid var(--cad-edge);
+  border-radius: 7px;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .filter-dropdown__search input {
+  border: none;
+  min-height: 30px;
+  padding: 4px 0;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .filter-dropdown__options label {
+  align-items: flex-start;
+  gap: 6px;
+  color: var(--cad-text);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .cad-form-notice {
+  margin: 0 0 12px;
+  border: 1px solid color-mix(in srgb,var(--cad-danger) 42%,var(--cad-edge));
+  border-radius: 9px;
+  padding: 9px 11px;
+  color: var(--cad-danger);
+  background: var(--cad-danger-bg);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .master-modal-tabs button:not(.active):hover {
+  background: var(--cad-dialog);
+  border-color: var(--cad-edge);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal :is(.product-kind-warning,.filter-range-inputs,.catalog-filter-hint,.combo-component-row) {
+  border-radius: 10px;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .date-range-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: normal;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .range-calendar__days button {
+  min-height: 29px;
+  border-radius: 6px;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .range-calendar__days .selected {
+  background: var(--cad-accent);
+  color: var(--cad-dialog);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .range-calendar__days .in-range:not(.selected) {
+  background: var(--cad-accent-bg);
+  color: var(--cad-accent);
+}
+
+/* Saturated hover feedback for table actions and the new-record button. */
+@media (hover: hover) {
+  .ip-ui[data-theme][data-cadastros] .cad-page :is(
+    .catalog-table .catalog-actions .catalog-action,
+    .catalog-header-actions > .catalog-primary
+  ):not(:disabled):hover {
+    background: var(--cad-action-hover,#54def4);
+    border-color: var(--cad-action-hover,#54def4);
+    color: #111820;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / .38),
+      0 0 10px color-mix(in srgb,var(--cad-action-hover,#54def4) 36%,transparent);
+    filter: none;
+  }
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-table .catalog-action--edit:not(:disabled):hover {
+    --cad-action-hover: #f6cc61;
+  }
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-table .catalog-action--danger:not(:disabled):hover {
+    --cad-action-hover: #ff677d;
+  }
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-table .catalog-action--success:not(:disabled):hover {
+    --cad-action-hover: #a0ed54;
+  }
+}
+
+/* Match the existing modal controls inside the combo composition step. */
+.ip-ui[data-theme][data-cadastros] .cad-page .master-modal-content:has(> .inline-kit) > .master-form-grid:empty {
+  display: none !important;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit {
+  gap: 12px;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--cad-edge);
+  border-radius: 12px;
+  background: var(--cad-layer);
+  color: var(--cad-text);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit > header {
+  flex-flow: row wrap;
+  align-items: center;
+  gap: 9px 12px;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit > header > div {
+  flex: 1 1 330px;
+  min-width: 0;
+  gap: 4px;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit > header strong {
+  font-size: 15px;
+  line-height: 1.3;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit > header small {
+  color: var(--cad-muted);
+  font: 12px/1.45 IPInterface,system-ui,sans-serif;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit > header .catalog-primary {
+  min-height: 36px;
+  min-width: 0;
+  padding: 7px 10px;
+  border: 1px solid var(--cad-edge);
+  border-radius: 9px;
+  background: var(--cad-accent-bg);
+  color: var(--cad-accent);
+  font: 700 12px/1.25 IPInterface,system-ui,sans-serif;
+  text-transform: none;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit > header .catalog-primary:hover {
+  border-color: var(--cad-accent);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit .component-row {
+  grid-template-columns: minmax(0,2fr) minmax(78px,.75fr) repeat(2,minmax(92px,.9fr)) auto;
+  gap: 9px;
+  align-items: start;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--cad-edge);
+  border-radius: 10px;
+  background: var(--cad-dialog);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit :is(.combo-product-field,.component-row > label) {
+  min-width: 0;
+  gap: 6px;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit :is(.combo-product-field,.component-row > label) > span {
+  color: var(--cad-text);
+  font: 700 12px/1.35 IPInterface,system-ui,sans-serif;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit .product-search-select.is-open {
+  padding-bottom: 0;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit .product-search-select__input {
+  min-height: 40px;
+  min-width: 0;
+  gap: 5px;
+  padding: 2px 3px 2px 9px;
+  border: 1px solid var(--cad-edge);
+  border-radius: 10px;
+  background: var(--cad-field);
+  box-shadow: none;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit .product-search-select__input > span {
+  padding: 0;
+  color: var(--cad-accent);
+  font-size: 16px;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit .product-search-select__input > input {
+  min-height: 34px;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  outline: none;
+  box-shadow: none;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit .product-search-select__input:focus-within {
+  outline: 2px solid var(--cad-accent);
+  outline-offset: 2px;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit .product-search-select__input > button {
+  min-width: 29px;
+  min-height: 29px;
+  padding: 0;
+  border: 1px solid var(--cad-edge);
+  border-radius: 7px;
+  background: var(--cad-layer);
+  color: var(--cad-muted);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit .product-search-select__options {
+  padding: 4px;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit .product-search-select__options > button {
+  min-height: 36px;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  color: var(--cad-text);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit .product-search-select__options > button:is(:hover,:focus-visible,.selected) {
+  border-color: var(--cad-edge);
+  background: var(--cad-accent-bg);
+  color: var(--cad-accent);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit .component-cost {
+  min-width: 0;
+  min-height: 62px;
+  align-content: center;
+  gap: 4px;
+  padding: 7px 9px;
+  border: 1px solid var(--cad-edge);
+  border-radius: 9px;
+  background: var(--cad-field);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit :is(.component-cost,.combo-total) > span {
+  color: var(--cad-muted);
+  font: 600 11px/1.35 IPInterface,system-ui,sans-serif;
+  text-transform: none;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit .component-cost > strong {
+  color: var(--cad-text);
+  font: 700 13px/1.3 IPInterface,system-ui,sans-serif;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit .combo-remove {
+  grid-column: auto;
+  margin-top: 22px;
+  min-height: 40px;
+  justify-self: end;
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit > .combo-total {
+  justify-content: space-between;
+  gap: 9px;
+  padding: 10px 12px;
+  border: 1px solid var(--cad-edge);
+  border-radius: 9px;
+  background: var(--cad-field);
+}
+.ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit .combo-total > strong {
+  color: var(--ip-positive);
+  font: 700 16px/1.25 IPInterface,system-ui,sans-serif;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 760px) {
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit .component-row {
+    grid-template-columns: repeat(2,minmax(0,1fr)) minmax(82px,.8fr);
+  }
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit .combo-product-field {
+    grid-column: span 2;
+  }
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit .combo-remove {
+    margin: 0;
+    align-self: end;
+  }
+}
+@media (max-width: 460px) {
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit { padding: 10px; }
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit .component-row {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit .component-row > label,
+  .ip-ui[data-theme][data-cadastros] .cad-page .catalog-modal .inline-kit .combo-remove {
+    grid-column: 1 / -1;
+  }
+}
+
+}

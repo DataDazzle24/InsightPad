@@ -92,6 +92,14 @@ export function AppLayout() {
     <main
       className="app-frame ip-ui"
       data-theme={theme}
+      data-cadastros={
+        location.pathname === "/modulos/cadastros" ||
+        appRoutes.some(({ route }) =>
+          route.startsWith("/cadastros/") && route === location.pathname
+        )
+          ? ""
+          : undefined
+      }
       onChangeCapture={(event) => {
         // Format after React detects the change, before the field reads its value.
         if (event.target instanceof HTMLInputElement)

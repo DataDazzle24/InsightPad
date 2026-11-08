@@ -13,7 +13,7 @@ export function ModuleMenuPage({ moduleKey }: ModuleMenuPageProps) {
   const items = menu.items.filter((item) => canAccess(item.pageKey))
 
   return (
-    <section className="legacy-module">
+    <section className={moduleKey === "cadastros" ? "legacy-module cad-module" : "legacy-module"}>
       <header className="legacy-module__intro">
         <span className="eyebrow">INSIGHT PAD</span>
         <h1>{menu.title}</h1>

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDialogAccessibility } from "../hooks/useDialogAccessibility";
+import { useCadastroDialog } from "../hooks/useCadastroDialog";
 
 export type Notice = { text: string; type: "success" | "error" | "info" };
 export function AppToast({
@@ -148,6 +149,7 @@ export function DateRangePicker({
   onChange: (from: string, to: string) => void;
   label?: string;
 }) {
+  const trigger = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false),
     [cursor, setCursor] = useState(() => new Date()),
     [draftFrom, setDraftFrom] = useState(from),
@@ -182,10 +184,21 @@ export function DateRangePicker({
     } else onChange(draftFrom, value);
   }
   return (
-    <div className="filter-field date-range-field" ref={root}>
+    <div
+      className="filter-field date-range-field"
+      ref={root}
+      onKeyDown={(event) => {
+        if (event.key !== "Escape" || !open || !event.currentTarget.closest("[data-cadastros]")) return;
+        event.preventDefault();
+        setOpen(false);
+        trigger.current?.focus();
+      }}
+    >
       <span>{label}</span>
       <button
         type="button"
+        ref={trigger}
+        aria-expanded={open}
         className="date-range-trigger"
         onClick={() => setOpen((value) => !value)}
       >
@@ -262,7 +275,10 @@ export function DateRangePicker({
             <button
               type="button"
               className="catalog-primary"
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                setOpen(false);
+                if (root.current?.closest("[data-cadastros]")) trigger.current?.focus();
+              }}
             >
               Concluir
             </button>
@@ -279,11 +295,14 @@ type Detector = {
 export function BarcodeScanner({
   onRead,
   onClose,
+  cadastros = false,
 }: {
   onRead: (value: string) => void;
   onClose: () => void;
+  cadastros?: boolean;
 }) {
-  useDialogAccessibility(true, onClose);
+  useDialogAccessibility(!cadastros, onClose);
+  useCadastroDialog(cadastros, onClose);
   const video = useRef<HTMLVideoElement>(null),
     readCallback = useRef(onRead),
     [error, setError] = useState("");
@@ -378,6 +397,7 @@ export function BarcodeScanner({
         aria-label="Leitor de código de barras"
       >
         <header>
+          {cadastros && <span className="material-symbols-rounded cad-dialog-icon" aria-hidden="true">barcode_scanner</span>}
           <div>
             <span className="eyebrow">Câmera</span>
             <h2>Escanear código</h2>

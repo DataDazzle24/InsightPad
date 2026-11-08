@@ -17,6 +17,7 @@ import './home-header-refinements.css'
 import './sidebar-refinements.css'
 import './catalog-standardization.css'
 import './interface.css'
+import './cadastros.css'
 
 const CatalogPages = lazy(() => import('./pages/CatalogPages').then((module) => ({ default: module.CatalogPages })))
 const MasterDataPage = lazy(() => import('./pages/MasterDataPage').then((module) => ({ default: module.MasterDataPage })))

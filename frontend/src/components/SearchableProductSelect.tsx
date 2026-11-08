@@ -66,6 +66,10 @@ export function SearchableProductSelect({
           }}
           onKeyDown={(event) => {
             if (event.key === "Escape") {
+              if (event.currentTarget.closest("[data-cadastros]")) {
+                if (!open) return;
+                event.preventDefault();
+              }
               setOpen(false);
               setTerm(selected?.name ?? "");
             }

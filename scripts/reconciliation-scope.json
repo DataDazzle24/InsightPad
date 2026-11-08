@@ -90,7 +90,8 @@
     "DES-2026-002",
     "DES-2026-003",
     "UXIP-001",
-    "PDV-V2-20261107"
+    "PDV-V2-20261107",
+    "CADASTROS-UI-20261108"
   ],
   "paths": {
     ".gitignore": {
@@ -266,7 +267,8 @@
     "scripts/verify-reconciliation.mjs": {
       "ids": [
         "PREP-DEC017",
-        "OBS-018-AG03-001"
+        "OBS-018-AG03-001",
+        "CADASTROS-UI-20261108"
       ],
       "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
     },
@@ -540,14 +542,16 @@
     "frontend/src/pages/MasterDataPage.tsx": {
       "ids": [
         "AJU-PROD-01",
-        "AJU-PROD-02"
+        "AJU-PROD-02",
+        "CADASTROS-UI-20261108"
       ],
       "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão."
     },
     "frontend/src/pages/ProductExtras.tsx": {
       "ids": [
         "AJU-PROD-01",
-        "AJU-PROD-02"
+        "AJU-PROD-02",
+        "CADASTROS-UI-20261108"
       ],
       "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão."
     },
@@ -579,7 +583,8 @@
         "AJU-SUB-10",
         "AJU-SUB-11",
         "AJU-SUB-13",
-        "AJU-SUB-14"
+        "AJU-SUB-14",
+        "CADASTROS-UI-20261108"
       ],
       "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão. Arthur autorizou em 07/11/2026 a correção restrita do foco após erro em Categorias/Subcategorias; JSX, validações, APIs e mutações permanecem preservados por comparação da exceção exata."
     },
@@ -610,7 +615,8 @@
     },
     "scripts/reconciliation-scope.json": {
       "ids": [
-        "OBS-018-AG03-001"
+        "OBS-018-AG03-001",
+        "CADASTROS-UI-20261108"
       ],
       "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
     },
@@ -802,7 +808,8 @@
     "frontend/src/components/SalesUi.tsx": {
       "ids": [
         "ADD-018-002",
-        "AJU-CAT-05"
+        "AJU-CAT-05",
+        "CADASTROS-UI-20261108"
       ],
       "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
     },
@@ -1221,7 +1228,8 @@
         "AJU-SUB-10",
         "AJU-SUB-11",
         "AJU-SUB-13",
-        "AJU-SUB-14"
+        "AJU-SUB-14",
+        "CADASTROS-UI-20261108"
       ],
       "reason": "Exact isolated residual consumer tests for the frozen68, preserving exclusions and sufficient cases; no business endpoint, remote operation or public evidence."
     },
@@ -1255,7 +1263,8 @@
     },
     "frontend/src/layout/AppLayout.tsx": {
       "ids": [
-        "UXIP-001"
+        "UXIP-001",
+        "CADASTROS-UI-20261108"
       ],
       "reason": "Screen-only visual migration and exact presentation/preservation regression; preserve business callbacks, fields, domain sources and print. Exact path only; no backend or operational change."
     },
@@ -1267,7 +1276,8 @@
     },
     "frontend/src/pages/ModuleMenuPage.tsx": {
       "ids": [
-        "UXIP-001"
+        "UXIP-001",
+        "CADASTROS-UI-20261108"
       ],
       "reason": "Screen-only visual migration and exact presentation/preservation regression; preserve business callbacks, fields, domain sources and print. Exact path only; no backend or operational change."
     },
@@ -1309,7 +1319,8 @@
     },
     "scripts/verify-interface.mjs": {
       "ids": [
-        "UXIP-001"
+        "UXIP-001",
+        "CADASTROS-UI-20261108"
       ],
       "reason": "Screen-only visual migration and exact presentation/preservation regression; preserve business callbacks, fields, domain sources and print. Exact path only; no backend or operational change."
     },
@@ -1534,6 +1545,72 @@
         "PDV-V2-20261107"
       ],
       "reason": "Pedido Frente de Caixa v2 de 2026-11-07: layout restrito, filial em rascunho e evidência dirigida, preservando contratos reais e matriz congelada."
+    },
+    "frontend/src/App.tsx": {
+      "reason": "Cadastros UI approved package on published 9c50ee2: scoped presentation, local interaction/focus, regression evidence and exact preservation gates; no backend or global shell redesign.",
+      "ids": [
+        "CADASTROS-UI-20261108"
+      ]
+    },
+    "frontend/src/cadastros.css": {
+      "reason": "Cadastros UI approved package on published 9c50ee2: scoped presentation, local interaction/focus, regression evidence and exact preservation gates; no backend or global shell redesign.",
+      "ids": [
+        "CADASTROS-UI-20261108"
+      ]
+    },
+    "frontend/src/components/SearchableProductSelect.tsx": {
+      "reason": "Cadastros UI approved package on published 9c50ee2: scoped presentation, local interaction/focus, regression evidence and exact preservation gates; no backend or global shell redesign.",
+      "ids": [
+        "CADASTROS-UI-20261108"
+      ]
+    },
+    "frontend/src/hooks/useCadastroDialog.ts": {
+      "reason": "Cadastros UI approved package on published 9c50ee2: scoped presentation, local interaction/focus, regression evidence and exact preservation gates; no backend or global shell redesign.",
+      "ids": [
+        "CADASTROS-UI-20261108"
+      ]
+    },
+    "frontend/src/hooks/useCadastroDialog.test.tsx": {
+      "reason": "Cadastros UI approved package on published 9c50ee2: scoped presentation, local interaction/focus, regression evidence and exact preservation gates; no backend or global shell redesign.",
+      "ids": [
+        "CADASTROS-UI-20261108"
+      ]
+    },
+    "frontend/src/pages/ProductExtras.test.tsx": {
+      "reason": "Cadastros UI approved package on published 9c50ee2: scoped presentation, local interaction/focus, regression evidence and exact preservation gates; no backend or global shell redesign.",
+      "ids": [
+        "CADASTROS-UI-20261108"
+      ]
+    },
+    "scripts/verify-cadastros.mjs": {
+      "reason": "Cadastros UI approved package on published 9c50ee2: scoped presentation, local interaction/focus, regression evidence and exact preservation gates; no backend or global shell redesign.",
+      "ids": [
+        "CADASTROS-UI-20261108"
+      ]
+    },
+    "scripts/qa-browser/.gitignore": {
+      "reason": "Cadastros UI approved package on published 9c50ee2: scoped presentation, local interaction/focus, regression evidence and exact preservation gates; no backend or global shell redesign.",
+      "ids": [
+        "CADASTROS-UI-20261108"
+      ]
+    },
+    "scripts/qa-browser/cadastros.mjs": {
+      "reason": "Cadastros UI approved package on published 9c50ee2: scoped presentation, local interaction/focus, regression evidence and exact preservation gates; no backend or global shell redesign.",
+      "ids": [
+        "CADASTROS-UI-20261108"
+      ]
+    },
+    "scripts/qa-browser/run.mjs": {
+      "reason": "Cadastros UI approved package on published 9c50ee2: scoped presentation, local interaction/focus, regression evidence and exact preservation gates; no backend or global shell redesign.",
+      "ids": [
+        "CADASTROS-UI-20261108"
+      ]
+    },
+    "docs/cadastros-ui-dev.md": {
+      "reason": "Cadastros UI approved package on published 9c50ee2: scoped presentation, local interaction/focus, regression evidence and exact preservation gates; no backend or global shell redesign.",
+      "ids": [
+        "CADASTROS-UI-20261108"
+      ]
     }
   },
   "bytePreserved": [

@@ -8,6 +8,7 @@ import {consolidated} from './consolidated.mjs';
 import {interfaceProof} from './interface.mjs';
 import {dashboardV3} from './dashboard-v3.mjs';
 import {pdvV2} from './pdv-v2.mjs';
+import {cadastrosProof} from './cadastros.mjs';
 import {dashboardV3Zoom} from './dashboard-v3-zoom.mjs';
 const sha=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
 const meta=JSON.parse(readFileSync('artifacts/recovery-qa/qa-source.json','utf8'));assert.equal(meta.commit,sha);assert.equal(meta.auth,'mock');
@@ -30,6 +31,7 @@ try{
  if(process.argv.includes('--dashboard-v3')||process.argv.includes('--full'))await dashboardV3({page,output,sha});
  if(process.argv.includes('--dashboard-zoom')||process.argv.includes('--full'))await dashboardV3Zoom({output,sha});
  if(process.argv.includes('--pdv-v2')||process.argv.includes('--full'))await pdvV2({output,sha});
+ if(process.argv.includes('--cadastros')||process.argv.includes('--full'))await cadastrosProof({output,sha});
  if(process.argv.includes('--reports')||process.argv.includes('--full'))await reports({page,output,sha});
  if(process.argv.includes('--consolidated')||process.argv.includes('--full'))await consolidated({page,output,sha});
  if(process.argv.includes('--full')||process.argv.includes('--coverage')){await page.setViewportSize({width:1440,height:1000});await page.locator('.qa-controls').evaluate(e=>{e.open=false});await coverage({page,context,output,sha})}

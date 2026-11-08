@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useRef, useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { getDataConnect } from "firebase/data-connect";
 import { z } from "zod";
 import {
@@ -7,7 +7,7 @@ import {
   savePromotion,
   setPromotionStatus,
 } from "@insightpad/dataconnect";
-import { useDialogAccessibility } from "../hooks/useDialogAccessibility";
+import { useCadastroDialog } from "../hooks/useCadastroDialog";
 import { firebaseApp } from "../lib/firebase";
 import { csvSafe } from "../utils/registration";
 
@@ -53,11 +53,33 @@ const statusLabel: Record<Promotion["status"], string> = {
 export function ProductExtras({
   product,
   onClose,
+  onChanged,
 }: {
   product: Product;
   onClose: () => void;
+  onChanged?: () => void;
 }) {
-  useDialogAccessibility(true, onClose);
+  const changed = useRef(false);
+  const closed = useRef(false);
+  const changeCallback = useRef(onChanged);
+  useEffect(() => { changeCallback.current = onChanged; }, [onChanged]);
+  function notifyChanges() {
+    if (!changed.current) return;
+    changed.current = false;
+    changeCallback.current?.();
+  }
+  function markChanged() {
+    changed.current = true;
+    // An acknowledged request can finish after Escape closed this dialog.
+    if (closed.current) notifyChanges();
+  }
+  function close() {
+    if (closed.current) return;
+    closed.current = true;
+    onClose();
+    notifyChanges();
+  }
+  useCadastroDialog(true, close);
   const [promotions, setPromotions] = useState<Promotion[]>([]),
     [busy, setBusy] = useState(true),
     [message, setMessage] = useState(""),
@@ -132,6 +154,7 @@ export function ProductExtras({
         endsAt: ends.toISOString(),
       });
       if (!result.data._execute) throw new Error("Operação não aplicada");
+      markChanged();
       setMessage(
         editing
           ? "Promoção atualizada com sucesso."
@@ -154,6 +177,7 @@ export function ProductExtras({
         active: !item.active,
       });
       if (!result.data._execute) throw new Error("Operação não aplicada");
+      markChanged();
       setMessage(item.active ? "Promoção inativada." : "Promoção reativada.");
       await load();
     } catch (error) {
@@ -215,11 +239,12 @@ export function ProductExtras({
         aria-labelledby="promotion-title"
       >
         <header>
+          <span className="material-symbols-rounded cad-dialog-icon" aria-hidden="true">sell</span>
           <div>
             <span className="eyebrow">Promoções</span>
             <h2 id="promotion-title">{String(product.name)}</h2>
           </div>
-          <button aria-label="Fechar promoções" onClick={onClose}>×</button>
+          <button aria-label="Fechar promoções" onClick={close}>×</button>
         </header>
 
         <div className="product-extras__body">
@@ -384,7 +409,7 @@ export function ProductExtras({
         </div>
 
         <footer className="product-extras__footer">
-          <button className="catalog-modal-cancel" onClick={onClose}>Cancelar</button>
+          <button className="catalog-modal-cancel" onClick={close}>Cancelar</button>
         </footer>
         {busy && <div className="extras-loading">Atualizando promoções...</div>}
       </section>

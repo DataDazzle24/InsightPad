@@ -4,7 +4,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 export const recoveredAncestor = '80f21c65a0ed3e07b0f9c29bebd07d2479b0735b';
 const exclusions = ['AJU-PDV-06','AJU-PDV-07','AJU-EST-17','AJU-EST-21','AJU-EST-24','AJU-EST-25','AJU-CAT-15','AJU-SUB-12','AJU-SUB-15','AJU-SUB-16'];
-const approvedAdditional = new Set(['PDV-V2-20261107','UXIP-001','PREP-DEC017','OBS-018-AG03-001','ADD-018-001','ADD-018-002','ADD-018-003','ADD-018-004',...Array.from({length:8},(_,i)=>`SEC-2026-${String(i+1).padStart(3,'0')}`),...Array.from({length:3},(_,i)=>`DES-2026-${String(i+1).padStart(3,'0')}`)]);
+const approvedAdditional = new Set(['CADASTROS-UI-20261108','PDV-V2-20261107','UXIP-001','PREP-DEC017','OBS-018-AG03-001','ADD-018-001','ADD-018-002','ADD-018-003','ADD-018-004',...Array.from({length:8},(_,i)=>`SEC-2026-${String(i+1).padStart(3,'0')}`),...Array.from({length:3},(_,i)=>`DES-2026-${String(i+1).padStart(3,'0')}`)]);
 const protectedPaths = ['frontend/src/utils/salesOffline.ts','frontend/src/hooks/useDialogAccessibility.ts','frontend/src/components/PosApprovalsModal.tsx'];
 // Exact additional sources for server leases and read-only schema inspection.
 // Internal review matrices and findings are never added here.

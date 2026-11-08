@@ -30,7 +30,7 @@ import {
 import { useAuth } from "../auth/useAuth";
 import { SortableTableHeader } from "../components/SortableTableHeader";
 import { SearchableProductSelect } from "../components/SearchableProductSelect";
-import { useDialogAccessibility } from "../hooks/useDialogAccessibility";
+import { useCadastroDialog } from "../hooks/useCadastroDialog";
 import { useDismissibleDetails } from "../hooks/useDismissibleDetails";
 import { firebaseApp } from "../lib/firebase";
 import {
@@ -203,6 +203,7 @@ function EmailSuggestionInput({
         }}
         onKeyDown={(event) => {
           if (event.key === "Escape") {
+            if (isOpen) event.preventDefault();
             setExpanded(false);
             return;
           }
@@ -651,6 +652,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
     [baseline, setBaseline] = useState(""),
     [showErrors, setShowErrors] = useState(false),
     [notice, setNotice] = useState(""),
+    [formNotice, setFormNotice] = useState(""),
     [confirm, setConfirm] = useState<null | {
       text: string;
       run: () => Promise<void>;
@@ -667,6 +669,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
     [kitItems, setKitItems] = useState<KitItem[]>([]),
     [section, setSection] = useState(modalSections[pageKey][0].key);
   const requestSequence = useRef(0);
+  const formContent = useRef<HTMLDivElement>(null);
   const [filterModal, setFilterModal] = useState(false),
     [filters, setFilters] = useState<Record<string, string[]>>({}),
     [filterSearch, setFilterSearch] = useState<Record<string, string>>({}),
@@ -674,11 +677,18 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
     [dateFilters, setDateFilters] = useState<Record<string, DateRangeValue>>({}),
     [sort, setSort] = useState<TableSort | null>(null),
     [barcodeTarget, setBarcodeTarget] = useState<BarcodeTarget | null>(null);
-  useDialogAccessibility(productTypeModal, () => setProductTypeModal(false));
-  useDialogAccessibility(modal && !confirm && !barcodeTarget, closeForm);
-  useDialogAccessibility(filterModal && !confirm && !barcodeTarget, () => setFilterModal(false));
-  useDialogAccessibility(Boolean(confirm), () => setConfirm(null));
+  useCadastroDialog(productTypeModal, () => setProductTypeModal(false));
+  useCadastroDialog(modal, closeForm);
+  useCadastroDialog(filterModal, () => setFilterModal(false));
+  useCadastroDialog(Boolean(confirm), () => setConfirm(null));
   useDismissibleDetails(filterModal);
+  useEffect(() => {
+    if (!modal || !formNotice || confirm || barcodeTarget) return;
+    const body = formContent.current;
+    const field = body?.querySelector<HTMLElement>('[aria-invalid="true"]');
+    if (field) field.focus();
+    else body?.scrollTo({ top: 0 });
+  }, [modal, formNotice, section, confirm, barcodeTarget]);
   const setSearch = (value: string) => {
     setSearchState(value);
     setPage(0);
@@ -1064,6 +1074,11 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
       if (requestId === requestSequence.current) setBusy(false);
     }
   }, [pageKey, query]);
+  const refreshProducts = useRef<(() => Promise<void>) | null>(null);
+  useEffect(() => {
+    refreshProducts.current = pageKey === "CAD_PRODUTO" ? load : null;
+    return () => { refreshProducts.current = null; };
+  }, [load, pageKey]);
   useEffect(() => {
     const t = window.setTimeout(() => void load(), 350);
     return () => clearTimeout(t);
@@ -1074,6 +1089,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
     return () => window.clearTimeout(t);
   }, [notice]);
   async function open(row?: Row, selectedProductKind?: ProductKind) {
+    setFormNotice("");
     setEditing(row ?? null);
     const next: Record<string, unknown> = {};
     let loadedKit: KitItem[] = [];
@@ -1257,7 +1273,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
     }
     const error = validate();
     if (error) {
-      setNotice(error);
+      setFormNotice(error);
       return;
     }
     saving.current=true;setBusy(true);
@@ -1290,7 +1306,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
       if (page === 0) await load();
     } catch (e) {
       console.error(e);
-      setNotice(
+      setFormNotice(
         pageKey === "CAD_PRODUTO"
           ? "Operação não aplicada. Verifique os dados e códigos duplicados. Para trocar o EAN ou código de balança de um produto publicado, remova primeiro o vínculo do canal para desativar o identificador antigo."
           : "Operação não aplicada. Verifique duplicidades, vínculos e dados informados.",
@@ -1425,7 +1441,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
   }
 
   return (
-    <section className="catalog-page">
+    <section className="catalog-page cad-page">
       <header>
         <div className="catalog-title-group">
           <Link
@@ -1486,7 +1502,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Pesquisar..."
+              aria-label="Pesquisar registros" placeholder="Pesquisar..."
             />
           </label>
           {selected.length > 0 && (
@@ -1530,7 +1546,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
           )}
         </div>
         <div
-          className="catalog-scroll"
+          className="catalog-scroll" tabIndex={0} role="region" aria-label={`Registros de ${cfg.title}`}
           onScroll={(event) => {
             const node = event.currentTarget;
             if (node.scrollTop + node.clientHeight >= node.scrollHeight - 180)
@@ -1546,6 +1562,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                   <th>
                     <input
                       type="checkbox"
+                      aria-label="Selecionar todos os registros da página"
                       checked={
                         sortedRows.length > 0 &&
                         sortedRows.every((row) => selected.includes(row.id))
@@ -1587,7 +1604,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                     <td>
                       <input
                         type="checkbox"
-                        checked={selected.includes(row.id)}
+                        aria-label={`Selecionar ${String(row[cfg.columns[0].key] ?? "registro")}`} checked={selected.includes(row.id)}
                         onChange={(e) =>
                           setSelected((v) =>
                             e.target.checked
@@ -1734,6 +1751,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
             aria-labelledby="product-kind-title"
           >
             <header>
+              <span className="material-symbols-rounded cad-dialog-icon" aria-hidden="true">inventory_2</span>
               <div>
                 <span className="eyebrow">Novo produto</span>
                 <h2 id="product-kind-title">Qual é o tipo do produto?</h2>
@@ -1814,12 +1832,14 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
             className="catalog-modal master-modal advanced-search-modal"
             role="dialog"
             aria-modal="true"
+            aria-labelledby="cad-filters-title"
             aria-label="Pesquisa avançada"
           >
             <header>
+              <span className="material-symbols-rounded cad-dialog-icon" aria-hidden="true">filter_alt</span>
               <div>
                 <span className="eyebrow">Pesquisa</span>
-                <h2>Filtros avançados</h2>
+                <h2 id="cad-filters-title">Filtros avançados</h2>
               </div>
               <button
                 aria-label="Fechar pesquisa avançada"
@@ -1915,13 +1935,15 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
             className="catalog-modal master-modal"
             role="dialog"
             aria-modal="true"
+            aria-labelledby="cad-form-title"
             aria-label="Formulário de cadastro"
           >
             <header>
+              <span className="material-symbols-rounded cad-dialog-icon" aria-hidden="true">{pageKey === "CAD_PRODUTO" ? "sell" : pageKey === "CAD_CLIENTE" ? "groups" : pageKey === "CAD_FORNECEDOR" ? "local_shipping" : "store"}</span>
               <div>
                 <span className="eyebrow">Cadastro</span>
-                <h2>
-                  {editing ? "Editar" : "Novo"} {cfg.singular}
+                <h2 id="cad-form-title">
+                  {editing ? "Editar" : pageKey === "CAD_FILIAL" ? "Nova" : "Novo"} {cfg.singular}
                 </h2>
               </div>
               <button aria-label="Fechar formulário" onClick={closeForm}>
@@ -1941,7 +1963,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                         (item) => !item.productId || parseQuantityDraft(item.quantity,!!options.products.find(p=>p.id===item.productId)?.weightedProduct)===null,
                       ))
                   ) {
-                    setNotice(
+                    setFormNotice(
                       "Selecione os produtos simples e informe quantidades válidas para continuar.",
                     );
                     return;
@@ -1953,11 +1975,12 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                       !String(form[field.key] ?? "").trim(),
                   );
                   if (requiredHere) {
-                    setNotice(
+                    setFormNotice(
                       "Preencha os campos obrigatórios desta etapa antes de continuar.",
                     );
                     return;
                   }
+                  setFormNotice("");
                   setSection(sections[sectionIndex + 1].key);
                   return;
                 }
@@ -1985,7 +2008,10 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                   </button>
                 ))}
               </nav>
-              <div className="master-modal-content">
+              <div className="master-modal-content" ref={formContent}>
+                {formNotice && (
+                  <p className="cad-form-notice" role="alert">{formNotice}</p>
+                )}
                 <div className="master-form-grid">
                 {cfg.fields
                   .filter((field) =>
@@ -2182,7 +2208,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                                 { productId: "", quantity: '1' },
                               ]);
                             else
-                              setNotice(
+                              setFormNotice(
                                 "Não existem outros produtos simples disponíveis para adicionar.",
                               );
                           }}
@@ -2290,7 +2316,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
                     Anterior
                   </button>
                 )}
-                <button className={`catalog-primary catalog-modal-submit ${editing ? "catalog-modal-submit--edit" : "catalog-modal-submit--create"}`}>
+                <button className={`catalog-primary catalog-modal-submit ${sectionIndex < sections.length - 1 ? "cad-submit--next" : editing ? "catalog-modal-submit--edit" : "catalog-modal-submit--create"}`}>
                   {sectionIndex < sections.length - 1 ? "Próxima" : "Salvar"}
                 </button>
               </footer>
@@ -2301,7 +2327,7 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
       {confirm && (
         <div className="catalog-backdrop">
           <section
-            className="catalog-confirm"
+            className={`catalog-confirm${/inativar/i.test(confirm.text) ? " cad-confirm--danger" : /abaixo do custo/i.test(confirm.text) ? " cad-confirm--warning" : ""}`}
             role="alertdialog"
             aria-modal="true"
             aria-label="Confirmar operação"
@@ -2335,10 +2361,12 @@ export function MasterDataPage({ pageKey }: { pageKey: PageKey }) {
             costPriceCents: String(extras.costPriceCents ?? 0),
           }}
           onClose={() => setExtras(null)}
+          onChanged={() => { void refreshProducts.current?.(); }}
         />
       )}
       {barcodeTarget && (
         <BarcodeScanner
+          cadastros
           onClose={() => setBarcodeTarget(null)}
           onRead={(value) => {
             if (barcodeTarget.area === "form")
