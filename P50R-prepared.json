@@ -1,0 +1,26 @@
+{
+  "phase": "P50R_PREPARATION",
+  "CORE": "CORE não gravada",
+  "project": "insightpad-dd-dev",
+  "candidate": "9c50ee250c54ed9b2ab6a2b4656aedff1fb9a63a",
+  "baselineCandidate": "8efbd9d34e00b9d46a92f545d7d335368ce8f825",
+  "baselineVersion": "dc4de30734b6ae30",
+  "CI": {
+    "run": "42407535890",
+    "job": "128508366198",
+    "gate": "consultar novamente o CI aprovado do SHA exato; sem repetir suítes"
+  },
+  "wrapperSHA256": "7d7942e824ed7cd2ffedc58e663549a2ad18540b7769b140d1255066c3ba8cd8",
+  "sourcesSHA256": {
+    "P50R-preflight.py": "3535a3e5947dcf21dc34bc6eb60c02d50b1c043d3c3372b318290c45b70239b2",
+    "P50R-publicar-pdv.py": "66a65f02279a6a96b95e32ec4a875b0dc8970d65a4cb17c1d1f7ec1c7ebae2fc"
+  },
+  "planningEnvelopeUSD": 5,
+  "capUSD": 5,
+  "billedCloudUSD": null,
+  "gcpMutationAttempted": false,
+  "hostingPublished": false,
+  "authenticatedSmokesExecuted": false,
+  "scope": "somente frontend Hosting DEV; sem Functions, SQL, connector, IAM, scheduler ou integração reativada",
+  "correction": "Private measured /tmp source, dependency copy, npm cache, build and upload staging; HOME only persistent journals/evidence. No deletion. Shared P50 lock and both journals checked."
+}
