@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import {readFileSync} from 'node:fs';
+import {verifyEstoqueRegistros,estoqueBase,estoqueHistoricalSource} from './verify-estoque-registros.mjs';
 import ts from '../frontend/node_modules/typescript/lib/typescript.js';
 import postcss from '../frontend/node_modules/postcss/lib/postcss.mjs';
 
@@ -19,12 +20,13 @@ function canonical(file,node){return print.printNode(ts.EmitHint.Unspecified,nod
 function named(file,name){let found;function visit(n){if((ts.isFunctionDeclaration(n)||ts.isVariableDeclaration(n))&&n.name?.getText(file)===name)found=n;ts.forEachChild(n,visit)}visit(file);assert.ok(found,'Missing '+name);return canonical(file,found)}
 function sdkCalls(file){const operations=new Set();for(const n of file.statements)if(ts.isImportDeclaration(n)&&n.moduleSpecifier.text==='@insightpad/dataconnect')for(const e of n.importClause.namedBindings.elements)operations.add(e.name.text);const result=[];function visit(n){if(ts.isCallExpression(n)&&operations.has(n.expression.getText(file)))result.push(canonical(file,n));ts.forEachChild(n,visit)}visit(file);return result.sort()}
 export function verifyCadastros(){
+ verifyEstoqueRegistros();
  git('merge-base','--is-ancestor',cadastrosBase,'HEAD');
- for(const path of git('diff','--name-only',cadastrosBase).split('\n').filter(Boolean)){
+ for(const path of git('diff','--name-only',cadastrosBase,estoqueBase).split('\n').filter(Boolean)){
   if(path.startsWith('frontend/src/'))assert.ok(allowed.has(path)||path.endsWith('.test.tsx'),`Cadastros modified another product source: ${path}`);
   else assert.match(path,/^(?:scripts\/verify-(?:cadastros|interface|reconciliation)\.mjs|scripts\/reconciliation-scope\.json|scripts\/qa-browser\/|docs\/)/,'Cadastros changed backend, SDK, dependency, infra or workflow: '+path);
  }
- const before=path=>git('show',cadastrosBase+':frontend/src/'+path),after=path=>readFileSync('frontend/src/'+path,'utf8');
+ const before=path=>git('show',cadastrosBase+':frontend/src/'+path),after=path=>estoqueHistoricalSource('frontend/src/'+path,'utf8');
  assert.equal(after('App.tsx').replace("import './cadastros.css'\n",'').trim(),before('App.tsx'));
  assert.equal(after('layout/AppLayout.tsx').replace(/\n      data-cadastros=\{[\s\S]*?\n      \}/,'' ).trim(),before('layout/AppLayout.tsx'),'Shell change must be scope attribute only');
  assert.equal(after('pages/ModuleMenuPage.tsx').replace('className={moduleKey === "cadastros" ? "legacy-module cad-module" : "legacy-module"}','className="legacy-module"').trim(),before('pages/ModuleMenuPage.tsx'));

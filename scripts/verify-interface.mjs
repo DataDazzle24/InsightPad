@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
-import {readFileSync as readActualSource} from 'node:fs';
 import {verifyCadastros,cadastrosBase} from './verify-cadastros.mjs';
+import {estoqueHistoricalSource} from './verify-estoque-registros.mjs';
 import ts from '../frontend/node_modules/typescript/lib/typescript.js';
 import postcss from '../frontend/node_modules/postcss/lib/postcss.mjs';
 
@@ -13,7 +13,7 @@ verifyCadastros();
 const cadastrosHistoricalView=new Set(['frontend/src/layout/AppLayout.tsx','frontend/src/components/SalesUi.tsx','frontend/src/pages/MasterDataPage.tsx','frontend/src/pages/CatalogPages.tsx']);
 const readFileSync=(path,encoding)=>cadastrosHistoricalView.has(path)
  ? execFileSync('git',['show',cadastrosBase+':'+path],{encoding})
- : readActualSource(path,encoding);
+ : estoqueHistoricalSource(path,encoding);
 
 // Presentation is scoped; retired footer UI is removed, never relocated.
 const baseline='3f5ba5b67567e3bf831575fb229d16a79d6ed6b1';

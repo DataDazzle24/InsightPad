@@ -91,7 +91,8 @@
     "DES-2026-003",
     "UXIP-001",
     "PDV-V2-20261107",
-    "CADASTROS-UI-20261108"
+    "CADASTROS-UI-20261108",
+    "ESTOQUE-REGISTROS-UI-20261109"
   ],
   "paths": {
     ".gitignore": {
@@ -268,9 +269,10 @@
       "ids": [
         "PREP-DEC017",
         "OBS-018-AG03-001",
-        "CADASTROS-UI-20261108"
+        "CADASTROS-UI-20261108",
+        "ESTOQUE-REGISTROS-UI-20261109"
       ],
-      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages."
     },
     "scripts/version-manifest.mjs": {
       "ids": [
@@ -454,9 +456,10 @@
         "AJU-EST-19",
         "AJU-EST-20",
         "AJU-EST-22",
-        "AJU-EST-23"
+        "AJU-EST-23",
+        "ESTOQUE-REGISTROS-UI-20261109"
       ],
-      "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão."
+      "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages."
     },
     "frontend/src/utils/stock.ts": {
       "ids": [
@@ -616,9 +619,10 @@
     "scripts/reconciliation-scope.json": {
       "ids": [
         "OBS-018-AG03-001",
-        "CADASTROS-UI-20261108"
+        "CADASTROS-UI-20261108",
+        "ESTOQUE-REGISTROS-UI-20261109"
       ],
-      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages."
     },
     "docs/dec019-progress.json": {
       "ids": [
@@ -765,9 +769,10 @@
         "AJU-EST-19",
         "AJU-EST-20",
         "AJU-EST-22",
-        "AJU-EST-23"
+        "AJU-EST-23",
+        "ESTOQUE-REGISTROS-UI-20261109"
       ],
-      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages."
     },
     "frontend/src/pages/PointOfSalePage.test.tsx": {
       "ids": [
@@ -809,9 +814,10 @@
       "ids": [
         "ADD-018-002",
         "AJU-CAT-05",
-        "CADASTROS-UI-20261108"
+        "CADASTROS-UI-20261108",
+        "ESTOQUE-REGISTROS-UI-20261109"
       ],
-      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages."
     },
     "frontend/src/components/SortableTableHeader.tsx": {
       "ids": [
@@ -1229,9 +1235,10 @@
         "AJU-SUB-11",
         "AJU-SUB-13",
         "AJU-SUB-14",
-        "CADASTROS-UI-20261108"
+        "CADASTROS-UI-20261108",
+        "ESTOQUE-REGISTROS-UI-20261109"
       ],
-      "reason": "Exact isolated residual consumer tests for the frozen68, preserving exclusions and sufficient cases; no business endpoint, remote operation or public evidence."
+      "reason": "Exact isolated residual consumer tests for the frozen68, preserving exclusions and sufficient cases; no business endpoint, remote operation or public evidence. Exclude decorative aria-hidden KPI icons from the original label assertion; preserve financial and stock assertions."
     },
     "functions/test/pos.test.ts": {
       "ids": [
@@ -1320,9 +1327,10 @@
     "scripts/verify-interface.mjs": {
       "ids": [
         "UXIP-001",
-        "CADASTROS-UI-20261108"
+        "CADASTROS-UI-20261108",
+        "ESTOQUE-REGISTROS-UI-20261109"
       ],
-      "reason": "Screen-only visual migration and exact presentation/preservation regression; preserve business callbacks, fields, domain sources and print. Exact path only; no backend or operational change."
+      "reason": "Screen-only visual migration and exact presentation/preservation regression; preserve business callbacks, fields, domain sources and print. Exact path only; no backend or operational change. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages."
     },
     "frontend/src/components/InterfaceNavigationLink.test.tsx": {
       "ids": [
@@ -1547,9 +1555,10 @@
       "reason": "Pedido Frente de Caixa v2 de 2026-11-07: layout restrito, filial em rascunho e evidência dirigida, preservando contratos reais e matriz congelada."
     },
     "frontend/src/App.tsx": {
-      "reason": "Cadastros UI approved package on published 9c50ee2: scoped presentation, local interaction/focus, regression evidence and exact preservation gates; no backend or global shell redesign.",
+      "reason": "Cadastros UI approved package on published 9c50ee2: scoped presentation, local interaction/focus, regression evidence and exact preservation gates; no backend or global shell redesign. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages.",
       "ids": [
-        "CADASTROS-UI-20261108"
+        "CADASTROS-UI-20261108",
+        "ESTOQUE-REGISTROS-UI-20261109"
       ]
     },
     "frontend/src/cadastros.css": {
@@ -1583,9 +1592,10 @@
       ]
     },
     "scripts/verify-cadastros.mjs": {
-      "reason": "Cadastros UI approved package on published 9c50ee2: scoped presentation, local interaction/focus, regression evidence and exact preservation gates; no backend or global shell redesign.",
+      "reason": "Cadastros UI approved package on published 9c50ee2: scoped presentation, local interaction/focus, regression evidence and exact preservation gates; no backend or global shell redesign. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages.",
       "ids": [
-        "CADASTROS-UI-20261108"
+        "CADASTROS-UI-20261108",
+        "ESTOQUE-REGISTROS-UI-20261109"
       ]
     },
     "scripts/qa-browser/.gitignore": {
@@ -1601,9 +1611,10 @@
       ]
     },
     "scripts/qa-browser/run.mjs": {
-      "reason": "Cadastros UI approved package on published 9c50ee2: scoped presentation, local interaction/focus, regression evidence and exact preservation gates; no backend or global shell redesign.",
+      "reason": "Cadastros UI approved package on published 9c50ee2: scoped presentation, local interaction/focus, regression evidence and exact preservation gates; no backend or global shell redesign. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages.",
       "ids": [
-        "CADASTROS-UI-20261108"
+        "CADASTROS-UI-20261108",
+        "ESTOQUE-REGISTROS-UI-20261109"
       ]
     },
     "docs/cadastros-ui-dev.md": {
@@ -1617,6 +1628,54 @@
       "ids": [
         "CADASTROS-UI-20261108"
       ]
+    },
+    "frontend/src/pages/SalesManagementPage.tsx": {
+      "ids": [
+        "ESTOQUE-REGISTROS-UI-20261109"
+      ],
+      "reason": " Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages."
+    },
+    "frontend/src/estoque-registros.css": {
+      "ids": [
+        "ESTOQUE-REGISTROS-UI-20261109"
+      ],
+      "reason": " Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages."
+    },
+    "frontend/src/hooks/useWorkDialog.ts": {
+      "ids": [
+        "ESTOQUE-REGISTROS-UI-20261109"
+      ],
+      "reason": " Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages."
+    },
+    "frontend/src/hooks/useWorkDialog.test.tsx": {
+      "ids": [
+        "ESTOQUE-REGISTROS-UI-20261109"
+      ],
+      "reason": " Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages."
+    },
+    "frontend/src/components/WorkspaceFilters.test.tsx": {
+      "ids": [
+        "ESTOQUE-REGISTROS-UI-20261109"
+      ],
+      "reason": " Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages."
+    },
+    "scripts/verify-estoque-registros.mjs": {
+      "ids": [
+        "ESTOQUE-REGISTROS-UI-20261109"
+      ],
+      "reason": " Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages."
+    },
+    "scripts/qa-browser/estoque-registros.mjs": {
+      "ids": [
+        "ESTOQUE-REGISTROS-UI-20261109"
+      ],
+      "reason": " Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages."
+    },
+    "docs/estoque-registros-ui-dev.md": {
+      "ids": [
+        "ESTOQUE-REGISTROS-UI-20261109"
+      ],
+      "reason": " Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages."
     }
   },
   "bytePreserved": [

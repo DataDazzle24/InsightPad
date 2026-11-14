@@ -80,7 +80,12 @@ export function SearchableMultiSelect({
       .includes(term.toLocaleLowerCase("pt-BR")),
   );
   return (
-    <div className="filter-field" ref={root}>
+    <div className="filter-field" ref={root} onKeyDown={event=>{
+      if (event.key !== "Escape" || !open || !event.currentTarget.closest(".work-stock,.work-sales")) return;
+      event.preventDefault();
+      setOpen(false);
+      root.current?.querySelector<HTMLButtonElement>(".filter-select-trigger")?.focus();
+    }}>
       <span>{label}</span>
       <div className={`filter-multiselect${open ? " is-open" : ""}`}>
         <button
@@ -144,12 +149,14 @@ export function DateRangePicker({
   onChange,
   label = "Período da venda",
   cadastros = false,
+  workspaceUX = false,
 }: {
   from: string;
   to: string;
   onChange: (from: string, to: string) => void;
   label?: string;
   cadastros?: boolean;
+  workspaceUX?: boolean;
 }) {
   const trigger = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false),
@@ -190,7 +197,7 @@ export function DateRangePicker({
       className="filter-field date-range-field"
       ref={root}
       onKeyDown={(event) => {
-        if (event.key !== "Escape" || !open || !cadastros) return;
+        if (event.key !== "Escape" || !open || !(cadastros || workspaceUX)) return;
         event.preventDefault();
         setOpen(false);
         trigger.current?.focus();
@@ -200,7 +207,7 @@ export function DateRangePicker({
       <button
         type="button"
         ref={trigger}
-        aria-expanded={cadastros ? open : undefined}
+        aria-expanded={cadastros || workspaceUX ? open : undefined}
         className="date-range-trigger"
         onClick={() => setOpen((value) => !value)}
       >
