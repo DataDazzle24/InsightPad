@@ -1,7 +1,7 @@
 """Wait for the exact candidate CI, then invoke the guarded existing-DEV publisher."""
 import json, pathlib, subprocess, sys, time, urllib.request
-SHA='69f4325a743fe8494d458069880141d045fc5748'
-RUN='43597799383'
+SHA='c61872785b80bce39d320d6678e84d3296b54ca0'
+RUN='43599640718'
 def get_run():
  request=urllib.request.Request('https://api.github.com/repos/DataDazzle24/InsightPad/actions/runs/'+RUN,headers={'User-Agent':'InsightPad-DEV-CI-readonly','Accept':'application/vnd.github+json','Cache-Control':'no-cache'})
  with urllib.request.urlopen(request,timeout=30) as response:return json.load(response)
