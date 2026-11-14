@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
-import {readFileSync} from 'node:fs';
+import {verifyCanais,canaisBase,canaisHistoricalSource} from './verify-canais.mjs';
 import ts from '../frontend/node_modules/typescript/lib/typescript.js';
 import postcss from '../frontend/node_modules/postcss/lib/postcss.mjs';
 
 export const estoqueBase='6e727a05fcd987b236ee11646c4c70e4bc88fcf5';
+const readFileSync=canaisHistoricalSource;
 export const estoqueHistoricalPaths=new Set(['frontend/src/App.tsx','frontend/src/components/SalesUi.tsx','frontend/src/pages/StockPage.tsx','frontend/src/pages/SalesManagementPage.tsx']);
 const git=(...args)=>execFileSync('git',args,{encoding:'utf8'}).trim();
 const printer=ts.createPrinter({removeComments:true});
@@ -22,8 +23,9 @@ const allowed=new Set([
 function declarations(file){const result=new Map();function visit(n){if((ts.isVariableDeclaration(n)||ts.isFunctionDeclaration(n))&&n.name&&ts.isIdentifier(n.name))result.set(n.name.text,n);ts.forEachChild(n,visit)}visit(file);return result}
 function wiring(file){const result=[];function visit(n){if(ts.isJsxAttribute(n)&&(/^(?:on[A-Z]|disabled$|value$|checked$|readOnly$|required$|name$|type$)/.test(n.name.getText(file))))result.push(canonical(file,n));ts.forEachChild(n,visit)}visit(file);return result}
 export function verifyEstoqueRegistros(){
+ verifyCanais();
  git('merge-base','--is-ancestor',estoqueBase,'HEAD');
- const changed=[...git('diff','--name-only',estoqueBase).split('\n'),...git('ls-files','--others','--exclude-standard').split('\n')].filter(Boolean);
+ const changed=git('diff','--name-only',estoqueBase,canaisBase).split('\n').filter(Boolean);
  for(const path of changed)assert.ok(allowed.has(path),'Estoque/Registros modified source outside exact approved scope: '+path);
  assert.equal(readFileSync('frontend/src/App.tsx','utf8').replace("import './estoque-registros.css'\n",'').trim(),before('frontend/src/App.tsx'),'App may only import the scoped stylesheet');
  for(const path of ['frontend/src/pages/StockPage.tsx','frontend/src/pages/SalesManagementPage.tsx']){
