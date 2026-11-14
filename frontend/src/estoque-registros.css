@@ -196,7 +196,7 @@
 .ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .ux-grid-scroll :is(.stock-status--low,.stock-status--high,.stock-status--pending) {
   color:var(--ux-warn); background:var(--ux-warn-bg);
 }
-.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .ux-grid-scroll :is(.stock-status--empty,.stock-status--cancelled,.stock-type--loss,.sales-source--ifood,.catalog-status--inactive) {
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .ux-grid-scroll :is(.stock-status--empty,.stock-status--reversed,.stock-status--cancelled,.stock-type--loss,.sales-source--ifood,.catalog-status--inactive) {
   color:var(--ux-danger); background:var(--ux-danger-bg);
 }
 .ip-ui[data-theme] .sales-page.work-sales .ux-grid-scroll .sales-source--pos {color:var(--ux-accent);background:var(--ux-tint)}

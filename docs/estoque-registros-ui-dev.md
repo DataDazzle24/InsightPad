@@ -22,6 +22,13 @@ navegador identificou que `.stock-kpis span` herdava fonte monoespaçada e
 capitalização do CSS legado, exibindo texto em vez dos ícones. A folha local
 restaura Material Symbols e `text-transform:none` somente nesses ícones.
 
+A regressão integrada também preserva a cor destrutiva de `REVERSED`, equivalente
+a `CANCELLED`. Nos filtros dessas duas rotas, o fechamento externo de listas e
+calendário ocorre no clique completo: fechar no `pointerdown` movia o diálogo
+centralizado entre pressionar e soltar Aplicar, consumindo a ação. Consumidores
+fora do escopo continuam com a interação anterior. O caso fiscal verifica a
+aplicação da data local e seu recorte UTC sem alterar as regras de negócio.
+
 Os verificadores históricos continuam executando as garantias de Cadastros,
 PDV, dashboards e shell. `verify-estoque-registros.mjs` verifica primeiro a
 lista exata de arquivos autorizados, declarações de negócio, wiring de JSX,

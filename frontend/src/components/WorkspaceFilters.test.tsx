@@ -25,3 +25,21 @@ it.each([false,true])('calendar opts in without changing existing callers: %s',a
  expect(event.defaultPrevented).toBe(workspaceUX);expect(Boolean(host.querySelector('.range-calendar'))).toBe(!workspaceUX)
  if(workspaceUX)expect(document.activeElement).toBe(trigger)
 })
+it.each([false,true])('inline calendar preserves the outside click only for workspace callers: %s',async(workspaceUX)=>{
+ const applied=vi.fn()
+ await act(async()=>root.render(<><DateRangePicker workspaceUX={workspaceUX} from="" to="" onChange={()=>{}}/><button id="outside" onClick={applied}>Aplicar</button></>))
+ await act(async()=>host.querySelector<HTMLButtonElement>('.date-range-trigger')!.click())
+ const outside=host.querySelector<HTMLButtonElement>('#outside')!
+ await act(async()=>outside.dispatchEvent(new Event('pointerdown',{bubbles:true})))
+ expect(Boolean(host.querySelector('.range-calendar'))).toBe(workspaceUX)
+ await act(async()=>outside.click());expect(applied).toHaveBeenCalledOnce();expect(host.querySelector('.range-calendar')).toBeNull()
+})
+it.each(['work-stock',''])('inline facet preserves the outside click only in its approved scope: %s',async(scope)=>{
+ host.className=scope;const applied=vi.fn()
+ await act(async()=>root.render(<><SearchableMultiSelect label="Tipos" options={[{value:'IN',label:'Entrada'}]} value={[]} onChange={()=>{}}/><button id="outside" onClick={applied}>Aplicar</button></>))
+ await act(async()=>host.querySelector<HTMLButtonElement>('.filter-select-trigger')!.click())
+ const outside=host.querySelector<HTMLButtonElement>('#outside')!
+ await act(async()=>outside.dispatchEvent(new Event('pointerdown',{bubbles:true})))
+ expect(Boolean(host.querySelector('.filter-dropdown'))).toBe(Boolean(scope))
+ await act(async()=>outside.click());expect(applied).toHaveBeenCalledOnce();expect(host.querySelector('.filter-dropdown')).toBeNull()
+})

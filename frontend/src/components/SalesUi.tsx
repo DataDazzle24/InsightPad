@@ -68,11 +68,14 @@ export function SearchableMultiSelect({
     [open, setOpen] = useState(false),
     root = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const close = (event: PointerEvent) => {
+    const close = (event: Event) => {
       if (!root.current?.contains(event.target as Node)) setOpen(false);
     };
-    document.addEventListener("pointerdown", close);
-    return () => document.removeEventListener("pointerdown", close);
+    // Inline workspace dropdowns change the dialog height when dismissed.
+    // Let the outside control receive its click before the layout can move.
+    const outsideEvent = root.current?.closest(".work-stock,.work-sales") ? "click" : "pointerdown";
+    document.addEventListener(outsideEvent, close);
+    return () => document.removeEventListener(outsideEvent, close);
   }, []);
   const visible = options.filter((option) =>
     option.label
@@ -165,12 +168,13 @@ export function DateRangePicker({
     root = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
-    const closeOutside = (event: PointerEvent) => {
+    const closeOutside = (event: Event) => {
       if (!root.current?.contains(event.target as Node)) setOpen(false);
     };
-    document.addEventListener("pointerdown", closeOutside, true);
-    return () => document.removeEventListener("pointerdown", closeOutside, true);
-  }, [open]);
+    const outsideEvent = workspaceUX ? "click" : "pointerdown";
+    document.addEventListener(outsideEvent, closeOutside, true);
+    return () => document.removeEventListener(outsideEvent, closeOutside, true);
+  }, [open, workspaceUX]);
   const days = useMemo(() => {
     const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1),
       start = new Date(first);

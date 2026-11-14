@@ -45,7 +45,21 @@ export function verifyEstoqueRegistros(){
  shared=shared.replace(/    <div className="filter-field" ref=\{root\} onKeyDown=\{event=>\{[\s\S]*?\n    \}\}>/,'    <div className="filter-field" ref={root}>')
   .replace('  workspaceUX = false,\n','').replace('  workspaceUX?: boolean;\n','')
   .replace('!(cadastros || workspaceUX)','!cadastros').replace('cadastros || workspaceUX ? open : undefined','cadastros ? open : undefined');
- assert.equal(shared.trim(),before('frontend/src/components/SalesUi.tsx'),'Shared UI changed beyond scoped Escape and explicit calendar opt-in');
+ shared=shared.replace(`    // Inline workspace dropdowns change the dialog height when dismissed.
+    // Let the outside control receive its click before the layout can move.
+    const outsideEvent = root.current?.closest(".work-stock,.work-sales") ? "click" : "pointerdown";
+    document.addEventListener(outsideEvent, close);
+    return () => document.removeEventListener(outsideEvent, close);`,`    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);`)
+  .replace(`    const outsideEvent = workspaceUX ? "click" : "pointerdown";
+    document.addEventListener(outsideEvent, closeOutside, true);
+    return () => document.removeEventListener(outsideEvent, closeOutside, true);
+  }, [open, workspaceUX]);`,`    document.addEventListener("pointerdown", closeOutside, true);
+    return () => document.removeEventListener("pointerdown", closeOutside, true);
+  }, [open]);`)
+  .replace('const close = (event: Event)', 'const close = (event: PointerEvent)')
+  .replace('const closeOutside = (event: Event)', 'const closeOutside = (event: PointerEvent)');
+ assert.equal(shared.trim(),before('frontend/src/components/SalesUi.tsx'),'Shared UI changed beyond scoped Escape, click-safe dismissal and explicit calendar opt-in');
  const css=postcss.parse(readFileSync('frontend/src/estoque-registros.css','utf8'));
  css.walkRules(rule=>{
   for(const selector of postcss.list.comma(rule.selector))assert.ok(selector.startsWith('.ip-ui[data-theme')&&(selector.includes('.stock-page.work-stock')||selector.includes('.sales-page.work-sales')),'Unscoped workspace selector: '+selector);
