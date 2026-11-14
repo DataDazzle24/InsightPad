@@ -19,6 +19,7 @@ import {
 } from "../components/SalesUi";
 import { allocateInvoiceCosts, maskMoney, parseMoney, stockConfirmed } from "../utils/stock";
 import { Link } from 'react-router-dom';
+import { useWorkDialog } from '../hooks/useWorkDialog';
 import { useAuth } from '../auth/useAuth';
 import { SortableTableHeader } from '../components/SortableTableHeader';
 import { nextTableSort,sortTableRows,type TableSort } from '../utils/tableSorting';
@@ -202,6 +203,10 @@ export function StockPage() {
     [draft, setDraft] = useState<Filters>(filters),
     [reverseOpen, setReverseOpen] = useState(false),
     [reason, setReason] = useState("");
+  useWorkDialog(operationOpen, () => { if (!inFlight.current && !busy) setOperationOpen(false); });
+  useWorkDialog(transferOpen, () => { if (!inFlight.current && !busy) setTransferOpen(false); });
+  useWorkDialog(filterOpen, () => { if (!busy) setFilterOpen(false); });
+  useWorkDialog(reverseOpen, () => { if (!busy) setReverseOpen(false); });
   const queryFilters=useMemo(()=>({...filters,search,from:filters.from?new Date(`${filters.from}T00:00:00`).toISOString():'',to:filters.to?new Date(`${filters.to}T23:59:59.999`).toISOString():''}),[filters,search]);
   const load = useCallback(async () => {
     const request=++sequence.current;
@@ -672,16 +677,16 @@ export function StockPage() {
   }
   const toggleLevel=(level:string)=>{setLevels(current=>current.includes(level)?current.filter(x=>x!==level):[...current,level]);chooseView('balance')};
   return (
-    <section className="stock-page">
+    <section className="stock-page work-stock">
       <header className="stock-heading">
-        <div>
-          <span className="eyebrow">ESTOQUE</span>
-          <h1><Link to="/" className="catalog-back" aria-label="Voltar ao menu principal"><span className="material-symbols-rounded">arrow_back</span></Link>CONTROLE DE ESTOQUE</h1>
+        <div className="catalog-title-group">
+          <Link to="/" className="catalog-back" aria-label="Voltar ao menu principal"><span className="material-symbols-rounded" aria-hidden="true">arrow_back</span></Link>
+          <div><span className="eyebrow">Estoque</span><h1>Controle de estoque</h1></div>
         </div>
-      <nav className="stock-tabs" aria-label="Vistas de estoque">{([['movements','Movimentações'],['transfers','Transferências'],['balance','Saldo atual']] as const).map(([key,label])=><button key={key} className={view===key?'active':''} onClick={()=>chooseView(key)}>{label}</button>)}</nav>
+      <nav className="stock-tabs" aria-label="Vistas de estoque">{([['movements','Movimentações'],['transfers','Transferências'],['balance','Saldo atual']] as const).map(([key,label])=><button key={key} aria-pressed={view===key} className={view===key?'active':''} onClick={()=>chooseView(key)}>{label}</button>)}</nav>
         <div className="stock-heading__actions">
           <button
-            className="stock-heading-action stock-heading-action--transfer" disabled={busy||data.branches.length<2||!permission?.canManage}
+            className="stock-heading-action stock-heading-action--transfer ux-action ux-info" disabled={busy||data.branches.length<2||!permission?.canManage}
             onClick={() => {
               operationKey.current={signature:'',id:''};
               setTransfer({
@@ -696,16 +701,16 @@ export function StockPage() {
             <span className="material-symbols-rounded">move_up</span>Transferir
           </button>
           <button
-            className="catalog-primary stock-heading-action stock-heading-action--create"
+            className="catalog-primary stock-heading-action stock-heading-action--create ux-action ux-primary"
             disabled={busy||!permission?.canCreate} onClick={openNew}
           >
-            <span className="material-symbols-rounded">add_box</span>Nova
+            <span className="material-symbols-rounded">add</span>Nova
             movimentação
           </button>
         </div>
       </header>
-      <AppToast notice={notice} onClose={() => setNotice(null)} />
-      <div className="stock-kpis"><article><span>Valor em estoque</span><strong>{money(summary.value)}</strong></article>{([['low','Estoque baixo',summary.low],['high','Estoque alto',summary.high],['empty','Sem saldo',summary.empty]] as const).map(([level,label,value])=><button key={level} aria-pressed={levels.includes(level)} className={`stock-kpi stock-status--${level}`} onClick={()=>toggleLevel(level)}><span>{label}</span><strong>{value}</strong></button>)}</div>
+      <AppToast notice={(operationOpen || transferOpen || reverseOpen) && notice?.type === "error" ? null : notice} onClose={() => setNotice(null)} />
+      <div className="stock-kpis"><article><span className="material-symbols-rounded ux-kpi-icon" aria-hidden="true">inventory_2</span><span>Valor em estoque</span><strong>{money(summary.value)}</strong></article>{([['low','Estoque baixo',summary.low],['high','Estoque alto',summary.high],['empty','Sem saldo',summary.empty]] as const).map(([level,label,value])=><button key={level} aria-pressed={levels.includes(level)} className={`stock-kpi stock-status--${level}`} onClick={()=>toggleLevel(level)}><span className="material-symbols-rounded ux-kpi-icon" aria-hidden="true">{level==='low'?'south':level==='high'?'north':'remove_circle'}</span><span>{label}</span><strong>{value}</strong></button>)}</div>
 
       <div className="stock-panel">
         <div className="stock-toolbar">
@@ -714,12 +719,12 @@ export function StockPage() {
             <input
               value={search}
               onChange={(e) => {setSearch(e.target.value);setPage(0);setSelectedIds([]);setSelected(null)}}
-              placeholder="Pesquisar..."
+              aria-label="Pesquisar no estoque" placeholder="Pesquisar..."
             />
           </label>
-          <button className="stock-toolbar-action" onClick={()=>{setFilters({types:[],products:[],branches:[],from:'',to:''});setSearch('');setLevels([]);setSort(null);setPage(0);setSelectedIds([]);setSelected(null)}}>Limpar filtros</button>
+          <button className="stock-toolbar-action ux-action " onClick={()=>{setFilters({types:[],products:[],branches:[],from:'',to:''});setSearch('');setLevels([]);setSort(null);setPage(0);setSelectedIds([]);setSelected(null)}}><span className="material-symbols-rounded" aria-hidden="true">ink_eraser</span>Limpar filtros</button>
           {view === "balance" && (
-            <select value={branch} onChange={(e) => {setBranch(e.target.value);setPage(0)}}>
+            <select aria-label="Filial do saldo" value={branch} onChange={(e) => {setBranch(e.target.value);setPage(0)}}>
               {data.branches.map((b) => (
                 <option value={b.id} key={b.id}>
                   {b.name}
@@ -729,22 +734,22 @@ export function StockPage() {
           )}
           {view === "movements" && (
             <button
-              className="stock-toolbar-action"
+              className="stock-toolbar-action ux-action "
               onClick={() => {
                 setDraft(filters);
                 setFilterOpen(true);
               }}
             >
-              <span className="material-symbols-rounded">tune</span>Pesquisa
+              <span className="material-symbols-rounded">filter_alt</span>Pesquisa
               avançada
             </button>
           )}
-          <button className="stock-toolbar-action" onClick={csv}>
+          <button className="stock-toolbar-action ux-action " onClick={csv}>
             <span className="material-symbols-rounded">download</span>CSV
           </button>
-          <button className="stock-heading-action stock-heading-action--edit" disabled={busy||selectedIds.length!==1||!permission?.canUpdate} onClick={edit}>Editar</button><button className="danger stock-action-danger" disabled={busy||!selectedIds.length||!permission?.canDelete} onClick={()=>setReverseOpen(true)}>Estornar</button>
+          <button className="stock-heading-action stock-heading-action--edit ux-action ux-edit" disabled={busy||selectedIds.length!==1||!permission?.canUpdate} onClick={edit}><span className="material-symbols-rounded" aria-hidden="true">edit</span>Editar</button><button className="danger stock-action-danger ux-action ux-danger" disabled={busy||!selectedIds.length||!permission?.canDelete} onClick={()=>setReverseOpen(true)}><span className="material-symbols-rounded" aria-hidden="true">undo</span>Estornar</button>
         </div>
-          <div className={`stock-table stock-table--${view}`}>
+          <div className={`stock-table stock-table--${view} ux-grid-scroll`} role="region" tabIndex={0} aria-label="Tabela de estoque">
           <table>
             <thead>
               {view === "balance" ? (
@@ -833,7 +838,7 @@ export function StockPage() {
                         <td>
                           {new Date(m.occurredAt).toLocaleString("pt-BR")}
                         </td>
-                        <td><span className={`stock-type stock-type--${m.typeCode === "SALE" ? "sale" : m.direction === "IN" ? "in" : "loss"}`}>{m.typeName}</span></td>
+                        <td><span className={`stock-type stock-type--${m.typeCode.startsWith("TRANSFER") ? "transfer" : m.typeCode === "SALE" ? "sale" : m.direction === "IN" ? "in" : "loss"}`}>{m.typeName}</span></td>
                         <td>
                           <strong>{m.productName}</strong>
                         </td>
@@ -864,6 +869,9 @@ export function StockPage() {
                     ))}
             </tbody>
           </table>
+          {!busy && !notice && count === 0 && <div className="ux-empty" role="status">
+            <strong>Nenhum registro encontrado</strong><span>Revise a pesquisa, os filtros e a filial selecionada.</span>
+          </div>}
         </div><div className="catalog-pagination"><button disabled={busy||page===0} onClick={()=>{setPage(page-1);setSelectedIds([]);setSelected(null)}}>Anterior</button><span>{count===0?0:page*100+1}–{Math.min((page+1)*100,count)} de {count} registros</span><button disabled={busy||(page+1)*100>=count} onClick={()=>{setPage(page+1);setSelectedIds([]);setSelected(null)}}>Próxima</button></div>
       </div>
       {operationOpen && (
@@ -882,6 +890,7 @@ export function StockPage() {
           add={() => add("form")}
           close={() => setOperationOpen(false)}
           save={save}
+          notice={notice}
         />
       )}{" "}
       {transferOpen && (
@@ -894,6 +903,7 @@ export function StockPage() {
           add={() => add("transfer")}
           close={() => setTransferOpen(false)}
           save={saveTransfer}
+          notice={notice}
         />
       )}{" "}
       {filterOpen && (
@@ -905,9 +915,10 @@ export function StockPage() {
             aria-labelledby="stock-filter-title"
           >
             <header>
+              <span className="material-symbols-rounded ux-dialog-icon" aria-hidden="true">filter_alt</span>
               <div>
                 <span className="eyebrow">PESQUISA</span>
-                <h2 id="stock-filter-title">FILTROS DE MOVIMENTAÇÃO</h2>
+                <h2 id="stock-filter-title">Filtros de movimentação</h2>
               </div>
               <button
                 aria-label="Fechar filtros de movimentação"
@@ -948,7 +959,7 @@ export function StockPage() {
                 value={draft.branches}
                 onChange={(branches) => setDraft((v) => ({ ...v, branches }))}
               />
-              <DateRangePicker
+              <DateRangePicker workspaceUX label="Período da movimentação"
                 from={draft.from}
                 to={draft.to}
                 onChange={(from, to) => setDraft((v) => ({ ...v, from, to }))}
@@ -956,7 +967,7 @@ export function StockPage() {
             </div>
             <footer>
               <button
-                className="stock-filter-clear"
+                className="stock-filter-clear ux-action "
                 onClick={() =>
                   setDraft({
                     types: [],
@@ -970,13 +981,13 @@ export function StockPage() {
                 Limpar
               </button>
               <button
-                className="catalog-modal-cancel"
+                className="catalog-modal-cancel ux-action "
                 onClick={() => setFilterOpen(false)}
               >
                 Cancelar
               </button>
               <button
-                className="catalog-primary stock-filter-apply"
+                className="catalog-primary stock-filter-apply ux-action ux-confirm"
                 onClick={() => {
                   setFilters(draft);setPage(0);setSelectedIds([]);setSelected(null);
                   setFilterOpen(false);
@@ -996,24 +1007,28 @@ export function StockPage() {
             aria-modal="true"
             aria-labelledby="stock-reverse-title"
           >
-            <span className="material-symbols-rounded">undo</span>
-            <h2 id="stock-reverse-title">Estornar movimentação?</h2>
+            <header><span className="material-symbols-rounded ux-dialog-icon ux-dialog-danger" aria-hidden="true">undo</span><div><span className="eyebrow">Estoque</span><h2 id="stock-reverse-title">Estornar movimentação?</h2></div>
+              <button aria-label="Fechar confirmação de estorno" onClick={() => setReverseOpen(false)}>×</button>
+            </header>
+            <div className="ux-dialog-body">
+            <OperationNotice notice={notice}/>
             <p>
               O saldo será recalculado e a operação permanecerá na auditoria.
             </p>
             <textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="Motivo obrigatório"
+              aria-label="Motivo obrigatório" placeholder="Motivo obrigatório"
             />
+            </div>
             <footer>
               <button
-                className="catalog-modal-cancel"
+                className="catalog-modal-cancel ux-action "
                 onClick={() => setReverseOpen(false)}
               >
                 Voltar
               </button>
-              <button className="danger stock-action-danger" onClick={reverse}>
+              <button className="danger stock-action-danger ux-action ux-danger" onClick={reverse}>
                 Estornar
               </button>
             </footer>
@@ -1048,7 +1063,7 @@ function ItemEditor({
           <strong>Produtos da movimentação</strong>
           <small>Inclua todos os itens antes de concluir.</small>
         </div>
-        <button className="catalog-primary stock-item-add" onClick={add}>
+        <button className="catalog-primary stock-item-add ux-action ux-info" onClick={add}>
           + Adicionar
         </button>
       </header>
@@ -1110,7 +1125,7 @@ function ItemEditor({
             </label>
           )}
           <button
-            className="danger stock-item-remove"
+            className="danger stock-item-remove ux-action ux-danger"
             onClick={() => remove(i)}
             disabled={items.length === 1}
           >
@@ -1139,6 +1154,7 @@ function OperationModal({
   add,
   close,
   save,
+  notice,
 }: {
   form: Form;
   setForm: React.Dispatch<React.SetStateAction<Form>>;
@@ -1154,6 +1170,7 @@ function OperationModal({
   add: () => void;
   close: () => void;
   save: () => void;
+  notice: Notice | null;
 }) {
   const tabs = ["Identificação", "Produtos", "Nota fiscal", "Revisão"];
   return (
@@ -1169,10 +1186,11 @@ function OperationModal({
         aria-labelledby="stock-operation-title"
       >
         <header>
+          <span className="material-symbols-rounded ux-dialog-icon" aria-hidden="true">inventory_2</span>
           <div>
             <span className="eyebrow">ESTOQUE</span>
             <h2 id="stock-operation-title">
-              {editing ? "CORRIGIR MOVIMENTAÇÃO" : "NOVA MOVIMENTAÇÃO"}
+              {editing ? "Corrigir movimentação" : "Nova movimentação"}
             </h2>
             {editing&&<small style={{display:'block',overflowWrap:'anywhere'}}>Referência: {movementId}</small>}
           </div>
@@ -1181,7 +1199,7 @@ function OperationModal({
         <nav className="stock-wizard" aria-label="Etapas da movimentação">
           {tabs.map((t, i) => (
             <button
-              className={step === i ? "active" : ""}
+              aria-current={step === i ? "step" : undefined} className={step === i ? "active" : ""}
               onClick={() => setStep(i)}
               key={t}
             >
@@ -1190,6 +1208,7 @@ function OperationModal({
             </button>
           ))}
         </nav>
+        <OperationNotice notice={notice}/>
         <div className="stock-wizard-body">
           {step === 0 && (
             <div className="stock-form">
@@ -1265,7 +1284,7 @@ function OperationModal({
           )}{" "}
           {step === 2 && (
             <div className="stock-fiscal">
-              <fieldset className="stock-fiscal-toggle"><legend>Esta entrada possui nota fiscal?</legend>{[true,false].map(value=><button type="button" key={String(value)} aria-pressed={form.fiscalEnabled===value} disabled={form.direction==='OUT'} onClick={()=>setForm(v=>({...v,fiscalEnabled:value}))}>{value?'Sim':'Não'}</button>)}</fieldset>
+              <fieldset className="stock-fiscal-toggle"><legend>Esta entrada possui nota fiscal?</legend>{[true,false].map(value=><button type="button" className="ux-action" key={String(value)} aria-pressed={form.fiscalEnabled===value} disabled={form.direction==='OUT'} onClick={()=>setForm(v=>({...v,fiscalEnabled:value}))}>{value?'Sim':'Não'}</button>)}</fieldset>
               {form.fiscalEnabled && (
                 <div className="stock-form">
                   <label>
@@ -1380,12 +1399,12 @@ function OperationModal({
           )}
         </div>
         <footer>
-          <button className="catalog-modal-cancel" onClick={close}>
+          <button className="catalog-modal-cancel ux-action " onClick={close}>
             Cancelar
           </button>
           {step > 0 && (
             <button
-              className="stock-modal-secondary"
+              className="stock-modal-secondary ux-action "
               onClick={() => setStep(step - 1)}
             >
               Anterior
@@ -1393,18 +1412,14 @@ function OperationModal({
           )}
           {step < 3 ? (
             <button
-              className={`catalog-primary catalog-modal-submit ${
-                editing
-                  ? "catalog-modal-submit--edit"
-                  : "catalog-modal-submit--create"
-              }`}
+              className="catalog-primary catalog-modal-submit ux-action ux-info"
               onClick={() => setStep(step + 1)}
             >
               Próxima
             </button>
           ) : (
             <button
-              className={`catalog-primary catalog-modal-submit ${
+              className={`catalog-primary catalog-modal-submit ux-action ${editing ? "ux-edit" : "ux-confirm"} ${
                 editing
                   ? "catalog-modal-submit--edit"
                   : "catalog-modal-submit--create"
@@ -1428,6 +1443,7 @@ function TransferModal({
   add,
   close,
   save,
+  notice,
 }: {
   value: {
     sourceBranchId: string;
@@ -1449,6 +1465,7 @@ function TransferModal({
   add: () => void;
   close: () => void;
   save: () => void;
+  notice: Notice | null;
 }) {
   return (
     <div className="catalog-backdrop">
@@ -1459,12 +1476,14 @@ function TransferModal({
         aria-labelledby="stock-transfer-title"
       >
         <header>
+          <span className="material-symbols-rounded ux-dialog-icon" aria-hidden="true">move_up</span>
           <div>
             <span className="eyebrow">ESTOQUE</span>
-            <h2 id="stock-transfer-title">TRANSFERÊNCIA ENTRE FILIAIS</h2>
+            <h2 id="stock-transfer-title">Transferência entre filiais</h2>
           </div>
           <button aria-label="Fechar transferência" onClick={close}>×</button>
         </header>
+        <OperationNotice notice={notice}/>
         <div className="stock-wizard-body">
           <div className="stock-form">
           <label>
@@ -1529,11 +1548,11 @@ function TransferModal({
           </label>
         </div>
         <footer>
-          <button className="catalog-modal-cancel" onClick={close}>
+          <button className="catalog-modal-cancel ux-action " onClick={close}>
             Cancelar
           </button>
           <button
-            className="catalog-primary catalog-modal-submit catalog-modal-submit--create"
+            className="catalog-primary catalog-modal-submit catalog-modal-submit--create ux-action ux-confirm"
             onClick={save}
           >
             Concluir transferência
@@ -1542,4 +1561,10 @@ function TransferModal({
       </section>
     </div>
   );
+}
+
+function OperationNotice({notice}:{notice:Notice|null}) {
+  if (notice?.type !== "error") return null;
+  const uncertain = notice.text.startsWith("Confirmação da");
+  return <p className={`ux-operation-notice${uncertain ? "" : " is-error"}`} role="alert">{notice.text}</p>;
 }

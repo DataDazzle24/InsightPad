@@ -1,0 +1,519 @@
+/* Screen only. The root classes belong exclusively to the two proposed views. */
+@media screen {
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) {
+  --ux-panel:#151b22; --ux-raised:#1b242e; --ux-field:#0d131a;
+  --ux-edge:#334252; --ux-text:#f0f5f8; --ux-muted:#b6c2ce;
+  --ux-accent:#56d8f0; --ux-tint:#112b36; --ux-positive:#a0ed54;
+  --ux-edit:#f5ca65; --ux-danger:#ffacb5; --ux-danger-bg:#3c2229;
+  --ux-ok-bg:#233721; --ux-ok:#b9ed9f; --ux-warn-bg:#342a18; --ux-warn:#f5ca65;
+  --ux-inset:clamp(12px,1.45vw,22px); --ux-modal-inset:18px;
+  --ux-overlay:rgb(3 8 12 / .76); --ux-shadow:0 20px 58px rgb(0 0 0 / .48);
+  display:flex; flex-direction:column; gap:10px; min-height:0; min-width:0;
+  padding:12px var(--ux-inset); overflow:auto; overscroll-behavior:contain;
+  color:var(--ux-text);
+}
+.ip-ui[data-theme="light"] :is(.stock-page.work-stock,.sales-page.work-sales) {
+  --ux-panel:#fff; --ux-raised:#edf3f8; --ux-field:#f7fafc;
+  --ux-edge:#c9d5e0; --ux-text:#162532; --ux-muted:#516272;
+  --ux-accent:#006781; --ux-tint:#e3f5fa;
+  --ux-danger:#a72439; --ux-danger-bg:#fdecef;
+  --ux-ok-bg:#e5f4e6; --ux-ok:#276138; --ux-warn-bg:#fff2d9; --ux-warn:#76530d;
+  --ux-overlay:rgb(18 32 47 / .52); --ux-shadow:0 20px 56px rgb(18 45 67 / .23);
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) > :is(.stock-heading,.sales-title) {
+  display:flex; flex-flow:row wrap; align-items:center; justify-content:space-between;
+  gap:8px 12px; margin:0; padding:0; border:0; background:none; box-shadow:none;
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-title-group {
+  display:flex; flex-direction:row; gap:9px; align-items:center; justify-content:flex-start; min-width:0;
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-title-group h1 {
+  font:700 clamp(19px,1.85vw,23px)/1.2 IPInterface,system-ui,sans-serif;
+  letter-spacing:-.025em; color:var(--ux-text); text-transform:none;
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-title-group .eyebrow {
+  color:var(--ux-accent); font:700 9px/1.3 IPInterface,system-ui,sans-serif;
+  letter-spacing:.12em; text-transform:uppercase;
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-back {
+  display:grid; place-items:center; width:34px; height:34px; min-height:34px; flex:none;
+  padding:0; border:1px solid var(--ux-edge); border-radius:9px; background:var(--ux-raised); color:var(--ux-accent);
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-back svg {width:18px;height:18px}
+.ip-ui[data-theme] .stock-page.work-stock :is(.stock-tabs,.stock-heading__actions) {
+  display:flex; flex-wrap:wrap; align-items:center; width:auto; min-width:0; gap:5px; margin:0;
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-tabs {
+  display:grid; grid-template-columns:repeat(3,max-content); justify-content:center; gap:3px;
+  max-width:100%; padding:3px; border:1px solid var(--ux-edge); border-radius:10px;
+  background:var(--ux-panel); box-shadow:none;
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-tabs button {
+  display:grid; place-items:center; min-width:0; min-height:30px; width:auto; margin:0;
+  padding:4px 10px; border:1px solid transparent; border-radius:7px;
+  background:none; color:var(--ux-muted); font:700 11px/1.2 IPInterface,system-ui,sans-serif;
+  text-transform:none; white-space:nowrap; text-align:center;
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-tabs button:is(.active,:hover) {
+  border-color:color-mix(in srgb,var(--ux-accent) 37%,var(--ux-edge));
+  background:var(--ux-tint); color:var(--ux-accent); box-shadow:none;
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-kpis {
+  flex:0 0 auto; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:9px;
+  margin:0; padding:0; border:0; background:none;
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-kpis > :is(article,button) {
+  display:grid; grid-template-columns:30px minmax(0,1fr); grid-template-rows:auto auto;
+  align-content:center; align-items:center; gap:3px 10px;
+  min-width:0; min-height:64px; margin:0; padding:8px 10px; text-align:left;
+  border:1px solid var(--ux-edge); border-radius:12px;
+  background:var(--ux-panel); color:var(--ux-text); box-shadow:none;
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-kpis .ux-kpi-icon {
+  grid-row:span 2; display:grid; place-items:center; width:30px; height:30px;
+  border-radius:8px; border:1px solid color-mix(in srgb,currentColor 25%,var(--ux-edge));
+  background:var(--ux-tint); color:var(--ux-accent);
+  font:400 16px/1 'Material Symbols Rounded'; text-transform:none; letter-spacing:normal;
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-kpis .stock-status--low .ux-kpi-icon {color:var(--ux-warn);background:var(--ux-warn-bg)}
+.ip-ui[data-theme] .stock-page.work-stock .stock-kpis .stock-status--high .ux-kpi-icon {color:var(--ux-ok);background:var(--ux-ok-bg)}
+.ip-ui[data-theme] .stock-page.work-stock .stock-kpis .stock-status--empty .ux-kpi-icon {color:var(--ux-danger);background:var(--ux-danger-bg)}
+.ip-ui[data-theme] .stock-page.work-stock .stock-kpis > :is(article,button) > span:not(.ux-kpi-icon) {
+  color:var(--ux-muted); font:700 11px/1.25 IPInterface,system-ui,sans-serif; text-transform:none; letter-spacing:0;
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-kpis strong {
+  min-width:0; color:var(--ux-text); font:700 clamp(15px,1.5vw,20px)/1.15 IPInterface,system-ui,sans-serif;
+  font-variant-numeric:tabular-nums; overflow-wrap:anywhere;
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-kpis button:is(:hover,[aria-pressed="true"]) {
+  border-color:var(--ux-accent); background:var(--ux-tint);
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) > :is(.stock-panel,.catalog-panel) {
+  display:flex; flex:1 1 auto; flex-direction:column; min-width:0; min-height:215px; gap:0; padding:0;
+  border:1px solid var(--ux-edge); border-radius:14px; background:var(--ux-panel); box-shadow:none; overflow:hidden;
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) :is(.stock-toolbar,.catalog-toolbar) {
+  display:flex; flex:0 0 auto; flex-wrap:wrap; align-items:center; gap:6px;
+  margin:0; padding:7px 9px; background:var(--ux-panel); border:0; border-bottom:1px solid var(--ux-edge);
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) :is(.stock-toolbar,.catalog-toolbar) > label {
+  display:flex; align-items:center; flex:1 1 160px; gap:8px; min-width:0; min-height:34px; padding:0 8px;
+  border:1px solid var(--ux-edge); border-radius:9px; background:var(--ux-field); color:var(--ux-accent);
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) :is(.stock-toolbar,.catalog-toolbar) > label input {
+  flex:1; width:100%; min-width:0; min-height:32px; padding:4px 0;
+  border:0; box-shadow:none; outline:none; background:none; color:var(--ux-text); font:13px/1.3 IPInterface,system-ui,sans-serif;
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) :is(.stock-toolbar,.catalog-toolbar) > label:focus-within {outline:2px solid var(--ux-accent);outline-offset:1px}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) :is(.stock-toolbar,.catalog-toolbar) > select {
+  min-width:0; min-height:34px; padding:4px 8px; border:1px solid var(--ux-edge); border-radius:9px;
+  background:var(--ux-field); color:var(--ux-text); font:700 11px/1.25 IPInterface,system-ui,sans-serif;
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) :is(.ux-action,.catalog-pagination button) {
+  display:inline-flex; align-items:center; justify-content:center; gap:5px;
+  min-height:34px; min-width:0; padding:5px 9px; margin:0;
+  border:1px solid var(--ux-action-edge,var(--ux-edge)); border-radius:9px; text-decoration:none;
+  background:var(--ux-action-fill,var(--ux-raised)); color:var(--ux-action-ink,var(--ux-text));
+  box-shadow:none; font:700 11px/1.25 IPInterface,system-ui,sans-serif;
+  text-transform:none; letter-spacing:0; white-space:nowrap; cursor:pointer;
+  transition:background-color .16s ease,color .16s ease,border-color .16s ease,box-shadow .16s ease;
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) :is(.ux-action,.catalog-pagination button) .material-symbols-rounded {font-size:15px}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) :is(.stock-heading__actions,.catalog-header-actions) .ux-action {min-height:36px;font-size:11.5px}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .ux-info {
+  --ux-action-fill:var(--ux-tint); --ux-action-ink:var(--ux-accent);
+  --ux-action-edge:color-mix(in srgb,var(--ux-accent) 40%,var(--ux-edge));
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .ux-primary {
+  --ux-action-fill:var(--ip-primary,#10c7e8); --ux-action-ink:#111820;
+  --ux-action-edge:var(--ip-primary,#10c7e8);
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) :is(.ux-edit,.ux-danger) .material-symbols-rounded,
+.ip-ui[data-theme] .sales-page.work-sales .ux-grid-scroll .ux-action .material-symbols-rounded {font-size:13px}
+
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .ux-edit {
+  --ux-action-fill:var(--ip-warning-bg,var(--ux-warn-bg)); --ux-action-ink:var(--ip-warning,var(--ux-warn));
+  --ux-action-edge:color-mix(in srgb,var(--ip-edit) 40%,var(--ux-edge)); --ux-hover:#f6cc61;
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .ux-danger {
+  --ux-action-fill:var(--ip-negative-bg,var(--ux-danger-bg)); --ux-action-ink:var(--ip-negative,var(--ux-danger));
+  --ux-action-edge:color-mix(in srgb,var(--ip-negative) 40%,var(--ux-edge)); --ux-hover:#ff677d;
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .ux-confirm {
+  --ux-action-fill:var(--ux-positive); --ux-action-ink:#142309;
+  --ux-action-edge:var(--ux-positive); --ux-hover:#a0ed54;
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) :is(.ux-action,.catalog-pagination button):focus-visible,
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) :is(button,a,input,textarea,select,[tabindex]):focus-visible {
+  outline:2px solid var(--ux-accent); outline-offset:2px;
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .ux-action:not(:disabled):focus-visible {
+  border-color:var(--ux-hover,#54def4); background:var(--ux-hover,#54def4); color:#111820;
+}
+@media (hover:hover) {
+  .ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .ux-action:not(:disabled):hover {
+    border-color:var(--ux-hover,#54def4); background:var(--ux-hover,#54def4); color:#111820;
+    box-shadow:inset 0 1px 0 rgb(255 255 255 / .38),0 0 10px color-mix(in srgb,var(--ux-hover,#54def4) 36%,transparent);
+    filter:none; transform:none;
+  }
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) :is(button,input,select,textarea):disabled {
+  opacity:.51; cursor:not-allowed; box-shadow:none; filter:none; transform:none;
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) :is(.ux-grid-scroll,.detail-table) {
+  min-height:0; min-width:0; overflow:auto; overscroll-behavior:contain; scrollbar-color:var(--ux-edge) transparent;
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .ux-grid-scroll {
+  flex:1 1 auto; position:relative; width:100%; height:auto; margin:0; border:0; border-radius:0; background:var(--ux-panel);
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .ux-grid-scroll:focus-visible {outline-offset:-2px}
+.ip-ui[data-theme] .sales-page.work-sales .ux-grid-scroll .catalog-table {width:max-content;min-width:100%;overflow:visible}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) :is(.ux-grid-scroll,.detail-table) table {
+  width:max-content; min-width:100%; border-collapse:separate; border-spacing:0; table-layout:auto;
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) :is(.ux-grid-scroll,.detail-table) :is(th,td):nth-child(n) {
+  display:table-cell; padding:6px 9px; min-width:0; max-width:none; overflow:visible;
+  white-space:nowrap; text-overflow:clip; text-align:left; border:0; border-bottom:1px solid var(--ux-edge);
+  color:var(--ux-text); font:12px/1.35 IPInterface,system-ui,sans-serif; font-variant-numeric:tabular-nums;
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) :is(.ux-grid-scroll,.detail-table) td::before {content:none}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) :is(.ux-grid-scroll,.detail-table) th:nth-child(n) {
+  position:sticky; top:0; z-index:1; height:34px; padding-block:3px; background:var(--ux-raised);
+  color:var(--ux-muted); font-weight:700; text-transform:none; letter-spacing:0;
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .ux-grid-scroll tr:hover td {background:var(--ux-raised)}
+.ip-ui[data-theme] .stock-page.work-stock .ux-grid-scroll tr.selected td {background:var(--ux-tint)}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .ux-grid-scroll .catalog-actions {display:flex;align-items:center;gap:5px;flex-wrap:nowrap}
+.ip-ui[data-theme] .sales-page.work-sales .ux-grid-scroll .ux-action {min-height:30px;padding:5px 7px;border-radius:7px;font-size:10.5px}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .ux-grid-scroll :is(.stock-type,.stock-status,.catalog-status,.sales-source) {
+  display:inline-flex; align-items:center; gap:5px; padding:4px 6px; border-radius:6px; border:1px solid var(--ux-edge);
+  background:var(--ux-raised); color:var(--ux-muted); font:700 10px/1.2 IPInterface,system-ui,sans-serif;
+  text-transform:none; letter-spacing:0;
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .ux-grid-scroll :is(.stock-status--normal,.stock-status--posted,.stock-status--completed,.catalog-status--active,.stock-type--in) {
+  color:var(--ux-ok); background:var(--ux-ok-bg);
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .ux-grid-scroll :is(.stock-status--low,.stock-status--high,.stock-status--pending) {
+  color:var(--ux-warn); background:var(--ux-warn-bg);
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .ux-grid-scroll :is(.stock-status--empty,.stock-status--reversed,.stock-status--cancelled,.stock-type--loss,.sales-source--ifood,.catalog-status--inactive) {
+  color:var(--ux-danger); background:var(--ux-danger-bg);
+}
+.ip-ui[data-theme] .sales-page.work-sales .ux-grid-scroll .sales-source--pos {color:var(--ux-accent);background:var(--ux-tint)}
+.ip-ui[data-theme] .stock-page.work-stock .catalog-pagination {
+  flex:0 0 auto; display:flex; justify-content:flex-end; align-items:center; flex-wrap:wrap;
+  gap:6px; padding:7px 10px; border-top:1px solid var(--ux-edge); background:var(--ux-panel);
+  color:var(--ux-muted); font:600 11px/1.25 IPInterface,system-ui,sans-serif;
+}
+.ip-ui[data-theme] .stock-page.work-stock .catalog-pagination button {min-height:32px;padding:4px 8px}
+.ip-ui[data-theme] .stock-page.work-stock .catalog-pagination span {text-transform:none;font:600 11px/1.25 IPInterface,system-ui,sans-serif}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .ux-empty {
+  display:grid; align-content:center; justify-items:center; gap:6px; padding:24px 12px;
+  color:var(--ux-muted); font:12px/1.4 IPInterface,system-ui,sans-serif; text-align:center;
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .ux-empty strong {color:var(--ux-text);font-size:14px}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop {
+  position:fixed; inset:0; display:grid; place-items:center; padding:16px; z-index:var(--ip-z-modal,100);
+  background:var(--ux-overlay); backdrop-filter:blur(3px);
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop :is(.catalog-modal,.catalog-confirm) {
+  --ux-dialog:800px;
+  display:flex; flex-direction:column; min-width:0; min-height:0; width:min(var(--ux-dialog),100%);
+  max-width:100%; max-height:calc(100dvh - 32px); height:auto; margin:auto; padding:0;
+  gap:0; overflow:hidden; border:1px solid var(--ux-edge); border-radius:18px;
+  background:var(--ux-panel); color:var(--ux-text); box-shadow:var(--ux-shadow);
+}
+.ip-ui[data-theme] .stock-page.work-stock .catalog-backdrop .stock-operation-modal {--ux-dialog:900px}
+.ip-ui[data-theme] .stock-page.work-stock .catalog-backdrop .stock-transfer-modal {--ux-dialog:800px}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop :is(.stock-filter-modal,.sales-filter-modal) {--ux-dialog:800px}
+.ip-ui[data-theme] .sales-page.work-sales .catalog-backdrop .sale-details {--ux-dialog:840px}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop .catalog-confirm {--ux-dialog:460px}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop :is(.catalog-modal,.catalog-confirm) > header {
+  display:flex; flex:0 0 auto; align-items:center; gap:9px; min-height:60px; margin:0;
+  padding:9px var(--ux-modal-inset); border:0; border-bottom:1px solid var(--ux-edge);
+  border-radius:0; background:var(--ux-panel);
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop header > div {flex:1;min-width:0}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop header h2 {
+  margin:0; color:var(--ux-text); font:700 20px/1.2 IPInterface,system-ui,sans-serif; text-transform:none; overflow-wrap:anywhere;
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop header .eyebrow {
+  color:var(--ux-accent); font:700 10px/1.25 IPInterface,system-ui,sans-serif; letter-spacing:.1em;text-transform:uppercase;
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop .ux-dialog-icon {
+  display:grid; place-items:center; flex:0 0 35px; width:35px; height:35px; border-radius:10px;
+  border:1px solid color-mix(in srgb,var(--ux-accent) 31%,var(--ux-edge)); background:var(--ux-tint); color:var(--ux-accent);font-size:17px;
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop .ux-dialog-icon.ux-dialog-danger {background:var(--ux-danger-bg);color:var(--ux-danger);border-color:var(--ux-edge)}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop header > button:not(:where(.stock-operation-modal--create .stock-item-add)) {
+  flex:0 0 32px; width:32px; height:32px; min-height:32px; margin-left:auto; padding:0;
+  border:1px solid var(--ux-edge); border-radius:10px; background:var(--ux-raised);color:var(--ux-muted);
+  font:400 23px/1 system-ui,sans-serif; box-shadow:none;
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop form {display:flex;flex-direction:column;min-height:0;gap:0;padding:0;overflow:hidden}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop :is(.ux-dialog-body,.stock-wizard-body,.stock-filter-modal>.finance-filter-grid) {
+  flex:1 1 auto; min-height:0; min-width:0; max-height:none; margin:0;
+  padding:14px var(--ux-modal-inset); overflow:auto; overscroll-behavior:contain; scroll-padding:14px;
+  scrollbar-width:thin; scrollbar-color:var(--ux-edge) transparent;
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop :is(.catalog-modal>footer,.catalog-modal>form>footer,.catalog-confirm>footer) {
+  display:flex; flex:0 0 auto; justify-content:flex-end; flex-wrap:wrap; gap:7px; margin:0; min-height:0;
+  padding:8px var(--ux-modal-inset); border-top:1px solid var(--ux-edge); border-radius:0; background:var(--ux-raised);
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop :is(.stock-form,.sales-filter-grid,.stock-filter-modal>.finance-filter-grid) {
+  display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; align-items:start; background:transparent;
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-wizard-body .stock-form {padding:0}
+.ip-ui[data-theme] .stock-page.work-stock .stock-operation-modal > .ux-operation-notice {
+  flex:0 1 auto; max-height:30dvh; overflow:auto; margin:12px var(--ux-modal-inset) 0;
+}
+.ip-ui[data-theme] .stock-page.work-stock .ux-grid-scroll .stock-type--transfer {
+  color:var(--ux-accent); background:var(--ux-tint);
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop .wide {grid-column:1/-1}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop :is(label,.filter-field,.stock-item-cost) {
+  min-width:0; gap:6px; color:var(--ux-text); font:700 12px/1.35 IPInterface,system-ui,sans-serif; text-transform:none;
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop :is(input:not([type="checkbox"],[type="radio"]),select,textarea,.filter-select-trigger,.date-range-trigger) {
+  min-width:0; width:100%; min-height:36px; margin:0; padding:6px 9px;
+  border:1px solid var(--ux-edge); border-radius:10px; background:var(--ux-field); color:var(--ux-text);
+  font:12.5px/1.3 IPInterface,system-ui,sans-serif; text-align:left; text-transform:none; box-shadow:none;
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop textarea {min-height:64px;resize:vertical}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop :is(.filter-dropdown,.range-calendar) {
+  position:static; transform:none; width:100%; max-width:100%; margin:5px 0 0;
+  border:1px solid var(--ux-edge); border-radius:10px; background:var(--ux-panel); color:var(--ux-text); box-shadow:none;
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop .filter-dropdown__options {max-height:min(184px,30dvh);overflow:auto;overscroll-behavior:contain}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop .filter-dropdown__options label {
+  display:flex; align-items:center; gap:7px; min-height:29px; padding:4px 6px; white-space:normal; overflow-wrap:anywhere;
+}
+
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop .filter-select-trigger {
+  display:flex; justify-content:space-between; align-items:center; gap:8px;
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop .filter-select-trigger::after {
+  content:""; display:block; flex:0 0 7px; width:7px; height:7px; margin:-3px 2px 0 0;
+  border:solid var(--ux-accent); border-width:0 1.5px 1.5px 0; transform:rotate(45deg);
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop .filter-select-trigger[aria-expanded="true"] {
+  border-color:var(--ux-accent); background:var(--ux-tint);
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop .filter-select-trigger[aria-expanded="true"]::after {
+  margin-top:3px; transform:rotate(225deg);
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop .filter-dropdown {
+  padding:6px; background:var(--ux-panel);
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop .filter-dropdown__search {
+  padding:0 8px; border:1px solid var(--ux-edge); border-radius:7px; background:var(--ux-field);
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop .filter-dropdown__search:focus-within {
+  border-color:var(--ux-accent); box-shadow:0 0 0 1px var(--ux-accent);
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop .filter-dropdown__search > .material-symbols-rounded {
+  padding:0; color:var(--ux-accent); font-size:14px;
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop .filter-dropdown__search input {
+  min-height:29px!important; padding:4px 0; border:0; outline:none; background:none; box-shadow:none;
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop .filter-dropdown__options input[type="checkbox"] {
+  width:15px; height:15px; flex:0 0 15px; margin:0; accent-color:var(--ux-accent);
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop .range-calendar {width:min(330px,100%)}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop .date-range-field:has(.range-calendar) {grid-column:span 2}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop .range-calendar header {display:flex;align-items:center;gap:5px}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop .range-calendar header > button {flex:0 0 28px;width:28px;height:28px;min-height:28px}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop .range-calendar button {min-width:0;padding-inline:2px}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop .range-calendar :is(.range-calendar__days,.range-calendar__week) {min-width:0}
+.ip-ui[data-theme] .stock-page.work-stock .stock-wizard {
+  display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); flex:0 0 auto; gap:5px;
+  margin:0; padding:5px var(--ux-modal-inset); border:0; border-bottom:1px solid var(--ux-edge); background:var(--ux-raised);
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-wizard button {
+  display:flex; align-items:center; justify-content:center; gap:5px; min-height:32px; min-width:0; padding:4px;
+  border:1px solid transparent; border-radius:8px; background:none;color:var(--ux-muted);
+  font:700 11px/1.2 IPInterface,system-ui,sans-serif; text-transform:none; white-space:normal;
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-wizard button:is(.active,:hover) {border-color:var(--ux-accent);background:var(--ux-tint);color:var(--ux-accent)}
+.ip-ui[data-theme] .stock-page.work-stock .stock-wizard button span {font-size:10px;color:inherit}
+.ip-ui[data-theme] .stock-page.work-stock .catalog-backdrop :is(.stock-items,.stock-fiscal,.stock-review),
+.ip-ui[data-theme] .sales-page.work-sales .catalog-backdrop :is(.sale-detail-summary,.channels-guidance,.master-section-title) {
+  min-width:0; margin:0 0 10px; padding:10px; border:1px solid var(--ux-edge); border-radius:12px;
+  background:var(--ux-raised);color:var(--ux-text);box-shadow:none;
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-items > header {display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.ip-ui[data-theme] .stock-page.work-stock .stock-items > header > div {flex:1 1 200px}
+.ip-ui[data-theme] .stock-page.work-stock .stock-item-row {
+  display:grid; grid-template-columns:minmax(130px,1.65fr) minmax(65px,.55fr) minmax(85px,.8fr) minmax(85px,.85fr) minmax(75px,.7fr) auto;
+  align-items:end; gap:7px; min-width:0; margin-top:7px; padding:8px; border:1px solid var(--ux-edge); border-radius:10px;
+  background:var(--ux-panel);
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-transfer-modal .stock-item-row {grid-template-columns:minmax(0,2fr) minmax(75px,1fr) auto}
+.ip-ui[data-theme] .stock-page.work-stock .stock-item-cost {
+  display:grid; align-content:center; min-height:36px; padding:4px 7px;
+  border:1px solid var(--ux-edge); border-radius:9px; background:var(--ux-field); color:var(--ux-text);
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-item-cost strong {color:var(--ux-text);font-variant-numeric:tabular-nums}
+.ip-ui[data-theme] .stock-page.work-stock .stock-item-cost span {font-size:10px;color:var(--ux-muted)}
+.ip-ui[data-theme] .stock-page.work-stock .stock-fiscal-toggle {margin:0 0 12px;border:0;padding:0}
+.ip-ui[data-theme] .stock-page.work-stock .stock-fiscal-toggle button {margin:5px 5px 0 0}
+.ip-ui[data-theme] .stock-page.work-stock .stock-fiscal-toggle button[aria-pressed="true"] {background:var(--ux-tint);border-color:var(--ux-accent);color:var(--ux-accent)}
+.ip-ui[data-theme] .stock-page.work-stock .stock-review {display:grid;gap:8px;overflow-wrap:anywhere}
+.ip-ui[data-theme] .stock-page.work-stock .transfer-notes {display:grid;margin-top:12px}
+.ip-ui[data-theme] .sales-page.work-sales .sale-detail-summary {display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
+.ip-ui[data-theme] .sales-page.work-sales .sale-detail-summary span {
+  display:grid; gap:4px; min-width:0; padding:7px; color:var(--ux-muted); background:var(--ux-field);
+  border:1px solid var(--ux-edge); border-radius:8px; font-size:11px; overflow-wrap:anywhere;
+}
+.ip-ui[data-theme] .sales-page.work-sales .sale-detail-summary b {color:var(--ux-text);font-size:12px}
+.ip-ui[data-theme] .sales-page.work-sales .detail-table {border:1px solid var(--ux-edge);border-radius:10px}
+.ip-ui[data-theme] .sales-page.work-sales .ux-dialog-body :is(h3,p) {margin:10px 0;color:var(--ux-text)}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-confirm .ux-dialog-body {text-align:left}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-confirm .ux-dialog-body p {margin:0 0 12px;color:var(--ux-muted);font-size:13px}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-confirm .ux-dialog-body label {display:grid}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .ux-operation-notice {
+  margin:0 0 12px; padding:10px 12px; border:1px solid var(--ux-edge); border-radius:10px;
+  background:var(--ux-warn-bg); color:var(--ux-warn); font:700 12px/1.45 IPInterface,system-ui,sans-serif; overflow-wrap:anywhere;
+}
+.ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .ux-operation-notice.is-error {color:var(--ux-danger);background:var(--ux-danger-bg)}
+@media (max-width:1040px) {
+  .ip-ui[data-theme] .stock-page.work-stock .stock-tabs {order:3;width:max-content;max-width:100%}
+  .ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop :is(.stock-form,.sales-filter-grid,.stock-filter-modal>.finance-filter-grid) {grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:760px) {
+  .ip-ui[data-theme] .stock-page.work-stock .stock-item-row {grid-template-columns:repeat(3,minmax(0,1fr))}
+  .ip-ui[data-theme] .stock-page.work-stock .stock-item-row > label:first-child {grid-column:span 2}
+  .ip-ui[data-theme] .stock-page.work-stock .stock-transfer-modal .stock-item-row {grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ip-ui[data-theme] .stock-page.work-stock .stock-kpis {grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:640px) {
+  .ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) {--ux-modal-inset:13px;gap:8px;padding:10px}
+  .ip-ui[data-theme] .stock-page.work-stock .stock-tabs {width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+  .ip-ui[data-theme] .stock-page.work-stock .stock-tabs button {padding-inline:5px;white-space:normal;overflow-wrap:anywhere}
+  .ip-ui[data-theme] .stock-page.work-stock .stock-kpis > :is(article,button) {min-height:57px;padding:7px;gap:3px 6px;grid-template-columns:26px minmax(0,1fr)}
+  .ip-ui[data-theme] .stock-page.work-stock .stock-kpis .ux-kpi-icon {width:26px;height:26px;font-size:14px}
+  .ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) :is(.stock-toolbar,.catalog-toolbar) {padding:7px}
+  .ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) :is(.stock-toolbar,.catalog-toolbar)>label {flex-basis:100%}
+  .ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) :is(.stock-toolbar,.catalog-toolbar)>.ux-action {flex:1 1 auto}
+  .ip-ui[data-theme] .stock-page.work-stock > .stock-panel {min-height:345px}
+  .ip-ui[data-theme] .stock-page.work-stock .ux-grid-scroll {min-height:120px}
+  .ip-ui[data-theme] .stock-page.work-stock .catalog-pagination {justify-content:center}
+  .ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop {padding:8px}
+  .ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop :is(.catalog-modal,.catalog-confirm) {max-height:calc(100dvh - 16px);border-radius:14px}
+  .ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop :is(.catalog-modal,.catalog-confirm)>header {min-height:54px;padding-block:7px}
+  .ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop header h2 {font-size:18px}
+  .ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop .ux-dialog-icon {flex-basis:32px;width:32px;height:32px;font-size:16px}
+  .ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop :is(.stock-form,.sales-filter-grid,.stock-filter-modal>.finance-filter-grid) {grid-template-columns:minmax(0,1fr)}
+  .ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop .date-range-field:has(.range-calendar) {grid-column:1/-1}
+  .ip-ui[data-theme] .sales-page.work-sales .sale-detail-summary {grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:460px) {
+  .ip-ui[data-theme] .stock-page.work-stock .stock-tabs {grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ip-ui[data-theme] .stock-page.work-stock .stock-tabs button:last-child {grid-column:1/-1}
+  .ip-ui[data-theme] .stock-page.work-stock .stock-kpis > :is(article,button) {grid-template-columns:minmax(0,1fr)}
+  .ip-ui[data-theme] .stock-page.work-stock .stock-kpis .ux-kpi-icon {display:none}
+  .ip-ui[data-theme] .stock-page.work-stock .stock-item-row {grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ip-ui[data-theme] .stock-page.work-stock .stock-item-row :is(label:first-child,.stock-check,.stock-item-remove) {grid-column:1/-1}
+  .ip-ui[data-theme] .stock-page.work-stock .stock-wizard {grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-height:460px) {
+  .ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop :is(.catalog-modal,.catalog-confirm)>header {min-height:48px;padding-block:6px}
+  .ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) .catalog-backdrop :is(.catalog-modal>footer,.catalog-modal>form>footer,.catalog-confirm>footer) {padding-block:6px}
+}
+@media (prefers-reduced-motion:reduce) {
+  .ip-ui[data-theme] :is(.stock-page.work-stock,.sales-page.work-sales) :is(.ux-action,.catalog-modal,.catalog-confirm) {animation:none;transition:none}
+}
+/* Inner components of Nova movimentação. */
+.ip-ui[data-theme] .stock-page.work-stock .stock-operation-modal--create .stock-wizard button:focus-visible {
+  outline-offset:1px;
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-operation-modal--create .stock-items > header {
+  flex-flow:row wrap; align-items:center; justify-content:space-between; gap:8px; margin:0 0 10px;
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-operation-modal--create .stock-items > header > div {
+  flex:1 1 190px; min-width:0;
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-operation-modal--create .stock-items > header strong {
+  color:var(--ux-text); font:700 13px/1.3 IPInterface,system-ui,sans-serif;
+  text-transform:none;
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-operation-modal--create .stock-items > header small {
+  color:var(--ux-muted); font-size:11px;
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-operation-modal--create .stock-items > header > .stock-item-add {
+  flex:0 0 auto; width:auto; max-width:100%; margin:0;
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-operation-modal--create .stock-item-row {
+  grid-template-columns:minmax(0,2.1fr) minmax(67px,.7fr) minmax(91px,1fr) minmax(96px,1fr) minmax(106px,1.15fr) max-content;
+  margin:0;
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-operation-modal--create .stock-item-row + .stock-item-row {
+  margin-top:8px;
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-operation-modal--create .stock-item-row > .stock-item-remove {
+  grid-column:auto; width:auto;
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-operation-modal--create .stock-item-cost strong {
+  font-size:12px; overflow-wrap:anywhere;
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-operation-modal--create .stock-item-row .stock-check {
+  display:flex; align-items:center; min-height:36px; padding:5px 7px;
+  border:1px solid var(--ux-edge); border-radius:9px; background:var(--ux-field);
+  color:var(--ux-text); font-size:11px; line-height:1.25;
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-operation-modal--create .stock-check input[type="checkbox"] {
+  flex:0 0 15px; width:15px; height:15px; margin:0; accent-color:var(--ux-accent);
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-operation-modal--create .stock-check:has(input:checked) {
+  border-color:var(--ux-accent); background:var(--ux-tint);
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-operation-modal--create .stock-fiscal-toggle {
+  display:flex; flex-wrap:wrap; align-items:center; gap:6px; min-width:0; min-height:0;
+  margin:0; padding:0; border:0; background:none;
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-operation-modal--create .stock-fiscal-toggle legend {
+  padding:0; margin-bottom:7px; color:var(--ux-text);
+  font:700 12px/1.35 IPInterface,system-ui,sans-serif;
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-operation-modal--create .stock-fiscal-toggle .ux-action {
+  min-width:52px; margin:0;
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-operation-modal--create .stock-fiscal-toggle + .stock-form {
+  margin-top:11px; padding-top:11px; border-top:1px solid var(--ux-edge);
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-operation-modal--create .stock-review {
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-operation-modal--create .stock-review > article {
+  display:grid; align-content:center; gap:4px; min-width:0; min-height:61px; padding:9px 11px;
+  border:1px solid var(--ux-edge); border-radius:10px; background:var(--ux-field);
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-operation-modal--create .stock-review span {
+  color:var(--ux-muted); font:700 10px/1.25 IPInterface,system-ui,sans-serif;
+}
+.ip-ui[data-theme] .stock-page.work-stock .stock-operation-modal--create .stock-review strong {
+  color:var(--ux-text); font:700 13px/1.3 IPInterface,system-ui,sans-serif;
+  font-variant-numeric:tabular-nums;
+}
+@media (max-width:760px) {
+  .ip-ui[data-theme] .stock-page.work-stock .stock-operation-modal--create .stock-item-row {
+    grid-template-columns:repeat(4,minmax(0,1fr));
+  }
+  .ip-ui[data-theme] .stock-page.work-stock .stock-operation-modal--create .stock-item-row > .stock-check {
+    grid-column:span 2;
+  }
+  .ip-ui[data-theme] .stock-page.work-stock .stock-operation-modal--create .stock-review {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+@media (max-width:460px) {
+  .ip-ui[data-theme] .stock-page.work-stock .stock-operation-modal--create .stock-item-row {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .ip-ui[data-theme] .stock-page.work-stock .stock-operation-modal--create .stock-item-row > :is(.stock-check,.stock-item-remove,.stock-item-cost) {
+    grid-column:1/-1;
+  }
+}
+
+}

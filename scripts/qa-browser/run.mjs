@@ -9,6 +9,7 @@ import {interfaceProof} from './interface.mjs';
 import {dashboardV3} from './dashboard-v3.mjs';
 import {pdvV2} from './pdv-v2.mjs';
 import {cadastrosProof} from './cadastros.mjs';
+import {estoqueRegistrosProof} from './estoque-registros.mjs';
 import {dashboardV3Zoom} from './dashboard-v3-zoom.mjs';
 const sha=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
 const meta=JSON.parse(readFileSync('artifacts/recovery-qa/qa-source.json','utf8'));assert.equal(meta.commit,sha);assert.equal(meta.auth,'mock');
@@ -27,6 +28,7 @@ try{
  await page.screenshot({path:output+'/route.png',fullPage:true});assert.deepEqual(errors,[]);
  writeFileSync(output+'/proof.json',JSON.stringify({sha,browser:browser.version(),headless:true,server:'same-process-executor/loopback',route:'/cadastros/categorias',auth:'mock',api:'synthetic',viewport:{width:1440,height:1000},scope:'single route rendering proof; no integrated acceptance'},null,2));
  console.log('Synthetic application route rendered at source '+sha);
+ if(process.argv.includes('--estoque-registros')||process.argv.includes('--full'))await estoqueRegistrosProof({output,sha});
  if(process.argv.includes('--interface')||process.argv.includes('--full'))await interfaceProof({page,output,sha});
  if(process.argv.includes('--dashboard-v3')||process.argv.includes('--full'))await dashboardV3({page,output,sha});
  if(process.argv.includes('--dashboard-zoom')||process.argv.includes('--full'))await dashboardV3Zoom({output,sha});

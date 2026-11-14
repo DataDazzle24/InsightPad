@@ -68,11 +68,14 @@ export function SearchableMultiSelect({
     [open, setOpen] = useState(false),
     root = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const close = (event: PointerEvent) => {
+    const close = (event: Event) => {
       if (!root.current?.contains(event.target as Node)) setOpen(false);
     };
-    document.addEventListener("pointerdown", close);
-    return () => document.removeEventListener("pointerdown", close);
+    // Inline workspace dropdowns change the dialog height when dismissed.
+    // Let the outside control receive its click before the layout can move.
+    const outsideEvent = root.current?.closest(".work-stock,.work-sales") ? "click" : "pointerdown";
+    document.addEventListener(outsideEvent, close);
+    return () => document.removeEventListener(outsideEvent, close);
   }, []);
   const visible = options.filter((option) =>
     option.label
@@ -80,7 +83,12 @@ export function SearchableMultiSelect({
       .includes(term.toLocaleLowerCase("pt-BR")),
   );
   return (
-    <div className="filter-field" ref={root}>
+    <div className="filter-field" ref={root} onKeyDown={event=>{
+      if (event.key !== "Escape" || !open || !event.currentTarget.closest(".work-stock,.work-sales")) return;
+      event.preventDefault();
+      setOpen(false);
+      root.current?.querySelector<HTMLButtonElement>(".filter-select-trigger")?.focus();
+    }}>
       <span>{label}</span>
       <div className={`filter-multiselect${open ? " is-open" : ""}`}>
         <button
@@ -144,12 +152,14 @@ export function DateRangePicker({
   onChange,
   label = "Período da venda",
   cadastros = false,
+  workspaceUX = false,
 }: {
   from: string;
   to: string;
   onChange: (from: string, to: string) => void;
   label?: string;
   cadastros?: boolean;
+  workspaceUX?: boolean;
 }) {
   const trigger = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false),
@@ -158,12 +168,13 @@ export function DateRangePicker({
     root = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
-    const closeOutside = (event: PointerEvent) => {
+    const closeOutside = (event: Event) => {
       if (!root.current?.contains(event.target as Node)) setOpen(false);
     };
-    document.addEventListener("pointerdown", closeOutside, true);
-    return () => document.removeEventListener("pointerdown", closeOutside, true);
-  }, [open]);
+    const outsideEvent = workspaceUX ? "click" : "pointerdown";
+    document.addEventListener(outsideEvent, closeOutside, true);
+    return () => document.removeEventListener(outsideEvent, closeOutside, true);
+  }, [open, workspaceUX]);
   const days = useMemo(() => {
     const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1),
       start = new Date(first);
@@ -190,7 +201,7 @@ export function DateRangePicker({
       className="filter-field date-range-field"
       ref={root}
       onKeyDown={(event) => {
-        if (event.key !== "Escape" || !open || !cadastros) return;
+        if (event.key !== "Escape" || !open || !(cadastros || workspaceUX)) return;
         event.preventDefault();
         setOpen(false);
         trigger.current?.focus();
@@ -200,7 +211,7 @@ export function DateRangePicker({
       <button
         type="button"
         ref={trigger}
-        aria-expanded={cadastros ? open : undefined}
+        aria-expanded={cadastros || workspaceUX ? open : undefined}
         className="date-range-trigger"
         onClick={() => setOpen((value) => !value)}
       >

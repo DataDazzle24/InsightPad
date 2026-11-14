@@ -11,7 +11,7 @@ vi.mock('../auth/useAuth',()=>({useAuth:()=>({permissions:{ESTOQUE:{canAccess:tr
 vi.mock('@insightpad/dataconnect',()=>({connectorConfig:{},stockWorkspace:(...args:unknown[])=>mocks.workspace(...args),reverseStockOperation:(...args:unknown[])=>mocks.reverse(...args),postStockTransfer:(...args:unknown[])=>mocks.transfer(...args),saveStockBatch:vi.fn(),stockOperationDetails:vi.fn()}))
 let root:Root,container:HTMLDivElement
 const click=async(el:Element,shiftKey=false)=>{await act(async()=>el.dispatchEvent(new MouseEvent('click',{bubbles:true,shiftKey})))}
-const find=(label:string)=>{const el=[...container.querySelectorAll('button')].find(b=>[...b.childNodes].filter(n=>n.nodeType===Node.TEXT_NODE).map(n=>n.textContent).join('').trim()===label||b.textContent?.trim()===label);if(!el)throw new Error(label);return el}
+const find=(label:string)=>{const el=[...container.querySelectorAll('button')].find(b=>{const visible=b.cloneNode(true) as HTMLElement;visible.querySelectorAll('[aria-hidden="true"]').forEach(n=>n.remove());return [...b.childNodes].filter(n=>n.nodeType===Node.TEXT_NODE).map(n=>n.textContent).join('').trim()===label||visible.textContent?.trim()===label});if(!el)throw new Error(label);return el}
 const move=(n:number)=>({id:'m'+n,operationId:'operation'+n,occurredAt:'2026-10-20T12:00:00Z',quantity:1,unitCostCents:'100',status:'POSTED',typeCode:'MANUAL_IN',typeName:'Entrada',direction:'IN',productId:'p1',productName:'Produto',branchId:'b1',branchName:'Matriz'})
 const workspace=()=>({branches:[{id:'b1',name:'Matriz'}],suppliers:[],products:[{id:'p1',name:'Produto',minimumStock:1,maximumStock:10 as number|null,weightedProduct:true,costPriceCents:'100',balances:[{branchId:'b1',branchName:'Matriz',quantity:10,reservedQuantity:0,availableQuantity:10,averageCostCents:'100'}]}],movements:[move(1),move(2),move(3)],transfers:[],movementCount:3,transferCount:0})
 beforeEach(()=>{vi.useFakeTimers();vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);mocks.manage=true;mocks.workspace.mockResolvedValue({data:{_select:[{data:workspace()}]}});mocks.reverse.mockResolvedValue({data:{_execute:1}});mocks.transfer.mockReset().mockResolvedValue({data:{_execute:1}})})
@@ -78,4 +78,16 @@ it('renders every existing stock and transfer status with its Portuguese label a
  const labels=()=>[...container.querySelectorAll('.stock-status')].map(e=>[e.textContent,e.className]);
  expect(labels()).toEqual([['Registrado','stock-status stock-status--posted'],['Estornado','stock-status stock-status--reversed'],['Pendente','stock-status stock-status--pending']]);
  await click(find('Transferências'));expect(labels()).toEqual([['Pendente','stock-status stock-status--pending'],['Concluído','stock-status stock-status--completed'],['Cancelado','stock-status stock-status--cancelled']]);expect(data).toEqual(original);
+});
+
+it('keeps a pending transfer open on Escape and preserves its retry after an uncertain acknowledgement',async()=>{
+ const data=workspace();data.branches.push({id:'b2',name:'Filial'});mocks.workspace.mockResolvedValue({data:{_select:[{data}]}});
+ let rejectPending:(reason:Error)=>void=()=>{};mocks.transfer.mockImplementationOnce(()=>new Promise((_resolve,reject)=>{rejectPending=reject}));
+ await render();await click(find('Transferir'));const selects=container.querySelectorAll<HTMLSelectElement>('.stock-transfer-modal select');
+ await act(async()=>{selects[1].value='b2';selects[1].dispatchEvent(new Event('change',{bubbles:true}));selects[2].value='p1';selects[2].dispatchEvent(new Event('change',{bubbles:true}))});
+ await click(find('Concluir transferência'));await act(async()=>document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true})));
+ expect(container.querySelector('.stock-transfer-modal')).not.toBeNull();expect(mocks.transfer).toHaveBeenCalledTimes(1);
+ const payload=mocks.transfer.mock.calls[0][1].payload;await act(async()=>rejectPending(new Error('network lost')));
+ expect(container.querySelector('[role=alert]')?.textContent).toContain(payload.clientOperationId);await click(find('Concluir transferência'));
+ expect(mocks.transfer.mock.calls[1][1].payload).toEqual(payload);expect(container.querySelector('.stock-transfer-modal')).toBeNull();
 });
