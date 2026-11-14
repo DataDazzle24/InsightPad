@@ -92,7 +92,8 @@
     "UXIP-001",
     "PDV-V2-20261107",
     "CADASTROS-UI-20261108",
-    "ESTOQUE-REGISTROS-UI-20261109"
+    "ESTOQUE-REGISTROS-UI-20261109",
+    "CANAIS-UI-20261114"
   ],
   "paths": {
     ".gitignore": {
@@ -104,9 +105,10 @@
     ".github/workflows/ci.yml": {
       "ids": [
         "PREP-DEC017",
-        "OBS-018-AG03-001"
+        "OBS-018-AG03-001",
+        "CANAIS-UI-20261114"
       ],
-      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18. Canais adds isolated acceptance coverage to the existing full suite; extend only job timeout from 30 to 40 minutes, preserve every step and condition."
     },
     "docs/source-preservation.md": {
       "ids": [
@@ -270,9 +272,10 @@
         "PREP-DEC017",
         "OBS-018-AG03-001",
         "CADASTROS-UI-20261108",
-        "ESTOQUE-REGISTROS-UI-20261109"
+        "ESTOQUE-REGISTROS-UI-20261109",
+        "CANAIS-UI-20261114"
       ],
-      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages."
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages. Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only."
     },
     "scripts/version-manifest.mjs": {
       "ids": [
@@ -620,9 +623,10 @@
       "ids": [
         "OBS-018-AG03-001",
         "CADASTROS-UI-20261108",
-        "ESTOQUE-REGISTROS-UI-20261109"
+        "ESTOQUE-REGISTROS-UI-20261109",
+        "CANAIS-UI-20261114"
       ],
-      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages."
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages. Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only."
     },
     "docs/dec019-progress.json": {
       "ids": [
@@ -1555,10 +1559,11 @@
       "reason": "Pedido Frente de Caixa v2 de 2026-11-07: layout restrito, filial em rascunho e evidência dirigida, preservando contratos reais e matriz congelada."
     },
     "frontend/src/App.tsx": {
-      "reason": "Cadastros UI approved package on published 9c50ee2: scoped presentation, local interaction/focus, regression evidence and exact preservation gates; no backend or global shell redesign. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages.",
+      "reason": "Cadastros UI approved package on published 9c50ee2: scoped presentation, local interaction/focus, regression evidence and exact preservation gates; no backend or global shell redesign. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages. Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only.",
       "ids": [
         "CADASTROS-UI-20261108",
-        "ESTOQUE-REGISTROS-UI-20261109"
+        "ESTOQUE-REGISTROS-UI-20261109",
+        "CANAIS-UI-20261114"
       ]
     },
     "frontend/src/cadastros.css": {
@@ -1611,10 +1616,11 @@
       ]
     },
     "scripts/qa-browser/run.mjs": {
-      "reason": "Cadastros UI approved package on published 9c50ee2: scoped presentation, local interaction/focus, regression evidence and exact preservation gates; no backend or global shell redesign. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages.",
+      "reason": "Cadastros UI approved package on published 9c50ee2: scoped presentation, local interaction/focus, regression evidence and exact preservation gates; no backend or global shell redesign. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages. Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only.",
       "ids": [
         "CADASTROS-UI-20261108",
-        "ESTOQUE-REGISTROS-UI-20261109"
+        "ESTOQUE-REGISTROS-UI-20261109",
+        "CANAIS-UI-20261114"
       ]
     },
     "docs/cadastros-ui-dev.md": {
@@ -1661,9 +1667,10 @@
     },
     "scripts/verify-estoque-registros.mjs": {
       "ids": [
-        "ESTOQUE-REGISTROS-UI-20261109"
+        "ESTOQUE-REGISTROS-UI-20261109",
+        "CANAIS-UI-20261114"
       ],
-      "reason": " Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages."
+      "reason": " Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages. Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only."
     },
     "scripts/qa-browser/estoque-registros.mjs": {
       "ids": [
@@ -1694,6 +1701,54 @@
         "ESTOQUE-REGISTROS-UI-20261109"
       ],
       "reason": " Approved route UI integration: preserve contrast and pending-ACK integrity assertions; stream encrypted evidence after added route captures exceeded the previous 100 MiB archive buffer. No plaintext artifact upload."
+    },
+    "frontend/src/pages/ChannelOrdersPage.tsx": {
+      "ids": [
+        "CANAIS-UI-20261114"
+      ],
+      "reason": " Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only."
+    },
+    "frontend/src/pages/SalesChannelsPage.tsx": {
+      "ids": [
+        "CANAIS-UI-20261114"
+      ],
+      "reason": " Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only."
+    },
+    "frontend/src/pedidos.css": {
+      "ids": [
+        "CANAIS-UI-20261114"
+      ],
+      "reason": " Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only."
+    },
+    "frontend/src/conexoes.css": {
+      "ids": [
+        "CANAIS-UI-20261114"
+      ],
+      "reason": " Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only."
+    },
+    "frontend/qa/api.ts": {
+      "ids": [
+        "CANAIS-UI-20261114"
+      ],
+      "reason": " Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only."
+    },
+    "scripts/verify-canais.mjs": {
+      "ids": [
+        "CANAIS-UI-20261114"
+      ],
+      "reason": " Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only."
+    },
+    "scripts/qa-browser/canais.mjs": {
+      "ids": [
+        "CANAIS-UI-20261114"
+      ],
+      "reason": " Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only."
+    },
+    "docs/canais-ui-dev.md": {
+      "ids": [
+        "CANAIS-UI-20261114"
+      ],
+      "reason": " Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only."
     }
   },
   "bytePreserved": [
