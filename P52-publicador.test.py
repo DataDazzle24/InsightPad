@@ -49,4 +49,19 @@ class GuardTests(unittest.TestCase):
  def test_preflight_digest_matches_distributed_file(self):
   self.assertEqual(p.PREFLIGHT_SHA,p.digest(path.with_name('P52-preflight.py').read_bytes()))
 
+class CiGateTests(unittest.TestCase):
+ def setUp(self):
+  spec=importlib.util.spec_from_file_location('ci_gate',path.with_name('P52-executar.py'));self.g=importlib.util.module_from_spec(spec);spec.loader.exec_module(self.g)
+ def test_failed_ci_never_launches_publisher(self):
+  with patch.object(self.g,'get_run',return_value={'head_sha':self.g.SHA,'status':'completed','conclusion':'failure'}),patch.object(self.g.subprocess,'run') as launch:
+   with self.assertRaises(RuntimeError):self.g.main()
+   launch.assert_not_called()
+ def test_other_commit_never_launches_publisher(self):
+  with patch.object(self.g,'get_run',return_value={'head_sha':'another','status':'completed','conclusion':'success'}),patch.object(self.g.subprocess,'run') as launch:
+   with self.assertRaises(RuntimeError):self.g.main()
+   launch.assert_not_called()
+ def test_pending_then_success_launches_once(self):
+  with patch.object(self.g,'get_run',side_effect=[{'head_sha':self.g.SHA,'status':'in_progress'},{'head_sha':self.g.SHA,'status':'completed','conclusion':'success'}]),patch.object(self.g.time,'sleep'),patch.object(self.g.subprocess,'run') as launch,redirect_stdout(io.StringIO()):
+   launch.return_value.returncode=0;self.assertEqual(self.g.main(),0);launch.assert_called_once()
+
 if __name__=='__main__':unittest.main()

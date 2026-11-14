@@ -8,6 +8,7 @@ CI congelado no candidato, inspeção de configuração pública real, backend, 
 contenções iFood, serving config, versão atual e versão utilizável para rollback.
 Não modifica Functions, connector, schema, SQL, IAM, schedulers ou serviços Run.
 
+`python3 P52-executar.py`: aguarda até 30 minutos o CI do SHA exato e inicia o publicador apenas se aprovado.
 `python3 P52-preflight.py`: leitura autenticada e recibo privado, sem deploy.
 `python3 P52-publicar-estoque-registros.py`: ciclo autorizado Hosting DEV.
 `python3 P52-publicador.test.py`: oito regressões offline, sem cloud.
