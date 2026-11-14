@@ -11,7 +11,7 @@ Não modifica Functions, connector, schema, SQL, IAM, schedulers ou serviços Ru
 `python3 P52-executar.py`: aguarda até 30 minutos o CI do SHA exato e inicia o publicador apenas se aprovado.
 `python3 P52-preflight.py`: leitura autenticada e recibo privado, sem deploy.
 `python3 P52-publicar-estoque-registros.py`: ciclo autorizado Hosting DEV.
-`python3 P52-publicador.test.py`: oito regressões offline, sem cloud.
+`python3 P52-publicador.test.py`: onze regressões offline, sem cloud.
 
 A publicação verifica novamente a base servida antes de qualquer mutação e
 interrompe se outra revisão estiver publicada. Clona isoladamente de uma fonte
