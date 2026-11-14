@@ -52,6 +52,11 @@ class GuardTests(unittest.TestCase):
 class CiGateTests(unittest.TestCase):
  def setUp(self):
   spec=importlib.util.spec_from_file_location('ci_gate',path.with_name('P52-executar.py'));self.g=importlib.util.module_from_spec(spec);spec.loader.exec_module(self.g)
+  guard=patch.object(self.g,'check_access',return_value=None);guard.start();self.addCleanup(guard.stop)
+ def test_failed_preflight_never_reads_ci_or_launches_publisher(self):
+  with patch.object(self.g,'check_access',side_effect=RuntimeError('access unavailable')),patch.object(self.g,'get_run') as read,patch.object(self.g.subprocess,'run') as launch:
+   with self.assertRaises(RuntimeError):self.g.main()
+   read.assert_not_called();launch.assert_not_called()
  def test_failed_ci_never_launches_publisher(self):
   with patch.object(self.g,'get_run',return_value={'head_sha':self.g.SHA,'status':'completed','conclusion':'failure'}),patch.object(self.g.subprocess,'run') as launch:
    with self.assertRaises(RuntimeError):self.g.main()
