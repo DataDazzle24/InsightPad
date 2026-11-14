@@ -2,7 +2,7 @@ import datetime as dt, hashlib, json, os, pathlib, re, shutil, subprocess, urlli
 
 os.umask(0o077)
 P, N, R = 'insightpad-dd-dev', '102484114817', 'southamerica-east1'
-SHA = 'c61872785b80bce39d320d6678e84d3296b54ca0'
+SHA = '68abdac1ca10e30e953c626ebefc58cd89216666'
 EXPECTED = {
  'schemas/main': {'schema.gql': '005a157ba8442ede0b4c2778e8057407bbd8e148d6bc551c6adc444dfe7aba46'},
  'connectors/app': {
@@ -13,7 +13,7 @@ EXPECTED = {
   'queries.gql': '19fe3a7701182a23f56aac1b1faa175b44b5c44dc35322c8c3d0af2a10a80611',
   'recover_platform_admin.gql': '2696d380b78b80e4570c881185c3d396839764db9dae883caaea04f3f56279f4'}}
 PERMISSIONS = ['firebasehosting.sites.get', 'firebasehosting.sites.update']
-ROOT = pathlib.Path.home() / 'InsightPad_DEV_Estoque_Registros_c618727'
+ROOT = pathlib.Path.home() / 'InsightPad_DEV_Estoque_Registros_68abdac'
 OUT = ROOT / ('P52-preflight-' + dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%SZ') + '-' + uuid.uuid4().hex[:6])
 OUT.mkdir(parents=True, mode=0o700)
 report = OUT / 'P52-preflight.json'

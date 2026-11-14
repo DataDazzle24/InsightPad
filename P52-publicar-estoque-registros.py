@@ -2,10 +2,10 @@
 import contextlib, copy, datetime as dt, gzip, hashlib, io, json, os, pathlib, re, shutil, subprocess, sys, urllib.error, urllib.parse, urllib.request, uuid, tempfile
 
 P, N = 'insightpad-dd-dev', '102484114817'
-SHA = 'c61872785b80bce39d320d6678e84d3296b54ca0'
+SHA = '68abdac1ca10e30e953c626ebefc58cd89216666'
 BUNDLE_SHA = None  # No bundle is provided; fetch only the exact approved Git object.
-PREFLIGHT_SHA = '1b81f85b3a2ef0e6c0c720806b1141106ca33e0cf15e4fafc264cff7b0fc5ac1'
-ROOT = pathlib.Path.home()/'InsightPad_DEV_Estoque_Registros_c618727'
+PREFLIGHT_SHA = '8a29e9df40cc89e621ef776a0da14cf10f85420008cf227884c34a79b24d0e1e'
+ROOT = pathlib.Path.home()/'InsightPad_DEV_Estoque_Registros_68abdac'
 PREFIX = '/v1beta1/projects/'+P+'/sites/'+P
 SOURCE = 'https://github.com/DataDazzle24/InsightPad.git'
 
@@ -160,7 +160,7 @@ def compare_inventory(client,files,previous):
 
 def verify_frozen_ci():
  from html.parser import HTMLParser
- run='43599640718'; job='132461433017'
+ run='43602300534'; job='132469466710'
  base='https://github.com/DataDazzle24/InsightPad/actions/runs/'+run
  class Steps(HTMLParser):
   def __init__(self):super().__init__();self.values=[]
@@ -248,7 +248,7 @@ def prepare_workspace(donor,record,save):
  record['storage']=storage;save()
  require(storage['homeFreeBytes']>=storage['homeMinimumBytes'],'HOME sem reserva de 64 MiB para recibos; não limpar arquivos alheios')
  require(storage['tmpFreeBytes']>=required,'/tmp sem espaço suficiente para checkout/dependências/build; não limpar arquivos alheios')
- work=pathlib.Path(tempfile.mkdtemp(prefix='InsightPad_P52_c618727_',dir=str(tmp)))
+ work=pathlib.Path(tempfile.mkdtemp(prefix='InsightPad_P52_68abdac_',dir=str(tmp)))
  work.chmod(0o700)
  (work/'owner-private.json').write_text(json.dumps({'operation':record['operationLabel'],'candidate':SHA,'receiptRoot':str(ROOT),'private':True}))
  storage.update({'workspace':str(work),'privateMode':oct(work.stat().st_mode & 0o777),'preserveWorkspace':True});save()
@@ -323,7 +323,7 @@ def main():
   donors=[pathlib.Path(x['path']) for x in first['existingCheckouts'] if (pathlib.Path(x['path'])/'frontend/package-lock.json').is_file()]
   donor=next((p for p in donors if digest((p/'frontend/package-lock.json').read_bytes())=='06a3d7360db9ee61fa02c9cddffd29727d91f9f7fe766a4eae0c4452f61f971c' and digest((p/'frontend/package.json').read_bytes())=='ff9132a7d28b683a87a80deb2f95ad2e4098e19e3545e9229aa03b03c9027a3e'),donors[0] if donors else None)
   require(donor is not None,'Fonte Git existente indisponível')
-  bundle=pathlib.Path(__file__).resolve().with_name('candidato-c618727.bundle')
+  bundle=pathlib.Path(__file__).resolve().with_name('candidato-68abdac.bundle')
   work=prepare_workspace(donor,record,save)
   source=work/'source';environment=dict(os.environ,GIT_TERMINAL_PROMPT='0',GCM_INTERACTIVE='never')
   command(['git','clone','--shared','--no-checkout',str(donor),str(source)],env=environment,label='clone-local')

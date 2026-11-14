@@ -1,7 +1,9 @@
 # Hosting DEV — Estoque e Registros
 
+Após o CI aprovado, o bloco final executa diretamente o publicador, como no ciclo anterior. O helper opcional consulta o CI no máximo uma vez por minuto.
+
 Operação restrita ao frontend de `insightpad-dd-dev`, candidato imutável
-`c61872785b80bce39d320d6678e84d3296b54ca0`, base Cadastros `6e727a0`.
+`68abdac1ca10e30e953c626ebefc58cd89216666`, base Cadastros `6e727a0`.
 
 Adaptação do publicador controlado P51, com journal P52 próprio, checksums,
 CI congelado no candidato, inspeção de configuração pública real, backend, nove
