@@ -203,10 +203,10 @@ export function StockPage() {
     [draft, setDraft] = useState<Filters>(filters),
     [reverseOpen, setReverseOpen] = useState(false),
     [reason, setReason] = useState("");
-  useWorkDialog(operationOpen, () => setOperationOpen(false));
-  useWorkDialog(transferOpen, () => setTransferOpen(false));
-  useWorkDialog(filterOpen, () => setFilterOpen(false));
-  useWorkDialog(reverseOpen, () => setReverseOpen(false));
+  useWorkDialog(operationOpen, () => { if (!inFlight.current && !busy) setOperationOpen(false); });
+  useWorkDialog(transferOpen, () => { if (!inFlight.current && !busy) setTransferOpen(false); });
+  useWorkDialog(filterOpen, () => { if (!busy) setFilterOpen(false); });
+  useWorkDialog(reverseOpen, () => { if (!busy) setReverseOpen(false); });
   const queryFilters=useMemo(()=>({...filters,search,from:filters.from?new Date(`${filters.from}T00:00:00`).toISOString():'',to:filters.to?new Date(`${filters.to}T23:59:59.999`).toISOString():''}),[filters,search]);
   const load = useCallback(async () => {
     const request=++sequence.current;

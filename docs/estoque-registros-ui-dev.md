@@ -28,6 +28,12 @@ calendário ocorre no clique completo: fechar no `pointerdown` movia o diálogo
 centralizado entre pressionar e soltar Aplicar, consumindo a ação. Consumidores
 fora do escopo continuam com a interação anterior. O caso fiscal verifica a
 aplicação da data local e seu recorte UTC sem alterar as regras de negócio.
+Escape respeita a trava de gravação dos diálogos de estoque: as provas de ACK
+pendente de 15/60 segundos mantêm formulário, ID e payload até a confirmação.
+A prova de cor segue o Transferir tonal aprovado, preservando contraste e foco.
+O arquivo de evidências usa tar por fluxo diretamente para AES-GCM, com o mesmo
+envelope autenticado e chave pública. O crescimento das capturas não depende do
+antigo buffer de subprocesso de 100 MiB; nenhum tar em texto claro é persistido.
 
 Os verificadores históricos continuam executando as garantias de Cadastros,
 PDV, dashboards e shell. `verify-estoque-registros.mjs` verifica primeiro a

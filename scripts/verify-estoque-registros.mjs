@@ -16,7 +16,7 @@ const allowed=new Set([
  ...estoqueHistoricalPaths,'frontend/src/estoque-registros.css','frontend/src/hooks/useWorkDialog.ts',
  'frontend/src/hooks/useWorkDialog.test.tsx','frontend/src/components/WorkspaceFilters.test.tsx','frontend/src/pages/StockPage.test.tsx',
  'scripts/verify-estoque-registros.mjs','scripts/verify-cadastros.mjs','scripts/verify-interface.mjs',
- 'scripts/verify-reconciliation.mjs','scripts/reconciliation-scope.json','scripts/qa-browser/estoque-registros.mjs','scripts/qa-browser/consolidated.mjs','scripts/qa-browser/run.mjs',
+ 'scripts/verify-reconciliation.mjs','scripts/reconciliation-scope.json','scripts/qa-browser/estoque-registros.mjs','scripts/qa-browser/consolidated.mjs','scripts/qa-browser/residual.mjs','scripts/qa-browser/seal.mjs','scripts/qa-browser/evidence.test.mjs','scripts/qa-browser/run.mjs',
  'docs/estoque-registros-ui-dev.md',
 ]);
 function declarations(file){const result=new Map();function visit(n){if((ts.isVariableDeclaration(n)||ts.isFunctionDeclaration(n))&&n.name&&ts.isIdentifier(n.name))result.set(n.name.text,n);ts.forEachChild(n,visit)}visit(file);return result}

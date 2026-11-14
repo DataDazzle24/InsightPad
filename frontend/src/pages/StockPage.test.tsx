@@ -79,3 +79,15 @@ it('renders every existing stock and transfer status with its Portuguese label a
  expect(labels()).toEqual([['Registrado','stock-status stock-status--posted'],['Estornado','stock-status stock-status--reversed'],['Pendente','stock-status stock-status--pending']]);
  await click(find('Transferências'));expect(labels()).toEqual([['Pendente','stock-status stock-status--pending'],['Concluído','stock-status stock-status--completed'],['Cancelado','stock-status stock-status--cancelled']]);expect(data).toEqual(original);
 });
+
+it('keeps a pending transfer open on Escape and preserves its retry after an uncertain acknowledgement',async()=>{
+ const data=workspace();data.branches.push({id:'b2',name:'Filial'});mocks.workspace.mockResolvedValue({data:{_select:[{data}]}});
+ let rejectPending:(reason:Error)=>void=()=>{};mocks.transfer.mockImplementationOnce(()=>new Promise((_resolve,reject)=>{rejectPending=reject}));
+ await render();await click(find('Transferir'));const selects=container.querySelectorAll<HTMLSelectElement>('.stock-transfer-modal select');
+ await act(async()=>{selects[1].value='b2';selects[1].dispatchEvent(new Event('change',{bubbles:true}));selects[2].value='p1';selects[2].dispatchEvent(new Event('change',{bubbles:true}))});
+ await click(find('Concluir transferência'));await act(async()=>document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true})));
+ expect(container.querySelector('.stock-transfer-modal')).not.toBeNull();expect(mocks.transfer).toHaveBeenCalledTimes(1);
+ const payload=mocks.transfer.mock.calls[0][1].payload;await act(async()=>rejectPending(new Error('network lost')));
+ expect(container.querySelector('[role=alert]')?.textContent).toContain(payload.clientOperationId);await click(find('Concluir transferência'));
+ expect(mocks.transfer.mock.calls[1][1].payload).toEqual(payload);expect(container.querySelector('.stock-transfer-modal')).toBeNull();
+});

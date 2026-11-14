@@ -1676,6 +1676,24 @@
         "ESTOQUE-REGISTROS-UI-20261109"
       ],
       "reason": " Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages."
+    },
+    "scripts/qa-browser/residual.mjs": {
+      "ids": [
+        "ESTOQUE-REGISTROS-UI-20261109"
+      ],
+      "reason": " Approved route UI integration: preserve contrast and pending-ACK integrity assertions; stream encrypted evidence after added route captures exceeded the previous 100 MiB archive buffer. No plaintext artifact upload."
+    },
+    "scripts/qa-browser/seal.mjs": {
+      "ids": [
+        "ESTOQUE-REGISTROS-UI-20261109"
+      ],
+      "reason": " Approved route UI integration: preserve contrast and pending-ACK integrity assertions; stream encrypted evidence after added route captures exceeded the previous 100 MiB archive buffer. No plaintext artifact upload."
+    },
+    "scripts/qa-browser/evidence.test.mjs": {
+      "ids": [
+        "ESTOQUE-REGISTROS-UI-20261109"
+      ],
+      "reason": " Approved route UI integration: preserve contrast and pending-ACK integrity assertions; stream encrypted evidence after added route captures exceeded the previous 100 MiB archive buffer. No plaintext artifact upload."
     }
   },
   "bytePreserved": [
