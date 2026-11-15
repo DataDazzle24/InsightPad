@@ -33,7 +33,7 @@ export function verifyPlataforma(){
   assert.deepEqual(conditions(now),conditions(old),path+': conditional eligibility changed');
  }
  const canaisTest='scripts/qa-browser/canais.mjs';
- assert.equal(readFileSync(canaisTest,'utf8').replace("await page.waitForFunction(()=>document.querySelector('.channel-orders-table tbody>tr td strong')?.textContent?.trim()==='#QA-051');",'').trim(),before(canaisTest),'Only wait for the second-page sentinel; preserve every Canais assertion');
+ assert.equal(readFileSync(canaisTest,'utf8').replace("await page.waitForFunction(()=>document.querySelector('.channel-orders-table tbody>tr td strong')?.textContent?.trim()==='#QA-051');",'').replace("await page.waitForFunction(()=>window.__canais.calls.filter(c=>c.name==='SalesChannelOrdersV2').at(-1)?.variables.filters.branchId?.endsWith('000002'));",'').trim(),before(canaisTest),'Only wait for the second-page sentinel and applied branch filter; preserve every Canais assertion');
  const css=postcss.parse(readFileSync('frontend/src/plataforma.css','utf8'));
  css.walkRules(rule=>{
   for(const selector of postcss.list.comma(rule.selector))assert.ok(selector.startsWith('.ip-ui[data-theme')&&/\.work-platform(?:[\s.:#>\[]|$)/.test(selector),'Unscoped Plataforma selector: '+selector);
