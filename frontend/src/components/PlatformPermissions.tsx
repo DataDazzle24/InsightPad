@@ -84,7 +84,8 @@ export function PlatformPermissions({ roles, pages, permissions, onNotice, onSav
       <label className="platform-search"><span className="material-symbols-rounded">search</span><span className="sr-only">Pesquisar página ou módulo</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Pesquisar página, módulo ou chave" /></label>
       <div className="platform-alert"><span className="material-symbols-rounded">shield_lock</span>O acesso é obrigatório para as demais ações. Cada alteração é aplicada e auditada imediatamente.</div>
     </div>
-    <div className="platform-table permissions-grid"><table><thead><tr><th>Módulo / página</th>{columns.map((column) => <th key={column.key}>{column.label}</th>)}</tr></thead><tbody>
+    {saving && <span role="status" className="platform-saving">Salvando permissão…</span>}
+    <div className="platform-table permissions-grid" role="region" aria-label="Matriz de permissões" aria-busy={Boolean(saving)} tabIndex={0}><table><thead><tr><th>Módulo / página</th>{columns.map((column) => <th key={column.key}>{column.label}</th>)}</tr></thead><tbody>
       {visiblePages.map((page) => { const permission = current(page.id); return <tr key={page.id}><td><strong>{page.displayName}</strong><small>{page.module} · {page.pageKey}</small></td>{columns.map((column) => <td key={column.key}><input aria-label={`${column.label} ${page.displayName}`} type="checkbox" checked={permission[column.key]} disabled={!roleId || Boolean(saving)} onChange={() => void toggle(page, column.key)} /></td>)}</tr>; })}
       {!visiblePages.length && <tr><td colSpan={7}><div className="platform-empty compact"><span className="material-symbols-rounded">search_off</span><strong>Nenhuma página encontrada</strong></div></td></tr>}
     </tbody></table></div>

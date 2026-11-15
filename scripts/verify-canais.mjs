@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
-import {readFileSync} from 'node:fs';
+import {verifyPlataforma,plataformaBase,plataformaHistoricalSource} from './verify-plataforma.mjs';
 import ts from '../frontend/node_modules/typescript/lib/typescript.js';
 import postcss from '../frontend/node_modules/postcss/lib/postcss.mjs';
 
 export const canaisBase='68abdac1ca10e30e953c626ebefc58cd89216666';
+const readFileSync=plataformaHistoricalSource;
 const git=(...args)=>execFileSync('git',args,{encoding:'utf8'}).trim();
 const before=path=>git('show',canaisBase+':'+path);
 const pages=['frontend/src/pages/ChannelOrdersPage.tsx','frontend/src/pages/SalesChannelsPage.tsx'];
@@ -21,8 +22,9 @@ const canonical=(f,n)=>printer.printNode(ts.EmitHint.Unspecified,n,f).replace(/\
 function collect(f,predicate){const result=[];function visit(n){if(predicate(n))result.push(canonical(f,n));ts.forEachChild(n,visit)}visit(f);return result;}
 function prefixes(f){return f.statements.filter(ts.isFunctionDeclaration).map(n=>({name:n.name.text,prefix:n.body.statements.filter(s=>!ts.isReturnStatement(s)).map(s=>canonical(f,s)).filter(s=>s!=='useInitialFieldFocus();'&&!s.startsWith('const actionBlock =')&&!s.startsWith('const inlineBlock =')).join(' ')})).filter(x=>x.name!=='useInitialFieldFocus');}
 export function verifyCanais(){
+ verifyPlataforma();
  git('merge-base','--is-ancestor',canaisBase,'HEAD');
- const changed=[...git('diff','--name-only',canaisBase).split('\n'),...git('ls-files','--others','--exclude-standard').split('\n')].filter(Boolean);
+ const changed=git('diff','--name-only',canaisBase,plataformaBase).split('\n').filter(Boolean);
  for(const path of changed)assert.ok(allowed.has(path),'Canais changed an unapproved path: '+path);
  assert.equal(readFileSync('frontend/src/App.tsx','utf8').replace("import './pedidos.css'\nimport './conexoes.css'\n",'').trim(),before('frontend/src/App.tsx'),'App may only import the two screen stylesheets');
  assert.equal(readFileSync('.github/workflows/ci.yml','utf8').replace('    # Preserve the full prior suite plus the Canais acceptance proof.\n    timeout-minutes: 40','    timeout-minutes: 30').trim(),before('.github/workflows/ci.yml'),'CI may only extend the timeout for added browser proof');

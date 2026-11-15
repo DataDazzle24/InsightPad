@@ -16,7 +16,7 @@ export const firebaseApp={},auth={currentUser:null},appCheck=null
 export const getDataConnect=()=>({qa:true}),getFunctions=()=>({qa:true})
 export const currentSessionToken=()=> '0'.repeat(64)
 export const sessionKey=(uid:string)=>'qa.session:'+uid
-export const qaState={channelHarness:null as null|((name:string,variables:Row)=>unknown),pendingChannelOrders:[] as Row[],fail:false,delay:0,ackLoss:false,logs:[] as string[],unsupported:[] as string[],permissions:'full',empty:false,allowedBranches:[] as string[],cashAckLoss:false,requests:[] as {name:string;variables:unknown}[]}
+export const qaState={platformHarness:null as null|((name:string,variables:Row)=>unknown),channelHarness:null as null|((name:string,variables:Row)=>unknown),pendingChannelOrders:[] as Row[],fail:false,delay:0,ackLoss:false,logs:[] as string[],unsupported:[] as string[],permissions:'full',empty:false,allowedBranches:[] as string[],cashAckLoss:false,requests:[] as {name:string;variables:unknown}[]}
 export const uuid=(n:number)=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`
 const immutable=<T>(value:T):T=>{if(value&&typeof value==='object'){Object.values(value).forEach(immutable);Object.freeze(value)}return value}
 export const fixtureDate=new Date().toISOString().slice(0,10)
@@ -47,7 +47,7 @@ export function resetFixtures(){
  subcategories=Array.from({length:300},(_,i)=>({id:uuid(800+i),name:`SUBCATEGORIA QA ${String(i+1).padStart(3,'0')}`,categoryId:uuid(300+i%10),categoryName:`CATEGORIA QA ${String(i%10+1).padStart(3,'0')}`,active:i%11!==10,createdAt:when,updatedAt:when}))
  movements=Array.from({length:501},(_,i)=>({id:uuid(2000+i),operationId:'qa-movement-'+i,occurredAt:new Date(Date.parse(when)-i*60000).toISOString(),quantity:i%5+1,unitCostCents:products[i%products.length]!.costPriceCents,status:i%13===0?'REVERSED':'POSTED',typeCode:i%2?'LOSS':'MANUAL_IN',typeName:i%2?'Perda':'Entrada',direction:i%2?'OUT':'IN',productId:products[i%products.length]!.id,productName:products[i%products.length]!.name,branchId:branches[i%2]!.id,branchName:branches[i%2]!.name}))
  transfers=Array.from({length:201},(_,i)=>({id:uuid(3000+i),operationId:'qa-transfer-'+i,status:'COMPLETED',requestedAt:when,sourceBranchId:branches[0]!.id,destinationBranchId:branches[1]!.id,sourceBranch:branches[0]!.name,destinationBranch:branches[1]!.name,totalQuantity:i%5+1,itemCount:1}))
- receipts.clear();cashApprovals.clear();qaState.channelHarness=null;qaState.pendingChannelOrders=[];qaState.logs=[];qaState.unsupported=[];qaState.requests=[]
+ receipts.clear();cashApprovals.clear();qaState.platformHarness=null;qaState.channelHarness=null;qaState.pendingChannelOrders=[];qaState.logs=[];qaState.unsupported=[];qaState.requests=[]
 }
 resetFixtures()
 const result=(data:unknown)=>({data:{_select:[{data:structuredClone(data)}]}})
@@ -313,6 +313,15 @@ async function qaDefaultOperation(name:string,variables:unknown={}){
 // Only the explicit Canais proof opts in. Keep the default API and inferred
 // response contracts intact for all existing isolated browser suites.
 export async function qaOperation(name:string,variables:unknown={}){
+ if(qaState.platformHarness && /^(?:PlatformAdminWorkspace|PlatformBillingWorkspaceV2|CreatePlatformTenant|UpdatePlatformTenant|LinkPlatformUser|SetPlatformTenantStatus|SetPlatformUserStatus|SetPlatformRolePermission|CreatePlatformInvoice|UpdatePlatformInvoice|SettlePlatformInvoice|VoidPlatformInvoice|ReversePlatformPayment)$/.test(name)){
+  const v=(variables??{}) as Row
+  qaState.requests.push({name,variables:structuredClone(v)});qaState.requests=qaState.requests.slice(-200)
+  if(qaState.delay)await new Promise(r=>setTimeout(r,qaState.delay))
+  if(qaState.fail||qaState.permissions==='denied')throw Error('QA: acesso/consulta de plataforma indisponível')
+  if(qaState.permissions==='read'&&!['PlatformAdminWorkspace','PlatformBillingWorkspaceV2'].includes(name))throw Error('QA: permissão negada')
+  return qaState.platformHarness(name,v) as ReturnType<typeof qaDefaultOperation>
+ }
+
  if(!qaState.channelHarness || !/^(?:SalesChannel(?:Options|ConnectionsV2|ProductMappingsV2|OrdersV2|Operations|OrderDetails|ProductOptions)|ExportSalesChannelManagement|QueueSalesChannelOrderAction|RequestSalesChannelOrderReconciliation|MapSalesChannelOrderItem|RetrySalesChannelCommand)$/.test(name))return qaDefaultOperation(name,variables)
  const v=(variables??{}) as Row
  qaState.requests.push({name,variables:structuredClone(v)});qaState.requests=qaState.requests.slice(-200)

@@ -93,7 +93,8 @@
     "PDV-V2-20261107",
     "CADASTROS-UI-20261108",
     "ESTOQUE-REGISTROS-UI-20261109",
-    "CANAIS-UI-20261114"
+    "CANAIS-UI-20261114",
+    "PLATAFORMA-UI-20261115"
   ],
   "paths": {
     ".gitignore": {
@@ -273,9 +274,10 @@
         "OBS-018-AG03-001",
         "CADASTROS-UI-20261108",
         "ESTOQUE-REGISTROS-UI-20261109",
-        "CANAIS-UI-20261114"
+        "CANAIS-UI-20261114",
+        "PLATAFORMA-UI-20261115"
       ],
-      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages. Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only."
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages. Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only. Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication."
     },
     "scripts/version-manifest.mjs": {
       "ids": [
@@ -624,9 +626,10 @@
         "OBS-018-AG03-001",
         "CADASTROS-UI-20261108",
         "ESTOQUE-REGISTROS-UI-20261109",
-        "CANAIS-UI-20261114"
+        "CANAIS-UI-20261114",
+        "PLATAFORMA-UI-20261115"
       ],
-      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages. Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only."
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages. Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only. Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication."
     },
     "docs/dec019-progress.json": {
       "ids": [
@@ -1559,11 +1562,12 @@
       "reason": "Pedido Frente de Caixa v2 de 2026-11-07: layout restrito, filial em rascunho e evidência dirigida, preservando contratos reais e matriz congelada."
     },
     "frontend/src/App.tsx": {
-      "reason": "Cadastros UI approved package on published 9c50ee2: scoped presentation, local interaction/focus, regression evidence and exact preservation gates; no backend or global shell redesign. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages. Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only.",
+      "reason": "Cadastros UI approved package on published 9c50ee2: scoped presentation, local interaction/focus, regression evidence and exact preservation gates; no backend or global shell redesign. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages. Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only. Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication.",
       "ids": [
         "CADASTROS-UI-20261108",
         "ESTOQUE-REGISTROS-UI-20261109",
-        "CANAIS-UI-20261114"
+        "CANAIS-UI-20261114",
+        "PLATAFORMA-UI-20261115"
       ]
     },
     "frontend/src/cadastros.css": {
@@ -1616,11 +1620,12 @@
       ]
     },
     "scripts/qa-browser/run.mjs": {
-      "reason": "Cadastros UI approved package on published 9c50ee2: scoped presentation, local interaction/focus, regression evidence and exact preservation gates; no backend or global shell redesign. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages. Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only.",
+      "reason": "Cadastros UI approved package on published 9c50ee2: scoped presentation, local interaction/focus, regression evidence and exact preservation gates; no backend or global shell redesign. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages. Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only. Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication.",
       "ids": [
         "CADASTROS-UI-20261108",
         "ESTOQUE-REGISTROS-UI-20261109",
-        "CANAIS-UI-20261114"
+        "CANAIS-UI-20261114",
+        "PLATAFORMA-UI-20261115"
       ]
     },
     "docs/cadastros-ui-dev.md": {
@@ -1728,15 +1733,17 @@
     },
     "frontend/qa/api.ts": {
       "ids": [
-        "CANAIS-UI-20261114"
+        "CANAIS-UI-20261114",
+        "PLATAFORMA-UI-20261115"
       ],
-      "reason": " Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only."
+      "reason": " Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only. Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication."
     },
     "scripts/verify-canais.mjs": {
       "ids": [
-        "CANAIS-UI-20261114"
+        "CANAIS-UI-20261114",
+        "PLATAFORMA-UI-20261115"
       ],
-      "reason": " Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only."
+      "reason": " Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only. Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication."
     },
     "scripts/qa-browser/canais.mjs": {
       "ids": [
@@ -1749,6 +1756,48 @@
         "CANAIS-UI-20261114"
       ],
       "reason": " Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only."
+    },
+    "frontend/src/pages/PlatformAdminPage.tsx": {
+      "ids": [
+        "PLATAFORMA-UI-20261115"
+      ],
+      "reason": " Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication."
+    },
+    "frontend/src/components/PlatformBillingPanel.tsx": {
+      "ids": [
+        "PLATAFORMA-UI-20261115"
+      ],
+      "reason": " Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication."
+    },
+    "frontend/src/components/PlatformPermissions.tsx": {
+      "ids": [
+        "PLATAFORMA-UI-20261115"
+      ],
+      "reason": " Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication."
+    },
+    "frontend/src/plataforma.css": {
+      "ids": [
+        "PLATAFORMA-UI-20261115"
+      ],
+      "reason": " Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication."
+    },
+    "scripts/verify-plataforma.mjs": {
+      "ids": [
+        "PLATAFORMA-UI-20261115"
+      ],
+      "reason": " Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication."
+    },
+    "scripts/qa-browser/plataforma.mjs": {
+      "ids": [
+        "PLATAFORMA-UI-20261115"
+      ],
+      "reason": " Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication."
+    },
+    "docs/plataforma-ui-dev.md": {
+      "ids": [
+        "PLATAFORMA-UI-20261115"
+      ],
+      "reason": " Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication."
     }
   },
   "bytePreserved": [
