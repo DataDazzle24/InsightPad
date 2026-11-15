@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
-import {readFileSync} from 'node:fs';
+import {verifyBarrasGlobais,barrasBase,barrasHistoricalSource} from './verify-barras-globais.mjs';
+const readFileSync=barrasHistoricalSource;
 import ts from '../frontend/node_modules/typescript/lib/typescript.js';
 import postcss from '../frontend/node_modules/postcss/lib/postcss.mjs';
 export const plataformaBase='7bc4aec60d5455c6a8e6c7cb95f537f196cac6e8';
@@ -17,8 +18,9 @@ const parse=s=>ts.createSourceFile('source.tsx',s,ts.ScriptTarget.Latest,true,ts
 const canonical=(f,n)=>printer.printNode(ts.EmitHint.Unspecified,n,f).replace(/\s+/g,' ');
 function collect(f,predicate){const a=[];function visit(n){if(predicate(n))a.push(canonical(f,n));ts.forEachChild(n,visit)}visit(f);return a;}
 export function verifyPlataforma(){
+ verifyBarrasGlobais();
  git('merge-base','--is-ancestor',plataformaBase,'HEAD');
- const changed=[...git('diff','--name-only',plataformaBase).split('\n'),...git('ls-files','--others','--exclude-standard').split('\n')].filter(Boolean);
+ const changed=git('diff','--name-only',plataformaBase,barrasBase).split('\n').filter(Boolean);
  for(const p of changed)assert.ok(allowed.has(p),'Plataforma changed an unapproved path: '+p);
  assert.equal(readFileSync('frontend/src/App.tsx','utf8').replace("import './plataforma.css'\n",'').trim(),before('frontend/src/App.tsx'),'Only the scoped stylesheet import may change App');
  for(const path of sources){

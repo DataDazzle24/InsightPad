@@ -12,6 +12,7 @@ import {cadastrosProof} from './cadastros.mjs';
 import {estoqueRegistrosProof} from './estoque-registros.mjs';
 import {canaisProof} from './canais.mjs';
 import {plataformaProof} from './plataforma.mjs';
+import {barrasGlobaisProof} from './barras-globais.mjs';
 import {dashboardV3Zoom} from './dashboard-v3-zoom.mjs';
 const sha=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
 const meta=JSON.parse(readFileSync('artifacts/recovery-qa/qa-source.json','utf8'));assert.equal(meta.commit,sha);assert.equal(meta.auth,'mock');
@@ -33,6 +34,7 @@ try{
  if(process.argv.includes('--estoque-registros')||process.argv.includes('--full'))await estoqueRegistrosProof({output,sha});
  if(process.argv.includes('--canais')||process.argv.includes('--full'))await canaisProof({output,sha});
  if(process.argv.includes('--plataforma')||process.argv.includes('--full'))await plataformaProof({output,sha});
+ if(process.argv.includes('--barras-globais')||process.argv.includes('--full'))await barrasGlobaisProof({output,sha});
  if(process.argv.includes('--interface')||process.argv.includes('--full'))await interfaceProof({page,output,sha});
  if(process.argv.includes('--dashboard-v3')||process.argv.includes('--full'))await dashboardV3({page,output,sha});
  if(process.argv.includes('--dashboard-zoom')||process.argv.includes('--full'))await dashboardV3Zoom({output,sha});

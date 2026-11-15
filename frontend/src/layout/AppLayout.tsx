@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
 import { navigationModules } from "../config/navigation";
 import { appRoutes } from "../config/pages";
 import { useTheme } from "../theme/theme-context";
 import { smartMaskInput } from "../utils/inputMasks";
-import { InterfaceNavLink as NavLink } from "../components/InterfaceNavigationLink";
+import { useDialogAccessibility } from "../hooks/useDialogAccessibility";
 import { ChannelOrderNotifier } from "../components/ChannelOrderNotifier";
 
 function WhatsAppIcon() {
@@ -27,8 +27,6 @@ export function AppLayout() {
   const { profile, permissions, canAccess, signOut } = useAuth();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [leaving, setLeaving] = useState(false);
-  const drawerTriggerRef = useRef<HTMLButtonElement>(null);
-  const drawerCloseRef = useRef<HTMLButtonElement>(null);
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const isAdministrator =
@@ -49,18 +47,7 @@ export function AppLayout() {
     [permissions],
   );
 
-  useEffect(() => {
-    if (!drawerOpen) return;
-    drawerCloseRef.current?.focus();
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setDrawerOpen(false);
-        drawerTriggerRef.current?.focus();
-      }
-    };
-    document.addEventListener("keydown", closeOnEscape);
-    return () => document.removeEventListener("keydown", closeOnEscape);
-  }, [drawerOpen]);
+  useDialogAccessibility(drawerOpen, () => setDrawerOpen(false));
   const pageTitle = useMemo(() => {
     if (location.pathname === "/") return "Menu Principal";
     if (location.pathname === "/modulos/plataforma") return "Gestão da plataforma";
@@ -90,7 +77,7 @@ export function AppLayout() {
 
   return (
     <main
-      className="app-frame ip-ui"
+      className="app-frame ip-ui ip-shell"
       data-theme={theme}
       data-cadastros={
         location.pathname.replace(/\/+$/, "").toLowerCase() === "/modulos/cadastros" ||
@@ -113,12 +100,22 @@ export function AppLayout() {
           to="/"
           aria-label="Insight Pad — início"
         >
-          <img src="/brand/insight-pad-interface.png" alt="Insight Pad" />
+          <img src="/brand/insight-pad-logo-compact.png" alt="Insight Pad" />
         </Link>
         <nav className="legacy-header__nav" aria-label="Módulos do Insight Pad">
+          <NavLink className={({ isActive }) => isActive ? "header-nav-item active" : "header-nav-item"} to="/" end aria-label="Início">
+            <span className="material-symbols-rounded" aria-hidden="true">
+              home
+            </span>
+            <span className="header-nav-item__tooltip">Início</span>
+          </NavLink>
           {modules.map((module) => (
             <NavLink
-              className="header-nav-item"
+              className={({ isActive }) => `header-nav-item${isActive ? " active" : ""}${appRoutes.some(
+                ({ route, pageKey }) => route === location.pathname && module.pageKeys.includes(pageKey),
+              ) || (module.to === "/modulos/canais" && location.pathname === "/integracoes/canais/pedidos")
+                ? " is-current-module"
+                : ""}`}
               key={module.label}
               to={module.to}
               aria-label={module.label}
@@ -129,45 +126,28 @@ export function AppLayout() {
               <span className="header-nav-item__tooltip">{module.label}</span>
             </NavLink>
           ))}
-          <NavLink className="header-nav-item" to="/" end aria-label="Início">
-            <span className="material-symbols-rounded" aria-hidden="true">
-              home
-            </span>
-            <span className="header-nav-item__tooltip">Início</span>
-          </NavLink>
         </nav>
-        <button
-          ref={drawerTriggerRef}
-          className="legacy-header__user ip-account-trigger"
-          type="button"
-          onClick={() => setDrawerOpen(true)}
-          aria-label="Conta e sistema — abrir painel do usuário"
-          title="Conta e sistema"
-          aria-controls="user-drawer"
-          aria-expanded={drawerOpen}
-        >
-          <span className="material-symbols-rounded" aria-hidden="true">
-            manage_accounts
-          </span>
-          <span className="ip-rail-label">Conta e sistema</span>
-        </button>
       </header>
 
-      <button
-        className={
-          drawerOpen
-            ? "drawer-backdrop drawer-backdrop--open"
-            : "drawer-backdrop"
-        }
-        onClick={() => setDrawerOpen(false)}
-        aria-label="Fechar painel"
-      />
+      {drawerOpen && <div
+        className="drawer-backdrop drawer-backdrop--open"
+        onClick={(event) => { if (event.target === event.currentTarget) setDrawerOpen(false); }}
+      >
       <aside
         id="user-drawer"
-        className={drawerOpen ? "user-drawer user-drawer--open" : "user-drawer"}
-        aria-hidden={!drawerOpen}
-        aria-label="Painel do usuário"
+        className="user-drawer user-drawer--open"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="user-drawer-title"
+        tabIndex={-1}
       >
+        <header className="user-drawer__heading">
+          <h2 id="user-drawer-title">Conta e sistema</h2>
+          <button className="user-drawer__close" type="button" onClick={() => setDrawerOpen(false)} aria-label="Fechar painel do usuário">
+            <span className="material-symbols-rounded" aria-hidden="true">close</span>
+          </button>
+        </header>
+        <div className="user-drawer__body">
         <div className="user-drawer__identity">
           <span className="material-symbols-rounded" aria-hidden="true">
             account_circle
@@ -176,17 +156,6 @@ export function AppLayout() {
             <strong>{profile?.name}</strong>
             <small>{profile?.role.name}</small>
           </div>
-          <button
-            ref={drawerCloseRef}
-            className="user-drawer__close"
-            type="button"
-            onClick={() => setDrawerOpen(false)}
-            aria-label="Fechar painel do usuário"
-          >
-            <span className="material-symbols-rounded" aria-hidden="true">
-              close
-            </span>
-          </button>
         </div>
         <div className="user-drawer__company">
           <small>EMPRESA</small>
@@ -196,7 +165,7 @@ export function AppLayout() {
         </div>
         <div className="user-drawer__theme">
           <div>
-            <span className="material-symbols-rounded">contrast</span>
+            <span className="material-symbols-rounded" aria-hidden="true">contrast</span>
             <span>
               <strong>Aparência</strong>
               <small>{theme === "dark" ? "Tema escuro" : "Tema claro"}</small>
@@ -209,11 +178,11 @@ export function AppLayout() {
             aria-label={`Ativar tema ${theme === "dark" ? "claro" : "escuro"}`}
             aria-pressed={theme === "light"}
           >
-            <span className="material-symbols-rounded">dark_mode</span>
+            <span className="material-symbols-rounded" aria-hidden="true">dark_mode</span>
             <i>
               <b />
             </i>
-            <span className="material-symbols-rounded">light_mode</span>
+            <span className="material-symbols-rounded" aria-hidden="true">light_mode</span>
           </button>
         </div>
         <div className="user-drawer__actions">
@@ -222,11 +191,9 @@ export function AppLayout() {
               <strong id="available-pages-title">Páginas disponíveis</strong>
               <small>{availablePages.length}</small>
             </header>
-            <p>
-              {availablePages.length > 0
-                ? availablePages.join(", ")
-                : "Nenhuma página disponível."}
-            </p>
+            {availablePages.length > 0
+              ? <ul>{availablePages.map((label, index) => <li key={`${label}-${index}`}>{label}</li>)}</ul>
+              : <p>Nenhuma página disponível.</p>}
           </section>
           {profile?.role.systemRole === true && (
             <Link
@@ -234,12 +201,13 @@ export function AppLayout() {
               to="/modulos/plataforma"
               onClick={() => setDrawerOpen(false)}
             >
-              <span className="material-symbols-rounded">
+              <span className="material-symbols-rounded" aria-hidden="true">
                 admin_panel_settings
               </span>
               Gestão da plataforma
             </Link>
           )}
+        </div>
         </div>
         <footer className="user-drawer__footer-actions">
           {isAdministrator && (
@@ -270,18 +238,29 @@ export function AppLayout() {
             onClick={() => void handleSignOut()}
             disabled={leaving}
           >
-            <span className="material-symbols-rounded">logout</span>
+            <span className="material-symbols-rounded" aria-hidden="true">logout</span>
             {leaving ? "Saindo..." : "Sair do sistema"}
           </button>
         </footer>
       </aside>
+      </div>}
 
       <header className="ip-top">
           <div className="ip-context"><strong>{pageTitle}</strong><span>{profile?.tenant.tradeName ?? profile?.tenant.legalName}</span></div>
-          <button className="ip-btn ip-btn--compact" type="button" onClick={toggleTheme} aria-label={`Ativar tema ${theme === "dark" ? "claro" : "escuro"}`} aria-pressed={theme === "light"}>
-            <span className="material-symbols-rounded" aria-hidden="true">{theme === "dark" ? "light_mode" : "dark_mode"}</span>
-            <span>Tema {theme === "dark" ? "claro" : "escuro"}</span>
-          </button>
+        <button
+          className="ip-account-trigger"
+          type="button"
+          onClick={() => setDrawerOpen(true)}
+          aria-label="Conta e sistema — abrir painel do usuário"
+          title="Conta e sistema"
+          aria-haspopup="dialog"
+          aria-controls={drawerOpen ? "user-drawer" : undefined}
+          aria-expanded={drawerOpen}
+        >
+          <span className="material-symbols-rounded" aria-hidden="true">
+            account_circle
+          </span>
+        </button>
         </header>
         <section className="app-stage"><Outlet /></section>
       <ChannelOrderNotifier />
