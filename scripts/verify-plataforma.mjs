@@ -11,7 +11,7 @@ export const plataformaHistoricalSource=(path,encoding)=>[...sources,'frontend/s
 const allowed=new Set([...sources,'frontend/src/App.tsx','frontend/src/plataforma.css',
  'frontend/qa/api.ts','scripts/qa-browser/plataforma.mjs','scripts/qa-browser/run.mjs',
  'scripts/verify-plataforma.mjs','scripts/verify-canais.mjs','scripts/verify-reconciliation.mjs',
- 'scripts/reconciliation-scope.json','docs/plataforma-ui-dev.md']);
+ 'scripts/reconciliation-scope.json','scripts/qa-browser/canais.mjs','docs/plataforma-ui-dev.md']);
 const printer=ts.createPrinter({removeComments:true});
 const parse=s=>ts.createSourceFile('source.tsx',s,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
 const canonical=(f,n)=>printer.printNode(ts.EmitHint.Unspecified,n,f).replace(/\s+/g,' ');
@@ -32,6 +32,8 @@ export function verifyPlataforma(){
   const conditions=f=>{const result=[];function visit(n){if(ts.isConditionalExpression(n)){let p=n.parent;while(p&&!ts.isJsxAttribute(p)&&!ts.isJsxElement(p))p=p.parent;if(!(p&&ts.isJsxAttribute(p)&&p.name.getText(f).startsWith('aria-')))result.push(canonical(f,n.condition));}ts.forEachChild(n,visit);}visit(f);return result.sort();};
   assert.deepEqual(conditions(now),conditions(old),path+': conditional eligibility changed');
  }
+ const canaisTest='scripts/qa-browser/canais.mjs';
+ assert.equal(readFileSync(canaisTest,'utf8').replace("await page.waitForFunction(()=>document.querySelector('.channel-orders-table tbody>tr td strong')?.textContent?.trim()==='#QA-051');",'').trim(),before(canaisTest),'Only wait for the second-page sentinel; preserve every Canais assertion');
  const css=postcss.parse(readFileSync('frontend/src/plataforma.css','utf8'));
  css.walkRules(rule=>{
   for(const selector of postcss.list.comma(rule.selector))assert.ok(selector.startsWith('.ip-ui[data-theme')&&/\.work-platform(?:[\s.:#>\[]|$)/.test(selector),'Unscoped Plataforma selector: '+selector);

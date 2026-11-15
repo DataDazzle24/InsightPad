@@ -80,7 +80,7 @@ export async function canaisProof({output,sha,origin='http://127.0.0.1:4174'}){
   });
   await page.setViewportSize({width:1280,height:800});
   await run('orders-summary-pagination-filters',['PED-01','PED-02','PED-06'],async()=>{
-   await go();assert.equal(await page.locator('.channel-kpi').count(),4);await page.getByRole('button',{name:/Próxima/}).click();await ready();assert.equal(await page.locator('.channel-orders-table tbody>tr').count(),11);
+   await go();assert.equal(await page.locator('.channel-kpi').count(),4);await page.getByRole('button',{name:/Próxima/}).click();await page.waitForFunction(()=>document.querySelector('.channel-orders-table tbody>tr td strong')?.textContent?.trim()==='#QA-051');await ready();assert.equal(await page.locator('.channel-orders-table tbody>tr').count(),11);
    await page.locator('.channel-kpi').first().click();await ready();assert.match(await page.locator('.catalog-pagination').innerText(),/Página 1/);assert.equal(await page.locator('.channel-kpi').first().getAttribute('aria-pressed'),'true');
    await page.getByRole('button',{name:/Pesquisa avançada/}).click();const d=dialog();await d.getByLabel(/^Filial/).selectOption({label:'FILIAL QA'});await d.getByRole('button',{name:/Aplicar/}).click();await ready();const call=await page.evaluate(()=>window.__canais.calls.filter(c=>c.name==='SalesChannelOrdersV2').at(-1));assert.ok(call.variables.filters.branchId.endsWith('000002'));return call;
   });

@@ -1747,9 +1747,10 @@
     },
     "scripts/qa-browser/canais.mjs": {
       "ids": [
-        "CANAIS-UI-20261114"
+        "CANAIS-UI-20261114",
+        "PLATAFORMA-UI-20261115"
       ],
-      "reason": " Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only."
+      "reason": " Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only. Test-only synchronization for an existing stale-read race: wait for QA-051 before preserving the original 11-row assertion; Canais product sources unchanged."
     },
     "docs/canais-ui-dev.md": {
       "ids": [
