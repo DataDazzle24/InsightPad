@@ -94,7 +94,8 @@
     "CADASTROS-UI-20261108",
     "ESTOQUE-REGISTROS-UI-20261109",
     "CANAIS-UI-20261114",
-    "PLATAFORMA-UI-20261115"
+    "PLATAFORMA-UI-20261115",
+    "BARRAS-GLOBAIS-UI-20261115"
   ],
   "paths": {
     ".gitignore": {
@@ -275,9 +276,10 @@
         "CADASTROS-UI-20261108",
         "ESTOQUE-REGISTROS-UI-20261109",
         "CANAIS-UI-20261114",
-        "PLATAFORMA-UI-20261115"
+        "PLATAFORMA-UI-20261115",
+        "BARRAS-GLOBAIS-UI-20261115"
       ],
-      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages. Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only. Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication."
+      "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages. Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only. Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication. Barras globais aprovadas: apresentação ou suporte exato de validação, contratos preservados."
     },
     "scripts/version-manifest.mjs": {
       "ids": [
@@ -627,9 +629,10 @@
         "CADASTROS-UI-20261108",
         "ESTOQUE-REGISTROS-UI-20261109",
         "CANAIS-UI-20261114",
-        "PLATAFORMA-UI-20261115"
+        "PLATAFORMA-UI-20261115",
+        "BARRAS-GLOBAIS-UI-20261115"
       ],
-      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages. Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only. Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication."
+      "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages. Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only. Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication. Barras globais aprovadas: apresentação ou suporte exato de validação, contratos preservados."
     },
     "docs/dec019-progress.json": {
       "ids": [
@@ -1278,9 +1281,10 @@
     "frontend/src/layout/AppLayout.tsx": {
       "ids": [
         "UXIP-001",
-        "CADASTROS-UI-20261108"
+        "CADASTROS-UI-20261108",
+        "BARRAS-GLOBAIS-UI-20261115"
       ],
-      "reason": "Screen-only visual migration and exact presentation/preservation regression; preserve business callbacks, fields, domain sources and print. Exact path only; no backend or operational change."
+      "reason": "Screen-only visual migration and exact presentation/preservation regression; preserve business callbacks, fields, domain sources and print. Exact path only; no backend or operational change. Barras globais aprovadas: apresentação ou suporte exato de validação, contratos preservados."
     },
     "frontend/src/pages/DashboardPage.tsx": {
       "ids": [
@@ -1562,12 +1566,13 @@
       "reason": "Pedido Frente de Caixa v2 de 2026-11-07: layout restrito, filial em rascunho e evidência dirigida, preservando contratos reais e matriz congelada."
     },
     "frontend/src/App.tsx": {
-      "reason": "Cadastros UI approved package on published 9c50ee2: scoped presentation, local interaction/focus, regression evidence and exact preservation gates; no backend or global shell redesign. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages. Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only. Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication.",
+      "reason": "Cadastros UI approved package on published 9c50ee2: scoped presentation, local interaction/focus, regression evidence and exact preservation gates; no backend or global shell redesign. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages. Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only. Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication. Barras globais aprovadas: apresentação ou suporte exato de validação, contratos preservados.",
       "ids": [
         "CADASTROS-UI-20261108",
         "ESTOQUE-REGISTROS-UI-20261109",
         "CANAIS-UI-20261114",
-        "PLATAFORMA-UI-20261115"
+        "PLATAFORMA-UI-20261115",
+        "BARRAS-GLOBAIS-UI-20261115"
       ]
     },
     "frontend/src/cadastros.css": {
@@ -1620,12 +1625,13 @@
       ]
     },
     "scripts/qa-browser/run.mjs": {
-      "reason": "Cadastros UI approved package on published 9c50ee2: scoped presentation, local interaction/focus, regression evidence and exact preservation gates; no backend or global shell redesign. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages. Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only. Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication.",
+      "reason": "Cadastros UI approved package on published 9c50ee2: scoped presentation, local interaction/focus, regression evidence and exact preservation gates; no backend or global shell redesign. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages. Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only. Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication. Barras globais aprovadas: apresentação ou suporte exato de validação, contratos preservados.",
       "ids": [
         "CADASTROS-UI-20261108",
         "ESTOQUE-REGISTROS-UI-20261109",
         "CANAIS-UI-20261114",
-        "PLATAFORMA-UI-20261115"
+        "PLATAFORMA-UI-20261115",
+        "BARRAS-GLOBAIS-UI-20261115"
       ]
     },
     "docs/cadastros-ui-dev.md": {
@@ -1784,9 +1790,10 @@
     },
     "scripts/verify-plataforma.mjs": {
       "ids": [
-        "PLATAFORMA-UI-20261115"
+        "PLATAFORMA-UI-20261115",
+        "BARRAS-GLOBAIS-UI-20261115"
       ],
-      "reason": " Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication."
+      "reason": " Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication. Barras globais aprovadas: apresentação ou suporte exato de validação, contratos preservados."
     },
     "scripts/qa-browser/plataforma.mjs": {
       "ids": [
@@ -1799,6 +1806,30 @@
         "PLATAFORMA-UI-20261115"
       ],
       "reason": " Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication."
+    },
+    "frontend/src/barras-globais.css": {
+      "ids": [
+        "BARRAS-GLOBAIS-UI-20261115"
+      ],
+      "reason": "Barras globais aprovadas: apresentação ou suporte exato de validação, contratos preservados."
+    },
+    "frontend/src/layout/AppLayout.test.tsx": {
+      "ids": [
+        "BARRAS-GLOBAIS-UI-20261115"
+      ],
+      "reason": "Barras globais aprovadas: apresentação ou suporte exato de validação, contratos preservados."
+    },
+    "scripts/verify-barras-globais.mjs": {
+      "ids": [
+        "BARRAS-GLOBAIS-UI-20261115"
+      ],
+      "reason": "Barras globais aprovadas: apresentação ou suporte exato de validação, contratos preservados."
+    },
+    "scripts/qa-browser/barras-globais.mjs": {
+      "ids": [
+        "BARRAS-GLOBAIS-UI-20261115"
+      ],
+      "reason": "Barras globais aprovadas: apresentação ou suporte exato de validação, contratos preservados."
     }
   },
   "bytePreserved": [
