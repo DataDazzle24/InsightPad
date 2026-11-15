@@ -4,7 +4,7 @@ Base: `7bc4aec60d5455c6a8e6c7cb95f537f196cac6e8` (`agent/canais-ui-dev`), també
 
 ## Produto e preservação
 
-Cinco arquivos de produto: `frontend/src/App.tsx`, `frontend/src/pages/PlatformAdminPage.tsx`, `frontend/src/components/PlatformBillingPanel.tsx`, `frontend/src/components/PlatformPermissions.tsx` e `frontend/src/plataforma.css`. O import segue `conexoes.css`. Estilos exclusivamente em `@media screen`, sob `.ip-ui[data-theme] .work-platform`.
+Cinco arquivos de produto: `frontend/src/App.tsx`, `frontend/src/pages/PlatformAdminPage.tsx`, `frontend/src/components/PlatformBillingPanel.tsx`, `frontend/src/components/PlatformPermissions.tsx` e `frontend/src/plataforma.css`. O import segue `conexoes.css`. Adaptação visual ao patch: restaurar a família Material Symbols Rounded e a ligatura da lupa no seletor local `.work-platform .platform-search > .material-symbols-rounded`, pois a regra compartilhada de rótulos substituía a fonte e exibia a palavra search. Estilos globais não foram modificados. Estilos exclusivamente em `@media screen`, sob `.ip-ui[data-theme] .work-platform`.
 
 O patch mantém a célula `td` como `table-cell`; botões consecutivos usam margem lógica de 6 px. Os dois NavLinks de Gestão de usuários foram movidos juntos para o cabeçalho: alinhamento à direita na linha do título em desktop e abaixo dele até 640 px, acima dos indicadores. As quatro vistas conservam tabelas, colunas, paginação e rolagem interna. Matriz ganha região nomeada, `aria-busy` e anúncio ligado ao estado `saving` existente.
 
