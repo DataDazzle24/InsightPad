@@ -235,3 +235,5 @@
 @media screen{.ip-dashboard-v3 .dv-ring.is-mark-active{stroke-width:34;filter:brightness(1.1)}}
 
 @media screen{.ip-dashboard-v3 .dv-chart:has(g.is-selected) .dv-line{opacity:.35}}
+/* Inverted hover colors must switch together to preserve text contrast. */
+@media screen{.ip-dashboard-v3 :is(.dv-nav,.dv-subnav) button{transition:none}}
