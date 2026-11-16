@@ -96,7 +96,8 @@
     "CANAIS-UI-20261114",
     "PLATAFORMA-UI-20261115",
     "BARRAS-GLOBAIS-UI-20261115",
-    "MENUS-UI-20261116"
+    "MENUS-UI-20261116",
+    "AJUSTES-FINOS-20261116"
   ],
   "paths": {
     ".gitignore": {
@@ -279,7 +280,8 @@
         "CANAIS-UI-20261114",
         "PLATAFORMA-UI-20261115",
         "BARRAS-GLOBAIS-UI-20261115",
-        "MENUS-UI-20261116"
+        "MENUS-UI-20261116",
+        "AJUSTES-FINOS-20261116"
       ],
       "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages. Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only. Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication. Barras globais aprovadas: apresentação ou suporte exato de validação, contratos preservados."
     },
@@ -308,7 +310,8 @@
         "AJU-PDV-03",
         "AJU-PDV-04",
         "AJU-PDV-05",
-        "PDV-V2-20261107"
+        "PDV-V2-20261107",
+        "AJUSTES-FINOS-20261116"
       ],
       "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão. Frente de Caixa v2 explicitamente autorizada em 2026-11-07: apresentação/filial em rascunho, sem backend; guardas financeiras verificadas separadamente."
     },
@@ -337,7 +340,8 @@
         "AJU-DASH-10",
         "AJU-DASH-11",
         "AJU-DASH-12",
-        "AJU-DASH-13"
+        "AJU-DASH-13",
+        "AJUSTES-FINOS-20261116"
       ],
       "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão."
     },
@@ -355,7 +359,8 @@
         "AJU-DASH-10",
         "AJU-DASH-11",
         "AJU-DASH-12",
-        "AJU-DASH-13"
+        "AJU-DASH-13",
+        "AJUSTES-FINOS-20261116"
       ],
       "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão."
     },
@@ -373,7 +378,8 @@
         "AJU-DASH-10",
         "AJU-DASH-11",
         "AJU-DASH-12",
-        "AJU-DASH-13"
+        "AJU-DASH-13",
+        "AJUSTES-FINOS-20261116"
       ],
       "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão."
     },
@@ -633,7 +639,8 @@
         "CANAIS-UI-20261114",
         "PLATAFORMA-UI-20261115",
         "BARRAS-GLOBAIS-UI-20261115",
-        "MENUS-UI-20261116"
+        "MENUS-UI-20261116",
+        "AJUSTES-FINOS-20261116"
       ],
       "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages. Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only. Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication. Barras globais aprovadas: apresentação ou suporte exato de validação, contratos preservados."
     },
@@ -794,7 +801,8 @@
         "AJU-PDV-03",
         "AJU-PDV-04",
         "AJU-PDV-05",
-        "PDV-V2-20261107"
+        "PDV-V2-20261107",
+        "AJUSTES-FINOS-20261116"
       ],
       "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard. Frente de Caixa v2 explicitamente autorizada em 2026-11-07: apresentação/filial em rascunho, sem backend; guardas financeiras verificadas separadamente."
     },
@@ -812,7 +820,8 @@
         "AJU-DASH-10",
         "AJU-DASH-11",
         "AJU-DASH-12",
-        "AJU-DASH-13"
+        "AJU-DASH-13",
+        "AJUSTES-FINOS-20261116"
       ],
       "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard."
     },
@@ -1145,7 +1154,8 @@
         "AJU-PDV-01",
         "AJU-PDV-02",
         "AJU-PDV-03",
-        "PDV-V2-20261107"
+        "PDV-V2-20261107",
+        "AJUSTES-FINOS-20261116"
       ],
       "reason": "Cabeçalho extraído do PDV para testar navegação, conexão e encaminhamento ao controle de caixa, sem executar fechamento. Frente de Caixa v2 explicitamente autorizada em 2026-11-07: apresentação/filial em rascunho, sem backend; guardas financeiras verificadas separadamente."
     },
@@ -1174,7 +1184,8 @@
     },
     "scripts/qa-browser/reports.mjs": {
       "ids": [
-        "AJU-DASH-12"
+        "AJU-DASH-12",
+        "AJUSTES-FINOS-20261116"
       ],
       "reason": "Exact isolated PDF/print contrast regression for all five existing dashboard views and both themes; no remote operation or public evidence."
     },
@@ -1249,7 +1260,8 @@
         "AJU-SUB-13",
         "AJU-SUB-14",
         "CADASTROS-UI-20261108",
-        "ESTOQUE-REGISTROS-UI-20261109"
+        "ESTOQUE-REGISTROS-UI-20261109",
+        "AJUSTES-FINOS-20261116"
       ],
       "reason": "Exact isolated residual consumer tests for the frozen68, preserving exclusions and sufficient cases; no business endpoint, remote operation or public evidence. Exclude decorative aria-hidden KPI icons from the original label assertion; preserve financial and stock assertions."
     },
@@ -1382,19 +1394,22 @@
     },
     "frontend/src/components/dashboard-v3/DashboardSurface.tsx": {
       "ids": [
-        "UXIP-001"
+        "UXIP-001",
+        "AJUSTES-FINOS-20261116"
       ],
       "reason": "Approved dashboard v3 integration on b753891: exact presentation, real existing controller wiring, complete original print, persistent compact alert placement and directed regression. No backend/auth/IAM/dependency or mock product changes."
     },
     "frontend/src/components/dashboard-v3/DashboardSurface.test.tsx": {
       "ids": [
-        "UXIP-001"
+        "UXIP-001",
+        "AJUSTES-FINOS-20261116"
       ],
       "reason": "Approved dashboard v3 integration on b753891: exact presentation, real existing controller wiring, complete original print, persistent compact alert placement and directed regression. No backend/auth/IAM/dependency or mock product changes."
     },
     "frontend/src/components/dashboard-v3/model.ts": {
       "ids": [
-        "UXIP-001"
+        "UXIP-001",
+        "AJUSTES-FINOS-20261116"
       ],
       "reason": "Approved dashboard v3 integration on b753891: exact presentation, real existing controller wiring, complete original print, persistent compact alert placement and directed regression. No backend/auth/IAM/dependency or mock product changes."
     },
@@ -1406,7 +1421,8 @@
     },
     "frontend/src/components/dashboard-v3/adapters.ts": {
       "ids": [
-        "UXIP-001"
+        "UXIP-001",
+        "AJUSTES-FINOS-20261116"
       ],
       "reason": "Approved dashboard v3 integration on b753891: exact presentation, real existing controller wiring, complete original print, persistent compact alert placement and directed regression. No backend/auth/IAM/dependency or mock product changes."
     },
@@ -1430,7 +1446,8 @@
     },
     "frontend/src/components/dashboard-v3/DashboardPrintReport.tsx": {
       "ids": [
-        "UXIP-001"
+        "UXIP-001",
+        "AJUSTES-FINOS-20261116"
       ],
       "reason": "Approved dashboard v3 integration on b753891: exact presentation, real existing controller wiring, complete original print, persistent compact alert placement and directed regression. No backend/auth/IAM/dependency or mock product changes."
     },
@@ -1484,7 +1501,8 @@
     },
     "scripts/qa-browser/dashboard-v3.mjs": {
       "ids": [
-        "UXIP-001"
+        "UXIP-001",
+        "AJUSTES-FINOS-20261116"
       ],
       "reason": "Approved dashboard v3 integration on b753891: exact presentation, real existing controller wiring, complete original print, persistent compact alert placement and directed regression. No backend/auth/IAM/dependency or mock product changes."
     },
@@ -1520,7 +1538,8 @@
     },
     "frontend/src/components/dashboard-v3/dashboard-v6.css": {
       "ids": [
-        "UXIP-001"
+        "UXIP-001",
+        "AJUSTES-FINOS-20261116"
       ],
       "reason": "06 Nov v6 dashboard-only visual refinement, explicit removal of retired footer UI/relocations, preserved order business logic and selective restoration; geometry/cleanup/export/eleven-viewport regression. Exact path; no backend/auth/dependency or infrastructure change."
     },
@@ -1550,7 +1569,8 @@
     },
     "frontend/src/pages/PointOfSalePage.v2.css": {
       "ids": [
-        "PDV-V2-20261107"
+        "PDV-V2-20261107",
+        "AJUSTES-FINOS-20261116"
       ],
       "reason": "Pedido Frente de Caixa v2 de 2026-11-07: layout restrito, filial em rascunho e evidência dirigida, preservando contratos reais e matriz congelada."
     },
@@ -1562,7 +1582,8 @@
     },
     "scripts/qa-browser/pdv-v2.mjs": {
       "ids": [
-        "PDV-V2-20261107"
+        "PDV-V2-20261107",
+        "AJUSTES-FINOS-20261116"
       ],
       "reason": "Pedido Frente de Caixa v2 de 2026-11-07: layout restrito, filial em rascunho e evidência dirigida, preservando contratos reais e matriz congelada."
     },
@@ -1641,7 +1662,8 @@
         "CANAIS-UI-20261114",
         "PLATAFORMA-UI-20261115",
         "BARRAS-GLOBAIS-UI-20261115",
-        "MENUS-UI-20261116"
+        "MENUS-UI-20261116",
+        "AJUSTES-FINOS-20261116"
       ]
     },
     "docs/cadastros-ui-dev.md": {
@@ -1750,7 +1772,8 @@
     "frontend/qa/api.ts": {
       "ids": [
         "CANAIS-UI-20261114",
-        "PLATAFORMA-UI-20261115"
+        "PLATAFORMA-UI-20261115",
+        "AJUSTES-FINOS-20261116"
       ],
       "reason": " Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only. Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication."
     },
@@ -1868,13 +1891,15 @@
     },
     "frontend/qa/application.tsx": {
       "ids": [
-        "MENUS-UI-20261116"
+        "MENUS-UI-20261116",
+        "AJUSTES-FINOS-20261116"
       ],
       "reason": "Approved Home/submenu visual integration or exact regression/QA support; preserve business routes, permissions, global shell and destination pages. No merge or deployment."
     },
     "scripts/verify-menus.mjs": {
       "ids": [
-        "MENUS-UI-20261116"
+        "MENUS-UI-20261116",
+        "AJUSTES-FINOS-20261116"
       ],
       "reason": "Approved Home/submenu visual integration or exact regression/QA support; preserve business routes, permissions, global shell and destination pages. No merge or deployment."
     },
@@ -1883,6 +1908,30 @@
         "MENUS-UI-20261116"
       ],
       "reason": "Approved Home/submenu visual integration or exact regression/QA support; preserve business routes, permissions, global shell and destination pages. No merge or deployment."
+    },
+    "frontend/src/components/dashboard-v3/dashboard-print.css": {
+      "ids": [
+        "AJUSTES-FINOS-20261116"
+      ],
+      "reason": "Approved fine adjustments: scoped PDV/dashboard UI, print and directed regression; financial/API/auth contracts preserved."
+    },
+    "frontend/src/components/dashboard-v3/DashboardPrintReport.test.tsx": {
+      "ids": [
+        "AJUSTES-FINOS-20261116"
+      ],
+      "reason": "Approved fine adjustments: scoped PDV/dashboard UI, print and directed regression; financial/API/auth contracts preserved."
+    },
+    "scripts/verify-ajustes-finos.mjs": {
+      "ids": [
+        "AJUSTES-FINOS-20261116"
+      ],
+      "reason": "Approved fine adjustments: scoped PDV/dashboard UI, print and directed regression; financial/API/auth contracts preserved."
+    },
+    "scripts/qa-browser/ajustes-finos.mjs": {
+      "ids": [
+        "AJUSTES-FINOS-20261116"
+      ],
+      "reason": "Approved fine adjustments: scoped PDV/dashboard UI, print and directed regression; financial/API/auth contracts preserved."
     }
   },
   "bytePreserved": [

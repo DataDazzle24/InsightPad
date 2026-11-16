@@ -87,6 +87,17 @@ export function useBoundaryLedger(){
  const specs=[['2025-12-31',0,0,0],['2026-01-01',1,1,0],['2026-01-31',2,800,900],['2026-02-01',3,1234,1234],['2026-02-28',4,100001,1],['2026-03-01',5,800,900]] as const
  ledger=specs.map(([date,i,revenueCents,costCents])=>immutable({...structuredClone(products[i]!),category:'CATEGORIA QA 001',subcategory:'SUBCATEGORIA QA 001',saleId:'boundary-'+i,source:i%2?'IFOOD':'POS',supplierId:uuid(20),branchId:branches[i%2]!.id,date,quantity:1,revenueCents,providerFeeCents:0,netRevenueCents:revenueCents,costCents,grossProfitCents:revenueCents-costCents,profitCents:revenueCents-costCents,marginPercent:revenueCents?(revenueCents-costCents)/revenueCents*100:0,lineCount:1}))
 }
+/** Entry-only bundle fixture. Posting bundles remains unsupported by this adapter. */
+export function useFineBundleFixture(){
+ const component=products.find(product=>product.id===uuid(101))!;
+ const kit={...structuredClone(component),id:uuid(14999),name:'KIT TECLADO QA',ean:'',internalCode:'KIT-QA',bundleProduct:true,weightedProduct:false};
+ components.set(kit.id,[{productId:component.id,quantity:1}]);products.push(kit);
+}
+/** Explicit synthetic print stress profile; never loaded by the product entry. */
+export function useFinePrintFixtures(){
+ resetFixtures();
+ ledger=ledger.map((row,index)=>immutable({...row,name:`PRODUTO SINTÉTICO ${String(index+1).padStart(3,'0')} — DESCRIÇÃO EXTENSA PARA CONFERIR QUEBRAS DE LINHA E TODAS AS COLUNAS DO RELATÓRIO SEM CORTAR VALORES`,category:index%2?'CATEGORIA SINTÉTICA COM NOME EXTENSO B':'CATEGORIA SINTÉTICA COM NOME EXTENSO A'}));
+}
 // Separate interactive flow profile: opening ledger and balances reconcile by ID.
 export function useFlowFixtures(){
  resetFixtures();const product=products.find(p=>p.id===uuid(101))!;products=[product]

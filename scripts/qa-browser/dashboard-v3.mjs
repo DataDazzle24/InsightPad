@@ -91,7 +91,7 @@ export async function dashboardV3({page,output,sha,origin='http://127.0.0.1:4174
   } finally {page.off('pageerror',error);await isolated.close();page=previousPage;}
  });
  for(const theme of ['dark','light'])await run('donut-font-converges-'+theme,async()=>{
-  await page.setViewportSize({width:1440,height:900});await go(theme);await ready();const graphic=page.locator('.dv-donut-graphic:visible').first();
+  await page.setViewportSize({width:1440,height:900});await go(theme);await page.getByRole('button',{name:'Clientes',exact:true}).click();await ready();const graphic=page.locator('.dv-donut-graphic:visible').first();
   const frames=await graphic.evaluate(async e=>{const frames=[];for(let i=0;i<30;i++){await new Promise(requestAnimationFrame);const value=e.querySelector('strong'),range=document.createRange();range.selectNodeContents(value);const svg=e.querySelector('svg').getBoundingClientRect();frames.push({font:getComputedStyle(value).fontSize,width:[...range.getClientRects()].reduce((n,r)=>n+r.width,0),diameter:Math.min(svg.width,svg.height),compact:e.classList.contains('is-compact')})}return frames});
   const stable=frames.slice(-12);assert.equal(new Set(stable.map(frame=>frame.font)).size,1,'donut font must converge, not react to its own font changes forever');assert.ok(stable.every(frame=>frame.compact||frame.width<=frame.diameter*.54+2));return{frames,stableFrames:stable.length};
  });

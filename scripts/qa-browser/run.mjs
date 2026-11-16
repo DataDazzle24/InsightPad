@@ -3,6 +3,7 @@ import {spawn,execFileSync} from 'node:child_process';
 import {readFileSync,mkdirSync,writeFileSync} from 'node:fs';
 import assert from 'node:assert/strict';
 import {coverage} from './coverage.mjs';
+import {ajustesFinos} from './ajustes-finos.mjs';
 import {reports} from './reports.mjs';
 import {consolidated} from './consolidated.mjs';
 import {interfaceProof} from './interface.mjs';
@@ -41,6 +42,7 @@ try{
  if(process.argv.includes('--dashboard-v3')||process.argv.includes('--full'))await dashboardV3({page,output,sha});
  if(process.argv.includes('--dashboard-zoom')||process.argv.includes('--full'))await dashboardV3Zoom({output,sha});
  if(process.argv.includes('--pdv-v2')||process.argv.includes('--full'))await pdvV2({output,sha});
+ await ajustesFinos({output,sha});
  if(process.argv.includes('--cadastros')||process.argv.includes('--full'))await cadastrosProof({output,sha});
  if(process.argv.includes('--reports')||process.argv.includes('--full'))await reports({page,output,sha});
  if(process.argv.includes('--consolidated')||process.argv.includes('--full'))await consolidated({page,output,sha});
