@@ -59,3 +59,22 @@ Não reativar iFood nem criar movimentações financeiras para demonstrar aparê
 Compartilhe somente o JSON entre `=== INICIO P55 ===` e `=== FIM P55 ===`.
 Logs, snapshots e fonte permanecem privados no Cloud Shell. O script prepara delta,
 mas não escreve a CORE. A publicação só será registrada depois do recibo confirmado.
+
+## Incidente recebido — 16/11/2026, P55-20261116T120210Z-ac521d
+
+A tentativa criou a versão `ab7824c420c92a5d`, release `1794830687960000`
+às 09:04:47 BRT. A comparação pública falhou em
+`/assets/CatalogPages-C1aHOskZ.js`. Reversão confirmada pela API para
+`d0e096eb322b6f1e`, release `1794830729892000`, às 09:05:29 BRT.
+`publicationComplete` não foi confirmado; `publicArtifactVerified=false`.
+Restauração no navegador e causa da divergência ainda não comprovadas.
+
+**Não repetir o publicador nem remover o journal.** `P55-diagnostico.py` faz
+somente leituras: recibo/manifesto/build preservados, release live, inventários
+anterior/candidato, version.json e o asset que divergiu. Não executa build,
+upload, release, rollback, limpeza ou alteração do produto. Token somente em
+memória para GETs na API Hosting DEV; nunca no domínio público ou na saída.
+Quatro testes offline cobrem método GET, origem/caminhos, credenciais, projeto,
+conta e comparação de inventários. O diagnóstico ainda precisa ser executado
+no Cloud Shell do operador, pois o domínio DEV retorna bloqueio 403 no executor.
+Compartilhar somente JSON entre os marcadores P55 DIAGNOSTICO.
