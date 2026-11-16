@@ -78,3 +78,34 @@ Quatro testes offline cobrem método GET, origem/caminhos, credenciais, projeto,
 conta e comparação de inventários. O diagnóstico ainda precisa ser executado
 no Cloud Shell do operador, pois o domínio DEV retorna bloqueio 403 no executor.
 Compartilhar somente JSON entre os marcadores P55 DIAGNOSTICO.
+
+## Retomada P55R — versão existente, sem novo build/upload
+
+Diagnóstico recebido do operador: live `d0e096eb322b6f1e`, marcador público
+`9230247`, rollbackStillLive=true. O asset ausente na versão anterior retorna
+HTML (1163 bytes); isso após a reversão é esperado e não prova o conteúdo servido
+na falha. Na versão candidata o asset está ACTIVE e seu hash gzip
+`7f930856716d5da65d34dd145211d3af60619afa6ea8bad523e1dbb72a53e39d`
+corresponde ao arquivo local. Apenas index.html e version.json compartilham
+caminho com hash diferente entre versões; não há colisão nos nomes dos JS.
+Causa da falha inicial ainda não comprovada; propagação é hipótese.
+
+`P55-retomar.py` reutiliza somente `ab7824c420c92a5d` FINALIZED, após conferir
+recibo original/reversão, CI exato, identidade/permissões/contenções, base live e
+release de rollback exatas, fonte limpa, manifesto privado com hash fixo, 47
+arquivos locais, inventário remoto e configuração idêntica à anterior. A classe
+API da retomada proíbe criar/finalizar versão e fazer upload. Permite apenas GETs
+e release DEV das duas versões fixas. Sem build, instalação ou novo upload.
+
+Após uma única release, compara marcador e todos os arquivos por SHA256, com
+até oito passes/120 segundos e cinco segundos entre divergências. Cada pass
+registra hashes/bytes observados; só leituras são repetidas. Não dispensa nenhum
+hash. Se não convergir, conserva evidência e tenta reverter somente se a release
+live ainda for exatamente a criada nesta retomada. Resultado de POST incerto ou
+release concorrente não autoriza repetição cega. Journal P55R privado e lock P55
+originais são preservados. Tentativa P55R com mutação bloqueia reentrada.
+
+Doze regressões offline da retomada, 22 do publicador e quatro do diagnóstico
+aprovadas. Executar somente `P55-retomar.py` no novo bootstrap, não o publicador
+original. Retorno esperado: JSON entre INICIO P55R e FIM P55R. Preparação não é
+publicação; aguardar recibo e manter aceite autenticado B01–B06 pendente.
