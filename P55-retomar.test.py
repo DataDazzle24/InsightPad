@@ -49,4 +49,40 @@ class Tests(unittest.TestCase):
    with patch.object(r.p,'ROOT',root),patch.object(r.p,'verify_frozen_ci',side_effect=AssertionError('network forbidden')),contextlib.redirect_stdout(io.StringIO()):self.assertEqual(r.main(),2)
  def test_read_failure_stops_without_retrying_mutations(self):
   with self.assertRaisesRegex(RuntimeError,'network'):self.wait(Mock(side_effect=RuntimeError('network')))
+class LifecycleTests(unittest.TestCase):
+ def scenario(self,fail=False,concurrent=False):
+  with tempfile.TemporaryDirectory() as d:
+   root=pathlib.Path(d);original=root/'P55-20261116T120210Z-ac521d';original.mkdir();source=root/'source';source.mkdir()
+   files={k:{'data':v,'rawSHA256':r.p.digest(v),'rawBytes':len(v)} for k,v in {'/version.json':b'version','/index.html':b'index'}.items()}
+   manifest=json.dumps({'files':{k:{a:b for a,b in v.items() if a!='data'} for k,v in files.items()}}).encode();(original/'artifact-manifest-private.json').write_bytes(manifest)
+   receipt=Tests().receipt();receipt.update(sourceRoot=str(source),remoteMutationAttempted=True,artifactManifestSHA256=r.p.digest(manifest));(original/'P55-publicacao.json').write_text(json.dumps(receipt))
+   config={'headers':[{'glob':'**','headers':{'Content-Security-Policy':'test','X-Frame-Options':'DENY','X-Content-Type-Options':'nosniff'}}]}
+   state={'live':r.PRIOR,'release':r.ROLLBACK_RELEASE};posts=[]
+   class Client:
+    def __init__(self,*args):self.version='';self.token=''
+    def live(self):return state['live']
+    def api(self,path,method='GET',body=None,query=None):
+     if method=='GET':return {'status':'FINALIZED','config':config,'labels':{'insightpad-candidate':r.p.SHA,'insightpad-operation':'p55-20261116t120210z-ac521d'}}
+     posts.append((path,method,query));state['live']=query['versionName'];state['release']='projects/test/release/'+str(len(posts));return {'name':state['release'],'releaseTime':'test'}
+   def fake_exec(code,ns):
+    ns.update(record={'readyForFrontendPreparation':True,'readyForRollbackResourceCheck':True,'nineControlsConfirmed':True,'publicVersionBefore':{'project':r.p.P,'commit':r.p.BASE_SHA},'previousRelease':{'name':state['release'],'version':state['live'],'releaseTime':'test'}},snapshots={'previous-version':{'config':config},'x-policy':{'unchanged':True}},report=root/'preflight.json')
+   def wait(*args):
+    if concurrent:state['release']='projects/test/release/concurrent'
+    if fail:raise RuntimeError('forced public mismatch')
+    args[2]['publicFilesVerified']=2
+   headers={'Content-Security-Policy':'test','X-Frame-Options':'DENY','X-Content-Type-Options':'nosniff','Cache-Control':'no-store'}
+   commands=[Mock(returncode=0,stdout=r.p.SHA),Mock(returncode=0,stdout='')]
+   with contextlib.ExitStack() as stack:
+    for obj,name,value in [(r.p,'ROOT',root),(r,'ORIGINAL',original),(r,'MANIFEST_SHA',r.p.digest(manifest)),(r,'CONFIG_SHA',r.p.config_hash(config)),(r,'ReleaseOnly',Client)]:stack.enter_context(patch.object(obj,name,value))
+    stack.enter_context(patch('builtins.exec',side_effect=fake_exec));stack.enter_context(patch.object(r.p,'verify_frozen_ci',return_value={'passed':True}));stack.enter_context(patch.object(r,'token',return_value='test-token'));stack.enter_context(patch.object(r.p,'inspect_dist',return_value=(files,12)));stack.enter_context(patch.object(r.p,'compare_inventory',return_value=4));stack.enter_context(patch.object(r.subprocess,'run',side_effect=commands));stack.enter_context(patch.object(r,'wait_public',side_effect=wait));stack.enter_context(patch.object(r.p,'public_bytes',return_value=(b'index',headers)));stack.enter_context(contextlib.redirect_stdout(io.StringIO()))
+    result=r.main()
+   report=json.loads(next(root.glob('P55R-*/P55R-publicacao.json')).read_text())
+   return result,report,posts
+ def test_success_releases_existing_version_exactly_once(self):
+  code,report,posts=self.scenario();self.assertEqual(code,0);self.assertTrue(report['publicationComplete']);self.assertTrue(report['publicArtifactVerified']);self.assertEqual(len(posts),1);self.assertEqual(posts[0][2],{'versionName':r.VERSION});self.assertFalse(report['newVersionCreated']);self.assertEqual(report['uploadedFiles'],0)
+ def test_failed_verification_rolls_back_only_own_release(self):
+  code,report,posts=self.scenario(fail=True);self.assertEqual(code,1);self.assertTrue(report['rollbackConfirmed']);self.assertFalse(report['publicationComplete']);self.assertEqual([x[2]['versionName'] for x in posts],[r.VERSION,r.PRIOR])
+ def test_concurrent_release_of_same_version_is_preserved(self):
+  code,report,posts=self.scenario(fail=True,concurrent=True);self.assertEqual(code,1);self.assertEqual(len(posts),1);self.assertIn('Release concorrente',report['rollbackError'])
+
 if __name__=='__main__':unittest.main()

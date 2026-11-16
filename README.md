@@ -105,7 +105,7 @@ live ainda for exatamente a criada nesta retomada. Resultado de POST incerto ou
 release concorrente não autoriza repetição cega. Journal P55R privado e lock P55
 originais são preservados. Tentativa P55R com mutação bloqueia reentrada.
 
-Doze regressões offline da retomada, 22 do publicador e quatro do diagnóstico
+Quinze regressões offline da retomada, 22 do publicador e quatro do diagnóstico
 aprovadas. Executar somente `P55-retomar.py` no novo bootstrap, não o publicador
 original. Retorno esperado: JSON entre INICIO P55R e FIM P55R. Preparação não é
 publicação; aguardar recibo e manter aceite autenticado B01–B06 pendente.
