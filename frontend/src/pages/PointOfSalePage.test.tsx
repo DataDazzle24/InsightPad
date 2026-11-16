@@ -23,6 +23,8 @@ it('AJU-PDV-01..03: groups back with clock, announces connection and routes cash
  await act(async()=>root.render(<MemoryRouter><PosHeader {...props}/></MemoryRouter>))
  expect(container.querySelector('.pos-clock-group a')).toBeTruthy()
  expect(container.querySelector('[role="status"]')?.textContent).toContain('Offline · 2 pendente(s)')
+ expect(buttons().some(el=>el.textContent?.includes('Fechar caixa'))).toBe(false)
+ await act(async()=>root.render(<MemoryRouter><PosHeader {...props} canManage/></MemoryRouter>))
  expect(button('Fechar caixa').className).toContain('--close')
  await click('Fechar caixa');expect(cash).toHaveBeenCalledTimes(1);expect(api.execute).not.toHaveBeenCalled()
  const event=new MouseEvent('click',{bubbles:true,cancelable:true})

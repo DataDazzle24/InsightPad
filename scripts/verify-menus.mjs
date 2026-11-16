@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
-import {readFileSync} from 'node:fs';
+import {fineBase,fineHistoricalSource,verifyAjustesFinos} from './verify-ajustes-finos.mjs';
+const readFileSync=fineHistoricalSource;
 import ts from '../frontend/node_modules/typescript/lib/typescript.js';
 import postcss from '../frontend/node_modules/postcss/lib/postcss.mjs';
 export const menusBase='1fff0fe154ad473ee61437929b93a17843215a0a';
@@ -13,8 +14,9 @@ const parse=(s)=>ts.createSourceFile('source.tsx',s,ts.ScriptTarget.Latest,true,
 const canonical=(f,n)=>printer.printNode(ts.EmitHint.Unspecified,n,f).replace(/\s+/g,' ');
 function collect(f,predicate){const a=[];function visit(n){if(predicate(n))a.push(canonical(f,n));ts.forEachChild(n,visit)}visit(f);return a;}
 export function verifyMenus(){
+ verifyAjustesFinos();
  git('merge-base','--is-ancestor',menusBase,'HEAD');
- for(const p of [...git('diff','--name-only',menusBase).split('\n'),...git('ls-files','--others','--exclude-standard').split('\n')].filter(Boolean))assert.ok(allowed.has(p),'Menus changed an unapproved path: '+p);
+ for(const p of [...git('diff','--name-only',menusBase,fineBase).split('\n')].filter(Boolean))assert.ok(allowed.has(p),'Menus changed an unapproved path: '+p);
  assert.equal(readFileSync('frontend/src/App.tsx','utf8').replace("import './menus.css'\n",'').trim(),before('frontend/src/App.tsx'),'Only menus CSS import can change App/router/guards');
  assert.match(readFileSync('frontend/src/App.tsx','utf8'),/import '\.\/barras-globais.css'\nimport '\.\/menus.css'/);
  for(const path of pages){

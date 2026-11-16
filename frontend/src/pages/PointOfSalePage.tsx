@@ -189,6 +189,7 @@ export function PointOfSalePage() {
     [scanner, setScanner] = useState(false),
     [clock, setClock] = useState(() => new Date());
   const searchRef = useRef<HTMLInputElement>(null),
+    quantityRef = useRef<HTMLInputElement>(null),
     searchBoxRef = useRef<HTMLDivElement>(null),
     productListRef = useRef<HTMLDivElement>(null),
     stockRequest = useRef(0),
@@ -756,7 +757,10 @@ export function PointOfSalePage() {
                         event.preventDefault();
                         if (event.repeat || codeReadInFlight.current || !term.trim()) return;
                         if (/^\d{8,14}$/.test(term.trim())) await readProductCode(term);
-                        else if (!productBusy) { add(); setSearchOpen(false) }
+                        else if (!productBusy && selected) {
+                          setChosenProduct(selected); setSelectedId(selected.id); setTerm(selected.name);
+                          setSearchOpen(false); quantityRef.current?.focus(); quantityRef.current?.select();
+                        }
                       }
                       if (event.key === "Escape") setSearchOpen(false);
                     }} placeholder="Código, EAN ou nome" />
@@ -773,7 +777,7 @@ export function PointOfSalePage() {
                   {filtered.map(product => <button tabIndex={-1} id={`pos-product-${product.id}`} role="option"
                     aria-selected={selected?.id === product.id} className={selected?.id === product.id ? "active" : ""}
                     key={product.id} onMouseDown={event => event.preventDefault()}
-                    onClick={() => { setSelectedId(product.id); setChosenProduct(product); setTerm(product.name); setSearchOpen(false) }}>
+                    onClick={() => { setSelectedId(product.id); setChosenProduct(product); setTerm(product.name); setSearchOpen(false); quantityRef.current?.focus(); quantityRef.current?.select() }}>
                     <span><strong>{product.name}</strong><small>{product.internalCode || product.ean || "Sem código"} · {product.bundleProduct ? "Combo" : product.weightedProduct ? "Pesável" : "Unidade"}</small></span>
                     <span><b>{money(product.effectivePriceCents)}</b><small>{product.allowNegativeStock && !product.bundleProduct ? "Estoque livre" : `Saldo ${product.stock} ${product.bundleProduct ? "combo(s)" : product.weightedProduct ? "kg/L" : "un."}`}</small></span>
                   </button>)}
@@ -783,8 +787,14 @@ export function PointOfSalePage() {
             </div>
             <label className="pos-qty-field">
               Quantidade
-              <input type="number" aria-label={selected?.weightedProduct ? "Quantidade em kg ou L" : selected?.bundleProduct ? "Quantidade em combos" : "Quantidade"}
+              <input ref={quantityRef} type="number" aria-label={selected?.weightedProduct ? "Quantidade em kg ou L" : selected?.bundleProduct ? "Quantidade em combos" : "Quantidade"}
                 disabled={itemEntryDisabled} min={selected?.weightedProduct ? 0.001 : 1} step={selected?.weightedProduct ? 0.001 : 1}
+                onKeyDown={event => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    if (!event.repeat && !codeReadInFlight.current) add();
+                  }
+                }}
                 value={qty || ""} onChange={event => setQty(event.target.value === "" ? 0 : Number(event.target.value))}
                 onBlur={() => { if (!qty) setQty(selected?.weightedProduct ? .001 : 1) }} />
             </label>
@@ -801,7 +811,7 @@ export function PointOfSalePage() {
           </div>}
           <div className="pdv-shortcuts" aria-label="Atalhos da Frente de Caixa">
             <span className="material-symbols-rounded" aria-hidden="true">keyboard</span>
-            <span><kbd>F2</kbd>Buscar</span><span><kbd>F4</kbd>Pagamento</span><span><kbd>F6</kbd>Leitor</span><span><kbd>F8</kbd>Caixa</span>
+            <span><kbd>Enter</kbd>Selecionar / adicionar quantidade</span><span><kbd>F2</kbd>Buscar</span><span><kbd>F4</kbd>Pagamento</span><span><kbd>F6</kbd>Leitor</span><span><kbd>F8</kbd>Caixa</span>
           </div>
         </aside>
         <main className="pos-cart">
@@ -1094,7 +1104,7 @@ export function PointOfSalePage() {
       {receiptPrompt && lastReceipt && (
         <div className="catalog-backdrop">
           <section className="catalog-confirm receipt-prompt" role="dialog" aria-modal="true" aria-label="Imprimir comprovante">
-            <span className="material-symbols-rounded">receipt_long</span>
+            <span className="material-symbols-rounded" aria-hidden="true">receipt_long</span>
             <h2>Venda concluída</h2>
             <p>Deseja enviar o comprovante para impressão agora?</p>
             <footer>
@@ -1108,7 +1118,7 @@ export function PointOfSalePage() {
                   setReceiptPrompt(false);
                 }}
               >
-                <span className="material-symbols-rounded">print</span>Imprimir
+                <span className="material-symbols-rounded" aria-hidden="true">print</span>Imprimir
               </button>
             </footer>
           </section>
