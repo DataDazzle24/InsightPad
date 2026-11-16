@@ -27,22 +27,16 @@ export async function interfaceProof({page,output,sha}) {
   await page.setViewportSize({width,height});await go('/',theme);const cards=page.locator('.home-menu__modules a');assert.equal(await cards.count(),6);
   const measured=await page.locator('.home-menu__insight-logo').evaluate(e=>{const r=e.getBoundingClientRect(),p=e.parentElement.getBoundingClientRect();return{loaded:e.complete&&e.naturalWidth===1024,width:r.width,height:r.height,inside:r.left>=p.left&&r.right<=p.right+1&&r.top>=p.top&&r.bottom<=p.bottom+1,filter:getComputedStyle(e).filter}});
   assert.ok(measured.loaded&&measured.inside&&measured.width>50);
-  const contrast=await screenContrast(page.locator('.legacy-tile strong,.legacy-tile small,.ip-slogan,.ip-slogan strong'));assert.ok(contrast.every(x=>x.ratio+.001>=x.minimum),JSON.stringify(contrast));assert.equal(await page.locator('.home-menu .ip-slogan').innerText(),'DADOS PARA O PRESENTE.\nINSIGHTS PARA O FUTURO.');
+  const contrast=await screenContrast(page.locator('.menus-card__face:not([aria-hidden]) strong,.menus-card__face:not([aria-hidden]) small,.ip-slogan,.ip-slogan strong'));assert.ok(contrast.every(x=>x.ratio+.001>=x.minimum),JSON.stringify(contrast));assert.equal(await page.locator('.home-menu .ip-slogan').innerText(),'DADOS PARA O PRESENTE.\nINSIGHTS PARA O FUTURO.');
   const initialCapture=await picture(`home-${theme}-${width}-initial`);
   await cards.last().scrollIntoViewIfNeeded();await cards.last().focus();assert.ok(await cards.last().evaluate(e=>e===document.activeElement));
   return{viewport:{width,height,method:'emulated viewport; no CSS zoom'},logo:measured,contrast,initialCapture,capture:await picture(`home-${theme}-${width}`)};
  });
  await page.setViewportSize({width:1280,height:800});
  for(const theme of ['light','dark'])await run('navigation-feedback-'+theme,async()=>{
-  await go('/',theme);const card=page.locator('.home-menu__modules a').first();await card.hover();const box=await card.boundingBox();await page.mouse.move(box.x+40,box.y+40);await page.mouse.down();await page.waitForFunction(()=>document.querySelector('.legacy-tile')?.classList.contains('is-feedback'));
-  const frames=[];
-  for(const fraction of [0,.25,.5,.75,1]){
-   await card.evaluate((e,f)=>{for(const a of e.getAnimations({subtree:true})){a.pause();a.currentTime=f*360}},fraction);
-   frames.push(await card.evaluate(e=>({transform:getComputedStyle(e,'::before').transform,copy:getComputedStyle(e.querySelector('.ip-nav-content')).color,backing:getComputedStyle(e.querySelector('.ip-nav-content')).backgroundColor,feedback:e.classList.contains('is-feedback'),underline:getComputedStyle(e,'::after').content})));
-   if(fraction===.5)await picture('navigation-wipe-'+theme);
-  }
-  assert.equal(new Set(frames.filter(x=>x.feedback).map(x=>x.copy)).size,1);assert.equal(frames[0].backing,'rgb(17, 24, 32)');assert.equal(frames[0].underline,'none');
-  await page.mouse.up();await page.waitForURL('**#/modulos/vendas');return{frames,destination:page.url().split('#')[1],navigationDelayAdded:false};
+  await go('/',theme);const card=page.locator('.home-menu__modules a').first(),filled=card.locator('.menus-card__face--filled');await card.hover();await page.waitForTimeout(260);
+  const hover=await filled.evaluate(e=>({clip:getComputedStyle(e).clipPath,background:getComputedStyle(e).backgroundColor,color:getComputedStyle(e.querySelector('strong')).color}));assert.equal(hover.clip,'inset(0px)');assert.equal(hover.background,'rgb(36, 191, 255)');assert.equal(hover.color,'rgb(7, 11, 13)');
+  await picture('navigation-wipe-'+theme);await page.mouse.down();const pressed=await filled.evaluate(e=>getComputedStyle(e).backgroundColor);assert.equal(pressed,'rgb(120, 255, 56)');await page.mouse.up();await page.waitForURL('**#/modulos/vendas');return{hover,pressed,destination:page.url().split('#')[1],navigationFeedbackMs:160};
  });
  await run('reduced-motion',async()=>{await go('/');await page.emulateMedia({reducedMotion:'reduce'});const nav=page.locator('.header-nav-item').first();await nav.dispatchEvent('pointerdown',{button:0});const duration=await nav.evaluate(e=>getComputedStyle(e,'::before').animationName);assert.equal(duration,'none');await nav.dispatchEvent('pointerup',{button:0});assert.equal(await nav.evaluate(e=>e.classList.contains('is-feedback')),false);await page.emulateMedia({reducedMotion:'no-preference'});return{animationName:duration}});
  await run('account-keeps-existing-actions-and-focus',async()=>{

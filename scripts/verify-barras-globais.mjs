@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
-import {readFileSync} from 'node:fs';
+import {verifyMenus,menusBase,menusHistoricalSource} from './verify-menus.mjs';
+const readFileSync=menusHistoricalSource;
 import ts from '../frontend/node_modules/typescript/lib/typescript.js';
 import postcss from '../frontend/node_modules/postcss/lib/postcss.mjs';
 export const barrasBase='9230247b8f6f3ddfa1868ed66a67ddf2eb276ed7';
@@ -17,8 +18,9 @@ const canonical=(f,n)=>printer.printNode(ts.EmitHint.Unspecified,n,f).replace(/\
 function collect(f,predicate){const result=[];function visit(n){if(predicate(n))result.push(canonical(f,n));ts.forEachChild(n,visit);}visit(f);return result;}
 function named(f,name){let found;function visit(n){if((ts.isFunctionDeclaration(n)||ts.isVariableDeclaration(n))&&n.name?.getText(f)===name)found=n;ts.forEachChild(n,visit);}visit(f);assert.ok(found,'Missing preserved '+name);return canonical(f,found);}
 export function verifyBarrasGlobais(){
+ verifyMenus();
  git('merge-base','--is-ancestor',barrasBase,'HEAD');
- const changed=[...git('diff','--name-only',barrasBase).split('\n'),...git('ls-files','--others','--exclude-standard').split('\n')].filter(Boolean);
+ const changed=[...git('diff','--name-only',barrasBase,menusBase).split('\n')].filter(Boolean);
  for(const path of changed)assert.ok(allowed.has(path),'Barras globais changed an unapproved path: '+path);
  assert.equal(readFileSync(sources[0],'utf8').replace("import './barras-globais.css'\n",'').trim(),before(sources[0]),'Only the global-bar stylesheet import may change App/routes');
  const path=sources[1],old=parse(before(path)),now=parse(readFileSync(path,'utf8'));

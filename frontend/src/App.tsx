@@ -23,6 +23,7 @@ import './pedidos.css'
 import './conexoes.css'
 import './plataforma.css'
 import './barras-globais.css'
+import './menus.css'
 
 const CatalogPages = lazy(() => import('./pages/CatalogPages').then((module) => ({ default: module.CatalogPages })))
 const MasterDataPage = lazy(() => import('./pages/MasterDataPage').then((module) => ({ default: module.MasterDataPage })))
