@@ -1,4 +1,4 @@
-import { InterfaceLink as Link } from '../components/InterfaceNavigationLink'
+import { MenuCard } from '../components/MenuCard'
 import { useAuth } from '../auth/useAuth'
 import { navigationModules } from '../config/navigation'
 
@@ -15,12 +15,7 @@ export function DashboardPage() {
       </div>
       <div className="home-menu__modules">
         {modules.map((module) => (
-          <Link className={'legacy-tile legacy-tile--' + module.accent} key={module.label} to={module.to}>
-            <span className="legacy-tile__bar" />
-            <span className="material-symbols-rounded legacy-tile__icon" aria-hidden="true">{module.icon}</span>
-            <span><strong>{module.label}</strong><small>{module.description}</small></span>
-            <span className="material-symbols-rounded legacy-tile__arrow" aria-hidden="true">arrow_forward</span>
-          </Link>
+          <MenuCard key={module.label} to={module.to} label={module.label} description={module.description} icon={module.icon} />
         ))}
       </div>
     </section>

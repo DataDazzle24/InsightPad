@@ -19,7 +19,7 @@ export async function cadastrosProof({output,sha,origin='http://127.0.0.1:4174'}
   const uuid=n=>'00000000-0000-4000-8000-'+String(n).padStart(12,'0');
   async function zoom(value){const actual=await worker.evaluate(async({origin,value})=>{const tab=(await chrome.tabs.query({})).find(t=>t.url?.startsWith(origin));await chrome.tabs.setZoom(tab.id,value);return chrome.tabs.getZoom(tab.id)},{origin,value});assert.equal(actual,value);return actual}
   async function go(route,theme='dark'){
-   await page.goto(origin+'/qa/application.html?cadastros_case='+(++navigation)+'#'+route);await page.evaluate(t=>localStorage.setItem('insightpad.theme',t),theme);await page.reload();await page.locator('.qa-controls').evaluate(e=>e.style.visibility='hidden');await page.locator(route.toLowerCase().startsWith('/cadastros/')?'.cad-page':'.cad-module').waitFor();await page.locator('.catalog-loader').waitFor({state:'hidden'});await page.evaluate(()=>document.fonts.ready);await zoom(1);
+   await page.goto(origin+'/qa/application.html?cadastros_case='+(++navigation)+'#'+route);await page.evaluate(t=>localStorage.setItem('insightpad.theme',t),theme);await page.reload();await page.locator('.qa-controls').evaluate(e=>e.style.visibility='hidden');await page.locator(route.toLowerCase().startsWith('/cadastros/')?'.cad-page':'.menus-submenu').waitFor();await page.locator('.catalog-loader').waitFor({state:'hidden'});await page.evaluate(()=>document.fonts.ready);await zoom(1);
   }
   const call=(name,v)=>page.evaluate(async({name,v})=>window.__insightpadQa.operate(name,v),{name,v});
   async function capture(name){const file=name+'.png';await page.screenshot({path:dir+'/'+file});return file}
@@ -34,7 +34,7 @@ export async function cadastrosProof({output,sha,origin='http://127.0.0.1:4174'}
   async function mode(value){await page.locator('.qa-controls').evaluate(e=>{e.style.visibility='visible';e.open=true});await page.getByLabel('Permissões',{exact:true}).selectOption(value);await page.locator('.qa-controls').evaluate(e=>e.style.visibility='hidden')}
   async function reachable(locator){await locator.scrollIntoViewIfNeeded();assert.ok(await locator.isVisible());const r=await locator.boundingBox();const v=await page.evaluate(()=>({width:innerWidth,height:innerHeight}));assert.ok(r&&r.x>=-1&&r.y>=-1&&r.x+r.width<=v.width+1&&r.y+r.height<=v.height+1,JSON.stringify({r,v}));}
   await run('routes-permissions',['CAD-01','CAD-03'],async()=>{
-   await go('/modulos/cadastros');assert.equal(await page.locator('.cad-module .legacy-module__grid a').count(),6);
+   await go('/modulos/cadastros');assert.equal(await page.locator('.menus-submenu .legacy-module__grid a').count(),6);
    for(const route of ['categorias','subcategorias','produtos','clientes','fornecedores','filiais']){
     await go('/cadastros/'+route);assert.equal(await page.locator('[data-cadastros] .cad-page').count(),1);await mode('read');assert.equal(await add().count(),0);assert.equal(await page.locator('.catalog-action').count(),0);assert.equal(await page.getByRole('button',{name:'Exportar CSV',exact:true}).count(),0);
    }

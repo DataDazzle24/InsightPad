@@ -95,7 +95,8 @@
     "ESTOQUE-REGISTROS-UI-20261109",
     "CANAIS-UI-20261114",
     "PLATAFORMA-UI-20261115",
-    "BARRAS-GLOBAIS-UI-20261115"
+    "BARRAS-GLOBAIS-UI-20261115",
+    "MENUS-UI-20261116"
   ],
   "paths": {
     ".gitignore": {
@@ -277,7 +278,8 @@
         "ESTOQUE-REGISTROS-UI-20261109",
         "CANAIS-UI-20261114",
         "PLATAFORMA-UI-20261115",
-        "BARRAS-GLOBAIS-UI-20261115"
+        "BARRAS-GLOBAIS-UI-20261115",
+        "MENUS-UI-20261116"
       ],
       "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages. Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only. Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication. Barras globais aprovadas: apresentação ou suporte exato de validação, contratos preservados."
     },
@@ -630,7 +632,8 @@
         "ESTOQUE-REGISTROS-UI-20261109",
         "CANAIS-UI-20261114",
         "PLATAFORMA-UI-20261115",
-        "BARRAS-GLOBAIS-UI-20261115"
+        "BARRAS-GLOBAIS-UI-20261115",
+        "MENUS-UI-20261116"
       ],
       "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages. Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only. Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication. Barras globais aprovadas: apresentação ou suporte exato de validação, contratos preservados."
     },
@@ -1288,20 +1291,23 @@
     },
     "frontend/src/pages/DashboardPage.tsx": {
       "ids": [
-        "UXIP-001"
+        "UXIP-001",
+        "MENUS-UI-20261116"
       ],
       "reason": "Screen-only visual migration and exact presentation/preservation regression; preserve business callbacks, fields, domain sources and print. Exact path only; no backend or operational change."
     },
     "frontend/src/pages/ModuleMenuPage.tsx": {
       "ids": [
         "UXIP-001",
-        "CADASTROS-UI-20261108"
+        "CADASTROS-UI-20261108",
+        "MENUS-UI-20261116"
       ],
       "reason": "Screen-only visual migration and exact presentation/preservation regression; preserve business callbacks, fields, domain sources and print. Exact path only; no backend or operational change."
     },
     "frontend/src/pages/PlatformAdminMenuPage.tsx": {
       "ids": [
-        "UXIP-001"
+        "UXIP-001",
+        "MENUS-UI-20261116"
       ],
       "reason": "Screen-only visual migration and exact presentation/preservation regression; preserve business callbacks, fields, domain sources and print. Exact path only; no backend or operational change."
     },
@@ -1331,7 +1337,8 @@
     },
     "scripts/qa-browser/interface.mjs": {
       "ids": [
-        "UXIP-001"
+        "UXIP-001",
+        "MENUS-UI-20261116"
       ],
       "reason": "Screen-only visual migration and exact presentation/preservation regression; preserve business callbacks, fields, domain sources and print. Exact path only; no backend or operational change."
     },
@@ -1572,7 +1579,8 @@
         "ESTOQUE-REGISTROS-UI-20261109",
         "CANAIS-UI-20261114",
         "PLATAFORMA-UI-20261115",
-        "BARRAS-GLOBAIS-UI-20261115"
+        "BARRAS-GLOBAIS-UI-20261115",
+        "MENUS-UI-20261116"
       ]
     },
     "frontend/src/cadastros.css": {
@@ -1621,7 +1629,8 @@
     "scripts/qa-browser/cadastros.mjs": {
       "reason": "Cadastros UI approved package on published 9c50ee2: scoped presentation, local interaction/focus, regression evidence and exact preservation gates; no backend or global shell redesign.",
       "ids": [
-        "CADASTROS-UI-20261108"
+        "CADASTROS-UI-20261108",
+        "MENUS-UI-20261116"
       ]
     },
     "scripts/qa-browser/run.mjs": {
@@ -1631,7 +1640,8 @@
         "ESTOQUE-REGISTROS-UI-20261109",
         "CANAIS-UI-20261114",
         "PLATAFORMA-UI-20261115",
-        "BARRAS-GLOBAIS-UI-20261115"
+        "BARRAS-GLOBAIS-UI-20261115",
+        "MENUS-UI-20261116"
       ]
     },
     "docs/cadastros-ui-dev.md": {
@@ -1821,7 +1831,8 @@
     },
     "scripts/verify-barras-globais.mjs": {
       "ids": [
-        "BARRAS-GLOBAIS-UI-20261115"
+        "BARRAS-GLOBAIS-UI-20261115",
+        "MENUS-UI-20261116"
       ],
       "reason": "Barras globais aprovadas: apresentação ou suporte exato de validação, contratos preservados."
     },
@@ -1830,6 +1841,48 @@
         "BARRAS-GLOBAIS-UI-20261115"
       ],
       "reason": "Barras globais aprovadas: apresentação ou suporte exato de validação, contratos preservados."
+    },
+    "frontend/src/components/MenuCard.tsx": {
+      "ids": [
+        "MENUS-UI-20261116"
+      ],
+      "reason": "Approved Home/submenu visual integration or exact regression/QA support; preserve business routes, permissions, global shell and destination pages. No merge or deployment."
+    },
+    "frontend/src/menus.css": {
+      "ids": [
+        "MENUS-UI-20261116"
+      ],
+      "reason": "Approved Home/submenu visual integration or exact regression/QA support; preserve business routes, permissions, global shell and destination pages. No merge or deployment."
+    },
+    "frontend/src/components/MenuCard.test.tsx": {
+      "ids": [
+        "MENUS-UI-20261116"
+      ],
+      "reason": "Approved Home/submenu visual integration or exact regression/QA support; preserve business routes, permissions, global shell and destination pages. No merge or deployment."
+    },
+    "frontend/src/pages/MenuPages.test.tsx": {
+      "ids": [
+        "MENUS-UI-20261116"
+      ],
+      "reason": "Approved Home/submenu visual integration or exact regression/QA support; preserve business routes, permissions, global shell and destination pages. No merge or deployment."
+    },
+    "frontend/qa/application.tsx": {
+      "ids": [
+        "MENUS-UI-20261116"
+      ],
+      "reason": "Approved Home/submenu visual integration or exact regression/QA support; preserve business routes, permissions, global shell and destination pages. No merge or deployment."
+    },
+    "scripts/verify-menus.mjs": {
+      "ids": [
+        "MENUS-UI-20261116"
+      ],
+      "reason": "Approved Home/submenu visual integration or exact regression/QA support; preserve business routes, permissions, global shell and destination pages. No merge or deployment."
+    },
+    "scripts/qa-browser/menus.mjs": {
+      "ids": [
+        "MENUS-UI-20261116"
+      ],
+      "reason": "Approved Home/submenu visual integration or exact regression/QA support; preserve business routes, permissions, global shell and destination pages. No merge or deployment."
     }
   },
   "bytePreserved": [
