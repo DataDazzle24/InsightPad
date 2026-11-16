@@ -42,7 +42,7 @@ try{
  if(process.argv.includes('--dashboard-v3')||process.argv.includes('--full'))await dashboardV3({page,output,sha});
  if(process.argv.includes('--dashboard-zoom')||process.argv.includes('--full'))await dashboardV3Zoom({output,sha});
  if(process.argv.includes('--pdv-v2')||process.argv.includes('--full'))await pdvV2({output,sha});
- await ajustesFinos({output,sha});
+ if(process.argv.includes('--ajustes-finos')||process.argv.includes('--full'))await ajustesFinos({output,sha});
  if(process.argv.includes('--cadastros')||process.argv.includes('--full'))await cadastrosProof({output,sha});
  if(process.argv.includes('--reports')||process.argv.includes('--full'))await reports({page,output,sha});
  if(process.argv.includes('--consolidated')||process.argv.includes('--full'))await consolidated({page,output,sha});
