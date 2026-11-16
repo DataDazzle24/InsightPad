@@ -1,12 +1,17 @@
 import { compareRaw } from './geometry';
-import { useMemo, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import type { FinancialDashboardData, FinancialProduct, FinancialDay } from '../../pages/DailyProfitDashboardPage';
 import type { Stock, Customer, Category } from '../../pages/DashboardHubPage';
 import type { ChannelDashboardData } from '../../pages/ChannelDashboardPage';
 import { heatmapStyle } from '../../utils/dashboardExport';
 import { money } from './adapters';
+import './dashboard-print.css';
 const num = (value: unknown) => new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 }).format(Number(value ?? 0));
 const number = (value: unknown) => new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 3 }).format(Number(value ?? 0));
+/** Print-only identity and managerial context. Data always comes from the applied query. */
+export function AnalysisReport({title,from,to,summary,children}:{title:string;from:string;to:string;summary:ReactNode;children:ReactNode}){
+ return <section className="ip-analysis-report"><header className="ip-report-heading"><div><img src="/brand/insight-pad-logo-compact.png" alt="Insight Pad"/><p>Dados para o presente. Insights para o futuro.</p></div><div><span>RELATÓRIO GERENCIAL</span><h1>{title}</h1><p>{from} — {to}</p></div></header><aside className="ip-report-summary"><h2>Resumo gerencial e recorte</h2><p>{summary}</p><p>Indicadores e detalhes refletem a consulta aplicada. Seleções locais de classe ABC e ordem da tabela afetam o CSV da tabela; o PDF mantém o detalhamento completo do recorte.</p></aside>{children}<footer className="ip-report-footer">Insight Pad · Fim do relatório · Valores monetários em reais (R$).</footer></section>;
+}
 /** Complete original report content, with presentation controls/events removed. */
 export function SalesPrintReport({ data, products, series, metrics, group, sort, from, to, summary }: {
     data: FinancialDashboardData;
@@ -19,8 +24,11 @@ export function SalesPrintReport({ data, products, series, metrics, group, sort,
     to: string;
     summary: string;
 }) {
-    const c = data.cards, m = data.monthly, max = Math.max(1, ...series.flatMap(d => [d.volume, Number(d.revenueCents), Math.max(0, Number(d.profitCents))]));
-    return <section className="finance-dashboard"><header className="finance-heading"><div><span className="eyebrow">DASHBOARD</span><h1>INDICADORES FINANCEIROS</h1><p>{from} — {to} · {summary}</p></div></header>
+    const c = data.cards, m = data.monthly;
+    const categoryRows=new Map<string,{revenue:bigint;profit:bigint}>();
+    for(const item of products){const name=item.category||'Não informada',prior=categoryRows.get(name)??{revenue:0n,profit:0n};categoryRows.set(name,{revenue:prior.revenue+BigInt(item.revenueCents),profit:prior.profit+BigInt(item.profitCents)})}
+    const categories=[...categoryRows].sort(([an,a],[bn,b])=>a.revenue===b.revenue?an.localeCompare(bn,'pt-BR'):a.revenue>b.revenue?-1:1);
+    return <AnalysisReport title="Vendas" from={from} to={to} summary={<>{summary} · {products.length} produto(s) · Faturamento {money(c.revenueCents)} · Lucro após taxas {money(c.profitCents)}.</>}><section className="finance-dashboard"><header className="finance-heading"><div><span className="eyebrow">DASHBOARD</span><h1>INDICADORES FINANCEIROS</h1><p>{from} — {to} · {summary}</p></div></header>
       {c.financialPendingSales > 0 && <p className="finance-reconciliation-note" role="status"><span className="material-symbols-rounded">schedule</span>{c.financialPendingSales} venda(s) do iFood ainda aguardam a conciliação oficial. Até lá, taxas e repasse aparecem como provisórios.</p>}
       {c && m && (<>
           <div className="finance-kpis">
@@ -74,44 +82,15 @@ export function SalesPrintReport({ data, products, series, metrics, group, sort,
               </small>
             </article>
           </div>
-          <div className="finance-workspace"><article className="finance-chart-card">
-            <header>
-              <div>
-                <span>Evolução financeira</span>
-                <strong>
-                  {group === "day" ? "Visão diária" : group === 'year' ? 'Visão anual' : "Visão mensal"}
-                </strong>
-              </div>
-              <></>
-            </header>
-            <div className="finance-chart">
-              {series.map((day) => (<div key={day.date} title={`${money(day.revenueCents)} faturados; ${money(day.profitCents)} de lucro`}>
-                  <span className="chart-bars">
-                    {metrics.includes("volume") && (<i className="volume" style={{
-                        height: `${(Number(day.volume) * 100) / max}%`,
-                    }}/>)}
-                    {metrics.includes("revenue") && (<i className="revenue" style={{
-                        height: `${(Number(day.revenueCents) * 100) / max}%`,
-                    }}/>)}
-                    {metrics.includes("profit") && (<i className="profit" style={{
-                        height: `${(Math.max(0, Number(day.profitCents)) * 100) / max}%`,
-                    }}/>)}
-                  </span>
-                  <small>
-                    {new Date(`${day.date}T12:00:00`).toLocaleDateString("pt-BR", group === "day"
-                    ? { day: "2-digit", month: "2-digit" }
-                    : { month: "short", year: "2-digit" })}
-                  </small>
-                </div>))}
-            </div>
-          </article>
+          <Table title="Comparação por categoria · faturamento e lucro" headers={['Categoria','Faturamento','Lucro após taxas']} rows={categories.map(([name,value])=>[name,money(value.revenue.toString()),money(value.profit.toString())])}/>
+          <div className="finance-workspace"><Table title={`Evolução financeira · ${group==='day'?'diária':group==='month'?'mensal':'anual'}`} headers={['Período',...metrics.map(metric=>({volume:'Volume',revenue:'Faturamento',profit:'Lucro após taxas'})[metric])]} rows={series.map(day=>[date(day.date),...metrics.map(metric=>metric==='volume'?num(day.volume):money(metric==='revenue'?day.revenueCents:day.profitCents))])}/>
           <article className="finance-table-card">
             <header>
               <div>
                 <span>Análise por produto</span>
                 <strong>Receita, custo e rentabilidade</strong>
               </div>
-        <div><small>Clique em um produto para filtrar todo o painel.</small><></></div><small>Cor: intensidade relativa da coluna; valores negativos em âmbar.</small>
+        <small>{products.length} produto(s) · Detalhamento do recorte aplicado</small>
             </header>
             <div tabIndex={0} role="region" aria-label="Produtos: tabela completa com rolagem horizontal">
               <table>
@@ -134,7 +113,7 @@ export function SalesPrintReport({ data, products, series, metrics, group, sort,
             ]>).map(([key, label]) => (<th key={key}>
                         <span>
                           {label}
-                          {sort === key ? " ↓" : ""}
+                          {sort === key ? " •" : ""}
                         </span>
                       </th>))}
                   </tr>
@@ -187,15 +166,16 @@ export function SalesPrintReport({ data, products, series, metrics, group, sort,
             </div>
           </article></div>
         </>)}
-    </section>;
+    </section></AnalysisReport>;
 }
-export function ChannelPrintReport({ data, from, to }: {
+export function ChannelPrintReport({ data, from, to, summary }: {
     data: ChannelDashboardData;
     from: string;
     to: string;
+    summary?: string;
 }) {
-    const cards = data.cards, maxDaily = Math.max(1, ...data.daily.map(item => Math.max(Number(item.grossRevenueCents ?? 0), Number(item.netRevenueCents ?? 0))));
-    return <section className="catalog-page analytics-page channel-dashboard"><header className="finance-heading"><div><h1>Canais de venda</h1><p>{date(from)} — {date(to)}</p></div></header>
+    const cards = data.cards;
+    return <AnalysisReport title="Canais de venda" from={from} to={to} summary={<>{summary} · {number(cards.sales)} venda(s) concluída(s) · Venda contabilizada {money(cards.grossRevenueCents)} · Repasse líquido {money(cards.netRevenueCents)} · {number(cards.financialPendingSales)} venda(s) com valor estimado.</>}><section className="catalog-page analytics-page channel-dashboard"><header className="finance-heading"><div><h1>Canais de venda</h1><p>{date(from)} — {date(to)}</p></div></header>
     {data && <>
       <div className="finance-kpis analytics-kpis channel-dashboard__kpis">
         <Metric label="Pedidos recebidos" value={number(cards.orders)} detail={`${number(cards.cancelledOrders)} cancelado(s)`}/>
@@ -208,7 +188,7 @@ export function ChannelPrintReport({ data, from, to }: {
         <Metric label="Repasse líquido" value={money(cards.netRevenueCents)} detail={`${number(cards.financialPendingSales)} venda(s) ainda com valor estimado`}/>
         <Metric label="Resultado após canal" value={money(cards.profitCents)} detail={`Custo registrado ${money(cards.costCents)}`} tone={Number(cards.profitCents ?? 0) < 0 ? "negative" : "positive"}/>
       </div>
-      <article className="finance-chart-card channel-dashboard__chart"><header><div><span>Evolução diária</span><strong>Venda contabilizada e repasse líquido</strong></div></header><div className="finance-chart analytics-chart">{data.daily.map((item) => <div key={String(item.date)} title={`${String(item.date)} · ${money(item.grossRevenueCents)} · líquido ${money(item.netRevenueCents)}`}><span className="chart-bars"><i className="revenue" style={{ height: `${Math.max(2, Number(item.grossRevenueCents ?? 0) * 100 / maxDaily)}%` }}/><i className="profit" style={{ height: `${Math.max(2, Number(item.netRevenueCents ?? 0) * 100 / maxDaily)}%` }}/></span><small>{new Date(`${String(item.date).slice(0, 10)}T12:00:00`).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}</small></div>)}</div></article>
+      <Table title="Evolução diária · venda contabilizada e repasse líquido" headers={['Período','Venda contabilizada','Repasse líquido']} rows={data.daily.map(item=>[date(item.date),money(item.grossRevenueCents),money(item.netRevenueCents)])}/>
       <div className="analytics-grid channel-dashboard__grid">
         <DashboardTable title="Resultado por loja" columns={["Loja", "Pedidos", "Vendas", "Venda", "Taxas", "Outros ajustes", "Repasse", "Resultado"]} rows={data.byChannel.map((row) => [<><strong>{String(row.name ?? "—")}</strong><small>{String(row.branchName ?? "")}</small></>, number(row.orders), number(row.sales), money(row.grossRevenueCents), money(row.providerFeeCents), money(row.financialAdjustmentsCents), money(row.netRevenueCents), money(row.profitCents)])}/>
         <DashboardTable title="Taxas confirmadas pelo iFood" columns={["Lançamento", "Ocorrências", "Valor"]} rows={data.fees.map((row) => [<><strong>{String(row.description ?? row.name ?? "—")}</strong><small>{String(row.name ?? "")}</small></>, number(row.entries), money(row.amountCents)])} empty="Nenhuma taxa financeira confirmada no período."/>
@@ -216,7 +196,7 @@ export function ChannelPrintReport({ data, from, to }: {
         <DashboardTable title="Produtos mais vendidos nos canais" columns={["Produto", "Quantidade", "Venda", "Repasse rateado", "Resultado após canal"]} rows={data.topProducts.map((row) => [String(row.name ?? "—"), number(row.quantity), money(row.revenueCents), money(row.netRevenueCents), money(row.profitCents)])} empty="Nenhum produto vendido no período."/>
       </div>
     </>}
-    </section>;
+    </section></AnalysisReport>;
 }
 function Metric({ label, value, detail, tone }: {
     label: string;
@@ -250,7 +230,7 @@ const Cards = ({ items }: {
 export function StockPrintView({ data }: {
     data: Stock;
 }) {
-    const c = data.cards, max = useMemo(() => Math.max(1, ...data.monthly.map((i) => Math.max(Number(i.inboundQuantity), Number(i.saleQuantity), Number(i.lossQuantity)))), [data]);
+    const c = data.cards;
     return (<>
       <Cards items={[
             [`Entradas`, num(c.inboundQuantity), money(c.inboundValueCents)],
@@ -264,31 +244,7 @@ export function StockPrintView({ data }: {
             ["Lucro", money(c.saleProfitCents)],
             ["Perdas", num(c.lossQuantity), money(c.lossValueCents)],
         ]}/>
-      <article className="finance-chart-card">
-        <header>
-          <div>
-            <span>Evolução mensal</span>
-            <strong>Entradas, vendas e perdas</strong>
-          </div>
-        </header>
-        <div className="finance-chart analytics-chart">
-          {data.monthly.map((i) => (<div key={String(i.date)}>
-              <span className="chart-bars">
-                <i className="volume" style={{
-                height: `${(Number(i.inboundQuantity) * 100) / max}%`,
-            }}/>
-                <i className="revenue" style={{ height: `${(Number(i.saleQuantity) * 100) / max}%` }}/>
-                <i className="profit" style={{ height: `${(Number(i.lossQuantity) * 100) / max}%` }}/>
-              </span>
-              <small>
-                {new Date(`${i.date}T12:00:00`).toLocaleDateString("pt-BR", {
-                month: "short",
-                year: "2-digit",
-            })}
-              </small>
-            </div>))}
-        </div>
-      </article>
+      <Table title="Evolução mensal · entradas, vendas e perdas" headers={['Período','Entradas','Vendas','Perdas']} rows={data.monthly.map(item=>[date(item.date),num(item.inboundQuantity),num(item.saleQuantity),num(item.lossQuantity)])}/>
       <Table title="Movimentação por produto" headers={["Produto", "Entradas", "Saídas", "Saldo", "Valor"]} rows={data.products.map((i) => [
             i.name,
             num(i.inQuantity),

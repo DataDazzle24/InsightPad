@@ -24,7 +24,7 @@ it('exposes five views, six KPIs, independent year grouping and the full print a
  expect(container.querySelector('[aria-label="Métricas de Evolução financeira"]')).not.toBeNull();
  await click([...container.querySelectorAll('button')].find(x=>x.textContent==='Ano')!);
  expect(container.querySelector('[aria-label="Agrupar período"] [aria-pressed="true"]')?.textContent).toBe('Ano');
- expect(container.querySelector('.dv-original-print')?.textContent).toContain('Visão anual');
+ expect(container.querySelector('.dv-original-print')?.textContent).toContain('Evolução financeira · anual');
  await click(container.querySelector('[aria-label="Exportar PDF"]')!);expect(print).toHaveBeenCalledOnce();
  expect(container.querySelector('[aria-label="Exportar CSV de Análise por produto"]')).not.toBeNull();
 })
