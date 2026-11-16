@@ -36,9 +36,9 @@ it('rechecks export handlers when permissions, data availability or busy state c
 });
 it('resets only local ABC selection on controller clear while retaining table sort and metric state',async()=>{
  const model=buildCustomerModel(customer()),a=actions();const table=model.pages[0].panels[0];if(table.kind!=='table')throw Error();table.columns[3].sortable=true;
- await render(model,a);await click(container.querySelector('.dv-abc button')!);await click([...container.querySelectorAll('th button')][0]);await render(model,a,{filterResetToken:1});
- expect(container.querySelector('th[aria-sort="descending"]')?.textContent).toContain('Faturamento');expect(container.querySelector('.dv-abc [aria-pressed="true"]')).toBeNull();
- await click(button('Exportar CSV de Curva ABC'));expect(a.onExportTable).toHaveBeenLastCalledWith('customers-abc',['a','b','c']);
+ await render(model,a);await click(container.querySelector('.dv-abc button')!);await click([...container.querySelectorAll('th button')].find(button=>button.textContent?.includes('Faturamento'))!);await render(model,a,{filterResetToken:1});
+ expect(container.querySelector('th[aria-sort="ascending"]')?.textContent).toContain('Faturamento');expect(container.querySelector('.dv-abc [aria-pressed="true"]')).toBeNull();
+ await click(button('Exportar CSV de Curva ABC'));expect(a.onExportTable).toHaveBeenLastCalledWith('customers-abc',['c','b','a']);
 });
 it('preserves exact Int64 sorting, cents and totals without mutating the received payload',()=>{
  const data=freeze({cards:{volume:2,revenueCents:'18014398509481985',providerFeeCents:'0',netRevenueCents:'18014398509481985',profitCents:'-1',marginPercent:0,ticketCents:'1',financialPendingSales:0},monthly:{lastVolume:0,averageVolume:1,volumeGrowth:-100,lastProfitCents:'-1',averageProfitCents:'3',profitGrowth:-133.33,months:2},daily:[],products:['9007199254740992','9007199254740993'].map((n,i)=>({id:String(i),name:'Produto '+i,quantity:1,revenueCents:n,providerFeeCents:'0',netRevenueCents:n,costCents:n,profitCents:i?'0':'-1',marginPercent:0}))}) satisfies SalesData;
@@ -59,4 +59,34 @@ it('does not bridge missing points, invent smoothing peaks or turn multiple sele
  expect(lineSegments([[0,0],[1,NaN],[2,3],[3,4]])).toEqual([[[0,0]],[[2,3],[3,4]]]);
  const path=smoothPath([[0,0],[1,1],[2,0]]);expect(path).not.toContain('NaN');expect(path).toContain('C');
  expect(toggleSelection(['day-1'],'day-3',true)).toEqual(['day-1','day-3']);
+});
+it('DB10 cycles every header ascending, descending, original; preserves ABC and exact CSV IDs',async()=>{
+ const a=actions(),model=buildCustomerModel(customer());await render(model,a);
+ const table=container.querySelector('table')!,header=[...table.querySelectorAll('th button')].find(b=>b.textContent?.includes('Faturamento'))!;
+ const ids=async()=>{await click(button('Exportar CSV de Curva ABC'))};
+ await click(header);expect(header.parentElement?.getAttribute('aria-sort')).toBe('ascending');await ids();expect(a.onExportTable).toHaveBeenLastCalledWith('customers-abc',['c','b','a']);
+ await click(header);expect(header.parentElement?.getAttribute('aria-sort')).toBe('descending');await ids();expect(a.onExportTable).toHaveBeenLastCalledWith('customers-abc',['a','b','c']);
+ await click(header);expect(header.parentElement?.getAttribute('aria-sort')).toBe('none');await ids();expect(a.onExportTable).toHaveBeenLastCalledWith('customers-abc',['a','b','c']);
+ await click(table.querySelector('th button')!);expect(table.querySelector('th')?.getAttribute('aria-sort')).toBe('ascending');
+ expect(table.querySelectorAll('th button')).toHaveLength(table.querySelectorAll('th').length);
+ expect(customer().abc.map(r=>r.id)).toEqual(['a','b','c']);
+});
+it('DB04 signals actual local ABC filters and clears them without marking default dates active',async()=>{
+ await render(buildCustomerModel(customer()),actions());const clear=button('Limpar filtros');expect(clear.className).not.toContain('has-applied-filter');
+ await click(container.querySelector('.dv-abc button')!);expect(clear.className).toContain('has-applied-filter');
+ await click(clear);expect(clear.className).not.toContain('has-applied-filter');
+});
+it('DB09 sales category rankings preserve exact sums, negative profit and only two metric choices',async()=>{
+ const products=[{id:'a',name:'A',category:'Zeta',quantity:1,revenueCents:'9007199254740993',providerFeeCents:'0',netRevenueCents:'9007199254740993',costCents:'9007199254740994',profitCents:'-1',marginPercent:0},{id:'b',name:'B',category:'Água',quantity:2,revenueCents:'102',providerFeeCents:'0',netRevenueCents:'102',costCents:'0',profitCents:'102',marginPercent:100}];
+ const model=buildSalesModel({cards:{volume:3,revenueCents:'9007199254741095',providerFeeCents:'0',netRevenueCents:'9007199254741095',profitCents:'101',marginPercent:0,ticketCents:'1',financialPendingSales:0},monthly:{lastVolume:0,averageVolume:0,volumeGrowth:0,lastProfitCents:'0',averageProfitCents:'0',profitGrowth:0,months:0},daily:[],products},[]);
+ const ranking=model.pages[0].panels[1];expect(ranking).toMatchObject({kind:'bars',metrics:['revenue','profit'],rows:[{revenueRaw:'9007199254740993',profitRaw:'-1'},{revenueRaw:'102',profitRaw:'102'}]});
+ await render(model,actions(),{view:'sales'});const panel=container.querySelector('.dv-bars')!.parentElement!;
+ expect(panel.querySelectorAll('.dv-segment button')).toHaveLength(2);expect(panel.querySelector('.dv-bar-row')?.textContent).toContain('Zeta');
+ await click([...panel.querySelectorAll('button')].find(b=>b.textContent==='Lucro')!);expect(panel.querySelector('.dv-bar-row')?.textContent).toContain('Água');expect(panel.querySelector('.negative')).not.toBeNull();
+});
+it('DB10 uses chronological raw dates and preserves missing values at the end',async()=>{
+ const source=customer(),model=buildCustomerModel({...source,abc:[{...source.abc[0],lastPurchase:'2026-12-01'},{...source.abc[1],lastPurchase:'2026-11-28'},source.abc[2]]}),a=actions();await render(model,a);const column=[...container.querySelectorAll('th button')].find(b=>b.textContent?.includes('Última compra'))!;await click(column);await click(button('Exportar CSV de Curva ABC'));expect(a.onExportTable).toHaveBeenLastCalledWith('customers-abc',['b','a','c']);await click(column);await click(button('Exportar CSV de Curva ABC'));expect(a.onExportTable).toHaveBeenLastCalledWith('customers-abc',['a','b','c']);
+});
+it('DB10 controlled sort emits ascending, descending and restore without changing its received model',async()=>{
+ const model=buildCustomerModel(customer()),panel=model.pages[0].panels[0];if(panel.kind!=='table')throw Error();const onChange=vi.fn();panel.sorting={onChange};await render(model,actions());const header=container.querySelector('th button')!;await click(header);expect(onChange).toHaveBeenLastCalledWith(0,'ascending');panel.sorting={column:0,direction:'ascending',onChange};await render(model,actions());await click(header);expect(onChange).toHaveBeenLastCalledWith(0,'descending');panel.sorting={column:0,direction:'descending',onChange};await render(model,actions());await click(header);expect(onChange).toHaveBeenLastCalledWith(undefined,undefined);expect(panel.rows.map(row=>row.id)).toEqual(['a','b','c']);
 });

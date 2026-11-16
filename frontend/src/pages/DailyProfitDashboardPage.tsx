@@ -120,7 +120,9 @@ export function DailyProfitDashboardPage({onViewChange}:DashboardViewProps) {
       "profit",
     ]),
     [sort, setSort] = useState<keyof Product>("revenueCents"),
-    [selected, setSelected] = useState(false);
+    [selected, setSelected] = useState(false),
+    [sortDirection,setSortDirection]=useState<'ascending'|'descending'>(),
+    [origin,setOrigin]=useState<{daily:Day[];from:string;to:string;point:string}|null>(null);
   useDialogAccessibility(filterOpen,()=>setFilterOpen(false));
   useDialogAccessibility(info,()=>setInfo(false));
   const sequence=useRef(0);
@@ -147,21 +149,21 @@ export function DailyProfitDashboardPage({onViewChange}:DashboardViewProps) {
     } finally {
       if(request===sequence.current)setBusy(false);
     }
-  }, [from, to, filters]);
+  }, [from, to, filters, setBusy, setData, setGeneratedAt, setNotice]);
   useEffect(() => {
     const timer = setTimeout(() => void load(), 0);
     return () => clearTimeout(timer);
   }, [load]);
   const series = useMemo(
-      () => aggregateFinancialDays(data?.daily ?? [], group),
-      [data, group],
+      () => aggregateFinancialDays(origin?.daily ?? data?.daily ?? [], group),
+      [data, group, origin],
     ),
     products = useMemo(
       () =>
         [...(data?.products ?? [])].sort(
-          (a, b) => compareRaw(b[sort], a[sort]),
+          (a, b) => sortDirection?compareRaw(a[sort], b[sort])*(sortDirection==='ascending'?1:-1):compareRaw(b.revenueCents,a.revenueCents),
         ),
-      [data, sort],
+      [data, sort, sortDirection],
     );
   function toggle(metric: "volume" | "revenue" | "profit") {
     setMetrics((v) =>
@@ -178,6 +180,7 @@ export function DailyProfitDashboardPage({onViewChange}:DashboardViewProps) {
     setTo(range.to || range.from);
     setFilterOpen(false);
     setSelected(false);
+    setOrigin(null);
   }
   function clear() {
     setVisualReset(value=>value+1);
@@ -188,6 +191,7 @@ export function DailyProfitDashboardPage({onViewChange}:DashboardViewProps) {
     setFrom(fresh.from);
     setTo(fresh.to);
     setSelected(false);
+    setOrigin(null);
   }
   function choosePeriod(day: Day) {
     const start = day.date,
@@ -201,8 +205,10 @@ export function DailyProfitDashboardPage({onViewChange}:DashboardViewProps) {
                 0,
               ),
             );
-    setFrom(start<from?from:start);
-    setTo(end>to?to:end);
+    const bounds=origin??{daily:data?.daily??[],from,to,point:day.date};
+    setOrigin({...bounds,point:day.date});
+    setFrom(start<bounds.from?bounds.from:start);
+    setTo(end>bounds.to?bounds.to:end);
     setSelected(true);
   }
   function csv(rows:Product[] = products) {
@@ -221,21 +227,25 @@ export function DailyProfitDashboardPage({onViewChange}:DashboardViewProps) {
   const model=data?buildSalesModel(data,series,groupControls,{keys:metrics,onToggle:key=>{if(key==='volume'||key==='revenue'||key==='profit')toggle(key)}}):waitingModel('sales');
   const columns:Array<keyof Product>=['name','category','subcategory','quantity','revenueCents','providerFeeCents','netRevenueCents','costCents','profitCents','marginPercent'];
   const table=model.pages.flatMap(page=>page.panels).find(panel=>panel.id==='sales-products');
-  if(table?.kind==='table')table.sorting={column:columns.indexOf(sort),onChange:index=>setSort(columns[index])};
+  if(table?.kind==='table')table.sorting={column:sortDirection?columns.indexOf(sort):undefined,direction:sortDirection,onChange:(index,direction)=>{setSort(index===undefined?'revenueCents':columns[index]);setSortDirection(direction)}};
+  const evolution=model.pages.flatMap(page=>page.panels).find(panel=>panel.id==='sales-evolution');
+  if(evolution?.kind==='lines')evolution.selectedPoint=origin?series.find(point=>point.date.slice(0,group==='year'?4:group==='month'?7:10)===origin.point.slice(0,group==='year'?4:group==='month'?7:10))?.date:undefined;
+  const periodChanged=from!==iso(initial)||to!==iso(today);
   return <section className="finance-dashboard dashboard-v3-controller" data-theme={theme}>
     <DashboardSurface model={model} view="sales" views={dashboardViews} theme={theme} busy={busy} canExport={canExport&&!!data} filterResetToken={visualReset}
       actions={{onViewChange,onBack:()=>navigate('/modulos/dashboards'),onClear:clear,onDetails:()=>setInfo(true),onFilters:()=>{setDraft(filters);setRange({from,to});setFilterOpen(true)},onPrint:()=>{if(canExport&&data&&!busy)window.print()},
         onSelectPeriod:id=>{const day=series.find(item=>item.date===id);if(day)choosePeriod(day)},
         onSelectProduct:(id,{additive})=>{const ids=additive?(filters.products.includes(id)?filters.products.filter(value=>value!==id):[...filters.products,id]):[id];const next={...filters,products:ids};setFilters(next);setDraft(next)},
         onExportTable:(id,ordered)=>{if(!canExport||!data||busy||id!=='sales-products')return;const byId=new Map(data.products.map(row=>[row.id,row]));csv(ordered.flatMap(key=>{const row=byId.get(key);return row?[row]:[]}))}}}
-      hasSelectionContext={selected||filterSummary!=='Todos os filtros'}
-      selectionSummary={<><span>{filterSummary}</span>      {selected && (
+      hasSelectionContext={selected||periodChanged||filterSummary!=='Todos os filtros'}
+      selectionSummary={<><span>{filterSummary} · {from} — {to}</span>      {selected && (
         <button
           className="period-chip"
           onClick={() => {
-            setFrom(range.from);
-            setTo(range.to);
+            setFrom(origin?.from??from);
+            setTo(origin?.to??to);
             setSelected(false);
+            setOrigin(null);
           }}
         >
           Período selecionado · remover ×
@@ -244,7 +254,7 @@ export function DailyProfitDashboardPage({onViewChange}:DashboardViewProps) {
 </>}
       notice={c&&c.financialPendingSales>0?<p className="dv-provisional" role="status">Valores provisórios · {c.financialPendingSales} venda(s) aguardam conciliação. Consulte Detalhes da análise.</p>:undefined}
       emptySlot={!data&&!busy?<p role="status">Os indicadores ainda não estão disponíveis para esta consulta.</p>:undefined}
-      printSlot={data?<SalesPrintReport data={data} products={products} series={series} metrics={metrics} group={group} sort={sort} from={from} to={to} summary={`${filterSummary} · Atualizado em ${generatedAt?.toLocaleString('pt-BR')??'—'}`}/>:null}/>
+      printSlot={data?<SalesPrintReport data={data} products={products} series={aggregateFinancialDays(data.daily,group)} metrics={metrics} group={group} sort={sort} from={from} to={to} summary={`${filterSummary} · Atualizado em ${generatedAt?.toLocaleString('pt-BR')??'—'}`}/>:null}/>
     <AppToast notice={notice} onClose={()=>setNotice(null)}/>
       {filterOpen && (
         <div className="catalog-backdrop dashboard-v3-modal-backdrop" data-theme={theme}>

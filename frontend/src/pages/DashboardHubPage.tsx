@@ -5,7 +5,7 @@ import {useNavigate} from 'react-router-dom';
 import {useTheme} from '../theme/theme-context';
 import {DashboardSurface} from '../components/dashboard-v3/DashboardSurface';
 import {buildStockModel,buildCustomerModel,buildCategoryModel} from '../components/dashboard-v3/adapters';
-import {StockPrintView,CustomerPrintView,CategoryPrintView} from '../components/dashboard-v3/DashboardPrintReport';
+import {AnalysisReport,StockPrintView,CustomerPrintView,CategoryPrintView} from '../components/dashboard-v3/DashboardPrintReport';
 import {dashboardViews,waitingModel,type DashboardViewProps} from '../components/dashboard-v3/integration';
 import { downloadDashboardCsv } from '../utils/dashboardExport';
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -94,19 +94,19 @@ function Operational({view,onViewChange}:DashboardViewProps&{view:Exclude<View,"
     } finally {
       if(request===sequence.current)setBusy(false);
     }
-  }, [from, to]);
+  }, [from, to, setBusy, setData, setGeneratedAt, setNotice]);
   useEffect(() => {
     const timer = setTimeout(() => void load(), 0);
     return () => clearTimeout(timer);
   }, [load]);
   function clear(){setFrom(iso(start));setTo(iso(now));setDraft({from:iso(start),to:iso(now)});setVisualReset(value=>value+1)}
   const model=!data?waitingModel(view):view==='stock'?buildStockModel(data.stock):view==='customers'?buildCustomerModel(data.customers):buildCategoryModel(data.categories);
-  const printReport=!data?null:<section className="catalog-page analytics-page"><header className="finance-heading"><div><h1>{model.title}</h1><p>{new Date(`${from}T12:00:00`).toLocaleDateString("pt-BR")} — {new Date(`${to}T12:00:00`).toLocaleDateString("pt-BR")} · Atualizado em {generatedAt?.toLocaleString('pt-BR')??'—'}</p></div></header>{view==='stock'?<StockPrintView data={data.stock}/>:view==='customers'?<CustomerPrintView data={data.customers}/>:<CategoryPrintView data={data.categories}/>}</section>;
+  const printReport=!data?null:<AnalysisReport title={model.title} from={from} to={to} summary={<>{model.kpis.map(k=><span key={k.id}>{k.label}: {k.value}. </span>)} Atualizado em {generatedAt?.toLocaleString('pt-BR')??'—'}. </>}><section className="catalog-page analytics-page"><header className="finance-heading"><div><h1>{model.title}</h1><p>{new Date(`${from}T12:00:00`).toLocaleDateString("pt-BR")} — {new Date(`${to}T12:00:00`).toLocaleDateString("pt-BR")} · Atualizado em {generatedAt?.toLocaleString('pt-BR')??'—'}</p></div></header>{view==='stock'?<StockPrintView data={data.stock}/>:view==='customers'?<CustomerPrintView data={data.customers}/>:<CategoryPrintView data={data.categories}/>}</section></AnalysisReport>;
   return <section className="catalog-page analytics-page dashboard-v3-controller" data-theme={theme}>
     <DashboardSurface model={model} view={view} views={dashboardViews} theme={theme} busy={busy} canExport={canExport&&!!data} filterResetToken={visualReset}
       actions={{onViewChange,onBack:()=>navigate('/modulos/dashboards'),onClear:clear,onDetails:()=>setInfo(true),onFilters:()=>{setDraft({from,to});setFilter(true)},onPrint:()=>{if(canExport&&data&&!busy)window.print()},
         onExportTable:(id,ordered)=>{if(!canExport||!data||busy)return;const panel=model.pages.flatMap(page=>page.panels).find(item=>item.id===id);if(panel?.kind!=='table')return;const byId=new Map(panel.rows.map(row=>[row.id,row]));const rows=ordered.flatMap(key=>{const row=byId.get(key);return row?[row.csv??row.cells.map(cell=>cell.text)]:[]});if(rows.length)downloadDashboardCsv(panel.title,panel.columns.map(column=>column.label),rows)}}}
-      selectionSummary="Todos os filtros do período aplicado"
+      hasSelectionContext={from!==iso(start)||to!==iso(now)} selectionSummary={`Período aplicado: ${from} — ${to}`}
       emptySlot={!data&&!busy?<p role="status">Os indicadores ainda não estão disponíveis para esta consulta.</p>:undefined} printSlot={printReport}/>
     <AppToast notice={notice} onClose={()=>setNotice(null)}/>
       {filter && (
