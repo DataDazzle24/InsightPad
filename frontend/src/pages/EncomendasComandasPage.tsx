@@ -28,6 +28,10 @@ import {
   localDate,
   money,
 } from "../encomendas-comandas/money";
+import {
+  PaymentLedger,
+  EventSummary,
+} from "../encomendas-comandas/LedgerDetails";
 import { printDocument } from "../encomendas-comandas/print";
 import { pending as readPending } from "../encomendas-comandas/pending";
 import {
@@ -50,6 +54,7 @@ import type {
   Page,
   Pending,
   Receipt,
+  Refund,
 } from "../encomendas-comandas/types";
 type Filters = {
   branchId: string;
@@ -131,6 +136,12 @@ export function EncomendasComandasPage({ kind }: { kind: Kind }) {
     [actionItem, setActionItem] = useState<Item | undefined>(),
     [detailTab, setDetailTab] = useState("ITEMS");
   const [receipts, setReceipts] = useState<Page<Receipt>>({
+      rows: [],
+      total: 0,
+      offset: 0,
+      pageSize: 25,
+    }),
+    [refunds, setRefunds] = useState<Page<Refund>>({
       rows: [],
       total: 0,
       offset: 0,
@@ -255,6 +266,8 @@ export function EncomendasComandasPage({ kind }: { kind: Kind }) {
   const open = useCallback(
     async (id: string) => {
       const request = ++detailRequest.current;
+      setDetail(null);
+      setAction("");
       setError("");
       try {
         const next = await read<Detail>({
@@ -266,20 +279,24 @@ export function EncomendasComandasPage({ kind }: { kind: Kind }) {
           setDetail(next);
           setDetailTab("ITEMS");
           setReceipts({ rows: [], total: 0, offset: 0, pageSize: 25 });
+          setRefunds({ rows: [], total: 0, offset: 0, pageSize: 25 });
           setEvents({ rows: [], total: 0, offset: 0, pageSize: 25 });
           setStock(null);
+          return next;
         }
       } catch (e) {
-        setError(errorText(e));
+        if (request === detailRequest.current) setError(errorText(e));
       }
+      return null;
     },
     [kind],
   );
   useEffect(() => {
     const id = new URLSearchParams(location.search).get("document");
     if (id)
-      void open(id).then(() => {
+      void open(id).then((loaded) => {
         if (
+          loaded?.document.id === id &&
           new URLSearchParams(location.search).get("action") === "CANCEL_SALE"
         )
           setAction("CANCEL_SALE");
@@ -291,12 +308,20 @@ export function EncomendasComandasPage({ kind }: { kind: Kind }) {
     const id = detail.document.id;
     const request =
       detailTab === "RECEIPTS"
-        ? read<Page<Receipt>>({
-            mode: "RECEIPTS",
-            kind,
-            documentId: id,
-            offset: receipts.offset,
-          })
+        ? Promise.all([
+            read<Page<Receipt>>({
+              mode: "RECEIPTS",
+              kind,
+              documentId: id,
+              offset: receipts.offset,
+            }),
+            read<Page<Refund>>({
+              mode: "REFUNDS",
+              kind,
+              documentId: id,
+              offset: refunds.offset,
+            }),
+          ])
         : detailTab === "EVENTS"
           ? read<Page<Event>>({
               mode: "EVENTS",
@@ -315,8 +340,11 @@ export function EncomendasComandasPage({ kind }: { kind: Kind }) {
       void request
         .then((value) => {
           if (!live) return;
-          if (detailTab === "RECEIPTS") setReceipts(value as Page<Receipt>);
-          else if (detailTab === "EVENTS") setEvents(value as Page<Event>);
+          if (detailTab === "RECEIPTS") {
+            const [received, returned] = value as [Page<Receipt>, Page<Refund>];
+            setReceipts(received);
+            setRefunds(returned);
+          } else if (detailTab === "EVENTS") setEvents(value as Page<Event>);
           else setStock(value as NonNullable<typeof stock>);
         })
         .catch((e) => {
@@ -325,7 +353,7 @@ export function EncomendasComandasPage({ kind }: { kind: Kind }) {
     return () => {
       live = false;
     };
-  }, [detail, detailTab, kind, receipts.offset, events.offset]);
+  }, [detail, detailTab, kind, receipts.offset, refunds.offset, events.offset]);
   async function refresh(id?: string) {
     try {
       setUncertain(await readPending(owner));
@@ -478,8 +506,13 @@ export function EncomendasComandasPage({ kind }: { kind: Kind }) {
   const visibleActions = detail
     ? detail.terminal
       ? detail.document.status === "CANCELLED"
-        ? ["REFUND"]
-        : ["CANCEL_SALE"]
+        ? BigInt(detail.refundPendingCents) > 0n
+          ? ["REFUND"]
+          : []
+        : detail.document.sale_id &&
+            ["CLOSED", "COMPLETED"].includes(detail.document.status)
+          ? ["CANCEL_SALE"]
+          : []
       : [
           ...(kind === "COMANDA"
             ? [
@@ -1299,59 +1332,17 @@ export function EncomendasComandasPage({ kind }: { kind: Kind }) {
               </>
             )}
             {detailTab === "RECEIPTS" && (
-              <>
-                <div className="ec-table-scroll">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Data</th>
-                        <th>Meio</th>
-                        <th>Recebido</th>
-                        <th>Troco</th>
-                        <th>Referência</th>
-                        <th>Caixa / operador</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {receipts.rows.map((r) => (
-                        <tr key={r.id}>
-                          <td>
-                            {dateTime(r.received_at, d.timezone_snapshot)}
-                          </td>
-                          <td>
-                            {r.method_name ??
-                              lookup.paymentMethods.find(
-                                (m) => m.id === r.payment_method_id,
-                              )?.name ??
-                              "Meio indisponível"}
-                          </td>
-                          <td>
-                            {money(r.amount_cents)}
-                            {BigInt(r.returned_cents) > 0n && (
-                              <small>
-                                Devolvido: {money(r.returned_cents)}
-                              </small>
-                            )}
-                          </td>
-                          <td>{money(r.change_cents)}</td>
-                          <td>{r.reference}</td>
-                          <td>
-                            {r.cash_session_id?.slice(0, 8) ??
-                              "Sem caixa (política)"}{" "}
-                            · {r.operator_name ?? r.operator_uid}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <Pager
-                  {...receipts}
-                  onPage={(next) =>
-                    setReceipts((v) => ({ ...v, offset: next }))
-                  }
-                />
-              </>
+              <PaymentLedger
+                detail={detail}
+                receipts={receipts}
+                refunds={refunds}
+                onReceiptsPage={(offset) =>
+                  setReceipts((v) => ({ ...v, offset }))
+                }
+                onRefundsPage={(offset) =>
+                  setRefunds((v) => ({ ...v, offset }))
+                }
+              />
             )}
             {detailTab === "STOCK" && (
               <div className="ec-table-scroll">
@@ -1389,15 +1380,7 @@ export function EncomendasComandasPage({ kind }: { kind: Kind }) {
                         {dateTime(e.occurred_at, d.timezone_snapshot)} ·{" "}
                         {e.actor_name ?? e.actor_uid}
                       </span>
-                      {typeof e.details.previousDueAt === "string" && (
-                        <span>
-                          Prazo anterior:{" "}
-                          {dateTime(
-                            e.details.previousDueAt,
-                            d.timezone_snapshot,
-                          )}
-                        </span>
-                      )}
+                      <EventSummary event={e} zone={d.timezone_snapshot} />
                       {e.related_document_id && (
                         <button
                           className="ec-link"

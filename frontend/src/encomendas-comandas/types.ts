@@ -46,11 +46,28 @@ export type Item = {
   participant_id: string | null;
   status: string;
 };
+export type Refund = {
+  id: string;
+  operation_id: string;
+  amount_cents: Cents;
+  refunded_at: string;
+  reference: string;
+  reason: string;
+  cash_session_id: string | null;
+  operator_uid: string;
+  operator_name: string | null;
+  method_name: string;
+  authorizer_name: string | null;
+  receipt_count: number;
+};
 export type Receipt = {
   id: string;
   document_id: string;
   original_document_id: string;
   amount_cents: Cents;
+  document_total_cents: Cents | null;
+  balance_before_cents: Cents | null;
+  balance_after_cents: Cents | null;
   returned_cents: Cents;
   change_cents: Cents;
   payment_method_id: string;
@@ -94,6 +111,7 @@ export type Detail = {
   items: Item[];
   participants: { id: string; name: string }[];
   allocations: {
+    participant_id?: string | null;
     receipt_id: string;
     item_id: string | null;
     amount_cents: Cents;
@@ -194,6 +212,7 @@ export type Page<T> = {
   pageSize: number;
 };
 export type Event = {
+  authorizer_name?: string;
   actor_name?: string;
   id: string;
   event_type: string;

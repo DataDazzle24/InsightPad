@@ -31,7 +31,7 @@ CREATE OR REPLACE FUNCTION ec_sensitive(actor users,page text) RETURNS boolean L
 CREATE OR REPLACE FUNCTION ec_apply(actor users, operation uuid, command jsonb) RETURNS jsonb LANGUAGE plpgsql AS $$
 DECLARE action text:=command->>'action'; p jsonb:=COALESCE(command->'payload','{}'); d ec_documents; other ec_documents;
  v_kind text:=command->>'kind'; page text; line jsonb; participant jsonb; before_version bigint; old_due timestamptz;
- result jsonb:='{}'; previous_items jsonb; previous_receipts jsonb; previous_participants jsonb; demand_changed boolean:=false; receipt uuid; sale uuid; item ec_items; next_code bigint; tz text;
+ result jsonb:='{}'; previous_items jsonb; previous_receipts jsonb; previous_participants jsonb; previous_plans jsonb; demand_changed boolean:=false; receipt uuid; sale uuid; item ec_items; next_code bigint; tz text;
 BEGIN
  IF action IN('CREATE_ORDER','OPEN_COMMAND') THEN
   v_kind:=CASE WHEN action='CREATE_ORDER' THEN 'ENCOMENDA' ELSE 'COMANDA' END;
@@ -81,7 +81,7 @@ BEGIN
   PERFORM 1 FROM ec_documents doc WHERE doc.tenant_id=actor.tenant_id AND doc.id IN(d.id,NULLIF(command->>'secondaryDocumentId','')::uuid) ORDER BY doc.id FOR UPDATE;
   SELECT * INTO STRICT d FROM ec_documents WHERE id=d.id AND tenant_id=actor.tenant_id;
   before_version:=d.version;
-  IF action='MERGE' THEN SELECT COALESCE(jsonb_agg(id),'[]') INTO previous_receipts FROM ec_receipts WHERE document_id=d.id;SELECT COALESCE(jsonb_agg(id),'[]') INTO previous_participants FROM ec_participants WHERE document_id=d.id;END IF;
+  IF action='MERGE' THEN SELECT COALESCE(jsonb_agg(id),'[]') INTO previous_receipts FROM ec_receipts WHERE document_id=d.id;SELECT COALESCE(jsonb_agg(id),'[]') INTO previous_participants FROM ec_participants WHERE document_id=d.id;SELECT COALESCE(jsonb_agg(id),'[]') INTO previous_plans FROM ec_split_plans WHERE document_id=d.id;END IF;
   IF action IN('EDIT_ORDER','ADD_ITEM','REMOVE_ITEM','TRANSFER_ITEMS','MERGE','ASSIGN_ITEM','PREPARE_ITEM') THEN previous_items:=ec_item_snapshot(d.id);END IF;
   PERFORM ec_require(d.version=(command->>'expectedVersion')::bigint,'VERSION_CONFLICT',jsonb_build_object('currentVersion',d.version::text));
   IF action='CANCEL_SALE' THEN PERFORM ec_require(d.status IN('CLOSED','COMPLETED'),'DOCUMENT_TERMINAL');
@@ -158,7 +158,7 @@ BEGIN
   END CASE;
   UPDATE ec_documents SET version=version+1,updated_at=now() WHERE id=d.id;
   result:=result||CASE WHEN previous_items IS NOT NULL THEN jsonb_build_object('previousItems',previous_items,'currentItems',ec_item_snapshot(d.id)) ELSE '{}'::jsonb END;
-  IF previous_receipts IS NOT NULL THEN result:=result||jsonb_build_object('previousReceiptIds',previous_receipts,'previousParticipantIds',previous_participants);END IF;
+  IF previous_receipts IS NOT NULL THEN result:=result||jsonb_build_object('previousReceiptIds',previous_receipts,'previousParticipantIds',previous_participants,'previousPlanIds',previous_plans);END IF;
   IF sale IS NOT NULL THEN result:=result||jsonb_build_object('saleId',sale,'saleTotalCents',(SELECT total_cents::text FROM ec_documents WHERE id=d.id));END IF;
   IF action='REQUEST_REFUND_APPROVAL' THEN result:=result||jsonb_build_object('proposal',p);END IF;
   IF action IN('REMOVE_ITEM','MERGE','CANCEL','CANCEL_SALE','REFUND','REQUEST_REFUND_APPROVAL') THEN result:=result||jsonb_build_object('actorUid',actor.id,'authorizerUid',COALESCE(result->>'authorizerUid',actor.id));END IF;

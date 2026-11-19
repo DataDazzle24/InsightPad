@@ -97,7 +97,10 @@ dados. Essa ação apenas consulta; não repete o recebimento nem a baixa.
 
 Os filtros gerais se compõem com Atrasadas/Prontas e Quitadas a fechar. Lista e
 calendário preservam o recorte. +N abre todos os registros do dia com paginação.
-O histórico inclui fechadas, canceladas e incorporadas e seus vínculos.
+O histórico inclui fechadas, canceladas e incorporadas e seus vínculos. Em Recebimentos,
+consulte parcelas confirmadas e pagas, alocações e devoluções. O saldo anterior e
+posterior é o registrado no pagamento, mesmo quando houver consumo posterior.
+O histórico mostra motivo, quantidade, destino e autorização de perdas/retiradas.
 
 O faturamento considera a venda final, uma vez. Os recebimentos conservam a data,
 operador e caixa em que ocorreram. Taxa de entrega integra o total da venda,

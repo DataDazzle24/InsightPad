@@ -82,7 +82,7 @@ BEGIN
  page:=CASE WHEN v_kind='ENCOMENDA' THEN 'ENCOMENDAS' ELSE 'COMANDAS' END;
  PERFORM ec_require(ec_can(actor,page,'access'),'ACCESS_DENIED');
  SELECT timezone INTO tz FROM tenants WHERE id=actor.tenant_id;
- IF mode IN('DETAIL','EVENTS','RECEIPTS','AVAILABILITY') THEN
+ IF mode IN('DETAIL','EVENTS','RECEIPTS','REFUNDS','AVAILABILITY') THEN
   SELECT * INTO d FROM ec_documents doc WHERE doc.id=(request->>'documentId')::uuid AND doc.tenant_id=actor.tenant_id AND doc.kind=v_kind;
   PERFORM ec_require(d.id IS NOT NULL AND ec_branch(actor,d.branch_id),'NOT_FOUND');
  END IF;
@@ -100,8 +100,24 @@ BEGIN
    'cashSessions',(SELECT COALESCE(jsonb_agg(jsonb_build_object('id',s.id,'branch_id',s.branch_id,'opened_at',s.opened_at)),'[]') FROM cash_sessions s WHERE s.tenant_id=actor.tenant_id AND s.opened_by_uid=actor.id AND s.status='OPEN' AND ec_can(actor,'CAIXA','access') AND ec_branch(actor,s.branch_id)));
  END IF;
  IF mode IN('EVENTS','RECEIPTS') THEN
-  IF mode='EVENTS' THEN SELECT jsonb_build_object('rows',COALESCE(jsonb_agg(ec_json(to_jsonb(x))),'[]'),'offset',skip,'pageSize',size,'total',(SELECT count(*) FROM ec_events WHERE document_id=d.id)) INTO result FROM (SELECT e.*,u.name actor_name FROM ec_events e LEFT JOIN users u ON u.id=e.actor_uid AND u.tenant_id=e.tenant_id WHERE e.document_id=d.id AND e.tenant_id=d.tenant_id ORDER BY e.occurred_at,e.id LIMIT size OFFSET skip)x;
+  IF mode='EVENTS' THEN SELECT jsonb_build_object('rows',COALESCE(jsonb_agg(ec_json(to_jsonb(x))),'[]'),'offset',skip,'pageSize',size,'total',(SELECT count(*) FROM ec_events WHERE document_id=d.id)) INTO result FROM (SELECT e.*,u.name actor_name,manager.name authorizer_name FROM ec_events e LEFT JOIN users u ON u.id=e.actor_uid AND u.tenant_id=e.tenant_id LEFT JOIN users manager ON manager.id=e.details->>'authorizerUid' AND manager.tenant_id=e.tenant_id WHERE e.document_id=d.id AND e.tenant_id=d.tenant_id ORDER BY e.occurred_at,e.id LIMIT size OFFSET skip)x;
   ELSE SELECT jsonb_build_object('rows',COALESCE(jsonb_agg(ec_json(to_jsonb(x))),'[]'),'offset',skip,'pageSize',size,'total',(SELECT count(*) FROM ec_receipts WHERE id IN(SELECT ec_receipt_scope(d.id,d.tenant_id)))) INTO result FROM (SELECT r.*,m.name method_name,u.name operator_name FROM ec_receipts r JOIN payment_methods m ON m.id=r.payment_method_id AND m.tenant_id=r.tenant_id LEFT JOIN users u ON u.id=r.operator_uid AND u.tenant_id=r.tenant_id WHERE r.id IN(SELECT ec_receipt_scope(d.id,d.tenant_id)) ORDER BY r.received_at,r.id LIMIT size OFFSET skip)x; END IF;
+  RETURN result;
+ END IF;
+ IF mode='REFUNDS' THEN
+  WITH grouped AS (
+   SELECT min(r.id::text) id,r.operation_id,sum(r.amount_cents)::bigint amount_cents,min(r.refunded_at) refunded_at,
+    max(r.reference) reference,max(r.reason) reason,max(r.cash_session_id::text) cash_session_id,
+    max(r.operator_uid) operator_uid,max(u.name) operator_name,max(m.name) method_name,max(manager.name) authorizer_name,
+    count(*)::integer receipt_count
+   FROM ec_refunds r JOIN payment_methods m ON m.id=r.payment_method_id AND m.tenant_id=r.tenant_id
+   LEFT JOIN users u ON u.id=r.operator_uid AND u.tenant_id=r.tenant_id
+   LEFT JOIN ec_events e ON e.document_id=r.document_id AND e.tenant_id=r.tenant_id AND e.operation_id=r.operation_id AND e.event_type='REFUND'
+   LEFT JOIN users manager ON manager.id=e.details->>'authorizerUid' AND manager.tenant_id=e.tenant_id
+   WHERE r.tenant_id=d.tenant_id AND r.receipt_id IN(SELECT ec_receipt_scope(d.id,d.tenant_id)) GROUP BY r.operation_id
+  ), sliced AS (SELECT * FROM grouped ORDER BY refunded_at,operation_id LIMIT size OFFSET skip)
+  SELECT jsonb_build_object('rows',COALESCE((SELECT jsonb_agg(ec_json(to_jsonb(x)) ORDER BY x.refunded_at,x.operation_id) FROM sliced x),'[]'),
+   'offset',skip,'pageSize',size,'total',(SELECT count(*) FROM grouped)) INTO result;
   RETURN result;
  END IF;
  IF mode='AVAILABILITY' THEN
@@ -113,8 +129,8 @@ BEGIN
    'customerName',(SELECT name FROM customers WHERE id=d.customer_id AND tenant_id=d.tenant_id),'branchName',(SELECT name FROM branches WHERE id=d.branch_id AND tenant_id=d.tenant_id),'operatorName',(SELECT name FROM users WHERE id=d.opened_by_uid AND tenant_id=d.tenant_id),
    'items',CASE WHEN d.status='INCORPORATED' THEN (SELECT COALESCE(jsonb_agg(ec_json(to_jsonb(i))||jsonb_build_object('quantity',v->>'quantity','line_total_cents',v->>'lineTotalCents','status',v->>'status','participant_id',v->>'participantId','preparation_state',v->>'preparation')),'[]') FROM jsonb_array_elements(COALESCE((SELECT details->'previousItems' FROM ec_events WHERE document_id=d.id AND tenant_id=d.tenant_id AND event_type='MERGE' ORDER BY occurred_at DESC,id DESC LIMIT 1),'[]')) v JOIN ec_items i ON i.id=(v->>'id')::uuid AND i.tenant_id=d.tenant_id) ELSE (SELECT COALESCE(jsonb_agg(ec_json(to_jsonb(i))||jsonb_build_object('actions',ec_item_actions(actor,d,i)) ORDER BY i.created_at,i.id),'[]') FROM ec_items i WHERE i.document_id=d.id) END,
    'participants',(SELECT COALESCE(jsonb_agg(to_jsonb(p) ORDER BY p.display_order,p.id),'[]') FROM ec_participants p WHERE p.tenant_id=d.tenant_id AND (p.document_id=d.id OR p.id IN(SELECT value::uuid FROM jsonb_array_elements_text(COALESCE((SELECT details->'previousParticipantIds' FROM ec_events WHERE document_id=d.id AND tenant_id=d.tenant_id AND event_type='MERGE' ORDER BY occurred_at DESC,id DESC LIMIT 1),'[]'))))),
-   'allocations',(SELECT COALESCE(jsonb_agg(ec_json(to_jsonb(a))),'[]') FROM ec_effective_allocations a WHERE a.document_id=d.id),
-   'plans',(SELECT COALESCE(jsonb_agg(ec_json(to_jsonb(p))||jsonb_build_object('shares',(SELECT COALESCE(jsonb_agg(ec_json(to_jsonb(s)) ORDER BY s.share_index),'[]') FROM ec_split_shares s WHERE s.plan_id=p.id))),'[]') FROM ec_split_plans p WHERE p.document_id=d.id),
+   'allocations',(SELECT COALESCE(jsonb_agg(ec_json(to_jsonb(a))),'[]') FROM ec_effective_allocations a WHERE a.tenant_id=d.tenant_id AND (a.document_id=d.id OR d.status='INCORPORATED' AND a.receipt_id IN(SELECT ec_receipt_scope(d.id,d.tenant_id)))),
+   'plans',(SELECT COALESCE(jsonb_agg(ec_json(to_jsonb(p))||jsonb_build_object('shares',(SELECT COALESCE(jsonb_agg(ec_json(to_jsonb(s)) ORDER BY s.share_index),'[]') FROM ec_split_shares s WHERE s.plan_id=p.id))),'[]') FROM ec_split_plans p WHERE p.tenant_id=d.tenant_id AND (p.document_id=d.id OR p.id IN(SELECT value::uuid FROM jsonb_array_elements_text(COALESCE((SELECT details->'previousPlanIds' FROM ec_events WHERE document_id=d.id AND tenant_id=d.tenant_id AND event_type='MERGE' ORDER BY occurred_at DESC,id DESC LIMIT 1),'[]'))))),
    'refundPendingCents',(CASE WHEN d.status='CANCELLED' THEN d.received_net_cents ELSE 0 END)::text,
    'actions',ec_actions(actor,d),
    'refundApprovals',(SELECT COALESCE(jsonb_agg(jsonb_build_object('id',p.id,'status',p.status,'amountCents',p.cash_amount_cents::text,'expiresAt',p.expires_at,'approvedByUid',p.approved_by_uid) ORDER BY p.created_at DESC),'[]') FROM pos_approvals p WHERE p.tenant_id=d.tenant_id AND p.branch_id=d.branch_id AND p.requested_by_uid=actor.id AND p.operation_key LIKE d.tenant_id||':EC:REFUND_APPROVAL:%' AND p.payload_hash=ec_refund_hash(d.id,d.version,COALESCE((SELECT e.details->'proposal' FROM ec_events e WHERE e.document_id=d.id AND e.details->>'approvalId'=p.id::text AND e.event_type='REQUEST_REFUND_APPROVAL' ORDER BY e.occurred_at DESC,e.id DESC LIMIT 1),'{}'))),

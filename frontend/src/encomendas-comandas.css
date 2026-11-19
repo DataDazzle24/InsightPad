@@ -1273,3 +1273,7 @@
 @media screen and (min-width:1600px) and (max-width:2199px) {
  .ip-ec .mosaic { grid-template-columns:repeat(6,minmax(0,1fr)); }
 }
+/* Financial tables retain natural height inside the scrolling dialog body. */
+.ip-ec .ec-ledger-table { flex:none; min-height:96px; max-height:320px; }
+.ip-ec .ec-ledger-plans { flex:none; }
+.ip-ec .ec-ledger-table:focus-visible { outline:2px solid var(--focus); outline-offset:2px; }

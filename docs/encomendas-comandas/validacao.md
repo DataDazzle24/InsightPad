@@ -34,20 +34,24 @@ Node22.23.4, dependências por lockfile; sem nova dependência de produto.
 | Frontend | `npm --prefix frontend run lint`; `npm --prefix frontend test`; `npm --prefix frontend run build -- --mode development` | Lint sem avisos;347 testes; tipos/build aprovados |
 | QA anterior | `npm --prefix frontend run test:qa`; `npm --prefix frontend run build:qa` | Teste e build aprovados |
 | Functions/contratos anteriores | `npm --prefix functions run lint`; `npm --prefix functions test`; `npm --prefix functions run build` | Tipos/build aprovados;204 testes aprovados |
-| Banco/concorrência real isolados | `python3 scripts/ec/test_runtime.py` |45 casos aprovados; schema oficial e7 migrações aplicados2 vezes |
-| Navegador com persistência | `node scripts/qa-browser/encomendas-comandas.mjs` |23 casos na rodada local; resultado/fingerprints em `encomendas-comandas/results.json` |
+| Banco/concorrência real isolados | `python3 scripts/ec/test_runtime.py` |47 casos aprovados; schema oficial e7 migrações aplicados2 vezes |
+| Navegador com persistência | `node scripts/qa-browser/encomendas-comandas.mjs` |25 casos na rodada local; resultado/fingerprints em `encomendas-comandas/results.json` |
 | Regressão visual anterior | `node scripts/qa-browser/run.mjs --full` |750 casos nos13 relatórios de resultados, sem falha/erro registrado |
 | Preservação | `node scripts/verify-interface.mjs`; `node scripts/verify-reconciliation.mjs --working-tree`; `git diff --check` | Guardas preservadas e escopo nominal ampliado para EC; sem erro de whitespace |
 | Scripts de suporte | `node --test scripts/version-manifest.test.mjs scripts/ci-dev-config.test.mjs scripts/verify-reconciliation.test.mjs scripts/qa-browser/evidence.test.mjs scripts/qa-browser/install-chromium.test.mjs` |34 testes aprovados |
 | Sessão compilada | `python3 scripts/qa-browser/session-runtime.py` |23 cenários isolados aprovados |
 
-O CI recebeu somente2 etapas adicionais (SQL isolado e navegador EC); mantém todos
+O CI recebeu2 etapas adicionais (SQL isolado e navegador EC); mantém todos
 os testes anteriores, sem deploy. Seu status deve ser consultado no SHA candidato;
-os resultados locais acima não são uma afirmação de CI remoto aprovado.
+os resultados locais acima não são uma afirmação de CI remoto aprovado. A primeira
+execução44435899733 aprovou contratos, SDKs, frontend, backend e QA, mas encerrou
+com124 no download das bibliotecas Ubuntu (limite180s). O limite apenas dessa
+instalação passou a600s, com teste de regressão; browser180s/duas tentativas e todas
+as verificações permanecem. Nenhuma publicação foi iniciada.
 
 ## Prova transacional
 
-Os45 casos usam o compilador SQL Connect real e PostgreSQL18 em Docker descartável,
+Os47 casos usam o compilador SQL Connect real e PostgreSQL18 em Docker descartável,
 com rede desativada e identidades sintéticas. Reaplicar o SQL sobre documentos,
 recebimentos, vendas, caixa, estoque e permissões existentes conservou os registros. Testam, entre outros: sinal60/restante140,
 caixas/datas diferentes, perda/remessa/estorno, cancelamento sem reembolso automático,
@@ -80,8 +84,10 @@ Fluxos de navegador com persistência: abrir/adicionar/receber/fechar comanda,
 ACK perdido depois do commit, falha de refresh com atualização somente de leitura,
 encomenda200 com sinal60/restante140, cancelamento de venda e devolução com gestor
 distinto pela operação existente `ApprovePosSale`, além de incerteza persistida
-antes de reload e recuperada por RESULT sem reenviar a mutação. O comprovante foi
-gerado como DOM e PDF headless; impressora física não foi testada.
+antes de reload e recuperada por RESULT sem reenviar a mutação. Rateios, saldo antes/depois de cada recebimento, devoluções agrupadas e autorizador
+ficam visíveis nas consultas e no histórico. Os saldos são snapshots do recebimento;
+não são recalculados pelo total atual. Campos históricos desconhecidos permanecem
+nulos. O comprovante foi gerado como DOM e PDF headless; impressora física não foi testada.
 
 Os artefatos privados locais ficam em `artifacts/browser-private/ec-runtime/` e
 `artifacts/browser-private/encomendas-comandas/`. O relatório guarda fingerprint do

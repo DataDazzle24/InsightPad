@@ -178,5 +178,15 @@
       "branch_id": "rs.branch_id",
       "product_id": "rs.product_id"
     }
+  },
+  {
+    "file": "queries.gql",
+    "operation": "SalesWorkspace",
+    "strategy": "UNION ALL channel reservations and EC reservations in grouped CTE"
+  },
+  {
+    "file": "queries.gql",
+    "operation": "SalesChannelProductOptions",
+    "strategy": "Simple-SKU lateral stock includes EC reservations, matching combo path"
   }
 ]

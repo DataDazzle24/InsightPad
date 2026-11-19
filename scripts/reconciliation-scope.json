@@ -1549,15 +1549,17 @@
     },
     "scripts/qa-browser/install-chromium.sh": {
       "ids": [
-        "UXIP-001"
+        "UXIP-001",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
-      "reason": "Directed CI provisioning correction after exit124 in required Chromium install; same lockfile/browser and all verification gates retained, bounded dependencies/download and one retry. Disposable runner only; no product/GCP resource change."
+      "reason": "Directed CI provisioning correction after exit124 in required Chromium install; same lockfile/browser and all verification gates retained, bounded dependencies/download and one retry. Disposable runner only; no product/GCP resource change. CI44435899733 timed out downloading Ubuntu Chromium dependencies; bound increases180s→600s only for system dependencies, preserving all fatal failures and browser retry limits."
     },
     "scripts/qa-browser/install-chromium.test.mjs": {
       "ids": [
-        "UXIP-001"
+        "UXIP-001",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
-      "reason": "Directed CI provisioning correction after exit124 in required Chromium install; same lockfile/browser and all verification gates retained, bounded dependencies/download and one retry. Disposable runner only; no product/GCP resource change."
+      "reason": "Directed CI provisioning correction after exit124 in required Chromium install; same lockfile/browser and all verification gates retained, bounded dependencies/download and one retry. Disposable runner only; no product/GCP resource change. CI44435899733 timed out downloading Ubuntu Chromium dependencies; bound increases180s→600s only for system dependencies, preserving all fatal failures and browser retry limits."
     },
     "frontend/src/components/dashboard-v3/dashboard-v6.css": {
       "ids": [
@@ -2190,6 +2192,12 @@
         "ENCOMENDAS-COMANDAS-20261118"
       ],
       "reason": "Rastreabilidade e handoff do novo escopo, sem reescrever os68 históricos ou gravar CORE."
+    },
+    "frontend/src/encomendas-comandas/LedgerDetails.tsx": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Read-only receipt allocations, persisted plans, refund ledger and authorized business effects in EC history; preserve financial commands and protected modules."
     }
   },
   "bytePreserved": [

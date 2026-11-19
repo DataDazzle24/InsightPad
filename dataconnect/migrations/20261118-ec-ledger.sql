@@ -91,7 +91,7 @@ BEGIN
  PERFORM ec_require(tendered>=amount AND (method.requires_change OR tendered=amount),'VALIDATION_ERROR');
  cash:=ec_cash(actor,d.branch_id,NULLIF(payment->>'cashSessionId','')::uuid);
  PERFORM ec_require(NOT method.requires_change OR cash IS NOT NULL,'CASH_SESSION_REQUIRED');
- INSERT INTO ec_receipts(id,tenant_id,document_id,original_document_id,amount_cents,returned_cents,tendered_cents,change_cents,payment_method_id,reference,cash_session_id,operator_uid,operation_id,received_at) VALUES(receipt,d.tenant_id,d.id,d.id,amount,0,tendered,tendered-amount,method.id,COALESCE(payment->>'reference',''),cash,actor.id,operation,now());
+ INSERT INTO ec_receipts(id,tenant_id,document_id,original_document_id,amount_cents,document_total_cents,balance_before_cents,balance_after_cents,returned_cents,tendered_cents,change_cents,payment_method_id,reference,cash_session_id,operator_uid,operation_id,received_at) VALUES(receipt,d.tenant_id,d.id,d.id,amount,d.total_cents,d.total_cents-d.received_net_cents,d.total_cents-d.received_net_cents-amount,0,tendered,tendered-amount,method.id,COALESCE(payment->>'reference',''),cash,actor.id,operation,now());
  IF method.requires_change AND cash IS NOT NULL THEN
   INSERT INTO cash_movements(id,operation_key,payload_hash,tenant_id,session_id,movement_type,amount_cents,description,created_by_uid,created_at)
   VALUES(gen_random_uuid(),concat(d.tenant_id,':EC:RECEIPT:',receipt),encode(sha256(convert_to(payment::text,'UTF8')),'hex'),d.tenant_id,cash,'EC_RECEIPT',amount,left('Recebimento '||d.code,180),actor.id,now());

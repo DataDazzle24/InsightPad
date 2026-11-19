@@ -42,8 +42,8 @@
   },
   "environments": {
     "localImplementation": "integrated",
-    "isolatedSQL": "45 tests passed; real SQL Connect/PG18, synthetic identities; live-record preservation across native DDL reapplication",
-    "browser": "23 scenarios; synthetic Auth plus isolated real persistence; native Chrome100/200 headless",
+    "isolatedSQL": "47 tests passed; real SQL Connect/PG18, synthetic identities; live-record preservation across native DDL reapplication",
+    "browser": "25 scenarios; synthetic Auth + isolated real persistence; receipt/plan/refund/history readers; native Chrome100/200 headless",
     "DEV": "not published; no authenticated smoke",
     "PROD": "untouched"
   },
@@ -76,5 +76,12 @@
     "specific authorization for coordinated DEV schema/nativeSQL/connector/Hosting",
     "authenticated DEV acceptance",
     "full direct prototype comparison; physical device/OSzoom/printer unverified"
-  ]
+  ],
+  "initialCI": {
+    "run": 44435899733,
+    "sha": "f08ec2e0dbff8d0dc3f50ae003e91e88851ad6a1",
+    "result": "failure",
+    "cause": "Ubuntu system dependency download exceeded180s; build/types/tests/SDKs passed",
+    "correction": "bounded600s only for install-deps; tests and Chromium retry limits preserved"
+  }
 }

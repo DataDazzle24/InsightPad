@@ -345,7 +345,7 @@ query SalesChannelProductOptions($term: String!, $connectionId: UUID, $productId
     LEFT JOIN selected_connection c ON c.tenant_id=p.tenant_id
     LEFT JOIN stock_balances sb ON sb.tenant_id=p.tenant_id AND sb.branch_id=c.branch_id AND sb.product_id=p.id
     LEFT JOIN LATERAL (
-      SELECT COALESCE(sum(r.quantity),0) quantity FROM sales_channel_stock_reservations r
+      SELECT COALESCE(sum(r.quantity),0)+(SELECT COALESCE(sum(ec.quantity),0) FROM ec_reservations ec WHERE ec.tenant_id=p.tenant_id AND ec.branch_id=c.branch_id AND ec.product_id=p.id AND ec.status='ACTIVE') quantity FROM sales_channel_stock_reservations r
       WHERE r.tenant_id=p.tenant_id AND r.branch_id=c.branch_id AND r.product_id=p.id AND r.status='RESERVED'
     ) reserved ON true
     LEFT JOIN LATERAL (
@@ -789,8 +789,11 @@ query SalesWorkspace($branchId: UUID, $requestKey: String!, $sessionToken: Strin
  SELECT b.* FROM branches b JOIN actor a ON a.tenant_id=b.tenant_id WHERE b.active AND b.deleted_at IS NULL AND (NOT EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=a.id) OR EXISTS(SELECT 1 FROM user_branches ub WHERE ub.user_id=a.id AND ub.tenant_id=b.tenant_id AND ub.branch_id=b.id AND ub.active))
  ), reserved_stock AS (
       SELECT r.tenant_id,r.branch_id,r.product_id,sum(r.quantity)::numeric(18,3) quantity
-      FROM sales_channel_stock_reservations r JOIN actor a ON a.tenant_id=r.tenant_id
-      WHERE r.status='RESERVED' GROUP BY r.tenant_id,r.branch_id,r.product_id
+      FROM (
+        SELECT tenant_id,branch_id,product_id,quantity FROM sales_channel_stock_reservations WHERE status='RESERVED'
+        UNION ALL SELECT tenant_id,branch_id,product_id,quantity FROM ec_reservations WHERE status='ACTIVE'
+      ) r JOIN actor a ON a.tenant_id=r.tenant_id
+      GROUP BY r.tenant_id,r.branch_id,r.product_id
     )
     SELECT jsonb_build_object(
       'tenant',(SELECT jsonb_build_object('legalName',t.legal_name,'tradeName',t.trade_name,'document',t.document,'email',t.email,'phone',t.phone) FROM tenants t,actor a WHERE t.id=a.tenant_id LIMIT 1),

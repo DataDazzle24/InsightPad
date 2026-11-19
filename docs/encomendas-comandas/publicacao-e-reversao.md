@@ -32,7 +32,8 @@ CI verde nesse SHA e árvore limpa. Não publicar a base histórica acima como c
    dos dois módulos durante a migração; não interromper PDV/Cadastros.
 3. **Diff oficial de schema.** Com Firebase CLI fixada `15.34.0`, gerar/revisar o
    diff antes de migrar. O delta autorizado é a adição das 17 tabelas `ec_*` e
-   índices correspondentes. Qualquer remoção/alteração de tabela legada interrompe
+   índices correspondentes. Os três snapshots de saldo em `ec_receipts` são
+   campos novos nullable para não inventar valores em registros anteriores. Qualquer remoção/alteração de tabela legada interrompe
    a publicação. Não usar aceite global de operações destrutivas.
 4. **Schema e SQL nativo.** Aplicar o schema aditivo oficial primeiro, sem publicar
    o connector novo ainda. Aplicar os sete SQL abaixo na ordem exata, por uma

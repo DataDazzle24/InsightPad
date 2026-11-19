@@ -5,7 +5,8 @@ cd "$(dirname "$0")/../.."
 export PLAYWRIGHT_DOWNLOAD_CONNECTION_TIMEOUT="${PLAYWRIGHT_DOWNLOAD_CONNECTION_TIMEOUT:-45000}"
 case "${1:-}" in
   dependencies)
-    timeout 180s node scripts/qa-browser/node_modules/playwright/cli.js install-deps chromium
+    # Ubuntu mirror downloads exceeded180s in CI44435899733; retain a finite bound.
+    timeout 600s node scripts/qa-browser/node_modules/playwright/cli.js install-deps chromium
     timeout 120s sudo -n apt-get -o Acquire::Retries=1 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y poppler-utils
     ;;
   browser)

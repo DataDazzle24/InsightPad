@@ -76,6 +76,9 @@ CREATE TABLE IF NOT EXISTS ec_receipts (
   document_id uuid NOT NULL,
   original_document_id uuid NOT NULL,
   amount_cents bigint NOT NULL,
+  document_total_cents bigint,
+  balance_before_cents bigint,
+  balance_after_cents bigint,
   returned_cents bigint NOT NULL,
   tendered_cents bigint NOT NULL,
   change_cents bigint NOT NULL,
@@ -86,6 +89,16 @@ CREATE TABLE IF NOT EXISTS ec_receipts (
   operation_id uuid NOT NULL,
   received_at timestamptz NOT NULL
 );
+-- Nullable for older receipts: never reconstruct a historical balance from today's total.
+ALTER TABLE ec_receipts ADD COLUMN IF NOT EXISTS document_total_cents bigint;
+ALTER TABLE ec_receipts ADD COLUMN IF NOT EXISTS balance_before_cents bigint;
+ALTER TABLE ec_receipts ADD COLUMN IF NOT EXISTS balance_after_cents bigint;
+DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_constraint WHERE conname='ec_receipt_balance_snapshot' AND conrelid='ec_receipts'::regclass) THEN
+ ALTER TABLE ec_receipts ADD CONSTRAINT ec_receipt_balance_snapshot CHECK(
+ (document_total_cents IS NULL AND balance_before_cents IS NULL AND balance_after_cents IS NULL)
+ OR (document_total_cents IS NOT NULL AND balance_before_cents IS NOT NULL AND balance_after_cents IS NOT NULL
+ AND document_total_cents>=balance_before_cents AND balance_before_cents>=amount_cents AND balance_after_cents=balance_before_cents-amount_cents));
+END IF; END $$;
 CREATE TABLE IF NOT EXISTS ec_allocations (
   id uuid NOT NULL PRIMARY KEY,
   tenant_id uuid NOT NULL,

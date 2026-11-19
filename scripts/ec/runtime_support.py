@@ -95,7 +95,7 @@ class Runtime:
         queries=(ROOT/'dataconnect/app/queries.gql').read_text()
         mutations=(ROOT/'dataconnect/app/mutations.gql').read_text()
         (config/'app/operations.gql').write_text('\n\n'.join([definition(queries,'EcRead'),
-            *[definition(queries,name) for name in ['StockWorkspace','SearchPosProducts','PosProductBranches','FinancialIndicatorsDashboard','ListSales','SaleDetails','SalesWorkspace']],
+            *[definition(queries,name) for name in ['SalesChannelProductOptions','StockWorkspace','SearchPosProducts','PosProductBranches','FinancialIndicatorsDashboard','ListSales','SaleDetails','SalesWorkspace']],
             *[definition(mutations,name) for name in ['EcCommand','ApprovePosSale','PostSale','CancelSale','PostStockAdjustment','PostStockTransfer','SaveStockBatch','ReverseStockOperation']]]))
         binary=Path(os.environ.get('FIREBASE_EMULATORS_PATH','/tmp'))/'dataconnect-emulator-3.4.23'
         local=ROOT.parent/'tools/dataconnect-emulator'

@@ -46,6 +46,7 @@ class DomainTests(unittest.TestCase):
         self.assertEqual(self.scalar('SELECT count(*)||\':\'||sum(total_cents) FROM sales;'),'1:20000')
         self.assertEqual(self.scalar('SELECT count(*)||\':\'||sum(amount_cents) FROM cash_movements;'),'2:20000')
         self.assertEqual(self.scalar('SELECT count(*) FROM ec_sale_receipt_links;'),'2')
+        snapshots=json.loads(self.scalar('SELECT jsonb_agg(jsonb_build_array(balance_before_cents,balance_after_cents) ORDER BY received_at,id)::text FROM ec_receipts;'));self.assertEqual(snapshots,[[20000,14000],[14000,0]])
         self.assertEqual(self.scalar(f"SELECT quantity FROM stock_balances WHERE product_id='{IDS['product']}';"),'98.000')
         self.assertEqual(self.detail(d,'ENCOMENDA')['document']['status'],'COMPLETED')
     def test_T02_receipts_keep_their_original_cash_and_date(self):
@@ -56,6 +57,7 @@ class DomainTests(unittest.TestCase):
         self.assertEqual(self.scalar(f"SELECT sum(amount_cents) FROM cash_movements WHERE session_id='{IDS['cash']}';"),'6000')
         self.assertEqual(self.scalar(f"SELECT sum(amount_cents) FROM cash_movements WHERE session_id='{second}';"),'14000')
         self.assertEqual(self.scalar("SELECT count(*) FROM ec_receipts WHERE received_at<now()-interval '20 hours';"),'1')
+        workspace=self.r.operation('SalesWorkspace',{'branchId':IDS['branch'],'requestKey':str(uuid.uuid4())});self.assertFalse(workspace.get('errors'),workspace);self.assertEqual(str(workspace['data']['_select'][0]['data']['openSession']['expectedAmountCents']),'14000')
     def test_T05_integral_reservation_wait_and_ready(self):
         self.r.sql("UPDATE stock_balances SET quantity=6;UPDATE stock_movements SET quantity=6 WHERE client_operation_id='ec-synthetic-opening';")
         payload={'branchId':IDS['branch'],'customerId':IDS['customer'],'dueAtLocal':'2026-11-20T12:30','fulfillmentMode':'PICKUP','reservationStrategy':'NOW','items':[{'productId':IDS['product'],'quantity':'10'}]}
@@ -114,6 +116,10 @@ class DomainTests(unittest.TestCase):
         product=next(p for p in response['data']['_select'][0]['data']['products'] if p['id']==IDS['product'])
         balance=next(b for b in product['balances'] if b['branchId']==IDS['branch'])
         self.assertEqual(Decimal(str(balance['availableQuantity'])),Decimal(98))
+        response=self.r.operation('SalesWorkspace',{'branchId':IDS['branch'],'requestKey':str(uuid.uuid4())});self.assertFalse(response.get('errors'),response)
+        product=next(p for p in response['data']['_select'][0]['data']['products'] if p['id']==IDS['product']);self.assertEqual(Decimal(str(product['stock'])),Decimal(98));self.assertEqual(Decimal(str(product['reservedStock'])),Decimal(2))
+        connection=str(uuid.uuid4());self.r.sql(f"INSERT INTO app_pages(id,page_key,display_name,module,route,created_at,updated_at) VALUES(gen_random_uuid(),'CANAIS_VENDA','Synthetic channel','Canais','/synthetic/channel',now(),now());INSERT INTO role_page_permissions(role_id,page_id,tenant_id,can_access,created_at,updated_at) SELECT '{IDS['role']}',id,'{IDS['tenant']}',true,now(),now() FROM app_pages WHERE page_key='CANAIS_VENDA';INSERT INTO sales_channel_connections(id,tenant_id,branch_id,provider,display_name,enabled,created_at,updated_at) VALUES('{connection}','{IDS['tenant']}','{IDS['branch']}','IFOOD','Synthetic disabled',false,now(),now());")
+        response=self.r.operation('SalesChannelProductOptions',{'term':'','connectionId':connection,'productId':IDS['product'],'limit':10,'requestKey':str(uuid.uuid4())});self.assertFalse(response.get('errors'),response);self.assertEqual(Decimal(str(response['data']['_select'][0]['availableStock'])),Decimal(98))
     def test_T11_edit_below_paid_is_rejected_and_notes_keep_ready(self):
         d=self.order(payment=self.payment('15000'));d=self.r.accepted('MARK_READY',{},d,'ENCOMENDA');item=self.detail(d,'ENCOMENDA')['items'][0]
         self.reject('EDIT_ORDER',{'items':[{'id':item['id'],'productId':IDS['product'],'quantity':'1'}]},d,'ENCOMENDA','TOTAL_BELOW_RECEIVED')
@@ -177,6 +183,7 @@ class DomainTests(unittest.TestCase):
         self.assertEqual(self.detail(d)['document']['received_net_cents'],'10000')
         self.r.accepted('RECEIVE_AND_COMPLETE',{'payment':self.payment('1000')},d)
         self.assertEqual(self.scalar('SELECT sum(amount_cents) FROM cash_movements;'),'11000');self.assertEqual(self.scalar('SELECT sum(total_cents) FROM sales;'),'11000')
+        self.assertEqual(self.scalar("SELECT string_agg(balance_before_cents::text,',' ORDER BY received_at,id) FROM ec_receipts;"),'10000,1000')
     def test_T20_exact_concurrent_close_creates_one_sale(self):
         d=self.tab();d=self.r.accepted('RECEIVE',self.payment(),d)
         op=str(uuid.uuid4());barrier=threading.Barrier(2)
@@ -275,6 +282,7 @@ class DomainTests(unittest.TestCase):
         replay=self.r.operation('EcCommand',{'command':command},True);self.assertEqual(replay['data']['query']['response']['result'],result)
         self.assertEqual(self.scalar('SELECT sum(amount_cents) FROM cash_movements;'),'0');self.assertEqual(self.scalar('SELECT sum(amount_cents) FROM ec_refunds;'),'6000')
         self.assertEqual(self.detail(result,'ENCOMENDA')['refundPendingCents'],'0')
+        ledger=self.r.read('ENCOMENDA',mode='REFUNDS',documentId=d['documentId']);self.assertEqual(ledger['total'],1);self.assertEqual(ledger['rows'][0]['amount_cents'],'6000');self.assertEqual(ledger['rows'][0]['authorizer_name'],'Synthetic actor')
         self.reject('REFUND',{**self.payment('6000'),'reason':'Already refunded','reference':'NEW-INVALID'},result,'ENCOMENDA','AMOUNT_EXCEEDS_BALANCE')
     def test_T18_paid_merge_preserves_source_history_and_ledger(self):
         a=self.tab();a=self.r.accepted('RECEIVE',self.payment('3000'),a);b=self.tab(product='product2')
@@ -324,6 +332,7 @@ class DomainTests(unittest.TestCase):
         self.reject('REFUND',{**payload,'approvalId':approval,'reference':'CHANGED'},d,'ENCOMENDA','FINANCIAL_APPROVAL_REQUIRED')
         d=self.r.accepted('REFUND',{**payload,'approvalId':approval},d,'ENCOMENDA')
         self.assertEqual(d['effects']['authorizerUid'],'manager');self.assertEqual(self.scalar('SELECT status FROM pos_approvals;'),'USED');self.assertEqual(self.scalar('SELECT sum(amount_cents) FROM cash_movements;'),'0')
+        self.assertEqual(self.r.read('ENCOMENDA',mode='REFUNDS',documentId=d['documentId'])['rows'][0]['authorizer_name'],'Synthetic approver')
     def test_T36_sensitive_permission_and_cash_access_cannot_substitute_each_other(self):
         d=self.tab();item=self.detail(d)['items'][0];d=self.r.accepted('PREPARE_ITEM',{'itemId':item['id'],'state':'PREPARING'},d)
         self.user_permission('COMANDAS',can_manage=False)
@@ -379,6 +388,18 @@ class DomainTests(unittest.TestCase):
         d=self.r.accepted('EDIT_ORDER',{'notes':'Keep confirmed kilograms','items':[{'id':item['id'],'productId':IDS['product'],'quantity':'1.125'}]},d,'ENCOMENDA')
         self.assertEqual(self.detail(d,'ENCOMENDA')['items'][0]['unit'],'kg')
         self.reject('ADD_ITEM',{'productId':IDS['product'],'quantity':'1.125'},self.r.accepted('OPEN_COMMAND',{'branchId':IDS['branch'],'identification':'New item uses current unit'}),code='VALIDATION_ERROR')
+    def test_T04_refund_reader_groups_two_origins_into_one_cash_outflow(self):
+        d=self.order(payment=self.payment('6000'));d=self.r.accepted('RECEIVE',self.payment('4000'),d,'ENCOMENDA');d=self.r.accepted('CANCEL',{'reason':'Synthetic refund ledger'},d,'ENCOMENDA')
+        d=self.r.accepted('REFUND',{**self.payment('10000'),'reason':'Two original receipts','reference':'GROUPED-RETURN'},d,'ENCOMENDA')
+        ledger=self.r.read('ENCOMENDA',mode='REFUNDS',documentId=d['documentId'],pageSize=1)
+        self.assertEqual(ledger['total'],1);self.assertEqual(ledger['rows'][0]['amount_cents'],'10000');self.assertEqual(ledger['rows'][0]['receipt_count'],2)
+        self.assertEqual(self.scalar('SELECT count(*) FROM ec_refunds;'),'2');self.assertEqual(self.scalar("SELECT count(*) FROM cash_movements WHERE movement_type='EC_REFUND';"),'1')
+    def test_T18B_original_document_retains_share_and_allocation_history_after_merge(self):
+        a=self.tab(product='product2');item=self.detail(a)['items'][0]
+        a=self.r.accepted('CREATE_SPLIT',{'mode':'SHARED_ITEM','parts':3,'itemId':item['id']},a);original=self.detail(a);share=original['plans'][0]['shares'][0]
+        a=self.r.accepted('RECEIVE',{**self.payment('933'),'allocations':[{'itemId':item['id'],'shareId':share['id'],'amountCents':'933'}]},a);b=self.tab()
+        self.r.accepted('MERGE',{},a,secondary=b);source=self.r.read(mode='DETAIL',documentId=a['documentId'])
+        self.assertEqual(source['plans'][0]['id'],original['plans'][0]['id']);self.assertEqual(source['plans'][0]['shares'][0]['paid_cents'],'933');self.assertEqual(source['allocations'][0]['share_id'],share['id'])
 
 class RecordedResult(unittest.TextTestResult):
     def startTest(self,test):

@@ -12,11 +12,11 @@ export const ecExistingPaths=new Set([
  'frontend/src/dataconnect-generated/react/README.md','frontend/src/dataconnect-generated/react/index.cjs.js','frontend/src/dataconnect-generated/react/index.d.ts','frontend/src/dataconnect-generated/react/esm/index.esm.js',
  'functions/src/dataconnect-admin-generated/index.cjs.js','functions/src/dataconnect-admin-generated/index.d.ts','functions/src/dataconnect-admin-generated/esm/index.esm.js',
  'scripts/verify-ajustes-finos.mjs','scripts/verify-interface.mjs','scripts/verify-reconciliation.mjs','scripts/reconciliation-scope.json',
- 'scripts/qa-browser/session-runtime.py','scripts/qa-browser/menus.mjs','.github/workflows/ci.yml',
+ 'scripts/qa-browser/install-chromium.sh','scripts/qa-browser/install-chromium.test.mjs','scripts/qa-browser/session-runtime.py','scripts/qa-browser/menus.mjs','.github/workflows/ci.yml',
 ]);
 const additions=[
  'frontend/src/pages/EncomendasComandasPage.tsx','frontend/src/encomendas-comandas.css',
- ...['ActionDialog.tsx','DocumentEditor.tsx','Calendar.tsx','calendarDates.ts','types.ts','ui.tsx','money.ts','money.test.ts','pending.ts','pending.test.ts','service.ts','service.test.ts','print.ts'].map(p=>'frontend/src/encomendas-comandas/'+p),
+ ...['LedgerDetails.tsx','ActionDialog.tsx','DocumentEditor.tsx','Calendar.tsx','calendarDates.ts','types.ts','ui.tsx','money.ts','money.test.ts','pending.ts','pending.test.ts','service.ts','service.test.ts','print.ts'].map(p=>'frontend/src/encomendas-comandas/'+p),
  ...['20261118-encomendas-comandas.sql','20261118-ec-functions.sql','20261118-ec-ledger.sql','20261118-ec-allocation-parts.sql','20261118-ec-advanced.sql','20261118-ec-commands.sql','20261118-ec-queries.sql'].map(p=>'dataconnect/migrations/'+p),
  ...['runtime_support.py','test_runtime.py','browser_runtime.py','fixtures.sql'].map(p=>'scripts/ec/'+p),
  'scripts/verify-encomendas-comandas.mjs','scripts/qa-browser/encomendas-comandas.mjs',

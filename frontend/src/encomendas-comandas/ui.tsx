@@ -160,14 +160,16 @@ export function Pager({
   offset,
   pageSize,
   onPage,
+  label = "Paginação",
 }: {
+  label?: string;
   total: number;
   offset: number;
   pageSize: number;
   onPage: (offset: number) => void;
 }) {
   return (
-    <nav className="ec-pager" aria-label="Paginação">
+    <nav className="ec-pager" aria-label={label}>
       <span>
         {total ? offset + 1 : 0}–{Math.min(offset + pageSize, total)} de {total}
       </span>
