@@ -1,0 +1,182 @@
+[
+  {
+    "file": "queries.gql",
+    "line": 357,
+    "fields": {
+      "tenant_id": "pc.tenant_id",
+      "branch_id": "c.branch_id",
+      "product_id": "pc.component_product_id"
+    }
+  },
+  {
+    "file": "queries.gql",
+    "line": 492,
+    "fields": {
+      "tenant_id": "m.tenant_id",
+      "branch_id": "c.branch_id",
+      "product_id": "m.product_id"
+    }
+  },
+  {
+    "file": "queries.gql",
+    "line": 497,
+    "fields": {
+      "tenant_id": "pc.tenant_id",
+      "branch_id": "c.branch_id",
+      "product_id": "pc.component_product_id"
+    }
+  },
+  {
+    "file": "queries.gql",
+    "line": 589,
+    "fields": {
+      "tenant_id": "i.tenant_id",
+      "branch_id": "o.branch_id",
+      "product_id": "i.product_id"
+    }
+  },
+  {
+    "file": "queries.gql",
+    "line": 597,
+    "fields": {
+      "tenant_id": "pc.tenant_id",
+      "branch_id": "o.branch_id",
+      "product_id": "pc.component_product_id"
+    }
+  },
+  {
+    "file": "queries.gql",
+    "line": 750,
+    "fields": {
+      "tenant_id": "i.tenant_id",
+      "branch_id": "o.branch_id",
+      "product_id": "i.product_id"
+    }
+  },
+  {
+    "file": "queries.gql",
+    "line": 757,
+    "fields": {
+      "tenant_id": "pc.tenant_id",
+      "branch_id": "o.branch_id",
+      "product_id": "pc.component_product_id"
+    }
+  },
+  {
+    "file": "queries.gql",
+    "line": 877,
+    "fields": {
+      "tenant_id": "s.tenant_id",
+      "branch_id": "s.branch_id",
+      "product_id": "component.id"
+    }
+  },
+  {
+    "file": "queries.gql",
+    "line": 877,
+    "fields": {
+      "tenant_id": "s.tenant_id",
+      "branch_id": "s.branch_id",
+      "product_id": "p.id"
+    }
+  },
+  {
+    "file": "queries.gql",
+    "line": 1573,
+    "fields": {
+      "tenant_id": "p.tenant_id",
+      "branch_id": "b.id",
+      "product_id": "p.id"
+    }
+  },
+  {
+    "file": "queries.gql",
+    "line": 2043,
+    "fields": {
+      "tenant_id": "p.tenant_id",
+      "branch_id": "$2",
+      "product_id": "p.id"
+    }
+  },
+  {
+    "file": "queries.gql",
+    "line": 2043,
+    "fields": {
+      "tenant_id": "p.tenant_id",
+      "branch_id": "$2",
+      "product_id": "component.id"
+    }
+  },
+  {
+    "file": "queries.gql",
+    "line": 2097,
+    "fields": {
+      "tenant_id": "p.tenant_id",
+      "branch_id": "b.id",
+      "product_id": "p.id"
+    }
+  },
+  {
+    "file": "queries.gql",
+    "line": 2097,
+    "fields": {
+      "tenant_id": "p.tenant_id",
+      "branch_id": "b.id",
+      "product_id": "component.id"
+    }
+  },
+  {
+    "file": "mutations.gql",
+    "line": 1547,
+    "fields": {
+      "tenant_id": "rs.tenant_id",
+      "branch_id": "rs.branch_id",
+      "product_id": "rs.product_id"
+    }
+  },
+  {
+    "file": "mutations.gql",
+    "line": 2241,
+    "fields": {
+      "tenant_id": "h.tenant_id",
+      "branch_id": "h.source_id",
+      "product_id": "i.product_id"
+    }
+  },
+  {
+    "file": "mutations.gql",
+    "line": 2297,
+    "fields": {
+      "tenant_id": "h.tenant_id",
+      "branch_id": "h.branch_id",
+      "product_id": "i.product_id"
+    }
+  },
+  {
+    "file": "mutations.gql",
+    "line": 3046,
+    "fields": {
+      "tenant_id": "o.tenant_id",
+      "branch_id": "o.branch_id",
+      "product_id": "requested.product_id"
+    }
+  },
+  {
+    "file": "mutations.gql",
+    "line": 3999,
+    "fields": {
+      "tenant_id": "rs.tenant_id",
+      "branch_id": "rs.branch_id",
+      "product_id": "rs.product_id"
+    }
+  },
+  {
+    "file": "mutations.gql",
+    "line": 4001,
+    "fields": {
+      "tenant_id": "rs.tenant_id",
+      "branch_id": "rs.branch_id",
+      "product_id": "rs.product_id"
+    }
+  }
+]

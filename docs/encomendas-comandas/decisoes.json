@@ -1,0 +1,34 @@
+{
+  "scope": "ENCOMENDAS-COMANDAS-20261118",
+  "readyForActivation": false,
+  "D01": {
+    "status": "resolved_from_existing_rules",
+    "rule": "Tenant.timezone; sequência operacional por tenant/modalidade, sem natureza fiscal"
+  },
+  "D02": {
+    "status": "approved_user_20261118",
+    "rule": "Até 3 casas somente para pesáveis, validação exata também em composição/reserva/transferência/baixa; compartilhamento divide dinheiro, nunca quantidade física."
+  },
+  "D03": {
+    "status": "resolved_from_approved_integral_reservation",
+    "rule": "Nenhuma reserva fictícia por allowNegativeStock"
+  },
+  "D04": {
+    "status": "resolved_from_existing_cash_scope",
+    "rule": "Não mudar filial após recebimento; não remapear caixa ou dinheiro"
+  },
+  "D05": {
+    "status": "approved_user_20261118",
+    "rule": "PREPARING exige gestor autenticado, quantidade/motivo e revisão de liberar reserva ou perda. Auditar ator, autorizador, preparo, quantidade/destino. Não contornar alocação/pagamento."
+  },
+  "D06": {
+    "status": "existing_price_source_and_snapshot",
+    "rule": "Promoção vigente e snapshots; sem taxas inventadas",
+    "remaining": "Validar divulgação e fórmula em DEV; faturamento inclui entrega, lucro/margem dos produtos excluem a taxa; resultado da entrega não é inferido sem custo de transporte."
+  },
+  "D07": {
+    "status": "approved_user_20261118",
+    "rule": "canAccess+canManage na página para sensíveis; dinheiro também CAIXA.canAccess e política financeira/filial/titularidade/aprovação distinta vigente. Sem aprovação digitada, sem grants."
+  },
+  "sensitiveActions": "Política aprovada; em implementação e validação, sem publicação. readyForActivation depende de aceite completo e migração DEV."
+}

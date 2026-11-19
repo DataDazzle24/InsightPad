@@ -68,6 +68,7 @@ You can also follow the instructions from the [Data Connect documentation](https
   - [*PendingPosApprovals*](#pendingposapprovals)
   - [*PosSaleApprovalStatus*](#possaleapprovalstatus)
   - [*PosCashApprovalStatus*](#poscashapprovalstatus)
+  - [*EcRead*](#ecread)
 - [**Mutations**](#mutations)
   - [*BootstrapSalesChannelsNavigation*](#bootstrapsaleschannelsnavigation)
   - [*BootstrapSalesChannelsNavigationV2*](#bootstrapsaleschannelsnavigationv2)
@@ -158,6 +159,7 @@ You can also follow the instructions from the [Data Connect documentation](https
   - [*RequestPosSaleApproval*](#requestpossaleapproval)
   - [*ApprovePosSale*](#approvepossale)
   - [*RequestPosCashApproval*](#requestposcashapproval)
+  - [*EcCommand*](#eccommand)
 
 # TanStack Query Firebase & TanStack React Query
 This SDK provides [React](https://react.dev/) hooks generated specific to your application, for the operations found in the connector `app`. These hooks are generated using [TanStack Query Firebase](https://react-query-firebase.invertase.dev/) by our partners at Invertase, a library built on top of [TanStack React Query v5](https://tanstack.com/query/v5/docs/framework/react/overview).
@@ -4890,6 +4892,92 @@ export default function PosCashApprovalStatusComponent() {
   if (query.isSuccess) {
     console.log(query.data.session);
     console.log(query.data._select);
+  }
+  return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## EcRead
+You can execute the `EcRead` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
+
+```javascript
+useEcRead(dc: DataConnect, vars: EcReadVariables, options?: useDataConnectQueryOptions<EcReadData>): UseDataConnectQueryResult<EcReadData, EcReadVariables>;
+```
+You can also pass in a `DataConnect` instance to the Query hook function.
+```javascript
+useEcRead(vars: EcReadVariables, options?: useDataConnectQueryOptions<EcReadData>): UseDataConnectQueryResult<EcReadData, EcReadVariables>;
+```
+
+### Variables
+The `EcRead` Query requires an argument of type `EcReadVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface EcReadVariables {
+  input: unknown;
+  sessionToken?: string | null;
+}
+```
+### Return Type
+Recall that calling the `EcRead` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
+
+To check the status of a Query, use the `UseQueryResult.status` field. You can also check for pending / success / error status using the `UseQueryResult.isPending`, `UseQueryResult.isSuccess`, and `UseQueryResult.isError` fields.
+
+To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `EcRead` Query is of type `EcReadData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface EcReadData {
+  session?: unknown | null;
+  response?: unknown | null;
+}
+```
+
+To learn more about the `UseQueryResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery).
+
+### Using `EcRead`'s Query hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, EcReadVariables } from '@insightpad/dataconnect';
+import { useEcRead } from '@insightpad/dataconnect/react'
+
+export default function EcReadComponent() {
+  // The `useEcRead` Query hook requires an argument of type `EcReadVariables`:
+  const ecReadVars: EcReadVariables = {
+    input: ...,
+    sessionToken: ..., // optional
+  };
+
+  // You don't have to do anything to "execute" the Query.
+  // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
+  const query = useEcRead(ecReadVars);
+  // Variables can be defined inline as well.
+  const query = useEcRead({ input: ..., sessionToken: ..., });
+
+  // You can also pass in a `DataConnect` instance to the Query hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const query = useEcRead(dataConnect, ecReadVars);
+
+  // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
+  const options = { staleTime: 5 * 1000 };
+  const query = useEcRead(ecReadVars, options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = { staleTime: 5 * 1000 };
+  const query = useEcRead(dataConnect, ecReadVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Query.
+  if (query.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
+  }
+
+  // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
+  if (query.isSuccess) {
+    console.log(query.data.session);
+    console.log(query.data.response);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
 }
@@ -13974,6 +14062,105 @@ export default function RequestPosCashApprovalComponent() {
   if (mutation.isSuccess) {
     console.log(mutation.data.query);
     console.log(mutation.data._execute);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## EcCommand
+You can execute the `EcCommand` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useEcCommand(options?: useDataConnectMutationOptions<EcCommandData, FirebaseError, EcCommandVariables>): UseDataConnectMutationResult<EcCommandData, EcCommandVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useEcCommand(dc: DataConnect, options?: useDataConnectMutationOptions<EcCommandData, FirebaseError, EcCommandVariables>): UseDataConnectMutationResult<EcCommandData, EcCommandVariables>;
+```
+
+### Variables
+The `EcCommand` Mutation requires an argument of type `EcCommandVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface EcCommandVariables {
+  command: unknown;
+  sessionToken?: string | null;
+}
+```
+### Return Type
+Recall that calling the `EcCommand` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `EcCommand` Mutation is of type `EcCommandData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface EcCommandData {
+  query?: {
+    session?: unknown | null;
+    response?: unknown | null;
+  };
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `EcCommand`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, EcCommandVariables } from '@insightpad/dataconnect';
+import { useEcCommand } from '@insightpad/dataconnect/react'
+
+export default function EcCommandComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useEcCommand();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useEcCommand(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useEcCommand(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useEcCommand(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useEcCommand` Mutation requires an argument of type `EcCommandVariables`:
+  const ecCommandVars: EcCommandVariables = {
+    command: ...,
+    sessionToken: ..., // optional
+  };
+  mutation.mutate(ecCommandVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ command: ..., sessionToken: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(ecCommandVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.query);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
 }

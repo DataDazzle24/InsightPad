@@ -1,0 +1,80 @@
+{
+  "scope": "ENCOMENDAS-COMANDAS-20261118",
+  "CORE": "CORE não gravada",
+  "coreWriteAttemptedInThisStage": false,
+  "branch": "agent/encomendas-comandas-dev",
+  "baseSHA": "72f9b629337ae2c0e799863f3ef4ab01c8b71326",
+  "candidateSHA": null,
+  "candidateSHAResolution": "git rev-parse HEAD no commit que contém esta integração; recibo externo da entrega registra SHA/CI",
+  "decisions": {
+    "scope": "ENCOMENDAS-COMANDAS-20261118",
+    "readyForActivation": false,
+    "D01": {
+      "status": "resolved_from_existing_rules",
+      "rule": "Tenant.timezone; sequência operacional por tenant/modalidade, sem natureza fiscal"
+    },
+    "D02": {
+      "status": "approved_user_20261118",
+      "rule": "Até 3 casas somente para pesáveis, validação exata também em composição/reserva/transferência/baixa; compartilhamento divide dinheiro, nunca quantidade física."
+    },
+    "D03": {
+      "status": "resolved_from_approved_integral_reservation",
+      "rule": "Nenhuma reserva fictícia por allowNegativeStock"
+    },
+    "D04": {
+      "status": "resolved_from_existing_cash_scope",
+      "rule": "Não mudar filial após recebimento; não remapear caixa ou dinheiro"
+    },
+    "D05": {
+      "status": "approved_user_20261118",
+      "rule": "PREPARING exige gestor autenticado, quantidade/motivo e revisão de liberar reserva ou perda. Auditar ator, autorizador, preparo, quantidade/destino. Não contornar alocação/pagamento."
+    },
+    "D06": {
+      "status": "existing_price_source_and_snapshot",
+      "rule": "Promoção vigente e snapshots; sem taxas inventadas",
+      "remaining": "Validar divulgação e fórmula em DEV; faturamento inclui entrega, lucro/margem dos produtos excluem a taxa; resultado da entrega não é inferido sem custo de transporte."
+    },
+    "D07": {
+      "status": "approved_user_20261118",
+      "rule": "canAccess+canManage na página para sensíveis; dinheiro também CAIXA.canAccess e política financeira/filial/titularidade/aprovação distinta vigente. Sem aprovação digitada, sem grants."
+    },
+    "sensitiveActions": "Política aprovada; em implementação e validação, sem publicação. readyForActivation depende de aceite completo e migração DEV."
+  },
+  "environments": {
+    "localImplementation": "integrated",
+    "isolatedSQL": "45 tests passed; real SQL Connect/PG18, synthetic identities; live-record preservation across native DDL reapplication",
+    "browser": "23 scenarios; synthetic Auth plus isolated real persistence; native Chrome100/200 headless",
+    "DEV": "not published; no authenticated smoke",
+    "PROD": "untouched"
+  },
+  "preservation": {
+    "historicalAdjustmentIDs": 68,
+    "exclusions": "preserved; see reconciliation-scope.json",
+    "shellAndHome": "unchanged",
+    "POSAndSession": "unchanged",
+    "approvalQueue": "reused unchanged; financial limits and distinct approver retained",
+    "providerAndSchedulers": "no remote mutations"
+  },
+  "delivery": [
+    "17 additive tables",
+    "7 ordered SQL migrations",
+    "EcRead/EcCommand + generated SDKs",
+    "real protected UI and existing integration",
+    "rastreabilidade.tsv",
+    "manual.md",
+    "validacao.md",
+    "publicacao-e-reversao.md"
+  ],
+  "remoteMutations": false,
+  "functionsDeployment": false,
+  "IAMChanges": false,
+  "paidResourcesCreated": false,
+  "availabilityCatalogUpdateAuthorizedByEvidence": false,
+  "remaining": [
+    "candidate remote CI",
+    "fresh DEV preflight/access/backup",
+    "specific authorization for coordinated DEV schema/nativeSQL/connector/Hosting",
+    "authenticated DEV acceptance",
+    "full direct prototype comparison; physical device/OSzoom/printer unverified"
+  ]
+}

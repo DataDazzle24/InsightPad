@@ -61,6 +61,7 @@ This README will guide you through the process of using the generated JavaScript
   - [*PendingPosApprovals*](#pendingposapprovals)
   - [*PosSaleApprovalStatus*](#possaleapprovalstatus)
   - [*PosCashApprovalStatus*](#poscashapprovalstatus)
+  - [*EcRead*](#ecread)
 - [**Mutations**](#mutations)
   - [*BootstrapSalesChannelsNavigation*](#bootstrapsaleschannelsnavigation)
   - [*BootstrapSalesChannelsNavigationV2*](#bootstrapsaleschannelsnavigationv2)
@@ -151,6 +152,7 @@ This README will guide you through the process of using the generated JavaScript
   - [*RequestPosSaleApproval*](#requestpossaleapproval)
   - [*ApprovePosSale*](#approvepossale)
   - [*RequestPosCashApproval*](#requestposcashapproval)
+  - [*EcCommand*](#eccommand)
 
 # Accessing the connector
 A connector is a collection of Queries and Mutations. One SDK is generated for each connector - this SDK is generated for the connector `app`. You can find more information about connectors in the [Data Connect documentation](https://firebase.google.com/docs/data-connect#how-does).
@@ -6492,6 +6494,123 @@ executeQuery(ref).then((response) => {
   const data = response.data;
   console.log(data.session);
   console.log(data._select);
+});
+```
+
+## EcRead
+You can execute the `EcRead` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+ecRead(vars: EcReadVariables, options?: ExecuteQueryOptions): QueryPromise<EcReadData, EcReadVariables>;
+
+interface EcReadRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: EcReadVariables): QueryRef<EcReadData, EcReadVariables>;
+}
+export const ecReadRef: EcReadRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+ecRead(dc: DataConnect, vars: EcReadVariables, options?: ExecuteQueryOptions): QueryPromise<EcReadData, EcReadVariables>;
+
+interface EcReadRef {
+  ...
+  (dc: DataConnect, vars: EcReadVariables): QueryRef<EcReadData, EcReadVariables>;
+}
+export const ecReadRef: EcReadRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the ecReadRef:
+```typescript
+const name = ecReadRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `EcRead` query requires an argument of type `EcReadVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface EcReadVariables {
+  input: unknown;
+  sessionToken?: string | null;
+}
+```
+### Return Type
+Recall that executing the `EcRead` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `EcReadData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface EcReadData {
+  session?: unknown | null;
+  response?: unknown | null;
+}
+```
+### Using `EcRead`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, ecRead, EcReadVariables } from '@insightpad/dataconnect';
+
+// The `EcRead` query requires an argument of type `EcReadVariables`:
+const ecReadVars: EcReadVariables = {
+  input: ...,
+  sessionToken: ..., // optional
+};
+
+// Call the `ecRead()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await ecRead(ecReadVars);
+// Variables can be defined inline as well.
+const { data } = await ecRead({ input: ..., sessionToken: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await ecRead(dataConnect, ecReadVars);
+
+console.log(data.session);
+console.log(data.response);
+
+// Or, you can use the `Promise` API.
+ecRead(ecReadVars).then((response) => {
+  const data = response.data;
+  console.log(data.session);
+  console.log(data.response);
+});
+```
+
+### Using `EcRead`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, ecReadRef, EcReadVariables } from '@insightpad/dataconnect';
+
+// The `EcRead` query requires an argument of type `EcReadVariables`:
+const ecReadVars: EcReadVariables = {
+  input: ...,
+  sessionToken: ..., // optional
+};
+
+// Call the `ecReadRef()` function to get a reference to the query.
+const ref = ecReadRef(ecReadVars);
+// Variables can be defined inline as well.
+const ref = ecReadRef({ input: ..., sessionToken: ..., });
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = ecReadRef(dataConnect, ecReadVars);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.session);
+console.log(data.response);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.session);
+  console.log(data.response);
 });
 ```
 
@@ -17372,6 +17491,121 @@ executeMutation(ref).then((response) => {
   const data = response.data;
   console.log(data.query);
   console.log(data._execute);
+});
+```
+
+## EcCommand
+You can execute the `EcCommand` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+ecCommand(vars: EcCommandVariables): MutationPromise<EcCommandData, EcCommandVariables>;
+
+interface EcCommandRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: EcCommandVariables): MutationRef<EcCommandData, EcCommandVariables>;
+}
+export const ecCommandRef: EcCommandRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+ecCommand(dc: DataConnect, vars: EcCommandVariables): MutationPromise<EcCommandData, EcCommandVariables>;
+
+interface EcCommandRef {
+  ...
+  (dc: DataConnect, vars: EcCommandVariables): MutationRef<EcCommandData, EcCommandVariables>;
+}
+export const ecCommandRef: EcCommandRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the ecCommandRef:
+```typescript
+const name = ecCommandRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `EcCommand` mutation requires an argument of type `EcCommandVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface EcCommandVariables {
+  command: unknown;
+  sessionToken?: string | null;
+}
+```
+### Return Type
+Recall that executing the `EcCommand` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `EcCommandData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface EcCommandData {
+  query?: {
+    session?: unknown | null;
+    response?: unknown | null;
+  };
+}
+```
+### Using `EcCommand`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, ecCommand, EcCommandVariables } from '@insightpad/dataconnect';
+
+// The `EcCommand` mutation requires an argument of type `EcCommandVariables`:
+const ecCommandVars: EcCommandVariables = {
+  command: ...,
+  sessionToken: ..., // optional
+};
+
+// Call the `ecCommand()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await ecCommand(ecCommandVars);
+// Variables can be defined inline as well.
+const { data } = await ecCommand({ command: ..., sessionToken: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await ecCommand(dataConnect, ecCommandVars);
+
+console.log(data.query);
+
+// Or, you can use the `Promise` API.
+ecCommand(ecCommandVars).then((response) => {
+  const data = response.data;
+  console.log(data.query);
+});
+```
+
+### Using `EcCommand`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, ecCommandRef, EcCommandVariables } from '@insightpad/dataconnect';
+
+// The `EcCommand` mutation requires an argument of type `EcCommandVariables`:
+const ecCommandVars: EcCommandVariables = {
+  command: ...,
+  sessionToken: ..., // optional
+};
+
+// Call the `ecCommandRef()` function to get a reference to the mutation.
+const ref = ecCommandRef(ecCommandVars);
+// Variables can be defined inline as well.
+const ref = ecCommandRef({ command: ..., sessionToken: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = ecCommandRef(dataConnect, ecCommandVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.query);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.query);
 });
 ```
 

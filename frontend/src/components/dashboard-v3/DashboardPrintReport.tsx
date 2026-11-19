@@ -29,6 +29,7 @@ export function SalesPrintReport({ data, products, series, metrics, group, sort,
     for(const item of products){const name=item.category||'Não informada',prior=categoryRows.get(name)??{revenue:0n,profit:0n};categoryRows.set(name,{revenue:prior.revenue+BigInt(item.revenueCents),profit:prior.profit+BigInt(item.profitCents)})}
     const categories=[...categoryRows].sort(([an,a],[bn,b])=>a.revenue===b.revenue?an.localeCompare(bn,'pt-BR'):a.revenue>b.revenue?-1:1);
     return <AnalysisReport title="Vendas" from={from} to={to} summary={<>{summary} · {products.length} produto(s) · Faturamento {money(c.revenueCents)} · Lucro após taxas {money(c.profitCents)}.</>}><section className="finance-dashboard"><header className="finance-heading"><div><span className="eyebrow">DASHBOARD</span><h1>INDICADORES FINANCEIROS</h1><p>{from} — {to} · {summary}</p></div></header>
+      {c.deliveryFeeCents&&BigInt(c.deliveryFeeCents)>0n&&<p className="finance-reconciliation-note">Taxas de entrega: {money(c.deliveryFeeCents)} incluídos no faturamento e repasse; excluídos da margem dos produtos. Resultado da entrega depende dos custos de transporte.</p>}
       {c.financialPendingSales > 0 && <p className="finance-reconciliation-note" role="status"><span className="material-symbols-rounded">schedule</span>{c.financialPendingSales} venda(s) do iFood ainda aguardam a conciliação oficial. Até lá, taxas e repasse aparecem como provisórios.</p>}
       {c && m && (<>
           <div className="finance-kpis">

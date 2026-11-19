@@ -4,7 +4,7 @@ import { useDashboardExport } from '../utils/dashboardAuthorization';
 import { useNavigate } from 'react-router-dom';
 import {useTheme} from '../theme/theme-context';
 import {DashboardSurface} from '../components/dashboard-v3/DashboardSurface';
-import {buildSalesModel} from '../components/dashboard-v3/adapters';
+import {money,buildSalesModel} from '../components/dashboard-v3/adapters';
 import {compareRaw} from '../components/dashboard-v3/geometry';
 import {SalesPrintReport} from '../components/dashboard-v3/DashboardPrintReport';
 import {dashboardViews,waitingModel,type DashboardViewProps} from '../components/dashboard-v3/integration';
@@ -35,6 +35,7 @@ type Filters = {
   sources: string[];
 };
 type Cards = {
+  deliveryFeeCents?: string;
   volume: number;
   revenueCents: string;
   providerFeeCents: string;
@@ -232,6 +233,7 @@ export function DailyProfitDashboardPage({onViewChange}:DashboardViewProps) {
   if(evolution?.kind==='lines')evolution.selectedPoint=origin?series.find(point=>point.date.slice(0,group==='year'?4:group==='month'?7:10)===origin.point.slice(0,group==='year'?4:group==='month'?7:10))?.date:undefined;
   const periodChanged=from!==iso(initial)||to!==iso(today);
   return <section className="finance-dashboard dashboard-v3-controller" data-theme={theme}>
+    {c?.deliveryFeeCents&&BigInt(c.deliveryFeeCents)>0n&&<p className="finance-reconciliation-note" role="status">Taxas de entrega: {money(c.deliveryFeeCents)} incluídos no faturamento e no repasse. A margem dos produtos exclui esse valor; o resultado da entrega depende dos custos de transporte.</p>}
     <DashboardSurface model={model} view="sales" views={dashboardViews} theme={theme} busy={busy} canExport={canExport&&!!data} filterResetToken={visualReset}
       actions={{onViewChange,onBack:()=>navigate('/modulos/dashboards'),onClear:clear,onDetails:()=>setInfo(true),onFilters:()=>{setDraft(filters);setRange({from,to});setFilterOpen(true)},onPrint:()=>{if(canExport&&data&&!busy)window.print()},
         onSelectPeriod:id=>{const day=series.find(item=>item.date===id);if(day)choosePeriod(day)},

@@ -1,24 +1,26 @@
 import {createRoot} from 'react-dom/client'
 import {HashRouter,Link} from 'react-router-dom'
-import {useMemo,useState} from 'react'
+import {useEffect,useMemo,useState} from 'react'
 import type {User} from 'firebase/auth'
 import App from '../src/App'
 import {AuthContext,type AuthContextValue,type UserProfile} from '../src/auth/auth-context'
 import {ThemeProvider} from '../src/theme/ThemeProvider'
 import {appRoutes} from '../src/config/pages'
-import {qaState,resetFixtures,inspectFixtures,useBoundaryLedger,useFlowFixtures,useFinePrintFixtures,useFineBundleFixture,qaOperation,uuid} from './api'
+import {auth,qaState,resetFixtures,inspectFixtures,useBoundaryLedger,useFlowFixtures,useFinePrintFixtures,useFineBundleFixture,qaOperation,uuid} from './api'
 import '../src/index.css'
 import '../src/dev-adjustments.css'
 import './review.css'
 const profile:UserProfile={id:'qa-user',name:'OPERADOR FICTÍCIO QA',email:'qa@example.invalid',active:true,onboardingPending:false,tenant:{id:uuid(10),legalName:'EMPRESA FICTÍCIA QA',tradeName:'QA',active:true,timezone:'America/Sao_Paulo',currencyCode:'BRL'},role:{id:uuid(11),name:'Administrador QA',systemRole:true,hierarchyLevel:10,active:true}}
-const pageNames:Record<string,string>={"CAIXA": "Frente de caixa", "GESTAO_VENDAS": "Registro de vendas", "ESTOQUE": "Controle de estoque", "CONTAS_PAGAR": "Contas a pagar", "CONTAS_RECEBER": "Contas a receber", "CAD_CATEGORIA": "Categorias", "CAD_SUBCATEGORIA": "Subcategorias", "CAD_PRODUTO": "Produtos", "CAD_CLIENTE": "Clientes", "CAD_FORNECEDOR": "Fornecedores", "CAD_FILIAL": "Filiais", "RELATORIOS_OPERACIONAIS": "Indicadores operacionais", "CANAIS_VENDA": "Canais de venda", "GESTAO_ACESSOS": "Gestão de acessos"}
+const pageNames:Record<string,string>={"COMANDAS":"Comandas","ENCOMENDAS":"Encomendas","CAIXA": "Frente de caixa", "GESTAO_VENDAS": "Registro de vendas", "ESTOQUE": "Controle de estoque", "CONTAS_PAGAR": "Contas a pagar", "CONTAS_RECEBER": "Contas a receber", "CAD_CATEGORIA": "Categorias", "CAD_SUBCATEGORIA": "Subcategorias", "CAD_PRODUTO": "Produtos", "CAD_CLIENTE": "Clientes", "CAD_FORNECEDOR": "Fornecedores", "CAD_FILIAL": "Filiais", "RELATORIOS_OPERACIONAIS": "Indicadores operacionais", "CANAIS_VENDA": "Canais de venda", "GESTAO_ACESSOS": "Gestão de acessos"}
 export function ApplicationQa(){
- const params=new URLSearchParams(location.search)
+ const params=useMemo(()=>new URLSearchParams(location.search),[])
  const [mode,setMode]=useState(params.has('qa-denied')?'unauthorized':'full'),[version,setVersion]=useState(0),[signed,setSigned]=useState(!params.has('qa-login'))
- const qaProfile=params.get('qa-profile')==='platform'?{...profile,role:{...profile.role,name:'Administrador da Plataforma'}}:params.get('qa-profile')==='member'?{...profile,role:{...profile.role,systemRole:false,hierarchyLevel:20}}:profile
+ const ecRuntime=(window as unknown as {__ecRuntime?:{uid:string;tenantId:string}}).__ecRuntime;
+ const qaProfile=params.has('qa-ec')&&ecRuntime?{...profile,id:ecRuntime.uid,name:'Operador sintético EC',tenant:{...profile.tenant,id:ecRuntime.tenantId,tradeName:'Ambiente sintético de integração'}}:params.get('qa-profile')==='platform'?{...profile,role:{...profile.role,name:'Administrador da Plataforma'}}:params.get('qa-profile')==='member'?{...profile,role:{...profile.role,systemRole:false,hierarchyLevel:20}}:profile
  const pageFilter=params.get('qa-pages')
  const permissions=useMemo(()=>Object.fromEntries(appRoutes.map((r,i)=>[r.pageKey,{page:{id:uuid(10000+i),pageKey:r.pageKey,displayName:pageNames[r.pageKey],module:'QA',route:r.route,icon:'apps',displayOrder:i,requiresLogin:true,active:true},canAccess:mode!=='denied'&&(!pageFilter||pageFilter.split(',').includes(r.pageKey)),canCreate:!['read','denied'].includes(mode),canUpdate:!['read','denied'].includes(mode),canDelete:!['read','denied'].includes(mode),canManage:!['read','denied','operator'].includes(mode),canExport:mode==='full'}])),[mode,pageFilter])
- const context:AuthContextValue={firebaseUser:signed?{uid:'qa-user'} as User:null,profile:signed?qaProfile:null,permissions,status:signed?(mode==='unauthorized'?'unauthorized':'authenticated'):'unauthenticated',error:null,canAccess:key=>permissions[key]?.canAccess===true,signIn:async()=>setSigned(true),signOut:async()=>setSigned(false),resetPassword:async()=>{}}
+ useEffect(()=>{auth.currentUser=signed?{uid:params.has('qa-ec')&&ecRuntime?ecRuntime.uid:'qa-user'}:null},[signed,ecRuntime,params]);
+ const context:AuthContextValue={firebaseUser:signed?{uid:params.has('qa-ec')&&ecRuntime?ecRuntime.uid:'qa-user'} as User:null,profile:signed?qaProfile:null,permissions,status:signed?(mode==='unauthorized'?'unauthorized':'authenticated'):'unauthenticated',error:null,canAccess:key=>permissions[key]?.canAccess===true,signIn:async()=>setSigned(true),signOut:async()=>setSigned(false),resetPassword:async()=>{}}
  return <><details className="qa-controls"><summary>QA completo · dados fictícios · sem backend</summary><p>SHA: <code>{import.meta.env.VITE_QA_SOURCE_SHA}</code></p><p>Auth/API mockados. Não usar dados ou credenciais reais. Este ambiente não comprova autorização ou integração implantada.</p>
  <label>Permissões <select aria-label="Permissões" value={mode} onChange={e=>{qaState.permissions=e.target.value;setMode(e.target.value)}}><option value="full">Completo</option><option value="noexport">Sem exportação</option><option value="operator">Operador sem gestão</option><option value="read">Somente consulta</option><option value="denied">Sem acesso</option></select></label>
  <label><input type="checkbox" onChange={e=>{qaState.fail=e.target.checked;setVersion(x=>x+1)}}/>Falha sintética de API</label>

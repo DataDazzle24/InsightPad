@@ -370,6 +370,113 @@ export interface DailyProfitDashboardVariables {
   sessionToken?: string | null;
 }
 
+export interface EcAllocationPart_Key {
+  id: UUIDString;
+  __typename?: 'EcAllocationPart_Key';
+}
+
+export interface EcAllocation_Key {
+  id: UUIDString;
+  __typename?: 'EcAllocation_Key';
+}
+
+export interface EcCommandData {
+  query?: {
+    session?: unknown | null;
+    response?: unknown | null;
+  };
+}
+
+export interface EcCommandVariables {
+  command: unknown;
+  sessionToken?: string | null;
+}
+
+export interface EcComponent_Key {
+  id: UUIDString;
+  __typename?: 'EcComponent_Key';
+}
+
+export interface EcDisposition_Key {
+  id: UUIDString;
+  __typename?: 'EcDisposition_Key';
+}
+
+export interface EcDocument_Key {
+  id: UUIDString;
+  __typename?: 'EcDocument_Key';
+}
+
+export interface EcEvent_Key {
+  id: UUIDString;
+  __typename?: 'EcEvent_Key';
+}
+
+export interface EcItem_Key {
+  id: UUIDString;
+  __typename?: 'EcItem_Key';
+}
+
+export interface EcLineage_Key {
+  id: UUIDString;
+  __typename?: 'EcLineage_Key';
+}
+
+export interface EcOperation_Key {
+  id: UUIDString;
+  __typename?: 'EcOperation_Key';
+}
+
+export interface EcParticipant_Key {
+  id: UUIDString;
+  __typename?: 'EcParticipant_Key';
+}
+
+export interface EcReadData {
+  session?: unknown | null;
+  response?: unknown | null;
+}
+
+export interface EcReadVariables {
+  input: unknown;
+  sessionToken?: string | null;
+}
+
+export interface EcReceipt_Key {
+  id: UUIDString;
+  __typename?: 'EcReceipt_Key';
+}
+
+export interface EcRefund_Key {
+  id: UUIDString;
+  __typename?: 'EcRefund_Key';
+}
+
+export interface EcReservation_Key {
+  id: UUIDString;
+  __typename?: 'EcReservation_Key';
+}
+
+export interface EcSaleReceiptLink_Key {
+  id: UUIDString;
+  __typename?: 'EcSaleReceiptLink_Key';
+}
+
+export interface EcSequence_Key {
+  id: UUIDString;
+  __typename?: 'EcSequence_Key';
+}
+
+export interface EcSplitPlan_Key {
+  id: UUIDString;
+  __typename?: 'EcSplitPlan_Key';
+}
+
+export interface EcSplitShare_Key {
+  id: UUIDString;
+  __typename?: 'EcSplitShare_Key';
+}
+
 export interface EnsureSalesDefaultsData {
   query?: {
     session?: unknown | null;
@@ -3167,6 +3274,18 @@ export const requestPosCashApprovalRef: RequestPosCashApprovalRef;
 export function requestPosCashApproval(vars: RequestPosCashApprovalVariables): MutationPromise<RequestPosCashApprovalData, RequestPosCashApprovalVariables>;
 export function requestPosCashApproval(dc: DataConnect, vars: RequestPosCashApprovalVariables): MutationPromise<RequestPosCashApprovalData, RequestPosCashApprovalVariables>;
 
+interface EcCommandRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: EcCommandVariables): MutationRef<EcCommandData, EcCommandVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: EcCommandVariables): MutationRef<EcCommandData, EcCommandVariables>;
+  operationName: string;
+}
+export const ecCommandRef: EcCommandRef;
+
+export function ecCommand(vars: EcCommandVariables): MutationPromise<EcCommandData, EcCommandVariables>;
+export function ecCommand(dc: DataConnect, vars: EcCommandVariables): MutationPromise<EcCommandData, EcCommandVariables>;
+
 interface GetCurrentUserRef {
   /* Allow users to create refs without passing in DataConnect */
   (): QueryRef<GetCurrentUserData, undefined>;
@@ -3766,4 +3885,16 @@ export const posCashApprovalStatusRef: PosCashApprovalStatusRef;
 
 export function posCashApprovalStatus(vars: PosCashApprovalStatusVariables, options?: ExecuteQueryOptions): QueryPromise<PosCashApprovalStatusData, PosCashApprovalStatusVariables>;
 export function posCashApprovalStatus(dc: DataConnect, vars: PosCashApprovalStatusVariables, options?: ExecuteQueryOptions): QueryPromise<PosCashApprovalStatusData, PosCashApprovalStatusVariables>;
+
+interface EcReadRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: EcReadVariables): QueryRef<EcReadData, EcReadVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: EcReadVariables): QueryRef<EcReadData, EcReadVariables>;
+  operationName: string;
+}
+export const ecReadRef: EcReadRef;
+
+export function ecRead(vars: EcReadVariables, options?: ExecuteQueryOptions): QueryPromise<EcReadData, EcReadVariables>;
+export function ecRead(dc: DataConnect, vars: EcReadVariables, options?: ExecuteQueryOptions): QueryPromise<EcReadData, EcReadVariables>;
 

@@ -11,7 +11,7 @@ export interface NavigationModule extends NavigationItem {
 }
 
 export const navigationModules: NavigationModule[] = [
-  { label: 'Vendas', icon: 'point_of_sale', to: '/modulos/vendas', pageKeys: ['CAIXA', 'GESTAO_VENDAS'], description: 'Frente de caixa e gestão das vendas', accent: 'cyan' },
+  { label: 'Vendas', icon: 'point_of_sale', to: '/modulos/vendas', pageKeys: ['CAIXA', 'COMANDAS', 'ENCOMENDAS', 'GESTAO_VENDAS'], description: 'Frente de caixa e gestão das vendas', accent: 'cyan' },
   { label: 'Estoque', icon: 'inventory_2', to: '/estoque', pageKeys: ['ESTOQUE'], description: 'Entradas, saídas e posição do estoque', accent: 'green' },
   { label: 'Financeiro', icon: 'account_balance_wallet', to: '/modulos/financeiro', pageKeys: ['CONTAS_PAGAR', 'CONTAS_RECEBER'], description: 'Pagamentos, recebimentos e acompanhamento financeiro', accent: 'cyan' },
   { label: 'Cadastros', icon: 'app_registration', to: '/modulos/cadastros', pageKeys: ['CAD_CATEGORIA', 'CAD_SUBCATEGORIA', 'CAD_PRODUTO', 'CAD_CLIENTE', 'CAD_FORNECEDOR', 'CAD_FILIAL'], description: 'Base cadastral do seu negócio', accent: 'cyan' },
@@ -22,7 +22,9 @@ export const navigationModules: NavigationModule[] = [
 export const moduleMenus = {
   vendas: { title: 'Vendas', subtitle: 'Escolha uma opção para continuar', items: [
     { pageKey: 'CAIXA', label: 'Frente de Caixa', description: 'Registre suas vendas com agilidade', icon: 'point_of_sale' },
-    { pageKey: 'GESTAO_VENDAS', label: 'Gestão de Vendas', description: 'Consulte e administre os registros', icon: 'receipt_long' },
+    { pageKey: 'COMANDAS', label: 'Comandas', description: 'Atendimento, itens e recebimentos', icon: 'receipt_long' },
+    { pageKey: 'ENCOMENDAS', label: 'Encomendas', description: 'Pedidos, prazos e reservas', icon: 'shopping_bag' },
+    { pageKey: 'GESTAO_VENDAS', label: 'Registro de Vendas', description: 'Consulte e administre os registros', icon: 'receipt_long' },
   ]},
   financeiro: { title: 'Financeiro', subtitle: 'Organize pagamentos e recebimentos do seu negócio', items: [
     { pageKey: 'CONTAS_PAGAR', label: 'Contas a Pagar', description: 'Controle de compromissos financeiros', icon: 'payments' },

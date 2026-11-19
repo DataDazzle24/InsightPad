@@ -27,3 +27,6 @@ Thumbs.db
 
 # Artefatos locais de CI/revisão
 artifacts/
+
+# Python helpers for the isolated EC test runtime.
+/scripts/ec/__pycache__/

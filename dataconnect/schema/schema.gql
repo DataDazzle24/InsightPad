@@ -1194,3 +1194,242 @@ type PosApproval @table(name: "pos_approvals", key: "id")
   approvedAt: Timestamp @col(name: "approved_at")
   createdAt: Timestamp! @default(expr: "request.time") @col(name: "created_at")
 }
+
+# Encomendas e Comandas: additive operational ledger. PostgreSQL invariants and
+# shared stock guards are delivered in migrations/20261118-encomendas-comandas.sql.
+
+type EcDocument @table(name: "ec_documents", key: "id") {
+  id: UUID! @col(name: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  branchId: UUID! @col(name: "branch_id")
+  kind: String! @col(name: "kind")
+  code: String! @col(name: "code")
+  customerId: UUID @col(name: "customer_id")
+  identification: String! @col(name: "identification")
+  status: String! @col(name: "status")
+  fulfillmentMode: String @col(name: "fulfillment_mode")
+  dueAt: Timestamp @col(name: "due_at")
+  timezoneSnapshot: String! @col(name: "timezone_snapshot")
+  deliveryAddress: Any @col(name: "delivery_address")
+  deliveryFeeCents: Int64! @col(name: "delivery_fee_cents")
+  notes: String! @col(name: "notes")
+  reservationStrategy: String! @col(name: "reservation_strategy")
+  reservationState: String! @col(name: "reservation_state")
+  subtotalCents: Int64! @col(name: "subtotal_cents")
+  totalCents: Int64! @col(name: "total_cents")
+  receivedNetCents: Int64! @col(name: "received_net_cents")
+  saleId: UUID @col(name: "sale_id")
+  mergedIntoId: UUID @col(name: "merged_into_id")
+  openedByUid: String! @col(name: "opened_by_uid")
+  openedCashSessionId: UUID @col(name: "opened_cash_session_id")
+  completedAt: Timestamp @col(name: "completed_at")
+  cancelledAt: Timestamp @col(name: "cancelled_at")
+  incorporatedAt: Timestamp @col(name: "incorporated_at")
+  reason: String @col(name: "reason")
+  version: Int64! @col(name: "version")
+  createdAt: Timestamp! @col(name: "created_at")
+  updatedAt: Timestamp! @col(name: "updated_at")
+}
+
+type EcItem @table(name: "ec_items", key: "id") {
+  id: UUID! @col(name: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  documentId: UUID! @col(name: "document_id")
+  originalDocumentId: UUID! @col(name: "original_document_id")
+  sourceItemId: UUID @col(name: "source_item_id")
+  productId: UUID! @col(name: "product_id")
+  productName: String! @col(name: "product_name")
+  sku: String @col(name: "sku")
+  unit: String! @col(name: "unit")
+  quantity: Float! @col(name: "quantity", dataType: "numeric(18,3)")
+  unitListPriceCents: Int64! @col(name: "unit_list_price_cents")
+  unitPriceCents: Int64! @col(name: "unit_price_cents")
+  lineTotalCents: Int64! @col(name: "line_total_cents")
+  specifications: String! @col(name: "specifications")
+  preparationState: String! @col(name: "preparation_state")
+  participantId: UUID @col(name: "participant_id")
+  status: String! @col(name: "status")
+  createdAt: Timestamp! @col(name: "created_at")
+}
+
+type EcComponent @table(name: "ec_components", key: "id") {
+  id: UUID! @col(name: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  documentId: UUID! @col(name: "document_id")
+  itemId: UUID! @col(name: "item_id")
+  productId: UUID! @col(name: "product_id")
+  quantityPerParent: Float! @col(name: "quantity_per_parent", dataType: "numeric(18,3)")
+  unitCostCents: Int64! @col(name: "unit_cost_cents")
+}
+
+type EcParticipant @table(name: "ec_participants", key: "id") {
+  id: UUID! @col(name: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  documentId: UUID! @col(name: "document_id")
+  name: String! @col(name: "name")
+  displayOrder: Int! @col(name: "display_order")
+}
+
+type EcReceipt @table(name: "ec_receipts", key: "id") {
+  id: UUID! @col(name: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  documentId: UUID! @col(name: "document_id")
+  originalDocumentId: UUID! @col(name: "original_document_id")
+  amountCents: Int64! @col(name: "amount_cents")
+  returnedCents: Int64! @col(name: "returned_cents")
+  tenderedCents: Int64! @col(name: "tendered_cents")
+  changeCents: Int64! @col(name: "change_cents")
+  paymentMethodId: UUID! @col(name: "payment_method_id")
+  reference: String! @col(name: "reference")
+  cashSessionId: UUID @col(name: "cash_session_id")
+  operatorUid: String! @col(name: "operator_uid")
+  operationId: UUID! @col(name: "operation_id")
+  receivedAt: Timestamp! @col(name: "received_at")
+}
+
+type EcAllocation @table(name: "ec_allocations", key: "id") {
+  id: UUID! @col(name: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  documentId: UUID! @col(name: "document_id")
+  receiptId: UUID! @col(name: "receipt_id")
+  itemId: UUID @col(name: "item_id")
+  participantId: UUID @col(name: "participant_id")
+  shareId: UUID @col(name: "share_id")
+  amountCents: Int64! @col(name: "amount_cents")
+}
+
+type EcSplitPlan @table(name: "ec_split_plans", key: "id") {
+  id: UUID! @col(name: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  documentId: UUID! @col(name: "document_id")
+  itemId: UUID @col(name: "item_id")
+  mode: String! @col(name: "mode")
+  baseVersion: Int64! @col(name: "base_version")
+  totalCents: Int64! @col(name: "total_cents")
+  parts: Int! @col(name: "parts")
+  status: String! @col(name: "status")
+}
+
+type EcSplitShare @table(name: "ec_split_shares", key: "id") {
+  id: UUID! @col(name: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  documentId: UUID! @col(name: "document_id")
+  planId: UUID! @col(name: "plan_id")
+  participantId: UUID @col(name: "participant_id")
+  shareIndex: Int! @col(name: "share_index")
+  amountCents: Int64! @col(name: "amount_cents")
+  paidCents: Int64! @col(name: "paid_cents")
+}
+
+type EcReservation @table(name: "ec_reservations", key: "id") {
+  id: UUID! @col(name: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  documentId: UUID! @col(name: "document_id")
+  itemId: UUID! @col(name: "item_id")
+  branchId: UUID! @col(name: "branch_id")
+  productId: UUID! @col(name: "product_id")
+  quantity: Float! @col(name: "quantity", dataType: "numeric(18,3)")
+  status: String! @col(name: "status")
+  operationId: UUID! @col(name: "operation_id")
+  createdAt: Timestamp! @col(name: "created_at")
+  closedAt: Timestamp @col(name: "closed_at")
+}
+
+type EcDisposition @table(name: "ec_dispositions", key: "id") {
+  id: UUID! @col(name: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  documentId: UUID! @col(name: "document_id")
+  itemId: UUID! @col(name: "item_id")
+  quantity: Float! @col(name: "quantity", dataType: "numeric(18,3)")
+  preparationState: String! @col(name: "preparation_state")
+  disposition: String! @col(name: "disposition")
+  reason: String! @col(name: "reason")
+  actorUid: String! @col(name: "actor_uid")
+  stockMovementId: UUID @col(name: "stock_movement_id")
+  operationId: UUID! @col(name: "operation_id")
+  createdAt: Timestamp! @col(name: "created_at")
+}
+
+type EcEvent @table(name: "ec_events", key: "id") {
+  id: UUID! @col(name: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  documentId: UUID! @col(name: "document_id")
+  relatedDocumentId: UUID @col(name: "related_document_id")
+  eventType: String! @col(name: "event_type")
+  actorUid: String! @col(name: "actor_uid")
+  operationId: UUID! @col(name: "operation_id")
+  beforeVersion: Int64! @col(name: "before_version")
+  afterVersion: Int64! @col(name: "after_version")
+  details: Any! @col(name: "details")
+  occurredAt: Timestamp! @col(name: "occurred_at")
+}
+
+type EcOperation @table(name: "ec_operations", key: "id") {
+  id: UUID! @col(name: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  actorUid: String! @col(name: "actor_uid")
+  operationType: String! @col(name: "operation_type")
+  payloadHash: String! @col(name: "payload_hash")
+  documentId: UUID @col(name: "document_id")
+  secondaryDocumentId: UUID @col(name: "secondary_document_id")
+  result: Any! @col(name: "result")
+  createdAt: Timestamp! @col(name: "created_at")
+}
+
+type EcRefund @table(name: "ec_refunds", key: "id") {
+  id: UUID! @col(name: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  documentId: UUID! @col(name: "document_id")
+  receiptId: UUID! @col(name: "receipt_id")
+  amountCents: Int64! @col(name: "amount_cents")
+  paymentMethodId: UUID! @col(name: "payment_method_id")
+  reference: String! @col(name: "reference")
+  reason: String! @col(name: "reason")
+  cashSessionId: UUID @col(name: "cash_session_id")
+  operatorUid: String! @col(name: "operator_uid")
+  operationId: UUID! @col(name: "operation_id")
+  refundedAt: Timestamp! @col(name: "refunded_at")
+}
+
+type EcSaleReceiptLink @table(name: "ec_sale_receipt_links", key: "id") {
+  id: UUID! @col(name: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  documentId: UUID! @col(name: "document_id")
+  originalDocumentId: UUID! @col(name: "original_document_id")
+  saleId: UUID! @col(name: "sale_id")
+  salePaymentId: UUID! @col(name: "sale_payment_id")
+  receiptId: UUID! @col(name: "receipt_id")
+  amountCents: Int64! @col(name: "amount_cents")
+}
+
+type EcLineage @table(name: "ec_lineage", key: "id") {
+  id: UUID! @col(name: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  originDocumentId: UUID! @col(name: "origin_document_id")
+  destinationDocumentId: UUID! @col(name: "destination_document_id")
+  sourceItemId: UUID @col(name: "source_item_id")
+  destinationItemId: UUID @col(name: "destination_item_id")
+  quantity: Float @col(name: "quantity", dataType: "numeric(18,3)")
+  action: String! @col(name: "action")
+  operationId: UUID! @col(name: "operation_id")
+  occurredAt: Timestamp! @col(name: "occurred_at")
+}
+
+type EcSequence @table(name: "ec_sequences", key: "id") {
+  id: UUID! @col(name: "id")
+  tenantId: UUID! @col(name: "tenant_id")
+  kind: String! @col(name: "kind")
+  nextValue: Int64! @col(name: "next_value")
+}
+
+# Explicit item mapping preserves already-paid split shares and their receipts.
+type EcAllocationPart @table(name: "ec_allocation_parts", key: "id") {
+  id: UUID!
+  tenantId: UUID! @col(name: "tenant_id")
+  documentId: UUID! @col(name: "document_id")
+  allocationId: UUID! @col(name: "allocation_id")
+  itemId: UUID! @col(name: "item_id")
+  amountCents: Int64! @col(name: "amount_cents")
+  operationId: UUID! @col(name: "operation_id")
+  createdAt: Timestamp! @col(name: "created_at")
+}
