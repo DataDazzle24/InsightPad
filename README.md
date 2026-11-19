@@ -20,7 +20,9 @@ e parser PostgreSQL WASM18.2.4; não são dependências do produto.
    configuração pública real e as nove contenções iFood. Não espera um CI novo.
 2. Confere instância/serviço reais, usuário IAM SQL já existente, role proprietária
    existente e propriedade das tabelas de guardas. Exige backup SUCCESSFUL de até
-   24h e PITR existentes. Nenhum usuário, senha, grant, backup ou recurso é criado.
+   24h, reconfirmado por GET do ID na instância correta. PITR é registrado, sem ser
+   habilitado ou exigido quando há backup recente válido. Nenhum usuário, senha,
+   grant, backup ou recurso é criado.
    A confirmação é por metadados; não é um ensaio de restauração.
 3. Faz checkout isolado do SHA e build normal development com a configuração real.
    Reutiliza node_modules somente com manifests/lockfile iguais; senão npm ci.
@@ -78,7 +80,7 @@ CORE não gravada; delta local no diretório privado da operação.
 
 ## Validação deste pacote
 
-30 testes offline, incluindo orquestração completa simulada e bloqueio do frontend
+38 testes offline, incluindo orquestração completa simulada e bloqueio do frontend
 após falha SQL. As duas chamadas de smoke administrativo/recusa foram testadas com
 SQL Connect e PostgreSQL18 reais e isolados. Os sete corpos SQL foram analisados
 pelo parser para confirmar ausência de COMMIT/BEGIN externo após a adaptação.
@@ -87,3 +89,24 @@ Nenhuma mutação Google Cloud foi executada ao preparar este pacote.
 
 Compartilhar somente o JSON entre `=== INICIO P58 ===` e `=== FIM P58 ===`.
 Tokens, logs, snapshots e credenciais permanecem privados no Cloud Shell.
+
+## Correção do preflight de backup — 19/11/2026
+
+A primeira execução recebida parou antes de qualquer mutação Google, após CI,
+permissões e nove contenções aprovados. A mensagem juntava backup e PITR e não
+identificava qual condição estava ausente. A exigência adicional de PITR foi
+retirada: o plano exige um backup restaurável confirmado para a migração aditiva,
+sem impor a contratação/ativação de recuperação contínua. Backup recente continua
+obrigatório, mesmo quando PITR está habilitado.
+
+O roteiro agora pagina o inventário, reconfirma por ID o backup SUCCESSFUL concluído
+em até24h e registra o diagnóstico sanitizado mesmo ao bloquear. Aceita a ausência
+do campo opcional instance porque a URI da API já fixa projeto/instância; recusa
+campo conflitante. Não usa backups RUNNING, antigos ou com data inválida.
+PITR ausente não é ocultado: o recibo registra o estado e não afirma recuperação
+sem perda de dados. Restaurar um backup pode omitir escritas posteriores; nenhuma
+restauração é automática. Ledger e guardas continuam preservados na recuperação.
+
+Como a execução anterior marcou remoteMutationAttempted:false, é permitido iniciar
+uma nova tentativa com preflight fresco. O bloqueio de repetição depois de qualquer
+intenção de mutação foi mantido. O candidato do produto continua bb2def3.

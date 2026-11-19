@@ -55,17 +55,42 @@ class ApiTests(unittest.TestCase):
   saved=json.loads(self.r.path.read_text());self.assertTrue(saved['remoteMutationAttempted']);self.assertTrue(saved['remoteOutcomeUncertain']);self.assertNotIn('offline-secret',self.r.path.read_text());self.assertEqual(opener.open.call_count,1)
  def metadata(self,backup=True,user=True,pitr=True):
   now=dt.datetime.now(dt.timezone.utc)
-  return [dict(project=p.P,region=p.R,databaseVersion='POSTGRES_17',connectionName=p.P+':'+p.R+':insightpad-fdc',state='RUNNABLE',settings={'databaseFlags':[{'name':'cloudsql.iam_authentication','value':'on'}],'backupConfiguration':{'pointInTimeRecoveryEnabled':pitr}},ipAddresses=[{'type':'PRIMARY'}]),{'items':([{'name':p.OPERATOR,'type':'CLOUD_IAM_USER'}] if user else [])+[{'name':'service-'+p.N+'@gcp-sa-firebasedataconnect.iam','type':'CLOUD_IAM_SERVICE_ACCOUNT'}]},{'items':[{'id':'123','instance':'insightpad-fdc','status':'SUCCESSFUL','endTime':(now-dt.timedelta(hours=2 if backup else 25)).isoformat()}]}]
+  b={'id':'123','instance':'insightpad-fdc','status':'SUCCESSFUL','endTime':(now-dt.timedelta(hours=2 if backup else 25)).isoformat()}
+  return [dict(project=p.P,region=p.R,databaseVersion='POSTGRES_17',connectionName=p.P+':'+p.R+':insightpad-fdc',state='RUNNABLE',settings={'databaseFlags':[{'name':'cloudsql.iam_authentication','value':'on'}],'backupConfiguration':{'pointInTimeRecoveryEnabled':pitr}},ipAddresses=[{'type':'PRIMARY'}]),{'items':([{'name':p.OPERATOR,'type':'CLOUD_IAM_USER'}] if user else [])+[{'name':'service-'+p.N+'@gcp-sa-firebasedataconnect.iam','type':'CLOUD_IAM_SERVICE_ACCOUNT'}]},{'items':[b]},copy.deepcopy(b)]
  def test_existing_sql_access_and_backup_are_read_only(self):
   self.r.api=Mock(side_effect=self.metadata());self.r.cloud_sql();self.assertFalse(self.r.record['remoteMutationAttempted']);self.assertEqual(self.r.sql_config['user'],p.OPERATOR)
  def test_missing_iam_user_never_triggers_creation(self):
   self.r.api=Mock(side_effect=self.metadata(user=False))
   with self.assertRaisesRegex(RuntimeError,'usuário IAM SQL'):self.r.cloud_sql()
   self.assertFalse(self.r.record['remoteMutationAttempted'])
- def test_old_backup_or_missing_pitr_blocks_migration(self):
-  for kw in [{'backup':False},{'pitr':False}]:
-   self.r.api=Mock(side_effect=self.metadata(**kw))
-   with self.assertRaisesRegex(RuntimeError,'Backup'):self.r.cloud_sql()
+ def test_old_backup_blocks_migration_and_preserves_diagnostics(self):
+  self.r.api=Mock(side_effect=self.metadata(backup=False))
+  with self.assertRaisesRegex(RuntimeError,'backup SUCCESSFUL'):self.r.cloud_sql()
+  self.assertEqual(self.r.record['backupDiagnostics']['backupCount'],1);self.assertFalse(self.r.record['remoteMutationAttempted'])
+ def test_successful_backup_is_sufficient_without_changing_pitr(self):
+  self.r.api=Mock(side_effect=self.metadata(pitr=False));self.r.cloud_sql()
+  self.assertFalse(self.r.record['dataProtection']['PITREnabled']);self.assertFalse(self.r.record['dataProtection']['zeroDataLossRestoreClaimed']);self.assertFalse(self.r.record['remoteMutationAttempted']);self.assertEqual(self.r.api.call_args.args[1].split('/')[-1],'123')
+ def test_empty_backups_blocks_even_when_pitr_enabled(self):
+  data=self.metadata();data[2]={'items':[]};self.r.api=Mock(side_effect=data)
+  with self.assertRaisesRegex(RuntimeError,'backup SUCCESSFUL'):self.r.cloud_sql()
+  self.assertTrue(self.r.record['backupDiagnostics']['PITREnabled']);self.assertEqual(self.r.record['backupDiagnostics']['backupCount'],0)
+ def test_optional_instance_field_uses_exact_api_uri(self):
+  data=self.metadata();data[2]['items'][0].pop('instance');data[3].pop('instance');self.r.api=Mock(side_effect=data);self.r.cloud_sql();self.assertEqual(self.r.record['dataProtection']['backupID'],'123')
+ def test_conflicting_backup_instance_never_qualifies(self):
+  data=self.metadata();data[2]['items'][0]['instance']='production-other';self.r.api=Mock(side_effect=data)
+  with self.assertRaisesRegex(RuntimeError,'backup SUCCESSFUL'):self.r.cloud_sql()
+ def test_pagination_finds_recent_backup_on_next_page(self):
+  data=self.metadata();data.insert(2,{'items':[],'nextPageToken':'page2'});self.r.api=Mock(side_effect=data);self.r.cloud_sql();self.assertEqual(self.r.api.call_args_list[3].kwargs['query']['pageToken'],'page2')
+ def test_pending_or_invalid_timestamp_never_qualifies(self):
+  for change in [{'status':'RUNNING'},{'endTime':'invalid'},{'endTime':None}]:
+   data=self.metadata();data[2]['items'][0].update(change);self.r.api=Mock(side_effect=data)
+   with self.assertRaisesRegex(RuntimeError,'backup SUCCESSFUL'):self.r.cloud_sql()
+ def test_backup_status_changed_at_get_blocks_migration(self):
+  data=self.metadata();data[3]['status']='DELETING';self.r.api=Mock(side_effect=data)
+  with self.assertRaisesRegex(RuntimeError,'reconfirmado por ID'):self.r.cloud_sql()
+ def test_inflight_backup_without_end_time_does_not_hide_valid_backup(self):
+  data=self.metadata();data[2]['items'].append({'id':'124','status':'RUNNING','endTime':None,'startTime':dt.datetime.now(dt.timezone.utc).isoformat()});self.r.api=Mock(side_effect=data);self.r.cloud_sql()
+  self.assertEqual(self.r.record['dataProtection']['backupID'],'123');self.assertEqual(self.r.record['backupDiagnostics']['backupCount'],2)
  def test_prior_journal_blocks_a_second_publication(self):
   root=pathlib.Path(self.temp.name);old=root/'P58-old';old.mkdir();(old/'P58-publicacao.json').write_text('{"remoteMutationAttempted":true}')
   with patch.object(p,'ROOT',root),patch.object(p,'main',side_effect=AssertionError('Must not restart')),redirect_stdout(io.StringIO()):self.assertEqual(p.run_locked(),2)

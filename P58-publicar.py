@@ -49,6 +49,21 @@ def authentication_denied(value):
  if isinstance(value,list):return any(authentication_denied(v) for v in value)
  return False
 
+def backup_completed_at(backup):
+ try:
+  value=dt.datetime.fromisoformat(backup.get('endTime','').replace('Z','+00:00'))
+  return value if value.tzinfo is not None else None
+ except (ValueError,TypeError,AttributeError):return None
+
+def backup_belongs_to_target(backup):
+ # The list/get URI already identifies the exact instance; instance is optional
+ # in protobuf JSON. A conflicting field, when supplied, must still be rejected.
+ return backup.get('instance') in {None,'',INSTANCE,'projects/'+P+'/instances/'+INSTANCE,'projects/'+N+'/instances/'+INSTANCE}
+
+def usable_backup(backup,now):
+ when=backup_completed_at(backup)
+ return backup.get('status')=='SUCCESSFUL' and backup_belongs_to_target(backup) and when is not None and dt.timedelta(0)<=now-when<=dt.timedelta(hours=24)
+
 class Release:
  def __init__(self,out):
   self.out=out;self.path=out/'P58-publicacao.json';self.token='';self.token_at=0;self.backend_stage='base';self.sql_config=None
@@ -129,14 +144,24 @@ class Release:
   require(any(u.get('name')==OPERATOR and u.get('type')=='CLOUD_IAM_USER' for u in users),'Operador ainda não possui usuário IAM SQL existente; nenhuma criação ou senha alterada')
   self.db_service_user='service-'+N+'@gcp-sa-firebasedataconnect.iam'
   require(any(u.get('name')==self.db_service_user and u.get('type')=='CLOUD_IAM_SERVICE_ACCOUNT' for u in users),'Usuário SQL existente do Data Connect não confirmado')
-  backups=self.api('sqladmin.googleapis.com','/sql/v1beta4/projects/'+P+'/instances/'+INSTANCE+'/backupRuns',query={'maxResults':100}).get('items',[])
-  good=[]
-  for b in backups:
-   if b.get('status')=='SUCCESSFUL' and b.get('instance')==INSTANCE:
-    when=dt.datetime.fromisoformat(b.get('endTime',b.get('startTime','')).replace('Z','+00:00'))
-    if dt.timedelta(0)<=dt.datetime.now(dt.timezone.utc)-when<=dt.timedelta(hours=24):good.append(b)
-  require(good and settings.get('backupConfiguration',{}).get('pointInTimeRecoveryEnabled') is True,'Backup SUCCESSFUL de até24h e PITR existentes não confirmados; nenhuma migração iniciada')
-  backup=max(good,key=lambda b:b.get('endTime',''));self.record['dataProtection']={'backupID':str(backup['id']),'status':backup['status'],'endTime':backup.get('endTime'),'PITREnabled':True,'restoreExecuted':False,'newBackupCreated':False}
+  base='/sql/v1beta4/projects/'+P+'/instances/'+INSTANCE+'/backupRuns'
+  backups=[];page=None;seen=set()
+  for _ in range(10):
+   query={'maxResults':100}
+   if page:query['pageToken']=page
+   batch=self.api('sqladmin.googleapis.com',base,query=query);backups.extend(batch.get('items',[]));page=batch.get('nextPageToken')
+   if not page:break
+   require(page not in seen,'Paginação de backups repetiu token');seen.add(page)
+  require(not page,'Inventário de backups excedeu o limite; inspecionar antes de migrar')
+  now=dt.datetime.now(dt.timezone.utc);cfg=settings.get('backupConfiguration',{})
+  recent=sorted(backups,key=lambda b:str(b.get('endTime') or b.get('startTime') or ''),reverse=True)[:10]
+  self.record['backupDiagnostics']={'queriedInstance':P+':'+R+':'+INSTANCE,'backupCount':len(backups),'PITREnabled':cfg.get('pointInTimeRecoveryEnabled') is True,'automaticBackupEnabled':cfg.get('enabled') is True,'backupTier':cfg.get('backupTier'),'allocatedDiskGB':settings.get('dataDiskSizeGb'),'recentBackups':[{k:b.get(k) for k in ['id','instance','type','status','startTime','endTime']} for b in recent]};self.save()
+  good=[b for b in backups if usable_backup(b,now)]
+  require(good,'Nenhum backup SUCCESSFUL concluído nas últimas24h foi confirmado; consultar backupDiagnostics. Nenhuma migração iniciada')
+  chosen=max(good,key=backup_completed_at);bid=str(chosen.get('id',''));require(re.fullmatch(r'\d+',bid),'Backup sem ID oficial reconhecido')
+  backup=self.api('sqladmin.googleapis.com',base+'/'+bid)
+  require(str(backup.get('id'))==bid and usable_backup(backup,dt.datetime.now(dt.timezone.utc)),'Backup selecionado não foi reconfirmado por ID; nenhuma migração iniciada')
+  self.record['dataProtection']={'backupID':bid,'status':backup['status'],'startTime':backup.get('startTime'),'endTime':backup.get('endTime'),'backupAgeSeconds':int((dt.datetime.now(dt.timezone.utc)-backup_completed_at(backup)).total_seconds()),'PITREnabled':cfg.get('pointInTimeRecoveryEnabled') is True,'PITRRequiredForThisAdditiveMigration':False,'restoreExecuted':False,'zeroDataLossRestoreClaimed':False,'newBackupCreated':False}
   self.sql_config={'instance':instance['connectionName'],'database':DATABASE,'user':OPERATOR,'ipType':'PUBLIC' if any(i.get('type')=='PRIMARY' for i in instance.get('ipAddresses',[])) else 'PRIVATE'}
   self.record['sqlAccess']={k:v for k,v in self.sql_config.items()};self.save()
  def permissions(self):
