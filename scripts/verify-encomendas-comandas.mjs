@@ -20,6 +20,7 @@ const additions=[
  ...['20261118-encomendas-comandas.sql','20261118-ec-functions.sql','20261118-ec-ledger.sql','20261118-ec-allocation-parts.sql','20261118-ec-advanced.sql','20261118-ec-commands.sql','20261118-ec-queries.sql'].map(p=>'dataconnect/migrations/'+p),
  ...['runtime_support.py','test_runtime.py','browser_runtime.py','fixtures.sql'].map(p=>'scripts/ec/'+p),
  'scripts/verify-encomendas-comandas.mjs','scripts/qa-browser/encomendas-comandas.mjs',
+ 'frontend/qa/ec-print-date.test.ts',
  ...['base-e-plano.md','decisoes.json','reservas-integracao.json','rastreabilidade.tsv','validacao.md','manual.md','publicacao-e-reversao.md','CORE-handoff.json'].map(p=>'docs/encomendas-comandas/'+p),
 ];
 export const ecAllowedPaths=new Set([...ecExistingPaths,...additions]);

@@ -2198,6 +2198,12 @@
         "ENCOMENDAS-COMANDAS-20261118"
       ],
       "reason": "Read-only receipt allocations, persisted plans, refund ledger and authorized business effects in EC history; preserve financial commands and protected modules."
+    },
+    "frontend/qa/ec-print-date.test.ts": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Regressão dirigida da fixture de PDF na virada UTC/São Paulo encontrada no CI integrado; mantém65 produtos e as mesmas asserções de impressão."
     }
   },
   "bytePreserved": [

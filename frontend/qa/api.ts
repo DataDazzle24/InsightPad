@@ -96,7 +96,10 @@ export function useFineBundleFixture(){
 /** Explicit synthetic print stress profile; never loaded by the product entry. */
 export function useFinePrintFixtures(){
  resetFixtures();
- ledger=ledger.map((row,index)=>immutable({...row,name:`PRODUTO SINTÉTICO ${String(index+1).padStart(3,'0')} — DESCRIÇÃO EXTENSA PARA CONFERIR QUEBRAS DE LINHA E TODAS AS COLUNAS DO RELATÓRIO SEM CORTAR VALORES`,category:index%2?'CATEGORIA SINTÉTICA COM NOME EXTENSO B':'CATEGORIA SINTÉTICA COM NOME EXTENSO A'}));
+ // The sales dashboard's initial range uses the browser's local calendar.
+ // UTC can already be tomorrow in the Sao Paulo browser after 21:00.
+ const today=new Date(),localDay=[today.getFullYear(),String(today.getMonth()+1).padStart(2,'0'),String(today.getDate()).padStart(2,'0')].join('-');
+ ledger=ledger.map((row,index)=>immutable({...row,date:localDay,name:`PRODUTO SINTÉTICO ${String(index+1).padStart(3,'0')} — DESCRIÇÃO EXTENSA PARA CONFERIR QUEBRAS DE LINHA E TODAS AS COLUNAS DO RELATÓRIO SEM CORTAR VALORES`,category:index%2?'CATEGORIA SINTÉTICA COM NOME EXTENSO B':'CATEGORIA SINTÉTICA COM NOME EXTENSO A'}));
 }
 // Separate interactive flow profile: opening ledger and balances reconcile by ID.
 export function useFlowFixtures(){

@@ -31,7 +31,7 @@ Node22.23.4, dependências por lockfile; sem nova dependência de produto.
 | Verificação | Comando | Resultado observado |
 |---|---|---|
 | Contratos e SDKs | `dataconnect-emulator sdk generate --config_dir=dataconnect`; `node scripts/normalize-dataconnect-sdk.mjs` | Compilador3.4.23 fixado; frontend/React/admin regenerados |
-| Frontend | `npm --prefix frontend run lint`; `npm --prefix frontend test`; `npm --prefix frontend run build -- --mode development` | Lint sem avisos;347 testes; tipos/build aprovados |
+| Frontend | `npm --prefix frontend run lint`; `npm --prefix frontend test`; `npm --prefix frontend run build -- --mode development` | Lint sem avisos;351 testes; tipos/build aprovados |
 | QA anterior | `npm --prefix frontend run test:qa`; `npm --prefix frontend run build:qa` | Teste e build aprovados |
 | Functions/contratos anteriores | `npm --prefix functions run lint`; `npm --prefix functions test`; `npm --prefix functions run build` | Tipos/build aprovados;204 testes aprovados |
 | Banco/concorrência real isolados | `python3 scripts/ec/test_runtime.py` |47 casos aprovados; schema oficial e7 migrações aplicados2 vezes |
@@ -48,6 +48,14 @@ execução44435899733 aprovou contratos, SDKs, frontend, backend e QA, mas encer
 com124 no download das bibliotecas Ubuntu (limite180s). O limite apenas dessa
 instalação passou a600s, com teste de regressão; browser180s/duas tentativas e todas
 as verificações permanecem. Nenhuma publicação foi iniciada.
+
+A execução44440876451 também aprovou SQL EC e navegador EC, mas detectou falha
+nos dois PDFs de nomes longos: a fixture usava o dia UTC, enquanto a consulta
+inicial do dashboard usa o calendário local de São Paulo. Depois de21h locais
+os65 produtos ficavam fora do período. A fixture específica de estresse passou
+a usar o mesmo dia local;4 testes cobrem a virada de dia/mês. As duas provas PDF
+foram repetidas e passaram com65 IDs e as mesmas verificações de corte. Não há
+relaxamento de asserção nem mudança de cálculo/consulta do produto.
 
 ## Prova transacional
 

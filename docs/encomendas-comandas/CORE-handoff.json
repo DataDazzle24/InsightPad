@@ -83,5 +83,12 @@
     "cause": "Ubuntu system dependency download exceeded180s; build/types/tests/SDKs passed",
     "correction": "bounded600s only for install-deps; tests and Chromium retry limits preserved"
   },
-  "candidateCISource": "https://github.com/DataDazzle24/InsightPad/pull/29/checks; confirmar SHA e recibo externo, sem inferir aprovação"
+  "candidateCISource": "https://github.com/DataDazzle24/InsightPad/pull/29/checks; confirmar SHA e recibo externo, sem inferir aprovação",
+  "followupCI": {
+    "run": 44440876451,
+    "sha": "0aff830aa11ac5e884836c7faac347c433067a37",
+    "result": "failure",
+    "cause": "Two long-name PDF fixtures used UTC dates outside the Sao Paulo dashboard local range after21h; EC SQL/browser passed",
+    "correction": "Only stress-print fixture date aligned to browser local calendar; four day/month rollover tests and both original PDF assertions passed locally"
+  }
 }
