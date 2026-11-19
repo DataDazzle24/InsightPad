@@ -1949,24 +1949,8 @@ mutation SetPlatformRolePermission($payload: Any!, $sessionToken: String) @auth(
   """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
   }
   _execute(sql: """
-    WITH actor AS (SELECT u.id FROM users u JOIN tenants t ON t.id=u.tenant_id AND t.active AND t.deleted_at IS NULL
-      JOIN roles own_role ON own_role.id=u.role_id AND own_role.tenant_id=u.tenant_id WHERE u.id=$1 AND u.active AND u.deleted_at IS NULL
-      AND own_role.active AND own_role.deleted_at IS NULL AND own_role.system_role AND own_role.name='Administrador da Plataforma'),
-    i AS (SELECT COALESCE($2::jsonb,'{}'::jsonb) j,a.id actor_id FROM actor a),
-    valid AS (SELECT r.id role_id,r.tenant_id,(i.j->>'pageId')::uuid page_id,i.j,i.actor_id FROM roles r CROSS JOIN i
-      JOIN app_pages p ON p.id=(i.j->>'pageId')::uuid AND p.active WHERE r.id=(i.j->>'roleId')::uuid AND r.active AND r.deleted_at IS NULL),
-    changed AS (INSERT INTO role_page_permissions(role_id,page_id,tenant_id,can_access,can_create,can_update,can_delete,can_export,can_manage,created_at,updated_at)
-      SELECT role_id,page_id,tenant_id,COALESCE((j->>'canAccess')::boolean,false),COALESCE((j->>'canCreate')::boolean,false),
-        COALESCE((j->>'canUpdate')::boolean,false),COALESCE((j->>'canDelete')::boolean,false),COALESCE((j->>'canExport')::boolean,false),
-        COALESCE((j->>'canManage')::boolean,false),now(),now() FROM valid
-      ON CONFLICT(role_id,page_id) DO UPDATE SET can_access=EXCLUDED.can_access,can_create=EXCLUDED.can_create,
-        can_update=EXCLUDED.can_update,can_delete=EXCLUDED.can_delete,can_export=EXCLUDED.can_export,
-        can_manage=EXCLUDED.can_manage,updated_at=now() RETURNING role_id,page_id,tenant_id,can_access,can_create,can_update,can_delete,can_export,can_manage)
-    INSERT INTO audit_logs(tenant_id,user_id,module,page_key,action,entity_name,entity_id,summary,success,origin,after_data,created_at)
-    SELECT c.tenant_id,v.actor_id,'Plataforma','PLATFORM_ADMIN','UPDATE_PERMISSION','Role',c.role_id::text,'Permissão do perfil atualizada',true,'SQL_CONNECT',
-      jsonb_build_object('pageId',c.page_id,'canAccess',c.can_access,'canCreate',c.can_create,'canUpdate',c.can_update,
-        'canDelete',c.can_delete,'canExport',c.can_export,'canManage',c.can_manage),now() FROM changed c JOIN valid v ON v.role_id=c.role_id AND v.page_id=c.page_id
-  """,params:[{_expr:"auth.uid"},$payload])
+    SELECT platform_set_role_permission($1,$2::jsonb,$3::text)
+  """,params:[{_expr:"auth.uid"},$payload,$sessionToken])
 }
 
 mutation CreatePlatformInvoice($payload: Any!, $sessionToken: String) @auth(level: USER) @transaction {
