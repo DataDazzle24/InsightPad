@@ -64,10 +64,18 @@ def usable_backup(backup,now):
  when=backup_completed_at(backup)
  return backup.get('status')=='SUCCESSFUL' and backup_belongs_to_target(backup) and when is not None and dt.timedelta(0)<=now-when<=dt.timedelta(hours=24)
 
+def publication_mode(arguments):
+ require(arguments in ([],['--publish-without-backup']),'Opção de publicação não reconhecida')
+ return arguments==['--publish-without-backup']
+
 class Release:
- def __init__(self,out):
+ def __init__(self,out,*,without_backup=False):
+  require(not without_backup or P=='insightpad-dd-dev','Dispensa de backup restrita ao projeto DEV')
+  self.without_backup=without_backup
   self.out=out;self.path=out/'P58-publicacao.json';self.token='';self.token_at=0;self.backend_stage='base';self.sql_config=None
   self.record={'phase':'P58_ENCOMENDAS_COMANDAS_DEV','project':P,'candidate':SHA,'base':BASE,'CORE':'CORE não gravada','startedUTC':dt.datetime.now(dt.timezone.utc).isoformat(),'authorization':'pedido do código de publicação nesta conversa após apresentação do plano schema/SQL/connector/Hosting','remoteMutationAttempted':False,'schemaPublished':False,'connectorPublished':False,'hostingPublished':False,'functionsPublished':False,'IAMChanged':False,'SQLUsersCreated':False,'financialSmokesExecuted':False,'firebaseUserSmokesExecuted':False,'publicationComplete':False,'uploadedFiles':0,'uploadedBytes':0,'operationLabel':out.name.lower(),'cost':{'capUSD':5,'additionalFlatReserveUSD':0,'measuredGoogleCloudUSD':None,'newPaidResources':False}}
+  if without_backup:
+   self.record.update(backupRequirementWaived=True,backupCreated=False,authorization='Pedido expresso de19/11/2026 após falha do catálogo: seguir apenas com publicação do código, novas funcionalidades e adições/ajustes de banco. Execução explícita de --publish-without-backup em DEV.',recoveryRisk='Backup recente dispensado por orientação do usuário; sem backup/PITR confirmado, recuperação do banco não é garantida. Não restaurar nem remover ledger/guards automaticamente.')
  def save(self):
   p=self.path.with_suffix('.tmp')
   with p.open('w') as handle:handle.write(json.dumps(self.record,ensure_ascii=False,indent=2)+'\n');handle.flush();os.fsync(handle.fileno())
@@ -144,6 +152,12 @@ class Release:
   require(any(u.get('name')==OPERATOR and u.get('type')=='CLOUD_IAM_USER' for u in users),'Operador ainda não possui usuário IAM SQL existente; nenhuma criação ou senha alterada')
   self.db_service_user='service-'+N+'@gcp-sa-firebasedataconnect.iam'
   require(any(u.get('name')==self.db_service_user and u.get('type')=='CLOUD_IAM_SERVICE_ACCOUNT' for u in users),'Usuário SQL existente do Data Connect não confirmado')
+  self.sql_config={'instance':instance['connectionName'],'database':DATABASE,'user':OPERATOR,'ipType':'PUBLIC' if any(i.get('type')=='PRIMARY' for i in instance.get('ipAddresses',[])) else 'PRIVATE'}
+  self.record['sqlAccess']={k:v for k,v in self.sql_config.items()}
+  if self.without_backup:
+   cfg=settings.get('backupConfiguration',{})
+   self.record['dataProtection']={'backupRequired':False,'backupRequirementWaived':True,'backupVerified':False,'backupInventoryQueried':False,'newBackupCreated':False,'PITREnabled':cfg.get('pointInTimeRecoveryEnabled') is True,'automaticBackupEnabled':cfg.get('enabled') is True,'restoreExecuted':False,'zeroDataLossRestoreClaimed':False}
+   self.save();return
   base='/sql/v1beta4/projects/'+P+'/instances/'+INSTANCE+'/backupRuns'
   backups=[];page=None;seen=set()
   for _ in range(10):
@@ -162,10 +176,10 @@ class Release:
   backup=self.api('sqladmin.googleapis.com',base+'/'+bid)
   require(str(backup.get('id'))==bid and usable_backup(backup,dt.datetime.now(dt.timezone.utc)),'Backup selecionado não foi reconfirmado por ID; nenhuma migração iniciada')
   self.record['dataProtection']={'backupID':bid,'status':backup['status'],'startTime':backup.get('startTime'),'endTime':backup.get('endTime'),'backupAgeSeconds':int((dt.datetime.now(dt.timezone.utc)-backup_completed_at(backup)).total_seconds()),'PITREnabled':cfg.get('pointInTimeRecoveryEnabled') is True,'PITRRequiredForThisAdditiveMigration':False,'restoreExecuted':False,'zeroDataLossRestoreClaimed':False,'newBackupCreated':False}
-  self.sql_config={'instance':instance['connectionName'],'database':DATABASE,'user':OPERATOR,'ipType':'PUBLIC' if any(i.get('type')=='PRIMARY' for i in instance.get('ipAddresses',[])) else 'PRIVATE'}
-  self.record['sqlAccess']={k:v for k,v in self.sql_config.items()};self.save()
+  self.record['dataProtection']['backupVerified']=True;self.save()
  def permissions(self):
-  required=['firebasehosting.sites.get','firebasehosting.sites.update','firebasedataconnect.schemas.get','firebasedataconnect.schemas.update','firebasedataconnect.connectors.get','firebasedataconnect.connectors.update','firebasedataconnect.services.get','firebasedataconnect.services.executeGraphqlRead','cloudsql.instances.get','cloudsql.instances.connect','cloudsql.instances.login','cloudsql.users.list','cloudsql.backupRuns.list','cloudsql.backupRuns.get']
+  required=['firebasehosting.sites.get','firebasehosting.sites.update','firebasedataconnect.schemas.get','firebasedataconnect.schemas.update','firebasedataconnect.connectors.get','firebasedataconnect.connectors.update','firebasedataconnect.services.get','firebasedataconnect.services.executeGraphqlRead','cloudsql.instances.get','cloudsql.instances.connect','cloudsql.instances.login','cloudsql.users.list']
+  if not self.without_backup:required.extend(['cloudsql.backupRuns.list','cloudsql.backupRuns.get'])
   official=set()
   for role in ['firebasedataconnect.admin','cloudsql.admin','cloudsql.client','cloudsql.instanceUser']:official.update(self.api('iam.googleapis.com','/v1/roles/'+role).get('includedPermissions',[]))
   require(set(required[2:])<=official,'Nome de permissão não corresponde às definições oficiais; parar para diagnóstico')
@@ -303,17 +317,17 @@ def main(r):
  final,final_snap=r.preflight('final');require(H.same_version(final['previousRelease']['version'],version) and H.same_config(final_snap['previous-version']['config'],config) and same_policies(snapshot,final_snap),'Estado pós-publicação divergente')
  r.record.update(publicationComplete=True,nineControlsConfirmed=True,nominalPoliciesAndEtagsUnchanged=True,servingConfigPreserved=True,url='https://'+P+'.web.app/',remaining='Aceite autenticado Firebase no tenant de teste e nos perfis reais; caixa/estoque/ledger, temas, teclado e impressão. Nenhum smoke financeiro automático. CORE não gravada.',recovery='Preservar journal/SQL/ledger/guards. Não repetir o bootstrap após mutação nem fazer rollback Hosting isolado após documentos. Usar publicacao-e-reversao.md e diagnóstico do recibo.')
 
-def run_locked():
+def run_locked(*,without_backup=False):
  os.umask(0o077);ROOT.mkdir(mode=0o700,exist_ok=True)
  with (ROOT/'P58.lock').open('a') as lock:
   try:fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
   except BlockingIOError:print('P58 já está em execução; segunda operação bloqueada.');return 2
   for path in sorted(ROOT.glob('P58-*/P58-publicacao.json')):
    if json.loads(path.read_text()).get('remoteMutationAttempted'):print('Há operação com mutação registrada. Não repetir; recibo: '+str(path));print(path.read_text());return 2
-  out=ROOT/('P58-'+dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'-'+uuid.uuid4().hex[:6]);out.mkdir(mode=0o700);r=Release(out)
+  out=ROOT/('P58-'+dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'-'+uuid.uuid4().hex[:6]);out.mkdir(mode=0o700);r=Release(out,without_backup=without_backup)
   try:r.save();main(r)
   except Exception as error:r.record['stopped']=str(error) if isinstance(error,RuntimeError) else type(error).__name__
   finally:
    r.token='';r.record['endedUTC']=dt.datetime.now(dt.timezone.utc).isoformat();r.record['receipt']=str(r.path);r.save();(out/'CORE-handoff-publicacao.json').write_text(json.dumps(r.record,ensure_ascii=False,indent=2)+'\n');print('=== INICIO P58 ===');print(r.path.read_text());print('=== FIM P58 ===');print('Compartilhe somente esse JSON; mantenha logs, snapshots e credenciais privados no Cloud Shell.')
   return 0 if r.record.get('publicationComplete') else 1
-if __name__=='__main__':sys.exit(run_locked())
+if __name__=='__main__':sys.exit(run_locked(without_backup=publication_mode(sys.argv[1:])))

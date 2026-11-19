@@ -59,6 +59,30 @@ class ApiTests(unittest.TestCase):
   return [dict(project=p.P,region=p.R,databaseVersion='POSTGRES_17',connectionName=p.P+':'+p.R+':insightpad-fdc',state='RUNNABLE',settings={'databaseFlags':[{'name':'cloudsql.iam_authentication','value':'on'}],'backupConfiguration':{'pointInTimeRecoveryEnabled':pitr}},ipAddresses=[{'type':'PRIMARY'}]),{'items':([{'name':p.OPERATOR,'type':'CLOUD_IAM_USER'}] if user else [])+[{'name':'service-'+p.N+'@gcp-sa-firebasedataconnect.iam','type':'CLOUD_IAM_SERVICE_ACCOUNT'}]},{'items':[b]},copy.deepcopy(b)]
  def test_existing_sql_access_and_backup_are_read_only(self):
   self.r.api=Mock(side_effect=self.metadata());self.r.cloud_sql();self.assertFalse(self.r.record['remoteMutationAttempted']);self.assertEqual(self.r.sql_config['user'],p.OPERATOR)
+ def test_direct_mode_never_calls_backup_or_catalog_and_records_risk(self):
+  r=p.Release(pathlib.Path(self.temp.name),without_backup=True);r.api=Mock(side_effect=self.metadata(pitr=False)[:2]);r.cloud_sql()
+  self.assertEqual(r.api.call_count,2);self.assertEqual(r.sql_config['database'],p.DATABASE);self.assertTrue(r.record['backupRequirementWaived']);self.assertFalse(r.record['dataProtection']['backupVerified']);self.assertFalse(r.record['dataProtection']['PITREnabled']);self.assertFalse(r.record['dataProtection']['backupInventoryQueried']);self.assertFalse(r.record['remoteMutationAttempted']);self.assertIn('não é garantida',r.record['recoveryRisk']);self.assertNotIn('backupDiagnostics',r.record)
+ def test_direct_mode_still_requires_existing_sql_identity(self):
+  r=p.Release(pathlib.Path(self.temp.name),without_backup=True);r.api=Mock(side_effect=self.metadata(user=False)[:2])
+  with self.assertRaisesRegex(RuntimeError,'usuário IAM SQL'):r.cloud_sql()
+  self.assertFalse(r.record['remoteMutationAttempted'])
+ def test_direct_mode_still_rejects_wrong_instance(self):
+  data=self.metadata();data[0]['connectionName']='insightpad-dd:southamerica-east1:insightpad-fdc';r=p.Release(pathlib.Path(self.temp.name),without_backup=True);r.api=Mock(side_effect=data[:2])
+  with self.assertRaisesRegex(RuntimeError,'Identidade/estado'):r.cloud_sql()
+  self.assertFalse(r.record['remoteMutationAttempted'])
+ def test_direct_mode_cannot_target_production(self):
+  with patch.object(p,'P','insightpad-dd'):
+   with self.assertRaisesRegex(RuntimeError,'restrita ao projeto DEV'):p.Release(pathlib.Path(self.temp.name),without_backup=True)
+ def test_direct_mode_does_not_require_backup_permissions(self):
+  r=p.Release(pathlib.Path(self.temp.name),without_backup=True)
+  def api(host,path,method='GET',body=None,**kw):
+   if host=='iam.googleapis.com':return {'includedPermissions':['firebasedataconnect.schemas.get','firebasedataconnect.schemas.update','firebasedataconnect.connectors.get','firebasedataconnect.connectors.update','firebasedataconnect.services.get','firebasedataconnect.services.executeGraphqlRead','cloudsql.instances.get','cloudsql.instances.connect','cloudsql.instances.login','cloudsql.users.list']}
+   self.assertFalse(any('backup' in v.lower() for v in body['permissions']));return {'permissions':body['permissions']}
+  r.api=api;r.permissions();self.assertEqual(r.record['missingPermissions'],[])
+ def test_direct_mode_requires_exact_explicit_argument(self):
+  self.assertFalse(p.publication_mode([]));self.assertTrue(p.publication_mode(['--publish-without-backup']))
+  for args in [['--backup-and-publish'],['--force'],['--publish-without-backup','--backup-and-publish']]:
+   with self.assertRaisesRegex(RuntimeError,'Opção de publicação'):p.publication_mode(args)
  def test_missing_iam_user_never_triggers_creation(self):
   self.r.api=Mock(side_effect=self.metadata(user=False))
   with self.assertRaisesRegex(RuntimeError,'usuário IAM SQL'):self.r.cloud_sql()
@@ -94,6 +118,9 @@ class ApiTests(unittest.TestCase):
  def test_prior_journal_blocks_a_second_publication(self):
   root=pathlib.Path(self.temp.name);old=root/'P58-old';old.mkdir();(old/'P58-publicacao.json').write_text('{"remoteMutationAttempted":true}')
   with patch.object(p,'ROOT',root),patch.object(p,'main',side_effect=AssertionError('Must not restart')),redirect_stdout(io.StringIO()):self.assertEqual(p.run_locked(),2)
+ def test_direct_mode_cannot_bypass_prior_mutation_journal(self):
+  root=pathlib.Path(self.temp.name);old=root/'P58-old';old.mkdir();(old/'P58-publicacao.json').write_text('{"remoteMutationAttempted":true}')
+  with patch.object(p,'ROOT',root),patch.object(p,'main',side_effect=AssertionError('Must not restart')),redirect_stdout(io.StringIO()):self.assertEqual(p.run_locked(without_backup=True),2)
  def test_sql_bridge_refuses_another_target_without_network(self):
   r=subprocess.run([NODE,str(HERE/'P58-sql.cjs')],input=json.dumps({'mode':'sql','sql':['SELECT 1'],'readOnly':True,'owner':True,'instance':'insightpad-dd:southamerica-east1:insightpad-fdc','database':'fdcdb','user':p.OPERATOR}),capture_output=True,text=True,timeout=30);self.assertNotEqual(r.returncode,0);self.assertEqual(json.loads(r.stdout)['code'],'TARGET_DENIED')
  def test_auth_denial_accepts_real_rpc_and_graphql_shapes(self):

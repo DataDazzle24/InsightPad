@@ -7,6 +7,39 @@ autorizada pelo pedido do bloco de publicação nesta conversa, após apresenta�
 do plano de schema/SQL/connector/Hosting. O pacote operacional fica em branch
 separada; não muda o candidato testado, não faz merge e não publica PROD.
 
+## Orientação vigente — publicação direta em DEV, 19/11/2026
+
+Após a falha de conexão durante a cotação, o usuário instruiu: “vamos seguir apenas
+com a publicação do novo código com as novas funcionalidades e as adições e ajustes
+em banco”. O recibo P58B de12:51 confirmou backupMutationAttempted:false e
+remoteMutationAttempted:false. Não foi criado backup e não houve migração.
+
+O novo bloco usa explicitamente `P58-executar.py --publish-without-backup`.
+Esse modo dispensa somente o pré-requisito de backup recente; não consulta o
+catálogo de preços, não inventaria/cria backup, não ativa PITR/backups automáticos
+nem exige permissões de backup. O estado da configuração existente é registrado.
+O recibo identifica backupRequirementWaived:true, backupVerified:false e o risco:
+sem backup/PITR confirmado, não há recuperação garantida do banco. A decisão do
+usuário substitui, para esta execução DEV, a exigência anterior de proteção de dados.
+Não representa backup feito, restauração testada ou ausência de risco.
+
+Mantém CI do mesmo SHA, identidade/instância, usuário e role SQL existentes,
+proibição de grants, nove contenções, build, parser do diff aditivo, transações,
+comparação da estrutura legada, schema/connector/Hosting e verificações públicas.
+Estado parcial ou qualquer intenção anterior de mutação P58 continuam bloqueando
+uma segunda execução cega. O modo padrão continua exigindo backup recente, e o
+modo `--backup-and-publish` permanece separado; não há fallback entre modos.
+
+Executa45 testes do publicador antes de iniciar. Foram executados também os28
+testes do fluxo separado de backup, para confirmar sua compatibilidade. Nenhuma
+mutação Google foi executada durante a preparação. O produto continua no mesmo SHA.
+O teto acumulado US$5 não foi renovado; custo real não é medido por este roteiro.
+
+Reversão: corrigir em frente e preservar tabelas, ledger e guards. Após dados EC,
+rollback isolado de Hosting não reverte banco, reservas ou recebimentos; seguir
+o procedimento de recuperação do candidato e diagnosticar o recibo antes de agir.
+O aceite autenticado em DEV continua pendente após a publicação técnica.
+
 Executar somente no Cloud Shell de Arthur, projeto ativo `insightpad-dd-dev`,
 operador `datadazzletecnologia@gmail.com`. O bootstrap confere hashes e usa Node22
 existente. Instala29MiB de tooling isolado em /tmp por lockfile, sem scripts npm.
