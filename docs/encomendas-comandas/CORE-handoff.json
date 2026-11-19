@@ -44,7 +44,7 @@
     "localImplementation": "integrated",
     "isolatedSQL": "47 tests passed; real SQL Connect/PG18, synthetic identities; live-record preservation across native DDL reapplication",
     "browser": "25 scenarios; synthetic Auth + isolated real persistence; receipt/plan/refund/history readers; native Chrome100/200 headless",
-    "DEV": "not published; no authenticated smoke",
+    "DEV": "P58R: bb2def3336171b440df8038c4112abd9f05b7172 technically published19/11/2026 (17 tables/seven SQL/schema/connector/Hosting). Authenticated financial acceptance pending; permission matrix save failure reproduced; current hotfix not yet published.",
     "PROD": "untouched"
   },
   "preservation": {
@@ -90,5 +90,10 @@
     "result": "failure",
     "cause": "Two long-name PDF fixtures used UTC dates outside the Sao Paulo dashboard local range after21h; EC SQL/browser passed",
     "correction": "Only stress-print fixture date aligned to browser local calendar; four day/month rollover tests and both original PDF assertions passed locally"
+  },
+  "permissionMatrixHotfix": {
+    "status": "implemented; awaiting validation/CI/publication",
+    "cause": "SQL Connect wraps _execute in a scalar subquery; the inline data-modifying CTE/INSERT in SetPlatformRolePermission fails at runtime (42601).",
+    "fix": "Invoker native function keeps permission upsert+audit atomic and checks active session/platform admin; connector uses scalar SELECT. No automatic access grants."
   }
 }

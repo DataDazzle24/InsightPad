@@ -24,6 +24,8 @@ const additions=[
  ...['base-e-plano.md','decisoes.json','reservas-integracao.json','rastreabilidade.tsv','validacao.md','manual.md','publicacao-e-reversao.md','CORE-handoff.json'].map(p=>'docs/encomendas-comandas/'+p),
 ];
 export const ecAllowedPaths=new Set([...ecExistingPaths,...additions]);
+const permissionFixBase='bb2def3336171b440df8038c4112abd9f05b7172';
+for(const path of ['dataconnect/migrations/20261119-platform-role-permission.sql','scripts/ec/test_platform_permissions.py','docs/encomendas-comandas/correcao-permissoes.md'])ecAllowedPaths.add(path);
 // Same staged preservation pattern used by Cadastros→Canais→Plataforma→Menus.
 // This is used only AFTER the current EC delta has its own nominal-scope checks.
 export const ecHistoricalSource=(path,encoding)=>ecExistingPaths.has(path)
@@ -37,6 +39,19 @@ export function verifyEncomendasComandas(){
  git('merge-base','--is-ancestor',ecBase,'HEAD');
  const changed=[...git('diff','--name-only',ecBase).split('\n'),...git('ls-files','--others','--exclude-standard').split('\n')].filter(Boolean);
  for(const path of changed)assert.ok(ecAllowedPaths.has(path),'EC changed an unapproved path: '+path);
+ // The permission hotfix changes one connector implementation, never other
+ // mutations or the established authorization/session guard.
+ const mutationPath='dataconnect/app/mutations.gql',published=git('show',permissionFixBase+':'+mutationPath),currentMutations=now(mutationPath);
+ const permissionOperation=/^mutation SetPlatformRolePermission\b[\s\S]*?^}/m;
+ assert.equal(currentMutations.replace(permissionOperation,'').trim(),published.replace(permissionOperation,'').trim(),'Permission fix changed another connector operation');
+ const permissionBefore=published.match(permissionOperation)?.[0],permissionNow=currentMutations.match(permissionOperation)?.[0];
+ assert.ok(permissionBefore&&permissionNow,'Permission operation missing');
+ assert.equal(permissionNow.split('  _execute(sql:')[0],permissionBefore.split('  _execute(sql:')[0],'Permission signature/auth/session guard changed');
+ assert.match(permissionNow,/SELECT platform_set_role_permission\(\$1,\$2::jsonb,\$3::text\)/);
+ const nativePermission=now('dataconnect/migrations/20261119-platform-role-permission.sql');
+ assert.equal((nativePermission.match(/\$\$/g)||[]).length,2,'Native permission function has unexpected body boundaries');
+ const nativeOuter=nativePermission.replace(/--[^\n]*/g,'').replace(/\$\$[\s\S]*?\$\$/,()=> '$$body$$').trim();
+ assert.match(nativeOuter,/^BEGIN;\s*CREATE OR REPLACE FUNCTION platform_set_role_permission\(actor_uid text, payload jsonb, session_secret text\)\s*RETURNS integer LANGUAGE plpgsql SECURITY INVOKER SET search_path=public,pg_catalog AS \$\$body\$\$;\s*COMMIT;$/,'Permission migration must only install the invoker function, without granting permissions');
  // The original schema and public provider implementations remain intact.
  const schema=now('dataconnect/schema/schema.gql');assert.ok(schema.startsWith(old('dataconnect/schema/schema.gql')),'Legacy schema changed instead of an additive extension');
  const newTypes=[...schema.slice(old('dataconnect/schema/schema.gql').length).matchAll(/^type (\w+)/gm)].map(m=>m[1]);

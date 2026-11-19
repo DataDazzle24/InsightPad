@@ -30,7 +30,9 @@ def definition(source,name):
     return result.group()
 
 class Runtime:
-    def __init__(self):
+    def __init__(self, *, additional_mutations=(), additional_queries=()):
+        self.additional_mutations=additional_mutations
+        self.additional_queries=additional_queries
         self.name='insightpad-ec-test-'+uuid.uuid4().hex[:10]
         self.created=False;self.process=None;self.temp=None;self.calls=[]
         self.source_fingerprint=hashlib.sha256(b''.join((ROOT/path).read_bytes() for path in ['dataconnect/schema/schema.gql','dataconnect/app/queries.gql','dataconnect/app/mutations.gql',*['dataconnect/migrations/'+name for name in MIGRATIONS]])).hexdigest()
@@ -95,8 +97,8 @@ class Runtime:
         queries=(ROOT/'dataconnect/app/queries.gql').read_text()
         mutations=(ROOT/'dataconnect/app/mutations.gql').read_text()
         (config/'app/operations.gql').write_text('\n\n'.join([definition(queries,'EcRead'),
-            *[definition(queries,name) for name in ['SalesChannelProductOptions','StockWorkspace','SearchPosProducts','PosProductBranches','FinancialIndicatorsDashboard','ListSales','SaleDetails','SalesWorkspace']],
-            *[definition(mutations,name) for name in ['EcCommand','ApprovePosSale','PostSale','CancelSale','PostStockAdjustment','PostStockTransfer','SaveStockBatch','ReverseStockOperation']]]))
+            *[definition(queries,name) for name in ['SalesChannelProductOptions','StockWorkspace','SearchPosProducts','PosProductBranches','FinancialIndicatorsDashboard','ListSales','SaleDetails','SalesWorkspace',*self.additional_queries]],
+            *[definition(mutations,name) for name in ['EcCommand','ApprovePosSale','PostSale','CancelSale','PostStockAdjustment','PostStockTransfer','SaveStockBatch','ReverseStockOperation',*self.additional_mutations]]]))
         binary=Path(os.environ.get('FIREBASE_EMULATORS_PATH','/tmp'))/'dataconnect-emulator-3.4.23'
         local=ROOT.parent/'tools/dataconnect-emulator'
         if not binary.is_file():binary=local if local.is_file() else temp/'dataconnect-emulator'

@@ -2204,6 +2204,24 @@
         "ENCOMENDAS-COMANDAS-20261118"
       ],
       "reason": "Regressão dirigida da fixture de PDF na virada UTC/São Paulo encontrada no CI integrado; mantém65 produtos e as mesmas asserções de impressão."
+    },
+    "dataconnect/migrations/20261119-platform-role-permission.sql": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Correção da habilitação de Encomendas/Comandas: instalar somente função invoker para upsert e auditoria transacionais; sem concessões automáticas."
+    },
+    "scripts/ec/test_platform_permissions.py": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Regressão com SQL Connect e PostgreSQL reais e isolados da gravação de permissões necessária para habilitar EC; inclui sessões, perfis, auditoria, rollback e acesso após liberação."
+    },
+    "docs/encomendas-comandas/correcao-permissoes.md": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Diagnóstico reproduzido e plano DEV da correção de permissões após P58R; preserva regras aprovadas e contratos existentes."
     }
   },
   "bytePreserved": [

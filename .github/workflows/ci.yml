@@ -84,6 +84,8 @@ jobs:
         run: python3 scripts/qa-browser/session-runtime.py
       - name: Encomendas e Comandas (SQL real isolado, sem DEV)
         run: python3 scripts/ec/test_runtime.py
+      - name: Permissões da plataforma (SQL Connect e PostgreSQL real isolado)
+        run: python3 scripts/ec/test_platform_permissions.py
       - name: Encomendas e Comandas (navegador com SQL isolado)
         run: node scripts/qa-browser/encomendas-comandas.mjs
       - name: Cobertura integrada QA existente
