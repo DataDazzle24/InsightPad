@@ -368,6 +368,113 @@ export interface DailyProfitDashboardVariables {
   sessionToken?: string | null;
 }
 
+export interface EcAllocationPart_Key {
+  id: UUIDString;
+  __typename?: 'EcAllocationPart_Key';
+}
+
+export interface EcAllocation_Key {
+  id: UUIDString;
+  __typename?: 'EcAllocation_Key';
+}
+
+export interface EcCommandData {
+  query?: {
+    session?: unknown | null;
+    response?: unknown | null;
+  };
+}
+
+export interface EcCommandVariables {
+  command: unknown;
+  sessionToken?: string | null;
+}
+
+export interface EcComponent_Key {
+  id: UUIDString;
+  __typename?: 'EcComponent_Key';
+}
+
+export interface EcDisposition_Key {
+  id: UUIDString;
+  __typename?: 'EcDisposition_Key';
+}
+
+export interface EcDocument_Key {
+  id: UUIDString;
+  __typename?: 'EcDocument_Key';
+}
+
+export interface EcEvent_Key {
+  id: UUIDString;
+  __typename?: 'EcEvent_Key';
+}
+
+export interface EcItem_Key {
+  id: UUIDString;
+  __typename?: 'EcItem_Key';
+}
+
+export interface EcLineage_Key {
+  id: UUIDString;
+  __typename?: 'EcLineage_Key';
+}
+
+export interface EcOperation_Key {
+  id: UUIDString;
+  __typename?: 'EcOperation_Key';
+}
+
+export interface EcParticipant_Key {
+  id: UUIDString;
+  __typename?: 'EcParticipant_Key';
+}
+
+export interface EcReadData {
+  session?: unknown | null;
+  response?: unknown | null;
+}
+
+export interface EcReadVariables {
+  input: unknown;
+  sessionToken?: string | null;
+}
+
+export interface EcReceipt_Key {
+  id: UUIDString;
+  __typename?: 'EcReceipt_Key';
+}
+
+export interface EcRefund_Key {
+  id: UUIDString;
+  __typename?: 'EcRefund_Key';
+}
+
+export interface EcReservation_Key {
+  id: UUIDString;
+  __typename?: 'EcReservation_Key';
+}
+
+export interface EcSaleReceiptLink_Key {
+  id: UUIDString;
+  __typename?: 'EcSaleReceiptLink_Key';
+}
+
+export interface EcSequence_Key {
+  id: UUIDString;
+  __typename?: 'EcSequence_Key';
+}
+
+export interface EcSplitPlan_Key {
+  id: UUIDString;
+  __typename?: 'EcSplitPlan_Key';
+}
+
+export interface EcSplitShare_Key {
+  id: UUIDString;
+  __typename?: 'EcSplitShare_Key';
+}
+
 export interface EnsureSalesDefaultsData {
   query?: {
     session?: unknown | null;
@@ -2535,6 +2642,11 @@ export function requestPosCashApproval(dc: DataConnect, vars: RequestPosCashAppr
 /** Generated Node Admin SDK operation action function for the 'RequestPosCashApproval' Mutation. Allow users to pass in custom DataConnect instances. */
 export function requestPosCashApproval(vars: RequestPosCashApprovalVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<RequestPosCashApprovalData>>;
 
+/** Generated Node Admin SDK operation action function for the 'EcCommand' Mutation. Allow users to execute without passing in DataConnect. */
+export function ecCommand(dc: DataConnect, vars: EcCommandVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<EcCommandData>>;
+/** Generated Node Admin SDK operation action function for the 'EcCommand' Mutation. Allow users to pass in custom DataConnect instances. */
+export function ecCommand(vars: EcCommandVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<EcCommandData>>;
+
 /** Generated Node Admin SDK operation action function for the 'GetCurrentUser' Query. Allow users to execute without passing in DataConnect. */
 export function getCurrentUser(dc: DataConnect, options?: OperationOptions): Promise<ExecuteOperationResponse<GetCurrentUserData>>;
 /** Generated Node Admin SDK operation action function for the 'GetCurrentUser' Query. Allow users to pass in custom DataConnect instances. */
@@ -2784,4 +2896,9 @@ export function posSaleApprovalStatus(vars: PosSaleApprovalStatusVariables, opti
 export function posCashApprovalStatus(dc: DataConnect, vars: PosCashApprovalStatusVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<PosCashApprovalStatusData>>;
 /** Generated Node Admin SDK operation action function for the 'PosCashApprovalStatus' Query. Allow users to pass in custom DataConnect instances. */
 export function posCashApprovalStatus(vars: PosCashApprovalStatusVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<PosCashApprovalStatusData>>;
+
+/** Generated Node Admin SDK operation action function for the 'EcRead' Query. Allow users to execute without passing in DataConnect. */
+export function ecRead(dc: DataConnect, vars: EcReadVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<EcReadData>>;
+/** Generated Node Admin SDK operation action function for the 'EcRead' Query. Allow users to pass in custom DataConnect instances. */
+export function ecRead(vars: EcReadVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<EcReadData>>;
 

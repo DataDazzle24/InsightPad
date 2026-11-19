@@ -1268,6 +1268,20 @@ exports.requestPosCashApproval = function requestPosCashApproval(dcOrVars, vars)
 }
 ;
 
+const ecCommandRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'EcCommand', inputVars);
+}
+ecCommandRef.operationName = 'EcCommand';
+exports.ecCommandRef = ecCommandRef;
+
+exports.ecCommand = function ecCommand(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(ecCommandRef(dcInstance, inputVars));
+}
+;
+
 const getCurrentUserRef = (dc) => {
   const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
   dcInstance._useGeneratedSdk();
@@ -2015,5 +2029,20 @@ exports.posCashApprovalStatus = function posCashApprovalStatus(dcOrVars, varsOrO
 
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(posCashApprovalStatusRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const ecReadRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'EcRead', inputVars);
+}
+ecReadRef.operationName = 'EcRead';
+exports.ecReadRef = ecReadRef;
+
+exports.ecRead = function ecRead(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(ecReadRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;

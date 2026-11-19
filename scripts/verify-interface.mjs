@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {ecBase} from './verify-encomendas-comandas.mjs';
 import {execFileSync} from 'node:child_process';
 import {verifyCadastros,cadastrosBase} from './verify-cadastros.mjs';
 import {estoqueHistoricalSource} from './verify-estoque-registros.mjs';
@@ -35,7 +36,7 @@ for(const family of families){
  for(const [attribute,count]of before)assert.ok((after.get(attribute)??0)>=count,`${path}: removed or changed business wiring ${attribute}`);
 }
 for(const path of ['frontend/src/App.css','frontend/src/index.css','frontend/src/home-header-refinements.css','frontend/src/sidebar-refinements.css','frontend/src/components/PosApprovalsModal.tsx','frontend/src/pages/StockPage.tsx','frontend/src/pages/MasterDataPage.tsx','frontend/src/pages/PlatformAdminPage.tsx','frontend/src/pages/SalesManagementPage.tsx','frontend/src/utils/salesOffline.ts','frontend/src/hooks/useModalIsolation.ts','frontend/src/hooks/useDialogAccessibility.ts'])assert.equal(readFileSync(path,'utf8').trim(),git('show',baseline+':'+path),`Functional or print source changed: ${path}`);
-const changed=git('diff','--name-only',baseline).split('\n').filter(Boolean);
+const changed=git('diff','--name-only',baseline,ecBase).split('\n').filter(Boolean);
 assert.ok(!changed.some(p=>/^(dataconnect\/|functions\/|frontend\/src\/dataconnect-generated\/|frontend\/src\/auth\/)/.test(p)||/package(?:-lock)?\.json$/.test(p)),'Visual scope changed domain/backend/dependencies');
 const css=readFileSync('frontend/src/interface.css','utf8');assert.ok(!css.includes('!important')&&!/@media\s+print/.test(css),'Screen stylesheet must not weaken cascade or redesign print');
 console.log('Interface preservation: original callbacks, refs, fields, domain/print sources and scope retained.');

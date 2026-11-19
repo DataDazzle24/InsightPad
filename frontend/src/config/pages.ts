@@ -1,5 +1,7 @@
 export const appRoutes = [
   { pageKey: 'CAIXA', route: '/vendas/frente-de-caixa' },
+  { pageKey: 'COMANDAS', route: '/vendas/comandas' },
+  { pageKey: 'ENCOMENDAS', route: '/vendas/encomendas' },
   { pageKey: 'GESTAO_VENDAS', route: '/vendas/registros' },
   { pageKey: 'ESTOQUE', route: '/estoque' },
   { pageKey: 'CONTAS_PAGAR', route: '/financeiro/contas-a-pagar' },

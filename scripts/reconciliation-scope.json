@@ -97,12 +97,14 @@
     "PLATAFORMA-UI-20261115",
     "BARRAS-GLOBAIS-UI-20261115",
     "MENUS-UI-20261116",
-    "AJUSTES-FINOS-20261116"
+    "AJUSTES-FINOS-20261116",
+    "ENCOMENDAS-COMANDAS-20261118"
   ],
   "paths": {
     ".gitignore": {
       "ids": [
-        "PREP-DEC017"
+        "PREP-DEC017",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
       "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
     },
@@ -110,7 +112,8 @@
       "ids": [
         "PREP-DEC017",
         "OBS-018-AG03-001",
-        "CANAIS-UI-20261114"
+        "CANAIS-UI-20261114",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
       "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18. Canais adds isolated acceptance coverage to the existing full suite; extend only job timeout from 30 to 40 minutes, preserve every step and condition."
     },
@@ -281,7 +284,8 @@
         "PLATAFORMA-UI-20261115",
         "BARRAS-GLOBAIS-UI-20261115",
         "MENUS-UI-20261116",
-        "AJUSTES-FINOS-20261116"
+        "AJUSTES-FINOS-20261116",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
       "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages. Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only. Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication. Barras globais aprovadas: apresentação ou suporte exato de validação, contratos preservados."
     },
@@ -360,9 +364,10 @@
         "AJU-DASH-11",
         "AJU-DASH-12",
         "AJU-DASH-13",
-        "AJUSTES-FINOS-20261116"
+        "AJUSTES-FINOS-20261116",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
-      "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão."
+      "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão. EC: delivery fee disclosure excludes transport income from product margin; existing controls/layout preserved."
     },
     "frontend/src/pages/ChannelDashboardPage.tsx": {
       "ids": [
@@ -445,7 +450,8 @@
         "AJU-SUB-10",
         "AJU-SUB-11",
         "AJU-SUB-13",
-        "AJU-SUB-14"
+        "AJU-SUB-14",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
       "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão."
     },
@@ -553,7 +559,8 @@
         "AJU-SUB-10",
         "AJU-SUB-11",
         "AJU-SUB-13",
-        "AJU-SUB-14"
+        "AJU-SUB-14",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
       "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão."
     },
@@ -620,7 +627,8 @@
         "AJU-SUB-10",
         "AJU-SUB-11",
         "AJU-SUB-13",
-        "AJU-SUB-14"
+        "AJU-SUB-14",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
       "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão."
     },
@@ -640,7 +648,8 @@
         "PLATAFORMA-UI-20261115",
         "BARRAS-GLOBAIS-UI-20261115",
         "MENUS-UI-20261116",
-        "AJUSTES-FINOS-20261116"
+        "AJUSTES-FINOS-20261116",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
       "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages. Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only. Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication. Barras globais aprovadas: apresentação ou suporte exato de validação, contratos preservados."
     },
@@ -1001,7 +1010,8 @@
         "ADD-018-001",
         "SEC-2026-001",
         "SEC-2026-002",
-        "SEC-2026-003"
+        "SEC-2026-003",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
       "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
     },
@@ -1010,7 +1020,8 @@
         "ADD-018-001",
         "SEC-2026-001",
         "SEC-2026-002",
-        "SEC-2026-003"
+        "SEC-2026-003",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
       "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
     },
@@ -1028,7 +1039,8 @@
         "ADD-018-001",
         "SEC-2026-001",
         "SEC-2026-002",
-        "SEC-2026-003"
+        "SEC-2026-003",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
       "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
     },
@@ -1037,7 +1049,8 @@
         "ADD-018-001",
         "SEC-2026-001",
         "SEC-2026-002",
-        "SEC-2026-003"
+        "SEC-2026-003",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
       "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
     },
@@ -1055,7 +1068,8 @@
         "ADD-018-001",
         "SEC-2026-001",
         "SEC-2026-002",
-        "SEC-2026-003"
+        "SEC-2026-003",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
       "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
     },
@@ -1064,7 +1078,8 @@
         "ADD-018-001",
         "SEC-2026-001",
         "SEC-2026-002",
-        "SEC-2026-003"
+        "SEC-2026-003",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
       "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
     },
@@ -1082,7 +1097,8 @@
         "ADD-018-001",
         "SEC-2026-001",
         "SEC-2026-002",
-        "SEC-2026-003"
+        "SEC-2026-003",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
       "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
     },
@@ -1091,7 +1107,8 @@
         "ADD-018-001",
         "SEC-2026-001",
         "SEC-2026-002",
-        "SEC-2026-003"
+        "SEC-2026-003",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
       "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
     },
@@ -1109,7 +1126,8 @@
         "ADD-018-001",
         "SEC-2026-001",
         "SEC-2026-002",
-        "SEC-2026-003"
+        "SEC-2026-003",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
       "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
     },
@@ -1127,7 +1145,8 @@
         "ADD-018-001",
         "SEC-2026-001",
         "SEC-2026-002",
-        "SEC-2026-003"
+        "SEC-2026-003",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
       "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
     },
@@ -1136,7 +1155,8 @@
         "ADD-018-001",
         "SEC-2026-001",
         "SEC-2026-002",
-        "SEC-2026-003"
+        "SEC-2026-003",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
       "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
     },
@@ -1277,7 +1297,8 @@
         "SEC-2026-001",
         "SEC-2026-002",
         "AJU-PDV-04",
-        "AJU-EST-22"
+        "AJU-EST-22",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
       "reason": "Exact isolated Data Connect compiler and disposable PG18 regression for session/core write ordering, financial/stock ledgers and replay; synthetic actors, sealed evidence, no remote backend or permissions change."
     },
@@ -1358,7 +1379,8 @@
       "ids": [
         "UXIP-001",
         "CADASTROS-UI-20261108",
-        "ESTOQUE-REGISTROS-UI-20261109"
+        "ESTOQUE-REGISTROS-UI-20261109",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
       "reason": "Screen-only visual migration and exact presentation/preservation regression; preserve business callbacks, fields, domain sources and print. Exact path only; no backend or operational change. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages."
     },
@@ -1447,9 +1469,10 @@
     "frontend/src/components/dashboard-v3/DashboardPrintReport.tsx": {
       "ids": [
         "UXIP-001",
-        "AJUSTES-FINOS-20261116"
+        "AJUSTES-FINOS-20261116",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
-      "reason": "Approved dashboard v3 integration on b753891: exact presentation, real existing controller wiring, complete original print, persistent compact alert placement and directed regression. No backend/auth/IAM/dependency or mock product changes."
+      "reason": "Approved dashboard v3 integration on b753891: exact presentation, real existing controller wiring, complete original print, persistent compact alert placement and directed regression. No backend/auth/IAM/dependency or mock product changes. EC: delivery fee disclosure excludes transport income from product margin; existing controls/layout preserved."
     },
     "frontend/public/dashboard-v3/card-art/finance.webp": {
       "ids": [
@@ -1526,15 +1549,17 @@
     },
     "scripts/qa-browser/install-chromium.sh": {
       "ids": [
-        "UXIP-001"
+        "UXIP-001",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
-      "reason": "Directed CI provisioning correction after exit124 in required Chromium install; same lockfile/browser and all verification gates retained, bounded dependencies/download and one retry. Disposable runner only; no product/GCP resource change."
+      "reason": "Directed CI provisioning correction after exit124 in required Chromium install; same lockfile/browser and all verification gates retained, bounded dependencies/download and one retry. Disposable runner only; no product/GCP resource change. CI44435899733 timed out downloading Ubuntu Chromium dependencies; bound increases180s→600s only for system dependencies, preserving all fatal failures and browser retry limits."
     },
     "scripts/qa-browser/install-chromium.test.mjs": {
       "ids": [
-        "UXIP-001"
+        "UXIP-001",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
-      "reason": "Directed CI provisioning correction after exit124 in required Chromium install; same lockfile/browser and all verification gates retained, bounded dependencies/download and one retry. Disposable runner only; no product/GCP resource change."
+      "reason": "Directed CI provisioning correction after exit124 in required Chromium install; same lockfile/browser and all verification gates retained, bounded dependencies/download and one retry. Disposable runner only; no product/GCP resource change. CI44435899733 timed out downloading Ubuntu Chromium dependencies; bound increases180s→600s only for system dependencies, preserving all fatal failures and browser retry limits."
     },
     "frontend/src/components/dashboard-v3/dashboard-v6.css": {
       "ids": [
@@ -1601,7 +1626,8 @@
         "CANAIS-UI-20261114",
         "PLATAFORMA-UI-20261115",
         "BARRAS-GLOBAIS-UI-20261115",
-        "MENUS-UI-20261116"
+        "MENUS-UI-20261116",
+        "ENCOMENDAS-COMANDAS-20261118"
       ]
     },
     "frontend/src/cadastros.css": {
@@ -1680,7 +1706,8 @@
     },
     "frontend/src/pages/SalesManagementPage.tsx": {
       "ids": [
-        "ESTOQUE-REGISTROS-UI-20261109"
+        "ESTOQUE-REGISTROS-UI-20261109",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
       "reason": " Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages."
     },
@@ -1773,7 +1800,8 @@
       "ids": [
         "CANAIS-UI-20261114",
         "PLATAFORMA-UI-20261115",
-        "AJUSTES-FINOS-20261116"
+        "AJUSTES-FINOS-20261116",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
       "reason": " Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only. Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication."
     },
@@ -1885,14 +1913,16 @@
     },
     "frontend/src/pages/MenuPages.test.tsx": {
       "ids": [
-        "MENUS-UI-20261116"
+        "MENUS-UI-20261116",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
-      "reason": "Approved Home/submenu visual integration or exact regression/QA support; preserve business routes, permissions, global shell and destination pages. No merge or deployment."
+      "reason": "Approved Home/submenu visual integration or exact regression/QA support; preserve business routes, permissions, global shell and destination pages. No merge or deployment. EC: exact approved Vendas order adds Comandas and Encomendas."
     },
     "frontend/qa/application.tsx": {
       "ids": [
         "MENUS-UI-20261116",
-        "AJUSTES-FINOS-20261116"
+        "AJUSTES-FINOS-20261116",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
       "reason": "Approved Home/submenu visual integration or exact regression/QA support; preserve business routes, permissions, global shell and destination pages. No merge or deployment."
     },
@@ -1905,9 +1935,10 @@
     },
     "scripts/qa-browser/menus.mjs": {
       "ids": [
-        "MENUS-UI-20261116"
+        "MENUS-UI-20261116",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
-      "reason": "Approved Home/submenu visual integration or exact regression/QA support; preserve business routes, permissions, global shell and destination pages. No merge or deployment."
+      "reason": "Approved Home/submenu visual integration or exact regression/QA support; preserve business routes, permissions, global shell and destination pages. No merge or deployment. EC: approved Vendas routes/order; preserve all other cases."
     },
     "frontend/src/components/dashboard-v3/dashboard-print.css": {
       "ids": [
@@ -1923,7 +1954,8 @@
     },
     "scripts/verify-ajustes-finos.mjs": {
       "ids": [
-        "AJUSTES-FINOS-20261116"
+        "AJUSTES-FINOS-20261116",
+        "ENCOMENDAS-COMANDAS-20261118"
       ],
       "reason": "Approved fine adjustments: scoped PDV/dashboard UI, print and directed regression; financial/API/auth contracts preserved."
     },
@@ -1932,6 +1964,246 @@
         "AJUSTES-FINOS-20261116"
       ],
       "reason": "Approved fine adjustments: scoped PDV/dashboard UI, print and directed regression; financial/API/auth contracts preserved."
+    },
+    "frontend/src/config/pages.ts": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Interface integrada e adaptadores reais do novo escopo, preservando shell e fluxos fora dele."
+    },
+    "frontend/src/config/navigation.ts": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Interface integrada e adaptadores reais do novo escopo, preservando shell e fluxos fora dele."
+    },
+    "frontend/src/pages/EncomendasComandasPage.tsx": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Interface integrada e adaptadores reais do novo escopo, preservando shell e fluxos fora dele."
+    },
+    "frontend/src/encomendas-comandas.css": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Interface integrada e adaptadores reais do novo escopo, preservando shell e fluxos fora dele."
+    },
+    "frontend/src/encomendas-comandas/ActionDialog.tsx": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Interface integrada e adaptadores reais do novo escopo, preservando shell e fluxos fora dele."
+    },
+    "frontend/src/encomendas-comandas/DocumentEditor.tsx": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Interface integrada e adaptadores reais do novo escopo, preservando shell e fluxos fora dele."
+    },
+    "frontend/src/encomendas-comandas/Calendar.tsx": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Interface integrada e adaptadores reais do novo escopo, preservando shell e fluxos fora dele."
+    },
+    "frontend/src/encomendas-comandas/calendarDates.ts": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Interface integrada e adaptadores reais do novo escopo, preservando shell e fluxos fora dele."
+    },
+    "frontend/src/encomendas-comandas/types.ts": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Interface integrada e adaptadores reais do novo escopo, preservando shell e fluxos fora dele."
+    },
+    "frontend/src/encomendas-comandas/ui.tsx": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Interface integrada e adaptadores reais do novo escopo, preservando shell e fluxos fora dele."
+    },
+    "frontend/src/encomendas-comandas/money.ts": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Interface integrada e adaptadores reais do novo escopo, preservando shell e fluxos fora dele."
+    },
+    "frontend/src/encomendas-comandas/money.test.ts": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Interface integrada e adaptadores reais do novo escopo, preservando shell e fluxos fora dele."
+    },
+    "frontend/src/encomendas-comandas/pending.ts": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Interface integrada e adaptadores reais do novo escopo, preservando shell e fluxos fora dele."
+    },
+    "frontend/src/encomendas-comandas/pending.test.ts": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Interface integrada e adaptadores reais do novo escopo, preservando shell e fluxos fora dele."
+    },
+    "frontend/src/encomendas-comandas/service.ts": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Interface integrada e adaptadores reais do novo escopo, preservando shell e fluxos fora dele."
+    },
+    "frontend/src/encomendas-comandas/service.test.ts": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Interface integrada e adaptadores reais do novo escopo, preservando shell e fluxos fora dele."
+    },
+    "frontend/src/encomendas-comandas/print.ts": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Interface integrada e adaptadores reais do novo escopo, preservando shell e fluxos fora dele."
+    },
+    "dataconnect/migrations/20261118-encomendas-comandas.sql": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Novo escopo autorizado de Encomendas/Comandas: dados, contratos, reservas e garantias transacionais aditivas."
+    },
+    "dataconnect/migrations/20261118-ec-functions.sql": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Novo escopo autorizado de Encomendas/Comandas: dados, contratos, reservas e garantias transacionais aditivas."
+    },
+    "dataconnect/migrations/20261118-ec-ledger.sql": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Novo escopo autorizado de Encomendas/Comandas: dados, contratos, reservas e garantias transacionais aditivas."
+    },
+    "dataconnect/migrations/20261118-ec-allocation-parts.sql": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Novo escopo autorizado de Encomendas/Comandas: dados, contratos, reservas e garantias transacionais aditivas."
+    },
+    "dataconnect/migrations/20261118-ec-advanced.sql": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Novo escopo autorizado de Encomendas/Comandas: dados, contratos, reservas e garantias transacionais aditivas."
+    },
+    "dataconnect/migrations/20261118-ec-commands.sql": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Novo escopo autorizado de Encomendas/Comandas: dados, contratos, reservas e garantias transacionais aditivas."
+    },
+    "dataconnect/migrations/20261118-ec-queries.sql": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Novo escopo autorizado de Encomendas/Comandas: dados, contratos, reservas e garantias transacionais aditivas."
+    },
+    "scripts/ec/runtime_support.py": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Validação isolada e governança nominal do novo escopo EC; guardas históricas continuam verificadas na fronteira P57."
+    },
+    "scripts/ec/test_runtime.py": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Validação isolada e governança nominal do novo escopo EC; guardas históricas continuam verificadas na fronteira P57."
+    },
+    "scripts/ec/browser_runtime.py": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Validação isolada e governança nominal do novo escopo EC; guardas históricas continuam verificadas na fronteira P57."
+    },
+    "scripts/ec/fixtures.sql": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Validação isolada e governança nominal do novo escopo EC; guardas históricas continuam verificadas na fronteira P57."
+    },
+    "scripts/verify-encomendas-comandas.mjs": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Validação isolada e governança nominal do novo escopo EC; guardas históricas continuam verificadas na fronteira P57."
+    },
+    "scripts/qa-browser/encomendas-comandas.mjs": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Validação isolada e governança nominal do novo escopo EC; guardas históricas continuam verificadas na fronteira P57."
+    },
+    "docs/encomendas-comandas/base-e-plano.md": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Rastreabilidade e handoff do novo escopo, sem reescrever os68 históricos ou gravar CORE."
+    },
+    "docs/encomendas-comandas/decisoes.json": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Rastreabilidade e handoff do novo escopo, sem reescrever os68 históricos ou gravar CORE."
+    },
+    "docs/encomendas-comandas/reservas-integracao.json": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Rastreabilidade e handoff do novo escopo, sem reescrever os68 históricos ou gravar CORE."
+    },
+    "docs/encomendas-comandas/rastreabilidade.tsv": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Rastreabilidade e handoff do novo escopo, sem reescrever os68 históricos ou gravar CORE."
+    },
+    "docs/encomendas-comandas/validacao.md": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Rastreabilidade e handoff do novo escopo, sem reescrever os68 históricos ou gravar CORE."
+    },
+    "docs/encomendas-comandas/manual.md": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Rastreabilidade e handoff do novo escopo, sem reescrever os68 históricos ou gravar CORE."
+    },
+    "docs/encomendas-comandas/publicacao-e-reversao.md": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Rastreabilidade e handoff do novo escopo, sem reescrever os68 históricos ou gravar CORE."
+    },
+    "docs/encomendas-comandas/CORE-handoff.json": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Rastreabilidade e handoff do novo escopo, sem reescrever os68 históricos ou gravar CORE."
+    },
+    "frontend/src/encomendas-comandas/LedgerDetails.tsx": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Read-only receipt allocations, persisted plans, refund ledger and authorized business effects in EC history; preserve financial commands and protected modules."
+    },
+    "frontend/qa/ec-print-date.test.ts": {
+      "ids": [
+        "ENCOMENDAS-COMANDAS-20261118"
+      ],
+      "reason": "Regressão dirigida da fixture de PDF na virada UTC/São Paulo encontrada no CI integrado; mantém65 produtos e as mesmas asserções de impressão."
     }
   },
   "bytePreserved": [

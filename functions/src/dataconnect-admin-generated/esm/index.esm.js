@@ -546,6 +546,12 @@ export function requestPosCashApproval(dcOrVarsOrOptions, varsOrOptions, options
   return dcInstance.executeMutation('RequestPosCashApproval', inputVars, inputOpts);
 }
 
+export function ecCommand(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeMutation('EcCommand', inputVars, inputOpts);
+}
+
 export function getCurrentUser(dcOrOptions, options) {
   const { dc: dcInstance, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrOptions, options, undefined);
   dcInstance.useGen(true);
@@ -844,5 +850,11 @@ export function posCashApprovalStatus(dcOrVarsOrOptions, varsOrOptions, options)
   const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
   dcInstance.useGen(true);
   return dcInstance.executeQuery('PosCashApprovalStatus', inputVars, inputOpts);
+}
+
+export function ecRead(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeQuery('EcRead', inputVars, inputOpts);
 }
 

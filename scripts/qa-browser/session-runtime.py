@@ -317,7 +317,7 @@ try:
                         time.sleep(.1)
                 post('/emulator/configure', {'connectionString': 'postgresql://postgres@/fdcdb?host=' + str(sock)
                                             + '&sslmode=disable', 'database': 'fdcdb', 'serviceId': 'insightpad'})
-                assert sql("SELECT count(*) FROM pg_tables WHERE schemaname='public';") == '53'
+                assert sql("SELECT count(*) FROM pg_tables WHERE schemaname='public';") == '70'  # original53 +17 additive EC tables; current schema is compiled here
                 tenant, role = '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000002'
                 sql(f"INSERT INTO tenants(id,legal_name,timezone,currency_code,active,created_at,updated_at) VALUES('{tenant}','Synthetic','UTC','BRL',true,now(),now());"
                     f"INSERT INTO roles(id,tenant_id,name,hierarchy_level,system_role,active,created_at,updated_at) VALUES('{role}','{tenant}','Synthetic',100,false,true,now(),now());"

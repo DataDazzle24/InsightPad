@@ -637,6 +637,13 @@ function requestPosCashApproval(dcOrVarsOrOptions, varsOrOptions, options) {
 }
 exports.requestPosCashApproval = requestPosCashApproval;
 
+function ecCommand(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeMutation('EcCommand', inputVars, inputOpts);
+}
+exports.ecCommand = ecCommand;
+
 function getCurrentUser(dcOrOptions, options) {
   const { dc: dcInstance, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrOptions, options, undefined);
   dcInstance.useGen(true);
@@ -986,4 +993,11 @@ function posCashApprovalStatus(dcOrVarsOrOptions, varsOrOptions, options) {
   return dcInstance.executeQuery('PosCashApprovalStatus', inputVars, inputOpts);
 }
 exports.posCashApprovalStatus = posCashApprovalStatus;
+
+function ecRead(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeQuery('EcRead', inputVars, inputOpts);
+}
+exports.ecRead = ecRead;
 

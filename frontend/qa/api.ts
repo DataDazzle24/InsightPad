@@ -12,11 +12,11 @@ export class DataConnectOperationError extends DataConnectError {
  constructor(message:string){super('partial-error',message);this.name='DataConnectOperationError';this.response={data:null,errors:[{message:'POS_REJECTED: '+message,path:['_execute']}]}}
 }
 export const connectorConfig={connector:'qa-only',service:'fixture',location:'local'}
-export const firebaseApp={},auth={currentUser:null},appCheck=null
+export const firebaseApp={},auth={currentUser:null as null|{uid:string}},appCheck=null
 export const getDataConnect=()=>({qa:true}),getFunctions=()=>({qa:true})
-export const currentSessionToken=()=> '0'.repeat(64)
+export const currentSessionToken=()=> typeof location!=='undefined'&&new URLSearchParams(location.search).has('qa-ec')?'a'.repeat(64):'0'.repeat(64)
 export const sessionKey=(uid:string)=>'qa.session:'+uid
-export const qaState={platformHarness:null as null|((name:string,variables:Row)=>unknown),channelHarness:null as null|((name:string,variables:Row)=>unknown),pendingChannelOrders:[] as Row[],fail:false,delay:0,ackLoss:false,logs:[] as string[],unsupported:[] as string[],permissions:'full',empty:false,allowedBranches:[] as string[],cashAckLoss:false,requests:[] as {name:string;variables:unknown}[]}
+export const qaState={ecHarness:null as null|((name:string,variables:Row)=>unknown),platformHarness:null as null|((name:string,variables:Row)=>unknown),channelHarness:null as null|((name:string,variables:Row)=>unknown),pendingChannelOrders:[] as Row[],fail:false,delay:0,ackLoss:false,logs:[] as string[],unsupported:[] as string[],permissions:'full',empty:false,allowedBranches:[] as string[],cashAckLoss:false,requests:[] as {name:string;variables:unknown}[]}
 export const uuid=(n:number)=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`
 const immutable=<T>(value:T):T=>{if(value&&typeof value==='object'){Object.values(value).forEach(immutable);Object.freeze(value)}return value}
 export const fixtureDate=new Date().toISOString().slice(0,10)
@@ -47,7 +47,7 @@ export function resetFixtures(){
  subcategories=Array.from({length:300},(_,i)=>({id:uuid(800+i),name:`SUBCATEGORIA QA ${String(i+1).padStart(3,'0')}`,categoryId:uuid(300+i%10),categoryName:`CATEGORIA QA ${String(i%10+1).padStart(3,'0')}`,active:i%11!==10,createdAt:when,updatedAt:when}))
  movements=Array.from({length:501},(_,i)=>({id:uuid(2000+i),operationId:'qa-movement-'+i,occurredAt:new Date(Date.parse(when)-i*60000).toISOString(),quantity:i%5+1,unitCostCents:products[i%products.length]!.costPriceCents,status:i%13===0?'REVERSED':'POSTED',typeCode:i%2?'LOSS':'MANUAL_IN',typeName:i%2?'Perda':'Entrada',direction:i%2?'OUT':'IN',productId:products[i%products.length]!.id,productName:products[i%products.length]!.name,branchId:branches[i%2]!.id,branchName:branches[i%2]!.name}))
  transfers=Array.from({length:201},(_,i)=>({id:uuid(3000+i),operationId:'qa-transfer-'+i,status:'COMPLETED',requestedAt:when,sourceBranchId:branches[0]!.id,destinationBranchId:branches[1]!.id,sourceBranch:branches[0]!.name,destinationBranch:branches[1]!.name,totalQuantity:i%5+1,itemCount:1}))
- receipts.clear();cashApprovals.clear();qaState.platformHarness=null;qaState.channelHarness=null;qaState.pendingChannelOrders=[];qaState.logs=[];qaState.unsupported=[];qaState.requests=[]
+ receipts.clear();cashApprovals.clear();qaState.ecHarness=null;qaState.platformHarness=null;qaState.channelHarness=null;qaState.pendingChannelOrders=[];qaState.logs=[];qaState.unsupported=[];qaState.requests=[]
 }
 resetFixtures()
 const result=(data:unknown)=>({data:{_select:[{data:structuredClone(data)}]}})
@@ -96,7 +96,10 @@ export function useFineBundleFixture(){
 /** Explicit synthetic print stress profile; never loaded by the product entry. */
 export function useFinePrintFixtures(){
  resetFixtures();
- ledger=ledger.map((row,index)=>immutable({...row,name:`PRODUTO SINTÉTICO ${String(index+1).padStart(3,'0')} — DESCRIÇÃO EXTENSA PARA CONFERIR QUEBRAS DE LINHA E TODAS AS COLUNAS DO RELATÓRIO SEM CORTAR VALORES`,category:index%2?'CATEGORIA SINTÉTICA COM NOME EXTENSO B':'CATEGORIA SINTÉTICA COM NOME EXTENSO A'}));
+ // The sales dashboard's initial range uses the browser's local calendar.
+ // UTC can already be tomorrow in the Sao Paulo browser after 21:00.
+ const today=new Date(),localDay=[today.getFullYear(),String(today.getMonth()+1).padStart(2,'0'),String(today.getDate()).padStart(2,'0')].join('-');
+ ledger=ledger.map((row,index)=>immutable({...row,date:localDay,name:`PRODUTO SINTÉTICO ${String(index+1).padStart(3,'0')} — DESCRIÇÃO EXTENSA PARA CONFERIR QUEBRAS DE LINHA E TODAS AS COLUNAS DO RELATÓRIO SEM CORTAR VALORES`,category:index%2?'CATEGORIA SINTÉTICA COM NOME EXTENSO B':'CATEGORIA SINTÉTICA COM NOME EXTENSO A'}));
 }
 // Separate interactive flow profile: opening ledger and balances reconcile by ID.
 export function useFlowFixtures(){
@@ -324,6 +327,18 @@ async function qaDefaultOperation(name:string,variables:unknown={}){
 // Only the explicit Canais proof opts in. Keep the default API and inferred
 // response contracts intact for all existing isolated browser suites.
 export async function qaOperation(name:string,variables:unknown={}){
+ if(qaState.ecHarness && /^(?:EcRead|EcCommand|ListSales|SaleDetails|SalesWorkspace)$/.test(name)){
+  const v=(variables??{}) as Row;qaState.requests.push({name,variables:structuredClone(v)});
+  if(qaState.fail)throw new DataConnectError('other','Falha de transporte sintética');
+  return qaState.ecHarness(name,v) as ReturnType<typeof qaDefaultOperation>;
+ }
+ if(name==='EcRead'){
+  // Empty visual fallback for pre-existing suites; no in-memory financial writes.
+  const request=((variables as Row)?.input??{}) as Row;
+  const result=request.mode==='LOOKUPS'?{branches:branches.map(b=>({id:b.id,name:b.name})),customers:[],products:[],paymentMethods:[],cashSessions:[],timezone:'America/Sao_Paulo',serverNow:when,catalogPageSize:50}:{rows:[],total:0,offset:0,pageSize:25,counts:{all:0,late:0,ready:0,paid:0,balanceCents:'0'},tables:[],codes:[],serverNow:when,timezone:'America/Sao_Paulo'};
+  return {data:{response:{result}}};
+ }
+
  if(qaState.platformHarness && /^(?:PlatformAdminWorkspace|PlatformBillingWorkspaceV2|CreatePlatformTenant|UpdatePlatformTenant|LinkPlatformUser|SetPlatformTenantStatus|SetPlatformUserStatus|SetPlatformRolePermission|CreatePlatformInvoice|UpdatePlatformInvoice|SettlePlatformInvoice|VoidPlatformInvoice|ReversePlatformPayment)$/.test(name)){
   const v=(variables??{}) as Row
   qaState.requests.push({name,variables:structuredClone(v)});qaState.requests=qaState.requests.slice(-200)

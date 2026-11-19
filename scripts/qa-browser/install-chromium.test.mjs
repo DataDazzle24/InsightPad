@@ -22,7 +22,7 @@ function run(mode,extra={}){
  assert.ifError(result.error);return{status:result.status,log:existsSync(join(root,'log'))?readFileSync(join(root,'log'),'utf8'):'',downloads:existsSync(join(root,'count'))?Number(readFileSync(join(root,'count'),'utf8')):0};
  }finally{rmSync(root,{recursive:true,force:true});}
 }
-test('installs the same Chromium system libraries and PDF tools under separate bounds',()=>{const r=run('dependencies');assert.equal(r.status,0);assert.match(r.log,/timeout:180s/);assert.match(r.log,/install-deps chromium:connection=45000/);assert.match(r.log,/timeout:120s/);assert.match(r.log,/apt-get .*install -y poppler-utils/);assert.equal(r.downloads,0);});
+test('installs the same Chromium system libraries and PDF tools under separate bounds',()=>{const r=run('dependencies');assert.equal(r.status,0);assert.match(r.log,/timeout:600s/);assert.match(r.log,/install-deps chromium:connection=45000/);assert.match(r.log,/timeout:120s/);assert.match(r.log,/apt-get .*install -y poppler-utils/);assert.equal(r.downloads,0);});
 test('dependency failures stop before PDF installation or browser download',()=>{const r=run('dependencies',{DEPS_RESULT:'77'});assert.equal(r.status,77);assert.doesNotMatch(r.log,/sudo:/);assert.equal(r.downloads,0);});
 test('PDF dependency failure remains fatal',()=>assert.equal(run('dependencies',{APT_RESULT:'78'}).status,78));
 test('successful pinned browser download runs once and retains its connection deadline',()=>{const r=run('browser');assert.equal(r.status,0);assert.equal(r.downloads,1);assert.match(r.log,/install chromium:connection=45000/);assert.doesNotMatch(r.log,/sudo:|install-deps/);});

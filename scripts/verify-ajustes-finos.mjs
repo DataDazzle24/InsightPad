@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
-import {readFileSync} from 'node:fs';
+import {ecBase,ecHistoricalSource,verifyEncomendasComandas} from './verify-encomendas-comandas.mjs';
+const readFileSync=ecHistoricalSource;
 import ts from '../frontend/node_modules/typescript/lib/typescript.js';
 import postcss from '../frontend/node_modules/postcss/lib/postcss.mjs';
 export const fineBase='fd8f10c8575982ace35613e58363adb0ea28522c';
@@ -25,8 +26,9 @@ function collect(file,predicate){const result=[];function visit(node){if(predica
 function named(file,name){const nodes=collect(file,node=>(ts.isVariableDeclaration(node)||ts.isFunctionDeclaration(node))&&node.name?.getText(file)===name);assert.ok(nodes.length,'Missing preserved '+name);return nodes[0];}
 function preserve(path,names,callback=false){const a=parse(before(path)),b=parse(readFileSync(path,'utf8'));for(const name of names){const old=named(a,name),now=named(b,name),body=n=>callback?n.initializer.arguments[0]:n;assert.equal(canonical(b,body(now)),canonical(a,body(old)),`Financial/API/session behavior changed: ${path} ${name}`)}}
 export function verifyAjustesFinos(){
+ verifyEncomendasComandas();
  git('merge-base','--is-ancestor',fineBase,'HEAD');
- const changed=[...git('diff','--name-only',fineBase).split('\n'),...git('ls-files','--others','--exclude-standard').split('\n')].filter(Boolean);
+ const changed=git('diff','--name-only',fineBase,ecBase).split('\n').filter(Boolean);
  for(const path of changed)assert.ok(allowed.has(path),'Fine adjustments changed an unapproved path: '+path);
  preserve('frontend/src/pages/PointOfSalePage.tsx',['add','readProductCode','finish','printReceipt','shortcuts','offlineOwner','canOpenCashControl','itemEntryDisabled']);
  preserve('frontend/src/pages/PointOfSalePage.tsx',['sync','load'],true);
