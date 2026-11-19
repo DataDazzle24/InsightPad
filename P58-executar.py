@@ -4,7 +4,7 @@ os.umask(0o077);root=pathlib.Path(__file__).resolve().parent
 def require(x,m):
  if not x:raise RuntimeError(m)
 try:
- require(sys.argv[1:] in ([],['--backup-and-publish'],['--publish-without-backup']),'Opção de execução não reconhecida')
+ require(sys.argv[1:] in ([],['--backup-and-publish'],['--publish-without-backup'],['--resume-after-sql']),'Opção de execução não reconhecida')
  project=subprocess.check_output(['gcloud','config','get-value','project'],text=True,stderr=subprocess.DEVNULL).strip();require(project=='insightpad-dd-dev','Projeto ativo fora de DEV')
  candidates=[pathlib.Path.home()/'InsightPad_DEC035_OP_20261028T165248Z/tools-node22/node_modules/node/bin/node']
  if shutil.which('node'):candidates.insert(0,pathlib.Path(shutil.which('node')))
@@ -23,6 +23,10 @@ try:
  if sys.argv[1:]==['--backup-and-publish']:
   result=subprocess.run([sys.executable,str(root/'P58-backup.test.py')],cwd=root,env=env,timeout=120);require(result.returncode==0,'Testes de backup falharam; criação bloqueada')
   sys.exit(subprocess.run([sys.executable,str(root/'P58-backup.py'),'--create-and-publish'],cwd=root,env=env).returncode)
+ if sys.argv[1:]==['--resume-after-sql']:
+  result=subprocess.run([sys.executable,str(root/'P58-retomada.test.py')],cwd=root,env=env,timeout=120);require(result.returncode==0,'Testes da retomada falharam; publicação bloqueada')
+  print('Retomando após os sete SQL aplicados. Sem reaplicar migrações, criar backup ou consultar preços.',flush=True)
+  sys.exit(subprocess.run([sys.executable,str(root/'P58-retomar.py'),'--resume-after-sql'],cwd=root,env=env).returncode)
  if sys.argv[1:]==['--publish-without-backup']:
   print('Orientação do usuário: publicação DEV sem exigir/criar backup ou consultar tarifas. Recuperação do banco não garantida.',flush=True)
  sys.exit(subprocess.run([sys.executable,str(root/'P58-publicar.py')]+sys.argv[1:],cwd=root,env=env).returncode)

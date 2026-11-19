@@ -1,0 +1,340 @@
+{
+  "error": {
+    "code": 400,
+    "message": "Invalid resource state for \"projects/102484114817/locations/southamerica-east1/services/insightpad/schemas/main\": the database schema must be migrated before the application schema can be updated",
+    "status": "FAILED_PRECONDITION",
+    "details": [
+      {
+        "@type": "type.googleapis.com/google.rpc.PreconditionFailure",
+        "violations": [
+          {
+            "type": "INCOMPATIBLE_SCHEMA",
+            "subject": "projects/102484114817/locations/southamerica-east1/services/insightpad/schemas/main",
+            "description": "the database schema must be migrated before the application schema can be updated"
+          }
+        ]
+      },
+      {
+        "@type": "type.googleapis.com/google.firebase.dataconnect.v1main.IncompatibleSqlSchemaError",
+        "diffs": [
+          {
+            "sql": "DROP INDEX \"public\".\"ec_allocation_parts_tenant_id_id_uidx\"",
+            "description": "drop index \"ec_allocation_parts_tenant_id_id_uidx\" from table: \"ec_allocation_parts\"",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "ALTER TABLE \"public\".\"ec_allocation_parts\" DROP CONSTRAINT \"ec_part_allocation_fk\", DROP CONSTRAINT \"ec_part_document_fk\", DROP CONSTRAINT \"ec_part_item_fk\"",
+            "description": "modify \"ec_allocation_parts\" table",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "DROP INDEX \"public\".\"ec_allocations_tenant_id_id_uidx\"",
+            "description": "drop index \"ec_allocations_tenant_id_id_uidx\" from table: \"ec_allocations\"",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "ALTER TABLE \"public\".\"ec_allocations\" DROP CONSTRAINT \"ec_allocations_values\", DROP CONSTRAINT \"ec_allocations_document_fk\", DROP CONSTRAINT \"ec_allocations_item_id_fk\", DROP CONSTRAINT \"ec_allocations_participant_id_fk\", DROP CONSTRAINT \"ec_allocations_receipt_id_fk\", DROP CONSTRAINT \"ec_allocations_share_id_fk\", DROP CONSTRAINT \"ec_allocations_tenant_fk\"",
+            "description": "modify \"ec_allocations\" table",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "DROP INDEX \"public\".\"ec_components_tenant_id_id_uidx\"",
+            "description": "drop index \"ec_components_tenant_id_id_uidx\" from table: \"ec_components\"",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "ALTER TABLE \"public\".\"ec_components\" DROP CONSTRAINT \"ec_component_values\", DROP CONSTRAINT \"ec_components_document_fk\", DROP CONSTRAINT \"ec_components_item_id_fk\", DROP CONSTRAINT \"ec_components_product_id_fk\", DROP CONSTRAINT \"ec_components_tenant_fk\"",
+            "description": "modify \"ec_components\" table",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "DROP INDEX \"public\".\"ec_dispositions_tenant_id_id_uidx\"",
+            "description": "drop index \"ec_dispositions_tenant_id_id_uidx\" from table: \"ec_dispositions\"",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "ALTER TABLE \"public\".\"ec_dispositions\" DROP CONSTRAINT \"ec_disposition_values\", DROP CONSTRAINT \"ec_dispositions_document_fk\", DROP CONSTRAINT \"ec_dispositions_item_id_fk\", DROP CONSTRAINT \"ec_dispositions_tenant_fk\"",
+            "description": "modify \"ec_dispositions\" table",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "DROP INDEX \"public\".\"ec_documents_tenant_id_id_uidx\"",
+            "description": "drop index \"ec_documents_tenant_id_id_uidx\" from table: \"ec_documents\"",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "ALTER TABLE \"public\".\"ec_documents\" DROP CONSTRAINT \"ec_doc_kind\", DROP CONSTRAINT \"ec_doc_merge\", DROP CONSTRAINT \"ec_doc_order\", DROP CONSTRAINT \"ec_doc_state\", DROP CONSTRAINT \"ec_doc_values\", DROP CONSTRAINT \"ec_doc_code\", DROP CONSTRAINT \"ec_doc_sale\", DROP CONSTRAINT \"ec_documents_branch_id_fk\", DROP CONSTRAINT \"ec_documents_customer_id_fk\", DROP CONSTRAINT \"ec_documents_sale_id_fk\", DROP CONSTRAINT \"ec_documents_tenant_fk\"",
+            "description": "modify \"ec_documents\" table",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "DROP INDEX \"public\".\"ec_events_tenant_id_id_uidx\"",
+            "description": "drop index \"ec_events_tenant_id_id_uidx\" from table: \"ec_events\"",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "ALTER TABLE \"public\".\"ec_events\" DROP CONSTRAINT \"ec_events_document_fk\", DROP CONSTRAINT \"ec_events_tenant_fk\"",
+            "description": "modify \"ec_events\" table",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "DROP INDEX \"public\".\"ec_items_tenant_id_id_uidx\"",
+            "description": "drop index \"ec_items_tenant_id_id_uidx\" from table: \"ec_items\"",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "ALTER TABLE \"public\".\"ec_items\" DROP CONSTRAINT \"ec_items_values\", DROP CONSTRAINT \"ec_items_document_fk\", DROP CONSTRAINT \"ec_items_participant_id_fk\", DROP CONSTRAINT \"ec_items_product_id_fk\", DROP CONSTRAINT \"ec_items_tenant_fk\"",
+            "description": "modify \"ec_items\" table",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "DROP INDEX \"public\".\"ec_lineage_tenant_id_id_uidx\"",
+            "description": "drop index \"ec_lineage_tenant_id_id_uidx\" from table: \"ec_lineage\"",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "ALTER TABLE \"public\".\"ec_lineage\" DROP CONSTRAINT \"ec_lineage_destination_document_id_fk\", DROP CONSTRAINT \"ec_lineage_origin_document_id_fk\", DROP CONSTRAINT \"ec_lineage_tenant_fk\"",
+            "description": "modify \"ec_lineage\" table",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "DROP INDEX \"public\".\"ec_operations_tenant_id_id_uidx\"",
+            "description": "drop index \"ec_operations_tenant_id_id_uidx\" from table: \"ec_operations\"",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "ALTER TABLE \"public\".\"ec_operations\" DROP CONSTRAINT \"ec_operations_tenant_fk\"",
+            "description": "modify \"ec_operations\" table",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "DROP INDEX \"public\".\"ec_participants_tenant_id_id_uidx\"",
+            "description": "drop index \"ec_participants_tenant_id_id_uidx\" from table: \"ec_participants\"",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "ALTER TABLE \"public\".\"ec_participants\" DROP CONSTRAINT \"ec_participants_document_fk\", DROP CONSTRAINT \"ec_participants_tenant_fk\"",
+            "description": "modify \"ec_participants\" table",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "DROP INDEX \"public\".\"ec_receipts_tenant_id_id_uidx\"",
+            "description": "drop index \"ec_receipts_tenant_id_id_uidx\" from table: \"ec_receipts\"",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "ALTER TABLE \"public\".\"ec_receipts\" DROP CONSTRAINT \"ec_receipt_balance_snapshot\", DROP CONSTRAINT \"ec_receipts_values\", DROP CONSTRAINT \"ec_receipts_cash_session_id_fk\", DROP CONSTRAINT \"ec_receipts_document_fk\", DROP CONSTRAINT \"ec_receipts_payment_method_id_fk\", DROP CONSTRAINT \"ec_receipts_tenant_fk\"",
+            "description": "modify \"ec_receipts\" table",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "DROP INDEX \"public\".\"ec_refunds_tenant_id_id_uidx\"",
+            "description": "drop index \"ec_refunds_tenant_id_id_uidx\" from table: \"ec_refunds\"",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "ALTER TABLE \"public\".\"ec_refunds\" DROP CONSTRAINT \"ec_refund_values\", DROP CONSTRAINT \"ec_refunds_cash_session_id_fk\", DROP CONSTRAINT \"ec_refunds_document_fk\", DROP CONSTRAINT \"ec_refunds_payment_method_id_fk\", DROP CONSTRAINT \"ec_refunds_receipt_id_fk\", DROP CONSTRAINT \"ec_refunds_tenant_fk\"",
+            "description": "modify \"ec_refunds\" table",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "DROP INDEX \"public\".\"ec_active_reservation_uidx\"",
+            "description": "drop index \"ec_active_reservation_uidx\" from table: \"ec_reservations\"",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "DROP INDEX \"public\".\"ec_reservations_tenant_id_id_uidx\"",
+            "description": "drop index \"ec_reservations_tenant_id_id_uidx\" from table: \"ec_reservations\"",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "ALTER TABLE \"public\".\"ec_reservations\" DROP CONSTRAINT \"ec_reservation_values\", DROP CONSTRAINT \"ec_reservations_branch_id_fk\", DROP CONSTRAINT \"ec_reservations_document_fk\", DROP CONSTRAINT \"ec_reservations_item_id_fk\", DROP CONSTRAINT \"ec_reservations_product_id_fk\", DROP CONSTRAINT \"ec_reservations_tenant_fk\"",
+            "description": "modify \"ec_reservations\" table",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "DROP INDEX \"public\".\"ec_sale_receipt_links_tenant_id_id_uidx\"",
+            "description": "drop index \"ec_sale_receipt_links_tenant_id_id_uidx\" from table: \"ec_sale_receipt_links\"",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "ALTER TABLE \"public\".\"ec_sale_receipt_links\" DROP CONSTRAINT \"ec_link_payment\", DROP CONSTRAINT \"ec_link_receipt\", DROP CONSTRAINT \"ec_sale_receipt_links_document_fk\", DROP CONSTRAINT \"ec_sale_receipt_links_receipt_id_fk\", DROP CONSTRAINT \"ec_sale_receipt_links_tenant_fk\"",
+            "description": "modify \"ec_sale_receipt_links\" table",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "DROP INDEX \"public\".\"ec_sequences_tenant_id_id_uidx\"",
+            "description": "drop index \"ec_sequences_tenant_id_id_uidx\" from table: \"ec_sequences\"",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "ALTER TABLE \"public\".\"ec_sequences\" DROP CONSTRAINT \"ec_seq_value\", DROP CONSTRAINT \"ec_seq_kind\", DROP CONSTRAINT \"ec_sequences_tenant_fk\"",
+            "description": "modify \"ec_sequences\" table",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "DROP INDEX \"public\".\"ec_split_plans_tenant_id_id_uidx\"",
+            "description": "drop index \"ec_split_plans_tenant_id_id_uidx\" from table: \"ec_split_plans\"",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "ALTER TABLE \"public\".\"ec_split_plans\" DROP CONSTRAINT \"ec_split_values\", DROP CONSTRAINT \"ec_split_plans_document_fk\", DROP CONSTRAINT \"ec_split_plans_item_id_fk\", DROP CONSTRAINT \"ec_split_plans_tenant_fk\"",
+            "description": "modify \"ec_split_plans\" table",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "DROP INDEX \"public\".\"ec_split_shares_tenant_id_id_uidx\"",
+            "description": "drop index \"ec_split_shares_tenant_id_id_uidx\" from table: \"ec_split_shares\"",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          },
+          {
+            "sql": "ALTER TABLE \"public\".\"ec_split_shares\" DROP CONSTRAINT \"ec_share_values\", DROP CONSTRAINT \"ec_split_shares_document_fk\", DROP CONSTRAINT \"ec_split_shares_plan_id_fk\", DROP CONSTRAINT \"ec_split_shares_tenant_fk\"",
+            "description": "modify \"ec_split_shares\" table",
+            "destructive": true,
+            "riskTags": [
+              "RISK_TAG_DESTRUCTIVE",
+              "RISK_TAG_TABLE_LOCK"
+            ]
+          }
+        ],
+        "destructive": true
+      }
+    ]
+  }
+}

@@ -7,6 +7,78 @@ autorizada pelo pedido do bloco de publicação nesta conversa, após apresenta�
 do plano de schema/SQL/connector/Hosting. O pacote operacional fica em branch
 separada; não muda o candidato testado, não faz merge e não publica PROD.
 
+## Retomada P58R após banco aplicado — 19/11/2026
+
+O diagnóstico P58D confirmou35 diffs destrutivos, exclusivamente remoções de95
+índices/constraints existentes das tabelas EC: chaves estrangeiras, checks de
+valores/estados e índices únicos. São proteções instaladas pelos sete SQL aprovados.
+O modo COMPATIBLE não aceitou essas restrições adicionais. A suposição anterior
+de que esse modo preservaria todas as restrições sem bloquear estava incorreta.
+Nenhum desses DROP será executado. O dado não precisa ser migrado novamente.
+
+`P58-executar.py --resume-after-sql` usa exclusivamente o recibo original
+P58-20261119T125956Z-51173c, sem apagá-lo. Recusa qualquer outra operação com
+intenção de mutação. Confere o mesmo candidato/CI, release/config anterior,
+usuário/role/permissões já existentes e as nove contenções. O SQL da retomada é
+sempre READ ONLY: uma chamada com read_only:false é recusada antes da conexão.
+Não exige/cria backup nem consulta tarifas, conforme a orientação vigente.
+
+A referência `P58-native-expected.json` foi gerada neste executor com o compilador
+SQL Connect v3.4.23 e PostgreSQL18 isolado, imagem fixada pelo teste do candidato,
+seguida dos sete SQL do SHA bb2def3. Foram gerados528 registros de estrutura:
+187 colunas,251 constraints (incluindo NOT NULL de PostgreSQL18),47 índices,
+36 funções (hash do corpo, assinatura e atributos),6 triggers e1 view. Não contém
+registros de clientes. A consulta está em P58-native-contract.sql e seu hash é
+conferido junto com o candidato e com o manifesto do pacote.
+
+A retomada exige igualdade exata do catálogo atual com essa referência. Compara
+também as colunas legadas com o snapshot original, as70 tabelas, login/role e
+privilégios SELECT/INSERT/UPDATE/DELETE do usuário SQL já existente do Data Connect.
+Não executa grants, Functions, DDL, limpeza, sementes ou operações financeiras.
+
+Gera um novo diff oficial em COMPATIBLE. Se passar, mantém COMPATIBLE. Se falhar,
+só admite FAILED_PRECONDITION/INCOMPATIBLE_SCHEMA com um único conjunto de erros
+reconhecidos. O parser PostgreSQL real verifica cada SQL: apenas DROP INDEX ou
+ALTER TABLE DROP CONSTRAINT de objetos existentes no contrato fixado e em public.
+Bloqueia relação legada, CREATE/ADD, coluna/tipo, CASCADE, DML, objeto desconhecido,
+conector incompatível, banco inacessível ou outro erro. O diff é classificado,
+jamais executado. O teste inclui os35 diffs reais recebidos do operador.
+
+Somente após esses gates escolhe a opção oficial schemaValidation:NONE para
+publicar o schema sem exigir remoção das proteções nativas. Isso desativa a
+validação SQL automática dessa publicação; a validação independente acima é
+obrigatória. Não é um --force nem uma migração automática. schemaMigration não é
+enviado, e instância/banco/schema permanecem iguais. A opção NONE não torna um
+banco incompatível seguro por si: nenhuma nova diferença é ignorada.
+
+Exige datasource conectado e não efêmero antes/depois de publicar. Revalida o
+contrato SQL antes de cada publicação do backend e nos preflights posteriores,
+incluindo antes da release Hosting e no final. Nenhuma mudança de metadados SQL é
+esperada. A leitura administrativa pelo serviço Data Connect deve confirmar o
+banco real e as17 tabelas; EcRead sem usuário deve ser recusada antes do Hosting.
+
+Reutiliza o dist privado do build aprovado na operação original (49 arquivos),
+conferindo fonte limpa/SHA e métricas originais. Recalcula os hashes de cada asset
+e grava um novo manifesto privado; não afirma que havia um manifesto original
+por arquivo no recibo anterior. O transporte existente verifica todos os bytes,
+MIME e rotas depois da release, preservando config/rewrite/headers e políticas.
+
+34 testes da retomada,45 do publicador e11 do diagnóstico passaram. A referência
+foi produzida com PostgreSQL real local, sem Google Cloud. A publicação técnica
+só termina com publicationComplete:true, schema/connector/Hosting e verificações
+públicas aprovados. O aceite autenticado Firebase e financeiro segue pendente.
+
+Novo journal P58R; não reaplica os sete SQL, não faz novo build e não renova o
+teto acumulado US$5. O banco segue sem backup/PITR confirmado por decisão vigente.
+Preservar ledger/guards e corrigir em frente. Se houver intenção de mutação em P58R,
+nunca repetir o bootstrap cegamente nem voltar apenas Hosting após uso de EC.
+CORE não gravada; handoff fica no diretório privado da operação.
+
+Referências oficiais consultadas: firebase/firebase-tools v15.34.0,
+src/dataconnect/schemaMigration.ts e client.ts; googleapis/google-api-go-client,
+firebasedataconnect/v1/firebasedataconnect-gen.go, PostgreSql.SchemaValidation.
+Compartilhar somente o JSON entre INICIO P58R/FIM P58R.
+
 ## Estado parcial confirmado e diagnóstico P58D — 19/11/2026
 
 O recibo P58-20261119T125956Z-51173c confirmou officialDDLApplied:true e os sete

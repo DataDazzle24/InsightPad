@@ -1,0 +1,5361 @@
+{
+  "candidate": "bb2def3336171b440df8038c4112abd9f05b7172",
+  "generatedFrom": "SQL Connect compiler v3.4.23 + isolated PostgreSQL18, seven pinned SQL migrations, no cloud",
+  "catalogSQLSHA256": "a2c6322fdffda16d3d018c51a19a473da24ff880792db874024351a1d29df9ba",
+  "rows": [
+    {
+      "kind": "column",
+      "name": "ec_allocation_parts.allocation_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_allocation_parts.amount_cents",
+      "definition": {
+        "type": "bigint",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_allocation_parts.created_at",
+      "definition": {
+        "type": "timestamp with time zone",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_allocation_parts.document_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_allocation_parts.id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_allocation_parts.item_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_allocation_parts.operation_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_allocation_parts.tenant_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_allocations.amount_cents",
+      "definition": {
+        "type": "bigint",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_allocations.document_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_allocations.id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_allocations.item_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_allocations.participant_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_allocations.receipt_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_allocations.share_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_allocations.tenant_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_components.document_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_components.id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_components.item_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_components.product_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_components.quantity_per_parent",
+      "definition": {
+        "type": "numeric(18,3)",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_components.tenant_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_components.unit_cost_cents",
+      "definition": {
+        "type": "bigint",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_dispositions.actor_uid",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_dispositions.created_at",
+      "definition": {
+        "type": "timestamp with time zone",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_dispositions.disposition",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_dispositions.document_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_dispositions.id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_dispositions.item_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_dispositions.operation_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_dispositions.preparation_state",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_dispositions.quantity",
+      "definition": {
+        "type": "numeric(18,3)",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_dispositions.reason",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_dispositions.stock_movement_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_dispositions.tenant_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_documents.branch_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_documents.cancelled_at",
+      "definition": {
+        "type": "timestamp with time zone",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_documents.code",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_documents.completed_at",
+      "definition": {
+        "type": "timestamp with time zone",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_documents.created_at",
+      "definition": {
+        "type": "timestamp with time zone",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_documents.customer_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_documents.delivery_address",
+      "definition": {
+        "type": "jsonb",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_documents.delivery_fee_cents",
+      "definition": {
+        "type": "bigint",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_documents.due_at",
+      "definition": {
+        "type": "timestamp with time zone",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_documents.fulfillment_mode",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_documents.id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_documents.identification",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_documents.incorporated_at",
+      "definition": {
+        "type": "timestamp with time zone",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_documents.kind",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_documents.merged_into_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_documents.notes",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_documents.opened_by_uid",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_documents.opened_cash_session_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_documents.reason",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_documents.received_net_cents",
+      "definition": {
+        "type": "bigint",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_documents.reservation_state",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_documents.reservation_strategy",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_documents.sale_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_documents.status",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_documents.subtotal_cents",
+      "definition": {
+        "type": "bigint",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_documents.tenant_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_documents.timezone_snapshot",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_documents.total_cents",
+      "definition": {
+        "type": "bigint",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_documents.updated_at",
+      "definition": {
+        "type": "timestamp with time zone",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_documents.version",
+      "definition": {
+        "type": "bigint",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_events.actor_uid",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_events.after_version",
+      "definition": {
+        "type": "bigint",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_events.before_version",
+      "definition": {
+        "type": "bigint",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_events.details",
+      "definition": {
+        "type": "jsonb",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_events.document_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_events.event_type",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_events.id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_events.occurred_at",
+      "definition": {
+        "type": "timestamp with time zone",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_events.operation_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_events.related_document_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_events.tenant_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_items.created_at",
+      "definition": {
+        "type": "timestamp with time zone",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_items.document_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_items.id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_items.line_total_cents",
+      "definition": {
+        "type": "bigint",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_items.original_document_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_items.participant_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_items.preparation_state",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_items.product_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_items.product_name",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_items.quantity",
+      "definition": {
+        "type": "numeric(18,3)",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_items.sku",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_items.source_item_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_items.specifications",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_items.status",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_items.tenant_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_items.unit",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_items.unit_list_price_cents",
+      "definition": {
+        "type": "bigint",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_items.unit_price_cents",
+      "definition": {
+        "type": "bigint",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_lineage.action",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_lineage.destination_document_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_lineage.destination_item_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_lineage.id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_lineage.occurred_at",
+      "definition": {
+        "type": "timestamp with time zone",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_lineage.operation_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_lineage.origin_document_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_lineage.quantity",
+      "definition": {
+        "type": "numeric(18,3)",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_lineage.source_item_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_lineage.tenant_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_operations.actor_uid",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_operations.created_at",
+      "definition": {
+        "type": "timestamp with time zone",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_operations.document_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_operations.id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_operations.operation_type",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_operations.payload_hash",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_operations.result",
+      "definition": {
+        "type": "jsonb",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_operations.secondary_document_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_operations.tenant_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_participants.display_order",
+      "definition": {
+        "type": "integer",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_participants.document_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_participants.id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_participants.name",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_participants.tenant_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_receipts.amount_cents",
+      "definition": {
+        "type": "bigint",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_receipts.balance_after_cents",
+      "definition": {
+        "type": "bigint",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_receipts.balance_before_cents",
+      "definition": {
+        "type": "bigint",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_receipts.cash_session_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_receipts.change_cents",
+      "definition": {
+        "type": "bigint",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_receipts.document_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_receipts.document_total_cents",
+      "definition": {
+        "type": "bigint",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_receipts.id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_receipts.operation_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_receipts.operator_uid",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_receipts.original_document_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_receipts.payment_method_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_receipts.received_at",
+      "definition": {
+        "type": "timestamp with time zone",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_receipts.reference",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_receipts.returned_cents",
+      "definition": {
+        "type": "bigint",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_receipts.tenant_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_receipts.tendered_cents",
+      "definition": {
+        "type": "bigint",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_refunds.amount_cents",
+      "definition": {
+        "type": "bigint",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_refunds.cash_session_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_refunds.document_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_refunds.id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_refunds.operation_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_refunds.operator_uid",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_refunds.payment_method_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_refunds.reason",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_refunds.receipt_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_refunds.reference",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_refunds.refunded_at",
+      "definition": {
+        "type": "timestamp with time zone",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_refunds.tenant_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_reservations.branch_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_reservations.closed_at",
+      "definition": {
+        "type": "timestamp with time zone",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_reservations.created_at",
+      "definition": {
+        "type": "timestamp with time zone",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_reservations.document_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_reservations.id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_reservations.item_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_reservations.operation_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_reservations.product_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_reservations.quantity",
+      "definition": {
+        "type": "numeric(18,3)",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_reservations.status",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_reservations.tenant_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_sale_receipt_links.amount_cents",
+      "definition": {
+        "type": "bigint",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_sale_receipt_links.document_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_sale_receipt_links.id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_sale_receipt_links.original_document_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_sale_receipt_links.receipt_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_sale_receipt_links.sale_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_sale_receipt_links.sale_payment_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_sale_receipt_links.tenant_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_sequences.id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_sequences.kind",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_sequences.next_value",
+      "definition": {
+        "type": "bigint",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_sequences.tenant_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_split_plans.base_version",
+      "definition": {
+        "type": "bigint",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_split_plans.document_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_split_plans.id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_split_plans.item_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_split_plans.mode",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_split_plans.parts",
+      "definition": {
+        "type": "integer",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_split_plans.status",
+      "definition": {
+        "type": "text",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_split_plans.tenant_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_split_plans.total_cents",
+      "definition": {
+        "type": "bigint",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_split_shares.amount_cents",
+      "definition": {
+        "type": "bigint",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_split_shares.document_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_split_shares.id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_split_shares.paid_cents",
+      "definition": {
+        "type": "bigint",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_split_shares.participant_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": false
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_split_shares.plan_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_split_shares.share_index",
+      "definition": {
+        "type": "integer",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "column",
+      "name": "ec_split_shares.tenant_id",
+      "definition": {
+        "type": "uuid",
+        "default": null,
+        "notNull": true
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_allocation_parts.ec_allocation_parts_allocation_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL allocation_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_allocation_parts.ec_allocation_parts_amount_cents_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL amount_cents"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_allocation_parts.ec_allocation_parts_created_at_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL created_at"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_allocation_parts.ec_allocation_parts_document_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL document_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_allocation_parts.ec_allocation_parts_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_allocation_parts.ec_allocation_parts_item_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL item_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_allocation_parts.ec_allocation_parts_operation_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL operation_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_allocation_parts.ec_allocation_parts_pkey",
+      "definition": {
+        "type": "p",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "PRIMARY KEY (id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_allocation_parts.ec_allocation_parts_tenant_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL tenant_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_allocation_parts.ec_part_allocation_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id, allocation_id) REFERENCES ec_allocations(tenant_id, id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_allocation_parts.ec_part_document_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id, document_id) REFERENCES ec_documents(tenant_id, id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_allocation_parts.ec_part_item_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id, item_id) REFERENCES ec_items(tenant_id, id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_allocations.ec_allocations_amount_cents_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL amount_cents"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_allocations.ec_allocations_document_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id, document_id) REFERENCES ec_documents(tenant_id, id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_allocations.ec_allocations_document_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL document_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_allocations.ec_allocations_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_allocations.ec_allocations_item_id_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id, item_id) REFERENCES ec_items(tenant_id, id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_allocations.ec_allocations_participant_id_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id, participant_id) REFERENCES ec_participants(tenant_id, id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_allocations.ec_allocations_pkey",
+      "definition": {
+        "type": "p",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "PRIMARY KEY (id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_allocations.ec_allocations_receipt_id_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id, receipt_id) REFERENCES ec_receipts(tenant_id, id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_allocations.ec_allocations_receipt_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL receipt_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_allocations.ec_allocations_share_id_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id, share_id) REFERENCES ec_split_shares(tenant_id, id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_allocations.ec_allocations_tenant_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id) REFERENCES tenants(id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_allocations.ec_allocations_tenant_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL tenant_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_allocations.ec_allocations_values",
+      "definition": {
+        "type": "c",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "CHECK (amount_cents > 0 AND (item_id IS NOT NULL OR share_id IS NOT NULL))"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_components.ec_component_values",
+      "definition": {
+        "type": "c",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "CHECK (quantity_per_parent > 0::numeric AND unit_cost_cents >= 0)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_components.ec_components_document_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id, document_id) REFERENCES ec_documents(tenant_id, id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_components.ec_components_document_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL document_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_components.ec_components_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_components.ec_components_item_id_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id, item_id) REFERENCES ec_items(tenant_id, id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_components.ec_components_item_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL item_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_components.ec_components_pkey",
+      "definition": {
+        "type": "p",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "PRIMARY KEY (id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_components.ec_components_product_id_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (product_id) REFERENCES products(id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_components.ec_components_product_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL product_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_components.ec_components_quantity_per_parent_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL quantity_per_parent"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_components.ec_components_tenant_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id) REFERENCES tenants(id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_components.ec_components_tenant_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL tenant_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_components.ec_components_unit_cost_cents_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL unit_cost_cents"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_dispositions.ec_disposition_values",
+      "definition": {
+        "type": "c",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "CHECK (quantity > 0::numeric AND (disposition = ANY (ARRAY['RELEASE_RESERVATION'::text, 'LOSS'::text, 'RETURN_TO_AVAILABLE'::text])))"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_dispositions.ec_dispositions_actor_uid_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL actor_uid"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_dispositions.ec_dispositions_created_at_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL created_at"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_dispositions.ec_dispositions_disposition_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL disposition"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_dispositions.ec_dispositions_document_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id, document_id) REFERENCES ec_documents(tenant_id, id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_dispositions.ec_dispositions_document_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL document_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_dispositions.ec_dispositions_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_dispositions.ec_dispositions_item_id_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id, item_id) REFERENCES ec_items(tenant_id, id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_dispositions.ec_dispositions_item_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL item_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_dispositions.ec_dispositions_operation_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL operation_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_dispositions.ec_dispositions_pkey",
+      "definition": {
+        "type": "p",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "PRIMARY KEY (id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_dispositions.ec_dispositions_preparation_state_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL preparation_state"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_dispositions.ec_dispositions_quantity_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL quantity"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_dispositions.ec_dispositions_reason_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL reason"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_dispositions.ec_dispositions_tenant_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id) REFERENCES tenants(id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_dispositions.ec_dispositions_tenant_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL tenant_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_doc_code",
+      "definition": {
+        "type": "u",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "UNIQUE (tenant_id, kind, code)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_doc_kind",
+      "definition": {
+        "type": "c",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "CHECK (kind = ANY (ARRAY['ENCOMENDA'::text, 'COMANDA'::text]))"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_doc_merge",
+      "definition": {
+        "type": "c",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "CHECK (merged_into_id IS NULL OR merged_into_id <> id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_doc_order",
+      "definition": {
+        "type": "c",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "CHECK (kind <> 'ENCOMENDA'::text OR customer_id IS NOT NULL AND due_at IS NOT NULL AND (fulfillment_mode = ANY (ARRAY['PICKUP'::text, 'DELIVERY'::text])) AND (fulfillment_mode = 'DELIVERY'::text AND delivery_address IS NOT NULL OR fulfillment_mode = 'PICKUP'::text AND delivery_fee_cents = 0 AND delivery_address IS NULL))"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_doc_sale",
+      "definition": {
+        "type": "u",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "UNIQUE (sale_id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_doc_state",
+      "definition": {
+        "type": "c",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "CHECK (kind = 'ENCOMENDA'::text AND (status = ANY (ARRAY['PENDING'::text, 'PREPARING'::text, 'READY'::text, 'COMPLETED'::text, 'CANCELLED'::text])) OR kind = 'COMANDA'::text AND (status = ANY (ARRAY['OPEN'::text, 'CLOSED'::text, 'CANCELLED'::text, 'INCORPORATED'::text])))"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_doc_values",
+      "definition": {
+        "type": "c",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "CHECK (delivery_fee_cents >= 0 AND subtotal_cents >= 0 AND total_cents = (subtotal_cents + delivery_fee_cents) AND received_net_cents >= 0 AND version > 0)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_documents_branch_id_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (branch_id) REFERENCES branches(id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_documents_branch_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL branch_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_documents_code_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL code"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_documents_created_at_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL created_at"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_documents_customer_id_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (customer_id) REFERENCES customers(id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_documents_delivery_fee_cents_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL delivery_fee_cents"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_documents_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_documents_identification_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL identification"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_documents_kind_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL kind"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_documents_notes_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL notes"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_documents_opened_by_uid_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL opened_by_uid"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_documents_pkey",
+      "definition": {
+        "type": "p",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "PRIMARY KEY (id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_documents_received_net_cents_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL received_net_cents"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_documents_reservation_state_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL reservation_state"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_documents_reservation_strategy_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL reservation_strategy"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_documents_sale_id_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (sale_id) REFERENCES sales(id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_documents_status_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL status"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_documents_subtotal_cents_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL subtotal_cents"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_documents_tenant_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id) REFERENCES tenants(id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_documents_tenant_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL tenant_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_documents_timezone_snapshot_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL timezone_snapshot"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_documents_total_cents_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL total_cents"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_documents_updated_at_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL updated_at"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_documents_version_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL version"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_documents.ec_guard_document_total",
+      "definition": {
+        "type": "t",
+        "deferred": true,
+        "validated": true,
+        "deferrable": true,
+        "definition": "TRIGGER DEFERRABLE INITIALLY DEFERRED"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_events.ec_events_actor_uid_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL actor_uid"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_events.ec_events_after_version_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL after_version"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_events.ec_events_before_version_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL before_version"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_events.ec_events_details_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL details"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_events.ec_events_document_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id, document_id) REFERENCES ec_documents(tenant_id, id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_events.ec_events_document_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL document_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_events.ec_events_event_type_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL event_type"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_events.ec_events_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_events.ec_events_occurred_at_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL occurred_at"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_events.ec_events_operation_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL operation_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_events.ec_events_pkey",
+      "definition": {
+        "type": "p",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "PRIMARY KEY (id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_events.ec_events_tenant_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id) REFERENCES tenants(id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_events.ec_events_tenant_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL tenant_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_items.ec_items_created_at_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL created_at"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_items.ec_items_document_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id, document_id) REFERENCES ec_documents(tenant_id, id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_items.ec_items_document_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL document_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_items.ec_items_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_items.ec_items_line_total_cents_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL line_total_cents"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_items.ec_items_original_document_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL original_document_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_items.ec_items_participant_id_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id, participant_id) REFERENCES ec_participants(tenant_id, id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_items.ec_items_pkey",
+      "definition": {
+        "type": "p",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "PRIMARY KEY (id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_items.ec_items_preparation_state_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL preparation_state"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_items.ec_items_product_id_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (product_id) REFERENCES products(id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_items.ec_items_product_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL product_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_items.ec_items_product_name_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL product_name"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_items.ec_items_quantity_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL quantity"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_items.ec_items_specifications_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL specifications"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_items.ec_items_status_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL status"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_items.ec_items_tenant_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id) REFERENCES tenants(id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_items.ec_items_tenant_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL tenant_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_items.ec_items_unit_list_price_cents_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL unit_list_price_cents"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_items.ec_items_unit_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL unit"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_items.ec_items_unit_price_cents_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL unit_price_cents"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_items.ec_items_values",
+      "definition": {
+        "type": "c",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "CHECK (quantity > 0::numeric AND unit_price_cents >= 0 AND unit_list_price_cents >= 0 AND line_total_cents >= 0 AND (preparation_state = ANY (ARRAY['NOTED'::text, 'PREPARING'::text, 'PREPARED'::text, 'SERVED'::text])) AND (status = ANY (ARRAY['ACTIVE'::text, 'REMOVED'::text, 'TRANSFERRED'::text])))"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_lineage.ec_lineage_action_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL action"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_lineage.ec_lineage_destination_document_id_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id, destination_document_id) REFERENCES ec_documents(tenant_id, id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_lineage.ec_lineage_destination_document_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL destination_document_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_lineage.ec_lineage_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_lineage.ec_lineage_occurred_at_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL occurred_at"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_lineage.ec_lineage_operation_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL operation_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_lineage.ec_lineage_origin_document_id_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id, origin_document_id) REFERENCES ec_documents(tenant_id, id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_lineage.ec_lineage_origin_document_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL origin_document_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_lineage.ec_lineage_pkey",
+      "definition": {
+        "type": "p",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "PRIMARY KEY (id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_lineage.ec_lineage_tenant_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id) REFERENCES tenants(id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_lineage.ec_lineage_tenant_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL tenant_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_operations.ec_operations_actor_uid_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL actor_uid"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_operations.ec_operations_created_at_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL created_at"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_operations.ec_operations_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_operations.ec_operations_operation_type_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL operation_type"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_operations.ec_operations_payload_hash_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL payload_hash"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_operations.ec_operations_pkey",
+      "definition": {
+        "type": "p",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "PRIMARY KEY (id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_operations.ec_operations_result_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL result"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_operations.ec_operations_tenant_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id) REFERENCES tenants(id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_operations.ec_operations_tenant_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL tenant_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_participants.ec_participants_display_order_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL display_order"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_participants.ec_participants_document_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id, document_id) REFERENCES ec_documents(tenant_id, id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_participants.ec_participants_document_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL document_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_participants.ec_participants_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_participants.ec_participants_name_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL name"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_participants.ec_participants_pkey",
+      "definition": {
+        "type": "p",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "PRIMARY KEY (id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_participants.ec_participants_tenant_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id) REFERENCES tenants(id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_participants.ec_participants_tenant_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL tenant_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_receipts.ec_receipt_balance_snapshot",
+      "definition": {
+        "type": "c",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "CHECK (document_total_cents IS NULL AND balance_before_cents IS NULL AND balance_after_cents IS NULL OR document_total_cents IS NOT NULL AND balance_before_cents IS NOT NULL AND balance_after_cents IS NOT NULL AND document_total_cents >= balance_before_cents AND balance_before_cents >= amount_cents AND balance_after_cents = (balance_before_cents - amount_cents))"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_receipts.ec_receipts_amount_cents_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL amount_cents"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_receipts.ec_receipts_cash_session_id_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (cash_session_id) REFERENCES cash_sessions(id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_receipts.ec_receipts_change_cents_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL change_cents"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_receipts.ec_receipts_document_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id, document_id) REFERENCES ec_documents(tenant_id, id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_receipts.ec_receipts_document_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL document_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_receipts.ec_receipts_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_receipts.ec_receipts_operation_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL operation_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_receipts.ec_receipts_operator_uid_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL operator_uid"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_receipts.ec_receipts_original_document_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL original_document_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_receipts.ec_receipts_payment_method_id_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (payment_method_id) REFERENCES payment_methods(id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_receipts.ec_receipts_payment_method_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL payment_method_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_receipts.ec_receipts_pkey",
+      "definition": {
+        "type": "p",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "PRIMARY KEY (id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_receipts.ec_receipts_received_at_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL received_at"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_receipts.ec_receipts_reference_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL reference"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_receipts.ec_receipts_returned_cents_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL returned_cents"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_receipts.ec_receipts_tenant_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id) REFERENCES tenants(id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_receipts.ec_receipts_tenant_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL tenant_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_receipts.ec_receipts_tendered_cents_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL tendered_cents"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_receipts.ec_receipts_values",
+      "definition": {
+        "type": "c",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "CHECK (amount_cents > 0 AND returned_cents >= 0 AND returned_cents <= amount_cents AND tendered_cents >= amount_cents AND change_cents = (tendered_cents - amount_cents))"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_refunds.ec_refund_values",
+      "definition": {
+        "type": "c",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "CHECK (amount_cents > 0 AND length(btrim(reference)) >= 1 AND length(btrim(reference)) <= 180 AND length(btrim(reason)) >= 1 AND length(btrim(reason)) <= 500)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_refunds.ec_refunds_amount_cents_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL amount_cents"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_refunds.ec_refunds_cash_session_id_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (cash_session_id) REFERENCES cash_sessions(id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_refunds.ec_refunds_document_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id, document_id) REFERENCES ec_documents(tenant_id, id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_refunds.ec_refunds_document_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL document_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_refunds.ec_refunds_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_refunds.ec_refunds_operation_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL operation_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_refunds.ec_refunds_operator_uid_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL operator_uid"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_refunds.ec_refunds_payment_method_id_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (payment_method_id) REFERENCES payment_methods(id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_refunds.ec_refunds_payment_method_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL payment_method_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_refunds.ec_refunds_pkey",
+      "definition": {
+        "type": "p",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "PRIMARY KEY (id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_refunds.ec_refunds_reason_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL reason"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_refunds.ec_refunds_receipt_id_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id, receipt_id) REFERENCES ec_receipts(tenant_id, id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_refunds.ec_refunds_receipt_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL receipt_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_refunds.ec_refunds_reference_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL reference"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_refunds.ec_refunds_refunded_at_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL refunded_at"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_refunds.ec_refunds_tenant_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id) REFERENCES tenants(id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_refunds.ec_refunds_tenant_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL tenant_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_reservations.ec_guard_reservation",
+      "definition": {
+        "type": "t",
+        "deferred": true,
+        "validated": true,
+        "deferrable": true,
+        "definition": "TRIGGER DEFERRABLE INITIALLY DEFERRED"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_reservations.ec_reservation_values",
+      "definition": {
+        "type": "c",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "CHECK (quantity > 0::numeric AND (status = ANY (ARRAY['ACTIVE'::text, 'CONSUMED'::text, 'RELEASED'::text])))"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_reservations.ec_reservations_branch_id_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (branch_id) REFERENCES branches(id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_reservations.ec_reservations_branch_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL branch_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_reservations.ec_reservations_created_at_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL created_at"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_reservations.ec_reservations_document_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id, document_id) REFERENCES ec_documents(tenant_id, id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_reservations.ec_reservations_document_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL document_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_reservations.ec_reservations_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_reservations.ec_reservations_item_id_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id, item_id) REFERENCES ec_items(tenant_id, id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_reservations.ec_reservations_item_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL item_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_reservations.ec_reservations_operation_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL operation_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_reservations.ec_reservations_pkey",
+      "definition": {
+        "type": "p",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "PRIMARY KEY (id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_reservations.ec_reservations_product_id_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (product_id) REFERENCES products(id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_reservations.ec_reservations_product_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL product_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_reservations.ec_reservations_quantity_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL quantity"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_reservations.ec_reservations_status_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL status"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_reservations.ec_reservations_tenant_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id) REFERENCES tenants(id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_reservations.ec_reservations_tenant_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL tenant_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_sale_receipt_links.ec_link_payment",
+      "definition": {
+        "type": "u",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "UNIQUE (sale_payment_id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_sale_receipt_links.ec_link_receipt",
+      "definition": {
+        "type": "u",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "UNIQUE (receipt_id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_sale_receipt_links.ec_sale_receipt_links_amount_cents_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL amount_cents"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_sale_receipt_links.ec_sale_receipt_links_document_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id, document_id) REFERENCES ec_documents(tenant_id, id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_sale_receipt_links.ec_sale_receipt_links_document_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL document_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_sale_receipt_links.ec_sale_receipt_links_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_sale_receipt_links.ec_sale_receipt_links_original_document_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL original_document_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_sale_receipt_links.ec_sale_receipt_links_pkey",
+      "definition": {
+        "type": "p",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "PRIMARY KEY (id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_sale_receipt_links.ec_sale_receipt_links_receipt_id_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id, receipt_id) REFERENCES ec_receipts(tenant_id, id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_sale_receipt_links.ec_sale_receipt_links_receipt_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL receipt_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_sale_receipt_links.ec_sale_receipt_links_sale_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL sale_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_sale_receipt_links.ec_sale_receipt_links_sale_payment_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL sale_payment_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_sale_receipt_links.ec_sale_receipt_links_tenant_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id) REFERENCES tenants(id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_sale_receipt_links.ec_sale_receipt_links_tenant_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL tenant_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_sequences.ec_seq_kind",
+      "definition": {
+        "type": "u",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "UNIQUE (tenant_id, kind)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_sequences.ec_seq_value",
+      "definition": {
+        "type": "c",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "CHECK (next_value > 0)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_sequences.ec_sequences_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_sequences.ec_sequences_kind_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL kind"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_sequences.ec_sequences_next_value_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL next_value"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_sequences.ec_sequences_pkey",
+      "definition": {
+        "type": "p",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "PRIMARY KEY (id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_sequences.ec_sequences_tenant_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id) REFERENCES tenants(id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_sequences.ec_sequences_tenant_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL tenant_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_split_plans.ec_split_plans_base_version_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL base_version"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_split_plans.ec_split_plans_document_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id, document_id) REFERENCES ec_documents(tenant_id, id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_split_plans.ec_split_plans_document_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL document_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_split_plans.ec_split_plans_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_split_plans.ec_split_plans_item_id_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id, item_id) REFERENCES ec_items(tenant_id, id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_split_plans.ec_split_plans_mode_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL mode"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_split_plans.ec_split_plans_parts_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL parts"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_split_plans.ec_split_plans_pkey",
+      "definition": {
+        "type": "p",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "PRIMARY KEY (id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_split_plans.ec_split_plans_status_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL status"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_split_plans.ec_split_plans_tenant_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id) REFERENCES tenants(id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_split_plans.ec_split_plans_tenant_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL tenant_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_split_plans.ec_split_plans_total_cents_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL total_cents"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_split_plans.ec_split_values",
+      "definition": {
+        "type": "c",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "CHECK (total_cents > 0 AND parts >= 1 AND parts <= 12 AND (mode = ANY (ARRAY['EQUAL'::text, 'ITEM'::text, 'PERSON'::text, 'SHARED_ITEM'::text])) AND (status = ANY (ARRAY['ACTIVE'::text, 'PAID'::text, 'SUPERSEDED'::text])))"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_split_shares.ec_share_values",
+      "definition": {
+        "type": "c",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "CHECK (amount_cents >= 0 AND paid_cents >= 0 AND paid_cents <= amount_cents AND share_index >= 0)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_split_shares.ec_split_shares_amount_cents_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL amount_cents"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_split_shares.ec_split_shares_document_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id, document_id) REFERENCES ec_documents(tenant_id, id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_split_shares.ec_split_shares_document_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL document_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_split_shares.ec_split_shares_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_split_shares.ec_split_shares_paid_cents_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL paid_cents"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_split_shares.ec_split_shares_pkey",
+      "definition": {
+        "type": "p",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "PRIMARY KEY (id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_split_shares.ec_split_shares_plan_id_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id, plan_id) REFERENCES ec_split_plans(tenant_id, id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_split_shares.ec_split_shares_plan_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL plan_id"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_split_shares.ec_split_shares_share_index_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL share_index"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_split_shares.ec_split_shares_tenant_fk",
+      "definition": {
+        "type": "f",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "FOREIGN KEY (tenant_id) REFERENCES tenants(id)"
+      }
+    },
+    {
+      "kind": "constraint",
+      "name": "ec_split_shares.ec_split_shares_tenant_id_not_null",
+      "definition": {
+        "type": "n",
+        "deferred": false,
+        "validated": true,
+        "deferrable": false,
+        "definition": "NOT NULL tenant_id"
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_actions(users, ec_documents)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "462f04410b89bfcd3530e17e8c96b382",
+        "language": "plpgsql",
+        "returnType": "jsonb",
+        "volatility": "s",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_actor(text, text)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "2b8f561878369146cbfcaf8ba41865f8",
+        "language": "plpgsql",
+        "returnType": "users",
+        "volatility": "v",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_add_item(users, uuid, jsonb)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "7163cc80c20bf8f67648b93e6646a203",
+        "language": "plpgsql",
+        "returnType": "uuid",
+        "volatility": "v",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_address_ok(jsonb)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "ac4c219e82c5a49dc7a6ea2818df56f6",
+        "language": "sql",
+        "returnType": "boolean",
+        "volatility": "i",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_advanced(users, uuid, jsonb, uuid)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "6850bfd75249a9a906f6fb8548822b3a",
+        "language": "plpgsql",
+        "returnType": "jsonb",
+        "volatility": "v",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_allocate(uuid, uuid, jsonb)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "01cfc9209c70b5b7f0b7e7fc79b7a44f",
+        "language": "plpgsql",
+        "returnType": "void",
+        "volatility": "v",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_apply(users, uuid, jsonb)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "fb2351b495e70e4b6b53030fb985c37c",
+        "language": "plpgsql",
+        "returnType": "jsonb",
+        "volatility": "v",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_branch(users, uuid)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "218f70056838d1290531976250e1e82c",
+        "language": "sql",
+        "returnType": "boolean",
+        "volatility": "s",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_can(users, text, text)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "98b89dbef9a8a0edd94e91e6cc01ad73",
+        "language": "sql",
+        "returnType": "boolean",
+        "volatility": "s",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_cash(users, uuid, uuid)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "02577807f4e470a56043548302198897",
+        "language": "plpgsql",
+        "returnType": "uuid",
+        "volatility": "v",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_command(text, text, jsonb)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "d9f79f7d6d4e5f0f03498c5f39a72513",
+        "language": "plpgsql",
+        "returnType": "jsonb",
+        "volatility": "v",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_document_guard()",
+      "definition": {
+        "config": null,
+        "bodyMD5": "69ee63fc2921129e717425a88284cf50",
+        "language": "plpgsql",
+        "returnType": "trigger",
+        "volatility": "v",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_edit_items(users, uuid, jsonb)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "b18c09ab3de40c05b9b997162f87ac67",
+        "language": "plpgsql",
+        "returnType": "void",
+        "volatility": "v",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_event(uuid, uuid, text, text, uuid, bigint, jsonb)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "9829d3ffcae6596f2e2926516c0d14b0",
+        "language": "sql",
+        "returnType": "void",
+        "volatility": "v",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_finish(users, uuid, uuid, uuid)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "fdb3e1a8d164b41c12e5a54224486c97",
+        "language": "plpgsql",
+        "returnType": "uuid",
+        "volatility": "v",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_has_unallocated(uuid)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "4183a7f1d3c331fb0aaff5543f1f5f67",
+        "language": "sql",
+        "returnType": "boolean",
+        "volatility": "s",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_item_actions(users, ec_documents, ec_items)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "73d843152fd7fd4a2c128055cb5374ae",
+        "language": "plpgsql",
+        "returnType": "jsonb",
+        "volatility": "s",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_item_snapshot(uuid)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "4072f3ba068eb1dff0105f2d983d81de",
+        "language": "sql",
+        "returnType": "jsonb",
+        "volatility": "s",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_json(jsonb)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "ae2f12bd475daf98ebb42f4bae958ab1",
+        "language": "sql",
+        "returnType": "jsonb",
+        "volatility": "i",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_lock_stock(uuid, uuid, uuid)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "2d372b1dfcff686f41f48573ebe48be3",
+        "language": "plpgsql",
+        "returnType": "void",
+        "volatility": "v",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_post_stock(uuid, uuid, numeric, boolean, text, uuid, uuid)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "d0153beb609afe5746b4d4b7c9653431",
+        "language": "plpgsql",
+        "returnType": "uuid",
+        "volatility": "v",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_read(text, text, jsonb)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "8d598b57729380220779bf248e04cc23",
+        "language": "plpgsql",
+        "returnType": "jsonb",
+        "volatility": "v",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_receipt_scope(uuid, uuid)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "4c6a36f4e33762578ef7e0def8d3664a",
+        "language": "sql",
+        "returnType": "uuid",
+        "volatility": "s",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_receive(users, uuid, jsonb, uuid)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "f1191911d3bd9e37444f5f3da5be2cfb",
+        "language": "plpgsql",
+        "returnType": "uuid",
+        "volatility": "v",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_reconcile(uuid, uuid, jsonb, uuid)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "a715d63b3a5142b5396e67ea83928c05",
+        "language": "plpgsql",
+        "returnType": "void",
+        "volatility": "v",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_refund_authorizer(users, ec_documents, jsonb, uuid)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "b79ce13920dde3828e08c232b94b5b3d",
+        "language": "plpgsql",
+        "returnType": "text",
+        "volatility": "v",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_refund_hash(uuid, bigint, jsonb)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "98e4b5c951e842b88a2e76b3a11bec57",
+        "language": "sql",
+        "returnType": "text",
+        "volatility": "i",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_remove(users, uuid, jsonb, uuid)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "a42e4660820157ee933214e97b2a575f",
+        "language": "plpgsql",
+        "returnType": "void",
+        "volatility": "v",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_request_refund_approval(users, ec_documents, jsonb, uuid)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "798e96352b27b37ee445a8cdf7d88c2e",
+        "language": "plpgsql",
+        "returnType": "jsonb",
+        "volatility": "v",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_require(boolean, text, jsonb)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "2a010f156d4f4b7f9c3812ca13808c30",
+        "language": "plpgsql",
+        "returnType": "void",
+        "volatility": "v",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_reservation_lock()",
+      "definition": {
+        "config": null,
+        "bodyMD5": "7e6d3ede3564321536fe26730a052e0d",
+        "language": "plpgsql",
+        "returnType": "trigger",
+        "volatility": "v",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_reserve(uuid, uuid)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "deb8be1b84ec40ff817853c82b69c79e",
+        "language": "plpgsql",
+        "returnType": "void",
+        "volatility": "v",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_reserved(uuid, uuid, uuid, uuid)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "9ce65eea082a34447764eb9c9c83ab11",
+        "language": "sql",
+        "returnType": "numeric",
+        "volatility": "s",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_retotal(uuid)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "28c35f19e490b62b071ae2c15799284c",
+        "language": "plpgsql",
+        "returnType": "void",
+        "volatility": "v",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_sensitive(users, text)",
+      "definition": {
+        "config": null,
+        "bodyMD5": "c6f06e1edb8d6f619c6496b6ff441da9",
+        "language": "sql",
+        "returnType": "boolean",
+        "volatility": "s",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "function",
+      "name": "ec_stock_guard()",
+      "definition": {
+        "config": null,
+        "bodyMD5": "c90cf8539acbada189d48e4ae039effc",
+        "language": "plpgsql",
+        "returnType": "trigger",
+        "volatility": "v",
+        "securityDefiner": false
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_allocation_parts.ec_allocation_parts_pkey",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_allocation_parts_pkey ON public.ec_allocation_parts USING btree (id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_allocation_parts.ec_allocation_parts_tenant_id_id_uidx",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_allocation_parts_tenant_id_id_uidx ON public.ec_allocation_parts USING btree (tenant_id, id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_allocations.ec_allocations_pkey",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_allocations_pkey ON public.ec_allocations USING btree (id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_allocations.ec_allocations_tenant_id_id_uidx",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_allocations_tenant_id_id_uidx ON public.ec_allocations USING btree (tenant_id, id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_components.ec_components_pkey",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_components_pkey ON public.ec_components USING btree (id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_components.ec_components_tenant_id_id_uidx",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_components_tenant_id_id_uidx ON public.ec_components USING btree (tenant_id, id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_dispositions.ec_dispositions_pkey",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_dispositions_pkey ON public.ec_dispositions USING btree (id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_dispositions.ec_dispositions_tenant_id_id_uidx",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_dispositions_tenant_id_id_uidx ON public.ec_dispositions USING btree (tenant_id, id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_documents.ec_doc_code",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_doc_code ON public.ec_documents USING btree (tenant_id, kind, code)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_documents.ec_doc_sale",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_doc_sale ON public.ec_documents USING btree (sale_id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_documents.ec_documents_history_idx",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE INDEX ec_documents_history_idx ON public.ec_documents USING btree (tenant_id, branch_id, kind, status, created_at, id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_documents.ec_documents_orders_idx",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE INDEX ec_documents_orders_idx ON public.ec_documents USING btree (tenant_id, branch_id, kind, status, due_at, id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_documents.ec_documents_pkey",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_documents_pkey ON public.ec_documents USING btree (id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_documents.ec_documents_tenant_id_id_uidx",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_documents_tenant_id_id_uidx ON public.ec_documents USING btree (tenant_id, id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_events.ec_events_document_idx",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE INDEX ec_events_document_idx ON public.ec_events USING btree (tenant_id, document_id, occurred_at, id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_events.ec_events_pkey",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_events_pkey ON public.ec_events USING btree (id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_events.ec_events_tenant_id_id_uidx",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_events_tenant_id_id_uidx ON public.ec_events USING btree (tenant_id, id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_items.ec_items_document_idx",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE INDEX ec_items_document_idx ON public.ec_items USING btree (tenant_id, document_id, status, id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_items.ec_items_pkey",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_items_pkey ON public.ec_items USING btree (id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_items.ec_items_tenant_id_id_uidx",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_items_tenant_id_id_uidx ON public.ec_items USING btree (tenant_id, id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_lineage.ec_lineage_pkey",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_lineage_pkey ON public.ec_lineage USING btree (id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_lineage.ec_lineage_tenant_id_id_uidx",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_lineage_tenant_id_id_uidx ON public.ec_lineage USING btree (tenant_id, id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_operations.ec_operations_actor_idx",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE INDEX ec_operations_actor_idx ON public.ec_operations USING btree (tenant_id, actor_uid, created_at, id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_operations.ec_operations_pkey",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_operations_pkey ON public.ec_operations USING btree (id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_operations.ec_operations_tenant_id_id_uidx",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_operations_tenant_id_id_uidx ON public.ec_operations USING btree (tenant_id, id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_participants.ec_participants_pkey",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_participants_pkey ON public.ec_participants USING btree (id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_participants.ec_participants_tenant_id_id_uidx",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_participants_tenant_id_id_uidx ON public.ec_participants USING btree (tenant_id, id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_receipts.ec_receipts_document_idx",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE INDEX ec_receipts_document_idx ON public.ec_receipts USING btree (tenant_id, document_id, received_at, id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_receipts.ec_receipts_pkey",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_receipts_pkey ON public.ec_receipts USING btree (id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_receipts.ec_receipts_tenant_id_id_uidx",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_receipts_tenant_id_id_uidx ON public.ec_receipts USING btree (tenant_id, id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_refunds.ec_refunds_pkey",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_refunds_pkey ON public.ec_refunds USING btree (id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_refunds.ec_refunds_tenant_id_id_uidx",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_refunds_tenant_id_id_uidx ON public.ec_refunds USING btree (tenant_id, id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_reservations.ec_active_reservation_uidx",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_active_reservation_uidx ON public.ec_reservations USING btree (tenant_id, item_id, product_id) WHERE (status = 'ACTIVE'::text)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_reservations.ec_reservations_pkey",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_reservations_pkey ON public.ec_reservations USING btree (id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_reservations.ec_reservations_stock_idx",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE INDEX ec_reservations_stock_idx ON public.ec_reservations USING btree (tenant_id, branch_id, product_id, status)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_reservations.ec_reservations_tenant_id_id_uidx",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_reservations_tenant_id_id_uidx ON public.ec_reservations USING btree (tenant_id, id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_sale_receipt_links.ec_link_payment",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_link_payment ON public.ec_sale_receipt_links USING btree (sale_payment_id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_sale_receipt_links.ec_link_receipt",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_link_receipt ON public.ec_sale_receipt_links USING btree (receipt_id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_sale_receipt_links.ec_sale_receipt_links_pkey",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_sale_receipt_links_pkey ON public.ec_sale_receipt_links USING btree (id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_sale_receipt_links.ec_sale_receipt_links_tenant_id_id_uidx",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_sale_receipt_links_tenant_id_id_uidx ON public.ec_sale_receipt_links USING btree (tenant_id, id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_sequences.ec_seq_kind",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_seq_kind ON public.ec_sequences USING btree (tenant_id, kind)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_sequences.ec_sequences_pkey",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_sequences_pkey ON public.ec_sequences USING btree (id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_sequences.ec_sequences_tenant_id_id_uidx",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_sequences_tenant_id_id_uidx ON public.ec_sequences USING btree (tenant_id, id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_split_plans.ec_split_plans_pkey",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_split_plans_pkey ON public.ec_split_plans USING btree (id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_split_plans.ec_split_plans_tenant_id_id_uidx",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_split_plans_tenant_id_id_uidx ON public.ec_split_plans USING btree (tenant_id, id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_split_shares.ec_split_shares_pkey",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_split_shares_pkey ON public.ec_split_shares USING btree (id)"
+      }
+    },
+    {
+      "kind": "index",
+      "name": "ec_split_shares.ec_split_shares_tenant_id_id_uidx",
+      "definition": {
+        "ready": true,
+        "valid": true,
+        "definition": "CREATE UNIQUE INDEX ec_split_shares_tenant_id_id_uidx ON public.ec_split_shares USING btree (tenant_id, id)"
+      }
+    },
+    {
+      "kind": "trigger",
+      "name": "ec_documents.ec_guard_document_total",
+      "definition": {
+        "enabled": "O",
+        "definition": "CREATE CONSTRAINT TRIGGER ec_guard_document_total AFTER INSERT OR UPDATE ON ec_documents DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION ec_document_guard()"
+      }
+    },
+    {
+      "kind": "trigger",
+      "name": "ec_reservations.ec_guard_reservation",
+      "definition": {
+        "enabled": "O",
+        "definition": "CREATE CONSTRAINT TRIGGER ec_guard_reservation AFTER INSERT OR UPDATE ON ec_reservations DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION ec_stock_guard()"
+      }
+    },
+    {
+      "kind": "trigger",
+      "name": "ec_reservations.ec_lock_reservation",
+      "definition": {
+        "enabled": "O",
+        "definition": "CREATE TRIGGER ec_lock_reservation BEFORE INSERT OR UPDATE ON ec_reservations FOR EACH ROW EXECUTE FUNCTION ec_reservation_lock()"
+      }
+    },
+    {
+      "kind": "trigger",
+      "name": "sales_channel_stock_reservations.ec_guard_channel",
+      "definition": {
+        "enabled": "O",
+        "definition": "CREATE CONSTRAINT TRIGGER ec_guard_channel AFTER INSERT OR UPDATE ON sales_channel_stock_reservations DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION ec_stock_guard()"
+      }
+    },
+    {
+      "kind": "trigger",
+      "name": "sales_channel_stock_reservations.ec_lock_channel_reservation",
+      "definition": {
+        "enabled": "O",
+        "definition": "CREATE TRIGGER ec_lock_channel_reservation BEFORE INSERT OR UPDATE ON sales_channel_stock_reservations FOR EACH ROW EXECUTE FUNCTION ec_reservation_lock()"
+      }
+    },
+    {
+      "kind": "trigger",
+      "name": "stock_balances.ec_guard_balance",
+      "definition": {
+        "enabled": "O",
+        "definition": "CREATE CONSTRAINT TRIGGER ec_guard_balance AFTER INSERT OR UPDATE ON stock_balances DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION ec_stock_guard()"
+      }
+    },
+    {
+      "kind": "view",
+      "name": "ec_effective_allocations",
+      "definition": {
+        "definition": " SELECT a.id,\n    a.tenant_id,\n    a.document_id,\n    a.receipt_id,\n    a.item_id,\n    a.participant_id,\n    a.share_id,\n    a.amount_cents\n   FROM ec_allocations a\nUNION ALL\n SELECT p.id,\n    p.tenant_id,\n    p.document_id,\n    a.receipt_id,\n    p.item_id,\n    a.participant_id,\n    a.share_id,\n    p.amount_cents\n   FROM ec_allocation_parts p\n     JOIN ec_allocations a ON a.id = p.allocation_id AND a.tenant_id = p.tenant_id;"
+      }
+    }
+  ]
+}

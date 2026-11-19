@@ -273,6 +273,9 @@ def main(r):
  principal=r.db_service_user
  privileges=r.sql(["SELECT bool_and(has_table_privilege('"+principal+"',quote_ident(schemaname)||'.'||quote_ident(tablename),'SELECT') AND has_table_privilege('"+principal+"',quote_ident(schemaname)||'.'||quote_ident(tablename),'INSERT') AND has_table_privilege('"+principal+"',quote_ident(schemaname)||'.'||quote_ident(tablename),'UPDATE') AND has_table_privilege('"+principal+"',quote_ident(schemaname)||'.'||quote_ident(tablename),'DELETE')) AS allowed FROM pg_tables WHERE schemaname='public' AND tablename LIKE 'ec_%'"])[0]['rows'][0]
  require(privileges.get('allowed') is True,'Privilégios SQL herdados do Data Connect insuficientes; nenhum grant automático');r.record['existingSQLPrivilegesVerified']=True;r.save()
+ return publish_ready(r,first,snapshot,schema_body,acl_sql,acl,columns_sql,columns,config,files,compressed,mapping)
+
+def publish_ready(r,first,snapshot,schema_body,acl_sql,acl,columns_sql,columns,config,files,compressed,mapping):
  print('5/8 Publicando schema e connector app; sem setup automático de permissões.',flush=True)
  before_schema,before_schema_snap=r.preflight('before-schema');require(before_schema['previousRelease']==first['previousRelease'] and same_policies(snapshot,before_schema_snap),'Alteração concorrente antes da publicação do schema')
  value=r.api('firebasedataconnect.googleapis.com','/v1/'+SERVICE+'/schemas/main','PATCH',schema_body,{'validateOnly':'true','updateMask':'source,datasources'},validation=True);require('validationError' not in value,'Ainda há divergência oficial de schema após SQL')
