@@ -98,7 +98,7 @@ class Release:
   elif host=='sqladmin.googleapis.com':require(path.startswith('/sql/v1beta4/projects/'+P+'/instances/'+INSTANCE),'Instância SQL fora do alvo');require(method=='GET','SQL Admin é somente leitura neste roteiro')
   elif host=='iam.googleapis.com':require(method=='GET' and path in {'/v1/roles/firebasedataconnect.admin','/v1/roles/cloudsql.admin','/v1/roles/cloudsql.client','/v1/roles/cloudsql.instanceUser'},'Consulta IAM fora do escopo')
   else:require(path=='/v1/projects/'+P+':testIamPermissions' and method=='POST','IAM somente testIamPermissions')
-  if validation:require(host=='firebasedataconnect.googleapis.com' and method=='PATCH' and path=='/v1/'+SERVICE+'/schemas/main' and (query or {}).get('validateOnly')=='true','validateOnly fora do contrato')
+  if validation:require(host=='firebasedataconnect.googleapis.com' and method=='PATCH' and path in {'/v1/'+SERVICE+'/schemas/main','/v1/'+SERVICE+'/connectors/app'} and (query or {}).get('validateOnly')=='true','validateOnly fora do contrato')
   if expected_denial:require(path=='/v1/'+SERVICE+':executeGraphqlRead' and method=='POST','Recusa esperada fora do smoke de leitura')
   mutate=host=='firebasedataconnect.googleapis.com' and method!='GET' and not validation and not path.endswith(':executeGraphqlRead')
   if mutate:
@@ -219,7 +219,7 @@ def build(r,donor,snapshot):
  r.record.update(publicFiles=len(files),rawBytes=total,gzipBytes=sum(map(len,compressed.values())))
  r.save();return files,compressed,mapping
 
-def verify_ci():
+def verify_ci(run=RUN,job=JOB,candidate=SHA,extra_steps=()):
  # Reuse the frozen CI page verifier, including all original gates and new SQL/browser gates.
  from html.parser import HTMLParser
  class Steps(HTMLParser):
@@ -227,13 +227,14 @@ def verify_ci():
   def handle_starttag(self,t,attrs):
    if t=='check-step':a=dict(attrs);self.values.append((a.get('data-name'),a.get('data-conclusion')))
  pages=[]
- for tail in ['', '/job/'+JOB]:
-  req=urllib.request.Request('https://github.com/DataDazzle24/InsightPad/actions/runs/'+RUN+tail+'?p58='+uuid.uuid4().hex,headers={'User-Agent':'InsightPad-DEV-release','Cache-Control':'no-cache'})
+ for tail in ['', '/job/'+job]:
+  req=urllib.request.Request('https://github.com/DataDazzle24/InsightPad/actions/runs/'+run+tail+'?p58='+uuid.uuid4().hex,headers={'User-Agent':'InsightPad-DEV-release','Cache-Control':'no-cache'})
   with urllib.request.build_opener(H.NoRedirect).open(req,timeout=30) as v:pages.append(v.read(4*1024**2).decode())
- status=re.search(r'>Status</span>\s*<span[^>]*>([^<]+)</span>',pages[0]);require(status and status.group(1).strip()=='Success' and all(SHA in p for p in pages),'CI do SHA exato não confirmado')
+ status=re.search(r'>Status</span>\s*<span[^>]*>([^<]+)</span>',pages[0]);require(status and status.group(1).strip()=='Success' and all(candidate in p for p in pages),'CI do SHA exato não confirmado')
  parser=Steps();parser.feed(pages[1]);require(len(parser.values)>=27 and all(v=='success' for _,v in parser.values),'Etapa CI ausente/não aprovada')
  require({'Conferir SHA do candidato','Compilar contratos e conferir SDKs gerados','Frontend (lint, testes, tipos e build)','Functions (tipos, testes e build)','Aplicação QA com Auth e API mockados','Conferir preservação da fonte recuperada','PostgreSQL 18 descartável (aborto e locks, sem rede)','Renovação de sessão pelo compilador Data Connect isolado','Encomendas e Comandas (SQL real isolado, sem DEV)','Encomendas e Comandas (navegador com SQL isolado)','Cobertura integrada QA existente'}<=set(n for n,_ in parser.values),'CI sem os gates obrigatórios anteriores/EC')
- return {'run':RUN,'job':JOB,'candidate':SHA,'passed':True,'steps':len(parser.values)}
+ require(set(extra_steps)<=set(n for n,_ in parser.values),'CI sem o gate específico da correção')
+ return {'run':run,'job':job,'candidate':candidate,'passed':True,'steps':len(parser.values)}
 
 def main(r):
  print('1/8 Conferindo CI, identidade, DEV, acessos e nove contenções.',flush=True)

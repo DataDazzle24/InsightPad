@@ -1,5 +1,68 @@
 # P58 — publicação coordenada de Encomendas e Comandas em DEV
 
+## P59 — correção da gravação de permissões, 19/11/2026
+
+Após P58R completo, o operador confirmou o catálogo Comandas/Encomendas na matriz,
+mas não conseguia salvar. O problema foi reproduzido em SQL Connect e PostgreSQL18
+isolados: o compilador envolve _execute numa expressão escalar, onde o antigo
+WITH ... INSERT não pode executar (42601). Nenhuma permissão/auditoria era gravada.
+A resposta falsa de sucesso não foi adotada e nenhum acesso foi liberado por script.
+
+Fix: dcb03f18a49bf267eb44a8fecbebeea641c9984a, branch
+agent/corrigir-permissoes-novas-paginas-dev, PR30. Função SQL
+platform_set_role_permission(text,jsonb,text), SECURITY INVOKER, mantém sessão
+ativa e administrador da plataforma, tenant derivado do perfil, upsert e auditoria
+atômicos. O connector passa a chamar SELECT da função; conserva assinatura e
+resposta numérica da operação. Não exige frontend/SDK/schema novos.
+
+Validação do produto:12 testes com SQL Connect/PostgreSQL18 reais e sintéticos,
+incluindo consulta real GetCurrentUserAccess e acesso EcRead após habilitação,
+rollback da permissão ao falhar auditoria e negações de perfil/sessão. SDKs
+regenerados sem diff após normalização; lint/build e preservação passaram.
+O CI completo continua obrigatório no SHA exato, incluindo o novo gate de permissões.
+Identificadores CI congelados em P59-publicar.py; o script faz leitura fresca e
+recusa status não aprovado, sem espera infinita ou mutação Google anterior ao CI.
+
+Executar `P58-executar.py --publish-permission-fix`. O bootstrap usa o mesmo
+tooling isolado/lockfile e45 testes existentes, depois14 testes P59.
+Não executa o publicador P58/P58R nem repete as sete migrações EC.
+
+P59 exige Hosting ainda na release P58R1795095245898000/f476efc58747f630, frontend
+bb2def3, schema e connector com os hashes reais publicados. Depois:
+
+1. Confere os nove controles, identidade, permissões e o login/role SQL existentes.
+2. Faz checkout novo do fix em /tmp, sem build ou instalação de dependências do app.
+3. Compara os528 metadados EC com a referência que já passou em P58R; captura
+   colunas legadas e roles/default ACLs e recusa função alvo já existente.
+4. Instala somente a função de20261119-platform-role-permission.sql, cujo SHA256
+   é fixado tanto no código quanto na cópia P59-approved-function.sql. O guard
+   permite uma única escrita com o corpo exato, após intenção fsync no journal.
+5. Confere corpo/owner/SECURITY INVOKER/search_path/retorno e privilégio EXECUTE já
+   existente do Data Connect. Se faltar, para; não concede grants automaticamente.
+6. Valida connector app com validateOnly:true e publica somente seu source; só
+   mutations.gql difere da baseline. Fonte de schema, datasources/schemaValidation,
+   frontend, Hosting, Functions, IAM, schedulers e contenções não são publicados.
+7. Reconfere contrato do connector, função, metadados EC, colunas e roles, schema
+   completo, release/config Hosting e políticas/etags nominais.
+
+PINNED_BACKENDS é um parâmetro interno do preflight reutilizado, fornecido pelo
+P59 fixado por hash. Sem ele, a execução P58 mantém exatamente seus contratos.
+O frontend continua bb2def3 porque esta correção é somente SQL/connector; o recibo
+registra separadamente o novo SHA do fix. Não altera version.json sem novo Hosting.
+
+Novo journal privado em HOME/InsightPad_DEV_Correcao_Permissoes_dcb03f1/P59-*/.
+Lock P59 e lock compartilhado P58; qualquer intenção anterior P59 bloqueia repetição
+cega. Preservar recibos. Falha SQL bloqueia o connector; falha posterior conserva a
+função sem conceder acesso. Não apagar dados, ledger ou guardas para recuperar.
+
+Após publicationComplete:true, selecionar a empresa/perfil do usuário que fará o
+teste e habilitar as ações pela matriz. Só então recarregar a sessão. Um perfil
+de outra empresa não altera automaticamente as permissões do usuário conectado.
+O aceite autenticado real não é executado pelo publicador, nem existem concessões
+automáticas ou testes de dinheiro. A orientação de não exigir/criar backup e não
+consultar tarifas permanece vigente; US$5 não renovado, custo real não medido.
+CORE não gravada; handoff privado inclui a publicação e as pendências.
+
 Candidato imutável: `bb2def3336171b440df8038c4112abd9f05b7172`, branch
 `agent/encomendas-comandas-dev`, PR29. CI aprovado:44444333875/job135292677985,
 29 etapas. Base:72f9b629337ae2c0e799863f3ef4ab01c8b71326/P57. A publicação foi
