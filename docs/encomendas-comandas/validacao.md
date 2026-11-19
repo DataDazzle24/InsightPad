@@ -116,11 +116,13 @@ selecionadas; essas pastas são ignoradas pelo Git e não entram no produto.
 ## Pendências reais
 
 Autorização e acesso para publicação coordenada schema/SQL/connector/Hosting DEV,
-preflight fresco e backup restaurável, CI remoto do candidato, smokes autenticados
+preflight fresco e backup restaurável, smokes autenticados
 e aceite visual/funcional na URL servida. Comparação direta completa com o protótipo
 ficou limitada: metadados da versão3/SHA24549a8 foram confirmados pelo conector,
 mas o arquivo exportado não pôde ser baixado; PDF/TSX/CSS do kit foram utilizados.
 Não foram testados dispositivo físico, zoom OS ou impressora física.
 
+O resultado final do CI e o SHA correspondente devem ser conferidos em
+https://github.com/DataDazzle24/InsightPad/pull/29/checks e no recibo externo da entrega.
 Nenhuma pendência D02/D05/D07 permanece para nova confirmação. A publicação não
 deve ser tratada como Hosting somente; seguir `publicacao-e-reversao.md`.

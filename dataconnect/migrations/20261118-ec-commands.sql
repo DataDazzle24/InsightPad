@@ -66,7 +66,7 @@ BEGIN
   IF v_kind='ENCOMENDA' THEN
    PERFORM ec_edit_items(actor,d.id,p->'items');
    IF d.reservation_strategy='NOW' THEN PERFORM ec_reserve(d.id,operation); ELSE UPDATE ec_documents SET reservation_state='WAITING' WHERE id=d.id; END IF;
-   IF COALESCE((p#>>'{payment,amountCents}')::bigint,0)>0 THEN receipt:=ec_receive(actor,d.id,p->'payment',operation); END IF;
+   IF p ? 'payment' THEN receipt:=ec_receive(actor,d.id,p->'payment',operation); END IF;
   END IF;
   PERFORM ec_event(d.id,NULL,action,actor.id,operation,0,jsonb_build_object('items',ec_item_snapshot(d.id),'receiptId',receipt,'customerId',d.customer_id,'branchId',d.branch_id));
  ELSE

@@ -265,6 +265,9 @@ class DomainTests(unittest.TestCase):
         self.r.sql(f"UPDATE products SET sale_price_cents=9007199254740993,weighted_product=true WHERE id='{IDS['product']}';")
         d=self.order('1');self.assertEqual(self.detail(d,'ENCOMENDA')['document']['total_cents'],'9007199254740993')
         self.reject('RECEIVE',self.payment('9223372036854775808'),d,'ENCOMENDA','VALIDATION_ERROR')
+        payload={'branchId':IDS['branch'],'customerId':IDS['customer'],'dueAtLocal':'2026-11-20T12:30','fulfillmentMode':'PICKUP','reservationStrategy':'NOW','items':[{'productId':IDS['product'],'quantity':'1'}]}
+        for amount in ['0','-1']:self.reject('CREATE_ORDER',{**payload,'payment':self.payment(amount)},kind='ENCOMENDA',code='VALIDATION_ERROR')
+        self.assertEqual(self.scalar('SELECT count(*) FROM ec_receipts;'),'0')
         self.reject('ADD_ITEM',{'productId':IDS['product2'],'quantity':'1.001'},self.r.accepted('OPEN_COMMAND',{'branchId':IDS['branch'],'identification':'Integers only'}),code='VALIDATION_ERROR')
     def test_T34_calendar_plus_n_and_pagination_are_complete(self):
         for _ in range(4):self.order('1')
