@@ -7,6 +7,29 @@ autorizada pelo pedido do bloco de publicação nesta conversa, após apresenta�
 do plano de schema/SQL/connector/Hosting. O pacote operacional fica em branch
 separada; não muda o candidato testado, não faz merge e não publica PROD.
 
+## Estado parcial confirmado e diagnóstico P58D — 19/11/2026
+
+O recibo P58-20261119T125956Z-51173c confirmou officialDDLApplied:true e os sete
+SQL concluídos. A validação posterior retornou erro400, mas o roteiro não salvou
+seu corpo no recibo: a mensagem genérica “Ainda há divergência oficial de schema
+após SQL” não permite determinar a causa técnica. Schema, connector e Hosting
+permaneceram não publicados conforme os campos false do recibo. Não reaplicar
+migrações, apagar journals ou tentar executar o publicador desde o início.
+
+`python3 P58-diagnosticar-schema.py` consulta exclusivamente o estado parcial
+desse recibo. Reutiliza o checkout original do candidato, confere os hashes dos
+sete SQL, o preflight somente de leitura e a release/configuração Hosting anterior.
+Consulta a validação oficial com validateOnly:true e registra o corpo do erro
+sanitizado, inclusive detalhes/diffs. Não interpreta qualquer400 como um diff SQL.
+Reconfirma que o recurso schema não mudou durante a consulta. O guard independente
+recusa publicação, SQL, outros recursos e alvos fora de DEV. Não instala ferramentas
+nem consulta preços/backup. O journal original permanece intacto.
+
+11 testes offline passaram. O diagnóstico usa journal separado P58D e imprime
+somente o JSON entre INICIO P58D/FIM P58D. diagnosticComplete:true significa que
+a consulta terminou, sem significar publicação concluída. A saída é necessária
+para preparar uma retomada específica a partir do banco já migrado.
+
 ## Orientação vigente — publicação direta em DEV, 19/11/2026
 
 Após a falha de conexão durante a cotação, o usuário instruiu: “vamos seguir apenas
