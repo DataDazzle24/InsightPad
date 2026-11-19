@@ -22,7 +22,8 @@ e parser PostgreSQL WASM18.2.4; não são dependências do produto.
    existente e propriedade das tabelas de guardas. Exige backup SUCCESSFUL de até
    24h, reconfirmado por GET do ID na instância correta. PITR é registrado, sem ser
    habilitado ou exigido quando há backup recente válido. Nenhum usuário, senha,
-   grant, backup ou recurso é criado.
+   grant, backup ou recurso é criado no modo padrão. O modo explícito de backup
+   descrito abaixo cria somente um backup pontual, com cotação e retenção verificadas.
    A confirmação é por metadados; não é um ensaio de restauração.
 3. Faz checkout isolado do SHA e build normal development com a configuração real.
    Reutiliza node_modules somente com manifests/lockfile iguais; senão npm ci.
@@ -110,3 +111,52 @@ restauração é automática. Ledger e guardas continuam preservados na recupera
 Como a execução anterior marcou remoteMutationAttempted:false, é permitido iniciar
 uma nova tentativa com preflight fresco. O bloqueio de repetição depois de qualquer
 intenção de mutação foi mantido. O candidato do produto continua bb2def3.
+
+## Modo explícito de backup e retomada
+
+O recibo de19/11/2026T12:15 confirmou que não existe backup na instância DEV:
+backupCount0, automaticBackupEnabledfalse e PITREnabledfalse. Nenhuma mutação de
+schema/SQL/connector/Hosting havia ocorrido. Esse bloqueio é real e não foi removido.
+
+O bootstrap aceita `--backup-and-publish` somente após o usuário revisar o bloco.
+Esse modo executa38 testes do publicador e28 testes de backup antes de acessar as
+APIs. Confere CI, nove contenções, identidade, permissões existentes e login/role
+SQL, sem grants. Um backup recente existente é reutilizado quando possível.
+
+Se precisar criar um backup:
+
+- Verifica que a instância ainda usa backup STANDARD e disco de até10GiB.
+- Consulta o Cloud Billing Catalog oficial em USD, para backup de PostgreSQL ou
+  genérico Cloud SQL em southamerica-east1/global. Usa a maior tarifa aplicável e
+  inclui oito dias no cálculo conservador de um backup com TTL pedido de sete dias.
+  Só permite criação se a estimativa incremental de armazenamento for atéUS$0,50.
+- Se tarifa, unidade, API ou permissão não puder ser confirmada, para antes de criar.
+  Não habilita APIs, Backup and DR, PITR, backups automáticos ou novos usuários.
+- Cria um único recurso de backup pela API oficial `backups.createBackup`, com
+  `instance:insightpad-fdc`, `location:southamerica-east1` e `ttlDays:7`.
+- Exige operação concluída, estadoSUCCESSFUL, vínculo ao backupRun da instância,
+  GET de confirmação desse backupRun, expiração de sete dias e tamanho dentro da
+  estimativa. Não faz fallback para backup de retenção indefinida.
+- Só então executa o P58 normal, com preflight fresco e o mesmo candidato bb2def3.
+
+A execução explícita desse bloco é a autorização do backup pontual e de seu possível
+custo de armazenamento. US$0,50 é um limite da estimativa calculada, não uma trava
+de cobrança nem reserva fixa por publicação. O teto acumulado deUS$5 não é renovado
+ou aumentado; os gastos históricos reais não foram medidos por este pacote.
+O tamanho chargeable é registrado quando a API o disponibiliza. Variação de preço,
+tributação e cobrança real não são convertidas em falsa garantia de custo zero.
+
+O backup expira em sete dias; isso não configura uma política contínua de proteção
+de DEV. Não há exclusão manual, restauração ou modificação dos backups existentes.
+Não há novo servidor, bucket ou instância. O recibo distingue o backup potencialmente
+faturado dos passos de schema/SQL/connector/Hosting e do aceite autenticado pendente.
+
+Journal P58B separado, fsync antes do único POST e lock. Resposta perdida não causa
+novo POST: se a operação é conhecida, repete apenas leituras; sem operação conhecida,
+para para diagnóstico. Após backup concluído, uma tentativa de publicação bloqueada
+antes de mutar pode reutilizá-lo. Mutação prévia do P58 impede nova tentativa cega.
+
+Referência técnica oficial: googleapis/google-api-go-client,
+`sqladmin/v1beta4/sqladmin-gen.go`, recursos Backup (ttlDays/expiryTime/backupRun),
+BackupsCreateBackupCall e Operation.BackupContext. Foram usados os campos documentados
+da API, sem mudanças de configuração da instância para contornar falta de backup.
