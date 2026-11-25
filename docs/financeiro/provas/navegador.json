@@ -1,0 +1,52 @@
+{
+  "sha": "1d2ffab4f8272e6cb660e87d633d16e32f880d80",
+  "environment": "Chromium, Auth sintético, SQL Connect e PostgreSQL 18 descartáveis",
+  "cases": [
+    {
+      "theme": "dark",
+      "width": 1440,
+      "height": 900,
+      "focusRestored": true,
+      "zoom": "1",
+      "scale": 1
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "focusRestored": true,
+      "zoom": "1",
+      "scale": 1
+    },
+    {
+      "theme": "light",
+      "width": 1440,
+      "height": 900,
+      "focusRestored": true,
+      "zoom": "1",
+      "scale": 1
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "focusRestored": true,
+      "zoom": "1",
+      "scale": 1
+    },
+    {
+      "routes": 8
+    },
+    {
+      "ackLost": true,
+      "reloaded": true,
+      "persisted": {
+        "settlements": 1,
+        "movementCents": "12345",
+        "residualCents": "0"
+      },
+      "csv": true
+    }
+  ],
+  "passed": true
+}

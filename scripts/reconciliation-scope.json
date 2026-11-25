@@ -2511,6 +2511,48 @@
         "FINANCEIRO-20261125"
       ],
       "reason": "Rastreabilidade, implementação e validação autorizadas para o Financeiro."
+    },
+    "docs/financeiro/matriz-aceite.tsv": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Evidência sintética e matriz de aceite autorizadas para o Financeiro."
+    },
+    "docs/financeiro/provas/README.md": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Evidência sintética e matriz de aceite autorizadas para o Financeiro."
+    },
+    "docs/financeiro/provas/dark-1440-receber.png": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Evidência sintética e matriz de aceite autorizadas para o Financeiro."
+    },
+    "docs/financeiro/provas/dark-390-receber.png": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Evidência sintética e matriz de aceite autorizadas para o Financeiro."
+    },
+    "docs/financeiro/provas/light-1440-receber.png": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Evidência sintética e matriz de aceite autorizadas para o Financeiro."
+    },
+    "docs/financeiro/provas/light-390-receber.png": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Evidência sintética e matriz de aceite autorizadas para o Financeiro."
+    },
+    "docs/financeiro/provas/navegador.json": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Evidência sintética e matriz de aceite autorizadas para o Financeiro."
     }
   },
   "bytePreserved": [
