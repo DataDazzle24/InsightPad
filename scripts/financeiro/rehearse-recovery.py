@@ -202,14 +202,8 @@ def fetch_image_file(path, resource, digest, limit, token):
     require(f'sha256:{checksum.hexdigest()}' == digest, 'SHA256 de um arquivo da imagem PostgreSQL divergiu')
 
 
-def prepare_image(scratch, progress):
+def prepare_image(scratch, tag, progress):
     run(['docker', 'info', '--format', '{{.ServerVersion}}'], label='Docker local')
-    try:
-        run(['docker', 'image', 'inspect', IMAGE_ID], label='Imagem PostgreSQL no cache')
-        return
-    except CheckFailed:
-        pass
-
     progress('Baixando PostgreSQL 18.6 pelo terminal e verificando os arquivos da imagem.')
     manifest_path = scratch / 'manifest.json'
     archive_path = scratch / 'postgres-image.tar'
@@ -220,26 +214,43 @@ def prepare_image(scratch, progress):
         image = json.loads(manifest_path.read_text())
         require(image['config']['digest'] == IMAGE_ID, 'Configuração da imagem PostgreSQL divergiu')
         config = IMAGE_ID.removeprefix('sha256:') + '.json'
+        config_path = scratch / config
+        fetch_image_file(config_path, 'blobs', IMAGE_ID, image['config']['size'], token)
+        expected_layers = json.loads(config_path.read_text())['rootfs']['diff_ids']
         layers = []
         with tarfile.open(archive_path, 'w') as archive:
-            for descriptor in [image['config'], *image['layers']]:
+            archive.add(config_path, arcname=config)
+            for descriptor in image['layers']:
                 digest = descriptor['digest']
-                name = config if digest == IMAGE_ID else digest.removeprefix('sha256:') + '.tar.gz'
+                name = digest.removeprefix('sha256:') + '.tar.gz'
                 path = scratch / name
                 fetch_image_file(path, 'blobs', digest, descriptor['size'], token)
                 archive.add(path, arcname=name)
                 path.unlink()
-                if name != config:
-                    layers.append(name)
-            manifest_path.write_text(json.dumps([{'Config': config, 'RepoTags': [], 'Layers': layers}]))
+                layers.append(name)
+            manifest_path.write_text(json.dumps([{'Config': config, 'RepoTags': [tag], 'Layers': layers}]))
             archive.add(manifest_path, arcname='manifest.json')
     except (urllib.error.URLError, TimeoutError) as error:
         raise CheckFailed('Registro PostgreSQL indisponível pelo terminal') from error
 
     progress('Carregando a imagem verificada no Docker local.')
     run(['docker', 'load', '--input', str(archive_path)], timeout=180, label='Carga da imagem PostgreSQL')
-    run(['docker', 'image', 'inspect', IMAGE_ID], label='Identificação da imagem PostgreSQL carregada')
+    # A named image can be addressed even when the Docker image store
+    # represents image IDs differently from the archive's config digest.
+    layers = json.loads(run(['docker', 'image', 'inspect', '--format', '{{json .RootFS.Layers}}', tag],
+                            label='Identificação da imagem PostgreSQL carregada'))
+    require(layers == expected_layers, 'Camadas da imagem PostgreSQL carregada divergiram')
     archive_path.unlink()
+
+
+@contextlib.contextmanager
+def recovery_image(scratch, tag, progress):
+    try:
+        prepare_image(scratch, tag, progress)
+        yield tag
+    finally:
+        with contextlib.suppress(OSError, subprocess.TimeoutExpired):
+            subprocess.run(['docker', 'image', 'rm', tag], capture_output=True, timeout=15)
 
 
 def wait_until(predicate, message, seconds=45):
@@ -260,6 +271,7 @@ def main():
     require(not output_dir.is_symlink() and output_dir.stat().st_mode & 0o077 == 0, 'O diretório da cópia precisa ser privado')
     stamp = dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%SZ')
     container = 'insightpad-fin-recovery-' + secrets.token_hex(6)
+    tag = 'insightpad-fin-recovery/postgres:' + container[-12:]
     protected = output_dir / f'{stamp}-{container[-12:]}.pgdump'
     receipt_path = protected.with_suffix('.json')
     require(not protected.exists() and not receipt_path.exists(), 'Arquivo de saída já existe')
@@ -270,9 +282,9 @@ def main():
         sockets = scratch / 'sql'
         sockets.mkdir()
         install_proxy(proxy)
-        prepare_image(scratch, lambda message: print(message, flush=True))
         proxy_error = scratch / 'proxy.log'
-        with proxy_error.open('wb') as log, subprocess.Popen(
+        with recovery_image(scratch, tag, lambda message: print(message, flush=True)), \
+                proxy_error.open('wb') as log, subprocess.Popen(
             [str(proxy), '--gcloud-auth', '--auto-iam-authn', '--unix-socket', str(sockets), CONNECTION],
             stdin=subprocess.DEVNULL, stdout=log, stderr=log,
         ) as bridge:
@@ -280,7 +292,7 @@ def main():
                 wait_until(lambda: (sockets / CONNECTION / '.s.PGSQL.5432').is_socket(), 'Proxy IAM não iniciou')
                 run(['docker', 'run', '-d', '--rm', '--pull=never', '--name', container, '--network', 'none', '--memory', '768m',
                      '--tmpfs', '/var/lib/postgresql:rw,size=768m', '--mount', f'type=bind,source={sockets},target=/ip-source,readonly',
-                     '-e', 'POSTGRES_HOST_AUTH_METHOD=trust', '-e', f'POSTGRES_DB={LOCAL_DB}', IMAGE_ID],
+                     '-e', 'POSTGRES_HOST_AUTH_METHOD=trust', '-e', f'POSTGRES_DB={LOCAL_DB}', tag],
                     timeout=60, label='PostgreSQL descartável')
 
                 def local_ready():
