@@ -2572,6 +2572,18 @@
       ],
       "reason": "Socket local para a cópia de leitura com o conector IAM já utilizado em P58/P59."
     },
+    "scripts/financeiro/publish-dev.py": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Publicação coordenada autorizada em DEV, com conferência da recuperação e reutilização do P58/P59."
+    },
+    "scripts/financeiro/publish-dev-cloud-shell.sh": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Entrada do Cloud Shell para publicar o candidato financeiro aprovado no projeto DEV."
+    },
     "scripts/financeiro/rehearse-recovery.py": {
       "ids": [
         "FINANCEIRO-20261125"
