@@ -10,13 +10,19 @@ import secrets
 import select
 import subprocess
 import sys
+import tarfile
 import tempfile
 import time
+import urllib.error
 import urllib.request
 
 from preflight_cloud_shell import CONNECTION, INSTANCE, OPERATOR, PROJECT
 
-IMAGE = 'postgres@sha256:edb0c08dc33befd0262ab3b5cf1c4f3f8cfd8b09e88c05b45adee29d6761ddb6'
+# Linux amd64 manifest and image ID of the same PostgreSQL 18.6 image.
+IMAGE_MANIFEST = 'sha256:9770878138a2e83abcb10856d30cc3f24dae0d317bb956db6ab9159de6c3c80d'
+IMAGE_ID = 'sha256:79061104669bb30919d015b549c764e2d8021a18ee39cb175581a2588fe90dbe'
+IMAGE_REGISTRY = 'https://registry-1.docker.io/v2/library/postgres'
+IMAGE_TOKEN_URL = 'https://auth.docker.io/token?service=registry.docker.io&scope=repository:library/postgres:pull'
 PROXY_URL = 'https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.18.3/cloud-sql-proxy.linux.amd64'
 PROXY_SHA256 = '4c2390ab4761159c57a039bac8cbb3ed264d1b40e1c6de3a0aa78c24d3a35ff5'
 OWNER_ROLE = 'firebaseowner_fdcdb_public'
@@ -175,6 +181,67 @@ def install_proxy(path):
     path.chmod(0o700)
 
 
+def fetch_image_file(path, resource, digest, limit, token):
+    request = urllib.request.Request(
+        f'{IMAGE_REGISTRY}/{resource}/{digest}',
+        headers={'Accept': 'application/vnd.oci.image.manifest.v1+json'},
+    )
+    # The registry redirects blob downloads to a CDN. Keep authorization
+    # on the initial request only.
+    request.add_unredirected_header('Authorization', f'Bearer {token}')
+    checksum = hashlib.sha256()
+    remaining = limit
+    deadline = time.monotonic() + 150
+    with urllib.request.urlopen(request, timeout=35) as response, path.open('wb') as output:
+        while chunk := response.read(1024 * 1024):
+            remaining -= len(chunk)
+            require(remaining >= 0 and time.monotonic() < deadline,
+                    'Download do PostgreSQL excedeu o limite de tamanho ou tempo')
+            checksum.update(chunk)
+            output.write(chunk)
+    require(f'sha256:{checksum.hexdigest()}' == digest, 'SHA256 de um arquivo da imagem PostgreSQL divergiu')
+
+
+def prepare_image(scratch, progress):
+    run(['docker', 'info', '--format', '{{.ServerVersion}}'], label='Docker local')
+    try:
+        run(['docker', 'image', 'inspect', IMAGE_ID], label='Imagem PostgreSQL no cache')
+        return
+    except CheckFailed:
+        pass
+
+    progress('Baixando PostgreSQL 18.6 pelo terminal e verificando os arquivos da imagem.')
+    manifest_path = scratch / 'manifest.json'
+    archive_path = scratch / 'postgres-image.tar'
+    try:
+        with urllib.request.urlopen(IMAGE_TOKEN_URL, timeout=35) as response:
+            token = json.loads(response.read(32768))['token']
+        fetch_image_file(manifest_path, 'manifests', IMAGE_MANIFEST, 65536, token)
+        image = json.loads(manifest_path.read_text())
+        require(image['config']['digest'] == IMAGE_ID, 'Configuração da imagem PostgreSQL divergiu')
+        config = IMAGE_ID.removeprefix('sha256:') + '.json'
+        layers = []
+        with tarfile.open(archive_path, 'w') as archive:
+            for descriptor in [image['config'], *image['layers']]:
+                digest = descriptor['digest']
+                name = config if digest == IMAGE_ID else digest.removeprefix('sha256:') + '.tar.gz'
+                path = scratch / name
+                fetch_image_file(path, 'blobs', digest, descriptor['size'], token)
+                archive.add(path, arcname=name)
+                path.unlink()
+                if name != config:
+                    layers.append(name)
+            manifest_path.write_text(json.dumps([{'Config': config, 'RepoTags': [], 'Layers': layers}]))
+            archive.add(manifest_path, arcname='manifest.json')
+    except (urllib.error.URLError, TimeoutError) as error:
+        raise CheckFailed('Registro PostgreSQL indisponível pelo terminal') from error
+
+    progress('Carregando a imagem verificada no Docker local.')
+    run(['docker', 'load', '--input', str(archive_path)], timeout=180, label='Carga da imagem PostgreSQL')
+    run(['docker', 'image', 'inspect', IMAGE_ID], label='Identificação da imagem PostgreSQL carregada')
+    archive_path.unlink()
+
+
 def wait_until(predicate, message, seconds=45):
     deadline = time.monotonic() + seconds
     while time.monotonic() < deadline:
@@ -203,7 +270,7 @@ def main():
         sockets = scratch / 'sql'
         sockets.mkdir()
         install_proxy(proxy)
-        run(['docker', 'pull', IMAGE], timeout=180, label='Imagem PostgreSQL 18 fixada')
+        prepare_image(scratch, lambda message: print(message, flush=True))
         proxy_error = scratch / 'proxy.log'
         with proxy_error.open('wb') as log, subprocess.Popen(
             [str(proxy), '--gcloud-auth', '--auto-iam-authn', '--unix-socket', str(sockets), CONNECTION],
@@ -211,9 +278,9 @@ def main():
         ) as bridge:
             try:
                 wait_until(lambda: (sockets / CONNECTION / '.s.PGSQL.5432').is_socket(), 'Proxy IAM não iniciou')
-                run(['docker', 'run', '-d', '--rm', '--name', container, '--network', 'none', '--memory', '768m',
+                run(['docker', 'run', '-d', '--rm', '--pull=never', '--name', container, '--network', 'none', '--memory', '768m',
                      '--tmpfs', '/var/lib/postgresql:rw,size=768m', '--mount', f'type=bind,source={sockets},target=/ip-source,readonly',
-                     '-e', 'POSTGRES_HOST_AUTH_METHOD=trust', '-e', f'POSTGRES_DB={LOCAL_DB}', IMAGE],
+                     '-e', 'POSTGRES_HOST_AUTH_METHOD=trust', '-e', f'POSTGRES_DB={LOCAL_DB}', IMAGE_ID],
                     timeout=60, label='PostgreSQL descartável')
 
                 def local_ready():
