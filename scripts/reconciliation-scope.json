@@ -2553,6 +2553,18 @@
         "FINANCEIRO-20261125"
       ],
       "reason": "Evidência sintética e matriz de aceite autorizadas para o Financeiro."
+    },
+    "scripts/financeiro/preflight-cloud-shell.sh": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Inventário financeiro somente leitura no Cloud Shell autenticado."
+    },
+    "scripts/financeiro/preflight_cloud_shell.py": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Inventário financeiro somente leitura no Cloud Shell autenticado."
     }
   },
   "bytePreserved": [

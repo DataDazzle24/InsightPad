@@ -6661,6 +6661,7 @@ Recall that executing the `FinancialRead` query returns a `QueryPromise` that re
 The `data` property is an object of type `FinancialReadData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface FinancialReadData {
+  session?: unknown | null;
   response?: unknown | null;
 }
 ```
@@ -6686,11 +6687,13 @@ const { data } = await financialRead({ input: ..., sessionToken: ..., });
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await financialRead(dataConnect, financialReadVars);
 
+console.log(data.session);
 console.log(data.response);
 
 // Or, you can use the `Promise` API.
 financialRead(financialReadVars).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data.response);
 });
 ```
@@ -6720,11 +6723,13 @@ const ref = financialReadRef(dataConnect, financialReadVars);
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
+console.log(data.session);
 console.log(data.response);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
+  console.log(data.session);
   console.log(data.response);
 });
 ```
@@ -17769,6 +17774,7 @@ The `data` property is an object of type `FinancialPrepareData`, which is define
 ```typescript
 export interface FinancialPrepareData {
   query?: {
+    session?: unknown | null;
     response?: unknown | null;
   };
 }
@@ -17885,6 +17891,7 @@ The `data` property is an object of type `FinancialExecuteData`, which is define
 ```typescript
 export interface FinancialExecuteData {
   query?: {
+    session?: unknown | null;
     response?: unknown | null;
   };
 }

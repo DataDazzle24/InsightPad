@@ -4514,12 +4514,38 @@ mutation EcCommand($command: Any!, $sessionToken: String) @auth(level: USER) @tr
 }
 mutation FinancialPrepare($command: Any!, $sessionToken: String) @auth(level: USER) @transaction {
   query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
   response: _selectFirst(sql: "SELECT fin_prepare($1,$2,$3::jsonb) AS result", params: [{_expr: "auth.uid"}, $sessionToken, $command])
   }
 }
 
 mutation FinancialExecute($operationId: UUID!, $payloadHash: String!, $cancel: Boolean!, $sessionToken: String) @auth(level: USER) @transaction {
   query {
+  session: _selectFirst(sql: """
+    SELECT EXISTS (
+      SELECT 1 FROM user_device_sessions s
+      JOIN users u ON u.id=s.user_id AND u.tenant_id=s.tenant_id
+      JOIN tenants t ON t.id=u.tenant_id
+      JOIN roles r ON r.id=u.role_id AND r.tenant_id=u.tenant_id
+      WHERE u.id=$1 AND $2::text ~ '^[a-f0-9]{64}$' AND s.session_token=encode(sha256(convert_to($2::text,'UTF8')),'hex')
+        AND u.active AND u.deleted_at IS NULL AND (u.blocked_until IS NULL OR u.blocked_until<=now())
+        AND t.active AND t.deleted_at IS NULL AND r.active AND r.deleted_at IS NULL
+        AND s.last_seen_at>now()-interval '15 minutes' AND s.claimed_at>now()-interval '12 hours'
+      FOR SHARE OF s,u,t,r
+    ) AS valid
+  """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
   response: _selectFirst(sql: "SELECT fin_execute($1,$2,$3,$4,$5) AS result", params: [{_expr: "auth.uid"}, $sessionToken, $operationId, $payloadHash, $cancel])
   }
 }

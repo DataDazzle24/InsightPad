@@ -5014,6 +5014,7 @@ To check the status of a Query, use the `UseQueryResult.status` field. You can a
 To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `FinancialRead` Query is of type `FinancialReadData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface FinancialReadData {
+  session?: unknown | null;
   response?: unknown | null;
 }
 ```
@@ -5064,6 +5065,7 @@ export default function FinancialReadComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
+    console.log(query.data.session);
     console.log(query.data.response);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -14283,6 +14285,7 @@ To access the data returned by a Mutation, use the `UseMutationResult.data` fiel
 ```javascript
 export interface FinancialPrepareData {
   query?: {
+    session?: unknown | null;
     response?: unknown | null;
   };
 }
@@ -14383,6 +14386,7 @@ To access the data returned by a Mutation, use the `UseMutationResult.data` fiel
 ```javascript
 export interface FinancialExecuteData {
   query?: {
+    session?: unknown | null;
     response?: unknown | null;
   };
 }

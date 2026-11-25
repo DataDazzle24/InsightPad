@@ -514,6 +514,7 @@ export interface FinancialCategory_Key {
 
 export interface FinancialExecuteData {
   query?: {
+    session?: unknown | null;
     response?: unknown | null;
   };
 }
@@ -540,6 +541,7 @@ export interface FinancialIndicatorsDashboardVariables {
 
 export interface FinancialPrepareData {
   query?: {
+    session?: unknown | null;
     response?: unknown | null;
   };
 }
@@ -550,6 +552,7 @@ export interface FinancialPrepareVariables {
 }
 
 export interface FinancialReadData {
+  session?: unknown | null;
   response?: unknown | null;
 }
 

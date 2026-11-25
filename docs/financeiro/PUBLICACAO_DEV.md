@@ -19,7 +19,9 @@ de migração, configuração ou publicação do Financeiro foi executado em DEV
    artefatos do conector e do Hosting anteriores e a operação autorizada.
 2. No Cloud Shell, validar o projeto e a conexão. Rodar
    `scripts/financeiro/preflight.sql` em transação somente leitura. Conferir
-   totais de títulos, vínculos e contas com o responsável. Não exportar PII.
+   totais de títulos, vínculos e contas com o responsável. O script
+   `scripts/financeiro/preflight-cloud-shell.sh` coleta apenas contagens e
+   metadados usando a ponte de leitura do P59. Nenhum dado pessoal é exportado.
 3. Demonstrar proteção recuperável antes das alterações. Pode ser uma cópia
    já existente, íntegra e comprovadamente restaurável no ambiente autorizado.
    Se for proposto dump privado, validar acesso a todos os objetos, retenção,
