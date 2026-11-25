@@ -4512,3 +4512,14 @@ mutation EcCommand($command: Any!, $sessionToken: String) @auth(level: USER) @tr
   response: _selectFirst(sql: "SELECT ec_command($1::text,$2::text,$3::jsonb)::jsonb AS result", params: [{_expr:"auth.uid"},$sessionToken,$command])
   }
 }
+mutation FinancialPrepare($command: Any!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  response: _selectFirst(sql: "SELECT fin_prepare($1,$2,$3::jsonb) AS result", params: [{_expr: "auth.uid"}, $sessionToken, $command])
+  }
+}
+
+mutation FinancialExecute($operationId: UUID!, $payloadHash: String!, $cancel: Boolean!, $sessionToken: String) @auth(level: USER) @transaction {
+  query {
+  response: _selectFirst(sql: "SELECT fin_execute($1,$2,$3,$4,$5) AS result", params: [{_expr: "auth.uid"}, $sessionToken, $operationId, $payloadHash, $cancel])
+  }
+}

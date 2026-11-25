@@ -30,3 +30,5 @@ artifacts/
 
 # Python helpers for the isolated EC test runtime.
 /scripts/ec/__pycache__/
+
+__pycache__/

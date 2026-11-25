@@ -62,6 +62,7 @@ This README will guide you through the process of using the generated JavaScript
   - [*PosSaleApprovalStatus*](#possaleapprovalstatus)
   - [*PosCashApprovalStatus*](#poscashapprovalstatus)
   - [*EcRead*](#ecread)
+  - [*FinancialRead*](#financialread)
 - [**Mutations**](#mutations)
   - [*BootstrapSalesChannelsNavigation*](#bootstrapsaleschannelsnavigation)
   - [*BootstrapSalesChannelsNavigationV2*](#bootstrapsaleschannelsnavigationv2)
@@ -153,6 +154,8 @@ This README will guide you through the process of using the generated JavaScript
   - [*ApprovePosSale*](#approvepossale)
   - [*RequestPosCashApproval*](#requestposcashapproval)
   - [*EcCommand*](#eccommand)
+  - [*FinancialPrepare*](#financialprepare)
+  - [*FinancialExecute*](#financialexecute)
 
 # Accessing the connector
 A connector is a collection of Queries and Mutations. One SDK is generated for each connector - this SDK is generated for the connector `app`. You can find more information about connectors in the [Data Connect documentation](https://firebase.google.com/docs/data-connect#how-does).
@@ -6610,6 +6613,118 @@ console.log(data.response);
 executeQuery(ref).then((response) => {
   const data = response.data;
   console.log(data.session);
+  console.log(data.response);
+});
+```
+
+## FinancialRead
+You can execute the `FinancialRead` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+financialRead(vars: FinancialReadVariables, options?: ExecuteQueryOptions): QueryPromise<FinancialReadData, FinancialReadVariables>;
+
+interface FinancialReadRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: FinancialReadVariables): QueryRef<FinancialReadData, FinancialReadVariables>;
+}
+export const financialReadRef: FinancialReadRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+financialRead(dc: DataConnect, vars: FinancialReadVariables, options?: ExecuteQueryOptions): QueryPromise<FinancialReadData, FinancialReadVariables>;
+
+interface FinancialReadRef {
+  ...
+  (dc: DataConnect, vars: FinancialReadVariables): QueryRef<FinancialReadData, FinancialReadVariables>;
+}
+export const financialReadRef: FinancialReadRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the financialReadRef:
+```typescript
+const name = financialReadRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `FinancialRead` query requires an argument of type `FinancialReadVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface FinancialReadVariables {
+  input: unknown;
+  sessionToken?: string | null;
+}
+```
+### Return Type
+Recall that executing the `FinancialRead` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `FinancialReadData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface FinancialReadData {
+  response?: unknown | null;
+}
+```
+### Using `FinancialRead`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, financialRead, FinancialReadVariables } from '@insightpad/dataconnect';
+
+// The `FinancialRead` query requires an argument of type `FinancialReadVariables`:
+const financialReadVars: FinancialReadVariables = {
+  input: ...,
+  sessionToken: ..., // optional
+};
+
+// Call the `financialRead()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await financialRead(financialReadVars);
+// Variables can be defined inline as well.
+const { data } = await financialRead({ input: ..., sessionToken: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await financialRead(dataConnect, financialReadVars);
+
+console.log(data.response);
+
+// Or, you can use the `Promise` API.
+financialRead(financialReadVars).then((response) => {
+  const data = response.data;
+  console.log(data.response);
+});
+```
+
+### Using `FinancialRead`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, financialReadRef, FinancialReadVariables } from '@insightpad/dataconnect';
+
+// The `FinancialRead` query requires an argument of type `FinancialReadVariables`:
+const financialReadVars: FinancialReadVariables = {
+  input: ...,
+  sessionToken: ..., // optional
+};
+
+// Call the `financialReadRef()` function to get a reference to the query.
+const ref = financialReadRef(financialReadVars);
+// Variables can be defined inline as well.
+const ref = financialReadRef({ input: ..., sessionToken: ..., });
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = financialReadRef(dataConnect, financialReadVars);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.response);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
   console.log(data.response);
 });
 ```
@@ -17595,6 +17710,240 @@ const ref = ecCommandRef({ command: ..., sessionToken: ..., });
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
 const ref = ecCommandRef(dataConnect, ecCommandVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.query);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.query);
+});
+```
+
+## FinancialPrepare
+You can execute the `FinancialPrepare` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+financialPrepare(vars: FinancialPrepareVariables): MutationPromise<FinancialPrepareData, FinancialPrepareVariables>;
+
+interface FinancialPrepareRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: FinancialPrepareVariables): MutationRef<FinancialPrepareData, FinancialPrepareVariables>;
+}
+export const financialPrepareRef: FinancialPrepareRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+financialPrepare(dc: DataConnect, vars: FinancialPrepareVariables): MutationPromise<FinancialPrepareData, FinancialPrepareVariables>;
+
+interface FinancialPrepareRef {
+  ...
+  (dc: DataConnect, vars: FinancialPrepareVariables): MutationRef<FinancialPrepareData, FinancialPrepareVariables>;
+}
+export const financialPrepareRef: FinancialPrepareRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the financialPrepareRef:
+```typescript
+const name = financialPrepareRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `FinancialPrepare` mutation requires an argument of type `FinancialPrepareVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface FinancialPrepareVariables {
+  command: unknown;
+  sessionToken?: string | null;
+}
+```
+### Return Type
+Recall that executing the `FinancialPrepare` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `FinancialPrepareData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface FinancialPrepareData {
+  query?: {
+    response?: unknown | null;
+  };
+}
+```
+### Using `FinancialPrepare`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, financialPrepare, FinancialPrepareVariables } from '@insightpad/dataconnect';
+
+// The `FinancialPrepare` mutation requires an argument of type `FinancialPrepareVariables`:
+const financialPrepareVars: FinancialPrepareVariables = {
+  command: ...,
+  sessionToken: ..., // optional
+};
+
+// Call the `financialPrepare()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await financialPrepare(financialPrepareVars);
+// Variables can be defined inline as well.
+const { data } = await financialPrepare({ command: ..., sessionToken: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await financialPrepare(dataConnect, financialPrepareVars);
+
+console.log(data.query);
+
+// Or, you can use the `Promise` API.
+financialPrepare(financialPrepareVars).then((response) => {
+  const data = response.data;
+  console.log(data.query);
+});
+```
+
+### Using `FinancialPrepare`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, financialPrepareRef, FinancialPrepareVariables } from '@insightpad/dataconnect';
+
+// The `FinancialPrepare` mutation requires an argument of type `FinancialPrepareVariables`:
+const financialPrepareVars: FinancialPrepareVariables = {
+  command: ...,
+  sessionToken: ..., // optional
+};
+
+// Call the `financialPrepareRef()` function to get a reference to the mutation.
+const ref = financialPrepareRef(financialPrepareVars);
+// Variables can be defined inline as well.
+const ref = financialPrepareRef({ command: ..., sessionToken: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = financialPrepareRef(dataConnect, financialPrepareVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.query);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.query);
+});
+```
+
+## FinancialExecute
+You can execute the `FinancialExecute` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+financialExecute(vars: FinancialExecuteVariables): MutationPromise<FinancialExecuteData, FinancialExecuteVariables>;
+
+interface FinancialExecuteRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: FinancialExecuteVariables): MutationRef<FinancialExecuteData, FinancialExecuteVariables>;
+}
+export const financialExecuteRef: FinancialExecuteRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+financialExecute(dc: DataConnect, vars: FinancialExecuteVariables): MutationPromise<FinancialExecuteData, FinancialExecuteVariables>;
+
+interface FinancialExecuteRef {
+  ...
+  (dc: DataConnect, vars: FinancialExecuteVariables): MutationRef<FinancialExecuteData, FinancialExecuteVariables>;
+}
+export const financialExecuteRef: FinancialExecuteRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the financialExecuteRef:
+```typescript
+const name = financialExecuteRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `FinancialExecute` mutation requires an argument of type `FinancialExecuteVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface FinancialExecuteVariables {
+  operationId: UUIDString;
+  payloadHash: string;
+  cancel: boolean;
+  sessionToken?: string | null;
+}
+```
+### Return Type
+Recall that executing the `FinancialExecute` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `FinancialExecuteData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface FinancialExecuteData {
+  query?: {
+    response?: unknown | null;
+  };
+}
+```
+### Using `FinancialExecute`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, financialExecute, FinancialExecuteVariables } from '@insightpad/dataconnect';
+
+// The `FinancialExecute` mutation requires an argument of type `FinancialExecuteVariables`:
+const financialExecuteVars: FinancialExecuteVariables = {
+  operationId: ...,
+  payloadHash: ...,
+  cancel: ...,
+  sessionToken: ..., // optional
+};
+
+// Call the `financialExecute()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await financialExecute(financialExecuteVars);
+// Variables can be defined inline as well.
+const { data } = await financialExecute({ operationId: ..., payloadHash: ..., cancel: ..., sessionToken: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await financialExecute(dataConnect, financialExecuteVars);
+
+console.log(data.query);
+
+// Or, you can use the `Promise` API.
+financialExecute(financialExecuteVars).then((response) => {
+  const data = response.data;
+  console.log(data.query);
+});
+```
+
+### Using `FinancialExecute`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, financialExecuteRef, FinancialExecuteVariables } from '@insightpad/dataconnect';
+
+// The `FinancialExecute` mutation requires an argument of type `FinancialExecuteVariables`:
+const financialExecuteVars: FinancialExecuteVariables = {
+  operationId: ...,
+  payloadHash: ...,
+  cancel: ...,
+  sessionToken: ..., // optional
+};
+
+// Call the `financialExecuteRef()` function to get a reference to the mutation.
+const ref = financialExecuteRef(financialExecuteVars);
+// Variables can be defined inline as well.
+const ref = financialExecuteRef({ operationId: ..., payloadHash: ..., cancel: ..., sessionToken: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = financialExecuteRef(dataConnect, financialExecuteVars);
 
 // Call `executeMutation()` on the reference to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.

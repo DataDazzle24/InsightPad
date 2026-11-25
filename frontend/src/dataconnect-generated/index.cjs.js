@@ -1282,6 +1282,34 @@ exports.ecCommand = function ecCommand(dcOrVars, vars) {
 }
 ;
 
+const financialPrepareRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'FinancialPrepare', inputVars);
+}
+financialPrepareRef.operationName = 'FinancialPrepare';
+exports.financialPrepareRef = financialPrepareRef;
+
+exports.financialPrepare = function financialPrepare(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(financialPrepareRef(dcInstance, inputVars));
+}
+;
+
+const financialExecuteRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'FinancialExecute', inputVars);
+}
+financialExecuteRef.operationName = 'FinancialExecute';
+exports.financialExecuteRef = financialExecuteRef;
+
+exports.financialExecute = function financialExecute(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(financialExecuteRef(dcInstance, inputVars));
+}
+;
+
 const getCurrentUserRef = (dc) => {
   const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
   dcInstance._useGeneratedSdk();
@@ -2044,5 +2072,20 @@ exports.ecRead = function ecRead(dcOrVars, varsOrOptions, options) {
 
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(ecReadRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const financialReadRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'FinancialRead', inputVars);
+}
+financialReadRef.operationName = 'FinancialRead';
+exports.financialReadRef = financialReadRef;
+
+exports.financialRead = function financialRead(dcOrVars, varsOrOptions, options) {
+
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(financialReadRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;

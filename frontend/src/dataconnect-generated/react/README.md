@@ -69,6 +69,7 @@ You can also follow the instructions from the [Data Connect documentation](https
   - [*PosSaleApprovalStatus*](#possaleapprovalstatus)
   - [*PosCashApprovalStatus*](#poscashapprovalstatus)
   - [*EcRead*](#ecread)
+  - [*FinancialRead*](#financialread)
 - [**Mutations**](#mutations)
   - [*BootstrapSalesChannelsNavigation*](#bootstrapsaleschannelsnavigation)
   - [*BootstrapSalesChannelsNavigationV2*](#bootstrapsaleschannelsnavigationv2)
@@ -160,6 +161,8 @@ You can also follow the instructions from the [Data Connect documentation](https
   - [*ApprovePosSale*](#approvepossale)
   - [*RequestPosCashApproval*](#requestposcashapproval)
   - [*EcCommand*](#eccommand)
+  - [*FinancialPrepare*](#financialprepare)
+  - [*FinancialExecute*](#financialexecute)
 
 # TanStack Query Firebase & TanStack React Query
 This SDK provides [React](https://react.dev/) hooks generated specific to your application, for the operations found in the connector `app`. These hooks are generated using [TanStack Query Firebase](https://react-query-firebase.invertase.dev/) by our partners at Invertase, a library built on top of [TanStack React Query v5](https://tanstack.com/query/v5/docs/framework/react/overview).
@@ -4977,6 +4980,90 @@ export default function EcReadComponent() {
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
     console.log(query.data.session);
+    console.log(query.data.response);
+  }
+  return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## FinancialRead
+You can execute the `FinancialRead` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
+
+```javascript
+useFinancialRead(dc: DataConnect, vars: FinancialReadVariables, options?: useDataConnectQueryOptions<FinancialReadData>): UseDataConnectQueryResult<FinancialReadData, FinancialReadVariables>;
+```
+You can also pass in a `DataConnect` instance to the Query hook function.
+```javascript
+useFinancialRead(vars: FinancialReadVariables, options?: useDataConnectQueryOptions<FinancialReadData>): UseDataConnectQueryResult<FinancialReadData, FinancialReadVariables>;
+```
+
+### Variables
+The `FinancialRead` Query requires an argument of type `FinancialReadVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface FinancialReadVariables {
+  input: unknown;
+  sessionToken?: string | null;
+}
+```
+### Return Type
+Recall that calling the `FinancialRead` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
+
+To check the status of a Query, use the `UseQueryResult.status` field. You can also check for pending / success / error status using the `UseQueryResult.isPending`, `UseQueryResult.isSuccess`, and `UseQueryResult.isError` fields.
+
+To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `FinancialRead` Query is of type `FinancialReadData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface FinancialReadData {
+  response?: unknown | null;
+}
+```
+
+To learn more about the `UseQueryResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery).
+
+### Using `FinancialRead`'s Query hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, FinancialReadVariables } from '@insightpad/dataconnect';
+import { useFinancialRead } from '@insightpad/dataconnect/react'
+
+export default function FinancialReadComponent() {
+  // The `useFinancialRead` Query hook requires an argument of type `FinancialReadVariables`:
+  const financialReadVars: FinancialReadVariables = {
+    input: ...,
+    sessionToken: ..., // optional
+  };
+
+  // You don't have to do anything to "execute" the Query.
+  // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
+  const query = useFinancialRead(financialReadVars);
+  // Variables can be defined inline as well.
+  const query = useFinancialRead({ input: ..., sessionToken: ..., });
+
+  // You can also pass in a `DataConnect` instance to the Query hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const query = useFinancialRead(dataConnect, financialReadVars);
+
+  // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
+  const options = { staleTime: 5 * 1000 };
+  const query = useFinancialRead(financialReadVars, options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = { staleTime: 5 * 1000 };
+  const query = useFinancialRead(dataConnect, financialReadVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Query.
+  if (query.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
+  }
+
+  // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
+  if (query.isSuccess) {
     console.log(query.data.response);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
@@ -14148,6 +14235,206 @@ export default function EcCommandComponent() {
     onSuccess: () => { console.log('Mutation succeeded!'); }
   };
   mutation.mutate(ecCommandVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.query);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## FinancialPrepare
+You can execute the `FinancialPrepare` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useFinancialPrepare(options?: useDataConnectMutationOptions<FinancialPrepareData, FirebaseError, FinancialPrepareVariables>): UseDataConnectMutationResult<FinancialPrepareData, FinancialPrepareVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useFinancialPrepare(dc: DataConnect, options?: useDataConnectMutationOptions<FinancialPrepareData, FirebaseError, FinancialPrepareVariables>): UseDataConnectMutationResult<FinancialPrepareData, FinancialPrepareVariables>;
+```
+
+### Variables
+The `FinancialPrepare` Mutation requires an argument of type `FinancialPrepareVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface FinancialPrepareVariables {
+  command: unknown;
+  sessionToken?: string | null;
+}
+```
+### Return Type
+Recall that calling the `FinancialPrepare` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `FinancialPrepare` Mutation is of type `FinancialPrepareData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface FinancialPrepareData {
+  query?: {
+    response?: unknown | null;
+  };
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `FinancialPrepare`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, FinancialPrepareVariables } from '@insightpad/dataconnect';
+import { useFinancialPrepare } from '@insightpad/dataconnect/react'
+
+export default function FinancialPrepareComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useFinancialPrepare();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useFinancialPrepare(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useFinancialPrepare(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useFinancialPrepare(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useFinancialPrepare` Mutation requires an argument of type `FinancialPrepareVariables`:
+  const financialPrepareVars: FinancialPrepareVariables = {
+    command: ...,
+    sessionToken: ..., // optional
+  };
+  mutation.mutate(financialPrepareVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ command: ..., sessionToken: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(financialPrepareVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.query);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## FinancialExecute
+You can execute the `FinancialExecute` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useFinancialExecute(options?: useDataConnectMutationOptions<FinancialExecuteData, FirebaseError, FinancialExecuteVariables>): UseDataConnectMutationResult<FinancialExecuteData, FinancialExecuteVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useFinancialExecute(dc: DataConnect, options?: useDataConnectMutationOptions<FinancialExecuteData, FirebaseError, FinancialExecuteVariables>): UseDataConnectMutationResult<FinancialExecuteData, FinancialExecuteVariables>;
+```
+
+### Variables
+The `FinancialExecute` Mutation requires an argument of type `FinancialExecuteVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface FinancialExecuteVariables {
+  operationId: UUIDString;
+  payloadHash: string;
+  cancel: boolean;
+  sessionToken?: string | null;
+}
+```
+### Return Type
+Recall that calling the `FinancialExecute` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `FinancialExecute` Mutation is of type `FinancialExecuteData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface FinancialExecuteData {
+  query?: {
+    response?: unknown | null;
+  };
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `FinancialExecute`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, FinancialExecuteVariables } from '@insightpad/dataconnect';
+import { useFinancialExecute } from '@insightpad/dataconnect/react'
+
+export default function FinancialExecuteComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useFinancialExecute();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useFinancialExecute(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useFinancialExecute(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useFinancialExecute(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useFinancialExecute` Mutation requires an argument of type `FinancialExecuteVariables`:
+  const financialExecuteVars: FinancialExecuteVariables = {
+    operationId: ...,
+    payloadHash: ...,
+    cancel: ...,
+    sessionToken: ..., // optional
+  };
+  mutation.mutate(financialExecuteVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ operationId: ..., payloadHash: ..., cancel: ..., sessionToken: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(financialExecuteVars, options);
 
   // Then, you can render your component dynamically based on the status of the Mutation.
   if (mutation.isPending) {

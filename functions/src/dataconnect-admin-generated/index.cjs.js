@@ -644,6 +644,20 @@ function ecCommand(dcOrVarsOrOptions, varsOrOptions, options) {
 }
 exports.ecCommand = ecCommand;
 
+function financialPrepare(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeMutation('FinancialPrepare', inputVars, inputOpts);
+}
+exports.financialPrepare = financialPrepare;
+
+function financialExecute(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeMutation('FinancialExecute', inputVars, inputOpts);
+}
+exports.financialExecute = financialExecute;
+
 function getCurrentUser(dcOrOptions, options) {
   const { dc: dcInstance, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrOptions, options, undefined);
   dcInstance.useGen(true);
@@ -1000,4 +1014,11 @@ function ecRead(dcOrVarsOrOptions, varsOrOptions, options) {
   return dcInstance.executeQuery('EcRead', inputVars, inputOpts);
 }
 exports.ecRead = ecRead;
+
+function financialRead(dcOrVarsOrOptions, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts} = validateAdminArgs(connectorConfig, dcOrVarsOrOptions, varsOrOptions, options, true, true);
+  dcInstance.useGen(true);
+  return dcInstance.executeQuery('FinancialRead', inputVars, inputOpts);
+}
+exports.financialRead = financialRead;
 

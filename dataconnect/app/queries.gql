@@ -2205,3 +2205,6 @@ query EcRead($input: Any!, $sessionToken: String) @auth(level: USER) {
   """,params:[{_expr:"auth.uid"},$sessionToken]) @check(expr: "this.valid == true", message: "SESSION_REQUIRED")
   response: _selectFirst(sql: "SELECT ec_read($1::text,$2::text,$3::jsonb)::jsonb AS result", params: [{_expr:"auth.uid"},$sessionToken,$input])
 }
+query FinancialRead($input: Any!, $sessionToken: String) @auth(level: USER) {
+  response: _selectFirst(sql: "SELECT fin_read($1,$2,$3::jsonb) AS result", params: [{_expr: "auth.uid"}, $sessionToken, $input])
+}
