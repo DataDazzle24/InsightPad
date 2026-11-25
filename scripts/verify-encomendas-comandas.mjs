@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import {readFileSync as actualRead} from 'node:fs';
+import {financePaths, stripFinancialOperations, verifyFinanceiro} from './verify-financeiro.mjs';
 import ts from '../frontend/node_modules/typescript/lib/typescript.js';
 export const ecBase='72f9b629337ae2c0e799863f3ef4ab01c8b71326';
 const git=(...args)=>execFileSync('git',args,{encoding:'utf8'}).trim();
@@ -38,10 +39,11 @@ function named(file,name){let found;function visit(node){if((ts.isVariableDeclar
 export function verifyEncomendasComandas(){
  git('merge-base','--is-ancestor',ecBase,'HEAD');
  const changed=[...git('diff','--name-only',ecBase).split('\n'),...git('ls-files','--others','--exclude-standard').split('\n')].filter(Boolean);
- for(const path of changed)assert.ok(ecAllowedPaths.has(path),'EC changed an unapproved path: '+path);
+ verifyFinanceiro();
+ for(const path of changed)assert.ok(ecAllowedPaths.has(path)||financePaths.has(path),'EC changed an unapproved path: '+path);
  // The permission hotfix changes one connector implementation, never other
  // mutations or the established authorization/session guard.
- const mutationPath='dataconnect/app/mutations.gql',published=git('show',permissionFixBase+':'+mutationPath),currentMutations=now(mutationPath);
+ const mutationPath='dataconnect/app/mutations.gql',published=git('show',permissionFixBase+':'+mutationPath),currentMutations=stripFinancialOperations(now(mutationPath));
  const permissionOperation=/^mutation SetPlatformRolePermission\b[\s\S]*?^}/m;
  assert.equal(currentMutations.replace(permissionOperation,'').trim(),published.replace(permissionOperation,'').trim(),'Permission fix changed another connector operation');
  const permissionBefore=published.match(permissionOperation)?.[0],permissionNow=currentMutations.match(permissionOperation)?.[0];

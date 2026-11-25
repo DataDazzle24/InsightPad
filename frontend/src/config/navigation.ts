@@ -1,3 +1,5 @@
+import { financeDestinations } from './financeRoutes'
+
 export interface NavigationItem {
   label: string
   icon: string
@@ -13,7 +15,7 @@ export interface NavigationModule extends NavigationItem {
 export const navigationModules: NavigationModule[] = [
   { label: 'Vendas', icon: 'point_of_sale', to: '/modulos/vendas', pageKeys: ['CAIXA', 'COMANDAS', 'ENCOMENDAS', 'GESTAO_VENDAS'], description: 'Frente de caixa e gestão das vendas', accent: 'cyan' },
   { label: 'Estoque', icon: 'inventory_2', to: '/estoque', pageKeys: ['ESTOQUE'], description: 'Entradas, saídas e posição do estoque', accent: 'green' },
-  { label: 'Financeiro', icon: 'account_balance_wallet', to: '/modulos/financeiro', pageKeys: ['CONTAS_PAGAR', 'CONTAS_RECEBER'], description: 'Pagamentos, recebimentos e acompanhamento financeiro', accent: 'cyan' },
+  { label: 'Financeiro', icon: 'account_balance_wallet', to: '/modulos/financeiro', pageKeys: financeDestinations.map(({pageKey}) => pageKey), description: 'Pagamentos, recebimentos e acompanhamento financeiro', accent: 'cyan' },
   { label: 'Cadastros', icon: 'app_registration', to: '/modulos/cadastros', pageKeys: ['CAD_CATEGORIA', 'CAD_SUBCATEGORIA', 'CAD_PRODUTO', 'CAD_CLIENTE', 'CAD_FORNECEDOR', 'CAD_FILIAL'], description: 'Base cadastral do seu negócio', accent: 'cyan' },
   { label: 'Dashboard', icon: 'monitoring', to: '/modulos/dashboards', pageKeys: ['RELATORIOS_OPERACIONAIS'], description: 'Relatórios e inteligência operacional', accent: 'green' },
   { label: 'Canais', icon: 'hub', to: '/modulos/canais', pageKeys: ['CANAIS_VENDA'], description: 'Pedidos e integrações com canais externos', accent: 'cyan' },
@@ -26,10 +28,7 @@ export const moduleMenus = {
     { pageKey: 'ENCOMENDAS', label: 'Encomendas', description: 'Pedidos, prazos e reservas', icon: 'shopping_bag' },
     { pageKey: 'GESTAO_VENDAS', label: 'Registro de Vendas', description: 'Consulte e administre os registros', icon: 'receipt_long' },
   ]},
-  financeiro: { title: 'Financeiro', subtitle: 'Organize pagamentos e recebimentos do seu negócio', items: [
-    { pageKey: 'CONTAS_PAGAR', label: 'Contas a Pagar', description: 'Controle de compromissos financeiros', icon: 'payments' },
-    { pageKey: 'CONTAS_RECEBER', label: 'Contas a Receber', description: 'Recebimentos e acompanhamento financeiro', icon: 'account_balance_wallet' },
-  ]},
+  financeiro: { title: 'Financeiro', subtitle: 'Organize pagamentos e recebimentos do seu negócio', items: financeDestinations },
   cadastros: { title: 'Cadastros', subtitle: 'Mantenha as informações do negócio organizadas', items: [
     { pageKey: 'CAD_CATEGORIA', label: 'Categorias', description: 'Organize as famílias de produtos', icon: 'category' },
     { pageKey: 'CAD_SUBCATEGORIA', label: 'Subcategorias', description: 'Detalhe a classificação do catálogo', icon: 'account_tree' },

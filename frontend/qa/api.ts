@@ -327,6 +327,13 @@ async function qaDefaultOperation(name:string,variables:unknown={}){
 // Only the explicit Canais proof opts in. Keep the default API and inferred
 // response contracts intact for all existing isolated browser suites.
 export async function qaOperation(name:string,variables:unknown={}){
+ if(/^Financial(?:Read|Prepare|Execute)$/.test(name)){
+  const request=(variables??{}) as Row
+  if(qaState.ecHarness)return qaState.ecHarness(name,request) as ReturnType<typeof qaDefaultOperation>;
+  if(name!=='FinancialRead')throw Error('A escrita financeira exige o PostgreSQL descartável do QA.');
+  return {data:{response:{result:{revision:'qa-empty',position:when.slice(0,10),rows:[],accounts:[],branches:[],categories:[],methods:[]}}}};
+ }
+
  if(qaState.ecHarness && /^(?:EcRead|EcCommand|ListSales|SaleDetails|SalesWorkspace)$/.test(name)){
   const v=(variables??{}) as Row;qaState.requests.push({name,variables:structuredClone(v)});
   if(qaState.fail)throw new DataConnectError('other','Falha de transporte sintética');

@@ -1,11 +1,12 @@
+import { financeDestinations } from './financeRoutes'
+
 export const appRoutes = [
   { pageKey: 'CAIXA', route: '/vendas/frente-de-caixa' },
   { pageKey: 'COMANDAS', route: '/vendas/comandas' },
   { pageKey: 'ENCOMENDAS', route: '/vendas/encomendas' },
   { pageKey: 'GESTAO_VENDAS', route: '/vendas/registros' },
   { pageKey: 'ESTOQUE', route: '/estoque' },
-  { pageKey: 'CONTAS_PAGAR', route: '/financeiro/contas-a-pagar' },
-  { pageKey: 'CONTAS_RECEBER', route: '/financeiro/contas-a-receber' },
+  ...financeDestinations,
   { pageKey: 'CAD_CATEGORIA', route: '/cadastros/categorias' },
   { pageKey: 'CAD_SUBCATEGORIA', route: '/cadastros/subcategorias' },
   { pageKey: 'CAD_PRODUTO', route: '/cadastros/produtos' },

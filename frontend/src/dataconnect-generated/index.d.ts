@@ -514,6 +514,20 @@ export interface FinancialCategory_Key {
   __typename?: 'FinancialCategory_Key';
 }
 
+export interface FinancialExecuteData {
+  query?: {
+    session?: unknown | null;
+    response?: unknown | null;
+  };
+}
+
+export interface FinancialExecuteVariables {
+  operationId: UUIDString;
+  payloadHash: string;
+  cancel: boolean;
+  sessionToken?: string | null;
+}
+
 export interface FinancialIndicatorsDashboardData {
   session?: unknown | null;
   _select?: unknown[] | null;
@@ -524,6 +538,28 @@ export interface FinancialIndicatorsDashboardVariables {
   to: DateString;
   filters: unknown;
   requestKey: string;
+  sessionToken?: string | null;
+}
+
+export interface FinancialPrepareData {
+  query?: {
+    session?: unknown | null;
+    response?: unknown | null;
+  };
+}
+
+export interface FinancialPrepareVariables {
+  command: unknown;
+  sessionToken?: string | null;
+}
+
+export interface FinancialReadData {
+  session?: unknown | null;
+  response?: unknown | null;
+}
+
+export interface FinancialReadVariables {
+  input: unknown;
   sessionToken?: string | null;
 }
 
@@ -3286,6 +3322,30 @@ export const ecCommandRef: EcCommandRef;
 export function ecCommand(vars: EcCommandVariables): MutationPromise<EcCommandData, EcCommandVariables>;
 export function ecCommand(dc: DataConnect, vars: EcCommandVariables): MutationPromise<EcCommandData, EcCommandVariables>;
 
+interface FinancialPrepareRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: FinancialPrepareVariables): MutationRef<FinancialPrepareData, FinancialPrepareVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: FinancialPrepareVariables): MutationRef<FinancialPrepareData, FinancialPrepareVariables>;
+  operationName: string;
+}
+export const financialPrepareRef: FinancialPrepareRef;
+
+export function financialPrepare(vars: FinancialPrepareVariables): MutationPromise<FinancialPrepareData, FinancialPrepareVariables>;
+export function financialPrepare(dc: DataConnect, vars: FinancialPrepareVariables): MutationPromise<FinancialPrepareData, FinancialPrepareVariables>;
+
+interface FinancialExecuteRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: FinancialExecuteVariables): MutationRef<FinancialExecuteData, FinancialExecuteVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: FinancialExecuteVariables): MutationRef<FinancialExecuteData, FinancialExecuteVariables>;
+  operationName: string;
+}
+export const financialExecuteRef: FinancialExecuteRef;
+
+export function financialExecute(vars: FinancialExecuteVariables): MutationPromise<FinancialExecuteData, FinancialExecuteVariables>;
+export function financialExecute(dc: DataConnect, vars: FinancialExecuteVariables): MutationPromise<FinancialExecuteData, FinancialExecuteVariables>;
+
 interface GetCurrentUserRef {
   /* Allow users to create refs without passing in DataConnect */
   (): QueryRef<GetCurrentUserData, undefined>;
@@ -3897,4 +3957,16 @@ export const ecReadRef: EcReadRef;
 
 export function ecRead(vars: EcReadVariables, options?: ExecuteQueryOptions): QueryPromise<EcReadData, EcReadVariables>;
 export function ecRead(dc: DataConnect, vars: EcReadVariables, options?: ExecuteQueryOptions): QueryPromise<EcReadData, EcReadVariables>;
+
+interface FinancialReadRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: FinancialReadVariables): QueryRef<FinancialReadData, FinancialReadVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: FinancialReadVariables): QueryRef<FinancialReadData, FinancialReadVariables>;
+  operationName: string;
+}
+export const financialReadRef: FinancialReadRef;
+
+export function financialRead(vars: FinancialReadVariables, options?: ExecuteQueryOptions): QueryPromise<FinancialReadData, FinancialReadVariables>;
+export function financialRead(dc: DataConnect, vars: FinancialReadVariables, options?: ExecuteQueryOptions): QueryPromise<FinancialReadData, FinancialReadVariables>;
 

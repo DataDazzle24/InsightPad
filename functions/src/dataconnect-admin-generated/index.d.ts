@@ -512,6 +512,20 @@ export interface FinancialCategory_Key {
   __typename?: 'FinancialCategory_Key';
 }
 
+export interface FinancialExecuteData {
+  query?: {
+    session?: unknown | null;
+    response?: unknown | null;
+  };
+}
+
+export interface FinancialExecuteVariables {
+  operationId: UUIDString;
+  payloadHash: string;
+  cancel: boolean;
+  sessionToken?: string | null;
+}
+
 export interface FinancialIndicatorsDashboardData {
   session?: unknown | null;
   _select?: unknown[] | null;
@@ -522,6 +536,28 @@ export interface FinancialIndicatorsDashboardVariables {
   to: DateString;
   filters: unknown;
   requestKey: string;
+  sessionToken?: string | null;
+}
+
+export interface FinancialPrepareData {
+  query?: {
+    session?: unknown | null;
+    response?: unknown | null;
+  };
+}
+
+export interface FinancialPrepareVariables {
+  command: unknown;
+  sessionToken?: string | null;
+}
+
+export interface FinancialReadData {
+  session?: unknown | null;
+  response?: unknown | null;
+}
+
+export interface FinancialReadVariables {
+  input: unknown;
   sessionToken?: string | null;
 }
 
@@ -2647,6 +2683,16 @@ export function ecCommand(dc: DataConnect, vars: EcCommandVariables, options?: O
 /** Generated Node Admin SDK operation action function for the 'EcCommand' Mutation. Allow users to pass in custom DataConnect instances. */
 export function ecCommand(vars: EcCommandVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<EcCommandData>>;
 
+/** Generated Node Admin SDK operation action function for the 'FinancialPrepare' Mutation. Allow users to execute without passing in DataConnect. */
+export function financialPrepare(dc: DataConnect, vars: FinancialPrepareVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<FinancialPrepareData>>;
+/** Generated Node Admin SDK operation action function for the 'FinancialPrepare' Mutation. Allow users to pass in custom DataConnect instances. */
+export function financialPrepare(vars: FinancialPrepareVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<FinancialPrepareData>>;
+
+/** Generated Node Admin SDK operation action function for the 'FinancialExecute' Mutation. Allow users to execute without passing in DataConnect. */
+export function financialExecute(dc: DataConnect, vars: FinancialExecuteVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<FinancialExecuteData>>;
+/** Generated Node Admin SDK operation action function for the 'FinancialExecute' Mutation. Allow users to pass in custom DataConnect instances. */
+export function financialExecute(vars: FinancialExecuteVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<FinancialExecuteData>>;
+
 /** Generated Node Admin SDK operation action function for the 'GetCurrentUser' Query. Allow users to execute without passing in DataConnect. */
 export function getCurrentUser(dc: DataConnect, options?: OperationOptions): Promise<ExecuteOperationResponse<GetCurrentUserData>>;
 /** Generated Node Admin SDK operation action function for the 'GetCurrentUser' Query. Allow users to pass in custom DataConnect instances. */
@@ -2901,4 +2947,9 @@ export function posCashApprovalStatus(vars: PosCashApprovalStatusVariables, opti
 export function ecRead(dc: DataConnect, vars: EcReadVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<EcReadData>>;
 /** Generated Node Admin SDK operation action function for the 'EcRead' Query. Allow users to pass in custom DataConnect instances. */
 export function ecRead(vars: EcReadVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<EcReadData>>;
+
+/** Generated Node Admin SDK operation action function for the 'FinancialRead' Query. Allow users to execute without passing in DataConnect. */
+export function financialRead(dc: DataConnect, vars: FinancialReadVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<FinancialReadData>>;
+/** Generated Node Admin SDK operation action function for the 'FinancialRead' Query. Allow users to pass in custom DataConnect instances. */
+export function financialRead(vars: FinancialReadVariables, options?: OperationOptions): Promise<ExecuteOperationResponse<FinancialReadData>>;
 

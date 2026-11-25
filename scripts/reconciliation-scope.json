@@ -98,13 +98,15 @@
     "BARRAS-GLOBAIS-UI-20261115",
     "MENUS-UI-20261116",
     "AJUSTES-FINOS-20261116",
-    "ENCOMENDAS-COMANDAS-20261118"
+    "ENCOMENDAS-COMANDAS-20261118",
+    "FINANCEIRO-20261125"
   ],
   "paths": {
     ".gitignore": {
       "ids": [
         "PREP-DEC017",
-        "ENCOMENDAS-COMANDAS-20261118"
+        "ENCOMENDAS-COMANDAS-20261118",
+        "FINANCEIRO-20261125"
       ],
       "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18."
     },
@@ -113,7 +115,8 @@
         "PREP-DEC017",
         "OBS-018-AG03-001",
         "CANAIS-UI-20261114",
-        "ENCOMENDAS-COMANDAS-20261118"
+        "ENCOMENDAS-COMANDAS-20261118",
+        "FINANCEIRO-20261125"
       ],
       "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18. Canais adds isolated acceptance coverage to the existing full suite; extend only job timeout from 30 to 40 minutes, preserve every step and condition."
     },
@@ -285,7 +288,8 @@
         "BARRAS-GLOBAIS-UI-20261115",
         "MENUS-UI-20261116",
         "AJUSTES-FINOS-20261116",
-        "ENCOMENDAS-COMANDAS-20261118"
+        "ENCOMENDAS-COMANDAS-20261118",
+        "FINANCEIRO-20261125"
       ],
       "reason": "Recorte CI/manifesto/modal/harness previamente reconciliado no PR18. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages. Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only. Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication. Barras globais aprovadas: apresentação ou suporte exato de validação, contratos preservados."
     },
@@ -451,7 +455,8 @@
         "AJU-SUB-11",
         "AJU-SUB-13",
         "AJU-SUB-14",
-        "ENCOMENDAS-COMANDAS-20261118"
+        "ENCOMENDAS-COMANDAS-20261118",
+        "FINANCEIRO-20261125"
       ],
       "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão."
     },
@@ -560,7 +565,8 @@
         "AJU-SUB-11",
         "AJU-SUB-13",
         "AJU-SUB-14",
-        "ENCOMENDAS-COMANDAS-20261118"
+        "ENCOMENDAS-COMANDAS-20261118",
+        "FINANCEIRO-20261125"
       ],
       "reason": "Implementação dos critérios dos IDs listados na matriz68; diffs intencionais exigem regressão."
     },
@@ -649,7 +655,8 @@
         "BARRAS-GLOBAIS-UI-20261115",
         "MENUS-UI-20261116",
         "AJUSTES-FINOS-20261116",
-        "ENCOMENDAS-COMANDAS-20261118"
+        "ENCOMENDAS-COMANDAS-20261118",
+        "FINANCEIRO-20261125"
       ],
       "reason": "Suporte e regressão restritos aos IDs listados; caminho exato, sem wildcard. Approved Estoque/Registros UI: route-only screen presentation, explicit focus opt-in and regression gates; preserve Cadastros, backend, financial/stock contracts and other pages. Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only. Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication. Barras globais aprovadas: apresentação ou suporte exato de validação, contratos preservados."
     },
@@ -1011,7 +1018,8 @@
         "SEC-2026-001",
         "SEC-2026-002",
         "SEC-2026-003",
-        "ENCOMENDAS-COMANDAS-20261118"
+        "ENCOMENDAS-COMANDAS-20261118",
+        "FINANCEIRO-20261125"
       ],
       "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
     },
@@ -1021,7 +1029,8 @@
         "SEC-2026-001",
         "SEC-2026-002",
         "SEC-2026-003",
-        "ENCOMENDAS-COMANDAS-20261118"
+        "ENCOMENDAS-COMANDAS-20261118",
+        "FINANCEIRO-20261125"
       ],
       "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
     },
@@ -1040,7 +1049,8 @@
         "SEC-2026-001",
         "SEC-2026-002",
         "SEC-2026-003",
-        "ENCOMENDAS-COMANDAS-20261118"
+        "ENCOMENDAS-COMANDAS-20261118",
+        "FINANCEIRO-20261125"
       ],
       "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
     },
@@ -1050,7 +1060,8 @@
         "SEC-2026-001",
         "SEC-2026-002",
         "SEC-2026-003",
-        "ENCOMENDAS-COMANDAS-20261118"
+        "ENCOMENDAS-COMANDAS-20261118",
+        "FINANCEIRO-20261125"
       ],
       "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
     },
@@ -1069,7 +1080,8 @@
         "SEC-2026-001",
         "SEC-2026-002",
         "SEC-2026-003",
-        "ENCOMENDAS-COMANDAS-20261118"
+        "ENCOMENDAS-COMANDAS-20261118",
+        "FINANCEIRO-20261125"
       ],
       "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
     },
@@ -1079,7 +1091,8 @@
         "SEC-2026-001",
         "SEC-2026-002",
         "SEC-2026-003",
-        "ENCOMENDAS-COMANDAS-20261118"
+        "ENCOMENDAS-COMANDAS-20261118",
+        "FINANCEIRO-20261125"
       ],
       "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
     },
@@ -1098,7 +1111,8 @@
         "SEC-2026-001",
         "SEC-2026-002",
         "SEC-2026-003",
-        "ENCOMENDAS-COMANDAS-20261118"
+        "ENCOMENDAS-COMANDAS-20261118",
+        "FINANCEIRO-20261125"
       ],
       "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
     },
@@ -1108,7 +1122,8 @@
         "SEC-2026-001",
         "SEC-2026-002",
         "SEC-2026-003",
-        "ENCOMENDAS-COMANDAS-20261118"
+        "ENCOMENDAS-COMANDAS-20261118",
+        "FINANCEIRO-20261125"
       ],
       "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
     },
@@ -1127,7 +1142,8 @@
         "SEC-2026-001",
         "SEC-2026-002",
         "SEC-2026-003",
-        "ENCOMENDAS-COMANDAS-20261118"
+        "ENCOMENDAS-COMANDAS-20261118",
+        "FINANCEIRO-20261125"
       ],
       "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
     },
@@ -1146,7 +1162,8 @@
         "SEC-2026-001",
         "SEC-2026-002",
         "SEC-2026-003",
-        "ENCOMENDAS-COMANDAS-20261118"
+        "ENCOMENDAS-COMANDAS-20261118",
+        "FINANCEIRO-20261125"
       ],
       "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
     },
@@ -1156,7 +1173,8 @@
         "SEC-2026-001",
         "SEC-2026-002",
         "SEC-2026-003",
-        "ENCOMENDAS-COMANDAS-20261118"
+        "ENCOMENDAS-COMANDAS-20261118",
+        "FINANCEIRO-20261125"
       ],
       "reason": "Saída do gerador oficial para operações autorizadas; proibida edição manual; compilação/contratos são gate."
     },
@@ -1627,7 +1645,8 @@
         "PLATAFORMA-UI-20261115",
         "BARRAS-GLOBAIS-UI-20261115",
         "MENUS-UI-20261116",
-        "ENCOMENDAS-COMANDAS-20261118"
+        "ENCOMENDAS-COMANDAS-20261118",
+        "FINANCEIRO-20261125"
       ]
     },
     "frontend/src/cadastros.css": {
@@ -1801,7 +1820,8 @@
         "CANAIS-UI-20261114",
         "PLATAFORMA-UI-20261115",
         "AJUSTES-FINOS-20261116",
-        "ENCOMENDAS-COMANDAS-20261118"
+        "ENCOMENDAS-COMANDAS-20261118",
+        "FINANCEIRO-20261125"
       ],
       "reason": " Approved Canais screen-only integration and isolated regression proof; preserve all contracts, permissions, timers, exports, global shell, neighboring modules and backend. Exact path only. Approved Plataforma presentation/accessibility package and isolated regression proof; exact path, preserve financial/permission contracts and all other modules. No hosted publication."
     },
@@ -1914,7 +1934,8 @@
     "frontend/src/pages/MenuPages.test.tsx": {
       "ids": [
         "MENUS-UI-20261116",
-        "ENCOMENDAS-COMANDAS-20261118"
+        "ENCOMENDAS-COMANDAS-20261118",
+        "FINANCEIRO-20261125"
       ],
       "reason": "Approved Home/submenu visual integration or exact regression/QA support; preserve business routes, permissions, global shell and destination pages. No merge or deployment. EC: exact approved Vendas order adds Comandas and Encomendas."
     },
@@ -1936,7 +1957,8 @@
     "scripts/qa-browser/menus.mjs": {
       "ids": [
         "MENUS-UI-20261116",
-        "ENCOMENDAS-COMANDAS-20261118"
+        "ENCOMENDAS-COMANDAS-20261118",
+        "FINANCEIRO-20261125"
       ],
       "reason": "Approved Home/submenu visual integration or exact regression/QA support; preserve business routes, permissions, global shell and destination pages. No merge or deployment. EC: approved Vendas routes/order; preserve all other cases."
     },
@@ -1967,13 +1989,15 @@
     },
     "frontend/src/config/pages.ts": {
       "ids": [
-        "ENCOMENDAS-COMANDAS-20261118"
+        "ENCOMENDAS-COMANDAS-20261118",
+        "FINANCEIRO-20261125"
       ],
       "reason": "Interface integrada e adaptadores reais do novo escopo, preservando shell e fluxos fora dele."
     },
     "frontend/src/config/navigation.ts": {
       "ids": [
-        "ENCOMENDAS-COMANDAS-20261118"
+        "ENCOMENDAS-COMANDAS-20261118",
+        "FINANCEIRO-20261125"
       ],
       "reason": "Interface integrada e adaptadores reais do novo escopo, preservando shell e fluxos fora dele."
     },
@@ -2135,7 +2159,8 @@
     },
     "scripts/verify-encomendas-comandas.mjs": {
       "ids": [
-        "ENCOMENDAS-COMANDAS-20261118"
+        "ENCOMENDAS-COMANDAS-20261118",
+        "FINANCEIRO-20261125"
       ],
       "reason": "Validação isolada e governança nominal do novo escopo EC; guardas históricas continuam verificadas na fronteira P57."
     },
@@ -2222,6 +2247,324 @@
         "ENCOMENDAS-COMANDAS-20261118"
       ],
       "reason": "Diagnóstico reproduzido e plano DEV da correção de permissões após P58R; preserva regras aprovadas e contratos existentes."
+    },
+    "dataconnect/migrations/20261125-fin-adjustments.sql": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "dataconnect/migrations/20261125-fin-bank.sql": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "dataconnect/migrations/20261125-fin-collections.sql": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "dataconnect/migrations/20261125-fin-commands.sql": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "dataconnect/migrations/20261125-fin-kernel.sql": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "dataconnect/migrations/20261125-fin-legacy.sql": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "dataconnect/migrations/20261125-fin-navigation.sql": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "dataconnect/migrations/20261125-fin-origins.sql": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "dataconnect/migrations/20261125-fin-policies.sql": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "dataconnect/migrations/20261125-fin-queries.sql": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "dataconnect/migrations/20261125-fin-revisions.sql": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "dataconnect/migrations/20261125-fin-structure.sql": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "docs/financeiro/ADR-001-titulos.md": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "docs/financeiro/BASE_ATUAL.md": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "docs/financeiro/DECISOES.md": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "docs/financeiro/PUBLICACAO_DEV.md": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "frontend/src/config/financeRoutes.ts": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "frontend/src/financeiro/FinancePage.tsx": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "frontend/src/financeiro/OperationDialog.tsx": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "frontend/src/financeiro/assets/font-license.txt": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "frontend/src/financeiro/assets/interface.ttf": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "frontend/src/financeiro/bankFile.test.ts": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "frontend/src/financeiro/bankFile.ts": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "frontend/src/financeiro/domain.test.ts": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "frontend/src/financeiro/domain.ts": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "frontend/src/financeiro/messages.ts": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "frontend/src/financeiro/model.ts": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "frontend/src/financeiro/operations.ts": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "frontend/src/financeiro/protocol.test.ts": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "frontend/src/financeiro/protocol.ts": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "frontend/src/financeiro/service.ts": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "frontend/src/financeiro/styles.css": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "frontend/src/financeiro/ui.tsx": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "scripts/financeiro/browser_runtime.py": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "scripts/financeiro/preflight.sql": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "scripts/financeiro/runtime.py": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "scripts/financeiro/test_runtime.py": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "scripts/qa-browser/financeiro.mjs": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "scripts/verify-financeiro.mjs": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Implementação e validação do Financeiro autorizadas em 25/11/2026."
+    },
+    "docs/financeiro/CORE-HANDOFF.md": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Rastreabilidade, implementação e validação autorizadas para o Financeiro."
+    },
+    "docs/financeiro/mapa-integracao.tsv": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Rastreabilidade, implementação e validação autorizadas para o Financeiro."
+    },
+    "docs/financeiro/MODELO.md": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Rastreabilidade, implementação e validação autorizadas para o Financeiro."
+    },
+    "docs/financeiro/VALIDACAO.md": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Rastreabilidade, implementação e validação autorizadas para o Financeiro."
+    },
+    "scripts/financeiro/postflight.sql": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Rastreabilidade, implementação e validação autorizadas para o Financeiro."
+    },
+    "docs/financeiro/matriz-aceite.tsv": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Evidência sintética e matriz de aceite autorizadas para o Financeiro."
+    },
+    "docs/financeiro/provas/README.md": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Evidência sintética e matriz de aceite autorizadas para o Financeiro."
+    },
+    "docs/financeiro/provas/dark-1440-receber.png": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Evidência sintética e matriz de aceite autorizadas para o Financeiro."
+    },
+    "docs/financeiro/provas/dark-390-receber.png": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Evidência sintética e matriz de aceite autorizadas para o Financeiro."
+    },
+    "docs/financeiro/provas/light-1440-receber.png": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Evidência sintética e matriz de aceite autorizadas para o Financeiro."
+    },
+    "docs/financeiro/provas/light-390-receber.png": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Evidência sintética e matriz de aceite autorizadas para o Financeiro."
+    },
+    "docs/financeiro/provas/navegador.json": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Evidência sintética e matriz de aceite autorizadas para o Financeiro."
+    },
+    "scripts/financeiro/preflight-cloud-shell.sh": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Inventário financeiro somente leitura no Cloud Shell autenticado."
+    },
+    "scripts/financeiro/preflight_cloud_shell.py": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Inventário financeiro somente leitura no Cloud Shell autenticado."
     }
   },
   "bytePreserved": [
