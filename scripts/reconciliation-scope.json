@@ -2565,6 +2565,18 @@
         "FINANCEIRO-20261125"
       ],
       "reason": "Inventário financeiro somente leitura no Cloud Shell autenticado."
+    },
+    "scripts/financeiro/rehearse-recovery.py": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Cópia lógica criptografada de DEV e ensaio isolado antes de autorizar a migração."
+    },
+    "scripts/financeiro/test_recovery_rehearsal.py": {
+      "ids": [
+        "FINANCEIRO-20261125"
+      ],
+      "reason": "Cópia lógica criptografada de DEV e ensaio isolado antes de autorizar a migração."
     }
   },
   "bytePreserved": [
