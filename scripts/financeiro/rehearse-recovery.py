@@ -311,7 +311,6 @@ def main():
         with cloud_socket(sys.argv[1], sockets), recovery_image(scratch, tag, lambda message: print(message, flush=True)):
             print('Socket IAM aberto pelo conector do P58/P59.', flush=True)
             try:
-                wait_until(lambda: (sockets / CONNECTION / '.s.PGSQL.5432').is_socket(), 'Proxy IAM não iniciou')
                 run(['docker', 'run', '-d', '--rm', '--pull=never', '--name', container, '--network', 'none', '--memory', '768m',
                      '--tmpfs', '/var/lib/postgresql:rw,size=768m', '--mount', f'type=bind,source={sockets},target=/ip-source,readonly',
                      '-e', 'POSTGRES_HOST_AUTH_METHOD=trust', '-e', f'POSTGRES_DB={LOCAL_DB}', tag],
