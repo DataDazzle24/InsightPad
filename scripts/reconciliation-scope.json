@@ -2570,13 +2570,13 @@
       "ids": [
         "FINANCEIRO-20261125"
       ],
-      "reason": "Cópia lógica criptografada de DEV e ensaio isolado antes de autorizar a migração."
+      "reason": "Cópia lógica privada de DEV e ensaio isolado antes de autorizar a migração."
     },
     "scripts/financeiro/test_recovery_rehearsal.py": {
       "ids": [
         "FINANCEIRO-20261125"
       ],
-      "reason": "Cópia lógica criptografada de DEV e ensaio isolado antes de autorizar a migração."
+      "reason": "Cópia lógica privada de DEV e ensaio isolado antes de autorizar a migração."
     }
   },
   "bytePreserved": [

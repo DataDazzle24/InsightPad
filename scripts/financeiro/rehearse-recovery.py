@@ -1,7 +1,6 @@
 """Capture DEV read-only and rehearse recovery on an isolated local PostgreSQL 18."""
 import contextlib
 import datetime as dt
-import getpass
 import hashlib
 import json
 import os
@@ -118,68 +117,39 @@ def manifest(container, endpoint, *, snapshot_id=None, role=None):
     return rows
 
 
-def gpg_base(home):
-    return ['gpg', '--homedir', str(home), '--batch', '--no-tty',
-            '--pinentry-mode', 'loopback', '--no-symkey-cache']
+def copy_step(command, *, label, timeout, stdin=None, stdout=None):
+    # Errors may describe database contents. Keep them off the terminal.
+    with tempfile.TemporaryFile() as errors:
+        try:
+            process = subprocess.run(command, stdin=stdin, stdout=stdout or subprocess.DEVNULL,
+                                     stderr=errors, timeout=timeout)
+        except (OSError, subprocess.TimeoutExpired):
+            raise CheckFailed(f'{label}: indisponível ou tempo limite excedido') from None
+        require(process.returncode == 0, f'{label}: terminou com erro ({process.returncode})')
 
 
-@contextlib.contextmanager
-def passphrase_fd(passphrase):
-    reader, writer = os.pipe()
-    try:
-        os.write(writer, (passphrase + '\n').encode('utf-8'))
-    finally:
-        os.close(writer)
-    try:
-        yield reader
-    finally:
-        os.close(reader)
-
-
-def pipeline(producer, consumer, *, key_fd, key_in_producer, label, timeout):
-    # Neither stdout nor stderr of dump/restore goes into the public receipt.
-    with tempfile.TemporaryFile() as errs:
-        with subprocess.Popen(producer, stdout=subprocess.PIPE, stderr=errs,
-                              pass_fds=(key_fd,) if key_in_producer else ()) as left:
-            try:
-                with subprocess.Popen(consumer, stdin=left.stdout, stdout=subprocess.DEVNULL,
-                                      stderr=errs, pass_fds=() if key_in_producer else (key_fd,)) as right:
-                    left.stdout.close()
-                    try:
-                        right_code = right.wait(timeout=timeout)
-                        left_code = left.wait(timeout=5)
-                    except subprocess.TimeoutExpired:
-                        right.kill()
-                        raise CheckFailed(f'{label}: tempo limite excedido') from None
-                    require(left_code == right_code == 0, f'{label}: falhou (etapas {left_code}/{right_code})')
-            finally:
-                if left.poll() is None:
-                    left.kill()
-
-
-def rehearse(container, source, role, output, gpg_home, passphrase, *, progress=lambda _message: None):
+def rehearse(container, source, role, output, *, progress=lambda _message: None):
     maximum = run(psql(container, source, read_only=True), input_text=
                   "SELECT current_setting('server_version_num')::int / 10000 = 18"
                   " AND pg_database_size(current_database()) <= 268435456;",
                   label='Versão e tamanho da origem')
     require(maximum == 't', 'Exige PostgreSQL 18 e banco de até 256 MiB para este ensaio local')
-    progress('Capturando snapshot consistente e criptografando a cópia.')
+    progress('Capturando snapshot consistente na pasta privada do Cloud Shell.')
     with snapshot(container, source, role) as snapshot_id:
         original = manifest(container, source, snapshot_id=snapshot_id, role=role)
         dump = [*pg(container, 'pg_dump', source, read_only=True),
                 '--format=custom', '--lock-wait-timeout=5s', f'--snapshot={snapshot_id}']
         if role:
             dump.append(f'--role={role}')
-        with passphrase_fd(passphrase) as key_fd:
-            encrypt = [*gpg_base(gpg_home), '--passphrase-fd', str(key_fd),
-                       '--symmetric', '--cipher-algo', 'AES256', '--output', str(output)]
-            pipeline(dump, encrypt, key_fd=key_fd, key_in_producer=False, label='Cópia lógica criptografada', timeout=150)
+        descriptor = os.open(output, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+        with os.fdopen(descriptor, 'wb') as archive:
+            copy_step(dump, stdout=archive, label='Cópia lógica privada', timeout=150)
+            os.fsync(archive.fileno())
 
     progress('Restaurando no PostgreSQL local e comparando as tabelas.')
-    with passphrase_fd(passphrase) as key_fd:
-        decrypt = [*gpg_base(gpg_home), '--passphrase-fd', str(key_fd), '--decrypt', str(output)]
-        restore = [*pg(container, 'pg_restore', LOCAL), '--no-owner', '--no-acl', '--exit-on-error', '--single-transaction']
-        pipeline(decrypt, restore, key_fd=key_fd, key_in_producer=True, label='Restauração descartável', timeout=120)
+    restore = [*pg(container, 'pg_restore', LOCAL), '--no-owner', '--no-acl', '--exit-on-error', '--single-transaction']
+    with output.open('rb') as archive:
+        copy_step(restore, stdin=archive, label='Restauração descartável', timeout=120)
 
     restored = manifest(container, LOCAL)
     require(original == restored, 'Tabelas restauradas divergem do snapshot')
@@ -218,20 +188,12 @@ def main():
     os.umask(0o077)
     cloud_target()
     print('Origem DEV confirmada. A cópia fica no seu Cloud Shell e a restauração usa PostgreSQL local.', flush=True)
-    try:
-        with open('/dev/tty', 'r') as terminal:
-            require(terminal.isatty(), 'Execute num Cloud Shell interativo')
-    except OSError:
-        raise CheckFailed('Execute num Cloud Shell interativo') from None
-    secret = getpass.getpass('Senha nova da cópia (mínimo 16 caracteres): ')
-    require(len(secret) >= 16 and len(secret.encode('utf-8')) <= 256, 'Use uma senha entre 16 e 256 caracteres')
-    require(getpass.getpass('Repita a senha: ') == secret, 'As senhas diferem')
     output_dir = Path.home() / '.insightpad-fin-recovery'
     output_dir.mkdir(mode=0o700, exist_ok=True)
     require(not output_dir.is_symlink() and output_dir.stat().st_mode & 0o077 == 0, 'O diretório da cópia precisa ser privado')
     stamp = dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%SZ')
     container = 'insightpad-fin-recovery-' + secrets.token_hex(6)
-    protected = output_dir / f'{stamp}-{container[-12:]}.pgdump.gpg'
+    protected = output_dir / f'{stamp}-{container[-12:]}.pgdump'
     receipt_path = protected.with_suffix('.json')
     require(not protected.exists() and not receipt_path.exists(), 'Arquivo de saída já existe')
 
@@ -240,8 +202,6 @@ def main():
         proxy = scratch / 'proxy'
         sockets = scratch / 'sql'
         sockets.mkdir()
-        gpg_home = scratch / 'gpg'
-        gpg_home.mkdir()
         install_proxy(proxy)
         run(['docker', 'pull', IMAGE], timeout=180, label='Imagem PostgreSQL 18 fixada')
         proxy_error = scratch / 'proxy.log'
@@ -263,7 +223,7 @@ def main():
                         return False
 
                 wait_until(local_ready, 'PostgreSQL descartável não iniciou')
-                proof = rehearse(container, SOURCE, OWNER_ROLE, protected, gpg_home, secret, progress=lambda message: print(message, flush=True))
+                proof = rehearse(container, SOURCE, OWNER_ROLE, protected, progress=lambda message: print(message, flush=True))
             except BaseException:
                 protected.unlink(missing_ok=True)
                 raise
@@ -282,7 +242,7 @@ def main():
             digest.update(chunk)
         os.fsync(archive.fileno())
     output = {'project': PROJECT, 'connection': CONNECTION, 'database': 'fdcdb',
-              'archive': protected.name, 'archiveSHA256': digest.hexdigest(), 'encrypted': True, 'scope': 'logical database',
+              'archive': protected.name, 'archiveSHA256': digest.hexdigest(), 'archiveMode': '0600', 'scope': 'logical database',
               'capturedAtUTC': stamp, 'recoveryRehearsed': True, 'remoteMutations': False, **proof}
     receipt_path.write_text(json.dumps(output, ensure_ascii=False, indent=2) + '\n')
     print(json.dumps(output, ensure_ascii=False, indent=2))

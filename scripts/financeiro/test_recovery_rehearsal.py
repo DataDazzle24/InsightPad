@@ -1,8 +1,8 @@
 """Prove the recovery path without Cloud Shell, ADC, or access to DEV."""
 import importlib.util
 from pathlib import Path
-import secrets
 import sys
+import stat
 import tempfile
 import unittest
 
@@ -15,7 +15,7 @@ spec.loader.exec_module(mod)
 
 
 class RehearsalTest(unittest.TestCase):
-    def test_snapshot_dump_encrypt_restore_and_verify(self):
+    def test_snapshot_private_dump_restore_and_verify(self):
         with Runtime() as runtime:
             runtime.reset()
             runtime.sql(
@@ -29,15 +29,13 @@ class RehearsalTest(unittest.TestCase):
                         'GRANT SELECT ON ALL SEQUENCES IN SCHEMA public TO firebaseowner_fdcdb_public;')
             runtime.sql('CREATE DATABASE fin_rehearsal;')
             with tempfile.TemporaryDirectory(prefix='fin-rehearsal-test-') as name:
-                directory = Path(name)
-                home = directory / 'gpg'
-                home.mkdir(mode=0o700)
-                archive = directory / 'test.pgdump.gpg'
+                archive = Path(name) / 'test.pgdump'
                 result = mod.rehearse(runtime.name, ['/var/run/postgresql', 'postgres', 'fdcdb'], mod.OWNER_ROLE,
-                                     archive, home, secrets.token_urlsafe(32))
+                                     archive)
                 self.assertEqual(result['cashMovements'], 5)
                 self.assertEqual(result['verifiedTables'], 70)
                 self.assertGreater(archive.stat().st_size, 1000)
+                self.assertEqual(stat.S_IMODE(archive.stat().st_mode), 0o600)
 
 
 if __name__ == '__main__':
