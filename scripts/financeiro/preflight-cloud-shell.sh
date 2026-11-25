@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# DEV preflight only. Runs the existing P59 SQL bridge with readOnly=true.
+# DEV read-only checks using the existing P58/P59 connector lockfile.
 set -euo pipefail
 umask 077
 
@@ -8,6 +8,11 @@ scratch="$(mktemp -d -t insightpad-fin-preflight.XXXXXXXX)"
 trap 'rm -rf -- "$scratch"' EXIT
 ops_sha=ae79f1dda7650073cf288be2f10d8b1e07cd6667
 repo=https://github.com/DataDazzle24/InsightPad.git
+
+case "${1-}" in
+  ''|--rehearse-recovery) ;;
+  *) printf '%s\n' 'Modo de verificação inválido.' >&2; exit 2 ;;
+esac
 
 for command in git gcloud node npm python3; do
   command -v "$command" >/dev/null || { printf 'Comando indisponível: %s\n' "$command" >&2; exit 1; }
@@ -24,4 +29,9 @@ done
 npm --prefix "$scratch/ops" ci --ignore-scripts --no-audit --no-fund > "$scratch/npm.log" 2>&1 ||
   { printf '%s\n' 'Não foi possível preparar a ponte SQL do P59. Nenhuma alteração no DEV.' >&2; exit 1; }
 
-python3 "$root/scripts/financeiro/preflight_cloud_shell.py" "$scratch/ops/P58-sql.cjs" "$root/scripts/financeiro/preflight.sql"
+if [[ "${1-}" == --rehearse-recovery ]]; then
+  cp "$root/scripts/financeiro/recovery-socket.cjs" "$scratch/ops/"
+  python3 -B "$root/scripts/financeiro/rehearse-recovery.py" "$scratch/ops/recovery-socket.cjs"
+else
+  python3 "$root/scripts/financeiro/preflight_cloud_shell.py" "$scratch/ops/P58-sql.cjs" "$root/scripts/financeiro/preflight.sql"
+fi

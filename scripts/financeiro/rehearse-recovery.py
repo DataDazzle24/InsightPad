@@ -23,13 +23,11 @@ IMAGE_MANIFEST = 'sha256:9770878138a2e83abcb10856d30cc3f24dae0d317bb956db6ab9159
 IMAGE_ID = 'sha256:79061104669bb30919d015b549c764e2d8021a18ee39cb175581a2588fe90dbe'
 IMAGE_REGISTRY = 'https://registry-1.docker.io/v2/library/postgres'
 IMAGE_TOKEN_URL = 'https://auth.docker.io/token?service=registry.docker.io&scope=repository:library/postgres:pull'
-PROXY_URL = 'https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.18.3/cloud-sql-proxy.linux.amd64'
-PROXY_SHA256 = '4c2390ab4761159c57a039bac8cbb3ed264d1b40e1c6de3a0aa78c24d3a35ff5'
 OWNER_ROLE = 'firebaseowner_fdcdb_public'
 APP_TABLES = {'cash_movements', 'accounts_payable', 'accounts_receivable', 'financial_accounts'}
 LOCAL_DB = 'fin_rehearsal'
 LOCAL = ['/var/run/postgresql', 'postgres', LOCAL_DB]
-SOURCE = [f'/ip-source/{CONNECTION}', OPERATOR, 'fdcdb']
+SOURCE = ['/ip-source', OPERATOR, 'fdcdb']
 
 # Hash the multiset of canonical row digests rather than exporting any row.
 # The comparison covers all application tables in public.
@@ -74,7 +72,8 @@ def pg(container, executable, endpoint, *, read_only=False):
     host, user, database = endpoint
     command = ['docker', 'exec', '-i', container]
     if read_only:
-        command.extend(['env', 'PGOPTIONS=-c default_transaction_read_only=on -c statement_timeout=60000 -c lock_timeout=5000'])
+        command.extend(['env', 'PGSSLMODE=disable', 'PGGSSENCMODE=disable', 'PGCONNECT_TIMEOUT=12',
+                        'PGOPTIONS=-c default_transaction_read_only=on -c statement_timeout=60000 -c lock_timeout=5000'])
     return [*command, executable, '-h', host, '-U', user, '-d', database, '-w']
 
 
@@ -172,13 +171,40 @@ def cloud_target():
             'A instância não confirmou o caminho já usado pelo Cloud Shell')
 
 
-def install_proxy(path):
-    require(platform.system() == 'Linux' and platform.machine() == 'x86_64', 'Use o Cloud Shell Linux x86_64')
-    with urllib.request.urlopen(PROXY_URL, timeout=40) as response:
-        binary = response.read(64 * 1024 * 1024)
-    require(hashlib.sha256(binary).hexdigest() == PROXY_SHA256, 'SHA256 do Cloud SQL Auth Proxy divergiu')
-    path.write_bytes(binary)
-    path.chmod(0o700)
+@contextlib.contextmanager
+def cloud_socket(script, directory):
+    token = run(['gcloud', 'auth', 'print-access-token', f'--project={PROJECT}', f'--account={OPERATOR}'],
+                label='Credencial IAM do operador')
+    require(token and len(token) <= 16384 and not any(char.isspace() for char in token), 'Credencial IAM indisponível')
+    with tempfile.TemporaryFile(mode='w+') as status, tempfile.TemporaryFile() as errors, subprocess.Popen(
+        ['node', str(script), str(directory)], stdin=subprocess.PIPE, stdout=status, stderr=errors, text=True,
+    ) as bridge:
+        try:
+            try:
+                bridge.stdin.write(token)
+                bridge.stdin.close()
+            except BrokenPipeError:
+                raise CheckFailed('Processo do conector IAM não iniciou') from None
+
+            def socket_ready():
+                return bridge.poll() is not None or (directory / '.s.PGSQL.5432').is_socket()
+
+            wait_until(socket_ready, 'Tempo limite na conexão do Cloud SQL Connector', seconds=60)
+            if bridge.poll() is not None:
+                status.seek(0)
+                code = status.read(32).strip()
+                safe_codes = {'401', '403', '404', '429', 'EACCES', 'EADDRINUSE', 'ENAMETOOLONG',
+                              'ENETUNREACH', 'ENOTFOUND', 'ECONNREFUSED', 'ETIMEDOUT'}
+                suffix = f' ({code})' if code in safe_codes else ''
+                raise CheckFailed(f'Cloud SQL Connector não abriu o socket IAM{suffix}')
+            yield
+        finally:
+            if bridge.poll() is None:
+                bridge.terminate()
+                try:
+                    bridge.wait(timeout=8)
+                except subprocess.TimeoutExpired:
+                    bridge.kill()
 
 
 def fetch_image_file(path, resource, digest, limit, token):
@@ -264,6 +290,8 @@ def wait_until(predicate, message, seconds=45):
 
 def main():
     os.umask(0o077)
+    require(len(sys.argv) == 2, 'Execute o ensaio pelo preflight-cloud-shell.sh --rehearse-recovery')
+    require(platform.system() == 'Linux' and platform.machine() == 'x86_64', 'Use o Cloud Shell Linux x86_64')
     cloud_target()
     print('Origem DEV confirmada. A cópia fica no seu Cloud Shell e a restauração usa PostgreSQL local.', flush=True)
     output_dir = Path.home() / '.insightpad-fin-recovery'
@@ -278,16 +306,10 @@ def main():
 
     with tempfile.TemporaryDirectory(prefix='ipfin-', dir='/tmp') as scratch_path:
         scratch = Path(scratch_path)
-        proxy = scratch / 'proxy'
         sockets = scratch / 'sql'
         sockets.mkdir()
-        install_proxy(proxy)
-        proxy_error = scratch / 'proxy.log'
-        with recovery_image(scratch, tag, lambda message: print(message, flush=True)), \
-                proxy_error.open('wb') as log, subprocess.Popen(
-            [str(proxy), '--gcloud-auth', '--auto-iam-authn', '--unix-socket', str(sockets), CONNECTION],
-            stdin=subprocess.DEVNULL, stdout=log, stderr=log,
-        ) as bridge:
+        with cloud_socket(sys.argv[1], sockets), recovery_image(scratch, tag, lambda message: print(message, flush=True)):
+            print('Socket IAM aberto pelo conector do P58/P59.', flush=True)
             try:
                 wait_until(lambda: (sockets / CONNECTION / '.s.PGSQL.5432').is_socket(), 'Proxy IAM não iniciou')
                 run(['docker', 'run', '-d', '--rm', '--pull=never', '--name', container, '--network', 'none', '--memory', '768m',
@@ -308,12 +330,6 @@ def main():
                 raise
             finally:
                 subprocess.run(['docker', 'rm', '-f', container], capture_output=True, timeout=15)
-                if bridge.poll() is None:
-                    bridge.terminate()
-                    try:
-                        bridge.wait(timeout=8)
-                    except subprocess.TimeoutExpired:
-                        bridge.kill()
 
     digest = hashlib.sha256()
     with protected.open('rb') as archive:
